@@ -187,6 +187,7 @@ if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   kill "$STOP_TEST_PID" 2>/dev/null || true
   STOP_TEST_PID=""
 else
+  echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/state/server.pid"
   bash "$STOP_SCRIPT" "$TEST_DIR/stop-test" >/dev/null 2>&1 || true
   sleep 1
 

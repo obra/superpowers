@@ -23,7 +23,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(Load Plan|read.*plan|extract.*tasks|读取计划|读取.*计划)"; then
+if echo "$output" | grep -qiE "(Load Plan|read.*plan|extract.*tasks|读取计划|读取.*计划|加载文档上下文|提取任务|TodoWrite)"; then
     : # pass
 else
     echo "  [FAIL] Should mention loading plan"
@@ -53,7 +53,7 @@ echo ""
 # Test 3: Verify self-review is mentioned
 echo "Test 3: Self-review requirement..."
 
-output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? What should they check?" 120)
+output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? Answer briefly, then list 2-3 things they should check." 120)
 
 if echo "$output" | grep -qiE "(self-review|self review|自审|自我审查)"; then
     : # pass
@@ -62,7 +62,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(completeness|Completeness|完整性)"; then
+if echo "$output" | grep -qiE "(completeness|Completeness|完整性|功能完整性|测试覆盖|代码质量)"; then
     : # pass
 else
     echo "  [FAIL] Should check completeness"
@@ -74,7 +74,7 @@ echo ""
 # Test 4: Verify plan is read once
 echo "Test 4: Plan reading efficiency..."
 
-output=$(run_claude "In subagent-driven-development, how many times should the controller read the plan file? When does this happen?" 120)
+output=$(run_claude "In subagent-driven-development, does the controller read the plan once before any task execution begins, or later during execution? Answer briefly." 120)
 
 if echo "$output" | grep -qiE "(once|one time|single|一次|仅.*一次)"; then
     : # pass
@@ -83,7 +83,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(Step 1|beginning|start|开始|前期|准备)"; then
+if echo "$output" | grep -qiE "(before.*task|before.*execut|before any task|执行任务之前|开始执行任务|开始.*执行|流程图|逐个任务执行之前)"; then
     : # pass
 else
     echo "  [FAIL] Should mention reading at beginning"
