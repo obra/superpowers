@@ -35,7 +35,26 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Proceed to smoke check below (if project has a runnable process) or Step 2 (if pure library or documentation).
+
+**For runnable apps and services — REQUIRED smoke check:**
+
+If the project starts a process (web app, server, CLI tool), you MUST verify it works end-to-end. Automated tests passing does not mean the app works.
+
+**Skip smoke check only when the project has no runnable process** (e.g. a pure library, a standalone config file, documentation with no server). If the project starts a process, the smoke check is always required regardless of how small the change appears — CSS, env config, and wiring changes all affect runtime.
+
+1. Start the service: `npm run dev` / `npm start` / `cargo run` / etc.
+2. Confirm it starts with no errors or warnings that indicate misconfiguration
+3. State the primary user flow for the feature you built, then walk it
+4. If a Playwright or E2E suite exists: run it (`npx playwright test`)
+5. If no E2E suite, confirm via browser or `curl`:
+   - Service responds (HTTP 200 on main route)
+   - Expected content is present, not an error page
+   - The feature built in this branch is exercisable
+
+Report what you verified before proceeding.
+
+**Do NOT proceed to Step 2 until both automated tests AND smoke check pass.**
 
 ### Step 2: Determine Base Branch
 
@@ -164,6 +183,11 @@ git worktree remove <worktree-path>
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
+**Treating smoke check as optional**
+- **Problem:** All unit tests pass, agent marks work complete, but app fails at runtime (env config missing, integration broken, UI never loads)
+- **Real incident:** Subagent-driven-development completed 12 tasks with passing code reviews; app had broken Tailwind CSS, missing API keys, and non-functional input — none caught until human ran it manually
+- **Fix:** For any runnable artifact, starting the app and walking the primary flow is REQUIRED, not a suggestion
+
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
@@ -183,9 +207,11 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Skip smoke check because "all tests pass" — unit tests ≠ working app
 
 **Always:**
 - Verify tests before offering options
+- For runnable apps/services: start the service, state the flow, walk it
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
