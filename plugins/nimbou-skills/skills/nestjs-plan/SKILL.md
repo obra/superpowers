@@ -72,6 +72,8 @@ Every plan MUST start with this header:
 ````markdown
 ### Task N: [Use-case or Slice Name]
 
+**Role:** `<role-slug>`
+
 **Files:**
 - Create: `src/modules/...`
 - Modify: `src/...`
@@ -127,6 +129,23 @@ Expected: PASS
 
 Run: `git add <exact files> && git commit -m "feat: implement [task name]"`
 ````
+
+## Role Mapping
+
+Every task MUST declare a `**Role:**` line that names the agent-author who will execute it under `nimbou-skills:subagent-driven-development`. The slug is one of:
+
+| Role slug | When to use |
+|---|---|
+| `prisma-schema-author` | Task touches `schema.prisma` and/or generates a migration. No application code in the same task. |
+| `prisma-repository-author` | Task implements or extends a concrete repository under `infra/persistence/` (or equivalent) against an existing application port. |
+| `nestjs-usecase-author` | Task creates or evolves one application use-case (one business verb) and the ports it consumes. No HTTP wiring, no Prisma. |
+| `nestjs-controller-author` | Task wires HTTP transport: controller, HTTP DTO, guards, validation pipes, module composition. No business logic. |
+
+Rules:
+
+- One role per task. If a single task description would fit two roles, split it into two tasks (one per role) before closing the plan.
+- Tasks under `nestjs-test` final-wave dispatch do not declare `Role:` — they are routed through the test auditors directly.
+- A task without `Role:` will fall back to `general-purpose` in SDD with a warning. Treat that as a planning bug to be fixed, not a feature.
 
 ## No Placeholders
 

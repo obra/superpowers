@@ -7,10 +7,22 @@ Return it directly in the chat by default. Only turn it into a saved Markdown do
 
 - `## Contexto` for the concrete frontend slice being implemented
 - `## Decisoes Fechadas` for resolved reuse, ownership, and state decisions
-- `## Arquivos` with exact paths and wave assignment
+- `## Arquivos` with exact paths, wave assignment, **and `Role`** (role slug per file)
 - `## Ondas de Execução` with parallel-by-default tasks per wave and a `nimbou-skills:request-review` checkpoint after each wave
 - `## Riscos e Validacoes` for responsive, data, or interaction risks
 - `## Pos-execucao` for catalog verification and testing follow-up
+
+## Role per file
+
+The `## Arquivos` table has columns `| Acao | Caminho | Onda | Role | Depende de |`. Every row MUST set `Role` to one of:
+
+| Role slug | Use when the file is |
+|---|---|
+| `vue-component-author` | a Vue SFC under `components/` |
+| `nuxt-composable-author` | a composable under `composables/` or a util consumed by composables |
+| `nuxt-page-author` | a page under `pages/`, a layout under `layouts/`, or route wiring |
+
+A row without `Role` falls back to `general-purpose` in `subagent-driven-development` with a warning. Fix the plan instead.
 
 ## Naming
 

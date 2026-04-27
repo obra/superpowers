@@ -79,6 +79,22 @@ This file map drives the waves.
 - Make the handoff between page, components, and composables explicit.
 - Call out any local anti-pattern avoidance that the execution must preserve, such as not duplicating fetch ownership between page and composable or not introducing store state for simple parent-child communication.
 
+## Role Mapping
+
+Every row in `## Arquivos` MUST set a `Role` slug so `subagent-driven-development` can route execution to the correct agent-author:
+
+| Role slug | When to use |
+|---|---|
+| `vue-component-author` | File lives under `components/` (SFC) |
+| `nuxt-composable-author` | File lives under `composables/` or `utils/` (consumed by composables) |
+| `nuxt-page-author` | File lives under `pages/`, `layouts/`, or wires routes |
+
+Rules:
+
+- One role per file/task. If a file would fit two roles, that is a planning bug — split into two files or two tasks.
+- Tasks under `## Pos-execucao` (catalog verification, `/test` runs) do not declare `Role`.
+- A row without `Role` will fall back to `general-purpose` with a warning. Fix the plan rather than leaning on the fallback.
+
 ## Response Shape
 
 ```md
@@ -93,7 +109,7 @@ Create a project details page using the existing status badge and a new sidebar.
 - Keep filtering state in a page-level composable.
 
 ## Arquivos
-| Acao | Caminho | Onda | Depende de |
+| Acao | Caminho | Onda | Role | Depende de |
 
 ## Ondas de Execução
 ### Onda 1 — Contratos compartilhados (paralelo)
