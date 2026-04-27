@@ -1,33 +1,37 @@
-# Superpowers Bootstrap for Codex
+# Horspowers Bootstrap for Codex
 
 <EXTREMELY_IMPORTANT>
-You have superpowers.
+You have horspowers.
+
+This bootstrap exists for legacy compatibility. Native skill discovery via
+`~/.agents/skills/horspowers` is the preferred installation path.
 
 **Tool for running skills:**
-- `~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
+- `~/.codex/horspowers/.codex/superpowers-codex use-skill <skill-name>` (legacy compatibility only)
 
 **Tool Mapping for Codex:**
-When skills reference tools you don't have, substitute your equivalent tools:
+When skills reference Claude Code tools, substitute the Codex equivalents:
 - `TodoWrite` → `update_plan` (your planning/task tracking tool)
-- `Task` tool with subagents → Tell the user that subagents aren't available in Codex yet and you'll do the work the subagent would do
-- `Skill` tool → `~/.codex/superpowers/.codex/superpowers-codex use-skill` command (already available)
+- `Task` tool with subagents → `spawn_agent`, `wait_agent`, `close_agent`
+- `Skill` tool → native skill loading (preferred) or the compatibility CLI above
 - `Read`, `Write`, `Edit`, `Bash` → Use your native tools with similar functions
 
 **Skills naming:**
-- Superpowers skills: `superpowers:skill-name` (from ~/.codex/superpowers/skills/)
-- Personal skills: `skill-name` (from ~/.codex/skills/)
-- Personal skills override superpowers skills when names match
+- Horspowers skills: `horspowers:skill-name`
+- Personal/native skills: sibling skill directories under `~/.agents/skills/`
+- The `horspowers` skill pack coexists with any personal skills you install
 
 **Critical Rules:**
 - Before ANY task, review the skills list (shown below)
-- If a relevant skill exists, you MUST use `~/.codex/superpowers/.codex/superpowers-codex use-skill` to load it
+- If a relevant skill exists, you MUST use it
 - Announce: "I've read the [Skill Name] skill and I'm using it to [purpose]"
 - Skills with checklists require `update_plan` todos for each item
 - NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
 
 **Skills location:**
-- Superpowers skills: ~/.codex/superpowers/skills/
-- Personal skills: ~/.codex/skills/ (override superpowers when names match)
+- Native discovery root: `~/.agents/skills/`
+- Horspowers skill pack: `~/.agents/skills/horspowers/`
+- Legacy compatibility files live under this repository's `.codex/` directory
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 </EXTREMELY_IMPORTANT>

@@ -122,7 +122,7 @@ Skills are resolved with this priority order:
 You can force resolution to a specific level:
 - `project:skill-name` - Force project skill
 - `skill-name` - Search project → personal → superpowers
-- `horspowers:skill-name` - Force superpowers skill
+- `horspowers:skill-name` - Force Horspowers skill pack resolution
 
 ## Features
 
@@ -205,7 +205,7 @@ Restart OpenCode to load the updates.
 ### Context not injecting
 
 1. Check if chat.message hook is working
-2. Verify using-superpowers skill exists
+2. Verify using-horspowers skill exists
 3. Check OpenCode version (requires recent version with plugin support)
 
 ## Getting Help

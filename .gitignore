@@ -1,6 +1,7 @@
 .worktrees/
 .private-journal/
 .claude/
+.horspowers/
 .horspowers-config.yaml
 .horspowers-version
 

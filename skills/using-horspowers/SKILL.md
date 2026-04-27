@@ -15,6 +15,8 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
 
+**In Codex:** Skills load natively when Horspowers is exposed under `~/.agents/skills/horspowers`. Do not use the legacy bootstrap CLI as the primary path. When a skill references Claude Code-specific tools, read `references/codex-tools.md` and apply those mappings.
+
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
 # Using Horspowers Skills
@@ -23,7 +25,7 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 **Horspowers** is a Chinese-enhanced fork of [obra/superpowers](https://github.com/obra/superpowers), a composable skills library for Claude Code. It provides complete development workflows with full Chinese language support.
 
-This skill was originally called `using-superpowers` in the upstream project. For backward compatibility, you may also invoke it using `horspowers:using-superpowers`.
+This skill was originally called `using-superpowers` in the upstream project. Legacy references may still use that name, but the canonical Horspowers skill name is `horspowers:using-horspowers`.
 
 ## The Rule
 
@@ -91,6 +93,15 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Codex Notes
+
+When running inside Codex:
+
+- Treat native skill discovery as the source of truth
+- Use `references/codex-tools.md` whenever a skill mentions Claude Code tools
+- Prefer `spawn_agent` / `wait_agent` / `close_agent` for subagent workflows
+- Only fall back to `.codex/superpowers-codex` when maintaining legacy installs
 
 ## Configuration System (Personal/Team Modes)
 
