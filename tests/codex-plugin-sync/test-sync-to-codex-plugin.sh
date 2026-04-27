@@ -73,6 +73,19 @@ assert_matches() {
     fi
 }
 
+assert_not_matches() {
+    local haystack="$1"
+    local pattern="$2"
+    local description="$3"
+
+    if printf '%s' "$haystack" | grep -Eq -- "$pattern"; then
+        fail "$description"
+        echo "    did not expect to match: $pattern"
+    else
+        pass "$description"
+    fi
+}
+
 assert_path_absent() {
     local path="$1"
     local description="$2"
@@ -244,6 +257,22 @@ EOF
     commit_fixture "$repo" "Initial destination fixture"
 }
 
+add_openai_agent_metadata_fixture() {
+    local repo="$1"
+
+    mkdir -p "$repo/plugins/superpowers/skills/example/agents"
+
+    cat > "$repo/plugins/superpowers/skills/example/agents/openai.yaml" <<'EOF'
+interface:
+  display_name: "Example"
+  short_description: "Destination-owned OpenAI metadata"
+EOF
+
+    git -C "$repo" add plugins/superpowers/skills/example/agents/openai.yaml
+
+    commit_fixture "$repo" "Add OpenAI agent metadata fixture"
+}
+
 dirty_tracked_destination_skill() {
     local repo="$1"
 
@@ -261,6 +290,7 @@ write_synced_destination_fixture() {
         "$repo/plugins/superpowers/.codex-plugin" \
         "$repo/plugins/superpowers/.private-journal" \
         "$repo/plugins/superpowers/assets" \
+        "$repo/plugins/superpowers/skills/example/agents" \
         "$repo/plugins/superpowers/skills/example"
 
     cat > "$repo/plugins/superpowers/.codex-plugin/plugin.json" <<EOF
@@ -282,12 +312,19 @@ EOF
 Fixture content.
 EOF
 
+    cat > "$repo/plugins/superpowers/skills/example/agents/openai.yaml" <<'EOF'
+interface:
+  display_name: "Example"
+  short_description: "Destination-owned OpenAI metadata"
+EOF
+
     printf 'tracked keep\n' > "$repo/plugins/superpowers/.private-journal/keep.txt"
 
     git -C "$repo" add \
         plugins/superpowers/.codex-plugin/plugin.json \
         plugins/superpowers/assets/app-icon.png \
         plugins/superpowers/assets/superpowers-small.svg \
+        plugins/superpowers/skills/example/agents/openai.yaml \
         plugins/superpowers/skills/example/SKILL.md \
         plugins/superpowers/.private-journal/keep.txt
 
@@ -415,6 +452,7 @@ main() {
     local help_output
     local script_source
     local dirty_skill_path
+    local noop_openai_metadata_path
 
     echo "=== Test: sync-to-codex-plugin dry-run regression ==="
 
@@ -443,6 +481,7 @@ main() {
 
     init_repo "$dest"
     write_destination_fixture "$dest"
+    add_openai_agent_metadata_fixture "$dest"
     checkout_fixture_branch "$dest" "$dest_branch"
     dirty_tracked_destination_skill "$dest"
 
@@ -490,6 +529,7 @@ main() {
     preview_section="$(printf '%s\n' "$preview_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
     stale_preview_section="$(printf '%s\n' "$stale_preview_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
     dirty_skill_path="$dirty_apply_dest/plugins/superpowers/skills/example/SKILL.md"
+    noop_openai_metadata_path="$noop_apply_dest/plugins/superpowers/skills/example/agents/openai.yaml"
 
     echo ""
     echo "Preview assertions..."
@@ -505,6 +545,7 @@ main() {
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
+    assert_not_matches "$preview_section" "\\*deleting +skills/example/agents/openai\\.yaml" "Preview preserves destination-owned OpenAI agent metadata"
     assert_current_branch "$dest" "$dest_branch" "Preview leaves destination checkout on its original branch"
     assert_branch_absent "$dest" "sync/superpowers-*" "Preview does not create sync branch in destination checkout"
 
@@ -542,6 +583,9 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     assert_contains "$noop_apply_output" "No changes — embedded plugin was already in sync with upstream" "Clean no-op local apply reports no changes"
     assert_current_branch "$noop_apply_dest" "$noop_apply_dest_branch" "Clean no-op local apply leaves destination checkout on its original branch"
     assert_branch_absent "$noop_apply_dest" "sync/superpowers-*" "Clean no-op local apply does not create sync branch in destination checkout"
+    assert_file_equals "$noop_openai_metadata_path" "interface:
+  display_name: \"Example\"
+  short_description: \"Destination-owned OpenAI metadata\"" "Clean no-op local apply preserves OpenAI agent metadata"
 
     echo ""
     echo "Missing manifest assertions..."
