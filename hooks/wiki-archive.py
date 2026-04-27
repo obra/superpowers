@@ -589,6 +589,82 @@ def write_markdown(data: dict, path: Path):
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+WIKI_DECISIONS_SEED = """# Decisions
+
+Architectural calls, tradeoffs, and "we picked X because Y" notes for this project.
+Append entries with date + one-line summary + reasoning. Read by `brainstorming` and
+`writing-plans` skills before proposing new work.
+"""
+
+WIKI_GOTCHAS_SEED = """# Gotchas
+
+Bugs, footguns, and "watch out for X" notes for this project. Read by
+`systematic-debugging` skill before investigating new failures — match symptoms
+against known gotchas first.
+"""
+
+WIKI_INDEX_HEADER = """# Session Index
+
+Auto-appended by `wiki-archive.py` on PreCompact / SessionEnd. Newest at the bottom.
+
+| Date | Event | Duration | Tools | Cost | Top files |
+|------|-------|----------|-------|------|-----------|
+"""
+
+
+def seed_wiki_files(wiki_root: Path):
+    """Create decisions.md / gotchas.md heading templates if missing."""
+    decisions = wiki_root / "decisions.md"
+    gotchas = wiki_root / "gotchas.md"
+    if not decisions.exists():
+        try:
+            decisions.write_text(WIKI_DECISIONS_SEED, encoding="utf-8")
+        except OSError:
+            pass
+    if not gotchas.exists():
+        try:
+            gotchas.write_text(WIKI_GOTCHAS_SEED, encoding="utf-8")
+        except OSError:
+            pass
+
+
+def append_index_entry(wiki_root: Path, data: dict, md_path: Path):
+    """Append one-line summary row to <wiki_root>/index.md."""
+    index = wiki_root / "index.md"
+    if not index.exists():
+        try:
+            index.write_text(WIKI_INDEX_HEADER, encoding="utf-8")
+        except OSError:
+            return
+
+    meta = data["meta"]
+    stats = data["stats"]
+    tokens = data["tokens"]
+    files = data.get("files", {})
+
+    ranked = sorted(
+        files.items(),
+        key=lambda x: -(x[1]["read"] + x[1]["edit"] + x[1]["write"]),
+    )
+    top = [os.path.basename(fp) for fp, _ in ranked[:3]]
+    top_str = ", ".join(f"`{t}`" for t in top) if top else "—"
+
+    rel_md = f"sessions/{md_path.name}"
+    row = (
+        f"| {meta['date']} {meta['time']} "
+        f"| [{meta['event']}]({rel_md}) "
+        f"| {meta['duration_active']} "
+        f"| {stats['total_tools']} "
+        f"| ${tokens['cost_estimate']} "
+        f"| {top_str} |\n"
+    )
+    try:
+        with open(index, "a", encoding="utf-8") as f:
+            f.write(row)
+    except OSError:
+        pass
+
+
 def main():
     try:
         payload = json.loads(sys.stdin.read())
@@ -632,6 +708,10 @@ def main():
 
     write_json(data, json_path)
     write_markdown(data, md_path)
+
+    wiki_root = out_dir.parent
+    seed_wiki_files(wiki_root)
+    append_index_entry(wiki_root, data, md_path)
 
 
 if __name__ == "__main__":
