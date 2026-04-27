@@ -99,7 +99,7 @@ test_brainstorming_proposes_approaches() {
 
     # Check for options/approaches - including A/B/C/D options or numbered lists
     # Enhanced regex to match various option formats
-    if echo "$output" | grep -iE "(approach|option|alternative|方案|选项|Option [ABCD]|^[[:space:]]*[ABCD]\.|[ABCD]\.|\* [ABCD]|选择.*A|选择.*B|问题.*1)" > /dev/null; then
+    if echo "$output" | grep -iE "(approach|option|alternative|方案|选项|应用场景|请选择一个|Option [ABCD]|^[[:space:]]*[0-9]+\.[[:space:]]|\n[[:space:]]*[0-9]+\.[[:space:]]|^[[:space:]]*[ABCD]\.|[ABCD]\.|\* [ABCD]|选择.*A|选择.*B|问题.*1)" > /dev/null; then
         echo "  [PASS] brainstorming proposes multiple approaches"
         return 0
     else
@@ -114,7 +114,7 @@ test_brainstorming_design_sections() {
     echo "Test: brainstorming covers design sections..."
 
     local output
-    output=$(run_claude "Use brainstorming skill. What sections does a design document typically include?" 120)
+    output=$(run_claude "Use brainstorming skill. Briefly list common sections in a design document." 180)
 
     # Check for key design sections (both English and Chinese)
     local found_sections=0

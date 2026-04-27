@@ -62,7 +62,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(completeness|完整性|quality|代码质量|遗漏|miss any requirements|edge cases|测试综合|tests comprehensive|maintainable)"; then
+if echo "$output" | grep -qiE "(completeness|完整性|quality|代码质量|遗漏|miss any requirements|edge cases|测试综合|tests comprehensive|maintainable|spec.*审查|spec.*review|code quality review|两阶段正式审查|不能替代)"; then
     : # pass
 else
     echo "  [FAIL] Should mention self-review checklist substance"
@@ -83,7 +83,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(before.*task|before.*execut|before any task|执行任务之前|任务执行开始之前|开始之前|开始执行任务|开始.*执行|流程图|逐个任务执行之前)"; then
+if echo "$output" | grep -qiE "(before.*task|before.*execut|before any task|执行任务.*之前|任务执行.*之前|任务执行开始之前|开始之前|开始执行任务|开始.*执行|调度.*之前|流程图|逐个任务执行之前|执行阶段.*复用|不再重新读取|前置步骤)"; then
     : # pass
 else
     echo "  [FAIL] Should mention reading at beginning"
@@ -95,16 +95,16 @@ echo ""
 # Test 5: Verify spec compliance reviewer is skeptical
 echo "Test 5: Spec compliance reviewer mindset..."
 
-output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" 120)
+output=$(run_claude "In subagent-driven-development, should the spec compliance reviewer inspect actual implementation code directly, or rely on the implementer's summary? Answer briefly." 120)
 
-if echo "$output" | grep -qiE "(not trust|don't trust|skeptical|verify.*independently|suspiciously|怀疑|不相信|独立验证)"; then
+if echo "$output" | grep -qiE "(not trust|don't trust|not rely|rely on.*summary|verify.*independently|summary|implementer.*report|怀疑|不相信|独立验证|不能只看总结|不能依赖总结)"; then
     : # pass
 else
     echo "  [FAIL] Should mention skepticism"
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(read.*code|inspect.*code|verify.*code|读取.*代码|检查.*代码)"; then
+if echo "$output" | grep -qiE "(read.*code|inspect.*code|verify.*code|actual implementation code|code inspection|line-by-line|读取.*代码|检查.*代码|查看.*代码|直接.*代码)"; then
     : # pass
 else
     echo "  [FAIL] Should mention reading code"

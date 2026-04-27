@@ -185,24 +185,24 @@ echo "Execution complete. Analyzing results..."
 echo ""
 
 # Find the session transcript
-# Session files are in ~/.claude/projects/-<working-dir>/<session-id>.jsonl
-WORKING_DIR_ESCAPED=$(echo "$SCRIPT_DIR/../.." | sed 's/\//-/g' | sed 's/^-//')
-SESSION_DIR="$HOME/.claude/projects/$WORKING_DIR_ESCAPED"
+# Session files live somewhere under ~/.claude/projects, but the path encoding
+# is CLI-specific, so search the whole tree instead of reconstructing it.
+SESSION_ROOT="$HOME/.claude/projects"
 
 # Find the transcript created for this specific test run.
-SESSION_FILE=$(python3 - <<'PY' "$SESSION_DIR" "$TEST_PROJECT" "$TEST_START_EPOCH"
+SESSION_FILE=$(python3 - <<'PY' "$SESSION_ROOT" "$TEST_PROJECT" "$TEST_START_EPOCH"
 from pathlib import Path
 import sys
 
-session_dir = Path(sys.argv[1]).expanduser()
+session_root = Path(sys.argv[1]).expanduser()
 test_project = sys.argv[2]
 test_start = int(sys.argv[3])
 
-if not session_dir.exists():
+if not session_root.exists():
     sys.exit(0)
 
 candidates = []
-for path in session_dir.rglob("*.jsonl"):
+for path in session_root.rglob("*.jsonl"):
     try:
         if int(path.stat().st_mtime) < test_start:
             continue
@@ -224,7 +224,7 @@ PY
 
 if [ -z "$SESSION_FILE" ]; then
     echo "ERROR: Could not find session transcript file"
-    echo "Looked in: $SESSION_DIR"
+    echo "Looked in: $SESSION_ROOT"
     exit 1
 fi
 
@@ -263,6 +263,8 @@ with open(path, encoding="utf-8", errors="ignore") as fh:
             continue
 
         for item in message.get("content", []):
+            if not isinstance(item, dict):
+                continue
             if item.get("type") != "tool_use":
                 continue
             name = item.get("name")
