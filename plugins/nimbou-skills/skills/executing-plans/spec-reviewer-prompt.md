@@ -1,12 +1,12 @@
 # Spec Compliance Reviewer Prompt Template
 
-Use this template when dispatching a spec compliance reviewer subagent **after the controller agent itself has executed every task in a wave** under `nimbou-skills:executing-plans`.
+Use this template when dispatching a spec compliance reviewer **subagent in background** (`run_in_background: true`) after the controller agent itself has committed a wave under `nimbou-skills:executing-plans`.
 
-**Purpose:** Verify the controller built what the wave's tasks requested — nothing more, nothing less — by inspecting the actual combined diff of the wave, not by trusting the controller's own claim of done.
+**Purpose:** Verify the controller built what the wave's tasks requested — nothing more, nothing less — by inspecting the actual committed diff of the wave, not by trusting the controller's own claim of done.
 
 **Scope:** One dispatch per wave, covering every task that ran inside that wave. Do not split this into per-task dispatches; the wave is the unit of review here.
 
-**Note on `⚠️ Deferred`:** This template adds a third reporting bucket on top of the standard `✅` / `❌` outputs. Use `⚠️ Deferred` for items that fall outside the wave's task specs but are reasonable to leave for later (e.g., a pre-existing inconsistency the controller chose not to touch, a refactor the spec did not call for, a comment-level cleanup). These items are not blockers; they feed the post-execution `<plan>.followups.md` artifact produced by `executing-plans` Step 3.
+**Non-blocking by design:** This reviewer runs alongside subsequent waves. Its output never gates execution. **All buckets — `✅`, `❌`, and `⚠️ Deferred` — are advisory** and feed `<plan>.followups.md` (Step 3 of `executing-plans`). `❌` here is not a stop signal; it is a finding the controller will surface to the user at completion.
 
 ```
 Task tool (general-purpose):
@@ -86,17 +86,19 @@ Task tool (general-purpose):
 
     Pick one primary status for the **wave as a whole**:
 
-    - `✅ Spec compliant` — the wave's combined diff matches every task's spec
+    - `✅ Spec compliant` — the wave's committed diff matches every task's spec
       exactly. No Missing, no Extra, no Misunderstanding across any task.
     - `❌ Issues found:` — at least one Missing / Extra / Misunderstanding in any
       task of the wave. List each with `Task N — file:line` references and a
-      one-line rationale. Group findings by task so the controller can fix the
-      right slice without re-reading the whole wave.
+      one-line rationale. Group findings by task so the user can triage the
+      right slice without re-reading the whole wave. **This is not a stop
+      signal — execution has already moved on. The controller will surface
+      these findings in `<plan>.followups.md` as `spec-issue` entries.**
 
     Then, **regardless of the primary status**, you may append:
 
-    - `⚠️ Deferred (non-blocking):` — bullet list of items the controller agent
-      should record in the post-execution follow-ups artifact. Each bullet:
+    - `⚠️ Deferred (non-blocking):` — bullet list of items that should be recorded
+      in the follow-ups artifact as `spec-deferred` entries. Each bullet:
       `Task N — <short description> — file:line — suggested next step`. Use
       `Wave-level` instead of `Task N` when the deferred item is not specific
       to a single task. Omit the section entirely if there is nothing to defer.
