@@ -1,76 +1,104 @@
-# Superpowers for Codex
+# Horspowers for Codex
 
-Complete guide for using Superpowers with OpenAI Codex.
+Guide for using Horspowers with Codex through native skill discovery.
 
 ## Quick Install
 
 Tell Codex:
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/LouisHors/horspowers/refs/heads/main/.codex/INSTALL.md
 ```
 
 ## Manual Installation
 
 ### Prerequisites
 
-- OpenAI Codex access
-- Shell access to install files
+- Codex with native skills support
+- Git
 
-### Installation Steps
+### Steps
 
-#### 1. Clone Superpowers
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/LouisHors/horspowers.git ~/.codex/horspowers
+   ```
 
-```bash
-mkdir -p ~/.codex/superpowers
-git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
+2. Expose the skills to Codex:
+   ```bash
+   mkdir -p ~/.agents/skills
+   ln -s ~/.codex/horspowers/skills ~/.agents/skills/horspowers
+   ```
+
+3. Restart Codex.
+
+### Windows
+
+Use a junction instead of a symlink:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
+cmd /c mklink /J "$env:USERPROFILE\.agents\skills\horspowers" "$env:USERPROFILE\.codex\horspowers\skills"
 ```
 
-#### 2. Install Bootstrap
+## How It Works
 
-The bootstrap file is included in the repository at `.codex/superpowers-bootstrap.md`. Codex will automatically use it from the cloned location.
+Codex scans `~/.agents/skills/` at startup. By exposing the repository's
+`skills/` directory as `~/.agents/skills/horspowers`, the built-in skill loader
+can discover Horspowers without requiring a bootstrap shell command.
 
-#### 3. Verify Installation
+Primary path:
 
-Tell Codex:
-
+```text
+~/.agents/skills/horspowers -> ~/.codex/horspowers/skills
 ```
-Run ~/.codex/superpowers/.codex/superpowers-codex find-skills to show available skills
-```
 
-You should see a list of available skills with descriptions.
+Legacy compatibility files still exist under `.codex/`, but they are no longer
+the recommended entrypoint.
 
 ## Usage
 
-### Finding Skills
+Once installed, Codex can discover and use the skills directly. Typical usage
+patterns:
 
+- Mention the skill by name, such as `horspowers:brainstorming`
+- Ask for work that matches a skill's description
+- Let `using-horspowers` route you into the required workflow
+
+## Tool Mapping
+
+Horspowers skills were originally written against Claude Code tool names. In
+Codex, those instructions map to native Codex tools.
+
+See:
+
+- `skills/using-horspowers/references/codex-tools.md`
+
+Key mappings:
+
+- `TodoWrite` -> `update_plan`
+- `Task` / subagent dispatch -> `spawn_agent`
+- Wait for agent result -> `wait_agent`
+- Free completed agent -> `close_agent`
+- `Skill` tool -> native skill loading
+
+If your Codex installation gates multi-agent support behind a feature flag,
+enable it in `~/.codex/config.toml`:
+
+```toml
+[features]
+multi_agent = true
 ```
-Run ~/.codex/superpowers/.codex/superpowers-codex find-skills
-```
 
-### Loading a Skill
+## Personal Skills
 
-```
-Run ~/.codex/superpowers/.codex/superpowers-codex use-skill horspowers:brainstorming
-```
-
-### Bootstrap All Skills
-
-```
-Run ~/.codex/superpowers/.codex/superpowers-codex bootstrap
-```
-
-This loads the complete bootstrap with all skill information.
-
-### Personal Skills
-
-Create your own skills in `~/.codex/skills/`:
+Create your own skills directly under `~/.agents/skills/`:
 
 ```bash
-mkdir -p ~/.codex/skills/my-skill
+mkdir -p ~/.agents/skills/my-skill
 ```
 
-Create `~/.codex/skills/my-skill/SKILL.md`:
+Then add `~/.agents/skills/my-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -79,75 +107,56 @@ description: Use when [condition] - [what it does]
 ---
 
 # My Skill
-
-[Your skill content here]
 ```
 
-Personal skills override superpowers skills with the same name.
+Personal skills can coexist with the `horspowers` skill pack.
 
-## Architecture
+## Legacy Bootstrap Compatibility
 
-### Codex CLI Tool
+This repository still ships:
 
-**Location:** `~/.codex/superpowers/.codex/superpowers-codex`
+- `.codex/superpowers-codex`
+- `.codex/superpowers-bootstrap.md`
 
-A Node.js CLI script that provides three commands:
-- `bootstrap` - Load complete bootstrap with all skills
-- `use-skill <name>` - Load a specific skill
-- `find-skills` - List all available skills
-
-### Shared Core Module
-
-**Location:** `~/.codex/superpowers/lib/skills-core.js`
-
-The Codex implementation uses the shared `skills-core` module (ES module format) for skill discovery and parsing. This is the same module used by the OpenCode plugin, ensuring consistent behavior across platforms.
-
-### Tool Mapping
-
-Skills written for Claude Code are adapted for Codex with these mappings:
-
-- `TodoWrite` → `update_plan`
-- `Task` with subagents → Tell user subagents aren't available, do work directly
-- `Skill` tool → `~/.codex/superpowers/.codex/superpowers-codex use-skill`
-- File operations → Native Codex tools
+They exist to help users migrate from the old bootstrap flow and to support
+older install guides. Native discovery should be treated as the source of truth.
 
 ## Updating
 
 ```bash
-cd ~/.codex/superpowers
-git pull
+cd ~/.codex/horspowers && git pull
 ```
+
+Restart Codex if the session was already open when the update was pulled.
 
 ## Troubleshooting
 
-### Skills not found
+### Skills not showing up
 
-1. Verify installation: `ls ~/.codex/superpowers/skills`
-2. Check CLI works: `~/.codex/superpowers/.codex/superpowers-codex find-skills`
-3. Verify skills have SKILL.md files
+1. Verify the symlink or junction:
+   ```bash
+   ls -la ~/.agents/skills/horspowers
+   ```
 
-### CLI script not executable
+2. Verify the repo contains skills:
+   ```bash
+   ls ~/.codex/horspowers/skills
+   ```
 
-```bash
-chmod +x ~/.codex/superpowers/.codex/superpowers-codex
-```
+3. Restart Codex.
 
-### Node.js errors
+### Old bootstrap and native discovery conflict
 
-The CLI script requires Node.js. Verify:
+If Codex is still following an old `AGENTS.md` bootstrap path, remove or disable
+that block after native discovery is working.
 
-```bash
-node --version
-```
+### Multi-agent skills do not dispatch
 
-Should show v14 or higher (v18+ recommended for ES module support).
+If a skill references subagents and Codex does not expose `spawn_agent`, enable
+multi-agent support if your Codex build requires it. Otherwise execute the task
+locally and document the limitation.
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
-- Blog post: https://blog.fsck.com/2025/10/27/skills-for-openai-codex/
-
-## Note
-
-Codex support is experimental and may require refinement based on user feedback. If you encounter issues, please report them on GitHub.
+- Horspowers issues: https://github.com/LouisHors/horspowers/issues
+- Upstream project: https://github.com/obra/superpowers

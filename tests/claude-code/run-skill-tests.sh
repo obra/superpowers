@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Test runner for Claude Code skills
-# Tests skills by invoking Claude Code CLI and verifying behavior
+# Layered test runner for Claude Code skills
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
+source "$SCRIPT_DIR/suite-helpers.sh"
 
 echo "========================================"
 echo " Claude Code Skills Test Suite"
@@ -15,24 +16,21 @@ echo "Test time: $(date)"
 echo "Claude version: $(claude --version 2>/dev/null || echo 'not found')"
 echo ""
 
-# Check if Claude Code is available
-if ! command -v claude &> /dev/null; then
-    echo "ERROR: Claude Code CLI not found"
-    echo "Install Claude Code first: https://code.claude.com"
-    exit 1
-fi
-
-# Parse command line arguments
 VERBOSE=false
+LIST_ONLY=false
 SPECIFIC_TEST=""
-TIMEOUT=300  # Default 5 minute timeout per test
-RUN_INTEGRATION=false
+SUITE="$DEFAULT_SUITE"
+TIMEOUT=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --verbose|-v)
             VERBOSE=true
             shift
+            ;;
+        --suite|-s)
+            SUITE="$2"
+            shift 2
             ;;
         --test|-t)
             SPECIFIC_TEST="$2"
@@ -42,8 +40,12 @@ while [[ $# -gt 0 ]]; do
             TIMEOUT="$2"
             shift 2
             ;;
+        --list)
+            LIST_ONLY=true
+            shift
+            ;;
         --integration|-i)
-            RUN_INTEGRATION=true
+            SUITE="integration"
             shift
             ;;
         --help|-h)
@@ -51,22 +53,17 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --verbose, -v        Show verbose output"
+            echo "  --suite, -s NAME     Select suite: smoke, full, integration"
             echo "  --test, -t NAME      Run only the specified test"
-            echo "  --timeout SECONDS    Set timeout per test (default: 300)"
-            echo "  --integration, -i    Run integration tests (slow, 10-30 min)"
+            echo "  --timeout SECONDS    Set timeout per test (default: suite-specific)"
+            echo "  --list               Show selected tests without running them"
+            echo "  --integration, -i    Alias for --suite integration"
             echo "  --help, -h           Show this help"
             echo ""
-            echo "Tests:"
-            echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
-            echo ""
-            echo "Core Skills Tests:"
-            echo "  test-brainstorming.sh                    Brainstorming skill tests"
-            echo "  test-writing-plans.sh                    Writing plans skill tests"
-            echo "  test-tdd.sh                              Test-driven development skill tests"
-            echo "  test-systematic-debugging.sh             Systematic debugging skill tests"
-            echo ""
-            echo "Integration Tests (use --integration):"
-            echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
+            echo "Suites:"
+            echo "  smoke        Fast compatibility checks for core skills"
+            echo "  full         Deeper semantic checks for skill instructions"
+            echo "  integration  Long-running end-to-end workflow validation"
             exit 0
             ;;
         *)
@@ -77,39 +74,47 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# List of skill tests to run (fast unit tests)
-tests=(
-    # Core skills tests
-    "test-brainstorming.sh"
-    "test-writing-plans.sh"
-    "test-tdd.sh"
-    "test-systematic-debugging.sh"
-    # Existing tests
-    "test-subagent-driven-development.sh"
-    "test-automated-development-workflow.sh"
-)
-
-# Integration tests (slow, full execution)
-integration_tests=(
-    "test-subagent-driven-development-integration.sh"
-)
-
-# Add integration tests if requested
-if [ "$RUN_INTEGRATION" = true ]; then
-    tests+=("${integration_tests[@]}")
+if ! is_valid_suite "$SUITE"; then
+    echo "ERROR: Unknown suite '$SUITE'"
+    echo "Valid suites: smoke, full, integration"
+    exit 1
 fi
 
-# Filter to specific test if requested
+if [ -z "$TIMEOUT" ]; then
+    TIMEOUT="$(suite_default_timeout "$SUITE")"
+fi
+
+tests=()
 if [ -n "$SPECIFIC_TEST" ]; then
     tests=("$SPECIFIC_TEST")
+else
+    while IFS= read -r test_name; do
+        [ -n "$test_name" ] || continue
+        tests+=("$test_name")
+    done < <(suite_tests "$SUITE")
 fi
 
-# Track results
+if [ "$LIST_ONLY" = true ]; then
+    if [ -n "$SPECIFIC_TEST" ]; then
+        echo "Selected suite: $SUITE"
+        echo "Specific test override: $SPECIFIC_TEST"
+        echo "Timeout: ${TIMEOUT}s"
+    else
+        print_suite_listing "$SUITE"
+    fi
+    exit 0
+fi
+
+if ! command -v claude > /dev/null 2>&1; then
+    echo "ERROR: Claude Code CLI not found"
+    echo "Install Claude Code first: https://code.claude.com"
+    exit 1
+fi
+
 passed=0
 failed=0
 skipped=0
 
-# Run each test
 for test in "${tests[@]}"; do
     echo "----------------------------------------"
     echo "Running: $test"
@@ -120,6 +125,7 @@ for test in "${tests[@]}"; do
     if [ ! -f "$test_path" ]; then
         echo "  [SKIP] Test file not found: $test"
         skipped=$((skipped + 1))
+        echo ""
         continue
     fi
 
@@ -150,7 +156,6 @@ for test in "${tests[@]}"; do
             failed=$((failed + 1))
         fi
     else
-        # Capture output for non-verbose mode
         if output=$(timeout "$TIMEOUT" bash "$test_path" 2>&1); then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
@@ -175,26 +180,26 @@ for test in "${tests[@]}"; do
     echo ""
 done
 
-# Print summary
 echo "========================================"
 echo " Test Results Summary"
 echo "========================================"
 echo ""
+echo "  Suite:   $SUITE"
 echo "  Passed:  $passed"
 echo "  Failed:  $failed"
 echo "  Skipped: $skipped"
 echo ""
 
-if [ "$RUN_INTEGRATION" = false ] && [ ${#integration_tests[@]} -gt 0 ]; then
-    echo "Note: Integration tests were not run (they take 10-30 minutes)."
-    echo "Use --integration flag to run full workflow execution tests."
+if [ "$SUITE" != "integration" ]; then
+    echo "Note: Integration tests were not run."
+    echo "Use --suite integration to run full workflow execution tests."
     echo ""
 fi
 
 if [ $failed -gt 0 ]; then
     echo "STATUS: FAILED"
     exit 1
-else
-    echo "STATUS: PASSED"
-    exit 0
 fi
+
+echo "STATUS: PASSED"
+exit 0

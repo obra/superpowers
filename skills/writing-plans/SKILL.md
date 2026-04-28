@@ -176,9 +176,35 @@ IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 
   Store the document path as `$TASK_DOC` for progress tracking throughout implementation.
 
+## Plan Review Gate
+
+After saving the plan document, review the full plan against the design/spec
+document before Execution Handoff.
+
+**Review inputs:**
+- Plan document path: `docs/plans/YYYY-MM-DD-<feature-name>.md`
+- Design/spec path: the related design document found earlier in `docs/plans/`
+
+**Review standard:** Use `./plan-document-reviewer-prompt.md`
+
+**What must be reviewed:**
+- Placeholders, `TODO`, `TBD`, "稍后定义", "实现时再定" and similar unresolved text
+- Coverage gaps between the design/spec and the plan tasks
+- Task steps that are not executable because they omit exact files, code, commands, or validation
+- Scope drift, over-engineering, or work that goes beyond the approved design/spec
+
+**How to run the review:**
+- If the host supports subagents, dispatch a reviewer using `./plan-document-reviewer-prompt.md`
+- Otherwise, do an equivalent local structured self-review using the same checklist and output format
+
+**Approval rule:**
+- If review status is `Issues Found`, fix the plan first and re-run the review
+- Only continue when the review status is `Approved`
+- Recommendations are advisory and do not block Execution Handoff
+
 ## Execution Handoff
 
-After saving the plan (and creating task doc if enabled), offer execution choice:
+After the plan review gate passes (and creating task doc if enabled), offer execution choice:
 
 **"计划已完成并保存到 `docs/plans/<filename>.md`。两种执行方式：**
 

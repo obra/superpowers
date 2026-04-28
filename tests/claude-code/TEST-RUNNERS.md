@@ -1,258 +1,141 @@
-# 测试运行器使用指南
+# Claude Code Test Runners
 
-本项目提供三种测试运行方式，适应不同的使用场景。
+`tests/claude-code/` now uses layered suites so routine checks do not automatically trigger every long-running `claude -p` script.
 
----
+## Runner Summary
 
-## 1. 原始测试运行器（批量模式）
+### `run-skill-tests.sh`
 
-**文件**: `run-skill-tests.sh`
+Batch runner for CI and quick local checks.
 
-**特点**:
-- 一次性运行所有测试
-- 适合 CI/CD 集成
-- 快速获得整体结果
+Examples:
 
-**使用**:
 ```bash
-# 运行所有核心测试
 ./tests/claude-code/run-skill-tests.sh
-
-# 运行特定测试
-./tests/claude-code/run-skill-tests.sh test-tdd.sh
-
-# 包含集成测试（耗时 10-30 分钟）
-./tests/claude-code/run-skill-tests.sh --integration
+./tests/claude-code/run-skill-tests.sh --suite full
+./tests/claude-code/run-skill-tests.sh --suite integration
+./tests/claude-code/run-skill-tests.sh --list
+./tests/claude-code/run-skill-tests.sh --test test-tdd.sh
 ```
 
-**输出示例**:
-```
-=========================================
- Claude Code Skills Test Suite
-========================================-
+Behavior:
 
-----------------------------------------
-Running: test-tdd.sh
-----------------------------------------
-  [PASS] (189s)
+- defaults to `smoke`
+- supports `smoke`, `full`, and `integration`
+- supports `--list` to preview without running Claude
+- does not automatically include targeted direct-run probes such as `test-worktree-native-preference.sh` or `test-document-review-system.sh`
 
-========================================
- Test Results Summary
-========================================
+### `run-skill-tests-interactive.sh`
 
-  Passed:  3
-  Failed:  0
-```
+Interactive queue runner with progress estimates.
 
----
+Examples:
 
-## 2. 交互式测试运行器（实时进度）
-
-**文件**: `run-skill-tests-interactive.sh`
-
-**特点**:
-- 显示测试队列和预估时间
-- 实时进度反馈
-- 彩色输出，更易读
-- 显示每个测试的耗时统计
-
-**使用**:
 ```bash
-# 运行所有测试（带实时进度）
 ./tests/claude-code/run-skill-tests-interactive.sh
-
-# 运行单个测试
-./tests/claude-code/run-skill-tests-interactive.sh test-tdd.sh
+./tests/claude-code/run-skill-tests-interactive.sh --suite full
+./tests/claude-code/run-skill-tests-interactive.sh --test test-tdd.sh
 ```
 
-**输出示例**:
-```
-=========================================
- Interactive Skill Tests
-=========================================
+### `run-skill-tests-stepwise.sh`
 
-Mode: Single-step with real-time feedback
+Stepwise runner that pauses between tests.
 
-Test Queue (6 tests, ~12 minutes total):
+Examples:
 
-  1. test-brainstorming.sh (~10m)
-  2. test-writing-plans.sh (~10m)
-  3. test-tdd.sh (~10m)
-  ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Test 1/6: test-tdd.sh
-Estimated: ~10 minutes
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[运行测试...]
-
-✅ PASSED (189s)
-
-Progress: 1/6 tests completed
-Elapsed: 3m 9s
-Estimated remaining: ~19m
-```
-
----
-
-## 3. 单步确认运行器（完全控制）
-
-**文件**: `run-skill-tests-stepwise.sh`
-
-**特点**:
-- 每个测试后暂停等待确认
-- 倒计时开始
-- 可检查中间结果
-- 可随时中断
-
-**使用**:
 ```bash
-# 从第一个测试开始
 ./tests/claude-code/run-skill-tests-stepwise.sh
-
-# 跳过前面的测试，从指定测试开始
-./tests/claude-code/run-skill-tests-stepwise.sh test-tdd.sh
-
-# 不需要确认，自动运行（类似原始模式）
-CONFIRM_EACH=false ./tests/claude-code/run-skill-tests-stepwise.sh
+./tests/claude-code/run-skill-tests-stepwise.sh --suite full
+./tests/claude-code/run-skill-tests-stepwise.sh --test test-tdd.sh
+CONFIRM_EACH=false ./tests/claude-code/run-skill-tests-stepwise.sh --suite smoke
 ```
 
-**输出示例**:
-```
-=========================================
- Stepwise Test Runner
-=========================================
+## Suite Guidance
 
-Each test will run and pause for your confirmation.
-Press Enter to continue, or Ctrl+C to exit.
+### `smoke`
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Test 3/6: test-tdd.sh
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Use for routine development checks. This is the default.
 
-Starting in 3... 2... 1... Go!
+- short prompts
+- fast feedback
+- validates that core skills still load and answer the most important questions
 
-[运行测试...]
+### `full`
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ TEST PASSED
-Duration: 189s (3m 9s)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Use before broader merges or when touching skill content.
 
-Progress: 3/6 | Passed: 3 | Failed: 0
+- multi-question semantic checks
+- slower than smoke
+- better coverage of behavior and instruction content
 
-Press Enter to continue to next test...
-```
+### `integration`
 
----
+Use only when you need end-to-end evidence.
 
-## 推荐使用场景
+- expensive
+- real project setup
+- workflow execution validation
 
-### 场景 1: 日常开发检查
+## Recommended Workflow
 
-**推荐**: 交互式运行器
+1. Run `./tests/claude-code/run-skill-tests.sh`
+2. If skill content changed, run `./tests/claude-code/run-skill-tests.sh --suite full`
+3. If `skills/using-git-worktrees/SKILL.md` changed, run `bash ./tests/claude-code/test-worktree-native-preference.sh green`
+4. If `skills/brainstorming/SKILL.md`, `skills/brainstorming/spec-document-reviewer-prompt.md`, `skills/writing-plans/SKILL.md`, or `skills/writing-plans/plan-document-reviewer-prompt.md` changed, run `bash ./tests/claude-code/test-document-review-system.sh green`
+5. Run integration only when workflow behavior was touched
+
+## Direct-Run Targeted Tests
+
+### `test-worktree-native-preference.sh`
+
+Use this when validating `using-git-worktrees` prompt wording around native tool preference.
 
 ```bash
-./tests/claude-code/run-skill-tests-interactive.sh
+bash ./tests/claude-code/test-worktree-native-preference.sh green
 ```
 
-**原因**:
-- 可以看到预计剩余时间
-- 实时了解进度
-- 彩色输出更友好
+What it verifies:
 
-### 场景 2: 调试特定测试
+- native worktree tools are named and preferred when available
+- user consent to create an isolated workspace authorizes direct native tool usage
+- `git worktree add` remains fallback-only, not the default answer when native tools exist
 
-**推荐**: 单步确认运行器
+What it does not verify:
+
+- actual worktree creation
+- real tool invocation success
+- suite membership or end-to-end isolation setup
+
+### `test-document-review-system.sh`
+
+Use this when validating the document reviewer flow for brainstorming and writing-plans.
 
 ```bash
-# 从失败的测试开始
-./tests/claude-code/run-skill-tests-stepwise.sh test-tdd.sh
+bash ./tests/claude-code/test-document-review-system.sh green
 ```
 
-**原因**:
-- 每个测试后可以检查结果
-- 可以在测试间查看日志
-- 完全控制执行节奏
+What it verifies:
 
-### 场景 3: CI/CD 集成
+- prompts explicitly reference current-workspace reviewer files instead of trusting an installed skill copy
+- brainstorming routes `docs/plans/` design docs through structured spec review before the user review gate
+- writing-plans routes `docs/plans/` plan docs through plan review against the related design/spec before execution handoff
+- both reviewer prompts preserve blocking-vs-advisory calibration
 
-**推荐**: 原始批量运行器
+What it does not verify:
+
+- actual subagent dispatch
+- creation of real design or plan documents
+- suite membership or full workflow execution
+
+## Queue Preview
+
+Preview a suite without running Claude:
 
 ```bash
-./tests/claude-code/run-skill-tests.sh
+./tests/claude-code/test-queue-preview.sh
+./tests/claude-code/test-queue-preview.sh full
 ```
 
-**原因**:
-- 标准输出格式
-- 适合日志解析
-- 退出码明确
+## Why This Exists
 
-### 场景 4: 快速验证单个技能
-
-**推荐**: 直接运行测试文件
-
-```bash
-./tests/claude-code/test-tdd.sh
-```
-
-**原因**:
-- 最快方式
-- 输出简洁
-- 适合频繁迭代
-
----
-
-## 测试文件列表
-
-| 测试文件 | 测试数量 | 预估耗时 | 说明 |
-|----------|----------|----------|------|
-| test-brainstorming.sh | 6 | ~10分钟 | 头脑风暴技能 |
-| test-writing-plans.sh | 6 | ~10分钟 | 编写计划技能 |
-| test-tdd.sh | 6 | ~10分钟 | TDD技能 |
-| test-systematic-debugging.sh | 5 | ~10分钟 | 系统化调试技能 |
-| test-subagent-driven-development.sh | 7 | ~15分钟 | 子代理驱动开发 |
-| test-automated-development-workflow.sh | 3 | ~15分钟 | 自动化开发工作流 |
-
----
-
-## 超时配置
-
-所有测试现在使用 **120秒** 超时（可在 `test-helpers.sh` 中配置）：
-
-```bash
-# 修改默认超时时间
-# test-helpers.sh line 11:
-local timeout="${2:-120}"  # 修改为你需要的秒数
-```
-
----
-
-## 调试模式
-
-启用详细调试输出：
-
-```bash
-# 启用调试模式
-TEST_DEBUG_MODE=1 ./tests/claude-code/test-tdd.sh
-
-# 查看正在执行的命令
-TEST_DEBUG_MODE=1 ./tests/claude-code/run-skill-tests-stepwise.sh
-```
-
----
-
-## 快捷命令
-
-```bash
-# 创建别名（可选）
-alias test-skills='./tests/claude-code/run-skill-tests-interactive.sh'
-alias test-step='./tests/claude-code/run-skill-tests-stepwise.sh'
-alias test-quick='./tests/claude-code/test-tdd.sh'
-
-# 使用
-test-skills      # 交互式运行所有测试
-test-step        # 单步运行所有测试
-test-quick       # 快速测试 TDD
-```
+The old default runner lumped together many high-cost semantic tests. That made local iteration noisy and increased the chance of runaway or stacked `claude -p` subprocesses. The layered model keeps default feedback cheap while preserving deeper suites for explicit use.

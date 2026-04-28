@@ -7,23 +7,25 @@ const skillsCore = require('../lib/skills-core');
 
 // Paths
 const homeDir = os.homedir();
-const superpowersSkillsDir = path.join(homeDir, '.codex', 'superpowers', 'skills');
-const personalSkillsDir = path.join(homeDir, '.codex', 'skills');
-const bootstrapFile = path.join(homeDir, '.codex', 'superpowers', '.codex', 'superpowers-bootstrap.md');
-const superpowersRepoDir = path.join(homeDir, '.codex', 'superpowers');
+const repoDir = path.resolve(__dirname, '..');
+const namespace = 'horspowers';
+const legacyNamespace = 'superpowers';
+const packSkillsDir = path.join(repoDir, 'skills');
+const nativeSkillsRoot = path.join(homeDir, '.agents', 'skills');
+const bootstrapFile = path.join(__dirname, 'superpowers-bootstrap.md');
 
 // Utility functions
 function printSkill(skillPath, sourceType) {
     const skillFile = path.join(skillPath, 'SKILL.md');
     const relPath = sourceType === 'personal'
-        ? path.relative(personalSkillsDir, skillPath)
-        : path.relative(superpowersSkillsDir, skillPath);
+        ? path.relative(nativeSkillsRoot, skillPath)
+        : path.relative(packSkillsDir, skillPath);
 
     // Print skill name with namespace
     if (sourceType === 'personal') {
         console.log(relPath.replace(/\\/g, '/')); // Personal skills are not namespaced
     } else {
-        console.log(`superpowers:${relPath.replace(/\\/g, '/')}`); // Superpowers skills get superpowers namespace
+        console.log(`${namespace}:${relPath.replace(/\\/g, '/')}`);
     }
 
     // Extract and print metadata
@@ -41,20 +43,24 @@ function runFindSkills() {
 
     const foundSkills = new Set();
 
-    // Find personal skills first (these take precedence)
-    const personalSkills = skillsCore.findSkillsInDir(personalSkillsDir, 'personal', 2);
+    // Find personal skills first (these take precedence). Skip the mounted
+    // horspowers pack itself to avoid duplicating core skills.
+    const personalSkills = skillsCore.findSkillsInDir(nativeSkillsRoot, 'personal', 2);
     for (const skill of personalSkills) {
-        const relPath = path.relative(personalSkillsDir, skill.path);
+        const relPath = path.relative(nativeSkillsRoot, skill.path);
+        if (relPath === namespace || relPath.startsWith(`${namespace}${path.sep}`)) {
+            continue;
+        }
         foundSkills.add(relPath);
         printSkill(skill.path, 'personal');
     }
 
-    // Find superpowers skills (only if not already found in personal)
-    const superpowersSkills = skillsCore.findSkillsInDir(superpowersSkillsDir, 'superpowers', 1);
-    for (const skill of superpowersSkills) {
-        const relPath = path.relative(superpowersSkillsDir, skill.path);
+    // Find horspowers skills (only if not already found in personal)
+    const packSkills = skillsCore.findSkillsInDir(packSkillsDir, 'horspowers', 1);
+    for (const skill of packSkills) {
+        const relPath = path.relative(packSkillsDir, skill.path);
         if (!foundSkills.has(relPath)) {
-            printSkill(skill.path, 'superpowers');
+            printSkill(skill.path, 'horspowers');
         }
     }
 
@@ -62,24 +68,24 @@ function runFindSkills() {
     console.log('  superpowers-codex use-skill <skill-name>   # Load a specific skill');
     console.log('');
     console.log('Skill naming:');
-    console.log('  Superpowers skills: superpowers:skill-name (from ~/.codex/superpowers/skills/)');
-    console.log('  Personal skills: skill-name (from ~/.codex/skills/)');
-    console.log('  Personal skills override superpowers skills when names match.');
+    console.log(`  Horspowers skills: ${namespace}:skill-name (from this repo's skills/)`);
+    console.log('  Personal skills: skill-name (from ~/.agents/skills/)');
+    console.log('  Personal skills override horspowers skills when names match.');
     console.log('');
-    console.log('Note: All skills are disclosed at session start via bootstrap.');
+    console.log('Note: Native skill discovery is preferred. This CLI is for compatibility.');
 }
 
 function runBootstrap() {
-    console.log('# Superpowers Bootstrap for Codex');
-    console.log('# ================================');
+    console.log('# Horspowers Bootstrap for Codex');
+    console.log('# ===============================');
     console.log('');
 
     // Check for updates (with timeout protection)
-    if (skillsCore.checkForUpdates(superpowersRepoDir)) {
+    if (skillsCore.checkForUpdates(repoDir)) {
         console.log('## Update Available');
         console.log('');
-        console.log('⚠️  Your superpowers installation is behind the latest version.');
-        console.log('To update, run: `cd ~/.codex/superpowers && git pull`');
+        console.log('Your horspowers installation is behind the latest version.');
+        console.log('To update, run: `cd ~/.codex/horspowers && git pull`');
         console.log('');
         console.log('---');
         console.log('');
@@ -109,16 +115,16 @@ function runBootstrap() {
     console.log('---');
     console.log('');
 
-    // Load the using-superpowers skill automatically
-    console.log('## Auto-loading superpowers:using-superpowers skill:');
+    // Load the using-horspowers skill automatically
+    console.log(`## Auto-loading ${namespace}:using-horspowers skill:`);
     console.log('');
-    runUseSkill('superpowers:using-superpowers');
+    runUseSkill(`${namespace}:using-horspowers`);
 
     console.log('');
     console.log('---');
     console.log('');
     console.log('# Bootstrap Complete!');
-    console.log('# You now have access to all superpowers skills.');
+    console.log('# You now have access to all horspowers skills.');
     console.log('# Use "superpowers-codex use-skill <skill>" to load and apply skills.');
     console.log('# Remember: If a skill applies to your task, you MUST use it!');
 }
@@ -127,20 +133,22 @@ function runUseSkill(skillName) {
     if (!skillName) {
         console.log('Usage: superpowers-codex use-skill <skill-name>');
         console.log('Examples:');
-        console.log('  superpowers-codex use-skill superpowers:brainstorming  # Load superpowers skill');
-        console.log('  superpowers-codex use-skill brainstorming              # Load personal skill (or superpowers if not found)');
+        console.log('  superpowers-codex use-skill horspowers:brainstorming  # Load horspowers skill');
+        console.log('  superpowers-codex use-skill brainstorming             # Load personal skill (or horspowers if not found)');
         console.log('  superpowers-codex use-skill my-custom-skill            # Load personal skill');
         return;
     }
 
     // Handle namespaced skill names
     let actualSkillPath;
-    let forceSuperpowers = false;
+    let forcePack = false;
 
-    if (skillName.startsWith('superpowers:')) {
-        // Remove the superpowers: namespace prefix
-        actualSkillPath = skillName.substring('superpowers:'.length);
-        forceSuperpowers = true;
+    if (skillName.startsWith(`${namespace}:`)) {
+        actualSkillPath = skillName.substring(`${namespace}:`.length);
+        forcePack = true;
+    } else if (skillName.startsWith(`${legacyNamespace}:`)) {
+        actualSkillPath = skillName.substring(`${legacyNamespace}:`.length);
+        forcePack = true;
     } else {
         actualSkillPath = skillName;
     }
@@ -168,16 +176,16 @@ function runUseSkill(skillName) {
 
     let skillFile = null;
 
-    // If superpowers: namespace was used, only check superpowers skills
-    if (forceSuperpowers) {
-        if (fs.existsSync(superpowersSkillsDir)) {
-            const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(superpowersPath);
+    // If a pack namespace was used, only check horspowers skills
+    if (forcePack) {
+        if (fs.existsSync(packSkillsDir)) {
+            const packPath = path.join(packSkillsDir, actualSkillPath);
+            skillFile = findSkillFile(packPath);
         }
     } else {
         // First check personal skills directory (takes precedence)
-        if (fs.existsSync(personalSkillsDir)) {
-            const personalPath = path.join(personalSkillsDir, actualSkillPath);
+        if (fs.existsSync(nativeSkillsRoot)) {
+            const personalPath = path.join(nativeSkillsRoot, actualSkillPath);
             skillFile = findSkillFile(personalPath);
             if (skillFile) {
                 console.log(`# Loading personal skill: ${actualSkillPath}`);
@@ -186,12 +194,12 @@ function runUseSkill(skillName) {
             }
         }
 
-        // If not found in personal, check superpowers skills
-        if (!skillFile && fs.existsSync(superpowersSkillsDir)) {
-            const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(superpowersPath);
+        // If not found in personal, check horspowers skills
+        if (!skillFile && fs.existsSync(packSkillsDir)) {
+            const packPath = path.join(packSkillsDir, actualSkillPath);
+            skillFile = findSkillFile(packPath);
             if (skillFile) {
-                console.log(`# Loading superpowers skill: superpowers:${actualSkillPath}`);
+                console.log(`# Loading horspowers skill: ${namespace}:${actualSkillPath}`);
                 console.log(`# Source: ${skillFile}`);
                 console.log('');
             }
@@ -220,8 +228,8 @@ function runUseSkill(skillName) {
     }
 
     // Display skill header with clean info
-    const displayName = forceSuperpowers ? `superpowers:${actualSkillPath}` :
-                       (skillFile.includes(personalSkillsDir) ? actualSkillPath : `superpowers:${actualSkillPath}`);
+    const displayName = forcePack ? `${namespace}:${actualSkillPath}` :
+                       (skillFile.includes(nativeSkillsRoot) ? actualSkillPath : `${namespace}:${actualSkillPath}`);
 
     const skillDirectory = path.dirname(skillFile);
 
@@ -261,7 +269,7 @@ switch (command) {
         console.log('');
         console.log('Examples:');
         console.log('  superpowers-codex bootstrap');
-        console.log('  superpowers-codex use-skill superpowers:brainstorming');
+        console.log('  superpowers-codex use-skill horspowers:brainstorming');
         console.log('  superpowers-codex use-skill my-custom-skill');
         break;
 }

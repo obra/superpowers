@@ -320,11 +320,11 @@ const personalDir = '$TEST_HOME/personal-skills';
 const shared = resolveSkillPath('shared-skill', superpowersDir, personalDir);
 console.log('SHARED:', JSON.stringify(shared));
 
-// Test 2: horspowers: prefix should force superpowers
+// Test 2: horspowers: prefix should force horspowers
 const forced = resolveSkillPath('horspowers:shared-skill', superpowersDir, personalDir);
 console.log('FORCED:', JSON.stringify(forced));
 
-// Test 3: Unique skill should resolve to superpowers
+// Test 3: Unique skill should resolve to horspowers
 const unique = resolveSkillPath('unique-skill', superpowersDir, personalDir);
 console.log('UNIQUE:', JSON.stringify(unique));
 
@@ -334,24 +334,24 @@ console.log('NOTFOUND:', JSON.stringify(notfound));
 " 2>&1)
 
 if echo "$result" | grep -q 'SHARED:.*"sourceType":"personal"'; then
-    echo "  [PASS] Personal skills shadow superpowers skills"
+    echo "  [PASS] Personal skills shadow horspowers skills"
 else
     echo "  [FAIL] Personal skills not shadowing correctly"
     echo "  Result: $result"
     exit 1
 fi
 
-if echo "$result" | grep -q 'FORCED:.*"sourceType":"superpowers"'; then
-    echo "  [PASS] horspowers: prefix forces superpowers resolution"
+if echo "$result" | grep -q 'FORCED:.*"sourceType":"horspowers"'; then
+    echo "  [PASS] horspowers: prefix forces horspowers resolution"
 else
     echo "  [FAIL] horspowers: prefix not working"
     exit 1
 fi
 
-if echo "$result" | grep -q 'UNIQUE:.*"sourceType":"superpowers"'; then
-    echo "  [PASS] Unique superpowers skills are found"
+if echo "$result" | grep -q 'UNIQUE:.*"sourceType":"horspowers"'; then
+    echo "  [PASS] Unique horspowers skills are found"
 else
-    echo "  [FAIL] Unique superpowers skills not found"
+    echo "  [FAIL] Unique horspowers skills not found"
     exit 1
 fi
 

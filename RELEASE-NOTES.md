@@ -1,5 +1,23 @@
 # Horspowers Release Notes
 
+## v4.4.0 (2026-04-29)
+
+### New Features
+
+**同步上游 brainstorming / Codex 兼容能力**
+- 对齐持续执行与 worktree 检测/延迟策略，强化隔离开发流程
+- 为 brainstorming 与 writing-plans 增加文档审查门禁，补齐 Claude Code 与 Codex 的测试覆盖
+- 完善 brainstorming visual companion 指南，并提供独立的脑暴服务测试入口
+
+### Testing
+
+**稳定客户端兼容性测试**
+- 稳定 Claude Code 技能测试提示词，降低因模型自由发挥导致的误报
+- 验证 `tests/claude-code/run-skill-tests.sh --suite full` 全量通过
+- 验证 Codex 文档审查流程与 brainstorm server 测试可独立运行
+
+---
+
 ## v4.3.4 (2026-02-12)
 
 ### Bug Fixes
