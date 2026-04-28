@@ -29,9 +29,10 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** - with trade-offs and your recommendation
 5. **Present design** - in sections scaled to complexity, get approval
 6. **Decide whether to write a design doc** - based on documentation settings and decision importance
-7. **Spec self-review** - if a design doc is written, check for placeholders, ambiguity, contradictions, and overscope
-8. **User reviews written spec** - if a design doc is written, ask the user to review it before moving on
-9. **Transition to implementation planning** - invoke writing-plans, not implementation
+7. **Structured spec review** - if a design doc is written, review it against the reviewer prompt criteria
+8. **Fix review issues** - if the review finds blockers, update the design doc and review again
+9. **User reviews written spec** - if a design doc is written, ask the user to review it before moving on
+10. **Transition to implementation planning** - invoke writing-plans, not implementation
 
 ## Process Flow
 
@@ -48,7 +49,9 @@ digraph brainstorming {
     "User approves design?" [shape=diamond];
     "Write design doc?" [shape=diamond];
     "Write design doc" [shape=box];
-    "Spec self-review" [shape=box];
+    "Structured spec review" [shape=box];
+    "Review issues found?" [shape=diamond];
+    "Fix design doc" [shape=box];
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
@@ -66,9 +69,12 @@ digraph brainstorming {
     "User approves design?" -> "Write design doc?" [label="yes"];
     "Write design doc?" -> "Write design doc" [label="yes"];
     "Write design doc?" -> "Invoke writing-plans skill" [label="no"];
-    "Write design doc" -> "Spec self-review";
-    "Spec self-review" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
+    "Write design doc" -> "Structured spec review";
+    "Structured spec review" -> "Review issues found?";
+    "Review issues found?" -> "Fix design doc" [label="yes"];
+    "Fix design doc" -> "Structured spec review";
+    "Review issues found?" -> "User reviews spec?" [label="no"];
+    "User reviews spec?" -> "Fix design doc" [label="changes requested"];
     "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
 }
 ```
@@ -160,19 +166,28 @@ IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 - Commit the design document to git
 
 **Spec Self-Review (如果已写设计文档):**
-After writing the design doc, check it quickly with fresh eyes:
+After writing the design doc in `docs/plans/`, run a structured review before asking the user to review it.
 
-1. **Placeholder scan:** Any "TODO", "TBD", unfinished sections, or vague requirements? Fix them.
+Use `skills/brainstorming/spec-document-reviewer-prompt.md` as the review criteria:
+
+1. **If the host supports subagents:** dispatch a reviewer using that prompt against the design doc.
+2. **If the host does not support subagents:** do the equivalent local self-review using the same criteria and output structure.
+
+The review must check for:
+
+1. **Completeness:** Any "TODO", "TBD", unfinished sections, "deferred definition", "decide later", or "to be defined during implementation" language? Fix it.
 2. **Internal consistency:** Do any sections contradict each other?
 3. **Scope check:** Is this still small enough for a single implementation plan?
-4. **Ambiguity check:** Could an engineer reasonably interpret a requirement in two different ways?
+4. **Implementation-blocking ambiguity:** Could an engineer reasonably interpret a requirement in two different ways, or be forced to make a missing design decision during implementation?
+5. **YAGNI:** Did the design doc add features or complexity the user did not ask for?
 
-Fix issues inline. Do not move forward with an obviously fuzzy spec.
+Fix blocking issues inline and rerun the structured review until it passes. Do not move forward with an obviously fuzzy spec, and do not start implementation from brainstorming.
 
 **User Review Gate (如果已写设计文档):**
-- Tell the user: "设计已保存到文档。请先检查文档内容；如果需要修改，我会先调整文档，再进入实施计划。"
+- Only ask for user review after the structured review has passed.
+- Tell the user: "设计已保存到文档，并已完成结构化审查。请先检查文档内容；如果需要修改，我会先调整文档，再进入实施计划。"
 - Wait for user confirmation - they may edit the document before proceeding
-- If the user requests changes, update the document and rerun the spec self-review
+- If the user requests changes, update the document in `docs/plans/` and rerun the structured review before asking for approval again
 - Only proceed once the user approves the document
 
 **Document as communication medium:**
@@ -183,6 +198,7 @@ Fix issues inline. Do not move forward with an obviously fuzzy spec.
 **Implementation (if continuing):**
 - Do NOT start implementation directly from brainstorming
 - The next skill is horspowers:writing-plans
+- Only invoke writing-plans after the design doc review loop and user approval are complete
 - writing-plans can then decide how implementation should be executed
 
 ## Visual Companion
