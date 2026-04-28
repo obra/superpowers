@@ -41,6 +41,14 @@ digraph when_to_use {
 
 ## The Process
 
+### Step 0: Set Up Isolated Workspace
+
+Before reading the plan, ensure work happens in an isolated workspace.
+
+- Announce: "I'm using the using-git-worktrees skill to set up the workspace."
+- **REQUIRED SUB-SKILL:** Use superpowers:using-git-worktrees
+- That skill detects existing isolation, asks for consent if needed, and honors any declared preference. If the user declines, it works in place. Do not skip this step — it is what surfaces the workspace decision before implementation begins.
+
 ```dot
 digraph process {
     rankdir=TB;
@@ -60,11 +68,13 @@ digraph process {
         "Mark task complete in TodoWrite" [shape=box];
     }
 
+    "Use superpowers:using-git-worktrees" [shape=box style=filled fillcolor=lightgreen];
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
+    "Use superpowers:using-git-worktrees" -> "Read plan, extract all tasks with full text, note context, create TodoWrite";
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
@@ -129,6 +139,8 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
+
+[Step 0: Use superpowers:using-git-worktrees — workspace decision honored]
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
@@ -237,6 +249,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
+- Skip Step 0 (using-git-worktrees) before reading the plan
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)

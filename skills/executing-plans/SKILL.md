@@ -15,6 +15,14 @@ Load plan, review critically, execute all tasks, report when complete.
 
 ## The Process
 
+### Step 0: Set Up Isolated Workspace
+
+Before loading the plan, ensure work happens in an isolated workspace.
+
+- Announce: "I'm using the using-git-worktrees skill to set up the workspace."
+- **REQUIRED SUB-SKILL:** Use superpowers:using-git-worktrees
+- That skill detects existing isolation, asks for consent if needed, and honors any declared preference. If the user declines, it works in place. Do not skip this step — it is what surfaces the workspace decision before implementation begins.
+
 ### Step 1: Load and Review Plan
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
@@ -55,6 +63,7 @@ After all tasks complete and verified:
 **Don't force through blockers** - stop and ask.
 
 ## Remember
+- Set up the workspace via using-git-worktrees BEFORE loading the plan (Step 0)
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
