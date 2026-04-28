@@ -135,8 +135,7 @@ EOF
 
 # Note: We use a longer timeout since this is integration testing
 # Use --allowed-tools to enable tool usage in headless mode
-# IMPORTANT: Run from superpowers directory so local dev skills are available
-PROMPT="Change to directory $TEST_PROJECT and then execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
+PROMPT="Execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
@@ -147,9 +146,14 @@ IMPORTANT: Follow the skill exactly. I will be verifying that you:
 
 Begin now. Execute the plan."
 
-echo "Running Claude (output will be shown below and saved to $OUTPUT_FILE)..."
+PLUGIN_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
+
+# Run claude from inside the test project so its session JSONL lands in a
+# project-specific directory under ~/.claude/projects/, isolated from any
+# other concurrent claude sessions.
+echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
-cd "$SCRIPT_DIR/../.." && timeout 1800 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
     echo ""
     echo "================================================================================"
     echo "EXECUTION FAILED (exit code: $?)"
@@ -161,13 +165,17 @@ echo ""
 echo "Execution complete. Analyzing results..."
 echo ""
 
-# Find the session transcript
-# Session files are in ~/.claude/projects/-<working-dir>/<session-id>.jsonl
-WORKING_DIR_ESCAPED=$(echo "$SCRIPT_DIR/../.." | sed 's/\//-/g' | sed 's/^-//')
-SESSION_DIR="$HOME/.claude/projects/$WORKING_DIR_ESCAPED"
-
-# Find the most recent session file (created during this test run)
-SESSION_FILE=$(find "$SESSION_DIR" -name "*.jsonl" -type f -mmin -60 2>/dev/null | sort -r | head -1)
+# Find the session transcript. Because we ran claude from $TEST_PROJECT (a
+# unique tmp dir), its sessions live in their own ~/.claude/projects/ folder
+# and we can pick the most-recent one without racing other concurrent sessions.
+# Resolve the real path because macOS mktemp returns /var/... but claude
+# normalizes it to /private/var/... when naming the project dir.
+TEST_PROJECT_REAL=$(cd "$TEST_PROJECT" && pwd -P)
+# Claude normalizes the cwd to a directory name by replacing every non-alphanumeric
+# character with `-` (so `_`, `.`, `/` all become `-`).
+SESSION_DIR="$HOME/.claude/projects/$(echo "$TEST_PROJECT_REAL" | sed 's|[^a-zA-Z0-9]|-|g')"
+# `|| true` prevents pipefail killing the script if ls gets SIGPIPE'd by head.
+SESSION_FILE=$(ls -t "$SESSION_DIR"/*.jsonl 2>/dev/null | head -1 || true)
 
 if [ -z "$SESSION_FILE" ]; then
     echo "ERROR: Could not find session transcript file"
@@ -194,9 +202,9 @@ else
 fi
 echo ""
 
-# Test 2: Subagents were used (Task tool)
+# Test 2: Subagents were used (Agent / Task tool — name varies by harness version)
 echo "Test 2: Subagents dispatched..."
-task_count=$(grep -c '"name":"Task"' "$SESSION_FILE" || echo "0")
+task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || echo "0")
 if [ "$task_count" -ge 2 ]; then
     echo "  [PASS] $task_count subagents dispatched"
 else
