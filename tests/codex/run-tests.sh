@@ -12,6 +12,8 @@ echo ""
 bash "$SCRIPT_DIR/test-legacy-cli.sh"
 echo ""
 bash "$SCRIPT_DIR/test-native-discovery.sh"
+echo ""
+bash "$SCRIPT_DIR/test-document-review-flow.sh"
 
 echo ""
 echo "========================================"
