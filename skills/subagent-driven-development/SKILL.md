@@ -61,11 +61,15 @@ digraph process {
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Check pre-task extensions" [shape=box style=filled fillcolor=lightyellow];
     "More tasks remain?" [shape=diamond];
+    "Check post-task extensions" [shape=box style=filled fillcolor=lightyellow];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Check post-execution extensions" [shape=box style=filled fillcolor=lightyellow];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Check pre-task extensions";
+    "Check pre-task extensions" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -79,10 +83,12 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "Mark task complete in TodoWrite" -> "Check post-task extensions";
+    "Check post-task extensions" -> "More tasks remain?";
+    "More tasks remain?" -> "Check pre-task extensions" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Check post-execution extensions";
+    "Check post-execution extensions" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 

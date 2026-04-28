@@ -74,11 +74,14 @@ done
 # List of skill tests to run (fast unit tests)
 tests=(
     "test-subagent-driven-development.sh"
+    "test-lifecycle-extensions-hook.sh"
+    "test-lifecycle-extensions.sh"
 )
 
 # Integration tests (slow, full execution)
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
+    "test-lifecycle-extensions-integration.sh"
 )
 
 # Add integration tests if requested

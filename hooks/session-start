@@ -30,9 +30,112 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
+# Parse a simple extensions.yaml file.
+# Format:
+#   extensions:
+#     event-name:
+#       - skill-name
+# Outputs tab-separated lines like: event-name<TAB>skill-name
+parse_extensions_yaml() {
+    local file="$1"
+    [ -f "$file" ] || return 0
+    local current_event=""
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip blank lines, comments, and the top-level "extensions:" key
+        case "$line" in
+            ''|'#'*|'extensions:'|'extensions: '*)
+                continue
+                ;;
+        esac
+        # Detect event key (indented, ends with colon, no dash prefix)
+        if printf '%s' "$line" | grep -qE '^[[:space:]]+[a-z].*:$'; then
+            current_event=$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/:$//')
+        # Detect skill entry (indented, starts with dash)
+        elif printf '%s' "$line" | grep -qE '^[[:space:]]+-[[:space:]]'; then
+            if [ -n "$current_event" ]; then
+                local skill_name
+                skill_name=$(printf '%s' "$line" | sed 's/^[[:space:]]*-[[:space:]]*//')
+                printf '%s\t%s\n' "$current_event" "$skill_name"
+            fi
+        fi
+    done < "$file"
+}
+
+# Find the nearest project extensions manifest.
+# Prefer the git repo root when available, then walk upward from $PWD.
+find_project_extensions_file() {
+    local git_root=""
+    local search_dir="$PWD"
+
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [ -n "$git_root" ] && [ -f "$git_root/.superpowers/extensions.yaml" ]; then
+        printf '%s\n' "$git_root/.superpowers/extensions.yaml"
+        return 0
+    fi
+
+    while [ "$search_dir" != "/" ]; do
+        if [ -f "$search_dir/.superpowers/extensions.yaml" ]; then
+            printf '%s\n' "$search_dir/.superpowers/extensions.yaml"
+            return 0
+        fi
+        search_dir=$(dirname "$search_dir")
+    done
+
+    return 1
+}
+
+# Merge personal and project extensions into a registry string.
+# Project entries append after personal entries for each event.
+# Output format for injection:
+#   Extensions Registry:
+#   - post-execution: compound-learning, integration-smoke-test
+#   - post-review: security-audit
+build_extensions_registry() {
+    local personal_file="${HOME}/.superpowers/extensions.yaml"
+    local project_file=""
+    local tmpfile
+    tmpfile=$(mktemp)
+
+    parse_extensions_yaml "$personal_file" >> "$tmpfile"
+    project_file=$(find_project_extensions_file || true)
+    if [ -n "$project_file" ]; then
+        parse_extensions_yaml "$project_file" >> "$tmpfile"
+    fi
+
+    if [ ! -s "$tmpfile" ]; then
+        rm -f "$tmpfile"
+        return 0
+    fi
+
+    # Collect unique events in order of first appearance
+    local events
+    events=$(awk -F'\t' '{print $1}' "$tmpfile" | awk '!seen[$0]++')
+
+    printf 'Extensions Registry (invoke each skill via Skill tool at the matching lifecycle event):\n'
+    while IFS= read -r event; do
+        [ -z "$event" ] && continue
+        local skills
+        skills=$(awk -F'\t' -v event="$event" '
+            $1 == event { printf "%s%s", sep, $2; sep=", " }
+        ' "$tmpfile")
+        printf -- '- %s: %s\n' "$event" "$skills"
+    done <<< "$events"
+
+    rm -f "$tmpfile"
+}
+
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# Build extensions registry from manifest files
+extensions_registry=$(build_extensions_registry)
+extensions_escaped=$(escape_for_json "$extensions_registry")
+
+extensions_section=""
+if [ -n "$extensions_registry" ]; then
+    extensions_section="\n\n---\n\n${extensions_escaped}"
+fi
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${extensions_section}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Cursor hooks expect additional_context (snake_case).
