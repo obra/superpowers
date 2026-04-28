@@ -6,7 +6,7 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 |-----------------|------------------|
 | `Task` tool (dispatch subagent) | `spawn_agent` (see [Named agent dispatch](#named-agent-dispatch)) |
 | Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
-| Task returns result | `wait` |
+| Task returns result | `wait_agent` |
 | Task completes automatically | `close_agent` to free slot |
 | `TodoWrite` (task tracking) | `update_plan` |
 | `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
@@ -22,7 +22,12 @@ Add to your Codex config (`~/.codex/config.toml`):
 multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+
+Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
+waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The
+`wait` name now belongs to code-mode `exec/wait`, which resumes a yielded exec
+cell by `cell_id`; it is not the spawned-agent result tool.
 
 ## Named agent dispatch
 
