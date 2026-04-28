@@ -12,12 +12,14 @@ echo " Upgrade Skill Tests"
 echo "========================================="
 echo ""
 
+SKILL_PATH="skills/upgrade/SKILL.md"
+
 # Test: upgrade skill is available
 test_upgrade_availability() {
     echo "Test: upgrade skill availability..."
 
     local output
-    output=$(run_claude "What is the upgrade skill for? When should it be used?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. What is the upgrade skill for? When should it be used?" 120)
 
     if echo "$output" | grep -qi "upgrade"; then
         echo "  [PASS] upgrade skill is available"
@@ -34,7 +36,7 @@ test_upgrade_mentions_version() {
     echo "Test: upgrade mentions version checking..."
 
     local output
-    output=$(run_claude "Use the upgrade skill. What version checking does it do?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. What version checking does it do?" 120)
 
     if echo "$output" | grep -qE "(version|版本|4\.2|upgrade)"; then
         echo "  [PASS] upgrade mentions version checking"
@@ -51,7 +53,7 @@ test_upgrade_handles_ddaw() {
     echo "Test: upgrade handles DDAW directory..."
 
     local output
-    output=$(run_claude "Use the upgrade skill. What does it do with document-driven-ai-workflow directory?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. What does the upgrade skill do with document-driven-ai-workflow directory?" 120)
 
     if echo "$output" | grep -qE "(DDAW|document-driven|迁移|移除|备份|trash)"; then
         echo "  [PASS] upgrade handles DDAW directory"
@@ -68,7 +70,7 @@ test_upgrade_mentions_docs_migration() {
     echo "Test: upgrade mentions docs migration..."
 
     local output
-    output=$(run_claude "Use the upgrade skill. What documentation migration does it perform?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. What documentation migration does the upgrade skill perform?" 120)
 
     if echo "$output" | grep -qE "(docs|文档|migrate|迁移|统一)"; then
         echo "  [PASS] upgrade mentions docs migration"
@@ -85,7 +87,7 @@ test_upgrade_command_invokes_skill() {
     echo "Test: /upgrade command invokes upgrade skill..."
 
     local output
-    output=$(run_claude "Run /upgrade command" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. If a user runs /upgrade command, which skill should be invoked and what is it for? Answer briefly." 120)
 
     # The command should trigger the skill
     if echo "$output" | grep -qiE "(upgrade|版本|升级|version)"; then

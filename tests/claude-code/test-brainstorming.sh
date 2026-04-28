@@ -12,12 +12,14 @@ echo " Brainstorming Skill Tests"
 echo "========================================="
 echo ""
 
+SKILL_PATH="skills/brainstorming/SKILL.md"
+
 # Test: brainstorming skill is available and describes its purpose
 test_brainstorming_availability() {
     echo "Test: brainstorming skill availability..."
 
     local output
-    output=$(run_claude "What is the brainstorming skill for? When should it be used?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. What is the brainstorming skill for? When should it be used?" 120)
 
     # Case-insensitive match for "brainstorming" or "Brainstorming"
     if echo "$output" | grep -qi "brainstorming"; then
@@ -34,7 +36,7 @@ test_brainstorming_chinese_announcement() {
     echo "Test: brainstorming Chinese announcement..."
 
     local output
-    output=$(run_claude "Use the brainstorming skill to help me design a simple feature" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. If brainstorming is active, how does it announce itself? Answer briefly." 120)
 
     # Check for Chinese interaction (skill is active and responding in Chinese)
     # The skill may use AskUserQuestion or other tools, so we check for Chinese content
@@ -53,7 +55,7 @@ test_brainstorming_asks_questions() {
     echo "Test: brainstorming asks clarifying questions..."
 
     local output
-    output=$(run_claude "I want to add a login feature. Use brainstorming to help me design it." 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. If a user says they want to add a login feature, how should brainstorming engage before presenting a design?" 120)
 
     # Check for any interactive element or brainstorming invocation
     # If output is very short, the skill may be waiting for user input (AskUserQuestion)
@@ -95,7 +97,7 @@ test_brainstorming_proposes_approaches() {
     echo "Test: brainstorming proposes multiple approaches..."
 
     local output
-    output=$(run_claude "Use brainstorming to design a caching strategy. What approaches would you consider?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. When brainstorming a caching strategy, should it propose multiple approaches or jump straight to one answer? Mention approaches or options briefly." 180)
 
     # Check for options/approaches - including A/B/C/D options or numbered lists
     # Enhanced regex to match various option formats
@@ -114,7 +116,7 @@ test_brainstorming_design_sections() {
     echo "Test: brainstorming covers design sections..."
 
     local output
-    output=$(run_claude "Use brainstorming skill. Briefly list common sections in a design document." 180)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. Briefly list common sections brainstorming should cover when presenting a design." 180)
 
     # Check for key design sections (both English and Chinese)
     local found_sections=0
@@ -149,7 +151,7 @@ test_brainstorming_creates_docs() {
     echo "Test: brainstorming creates design documents..."
 
     local output
-    output=$(run_claude "In the brainstorming skill, what happens after the design is validated? Where is it saved?" 120)
+    output=$(run_claude "Read $SKILL_PATH in the current workspace and answer only from that file. After the design is validated, what happens next and where is it saved?" 120)
 
     if echo "$output" | grep -q "docs/plans"; then
         echo "  [PASS] brainstorming saves to docs/plans"
