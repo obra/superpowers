@@ -50,8 +50,31 @@ fi
 
 echo ""
 
-# Test 3: Verify self-review is mentioned
-echo "Test 3: Self-review requirement..."
+# Test 3: Verify continuous execution semantics
+echo "Test 3: Continuous execution..."
+
+output=$(run_claude "In the subagent-driven-development skill, should the controller pause between tasks for a 'Should I continue?' style check-in, or continue executing? State the stop conditions briefly." 120)
+
+if echo "$output" | grep -qiE "(do not pause|don't pause|no pause|without stopping|continue.*next task|continue executing|不.*暂停|不要.*停下来确认|不要.*询问是否继续|直接继续)"; then
+    : # pass
+else
+    echo "  [FAIL] Should explicitly avoid pause-for-confirmation check-ins between tasks"
+    echo "  Output: $(echo "$output" | head -30)"
+    exit 1
+fi
+
+if echo "$output" | grep -qiE "(blocked|blocker|genuine ambiguity|real ambiguity|unclear instruction|all tasks complete|任务全部完成|遇到阻塞|真实歧义|真正.*歧义|全部完成)"; then
+    : # pass
+else
+    echo "  [FAIL] Should restrict stopping to blockers, genuine ambiguity, or full completion"
+    echo "  Output: $(echo "$output" | head -30)"
+    exit 1
+fi
+
+echo ""
+
+# Test 4: Verify self-review is mentioned
+echo "Test 4: Self-review requirement..."
 
 output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? Answer in one sentence, then give exactly two short checklist items." 120)
 
@@ -71,8 +94,8 @@ fi
 
 echo ""
 
-# Test 4: Verify plan is read once
-echo "Test 4: Plan reading efficiency..."
+# Test 5: Verify plan is read once
+echo "Test 5: Plan reading efficiency..."
 
 output=$(run_claude "In subagent-driven-development, does the controller read the plan once before any task execution begins, or later during execution? Answer briefly." 120)
 
@@ -92,8 +115,8 @@ fi
 
 echo ""
 
-# Test 5: Verify spec compliance reviewer is skeptical
-echo "Test 5: Spec compliance reviewer mindset..."
+# Test 6: Verify spec compliance reviewer is skeptical
+echo "Test 6: Spec compliance reviewer mindset..."
 
 output=$(run_claude "In subagent-driven-development, should the spec compliance reviewer inspect actual implementation code directly, or rely on the implementer's summary? Answer briefly." 120)
 
@@ -113,8 +136,8 @@ fi
 
 echo ""
 
-# Test 6: Verify review loops
-echo "Test 6: Review loop requirements..."
+# Test 7: Verify review loops
+echo "Test 7: Review loop requirements..."
 
 output=$(run_claude "In subagent-driven-development, what happens if a reviewer finds issues? Is it a one-time review or a loop?" 120)
 
@@ -134,8 +157,8 @@ fi
 
 echo ""
 
-# Test 7: Verify full task text is provided
-echo "Test 7: Task context provision..."
+# Test 8: Verify full task text is provided
+echo "Test 8: Task context provision..."
 
 output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Does it make them read a file or provide it directly?" 120)
 

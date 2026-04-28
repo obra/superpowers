@@ -34,12 +34,14 @@ Task tool (general-purpose):
     3. Verify implementation works
     4. Commit your work
     5. Self-review (see below)
-    6. Report back
+    6. Report back once the task is complete or you are BLOCKED
 
     Work from: [directory]
 
-    **While you work:** If you encounter something unexpected or unclear, **ask questions**.
-    It's always OK to pause and clarify. Don't guess or make assumptions.
+    **Execution rule:** Keep working until the task is complete. Do not stop for interim progress summaries or "Should I continue?" check-ins.
+
+    **While you work:** If you encounter something unexpected or unclear that blocks safe progress, **ask questions**.
+    Don't guess or make assumptions.
 
     ## Before Reporting Back: Self-Review
 

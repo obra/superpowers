@@ -9,6 +9,8 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+**Continuous execution:** After reading the plan and extracting task context, continue straight into the next task without "Should I continue?" style check-ins. Only stop for `BLOCKED` status, genuine ambiguity that prevents safe progress, or when all tasks are complete.
+
 **Announce at start:** "我正在使用子代理驱动开发技能来执行这个计划..." (I'm using subagent-driven development to execute this plan...)
 
 ## When to Use
@@ -284,6 +286,8 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Pause between tasks for routine progress check-ins or "Should I continue?" confirmations
+- Stop after a normal task/review cycle unless you are `BLOCKED`, genuinely ambiguous, or finished with all tasks
 
 **If subagent asks questions:**
 - Answer clearly and completely
