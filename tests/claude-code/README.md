@@ -49,6 +49,21 @@ bash ./test-worktree-native-preference.sh green
 
 This targeted test verifies prompt behavior only: when native worktree tools are available in model context, the skill should prefer them over `git worktree add`, treat user consent to create isolation as enough to use the native tool, and keep manual git commands as fallback-only.
 
+### Run the document review system probe directly
+
+```bash
+bash ./test-document-review-system.sh green
+```
+
+This targeted semantic probe verifies the local design-doc and plan-doc reviewer flow by explicitly reading current-workspace files:
+
+- `skills/brainstorming/SKILL.md`
+- `skills/brainstorming/spec-document-reviewer-prompt.md`
+- `skills/writing-plans/SKILL.md`
+- `skills/writing-plans/plan-document-reviewer-prompt.md`
+
+It checks that brainstorming runs structured spec review before user review, and that writing-plans runs plan review against the related `docs/plans/` design/spec before execution handoff. Keep it as a direct-run probe rather than routine smoke because it uses longer semantic prompts and is more exposed to Claude CLI latency/flakiness than the default suite.
+
 ### Preview the selected suite without running Claude
 
 ```bash
@@ -93,8 +108,9 @@ These tests ask broader semantic questions and take substantially longer than sm
 ### Standalone Targeted Checks
 
 - `test-worktree-native-preference.sh`: verifies native worktree tool preference, consent bridging, and `git worktree add` fallback semantics for `using-git-worktrees`
+- `test-document-review-system.sh`: verifies the new document reviewer flow for both brainstorming spec review and writing-plans plan review using current-workspace prompt files
 
-This test is intended for direct invocation with `green` mode rather than automatic suite membership.
+These tests are intended for direct invocation with `green` mode rather than automatic suite membership.
 
 ### Integration Suite
 

@@ -23,7 +23,7 @@ Behavior:
 - defaults to `smoke`
 - supports `smoke`, `full`, and `integration`
 - supports `--list` to preview without running Claude
-- does not automatically include targeted direct-run probes such as `test-worktree-native-preference.sh`
+- does not automatically include targeted direct-run probes such as `test-worktree-native-preference.sh` or `test-document-review-system.sh`
 
 ### `run-skill-tests-interactive.sh`
 
@@ -81,7 +81,8 @@ Use only when you need end-to-end evidence.
 1. Run `./tests/claude-code/run-skill-tests.sh`
 2. If skill content changed, run `./tests/claude-code/run-skill-tests.sh --suite full`
 3. If `skills/using-git-worktrees/SKILL.md` changed, run `bash ./tests/claude-code/test-worktree-native-preference.sh green`
-4. Run integration only when workflow behavior was touched
+4. If `skills/brainstorming/SKILL.md`, `skills/brainstorming/spec-document-reviewer-prompt.md`, `skills/writing-plans/SKILL.md`, or `skills/writing-plans/plan-document-reviewer-prompt.md` changed, run `bash ./tests/claude-code/test-document-review-system.sh green`
+5. Run integration only when workflow behavior was touched
 
 ## Direct-Run Targeted Tests
 
@@ -104,6 +105,27 @@ What it does not verify:
 - actual worktree creation
 - real tool invocation success
 - suite membership or end-to-end isolation setup
+
+### `test-document-review-system.sh`
+
+Use this when validating the document reviewer flow for brainstorming and writing-plans.
+
+```bash
+bash ./tests/claude-code/test-document-review-system.sh green
+```
+
+What it verifies:
+
+- prompts explicitly reference current-workspace reviewer files instead of trusting an installed skill copy
+- brainstorming routes `docs/plans/` design docs through structured spec review before the user review gate
+- writing-plans routes `docs/plans/` plan docs through plan review against the related design/spec before execution handoff
+- both reviewer prompts preserve blocking-vs-advisory calibration
+
+What it does not verify:
+
+- actual subagent dispatch
+- creation of real design or plan documents
+- suite membership or full workflow execution
 
 ## Queue Preview
 
