@@ -41,6 +41,14 @@ This suite verifies that skills are loaded correctly and that Claude follows the
 ./run-skill-tests.sh --test test-subagent-driven-development.sh
 ```
 
+### Run the native worktree preference check directly
+
+```bash
+bash ./test-worktree-native-preference.sh green
+```
+
+This targeted test verifies prompt behavior only: when native worktree tools are available in model context, the skill should prefer them over `git worktree add`, treat user consent to create isolation as enough to use the native tool, and keep manual git commands as fallback-only.
+
 ### Preview the selected suite without running Claude
 
 ```bash
@@ -81,6 +89,12 @@ This suite verifies that skills are loaded correctly and that Claude follows the
 - `test-upgrade.sh`
 
 These tests ask broader semantic questions and take substantially longer than smoke.
+
+### Standalone Targeted Checks
+
+- `test-worktree-native-preference.sh`: verifies native worktree tool preference, consent bridging, and `git worktree add` fallback semantics for `using-git-worktrees`
+
+This test is intended for direct invocation with `green` mode rather than automatic suite membership.
 
 ### Integration Suite
 
@@ -126,6 +140,8 @@ Run integration only when you explicitly need workflow-level validation.
 2. Source `test-helpers.sh`
 3. Add the test to the appropriate suite in `suite-helpers.sh`
 4. Make the file executable
+
+For targeted semantic probes that are useful during skill rewrites but not desirable in routine suite runs, document the direct invocation command in this file and in `TEST-RUNNERS.md`.
 
 ## Notes
 

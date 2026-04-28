@@ -23,6 +23,7 @@ Behavior:
 - defaults to `smoke`
 - supports `smoke`, `full`, and `integration`
 - supports `--list` to preview without running Claude
+- does not automatically include targeted direct-run probes such as `test-worktree-native-preference.sh`
 
 ### `run-skill-tests-interactive.sh`
 
@@ -79,7 +80,30 @@ Use only when you need end-to-end evidence.
 
 1. Run `./tests/claude-code/run-skill-tests.sh`
 2. If skill content changed, run `./tests/claude-code/run-skill-tests.sh --suite full`
-3. Run integration only when workflow behavior was touched
+3. If `skills/using-git-worktrees/SKILL.md` changed, run `bash ./tests/claude-code/test-worktree-native-preference.sh green`
+4. Run integration only when workflow behavior was touched
+
+## Direct-Run Targeted Tests
+
+### `test-worktree-native-preference.sh`
+
+Use this when validating `using-git-worktrees` prompt wording around native tool preference.
+
+```bash
+bash ./tests/claude-code/test-worktree-native-preference.sh green
+```
+
+What it verifies:
+
+- native worktree tools are named and preferred when available
+- user consent to create an isolated workspace authorizes direct native tool usage
+- `git worktree add` remains fallback-only, not the default answer when native tools exist
+
+What it does not verify:
+
+- actual worktree creation
+- real tool invocation success
+- suite membership or end-to-end isolation setup
 
 ## Queue Preview
 
