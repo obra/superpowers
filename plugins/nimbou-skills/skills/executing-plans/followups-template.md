@@ -6,7 +6,7 @@ Skeleton for the `<plan>.followups.md` artifact that `nimbou-skills:executing-pl
 
 **Allowed `<Tipo>` values:**
 
-- `spec-deferred` — `⚠️ Deferred` items returned by the per-task spec reviewer.
+- `spec-deferred` — `⚠️ Deferred` items returned by the per-wave spec reviewer (in `executing-plans`) or the per-task spec reviewer (in `subagent-driven-development`).
 - `review-minor` — Minor findings from the wave-level `nimbou-skills:request-review`.
 - `review-important` — Important findings from the wave-level `nimbou-skills:request-review` that were not treated as blockers.
 - `concern` — Controller-reported concerns during execution (architectural doubt, file growing too large, refactor suggestion, etc.).
@@ -21,7 +21,7 @@ Geradas em <YYYY-MM-DD> a partir de `<caminho relativo do plano>`.
 
 ## Itens
 
-- [ ] **<Tipo>** — <Origem (Onda N / Task X / reviewer Y)> — <Descrição em uma linha>
+- [ ] **<Tipo>** — <Origem (Onda N / reviewer Y)> — <Descrição em uma linha>
   - Ref: `<file:line>` <!-- omit when not applicable -->
   - Próximo passo: <ação concreta sugerida pelo reviewer ou "a definir">
 
@@ -42,7 +42,7 @@ Geradas em <YYYY-MM-DD> a partir de `<caminho relativo do plano>`.
 **Rules for the controller filling this in:**
 
 1. One bullet per finding. Never merge two reviewer items into a single bullet — each is independently actionable.
-2. Always carry the `<Origem>` so a reader can trace back to the wave/task that produced the item.
+2. Always carry the `<Origem>` so a reader can trace back to the wave/reviewer that produced the item.
 3. Keep `Ref:` only when there is a concrete file/line. Do not invent paths to satisfy the template.
 4. The `Próximo passo` line is required. If the reviewer did not propose one, write `a definir` rather than leaving it empty.
 5. Inherit `## Pos-execucao` items **verbatim** — do not paraphrase. They were already approved as part of the plan.

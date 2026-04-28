@@ -1,36 +1,45 @@
 # Spec Compliance Reviewer Prompt Template
 
-Use this template when dispatching a spec compliance reviewer subagent **after the controller agent itself has executed a task** under `nimbou-skills:executing-plans`.
+Use this template when dispatching a spec compliance reviewer subagent **after the controller agent itself has executed every task in a wave** under `nimbou-skills:executing-plans`.
 
-**Purpose:** Verify the controller built what the task spec requested — nothing more, nothing less — by inspecting the actual diff, not by trusting the controller's own claim of done.
+**Purpose:** Verify the controller built what the wave's tasks requested — nothing more, nothing less — by inspecting the actual combined diff of the wave, not by trusting the controller's own claim of done.
 
-**Note on `⚠️ Deferred`:** This template adds a third reporting bucket on top of the standard `✅` / `❌` outputs. Use `⚠️ Deferred` for items that fall outside the task spec but are reasonable to leave for later (e.g., a pre-existing inconsistency the controller chose not to touch, a refactor the spec did not call for, a comment-level cleanup). These items are not blockers; they feed the post-execution `<plan>.followups.md` artifact produced by `executing-plans` Step 3.
+**Scope:** One dispatch per wave, covering every task that ran inside that wave. Do not split this into per-task dispatches; the wave is the unit of review here.
+
+**Note on `⚠️ Deferred`:** This template adds a third reporting bucket on top of the standard `✅` / `❌` outputs. Use `⚠️ Deferred` for items that fall outside the wave's task specs but are reasonable to leave for later (e.g., a pre-existing inconsistency the controller chose not to touch, a refactor the spec did not call for, a comment-level cleanup). These items are not blockers; they feed the post-execution `<plan>.followups.md` artifact produced by `executing-plans` Step 3.
 
 ```
 Task tool (general-purpose):
-  description: "Review spec compliance for Task N (controller-executed)"
+  description: "Review spec compliance for Onda N (controller-executed)"
   prompt: |
-    You are reviewing whether a task implementation matches its specification.
+    You are reviewing whether a wave's implementation matches its specification.
 
-    The work was performed by the controller agent itself (no implementer subagent).
-    The controller has just claimed this task is done. Do not trust that claim.
+    The work was performed by the controller agent itself (no implementer subagent),
+    across every task declared inside this wave. The controller has just claimed
+    the wave is done. Do not trust that claim.
 
     ## What Was Requested
 
-    [FULL TEXT of task requirements from the plan — paste verbatim]
+    [FULL TEXT of every task's requirements inside this wave — paste verbatim,
+     keeping each task clearly labeled (Task 1, Task 2, ...). Include any
+     wave-level constraints from the plan.]
 
     ## What the Controller Claims Was Changed
 
-    [Controller's short report — files touched, behavior changed, tests run]
+    [Controller's short report per task — files touched, behavior changed,
+     verifications run. Keep it grouped by task.]
 
     ## Diff Under Review
 
-    [Output of `git diff` (or per-file diff) scoped to this task only — paste verbatim or provide the exact command and SHAs the reviewer must run]
+    [Output of `git diff` (or per-file diff) scoped to this wave's combined
+     output — every task in the wave at once. Paste verbatim or provide the
+     exact command and SHAs the reviewer must run.]
 
     ## CRITICAL: Do Not Trust the Report
 
     The controller may have moved fast, skipped a requirement, or added unrequested
-    work. You MUST verify everything independently against the diff.
+    work in any task of the wave. You MUST verify everything independently against
+    the diff.
 
     **DO NOT:**
     - Take the controller's word for what was implemented
@@ -39,14 +48,16 @@ Task tool (general-purpose):
 
     **DO:**
     - Read the actual diff line by line
-    - Compare it to the task spec line by line
+    - Compare it to each task's spec line by line
     - Check for missing pieces the controller claimed to implement
     - Look for extra changes the controller did not mention or that were not requested
     - Open touched files at `file:line` to confirm context, not just the diff hunk
+    - Map every finding back to the specific task it belongs to (Task N)
 
     ## Your Job
 
-    Categorize every divergence between spec and diff into exactly one bucket:
+    Categorize every divergence between spec and diff into exactly one bucket,
+    and tag each finding with the task it belongs to (Task 1, Task 2, ...):
 
     **Missing requirements:**
     - Requirements that were requested but not implemented
@@ -54,9 +65,9 @@ Task tool (general-purpose):
     - Tests/verifications the spec required but the diff lacks
 
     **Extra / unneeded work:**
-    - Changes outside the task spec that block correctness or scope
+    - Changes outside any task spec in the wave that block correctness or scope
     - Over-engineered abstractions, unrequested flags, dead branches
-    - Files touched that the spec did not mention and which alter behavior
+    - Files touched that no task in the wave mentioned and which alter behavior
 
     **Misunderstandings:**
     - Right area, wrong solution
@@ -65,7 +76,7 @@ Task tool (general-purpose):
 
     **Deferred (non-blocking):**
     - Out-of-scope nits the controller correctly avoided but that are worth recording
-    - Pre-existing issues nearby that the spec did not require fixing
+    - Pre-existing issues nearby that no task in the wave required fixing
     - Reviewer-recommended follow-ups that should not block the wave but should
       surface in `<plan>.followups.md`
 
@@ -73,14 +84,22 @@ Task tool (general-purpose):
 
     ## Report Format
 
-    Pick one primary status:
+    Pick one primary status for the **wave as a whole**:
 
-    - `✅ Spec compliant` — diff matches the spec exactly. No Missing, no Extra, no Misunderstanding.
-    - `❌ Issues found:` — at least one Missing / Extra / Misunderstanding. List each with `file:line` references and a one-line rationale.
+    - `✅ Spec compliant` — the wave's combined diff matches every task's spec
+      exactly. No Missing, no Extra, no Misunderstanding across any task.
+    - `❌ Issues found:` — at least one Missing / Extra / Misunderstanding in any
+      task of the wave. List each with `Task N — file:line` references and a
+      one-line rationale. Group findings by task so the controller can fix the
+      right slice without re-reading the whole wave.
 
     Then, **regardless of the primary status**, you may append:
 
-    - `⚠️ Deferred (non-blocking):` — bullet list of items the controller agent should record in the post-execution follow-ups artifact. Each bullet: `<short description> — file:line — suggested next step`. Omit the section entirely if there is nothing to defer.
+    - `⚠️ Deferred (non-blocking):` — bullet list of items the controller agent
+      should record in the post-execution follow-ups artifact. Each bullet:
+      `Task N — <short description> — file:line — suggested next step`. Use
+      `Wave-level` instead of `Task N` when the deferred item is not specific
+      to a single task. Omit the section entirely if there is nothing to defer.
 
     Be specific. Vague findings ("looks off", "could be cleaner") are not actionable
     and must be either concretized or dropped.
