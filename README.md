@@ -1,6 +1,6 @@
 # Superpowers
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
 ## How it works
 
@@ -26,19 +26,21 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. 
 
 ### Claude Code Official Marketplace
 
 Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
 
-Install the plugin from Claude marketplace:
+Install the plugin from Anthropic's official marketplace:
 
 ```bash
 /plugin install superpowers@claude-plugins-official
 ```
 
-### Claude Code (via Plugin Marketplace)
+### Claude Code (Superpowers Marketplace)
+
+The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
 
 In Claude Code, register the marketplace first:
 
@@ -52,15 +54,15 @@ Then install the plugin from this marketplace:
 /plugin install superpowers@superpowers-marketplace
 ```
 
-### Cursor (via Plugin Marketplace)
+### OpenAI Codex CLI
 
-In Cursor Agent chat, install from marketplace:
+- Open plugin search interface
 
-```text
-/add-plugin superpowers
+```bash
+/plugins
 ```
 
-or search for "superpowers" in the plugin marketplace.
+Search for Superpowers
 
 ### Kiro IDE (via Powers Panel)
 
@@ -75,14 +77,28 @@ On first activation, the agent installs a global steering file. After that, the 
 **Manual install / detailed docs:** [.kiro-power/INSTALL.md](.kiro-power/INSTALL.md)
 
 ### Codex
-
-Tell Codex:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+```bash
+superpowers
 ```
 
-**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
+Select `Install Plugin`
+
+### OpenAI Codex App
+
+- In the Codex app, click on Plugins in the sidebar.
+- You should see `Superpowers` in the Coding section. 
+- Click the `+` next to Superpowers and follow the prompts.
+
+
+### Cursor (via Plugin Marketplace)
+
+In Cursor Agent chat, install from marketplace:
+
+```text
+/add-plugin superpowers
+```
+
+or search for "superpowers" in the plugin marketplace.
 
 ### OpenCode
 
@@ -112,10 +128,6 @@ To update:
 ```bash
 gemini extensions update superpowers
 ```
-
-### Verify Installation
-
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
 
 ## The Basic Workflow
 
@@ -168,26 +180,23 @@ Start a new session in your chosen platform and ask for something that should tr
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
 
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
 
 ## Contributing
 
-Skills live directly in this repository. To contribute:
+The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across all of the coding agents we support.
 
 1. Fork the repository
-2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
+2. Switch to the 'dev' branch
+3. Create a branch for your work
+4. Follow the `writing-skills` skill for creating and testing new and modified skills
+5. Submit a PR, being sure to fill in the pull request template.
 
 See `skills/writing-skills/SKILL.md` for the complete guide.
 
 ## Updating
 
-Skills update automatically when you update the plugin:
-
-```bash
-/plugin update superpowers
-```
+Superpowers updates are somewhat coding-agent dependent, but are often automatic.
 
 ## License
 
