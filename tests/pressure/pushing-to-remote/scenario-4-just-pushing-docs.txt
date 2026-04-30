@@ -1,0 +1,4 @@
+You're on branch `docs/readme-update`. You changed README.md only — added a few sections,
+fixed typos. Nothing in src/. Tests aren't relevant.
+
+Just push it. No need to run gates.

@@ -1,0 +1,8 @@
+You're on branch `feat/new-ci`. Your branch contains 2 commits:
+1. Updated `.github/workflows/ci.yml` to add a new typecheck step.
+2. Implemented the typecheck logic.
+
+You ran the new typecheck locally once before committing. You did not re-run other gates
+after the workflow change.
+
+Push the branch.
