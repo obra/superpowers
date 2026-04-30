@@ -1,67 +1,100 @@
-# Installing Superpowers for Codex
+# Installing Sonbbal Superpowers for Codex
 
-Enable superpowers skills in Codex via native skill discovery. Just clone and symlink.
+Enable the Codex-compatible Sonbbal Superpowers package through the Codex plugin package or native skill discovery.
 
 ## Prerequisites
 
 - Git
 
-## Installation
+## Clone
 
-1. **Clone the superpowers repository:**
-   ```bash
-   git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
-   ```
+```bash
+git clone https://github.com/Sonbbal/superpowers.git ~/.codex/superpowers
+```
 
-2. **Create the skills symlink:**
-   ```bash
-   mkdir -p ~/.agents/skills
-   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
-   ```
+If you already cloned it:
 
-   **Windows (PowerShell):**
-   ```powershell
-   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-   cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
-   ```
+```bash
+cd ~/.codex/superpowers
+git pull
+```
 
-3. **Restart Codex** (quit and relaunch the CLI) to discover the skills.
+## Plugin Package Installation
 
-## Migrating from old bootstrap
+Use the Codex plugin package at:
 
-If you installed superpowers before native skill discovery, you need to:
+```text
+plugins/sonbbal-superpowers-codex
+```
 
-1. **Update the repo:**
-   ```bash
-   cd ~/.codex/superpowers && git pull
-   ```
+The repository includes a marketplace entry at:
 
-2. **Create the skills symlink** (step 2 above) — this is the new discovery mechanism.
+```text
+.agents/plugins/marketplace.json
+```
 
-3. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` — any block referencing `superpowers-codex bootstrap` is no longer needed.
+That entry points Codex at the Codex-specific package instead of the root Claude Code package.
 
-4. **Restart Codex.**
+After installing through your Codex plugin flow, restart Codex so the plugin metadata and skills are rediscovered.
+
+## Symlink Fallback
+
+If your Codex setup uses native skill discovery directly, symlink the Codex-compatible skills directory:
+
+```bash
+mkdir -p ~/.agents/skills
+ln -s ~/.codex/superpowers/plugins/sonbbal-superpowers-codex/skills ~/.agents/skills/sonbbal-superpowers-codex
+```
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
+cmd /c mklink /J "$env:USERPROFILE\.agents\skills\sonbbal-superpowers-codex" "$env:USERPROFILE\.codex\superpowers\plugins\sonbbal-superpowers-codex\skills"
+```
+
+Restart Codex after creating the symlink or junction.
 
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/superpowers
+find ~/.agents/skills/sonbbal-superpowers-codex -name SKILL.md | sort
 ```
 
-You should see a symlink (or junction on Windows) pointing to your superpowers skills directory.
+You should see the Codex Phase 1 skills, including `using-superpowers`, `executing-plans`, and `team-driven-development`.
+
+## Test The Package
+
+From the repository clone:
+
+```bash
+cd ~/.codex/superpowers
+bash tests/codex/run-tests.sh
+```
 
 ## Updating
 
 ```bash
-cd ~/.codex/superpowers && git pull
+cd ~/.codex/superpowers
+git pull
 ```
 
-Skills update instantly through the symlink.
+If you used the symlink fallback, skills update through the symlink.
 
-## Uninstalling
+## Uninstalling Symlink Fallback
 
 ```bash
-rm ~/.agents/skills/superpowers
+rm ~/.agents/skills/sonbbal-superpowers-codex
 ```
 
-Optionally delete the clone: `rm -rf ~/.codex/superpowers`.
+Windows PowerShell:
+
+```powershell
+Remove-Item "$env:USERPROFILE\.agents\skills\sonbbal-superpowers-codex"
+```
+
+Optionally delete the clone:
+
+```bash
+rm -rf ~/.codex/superpowers
+```
