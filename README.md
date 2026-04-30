@@ -97,6 +97,14 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Lingma IDE
+
+Tell Lingma:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.lingma/INSTALL.md
+```
+
 ### GitHub Copilot CLI
 
 ```bash
