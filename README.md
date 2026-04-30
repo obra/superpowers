@@ -125,12 +125,14 @@ gemini extensions update superpowers
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
 4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+   - **committing-work** - Each per-task commit goes through this skill. Auto-discovers the project's CI gates (`.github/workflows/*.yml`, `package.json`, `pyproject.toml`, etc.), caches them at `.superpowers/ci-gates.json`, runs every gate, auto-fixes safe categories (formatters, lockfile drift) with re-run loop, refuses to commit on any non-fixable failure.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
 6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+7. **finishing-a-development-branch** - Activates when tasks complete. Verifies HEAD is CI-clean (via committing-work for any uncommitted changes, or by running the gate suite directly), presents options (merge/PR/keep/discard), cleans up worktree.
+   - **pushing-to-remote** - When Option 2 (Push and create a PR) is chosen, this skill re-verifies HEAD against the gate suite (rebase/amend/cherry-pick can break per-commit cleanliness), checks branch base currency, and pushes. Also invoked directly on any push request.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -153,6 +155,8 @@ gemini extensions update superpowers
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
+- **committing-work** - CI-parity gating for git commits (discovers project gates, runs them all, auto-fixes safe categories, refuses to commit on failure)
+- **pushing-to-remote** - Re-verifies HEAD against the gate suite before push (since rebase/amend/cherry-pick break per-commit cleanliness)
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
