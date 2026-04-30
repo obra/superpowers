@@ -46,7 +46,7 @@ const normalizePath = (p, homeDir) => {
   return path.resolve(normalized);
 };
 
-export const SuperpowersPlugin = async ({ client, directory }) => {
+const server = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
@@ -113,5 +113,5 @@ ${toolMapping}
 
 export default {
   id: "superpowers",
-  server: SuperpowersPlugin,
+  server,
 };
