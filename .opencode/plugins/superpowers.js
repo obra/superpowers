@@ -110,3 +110,8 @@ ${toolMapping}
     }
   };
 };
+
+export default {
+  id: "superpowers",
+  server: SuperpowersPlugin,
+};
