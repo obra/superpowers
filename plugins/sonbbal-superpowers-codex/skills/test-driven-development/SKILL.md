@@ -11,6 +11,8 @@ No production behavior change without a failing test first.
 
 Write the smallest meaningful test for the behavior, run it, confirm it fails for the expected reason, then implement the smallest change that makes it pass.
 
+If you write production code before the failing test, delete or discard that implementation and start over from the test. Do not keep it as a reference, adapt it while writing the test, or treat a later test as equivalent to a real red phase.
+
 ## RED-GREEN-REFACTOR
 
 ### RED
@@ -50,6 +52,32 @@ Use this workflow for:
 - Compatibility tests.
 
 For pure documentation edits, still prefer executable checks when the repository has validation scripts.
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+| --- | --- |
+| "I'll write tests later" | Tests after implementation do not prove the test catches the missing behavior. |
+| "Manual testing is enough" | Manual checks are not repeatable regression tests. |
+| "This is too simple" | Simple behavior still breaks and still needs a red phase. |
+| "Just this once" | One skipped cycle creates untested production behavior. |
+| "Deleting this work is wasteful" | Sunk cost is not a reason to keep code written before the test. |
+| "I followed the spirit, not the letter" | The red phase is the discipline; skipping it changes the result. |
+
+## No Executable Test Harness
+
+If no executable test harness exists for the change, do not skip validation. Use the smallest deterministic check available and document why it is the best available substitute.
+
+Fallback validation is not TDD when a real failing test is possible. Use fallback checks only when the artifact or environment cannot produce a meaningful red test first.
+
+Acceptable fallback validation includes:
+
+- A compatibility script that checks the changed contract.
+- A schema, lint, parser, or format check for the edited artifact.
+- A focused command that exercises the changed path without a full test runner.
+- A documented inspection checklist tied to the requirement, expected output, and changed files.
+
+Run the fallback check before implementation when it can expose the current failure. If no pre-change failure is possible, record that limitation, make the smallest change, then run the fallback check after the change.
 
 ## Final Gate
 

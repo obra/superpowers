@@ -9,15 +9,29 @@ This package is intentionally separate from the root Claude Code package so each
 
 ## What This Package Contains
 
-Phase 1 provides a minimal Codex-compatible skill set:
+This package provides the Codex-compatible Superpowers skill set currently ported under `plugins/sonbbal-superpowers-codex/skills`:
 
+- `api-edr-validation`
+- `audit-verification`
+- `brainstorming`
+- `context-window-management`
+- `dispatching-parallel-agents`
+- `executing-plans`
+- `finishing-a-development-branch`
+- `model-assignment`
+- `project-scoping`
+- `receiving-code-review`
+- `requesting-code-review`
+- `subagent-driven-development`
+- `systematic-debugging`
+- `team-driven-development`
+- `test-driven-development`
+- `using-git-worktrees`
 - `using-superpowers`
 - `verification-before-completion`
-- `test-driven-development`
 - `writing-plans`
-- `executing-plans`
-- `team-driven-development`
-- `model-assignment`
+- `wiki-management`
+- `writing-skills`
 
 The plugin metadata is in `.codex-plugin/plugin.json`, and Codex discovers skills from `./skills`.
 
@@ -77,17 +91,12 @@ bash tests/codex/run-tests.sh
 The tests verify that:
 
 - The Codex plugin metadata points at `./skills`.
-- Required Phase 1 skills are present.
+- Required Codex-compatible skills are present.
 - Skill frontmatter includes `name` and `description`.
 - Codex skills do not contain unavailable operational tool references or model-tier names.
 
 ## Known Limitations
 
-Phase 1 is a compatibility baseline, not full parity with every root Superpowers skill.
-
-Current limitations:
-
-- Only the Phase 1 skill set is included.
 - Root `agents/`, `hooks/`, and Claude Code plugin files are not ported.
 - Team-driven workflows use local checklists unless the user explicitly authorizes Codex delegation.
 - There is no runtime bridge for other harness-specific team APIs.

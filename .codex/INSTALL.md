@@ -61,7 +61,7 @@ Restart Codex after creating the symlink or junction.
 find ~/.agents/skills/sonbbal-superpowers-codex -name SKILL.md | sort
 ```
 
-You should see the Codex Phase 1 skills, including `using-superpowers`, `executing-plans`, and `team-driven-development`.
+You should see the Codex-compatible skills from `plugins/sonbbal-superpowers-codex/skills`, including `using-superpowers`, `executing-plans`, `team-driven-development`, and the other packaged Superpowers workflows.
 
 ## Test The Package
 

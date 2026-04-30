@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 tests=(
   "test-plugin-package.sh"
   "test-codex-skill-language.sh"
+  "test-codex-pressure-behavior.sh"
 )
 
 passed=0
