@@ -1,0 +1,2 @@
+I just finished implementing the password reset endpoint. Tests pass locally.
+Can you commit my changes?
