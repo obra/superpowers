@@ -38,8 +38,7 @@
 
 ### Codex / OpenCode
 
-원본 프로젝트의 설치 가이드를 참고하세요:
-- **Codex:** [docs/README.codex.md](docs/README.codex.md)
+- **Codex:** Sonbbal Codex 전용 패키지는 [plugins/sonbbal-superpowers-codex/README.md](plugins/sonbbal-superpowers-codex/README.md)를 참고하세요.
 - **OpenCode:** [docs/README.opencode.md](docs/README.opencode.md)
 
 ---

@@ -1,0 +1,38 @@
+{
+  "name": "sonbbal-superpowers-codex",
+  "version": "0.1.0",
+  "description": "Codex-focused Superpowers plugin package for team-driven development workflows.",
+  "author": {
+    "name": "sonbbal",
+    "url": "https://github.com/Sonbbal"
+  },
+  "homepage": "https://github.com/Sonbbal/superpowers",
+  "repository": "https://github.com/Sonbbal/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "codex",
+    "team-driven",
+    "tdd",
+    "workflow"
+  ],
+  "skills": "./skills",
+  "interface": {
+    "displayName": "Sonbbal Superpowers for Codex",
+    "shortDescription": "Codex-native skill package for disciplined planning, TDD, review, and team workflows.",
+    "longDescription": "A Codex-focused package of Superpowers workflows, separated from the Claude Code plugin files so both harnesses can live in the same repository.",
+    "developerName": "sonbbal",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/Sonbbal/superpowers",
+    "defaultPrompt": [
+      "Use Sonbbal Superpowers to design this feature before implementation.",
+      "Use the Codex Superpowers workflow to execute this implementation plan.",
+      "Review this branch using the Superpowers verification workflow."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

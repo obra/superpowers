@@ -1,0 +1,20 @@
+{
+  "name": "sonbbal-superpowers-marketplace",
+  "interface": {
+    "displayName": "Sonbbal Superpowers"
+  },
+  "plugins": [
+    {
+      "name": "sonbbal-superpowers-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/sonbbal-superpowers-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
