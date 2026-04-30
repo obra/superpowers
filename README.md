@@ -132,6 +132,10 @@ gemini extensions update superpowers
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
+8. **using-memory** - Retrieves only the smallest useful slice of project history, using `Use When` / `Avoid When` to choose which memory types to inspect before reading indexes or entries.
+
+9. **record-memory** - Records closed reviewable change units in `docs/superpowers/memory/`, using `Record When` / `Avoid Recording When` to choose the right memory type and repairing missing structure only when needed.
+
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
 ## What's Inside
@@ -155,6 +159,10 @@ gemini extensions update superpowers
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+
+**Project Memory**
+- **record-memory** - Records closed reviewable change units in `docs/superpowers/memory/`, routing with `Record When` / `Avoid Recording When` and repairing structure only when needed
+- **using-memory** - Retrieves the smallest useful slice of project history, routing with `Use When` / `Avoid When` before reading `INDEX.md` or entries
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
