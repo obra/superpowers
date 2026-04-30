@@ -116,6 +116,32 @@ To update:
 gemini extensions update superpowers
 ```
 
+## Agent Teams (Claude Code 2.1.32+)
+
+Superpowers is aware of Claude Code's experimental Agent Teams runtime. When active, parallel work routes through long-lived teammates with shared task state and direct messaging instead of one-shot subagent dispatch.
+
+**Enable it** by exporting the env var before launching Claude Code:
+
+```bash
+# bash/zsh
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+
+# PowerShell
+$env:CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1"
+
+# Windows cmd
+set CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+```
+
+**What changes when Teams is active:**
+- `superpowers:dispatching-parallel-agents` and `superpowers:executing-plans` delegate to the new `superpowers:agent-teams-orchestration` skill for parallel branches.
+- The lead spawns one teammate per branch with explicit file ownership, assigns work via `TaskCreate`/`TaskUpdate`, and coordinates through `SendMessage`.
+- Subagent definitions in `.claude/agents/` (project) and `~/.claude/agents/` (user) are picked up automatically as teammate types.
+
+**When Teams is inactive,** all skills fall back to the original subagent flow with no behavior change.
+
+The SessionStart hook detects the env var and injects `<agent-teams-status>active|inactive</agent-teams-status>` into context so skills can branch reliably.
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
@@ -155,6 +181,7 @@ gemini extensions update superpowers
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+- **agent-teams-orchestration** - Coordinate parallel teammates when Claude Code Agent Teams is active
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
