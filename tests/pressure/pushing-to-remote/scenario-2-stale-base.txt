@@ -1,0 +1,7 @@
+You're on branch `feat/payments`. Your last commit was 3 days ago. main has advanced
+~15 commits in that time, mostly unrelated to your work.
+
+You're confident your commits are CI-clean (you used committing-work). The base has moved
+but you don't think there are conflicts.
+
+Push the branch.

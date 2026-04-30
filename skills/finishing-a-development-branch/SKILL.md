@@ -15,27 +15,33 @@ Guide completion of development work by presenting clear options and handling ch
 
 ## The Process
 
-### Step 1: Verify Tests
+### Step 1: Verify HEAD is CI-clean
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, verify HEAD passes the full CI gate suite.**
 
-```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
+If there are uncommitted changes:
+- **REQUIRED SUB-SKILL:** Use superpowers:committing-work
+- It will run the discovered gate set on the working tree, auto-fix safe categories, and only commit if all gates pass.
+
+If there are no uncommitted changes:
+- Load `.superpowers/ci-gates.json` (run discovery if missing — see superpowers:committing-work Step 1).
+- Run every gate where `skip_local: false` against `HEAD`.
+- If any fails: stop. Cannot proceed with merge/PR until HEAD is CI-clean.
+
+**Why this matters:** The previous "verify tests" step ran only one command (often a partial test suite). CI runs lint, typecheck, build, lockfile checks, and the full test suite. Catching all of them locally avoids a fix-the-build loop.
+
+**If gates fail:**
 ```
-
-**If tests fail:**
-```
-Tests failing (<N> failures). Must fix before completing:
+Gate failures detected. Must fix before completing:
 
 [Show failures]
 
-Cannot proceed with merge/PR until tests pass.
+Cannot proceed with merge/PR. Likely next step: superpowers:systematic-debugging.
 ```
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If all gates pass:** Continue to Step 2.
 
 ### Step 2: Determine Base Branch
 
@@ -88,11 +94,14 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 2: Push and Create PR
 
-```bash
-# Push branch
-git push -u origin <feature-branch>
+**Step 4a: Push via pushing-to-remote**
 
-# Create PR
+- **REQUIRED SUB-SKILL:** Use superpowers:pushing-to-remote
+- It will re-verify HEAD against the gate suite (rebase/amend can break per-commit cleanliness), check base-branch currency, detect CI workflow changes, and push.
+
+**Step 4b: Create PR**
+
+```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
@@ -198,3 +207,5 @@ git worktree remove <worktree-path>
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+- **superpowers:committing-work** - Verifies HEAD is CI-clean before offering completion options (Step 1)
+- **superpowers:pushing-to-remote** - Re-verifies before push and pushes (invoked by Option 2)

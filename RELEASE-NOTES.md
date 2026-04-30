@@ -1,5 +1,68 @@
 # Superpowers Release Notes
 
+## [Unreleased] — committing-work and pushing-to-remote skills
+
+Two new discipline skills close the CI-failure loop where agents push code that fails
+deterministic CI checks (lint, typecheck, lockfile drift, partial test runs) and then
+spend the next round-trip fixing what local verification should have caught.
+
+### New skills
+
+- **committing-work** — Auto-discovers project CI gates from `.github/workflows/*.yml`
+  and ecosystem manifests (`package.json` scripts, `pyproject.toml`, `Cargo.toml`,
+  `Makefile`), caches the discovered gate set to `.superpowers/ci-gates.json`
+  (gitignored), runs every gate before allowing a commit, auto-fixes safe categories
+  (formatters via `prettier --write` / `ruff check --fix`, lockfile drift via
+  `uv lock` / `npm install`) with a re-run-all-gates loop (2-pass cap), and refuses
+  to commit on any non-fixable failure with a structured report routing to
+  `systematic-debugging` or `test-driven-development`. Application of
+  `verification-before-completion` to git commits.
+
+- **pushing-to-remote** — Re-verifies HEAD against the gate suite before push, since
+  `git rebase`, `git commit --amend`, `git cherry-pick`, and direct `git commit`
+  produce commits that `committing-work` never saw. Detects mid-push-set CI workflow
+  changes and re-discovers gates with a cache diff (added/removed/modified). Checks
+  branch base currency with a 3-option stop (rebase / merge / push-anyway-with-typed-
+  `push stale`-confirm). No auto-fix at push time (would create dirty working-tree
+  state that doesn't match any commit being pushed). Application of
+  `verification-before-completion` to git pushes.
+
+### Modified existing skills
+
+- **finishing-a-development-branch** — Step 1 ("Verify Tests") now invokes
+  `committing-work` for any uncommitted changes, or runs the gate suite against `HEAD`
+  if the working tree is clean, instead of running a single `npm test`-style command.
+  Option 2 ("Push and create a PR") prepends `pushing-to-remote` invocation before
+  `gh pr create`. The 4-options-verbatim presentation, typed `discard` confirmation
+  for Option 4, and worktree cleanup logic are unchanged.
+
+- **subagent-driven-development/implementer-prompt.md** — Step 4 ("Commit your work")
+  now explicitly references `superpowers:committing-work` instead of leaving the
+  commit procedure to each implementer subagent's improvisation. Replaces ad-hoc
+  per-subagent commit workflows with the shared, pressure-tested skill.
+
+### Evidence
+
+Per CLAUDE.md's eval-evidence requirement for skill modifications:
+
+- **Pressure tests** — 8 adversarial scenarios (4 per new skill) with subagents
+  walking each scenario both without (RED baselines) and with (GREEN post-skill)
+  the new skill. All 8 GREEN passed on first iteration; no REFACTOR cycles needed.
+  Stored in `tests/pressure/{committing-work,pushing-to-remote}/`.
+
+- **Triggering tests** — Both new skills verified to auto-invoke from naive
+  natural-language prompts ("commit my changes", "push this branch") via real
+  `claude -p` Claude Code dispatch. Results in
+  `tests/skill-triggering/RESULTS-2026-04-29.md`.
+
+- **Regression tests** — Both modified existing skills retested post-change with
+  baseline-vs-post comparison checklists. All preserved behaviors retained, all new
+  behaviors correctly executed. Stored in `tests/pressure/regression/`.
+
+- **Integration test** — Setup script + 6 end-to-end scenarios (`tests/integration/
+  ci-parity-flow/`). Infrastructure ready; full live run deferred to a follow-up
+  session (see RUN-STATUS.md).
+
 ## v5.0.7 (2026-03-31)
 
 ### GitHub Copilot CLI Support

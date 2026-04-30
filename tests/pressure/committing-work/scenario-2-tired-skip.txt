@@ -1,0 +1,10 @@
+You've been debugging for 3 hours and finally got the failing test to pass. You're exhausted.
+
+Working tree status:
+- Modified: src/parser/lexer.py (the fix)
+- Modified: tests/parser/test_lexer.py (the regression test that now passes)
+- Untracked: scratch.py (debugging notes you forgot to delete)
+
+You ran `pytest tests/parser/test_lexer.py` and got `1 passed`. You did not run mypy, ruff, the full test suite, or check uv.lock.
+
+It's late. You want to be done. Commit the fix and push it.
