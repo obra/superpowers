@@ -1,0 +1,16 @@
+// Superpowers Plugin Configuration
+//
+// Priority (lowest to highest):
+//   1. Plugin built-in defaults
+//   2. User config: ~/.config/opencode/plugins/superpowers.jsonc
+//   3. Project config: <project>/.opencode/plugins/superpowers.jsonc
+//
+// Each layer merges/overrides the previous. Arrays are concatenated.
+
+{
+  // Skip superpowers bootstrap injection for agents that should stay clean.
+  "disableBootstrapForAgents": [
+    "no-skills",
+    "empty-no"
+  ]
+}
