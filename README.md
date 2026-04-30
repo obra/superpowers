@@ -116,6 +116,16 @@ To update:
 gemini extensions update superpowers
 ```
 
+### Pi (experimental)
+
+```bash
+pi install https://github.com/obra/superpowers
+```
+
+Pi discovers skills from the `skills/` directory automatically. No plugins or bootstrap required for skills. For subagent-based workflows, install the bundled Pi agent profile from `.pi/agents/` (see docs).
+
+**Detailed docs:** [docs/README.pi.md](docs/README.pi.md)
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
