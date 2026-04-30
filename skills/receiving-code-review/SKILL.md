@@ -11,6 +11,10 @@ Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
 
+Before editing code, present a concrete change plan and self-assess whether the plan can introduce regressions, broaden behavior changes, or weaken existing contracts. Name the affected surfaces, why the plan is scoped, and what verification will be needed. If the plan carries material regression risk, narrow it or ask before editing.
+
+Never stage changes while handling review feedback unless the user explicitly asks for staging or committing in the current request. Do not run `git add`, partial staging commands, or tooling that stages files as a side effect.
+
 ## The Response Pattern
 
 ```
@@ -21,8 +25,13 @@ WHEN receiving code review feedback:
 3. VERIFY: Check against codebase reality
 4. EVALUATE: Technically sound for THIS codebase?
 5. RESPOND: Technical acknowledgment or reasoned pushback
-6. IMPLEMENT: One item at a time, test each
+6. PLAN: When implementing, present intended code changes and regression-risk self-assessment
+7. IMPLEMENT: One item at a time, test each
 ```
+
+## Git Handling
+
+Do not stage files as part of receiving review feedback unless the current user request explicitly asks for staging or committing. Leave modified files unstaged and report what changed.
 
 ## Forbidden Responses
 
@@ -102,12 +111,14 @@ IF reviewer suggests "implementing properly":
 ```
 FOR multi-item feedback:
   1. Clarify anything unclear FIRST
-  2. Then implement in this order:
+  2. Present a code-change plan and regression-risk self-assessment before editing
+  3. Then implement in this order:
      - Blocking issues (breaks, security)
      - Simple fixes (typos, imports)
      - Complex fixes (refactoring, logic)
-  3. Test each fix individually
-  4. Verify no regressions
+  4. Test each fix individually
+  5. Verify no regressions
+  6. Leave changes unstaged unless the user explicitly asked for staging or committing
 ```
 
 ## When To Push Back
