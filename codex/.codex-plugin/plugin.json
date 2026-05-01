@@ -1,6 +1,6 @@
 {
   "name": "sonbbal-superpowers-codex",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Codex-focused Superpowers plugin package with Codex-native planning, TDD, review, validation, and team workflows.",
   "author": {
     "name": "sonbbal",

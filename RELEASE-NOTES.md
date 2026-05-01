@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## Unreleased (2026-05-01)
+## v2.0.0 (2026-05-01) — Platform Package Separation
 
 ### Breaking Changes
 

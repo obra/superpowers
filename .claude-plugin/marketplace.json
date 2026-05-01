@@ -7,7 +7,7 @@
     {
       "name": "sonbbal-superpowers",
       "description": "Team-driven development skills with API/EDR validation, audit verification, and parallel agent execution",
-      "version": "1.4.0",
+      "version": "2.0.0",
       "source": "./claude-code",
       "author": {
         "name": "sonbbal"
