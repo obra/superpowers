@@ -36,25 +36,23 @@ Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
 - Detached HEAD: "Already in isolated workspace at `<path>` (detached HEAD, externally managed). Branch creation needed at finish time."
 
-**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
+**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout. Proceed to Step 1 to create an isolated workspace.
 
-Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
-
-> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
-
-Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 3.
+**Do not stop to ask the user whether they want a worktree.** Invoking this skill IS the request for isolation — your authorization to create one comes from that invocation, not from a separate "yes" reply. If the user has already declared in their instructions that they prefer to work in place, honor that and skip to Step 3. Otherwise, create the worktree.
 
 ## Step 1: Create Isolated Workspace
 
 **You have two mechanisms. Try them in this order.**
 
-### 1a. Native Worktree Tools (preferred)
+### 1a. Native Worktree Tools (preferred — STOP HERE if available)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 3.
+Do you have a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag? **If YES: use it now and skip to Step 3.** Skill invocation is your authorization — you do not need a separate user reply.
 
-Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage — cleanup becomes impossible.
 
-Only proceed to Step 1b if you have no native worktree tool available.
+**Even if `.worktrees/` already exists, even under time pressure, even if `git worktree add` feels faster — use your native tool.** No exceptions.
+
+Only proceed to Step 1b if you have confirmed you have NO native worktree tool available.
 
 ### 1b. Git Worktree Fallback
 
@@ -199,6 +197,8 @@ Ready to implement <feature-name>
 ## Red Flags
 
 **Never:**
+- Stop to ask the user for consent when the skill has already been invoked. Invoking the skill IS the request — treat it as your authorization to proceed.
+- Fall back to a plain feature branch because a native worktree tool feels "restricted to explicit user requests." Skill invocation is the explicit request the tool requires.
 - Create a worktree when Step 0 detects existing isolation
 - Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
 - Skip Step 1a by jumping straight to Step 1b's git commands
@@ -207,6 +207,7 @@ Ready to implement <feature-name>
 - Proceed with failing tests without asking
 
 **Always:**
+- Treat skill invocation as implicit authorization to create a worktree
 - Run Step 0 detection first
 - Prefer native tools over git fallback
 - Follow directory priority: existing > global legacy > instruction file > default
