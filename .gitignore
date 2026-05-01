@@ -5,3 +5,6 @@
 node_modules/
 inspo
 triage/
+*.db
+*.db-shm
+*.db-wal
