@@ -6,11 +6,12 @@
  */
 
 import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const bootstrapPrelude = `<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**`;
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
 const extractAndStripFrontmatter = (content) => {
@@ -25,7 +26,10 @@ const extractAndStripFrontmatter = (content) => {
     const colonIdx = line.indexOf(':');
     if (colonIdx > 0) {
       const key = line.slice(0, colonIdx).trim();
-      const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
+      const value = line
+        .slice(colonIdx + 1)
+        .trim()
+        .replace(/^['']|['']$/g, '');
       frontmatter[key] = value;
     }
   }
@@ -33,32 +37,25 @@ const extractAndStripFrontmatter = (content) => {
   return { frontmatter, content: body };
 };
 
-// Normalize a path: trim whitespace, expand ~, resolve to absolute
-const normalizePath = (p, homeDir) => {
-  if (!p || typeof p !== 'string') return null;
-  let normalized = p.trim();
-  if (!normalized) return null;
-  if (normalized.startsWith('~/')) {
-    normalized = path.join(homeDir, normalized.slice(2));
-  } else if (normalized === '~') {
-    normalized = homeDir;
-  }
-  return path.resolve(normalized);
-};
-
-export const SuperpowersPlugin = async ({ client, directory }) => {
-  const homeDir = os.homedir();
-  const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
-  const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
-  const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+export const SuperpowersPlugin = async () => {
+  const superpowersSkillsDir = path.resolve(
+    import.meta.dirname,
+    '../../skills',
+  );
 
   // Helper to generate bootstrap content
-  const getBootstrapContent = () => {
+  const getBootstrapContent = async () => {
     // Try to load using-superpowers skill
-    const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
-
-    const fullContent = fs.readFileSync(skillPath, 'utf8');
+    const skillPath = path.join(
+      superpowersSkillsDir,
+      'using-superpowers',
+      'SKILL.md',
+    );
+    const fullContent = await fs.readFile(skillPath, 'utf8').catch((error) => {
+      if (error?.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!fullContent) return null;
     const { content } = extractAndStripFrontmatter(fullContent);
 
     const toolMapping = `**Tool Mapping for OpenCode:**
@@ -70,11 +67,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-    return `<EXTREMELY_IMPORTANT>
-You have superpowers.
-
-**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
-
+    return `${bootstrapPrelude}
 ${content}
 
 ${toolMapping}
@@ -99,14 +92,19 @@ ${toolMapping}
     //   1. Token bloat from system messages repeated every turn (#750)
     //   2. Multiple system messages breaking Qwen and other models (#894)
     'experimental.chat.messages.transform': async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+      const bootstrap = await getBootstrapContent();
       if (!bootstrap || !output.messages.length) return;
-      const firstUser = output.messages.find(m => m.info.role === 'user');
+      const firstUser = output.messages.find((m) => m.info.role === 'user');
       if (!firstUser || !firstUser.parts.length) return;
       // Only inject once
-      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      if (
+        firstUser.parts.some(
+          (p) => p.type === 'text' && p.text.startsWith(bootstrapPrelude),
+        )
+      )
+        return;
       const ref = firstUser.parts[0];
       firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
-    }
+    },
   };
 };
