@@ -1,8 +1,8 @@
 /**
  * Superpowers plugin for OpenCode.ai
  *
- * Injects superpowers bootstrap context via system prompt transform.
- * Auto-registers skills directory via config hook (no symlinks needed).
+ * - Injects superpowers bootstrap context via message transform
+ * - Auto-registers skills directory via config hook
  */
 
 import path from 'path';
@@ -12,68 +12,98 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
+/**
+ * Extract and strip YAML-style frontmatter
+ */
 const extractAndStripFrontmatter = (content) => {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { frontmatter: {}, content };
 
-  const frontmatterStr = match[1];
-  const body = match[2];
-  const frontmatter = {};
+  const [, frontmatterStr, body] = match;
 
-  for (const line of frontmatterStr.split('\n')) {
-    const colonIdx = line.indexOf(':');
-    if (colonIdx > 0) {
-      const key = line.slice(0, colonIdx).trim();
-      const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
-      frontmatter[key] = value;
-    }
-  }
+  const frontmatter = Object.fromEntries(
+    frontmatterStr.split('\n')
+      .map(line => {
+        const idx = line.indexOf(':');
+        if (idx <= 0) return null;
+        const key = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+        return [key, value];
+      })
+      .filter(Boolean)
+  );
 
   return { frontmatter, content: body };
 };
 
-// Normalize a path: trim whitespace, expand ~, resolve to absolute
-const normalizePath = (p, homeDir) => {
-  if (!p || typeof p !== 'string') return null;
-  let normalized = p.trim();
-  if (!normalized) return null;
-  if (normalized.startsWith('~/')) {
-    normalized = path.join(homeDir, normalized.slice(2));
-  } else if (normalized === '~') {
-    normalized = homeDir;
+/**
+ * Normalize path:
+ * - trims whitespace
+ * - expands ~
+ * - resolves absolute path
+ */
+const normalizePath = (input, homeDir) => {
+  if (typeof input !== 'string') return null;
+
+  let p = input.trim();
+  if (!p) return null;
+
+  if (p === '~') return homeDir;
+  if (p.startsWith('~/')) return path.join(homeDir, p.slice(2));
+
+  return path.resolve(p);
+};
+
+/**
+ * Safely read file if it exists
+ */
+const readFileIfExists = (filePath) => {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (err) {
+    console.warn('[SuperpowersPlugin] Failed to read file:', filePath, err);
+    return null;
   }
-  return path.resolve(normalized);
 };
 
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
+
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
-  const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+  const configDir = envConfigDir ?? path.join(homeDir, '.config/opencode');
 
-  // Helper to generate bootstrap content
+  /**
+   * Generate bootstrap content
+   */
   const getBootstrapContent = () => {
-    // Try to load using-superpowers skill
-    const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+    const skillPath = path.join(
+      superpowersSkillsDir,
+      'using-superpowers',
+      'SKILL.md'
+    );
 
-    const fullContent = fs.readFileSync(skillPath, 'utf8');
-    const { content } = extractAndStripFrontmatter(fullContent);
+    const file = readFileIfExists(skillPath);
+    if (!file) return null;
 
-    const toolMapping = `**Tool Mapping for OpenCode:**
+    const { content } = extractAndStripFrontmatter(file);
+
+    const toolMapping = `
+**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`todowrite\`
 - \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
-Use OpenCode's native \`skill\` tool to list and load skills.`;
+Use OpenCode's native \`skill\` tool to list and load skills.
+`;
 
     return `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
-**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
+**IMPORTANT: The using-superpowers skill is already loaded. Do NOT reload it.**
 
 ${content}
 
@@ -82,31 +112,50 @@ ${toolMapping}
   };
 
   return {
-    // Inject skills path into live config so OpenCode discovers superpowers skills
-    // without requiring manual symlinks or config file edits.
-    // This works because Config.get() returns a cached singleton — modifications
-    // here are visible when skills are lazily discovered later.
+    /**
+     * Inject skills path into runtime config
+     */
     config: async (config) => {
-      config.skills = config.skills || {};
-      config.skills.paths = config.skills.paths || [];
+      if (!config.skills) config.skills = {};
+      if (!Array.isArray(config.skills.paths)) config.skills.paths = [];
+
       if (!config.skills.paths.includes(superpowersSkillsDir)) {
         config.skills.paths.push(superpowersSkillsDir);
       }
+
+      return config;
     },
 
-    // Inject bootstrap into the first user message of each session.
-    // Using a user message instead of a system message avoids:
-    //   1. Token bloat from system messages repeated every turn (#750)
-    //   2. Multiple system messages breaking Qwen and other models (#894)
+    /**
+     * Inject bootstrap into first user message only
+     */
     'experimental.chat.messages.transform': async (_input, output) => {
+      if (!output?.messages?.length) return;
+
       const bootstrap = getBootstrapContent();
-      if (!bootstrap || !output.messages.length) return;
-      const firstUser = output.messages.find(m => m.info.role === 'user');
-      if (!firstUser || !firstUser.parts.length) return;
-      // Only inject once
-      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
-      const ref = firstUser.parts[0];
-      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
-    }
+      if (!bootstrap) return;
+
+      const firstUser = output.messages.find(
+        (m) => m?.info?.role === 'user'
+      );
+
+      if (!firstUser?.parts?.length) return;
+
+      const alreadyInjected = firstUser.parts.some(
+        (p) =>
+          p.type === 'text' &&
+          p.text.includes('<EXTREMELY_IMPORTANT>')
+      );
+
+      if (alreadyInjected) return;
+
+      const refPart = firstUser.parts[0];
+
+      firstUser.parts.unshift({
+        ...refPart,
+        type: 'text',
+        text: bootstrap,
+      });
+    },
   };
 };
