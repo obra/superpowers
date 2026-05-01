@@ -1,0 +1,13 @@
+{
+  "id": "superpowers-openclaw",
+  "name": "Superpowers for OpenClaw",
+  "version": "5.0.7",
+  "description": "Expose the Superpowers skill pack through OpenClaw's native plugin skill discovery.",
+  "skills": [
+    "./skills"
+  ],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  }
+}

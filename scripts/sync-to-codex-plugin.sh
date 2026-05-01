@@ -52,6 +52,7 @@ EXCLUDES=(
   "/.gitattributes"
   "/.github/"
   "/.gitignore"
+  "/.openclaw/"
   "/.opencode/"
   "/.version-bump.json"
   "/.worktrees/"
@@ -64,6 +65,7 @@ EXCLUDES=(
   "/GEMINI.md"
   "/RELEASE-NOTES.md"
   "/gemini-extension.json"
+  "/openclaw.plugin.json"
   "/package.json"
 
   # Directories not shipped by canonical Codex plugins

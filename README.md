@@ -127,6 +127,33 @@ already use it in another harness.
 
 - Detailed docs: [docs/README.opencode.md](docs/README.opencode.md)
 
+### OpenClaw
+
+OpenClaw uses its native plugin system. Install Superpowers separately even if
+you already use it in another harness.
+
+- Clone and link the plugin:
+
+  ```bash
+  git clone https://github.com/obra/superpowers.git ~/.openclaw/vendor/superpowers
+  openclaw plugins install --link ~/.openclaw/vendor/superpowers --dangerously-force-unsafe-install
+  openclaw plugins enable superpowers-openclaw
+  openclaw gateway restart
+  ```
+
+  The override is required because OpenClaw scans the linked plugin directory
+  during native plugin install. It flags `skills/writing-skills/render-graphs.js`,
+  an existing Superpowers skill-authoring helper, because that script shells out
+  to Graphviz. The helper is not part of the OpenClaw runtime hook; review the
+  source before using the override.
+
+- Verify the plugin and skills are available:
+
+  ```bash
+  openclaw plugins info superpowers-openclaw --json
+  openclaw skills info using-superpowers --json
+  ```
+
 ### Cursor
 
 - In Cursor Agent chat, install from marketplace:
