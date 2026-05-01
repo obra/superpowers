@@ -7,6 +7,8 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "bash": "COPILOT_CLI=1 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
+            "powershell": "& \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.ps1\"",
             "async": false
           }
         ]
