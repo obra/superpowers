@@ -5,6 +5,18 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 # Systematic Debugging
 
+## Required Preflight
+
+Before any debugging analysis, hypothesis, or fix attempt, you MUST first read and follow `debug-hypothesis.md`.
+
+This is a mandatory pre-debug gate.
+
+Do not propose fixes, implementation steps, likely causes, or architecture changes until you complete that module.
+
+If the issue is genuinely trivial and the root cause is already explicit from a compiler, linter, or runtime error, the preflight may be brief, but it is still not skippable.
+
+After completing `debug-hypothesis.md`, continue with the standard systematic debugging process below.
+
 ## Overview
 
 Random fixes waste time and create new bugs. Quick patches mask underlying issues.
@@ -19,7 +31,7 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 ```
 
-If you haven't completed Phase 1, you cannot propose fixes.
+If you haven't completed the pre-debug gate and Phase 1, you cannot propose fixes.
 
 ## When to Use
 
@@ -42,6 +54,14 @@ Use for ANY technical issue:
 - Issue seems simple (simple bugs have root causes too)
 - You're in a hurry (rushing guarantees rework)
 - Manager wants it fixed NOW (systematic is faster than thrashing)
+
+## Workflow Order
+
+You MUST follow this order:
+
+1. Complete `debug-hypothesis.md`
+2. Continue the four phases below
+3. Use supporting techniques only after the pre-debug gate is complete
 
 ## The Four Phases
 
@@ -279,6 +299,7 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 
 These techniques are part of systematic debugging and available in this directory:
 
+- **`debug-hypothesis.md`** - Mandatory pre-debug gate for symptoms, hypotheses, experiments, and evidence logging
 - **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
 - **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
