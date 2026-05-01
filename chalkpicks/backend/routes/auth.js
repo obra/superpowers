@@ -14,6 +14,7 @@ const {
   getPasswordResetToken,
   markPasswordResetTokenUsed,
 } = require('../models/db');
+const { sendWelcome, sendPasswordReset } = require('../services/email');
 
 const router = express.Router();
 
@@ -59,6 +60,8 @@ router.post('/register', authLimiter, async (req, res) => {
     });
 
     const token = signToken(user.id);
+
+    sendWelcome(user).catch(() => {});
 
     res.status(201).json({
       success: true,
@@ -132,9 +135,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
     const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRES_MINUTES * 60 * 1000).toISOString();
 
     createPasswordResetToken({ userId: user.id, token, expiresAt });
-
-    // In production wire up nodemailer here
-    console.info(`[password-reset] token for user ${user.id}: ${token}`);
+    sendPasswordReset(user, token).catch(() => {});
   }
 
   res.json({

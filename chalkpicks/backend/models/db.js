@@ -30,8 +30,8 @@ function initializeDatabase() {
   // Split on semicolons and run each statement that isn't empty
   const statements = schema
     .split(';')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith('--'));
+    .map((s) => s.split('\n').filter((line) => !line.trim().startsWith('--')).join('\n').trim())
+    .filter((s) => s.length > 0);
 
   const runAll = database.transaction(() => {
     for (const stmt of statements) {
@@ -264,7 +264,6 @@ function seedDatabase(database) {
       away_team: 'North Carolina Tar Heels',
       game_time: fmtDate(tomorrow),
       pick_type: 'spread',
-      pick_side: 'North Carolina +7.5',
       pick_side: 'North Carolina +7.5',
       pick_value: 7.5,
       odds: -110,
@@ -502,11 +501,157 @@ function getUserByStripeCustomerId(stripeCustomerId) {
     .get(stripeCustomerId);
 }
 
+// --- Pick helpers ---
+
+function getPicks({ sport, league, result, limit = 20, offset = 0 } = {}) {
+  const database = getDb();
+  const conditions = [];
+  const params = {};
+
+  if (sport) { conditions.push('sport = @sport'); params.sport = sport; }
+  if (league) { conditions.push('league = @league'); params.league = league; }
+  if (result) { conditions.push('result = @result'); params.result = result; }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  params.limit = Math.min(Number(limit) || 20, 100);
+  params.offset = Number(offset) || 0;
+
+  return database
+    .prepare(`SELECT * FROM picks ${where} ORDER BY game_time DESC LIMIT @limit OFFSET @offset`)
+    .all(params);
+}
+
+function getPickById(id) {
+  return getDb().prepare('SELECT * FROM picks WHERE id = ?').get(id);
+}
+
+function createPick(data) {
+  const database = getDb();
+  const allowed = [
+    'sport', 'league', 'game_id', 'home_team', 'away_team', 'game_time',
+    'pick_type', 'pick_side', 'pick_value', 'odds', 'opening_odds',
+    'confidence', 'analysis', 'key_factors', 'result', 'profit_loss', 'is_premium',
+  ];
+  const cols = allowed.filter((f) => data[f] !== undefined);
+  return database
+    .prepare(`INSERT INTO picks (${cols.join(',')}) VALUES (${cols.map((c) => '@' + c).join(',')}) RETURNING *`)
+    .get(data);
+}
+
+function updatePick(id, fields) {
+  const database = getDb();
+  const allowed = ['result', 'profit_loss', 'odds', 'opening_odds', 'confidence', 'analysis', 'key_factors', 'is_premium'];
+  const updates = Object.entries(fields)
+    .filter(([k]) => allowed.includes(k))
+    .map(([k]) => `${k} = @${k}`)
+    .join(', ');
+  if (!updates) return getPickById(id);
+  database.prepare(`UPDATE picks SET ${updates}, updated_at = datetime('now') WHERE id = @id`).run({ ...fields, id });
+  return getPickById(id);
+}
+
+function trackPick(userId, pickId) {
+  getDb()
+    .prepare('INSERT OR IGNORE INTO user_picks (user_id, pick_id) VALUES (?, ?)')
+    .run(userId, pickId);
+}
+
+function untrackPick(userId, pickId) {
+  getDb().prepare('DELETE FROM user_picks WHERE user_id = ? AND pick_id = ?').run(userId, pickId);
+}
+
+function getUserPicks(userId) {
+  return getDb()
+    .prepare(`
+      SELECT p.*, up.added_at as tracked_at
+      FROM picks p
+      JOIN user_picks up ON p.id = up.pick_id
+      WHERE up.user_id = ?
+      ORDER BY up.added_at DESC
+    `)
+    .all(userId);
+}
+
+// --- Stats helpers ---
+
+function getPerformanceStats(sport) {
+  const database = getDb();
+  if (sport && sport !== 'all') {
+    return database
+      .prepare('SELECT * FROM performance_stats WHERE sport = ? ORDER BY date DESC LIMIT 90')
+      .all(sport);
+  }
+  return database
+    .prepare("SELECT * FROM performance_stats WHERE sport = 'all' ORDER BY date DESC LIMIT 90")
+    .all();
+}
+
+function getDailyStats(days = 30) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return getDb()
+    .prepare("SELECT * FROM performance_stats WHERE sport = 'all' AND date >= ? ORDER BY date ASC")
+    .all(cutoff.toISOString().substring(0, 10));
+}
+
+// --- Bet helpers ---
+
+function getUserBets(userId) {
+  return getDb()
+    .prepare('SELECT * FROM user_bets WHERE user_id = ? ORDER BY bet_date DESC')
+    .all(userId);
+}
+
+function createBet(userId, data) {
+  const database = getDb();
+  const allowed = ['pick_id', 'sport', 'description', 'bet_type', 'odds', 'stake', 'potential_payout', 'result', 'profit_loss', 'notes', 'bet_date'];
+  const fields = { user_id: userId };
+  for (const k of allowed) {
+    if (data[k] !== undefined) fields[k] = data[k];
+  }
+  const cols = Object.keys(fields);
+  return database
+    .prepare(`INSERT INTO user_bets (${cols.join(',')}) VALUES (${cols.map((c) => '@' + c).join(',')}) RETURNING *`)
+    .get(fields);
+}
+
+function updateBet(id, userId, data) {
+  const database = getDb();
+  const allowed = ['description', 'result', 'profit_loss', 'notes', 'stake', 'odds', 'potential_payout'];
+  const updates = Object.entries(data)
+    .filter(([k]) => allowed.includes(k))
+    .map(([k]) => `${k} = @${k}`)
+    .join(', ');
+  if (!updates) return database.prepare('SELECT * FROM user_bets WHERE id = ? AND user_id = ?').get(id, userId);
+  database.prepare(`UPDATE user_bets SET ${updates} WHERE id = @id AND user_id = @userId`).run({ ...data, id, userId });
+  return database.prepare('SELECT * FROM user_bets WHERE id = ? AND user_id = ?').get(id, userId);
+}
+
+function deleteBet(id, userId) {
+  return getDb().prepare('DELETE FROM user_bets WHERE id = ? AND user_id = ?').run(id, userId);
+}
+
+// --- Parlay helpers ---
+
+function getUserParlays(userId) {
+  return getDb().prepare('SELECT * FROM parlays WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+}
+
+function createParlay(userId, data) {
+  const { picks, combined_odds, stake, potential_payout } = data;
+  return getDb()
+    .prepare('INSERT INTO parlays (user_id, picks, combined_odds, stake, potential_payout) VALUES (@userId, @picks, @combined_odds, @stake, @potential_payout) RETURNING *')
+    .get({ userId, picks: JSON.stringify(picks || []), combined_odds, stake, potential_payout });
+}
+
+function deleteParlay(id, userId) {
+  return getDb().prepare('DELETE FROM parlays WHERE id = ? AND user_id = ?').run(id, userId);
+}
 // --- Password reset helpers ---
 
 function createPasswordResetToken({ userId, token, expiresAt }) {
   const database = getDb();
-  // Invalidate previous tokens
+  // Invalidate previous tokens for this user
   database.prepare('UPDATE password_reset_tokens SET used = 1 WHERE user_id = ?').run(userId);
   database.prepare(`
     INSERT INTO password_reset_tokens (user_id, token, expires_at)
@@ -532,6 +677,7 @@ const database = initializeDatabase();
 module.exports = {
   db: database,
   getDb,
+  initializeDatabase,
   getUser,
   getUserById,
   createUser,
@@ -543,6 +689,22 @@ module.exports = {
   createPasswordResetToken,
   getPasswordResetToken,
   markPasswordResetTokenUsed,
+  getPicks,
+  getPickById,
+  createPick,
+  updatePick,
+  trackPick,
+  untrackPick,
+  getUserPicks,
+  getPerformanceStats,
+  getDailyStats,
+  getUserBets,
+  createBet,
+  updateBet,
+  deleteBet,
+  getUserParlays,
+  createParlay,
+  deleteParlay,
 };
 
 // Allow direct execution for setup
