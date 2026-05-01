@@ -10,7 +10,7 @@
 ### 1. Clone Superpowers
 
 ```bash
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/Sonbbal/superpowers.git ~/.config/opencode/superpowers
 ```
 
 ### 2. Register the Plugin
@@ -30,7 +30,7 @@ Create a symlink so OpenCode's native skill tool discovers superpowers skills:
 ```bash
 mkdir -p ~/.config/opencode/skills
 rm -rf ~/.config/opencode/skills/superpowers
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+ln -s ~/.config/opencode/superpowers/claude-code/skills ~/.config/opencode/skills/superpowers
 ```
 
 ### 4. Restart OpenCode
@@ -102,7 +102,7 @@ git pull
 ### Skills not found
 
 1. Check skills symlink: `ls -l ~/.config/opencode/skills/superpowers`
-2. Verify it points to: `~/.config/opencode/superpowers/skills`
+2. Verify it points to: `~/.config/opencode/superpowers/claude-code/skills`
 3. Use `skill` tool to list what's discovered
 
 ### Tool mapping
@@ -115,5 +115,5 @@ When skills reference Claude Code tools:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- Report issues: https://github.com/Sonbbal/superpowers/issues
+- Full documentation: https://github.com/Sonbbal/superpowers/blob/main/docs/README.opencode.md

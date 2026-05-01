@@ -3,207 +3,128 @@
 코딩 에이전트를 위한 팀 기반 병렬 개발 워크플로 스킬 라이브러리입니다.
 
 > **원본 프로젝트:** 이 프로젝트는 [obra/superpowers](https://github.com/obra/superpowers)를 기반으로 제작되었습니다.
-> 원본 프로젝트의 전체 스킬 라이브러리와 철학을 포함하며, 팀 기반 병렬 실행, API/EDR 검증, 감사 에이전트, 모델 할당, 컨텍스트 관리 기능이 추가되었습니다.
-> 원본 프로젝트에 대한 자세한 내용은 [obra/superpowers README](https://github.com/obra/superpowers/blob/main/README.md)를 참고하세요.
 
----
+## 패키지 구조
 
-## 설치 방법
+이 저장소는 하나의 repo 안에서 플랫폼별 패키지를 분리합니다.
 
-### Claude Code (플러그인 마켓플레이스)
+| 플랫폼 | 패키지 | 설명 |
+| --- | --- | --- |
+| Claude Code | `claude-code/` | Claude Code skills, agents, commands, hooks |
+| Codex | `codex/` | Codex-native skills and plugin metadata |
+| OpenCode | `docs/README.opencode.md` | 기존 OpenCode 설치 문서 |
 
-**1단계:** 마켓플레이스 등록
+저장소 루트는 더 이상 Claude Code 런타임 패키지가 아닙니다. 루트는 프로젝트 소개, release notes, marketplace entry, 공통 문서만 담당합니다.
 
-```bash
+## 빠른 설치
+
+### Claude Code
+
+Claude Code에서 실행:
+
+```text
 /plugin marketplace add Sonbbal/superpowers
-```
-
-**2단계:** 플러그인 설치
-
-```bash
 /plugin install sonbbal-superpowers@sonbbal-marketplace
 ```
 
-**3단계:** 설치 확인
+자세한 내용:
 
-새 세션을 시작하고 스킬이 트리거되는 작업을 요청하세요 (예: "이 기능을 설계해줘", "에이전트 팀을 구성해 병렬로 진행해줘"). Claude가 자동으로 관련 스킬을 호출합니다.
-
-### 업데이트
-
-스킬은 플러그인 업데이트 시 자동으로 반영됩니다:
-
-```bash
-/plugin update sonbbal-superpowers
-```
+- [claude-code/README.md](claude-code/README.md)
+- [claude-code/INSTALL.md](claude-code/INSTALL.md)
 
 ### Codex
 
-Codex용 스킬셋은 Claude Code용 루트 `skills/`가 아니라 `codex/skills`에 별도로 있습니다.
-
-**1단계:** 저장소 클론
+Codex용 패키지는 `codex/`에 있습니다.
 
 ```bash
 git clone https://github.com/Sonbbal/superpowers.git ~/.codex/superpowers
-```
-
-이미 클론했다면:
-
-```bash
-cd ~/.codex/superpowers
-git pull
-```
-
-**2단계:** Codex 전용 스킬 경로 연결
-
-```bash
 mkdir -p ~/.agents/skills
 ln -s ~/.codex/superpowers/codex/skills ~/.agents/skills/sonbbal-superpowers-codex
 ```
 
-**3단계:** 설치 확인
+자세한 내용:
 
-```bash
-find ~/.agents/skills/sonbbal-superpowers-codex -name SKILL.md | sort
-```
+- [codex/README.md](codex/README.md)
+- [codex/INSTALL.md](codex/INSTALL.md)
 
-Codex plugin metadata를 사용하는 환경에서는 루트의 `.agents/plugins/marketplace.json`이 `./codex` 패키지를 가리킵니다. 자세한 내용은 [codex/README.md](codex/README.md)를 참고하세요.
+## 붙여넣기 설치 프롬프트
 
-### OpenCode
+Claude Code나 Codex에 직접 붙여 넣어 설치/업데이트를 맡기는 프롬프트는 [docs/prompts.md](docs/prompts.md)에 있습니다.
 
-- **OpenCode:** [docs/README.opencode.md](docs/README.opencode.md)
+## 공통 설치 문서
 
----
+플랫폼별 설치, 업데이트, 제거, 마이그레이션은 [docs/installation.md](docs/installation.md)를 참고하세요.
 
 ## 추가된 기능
 
-기존 [obra/superpowers](https://github.com/obra/superpowers) 스킬 라이브러리에 다음 기능이 추가되었습니다:
+기존 [obra/superpowers](https://github.com/obra/superpowers) 스킬 라이브러리에 다음 기능이 추가되었습니다.
 
-### 팀 기반 병렬 개발 (team-driven-development)
+### 팀 기반 병렬 개발
 
-기존의 단일 subagent 방식 대신, **에이전트 팀을 구성**하여 병렬로 작업을 실행합니다.
+기존 단일 subagent 방식 대신 에이전트 팀을 구성하여 병렬로 작업을 실행합니다.
 
-| 역할 | 모델 | 책임 | 코드 작성 |
-|------|------|------|:---------:|
-| **Team Lead** | Opus | 오케스트레이션만 담당 — 태스크 할당, 메시지 라우팅, 블로커 해결 | **불가** |
-| **Audit Agent** | Opus (필수) | 태스크 완료 검증, 스펙 대비 검사, 비준수 작업 차단 | 불가 |
-| **Worker(s)** | Opus/Sonnet | TDD 기반 태스크 구현 | **유일하게 가능** |
+| 역할 | 책임 | 코드 작성 |
+| --- | --- | :---: |
+| Team Lead | 오케스트레이션, 태스크 할당, 블로커 해결 | 불가 |
+| Audit Agent | 태스크 완료 검증, 스펙 대비 검사, 비준수 작업 차단 | 불가 |
+| Worker | TDD 기반 태스크 구현 | 가능 |
 
-### API/EDR 검증 (api-edr-validation)
+### API/EDR 검증
 
-코드를 작성하는 에이전트가 API 엔드포인트, 변수명, 요청/응답 스키마를 **임의로 생성하는 것을 방지**합니다. 모든 API 계약은 `docs/api/` 디렉토리의 문서를 직접 참조하여 확인 후 사용해야 합니다.
+API 엔드포인트, 변수명, 요청/응답 스키마를 임의로 생성하는 것을 방지합니다. 모든 API 계약은 프로젝트 문서를 직접 참조해 확인합니다.
 
-### 감사 검증 (audit-verification)
+### 감사 검증
 
-모든 완료된 태스크는 Audit Agent의 **독립적 검증을 통과**해야 완료로 표시됩니다. 자체 보고만으로는 불충분합니다.
+완료된 태스크는 독립적 검증을 통과해야 완료로 표시합니다. 자체 보고만으로는 충분하지 않습니다.
 
-### 모델 할당 (model-assignment)
+### 모델 할당
 
-태스크 난이도에 따라 적절한 모델을 자동 할당합니다:
-- **Opus**: 복잡한 로직, 보안 관련, 아키텍처 설계, 다중 시스템 통합
-- **Sonnet**: 단순 CRUD, 설정 변경, 보일러플레이트, 패턴 따르기
-- **Audit Agent**: 항상 Opus (변경 불가)
+태스크 난이도와 위험도에 따라 적절한 모델과 reasoning 설정을 선택하는 지침을 제공합니다.
 
-### 컨텍스트 윈도우 관리 (context-window-management)
+### 컨텍스트 윈도우 관리
 
-에이전트의 대화가 **160k 토큰을 초과**하면 강제 압축을 실행합니다:
-1. 현재 작업 단위 완료
-2. 중간 정리 (커밋, 상태 저장)
-3. 컨텍스트 압축
-4. 압축 완료 후 재개
+긴 세션에서 작업 단위 완료, 상태 저장, 압축, 재개 절차를 명확히 합니다.
 
-### Wiki 지식 베이스 (wiki-management)
+### Wiki 지식 베이스
 
-Andrej Karpathy의 **LLM Wiki 패턴**을 스킬로 통합합니다. 매 세션마다 코드베이스를 탐색하는 대신, 사전 편찬된 위키를 캐시로 활용하여 토큰과 시간을 절약합니다.
+Andrej Karpathy의 LLM Wiki 패턴을 스킬로 통합합니다. 매 세션마다 코드베이스를 새로 탐색하는 대신 사전 편찬된 위키를 캐시로 활용합니다.
 
-- **3계층 구조**: Raw Sources (불변, 사람 관리) → Wiki (LLM 소유) → Schema (CLAUDE.md 규칙)
-- **L1/L2 캐시**: `hot.md`가 매 세션 자동 로딩 (L1), 나머지 위키 페이지는 필요 시 참조 (L2)
-- **자동 갱신**: brainstorming, writing-plans, finishing-a-development-branch 등 기존 스킬 완료 시 위키 자동 업데이트
-- **건강 점검**: 고아 페이지, 깨진 링크, 오래된 정보 감지
+## 기본 워크플로
 
-### 유틸리티 커맨드
+1. `brainstorming`: 코드 작성 전 설계 정제.
+2. `writing-plans`: 승인된 설계를 구현 계획으로 분해.
+3. `executing-plans` 또는 `team-driven-development`: 계획 실행.
+4. `test-driven-development`: RED-GREEN-REFACTOR 구현.
+5. `requesting-code-review`: 계획 대비 코드 검토.
+6. `verification-before-completion`: 완료 전 증거 기반 검증.
+7. `finishing-a-development-branch`: 병합, PR, 정리 선택.
 
-| 커맨드 | 설명 |
-|--------|------|
-| `/optimize-claude-md` | CLAUDE.md 분석 및 최적화 — 200줄 이하로 핵심만 남기고 상세 내용은 `docs/`로 분리 |
-| `/optimize-api-docs` | `docs/api/` 분석 및 최적화 — 초기 Bootstrap 또는 포맷 검증, 중복/고아/미문서화 API 감지 |
-| `/setup-hooks` | 프로젝트 생태계 감지 후 Claude Code hooks 자동 구성 |
-| `/wiki-init` | 프로젝트 위키 초기 생성 — `docs/wiki/`에 지식 베이스 구축 (최초 1회) |
-| `/wiki-sync` | Raw 소스 + 코드베이스 기반 위키 전체 동기화 |
-| `/wiki-lint` | 위키 건강 점검 — 고아 페이지, 깨진 링크, 오래된 정보 감지 |
+## 테스트
 
----
+Claude Code 패키지 경계:
 
-## 워크플로
+```bash
+bash tests/claude-code/test-plugin-package.sh
+```
 
-1. **brainstorming** — 코드 작성 전 활성화. 아이디어를 정제하고 설계 문서를 생성합니다.
+Codex 패키지 경계:
 
-2. **using-git-worktrees** — 설계 승인 후 활성화. 격리된 워크트리에서 새 브랜치를 생성합니다.
+```bash
+bash tests/codex/test-plugin-package.sh
+```
 
-3. **writing-plans** — 승인된 설계를 기반으로 구체적인 구현 계획을 작성합니다. 각 태스크는 2~5분 단위의 세밀한 단계로 구성됩니다.
+Codex 스킬 언어 호환성:
 
-4. **team-driven-development** 또는 **executing-plans** — 에이전트 팀을 구성하여 병렬로 실행하거나, 배치 단위로 순차 실행합니다.
-
-5. **test-driven-development** — 구현 중 활성화. RED-GREEN-REFACTOR 사이클을 강제합니다.
-
-6. **requesting-code-review** — 태스크 간 활성화. 계획 대비 코드를 검토합니다.
-
-7. **finishing-a-development-branch** — 모든 태스크 완료 후 활성화. 테스트 검증, 병합/PR 옵션을 제시합니다.
-
-8. **wiki-management** — 주요 스킬 완료 시 자동 활성화. 프로젝트 위키를 갱신하여 다음 세션에서 코드 탐색 없이 컨텍스트를 확보합니다.
-
----
-
-## 스킬 목록
-
-### 원본 스킬 (obra/superpowers 기반)
-
-| 카테고리 | 스킬 | 설명 |
-|----------|------|------|
-| 테스팅 | test-driven-development | RED-GREEN-REFACTOR 사이클 |
-| 디버깅 | systematic-debugging | 4단계 근본 원인 분석 |
-| | verification-before-completion | 수정 검증 |
-| 협업 | brainstorming | 소크라테스식 설계 정제 |
-| | writing-plans | 상세 구현 계획 작성 |
-| | executing-plans | 배치 실행 + 체크포인트 |
-| | requesting-code-review | 코드 리뷰 요청 |
-| | receiving-code-review | 코드 리뷰 피드백 대응 |
-| | using-git-worktrees | 격리된 개발 환경 |
-| | finishing-a-development-branch | 병합/PR 결정 워크플로 |
-| 메타 | writing-skills | 새 스킬 작성 가이드 |
-| | using-superpowers | 스킬 시스템 소개 |
-
-### 추가 스킬 (sonbbal)
-
-| 카테고리 | 스킬 | 설명 |
-|----------|------|------|
-| 팀 실행 | team-driven-development | 에이전트 팀 병렬 실행 |
-| | model-assignment | 태스크 난이도 기반 모델 할당 |
-| 검증 | api-edr-validation | API/EDR 계약 검증 |
-| | audit-verification | 태스크 완료 감사 |
-| 관리 | context-window-management | 160k 토큰 컨텍스트 압축 |
-| | wiki-management | LLM Wiki 패턴 기반 프로젝트 지식 캐시 |
-
-### 추가 에이전트 역할
-
-| 에이전트 | 파일 | 역할 |
-|----------|------|------|
-| Audit Agent | agents/audit-agent.md | 모든 태스크 완료의 독립적 검증자 + API 문서 검증 게이트 |
-
----
+```bash
+bash tests/codex/test-codex-skill-language.sh
+```
 
 ## 원본 프로젝트
 
-이 프로젝트는 Jesse Vincent([@obra](https://github.com/obra))의 [superpowers](https://github.com/obra/superpowers)를 기반으로 합니다.
-
-원본 프로젝트가 도움이 되셨다면 [Jesse의 오픈소스 후원](https://github.com/sponsors/obra)을 고려해 주세요.
-
-원본 프로젝트에 대한 자세한 내용:
-- **원본 레포지토리:** https://github.com/obra/superpowers
-- **원본 마켓플레이스:** https://github.com/obra/superpowers-marketplace
-- **블로그:** [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
-
----
+- 원본 레포지토리: https://github.com/obra/superpowers
+- 원본 마켓플레이스: https://github.com/obra/superpowers-marketplace
+- 블로그: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
 ## 라이선스
 
-MIT License — 자세한 내용은 LICENSE 파일을 참조하세요.
+MIT License. 자세한 내용은 [LICENSE](LICENSE)를 참고하세요.

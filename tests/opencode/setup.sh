@@ -15,7 +15,8 @@ export OPENCODE_CONFIG_DIR="$TEST_HOME/.config/opencode"
 # Install plugin to test location
 mkdir -p "$HOME/.config/opencode/superpowers"
 cp -r "$REPO_ROOT/lib" "$HOME/.config/opencode/superpowers/"
-cp -r "$REPO_ROOT/skills" "$HOME/.config/opencode/superpowers/"
+mkdir -p "$HOME/.config/opencode/superpowers/claude-code"
+cp -r "$REPO_ROOT/claude-code/skills" "$HOME/.config/opencode/superpowers/claude-code/"
 
 # Copy plugin directory
 mkdir -p "$HOME/.config/opencode/superpowers/.opencode/plugins"
@@ -25,6 +26,11 @@ cp "$REPO_ROOT/.opencode/plugins/superpowers.js" "$HOME/.config/opencode/superpo
 mkdir -p "$HOME/.config/opencode/plugins"
 ln -sf "$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js" \
        "$HOME/.config/opencode/plugins/superpowers.js"
+
+# Register Superpowers skills through OpenCode's native skill discovery.
+mkdir -p "$HOME/.config/opencode/skills"
+ln -s "$HOME/.config/opencode/superpowers/claude-code/skills" \
+      "$HOME/.config/opencode/skills/superpowers"
 
 # Create test skills in different locations for testing
 

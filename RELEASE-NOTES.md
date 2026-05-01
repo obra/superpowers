@@ -1,5 +1,35 @@
 # Superpowers Release Notes
 
+## Unreleased (2026-05-01)
+
+### Breaking Changes
+
+**Claude Code package moved from repository root to `claude-code/`**
+
+The repository now uses platform-specific package directories:
+
+- Claude Code: `claude-code/`
+- Codex: `codex/`
+
+The root `.claude-plugin/marketplace.json` remains in place, but its plugin source now points at `./claude-code`. Root-level `skills/`, `agents/`, `commands/`, and `hooks/` are no longer the Claude Code runtime package.
+
+If an existing Claude Code install does not pick up the new package path, run:
+
+```text
+/plugin update sonbbal-superpowers
+```
+
+If the old layout remains cached, uninstall and reinstall the plugin from `sonbbal-marketplace`.
+
+### Documentation
+
+- Added Claude Code package docs in `claude-code/README.md` and `claude-code/INSTALL.md`.
+- Added canonical Codex install docs in `codex/INSTALL.md`.
+- Added cross-platform install docs in `docs/installation.md`.
+- Added paste-ready install/update prompts in `docs/prompts.md`.
+
+---
+
 ## v1.4.0 (2026-04-11) — Wiki Knowledge Base
 
 Implements the Andrej Karpathy LLM Wiki pattern as a superpowers skill. Instead of Claude exploring the codebase every session, a pre-compiled wiki serves as a knowledge cache that accumulates over time.

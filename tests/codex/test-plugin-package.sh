@@ -33,7 +33,8 @@ required_skills=(
   "writing-skills"
 )
 
-INSTALL_DOC="$REPO_ROOT/.codex/INSTALL.md"
+INSTALL_DOC="$PLUGIN_DIR/INSTALL.md"
+ROOT_INSTALL_DOC="$REPO_ROOT/.codex/INSTALL.md"
 CODEX_README="$REPO_ROOT/docs/README.codex.md"
 PLUGIN_README="$PLUGIN_DIR/README.md"
 
@@ -115,11 +116,13 @@ pass "all required Codex skills exist with name and description frontmatter"
 pass "Codex plugin has ${#required_skills[@]} skill files"
 
 require_text "$INSTALL_DOC" 'codex' \
-  ".codex/INSTALL.md points users at the Codex plugin package"
+  "codex/INSTALL.md points users at the Codex plugin package"
 require_text "$INSTALL_DOC" 'codex/skills' \
-  ".codex/INSTALL.md points users at the Codex skills directory"
+  "codex/INSTALL.md points users at the Codex skills directory"
 require_text "$INSTALL_DOC" '~/.agents/skills/sonbbal-superpowers-codex' \
-  ".codex/INSTALL.md documents the Codex-native skill install path"
+  "codex/INSTALL.md documents the Codex-native skill install path"
+require_text "$ROOT_INSTALL_DOC" 'codex/INSTALL.md' \
+  ".codex/INSTALL.md points users at the canonical Codex install guide"
 require_text "$PLUGIN_README" 'codex' \
   "plugin README identifies the Codex plugin package path"
 require_text "$PLUGIN_README" 'codex/skills' \
@@ -138,7 +141,7 @@ grep -Eq '"path"[[:space:]]*:[[:space:]]*"\./codex"' "$MARKETPLACE_JSON" \
   || fail 'Codex marketplace must point at "./codex"'
 pass 'Codex marketplace points at ./codex'
 
-for file in "$INSTALL_DOC" "$CODEX_README" "$PLUGIN_README" "$MARKETPLACE_JSON"; do
+for file in "$INSTALL_DOC" "$ROOT_INSTALL_DOC" "$CODEX_README" "$PLUGIN_README" "$MARKETPLACE_JSON"; do
   forbid_text "$file" 'plugins/sonbbal-superpowers-codex' \
     "$file does not reference the old Codex plugin path"
 done

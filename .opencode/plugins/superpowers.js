@@ -48,7 +48,9 @@ const normalizePath = (p, homeDir) => {
 
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
-  const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
+  const packageSkillsDir = path.resolve(__dirname, '../../claude-code/skills');
+  const legacySkillsDir = path.resolve(__dirname, '../../skills');
+  const superpowersSkillsDir = fs.existsSync(packageSkillsDir) ? packageSkillsDir : legacySkillsDir;
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 

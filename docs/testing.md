@@ -11,6 +11,7 @@ Testing skills that involve subagents, workflows, and complex interactions requi
 ```
 tests/
 ├── claude-code/
+│   ├── test-plugin-package.sh             # Claude Code package layout check
 │   ├── test-helpers.sh                    # Shared test utilities
 │   ├── test-subagent-driven-development-integration.sh
 │   ├── analyze-token-usage.py             # Token analysis tool
@@ -18,6 +19,14 @@ tests/
 ```
 
 ## Running Tests
+
+### Package Layout Test
+
+```bash
+bash tests/claude-code/test-plugin-package.sh
+```
+
+This verifies that the Claude Code package lives under `claude-code/` and that root-level runtime directories are not present.
 
 ### Integration Tests
 
@@ -33,7 +42,7 @@ cd tests/claude-code
 
 ### Requirements
 
-- Must run from the **superpowers plugin directory** (not from temp directories)
+- Must run from the repository root with the Claude Code package available under `claude-code/`
 - Claude Code must be installed and available as `claude` command
 - Local dev marketplace must be enabled: `"superpowers@superpowers-dev": true` in `~/.claude/settings.json`
 
@@ -182,9 +191,9 @@ ls -lt "$SESSION_DIR"/*.jsonl | head -5
 **Problem**: Skill not found when running headless tests
 
 **Solutions**:
-1. Ensure you're running FROM the superpowers directory: `cd /path/to/superpowers && tests/...`
+1. Ensure you're running from the repository root: `cd /path/to/superpowers && tests/...`
 2. Check `~/.claude/settings.json` has `"superpowers@superpowers-dev": true` in `enabledPlugins`
-3. Verify skill exists in `skills/` directory
+3. Verify skill exists in `claude-code/skills/` directory
 
 ### Permission Errors
 
@@ -258,7 +267,7 @@ python3 "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE"
 1. **Always cleanup**: Use trap to cleanup temp directories
 2. **Parse transcripts**: Don't grep user-facing output - parse the `.jsonl` session file
 3. **Grant permissions**: Use `--permission-mode bypassPermissions` and `--add-dir`
-4. **Run from plugin dir**: Skills only load when running from the superpowers directory
+4. **Run from repository root**: local tests expect `claude-code/` to be available under the repository root
 5. **Show token usage**: Always include token analysis for cost visibility
 6. **Test real behavior**: Verify actual files created, tests passing, commits made
 

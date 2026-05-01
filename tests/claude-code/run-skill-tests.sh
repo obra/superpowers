@@ -73,6 +73,7 @@ done
 
 # List of skill tests to run (fast unit tests)
 tests=(
+    "test-plugin-package.sh"
     "test-subagent-driven-development.sh"
 )
 
@@ -96,6 +97,16 @@ passed=0
 failed=0
 skipped=0
 
+run_test_command() {
+    local test_path="$1"
+
+    if command -v timeout &> /dev/null; then
+        timeout "$TIMEOUT" bash "$test_path"
+    else
+        bash "$test_path"
+    fi
+}
+
 # Run each test
 for test in "${tests[@]}"; do
     echo "----------------------------------------"
@@ -118,7 +129,7 @@ for test in "${tests[@]}"; do
     start_time=$(date +%s)
 
     if [ "$VERBOSE" = true ]; then
-        if timeout "$TIMEOUT" bash "$test_path"; then
+        if run_test_command "$test_path"; then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo ""
@@ -138,7 +149,7 @@ for test in "${tests[@]}"; do
         fi
     else
         # Capture output for non-verbose mode
-        if output=$(timeout "$TIMEOUT" bash "$test_path" 2>&1); then
+        if output=$(run_test_command "$test_path" 2>&1); then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo "  [PASS] (${duration}s)"

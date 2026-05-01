@@ -41,7 +41,7 @@ fi
 
 # Test 3: Verify skills directory is populated
 echo "Test 3: Checking skills directory..."
-skill_count=$(find "$HOME/.config/opencode/superpowers/skills" -name "SKILL.md" | wc -l)
+skill_count=$(find "$HOME/.config/opencode/superpowers/claude-code/skills" -name "SKILL.md" | wc -l)
 if [ "$skill_count" -gt 0 ]; then
     echo "  [PASS] Found $skill_count skills installed"
 else
@@ -51,7 +51,7 @@ fi
 
 # Test 4: Check using-superpowers skill exists (critical for bootstrap)
 echo "Test 4: Checking using-superpowers skill (required for bootstrap)..."
-if [ -f "$HOME/.config/opencode/superpowers/skills/using-superpowers/SKILL.md" ]; then
+if [ -f "$HOME/.config/opencode/superpowers/claude-code/skills/using-superpowers/SKILL.md" ]; then
     echo "  [PASS] using-superpowers skill exists"
 else
     echo "  [FAIL] using-superpowers skill not found (required for bootstrap)"
