@@ -24,7 +24,7 @@ git pull
 Use the Codex plugin package at:
 
 ```text
-plugins/sonbbal-superpowers-codex
+codex
 ```
 
 The repository includes a marketplace entry at:
@@ -43,14 +43,14 @@ If your Codex setup uses native skill discovery directly, symlink the Codex-comp
 
 ```bash
 mkdir -p ~/.agents/skills
-ln -s ~/.codex/superpowers/plugins/sonbbal-superpowers-codex/skills ~/.agents/skills/sonbbal-superpowers-codex
+ln -s ~/.codex/superpowers/codex/skills ~/.agents/skills/sonbbal-superpowers-codex
 ```
 
 Windows PowerShell:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-cmd /c mklink /J "$env:USERPROFILE\.agents\skills\sonbbal-superpowers-codex" "$env:USERPROFILE\.codex\superpowers\plugins\sonbbal-superpowers-codex\skills"
+cmd /c mklink /J "$env:USERPROFILE\.agents\skills\sonbbal-superpowers-codex" "$env:USERPROFILE\.codex\superpowers\codex\skills"
 ```
 
 Restart Codex after creating the symlink or junction.
@@ -61,7 +61,7 @@ Restart Codex after creating the symlink or junction.
 find ~/.agents/skills/sonbbal-superpowers-codex -name SKILL.md | sort
 ```
 
-You should see the Codex-compatible skills from `plugins/sonbbal-superpowers-codex/skills`, including `using-superpowers`, `executing-plans`, `team-driven-development`, and the other packaged Superpowers workflows.
+You should see the Codex-compatible skills from `codex/skills`, including `using-superpowers`, `executing-plans`, `team-driven-development`, and the other packaged Superpowers workflows.
 
 ## Test The Package
 

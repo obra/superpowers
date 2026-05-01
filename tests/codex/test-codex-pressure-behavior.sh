@@ -343,7 +343,7 @@ case_dir="$CASE_DIR"
 assert_gate_before_repo_action \
   "skill-first" \
   "$case_dir/event-sequence.tsv" \
-  '(using-superpowers|superpowers:using-superpowers|skill[- ]first|plugins/sonbbal-superpowers-codex/skills|/skills/[^[:space:]]*/SKILL\.md|SKILL\.md)'
+  '(using-superpowers|superpowers:using-superpowers|skill[- ]first|codex/skills|/skills/[^[:space:]]*/SKILL\.md|SKILL\.md)'
 assert_no_write_commands \
   "skill-first" \
   "$case_dir/command-text.txt"

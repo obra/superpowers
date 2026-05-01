@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SKILLS_DIR="$REPO_ROOT/plugins/sonbbal-superpowers-codex/skills"
+SKILLS_DIR="$REPO_ROOT/codex/skills"
 TEAM_SKILL="$SKILLS_DIR/team-driven-development/SKILL.md"
 USING_SUPERPOWERS_SKILL="$SKILLS_DIR/using-superpowers/SKILL.md"
 TDD_SKILL="$SKILLS_DIR/test-driven-development/SKILL.md"

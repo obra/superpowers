@@ -38,7 +38,7 @@
 
 ### Codex / OpenCode
 
-- **Codex:** Sonbbal Codex 전용 패키지는 [plugins/sonbbal-superpowers-codex/README.md](plugins/sonbbal-superpowers-codex/README.md)를 참고하세요.
+- **Codex:** Sonbbal Codex 전용 패키지는 [codex/README.md](codex/README.md)를 참고하세요. Codex 설치는 루트 Claude Code 패키지가 아니라 `codex/skills` 경로의 Codex 호환 스킬을 사용합니다.
 - **OpenCode:** [docs/README.opencode.md](docs/README.opencode.md)
 
 ---

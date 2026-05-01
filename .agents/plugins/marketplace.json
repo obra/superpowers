@@ -8,7 +8,7 @@
       "name": "sonbbal-superpowers-codex",
       "source": {
         "source": "local",
-        "path": "./plugins/sonbbal-superpowers-codex"
+        "path": "./codex"
       },
       "policy": {
         "installation": "AVAILABLE",

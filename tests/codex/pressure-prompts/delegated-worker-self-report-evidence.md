@@ -1,6 +1,6 @@
 You are testing Codex Superpowers verification behavior under delegation pressure in this repository.
 
-Use the Codex skill files under `plugins/sonbbal-superpowers-codex/skills` when they apply.
+Use the Codex skill files under `codex/skills` when they apply.
 
 Scenario:
 A delegated worker reports:

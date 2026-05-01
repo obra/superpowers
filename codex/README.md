@@ -5,11 +5,11 @@ Codex-focused Superpowers plugin package.
 This package is intentionally separate from the root Claude Code package so each harness can keep idiomatic instructions:
 
 - Claude Code package: repository root, `.claude-plugin/`, `hooks/`, root `skills/`
-- Codex package: `plugins/sonbbal-superpowers-codex/`
+- Codex package: `codex/`
 
 ## What This Package Contains
 
-This package provides the Codex-compatible Superpowers skill set currently ported under `plugins/sonbbal-superpowers-codex/skills`:
+This package provides the Codex-compatible Superpowers skill set currently ported under `codex/skills`:
 
 - `api-edr-validation`
 - `audit-verification`
@@ -57,7 +57,7 @@ git clone https://github.com/Sonbbal/superpowers.git ~/.codex/superpowers
 When installing through Codex plugin metadata, use the package in this directory:
 
 ```text
-plugins/sonbbal-superpowers-codex
+codex
 ```
 
 The repository marketplace entry at `.agents/plugins/marketplace.json` points to that package path.
@@ -68,14 +68,14 @@ If your Codex setup uses native skill discovery directly, symlink the Codex-comp
 
 ```bash
 mkdir -p ~/.agents/skills
-ln -s ~/.codex/superpowers/plugins/sonbbal-superpowers-codex/skills ~/.agents/skills/sonbbal-superpowers-codex
+ln -s ~/.codex/superpowers/codex/skills ~/.agents/skills/sonbbal-superpowers-codex
 ```
 
 Windows PowerShell:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-cmd /c mklink /J "$env:USERPROFILE\.agents\skills\sonbbal-superpowers-codex" "$env:USERPROFILE\.codex\superpowers\plugins\sonbbal-superpowers-codex\skills"
+cmd /c mklink /J "$env:USERPROFILE\.agents\skills\sonbbal-superpowers-codex" "$env:USERPROFILE\.codex\superpowers\codex\skills"
 ```
 
 Restart Codex after installation so skills are rediscovered.

@@ -4,9 +4,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-PLUGIN_DIR="$REPO_ROOT/plugins/sonbbal-superpowers-codex"
+PLUGIN_DIR="$REPO_ROOT/codex"
 SKILLS_DIR="$PLUGIN_DIR/skills"
 PLUGIN_JSON="$PLUGIN_DIR/.codex-plugin/plugin.json"
+MARKETPLACE_JSON="$REPO_ROOT/.agents/plugins/marketplace.json"
 
 required_skills=(
   "api-edr-validation"
@@ -59,6 +60,20 @@ require_text() {
   fi
 }
 
+forbid_text() {
+  local file="$1"
+  local pattern="$2"
+  local message="$3"
+
+  [ -f "$file" ] || fail "Missing required file: $file"
+
+  if rg -q "$pattern" "$file"; then
+    fail "$message"
+  else
+    pass "$message"
+  fi
+}
+
 echo "=== Test: Codex Plugin Package ==="
 
 [ -f "$PLUGIN_JSON" ] || fail "Missing plugin metadata: $PLUGIN_JSON"
@@ -93,21 +108,37 @@ for skill in "${required_skills[@]}"; do
   ' "$skill_file" || fail "Frontmatter must include name and description: $skill_file"
 done
 
-pass "all required root skills exist with name and description frontmatter"
+pass "all required Codex skills exist with name and description frontmatter"
 
 [ "$skill_count" -eq "${#required_skills[@]}" ] \
   || fail "Expected ${#required_skills[@]} Codex skill files, found $skill_count"
 pass "Codex plugin has ${#required_skills[@]} skill files"
 
-require_text "$INSTALL_DOC" 'plugins/sonbbal-superpowers-codex' \
+require_text "$INSTALL_DOC" 'codex' \
   ".codex/INSTALL.md points users at the Codex plugin package"
+require_text "$INSTALL_DOC" 'codex/skills' \
+  ".codex/INSTALL.md points users at the Codex skills directory"
 require_text "$INSTALL_DOC" '~/.agents/skills/sonbbal-superpowers-codex' \
   ".codex/INSTALL.md documents the Codex-native skill install path"
-require_text "$PLUGIN_README" 'plugins/sonbbal-superpowers-codex' \
+require_text "$PLUGIN_README" 'codex' \
   "plugin README identifies the Codex plugin package path"
+require_text "$PLUGIN_README" 'codex/skills' \
+  "plugin README identifies the Codex skills directory"
 require_text "$PLUGIN_README" '~/.agents/skills/sonbbal-superpowers-codex' \
   "plugin README documents the Codex-native skill install path"
-require_text "$CODEX_README" 'plugins/sonbbal-superpowers-codex' \
+require_text "$CODEX_README" 'codex' \
   "docs/README.codex.md points users at the Codex plugin package"
+require_text "$CODEX_README" 'codex/skills' \
+  "docs/README.codex.md points users at the Codex skills directory"
 require_text "$CODEX_README" '~/.agents/skills/sonbbal-superpowers-codex' \
   "docs/README.codex.md documents the Codex-native skill install path"
+
+[ -f "$MARKETPLACE_JSON" ] || fail "Missing Codex marketplace metadata: $MARKETPLACE_JSON"
+grep -Eq '"path"[[:space:]]*:[[:space:]]*"\./codex"' "$MARKETPLACE_JSON" \
+  || fail 'Codex marketplace must point at "./codex"'
+pass 'Codex marketplace points at ./codex'
+
+for file in "$INSTALL_DOC" "$CODEX_README" "$PLUGIN_README" "$MARKETPLACE_JSON"; do
+  forbid_text "$file" 'plugins/sonbbal-superpowers-codex' \
+    "$file does not reference the old Codex plugin path"
+done
