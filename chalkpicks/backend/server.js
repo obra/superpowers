@@ -6,23 +6,16 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-
 const { generalLimiter } = require('./middleware/rateLimiter');
-const authRouter = require('./routes/auth');
-const subscriptionsRouter = require('./routes/subscriptions');
+const { ApiError } = require('./utils/errors');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://sharpaction.io';
 
-// --- Global middleware ---
 app.use(helmet());
 app.use(cors({
-  origin: [
-    FRONTEND_URL,
-    'http://localhost:3000',
-    'http://localhost:8080',
-  ],
+  origin: [FRONTEND_URL, 'http://localhost:3000', 'http://localhost:8080'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -30,20 +23,15 @@ app.use(cors({
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(generalLimiter);
 
-// --- Body parsing ---
-// Save the raw buffer on the request so the Stripe webhook handler can verify the signature.
-// The webhook route uses req.rawBody; all other routes use the parsed req.body.
+// Save raw buffer for Stripe webhook signature verification
 app.use(
   express.json({
     limit: '1mb',
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
+    verify: (req, _res, buf) => { req.rawBody = buf; },
   })
 );
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// --- Routes ---
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -53,22 +41,27 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('/api/auth', authRouter);
-app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/subscriptions', require('./routes/subscriptions'));
+app.use('/api/picks', require('./routes/picks'));
+app.use('/api/stats', require('./routes/stats'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/parlays', require('./routes/parlays'));
+app.use('/api/admin', require('./routes/admin'));
 
-// --- 404 handler ---
 app.use((req, res) => {
   res.status(404).json({ success: false, error: `Route ${req.method} ${req.path} not found.` });
 });
 
-// --- Global error handler ---
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({ success: false, error: err.message, code: err.code });
+  }
   console.error('Unhandled error:', err);
   const status = err.status || err.statusCode || 500;
-  const message =
-    process.env.NODE_ENV === 'production'
-      ? 'An unexpected error occurred.'
-      : err.message || 'Internal server error.';
+  const message = process.env.NODE_ENV === 'production'
+    ? 'An unexpected error occurred.'
+    : err.message || 'Internal server error.';
   res.status(status).json({ success: false, error: message });
 });
 
