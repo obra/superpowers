@@ -36,9 +36,40 @@
 /plugin update sonbbal-superpowers
 ```
 
-### Codex / OpenCode
+### Codex
 
-- **Codex:** Sonbbal Codex 전용 패키지는 [codex/README.md](codex/README.md)를 참고하세요. Codex 설치는 루트 Claude Code 패키지가 아니라 `codex/skills` 경로의 Codex 호환 스킬을 사용합니다.
+Codex용 스킬셋은 Claude Code용 루트 `skills/`가 아니라 `codex/skills`에 별도로 있습니다.
+
+**1단계:** 저장소 클론
+
+```bash
+git clone https://github.com/Sonbbal/superpowers.git ~/.codex/superpowers
+```
+
+이미 클론했다면:
+
+```bash
+cd ~/.codex/superpowers
+git pull
+```
+
+**2단계:** Codex 전용 스킬 경로 연결
+
+```bash
+mkdir -p ~/.agents/skills
+ln -s ~/.codex/superpowers/codex/skills ~/.agents/skills/sonbbal-superpowers-codex
+```
+
+**3단계:** 설치 확인
+
+```bash
+find ~/.agents/skills/sonbbal-superpowers-codex -name SKILL.md | sort
+```
+
+Codex plugin metadata를 사용하는 환경에서는 루트의 `.agents/plugins/marketplace.json`이 `./codex` 패키지를 가리킵니다. 자세한 내용은 [codex/README.md](codex/README.md)를 참고하세요.
+
+### OpenCode
+
 - **OpenCode:** [docs/README.opencode.md](docs/README.opencode.md)
 
 ---
