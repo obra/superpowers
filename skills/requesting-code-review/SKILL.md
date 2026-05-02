@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use to dispatch a reviewer subagent. Mandatory before merge to main for Medium+; mandatory after each task for Large. Skip for Trivial/Small unless work touches a security surface.
 ---
 
 # Requesting Code Review
@@ -11,12 +11,12 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 
 ## When to Request Review
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+**Mandatory (per task-tier):**
+- **Large:** after each task in subagent-driven development AND before merge to main
+- **Medium:** after the final task / completed feature, before merge to main
+- **Trivial / Small:** skip — unless work touches a security surface (auth, crypto, permissions, secrets, input validation at trust boundaries), in which case treat as Medium for review purposes
 
-**Optional but valuable:**
+**Optional but valuable (any tier):**
 - When stuck (fresh perspective)
 - Before refactoring (baseline check)
 - After fixing complex bug

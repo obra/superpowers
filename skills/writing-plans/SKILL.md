@@ -1,22 +1,26 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Use for Large tier work after brainstorming approval (per task-tier rubric). For Medium tier, use an inline TodoWrite checklist instead. Skip for Trivial/Small.
 ---
 
 # Writing Plans
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Commits at logical boundaries (feature-complete units), not per micro-step.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Tier scope:** This skill is for **Large** tier. Medium tier should use an inline TodoWrite checklist generated from the spec instead.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+**Context:** Recommended in a dedicated worktree (Large tier REQUIRED, Medium tier optional).
+
+**Save plans to:**
+- **Large:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` (committed)
+- **Medium (rare — usually skip this skill):** `.spx/plans/<feature-name>.md` (gitignored)
+- (User preferences for plan location override these defaults.)
 
 ## Scope Check
 
@@ -35,12 +39,19 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Bite-Sized Task Granularity
 
-**Each step is one action (2-5 minutes):**
+Granularity scales with tier:
+
+**Large tier (default for this skill) — 5 micro-steps per task:**
 - "Write the failing test" - step
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
 - "Commit" - step
+
+**Medium tier (when this skill is used at all) — 3 steps per task:**
+- "Write failing test"
+- "Implement and verify it passes"
+- "Commit at logical boundary (one commit per task, not per step)"
 
 ## Plan Document Header
 
@@ -117,7 +128,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
 - Exact commands with expected output
-- DRY, YAGNI, TDD, frequent commits
+- DRY, YAGNI, TDD, commits at logical boundaries (not per micro-step)
 
 ## Self-Review
 
@@ -133,20 +144,13 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+- **Large tier:** offer the user the execution choice (Subagent-Driven recommended; or Inline). Do not auto-pick.
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+  > "Plan saved to `<path>`. Execution options: (1) **Subagent-Driven** — fresh subagent per task with end-of-feature review, fast iteration. (2) **Inline** — execute in this session with checkpoints. Which?"
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+  - If Subagent-Driven: invoke superpowers:subagent-driven-development.
+  - If Inline: invoke superpowers:executing-plans.
 
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
-
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+- **Medium tier (rare for this skill):** skip the offer and proceed inline using executing-plans.

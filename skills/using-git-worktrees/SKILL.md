@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Use for Large tier work (per task-tier rubric) before implementation. Recommended for Medium. Skip for Trivial/Small — work on the current branch.
 ---
 
 # Using Git Worktrees
@@ -10,6 +10,14 @@ description: Use when starting feature work that needs isolation from current wo
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
+
+<TIER-GATE>
+Skip this skill for **Trivial** and **Small** tier work — make changes on the current branch. A worktree for a one-line edit creates more git churn than the change itself.
+
+- **Large:** worktree REQUIRED.
+- **Medium:** worktree recommended (use if the work spans multiple sessions or might block hot-fixes on the main branch); otherwise current branch is fine.
+- **Trivial / Small:** skip.
+</TIER-GATE>
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
@@ -209,9 +217,9 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** - REQUIRED before executing any tasks
-- **executing-plans** - REQUIRED before executing any tasks
+- **brainstorming** (Large tier, Phase 4) — REQUIRED when design is approved and implementation follows
+- **subagent-driven-development** — REQUIRED for Large tier; recommended for Medium; skip for Trivial/Small
+- **executing-plans** — REQUIRED for Large tier; recommended for Medium; skip for Trivial/Small
 - Any skill needing isolated workspace
 
 **Pairs with:**

@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use for Large tier work when you have a written implementation plan to execute in a separate session with review checkpoints. For Trivial/Small/Medium with no plan file, skip this skill and execute directly.
 ---
 
 # Executing Plans
@@ -14,6 +14,11 @@ Load plan, review critically, execute all tasks, report when complete.
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
 ## The Process
+
+### Step 0: Tier check (skip-or-proceed gate)
+- If the request is **Trivial** or **Small** (per `task-tier`) and no plan file exists, exit this skill and just make the change. Do not manufacture a plan.
+- If **Medium** with no plan file, generate an internal TodoWrite checklist from the spec and execute inline; the rest of this skill does not apply.
+- If **Large** with a plan file, proceed to Step 1.
 
 ### Step 1: Load and Review Plan
 1. Read plan file
@@ -65,6 +70,6 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:using-git-worktrees** — REQUIRED for Large; recommended for Medium; skip for Trivial/Small
+- **superpowers:writing-plans** — Creates the plan this skill executes (Large)
+- **superpowers:finishing-a-development-branch** — Complete development after all tasks

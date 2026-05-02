@@ -1,4 +1,8 @@
-# Superpowers — Contributor Guidelines
+# Superpowers (kwkwkiki/spx fork) — Contributor Guidelines
+
+> **This is a downstream fork.** It introduces tier-based ceremony scaling that does NOT exist in upstream `obra/superpowers`. See `skills/task-tier/SKILL.md` for the rubric. Trivial and Small tier work bypasses `brainstorming`, `writing-plans`, `using-git-worktrees`, and per-task review subagents. `verification-before-completion`, `systematic-debugging`, and TDD core principles are preserved across all tiers.
+>
+> **Do not open PRs from this fork to upstream.** The tier system intentionally diverges from the upstream "every project gets a design" philosophy and would not be accepted there.
 
 ## If You Are an AI Agent
 
