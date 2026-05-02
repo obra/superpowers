@@ -23,7 +23,7 @@ OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempt
 - **Primary agents**: Build (default, full access) and Plan (restricted, read-only)
 - **Subagents**: General (research, searching, multi-step tasks)
 - **Invocation**: Automatic dispatch by primary agents OR manual `@mention` syntax
-- **Configuration**: Custom agents in `opencode.json` or `~/.config/opencode/agent/`
+- **Configuration**: Custom agents in `opencode.json` or `~/.config/opencode/agents/`
 
 ## Architecture
 
