@@ -237,7 +237,7 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch multiple implementation subagents in parallel **without per-agent git worktrees** — shared-worktree parallelism causes git-index races, pre-commit hook contention, stash pollution, and orphan-import typecheck breaks. The fix is NOT to cap agent count; the fix is to give each agent its own `git worktree` on its own short-lived branch and let the orchestrator serialize the merges (`git merge --ff-only` per branch). Use `superpowers:using-git-worktrees` as the scaffolder. Read-only agents (exploration, review, audit) may share a worktree.
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
