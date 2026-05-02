@@ -1,198 +1,129 @@
-# Superpowers
+# spx — Tiered Superpowers (kwkwkiki fork)
 
-Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
+A downstream fork of the Superpowers plugin with **tier-based ceremony scaling**. Ceremony scales with the size of the task: a typo fix doesn't trigger a design-approval gate or a worktree, while a multi-day subsystem still gets the full plan/review/worktree pipeline.
 
-## How it works
+This fork exists because the upstream "every project gets a design, even simple ones" philosophy makes a 3-hour task into a 1-2 day workflow. It is not intended for upstream — see `CLAUDE.md`.
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+## What changed vs upstream
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+| Concern | Upstream | This fork |
+|---|---|---|
+| Session injection | Full `using-superpowers` SKILL injected each startup/clear/compact (~2K tokens) | Slim `POINTER.md` (~200 tokens) — full SKILL on demand via the `Skill` tool |
+| Design gate | HARD-GATE blocks ALL implementation until user approves design — applies to "EVERY project regardless of perceived simplicity" | Only Medium/Large tier; Trivial/Small skip brainstorming entirely |
+| Question style | One question per message; visual-companion offer must be its own message | Up to 3 batched questions per message; visual offer inlined |
+| Plan docs | Always saved to `docs/superpowers/specs|plans/YYYY-MM-DD-*.md` and committed | Medium → `.spx/` (gitignored); Large → `docs/superpowers/` (committed); Trivial/Small → none |
+| Worktree | REQUIRED before any plan execution | REQUIRED only for Large; recommended for Medium; skip for Trivial/Small |
+| Per-task review | Two subagents (spec-reviewer + quality-reviewer) per task | Single combined reviewer (Large only); Medium gets one final reviewer |
+| Commit cadence | "Frequent commits" — one per 2-5 min step | Logical boundaries; one commit per task for ≤Medium |
+| `anthropic-best-practices.md` | Auto-loaded with `writing-skills` (~11.5K tokens) | Lazy-loaded from `references/` only when explicitly needed |
+| Per-platform tool refs | All loaded each session | Indexed; load only your platform's file |
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+Preserved across all tiers: `verification-before-completion` (Iron Law), `systematic-debugging` (root-cause first), TDD core principles, subagent-isolation pattern.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+## The tier rubric
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+Every request is classified before any ceremony fires. Inferred from the request — **not asked**.
 
+| Tier | Scope | Examples |
+|---|---|---|
+| **Trivial** | Single-line edit, no logic change | typo, rename, comment, config flip |
+| **Small** | Single file, ≤~30 LOC, no architectural impact | flag, isolated bugfix, label tweak |
+| **Medium** | Multi-file feature within one subsystem | new endpoint, new component, single-module refactor |
+| **Large** | Cross-system, schema change, security surface, >1 day | new subsystem, migration, auth, billing, "platform" |
 
-## Sponsorship
+**Auto-escalate one tier up** if any apply: touches >2 files, security surface, schema/migration, public-API change, ambiguous user intent. When in doubt, tier up.
 
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
+### Ceremony matrix
 
-Thanks! 
+|  | Trivial | Small | Medium | Large |
+|---|:-:|:-:|:-:|:-:|
+| Restate intent before acting | optional | yes | yes | yes |
+| `brainstorming` HARD-GATE | skip | skip | 1-pass batched | full |
+| Plan/spec file | none | none | `.spx/` (gitignored) | `docs/superpowers/` (committed) |
+| `using-git-worktrees` | skip | skip | recommended | REQUIRED |
+| Commit cadence | 1 commit | logical | logical | frequent |
+| Per-task reviewer | skip | skip | skip | yes |
+| Final feature reviewer | skip | skip | yes | yes |
+| `test-driven-development` | optional | recommended | yes | yes |
+| `verification-before-completion` | yes | yes | yes | yes |
+| `systematic-debugging` | yes | yes | yes | yes |
 
-- Jesse
+Full rubric and inference cues: `skills/task-tier/SKILL.md`.
 
+## Skills
+
+Bold = new in this fork.
+
+**Triage**
+- **`task-tier`** — authoritative tier classifier; every gating skill defers to it
+
+**Process**
+- `using-superpowers` — skill philosophy and precedence rules (loaded on demand, not on every session)
+- `brainstorming` — Medium/Large only; batched questions; tier-aware spec location
+- `writing-plans` — Large tier; logical-boundary commits; tier-aware bite-size
+- `executing-plans` — tier-0 skip-or-proceed gate
+- `subagent-driven-development` — collapsed combined per-task reviewer; tier-conditional
+- `dispatching-parallel-agents` — concurrent subagent workflows
+- `using-git-worktrees` — REQUIRED only for Large
+- `requesting-code-review` — per-tier mandatory matrix
+- `receiving-code-review` — responding to feedback (unchanged)
+- `finishing-a-development-branch` — merge/PR decision workflow
+
+**Discipline (apply to every tier)**
+- `verification-before-completion` — Iron Law: evidence before claims (unchanged)
+- `systematic-debugging` — root-cause first (unchanged)
+- `test-driven-development` — RED-GREEN-REFACTOR (strictness scales with tier)
+
+**Meta**
+- `writing-skills` — `anthropic-best-practices.md` now load-on-demand only
+
+## How a request flows
+
+```
+user request
+  ↓
+task-tier triages → Trivial / Small / Medium / Large
+  ↓
+Trivial/Small → make change → verification → done
+Medium       → batched brainstorming → implement → final reviewer → done
+Large        → brainstorming (full) → writing-plans → worktree → subagent-driven → final reviewer → finishing-branch
+```
+
+`verification-before-completion` and `systematic-debugging` apply at every tier.
 
 ## Installation
 
-**Note:** Installation differs by platform. 
+This is a personal fork; install directly from this repo rather than the upstream marketplace. Adapt the path for your harness.
 
-### Claude Code Official Marketplace
-
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Anthropic's official marketplace:
-
+**Claude Code:**
 ```bash
-/plugin install superpowers@claude-plugins-official
+/plugin marketplace add kwkwkiki/spx
+/plugin install superpowers@spx
 ```
 
-### Claude Code (Superpowers Marketplace)
+**Cursor / Copilot CLI / Codex / Gemini CLI / OpenCode:** point your plugin loader at `kwkwkiki/spx` instead of `obra/superpowers`. The hook script auto-detects the harness; the slim SessionStart pointer works on every supported platform.
 
-The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
+To pull updates, sync your fork from this repo's main branch — there is no official marketplace entry.
 
-In Claude Code, register the marketplace first:
+## `.spx/` scratch directory
 
+Medium-tier specs and plans are written to `.spx/` in the user repo (gitignored). Add this to your repo's `.gitignore`:
+
+```
+.spx/
+```
+
+Promote a scratch file to permanent docs when it matures:
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+git mv .spx/specs/<topic>.md docs/superpowers/specs/$(date +%Y-%m-%d)-<topic>-design.md
 ```
 
-Then install the plugin from this marketplace:
+Details: `skills/task-tier/spx-scratch-template.md`.
 
-```bash
-/plugin install superpowers@superpowers-marketplace
-```
+## Known follow-ups
 
-### OpenAI Codex CLI
-
-- Open plugin search interface
-
-```bash
-/plugins
-```
-
-Search for Superpowers
-
-```bash
-superpowers
-```
-
-Select `Install Plugin`
-
-### OpenAI Codex App
-
-- In the Codex app, click on Plugins in the sidebar.
-- You should see `Superpowers` in the Coding section. 
-- Click the `+` next to Superpowers and follow the prompts.
-
-
-### Cursor (via Plugin Marketplace)
-
-In Cursor Agent chat, install from marketplace:
-
-```text
-/add-plugin superpowers
-```
-
-or search for "superpowers" in the plugin marketplace.
-
-### OpenCode
-
-Tell OpenCode:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-```
-
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
-
-### GitHub Copilot CLI
-
-```bash
-copilot plugin marketplace add obra/superpowers-marketplace
-copilot plugin install superpowers@superpowers-marketplace
-```
-
-### Gemini CLI
-
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
-
-To update:
-
-```bash
-gemini extensions update superpowers
-```
-
-## The Basic Workflow
-
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
-
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
-
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
-
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
-
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
-
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-## What's Inside
-
-### Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
-
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
-
-## Philosophy
-
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
-
-Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
-
-## Contributing
-
-The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across all of the coding agents we support.
-
-1. Fork the repository
-2. Switch to the 'dev' branch
-3. Create a branch for your work
-4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Superpowers updates are somewhat coding-agent dependent, but are often automatic.
+- `tests/claude-code/test-subagent-driven-development*.sh` assert the upstream "spec compliance before code quality" ordering. The combined reviewer is now the default; those assertions will need updating. They run only against a live Claude CLI and are not in any CI pipeline.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
+MIT — see `LICENSE`. Original work © Jesse Vincent / Prime Radiant; tier-scaling modifications © kwkwkiki.
