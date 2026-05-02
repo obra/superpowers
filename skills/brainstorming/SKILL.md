@@ -30,7 +30,8 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity; do not ask questions; record decisions/assumptions
 5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+6. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -41,13 +42,15 @@ digraph brainstorming {
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "Write design doc" [shape=box];
+    "Spec self-review\n(fix inline)" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Derive constraints";
     "Derive constraints" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "Write design doc";
-    "Write design doc" -> "Invoke writing-plans skill";
+    "Write design doc" -> "Spec self-review\n(fix inline)";
+    "Spec self-review\n(fix inline)" -> "Invoke writing-plans skill";
 }
 ```
 
@@ -56,16 +59,21 @@ digraph brainstorming {
 ## The Process
 
 **Understanding the idea:**
+
 - Check out the current project state first (files, docs, recent commits)
 - Derive purpose/constraints/success criteria from repo/docs/env/logs
 - If ambiguity remains, pick the safest default and record decisions
+- Assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), decompose into sub-projects and record the chosen first slice.
+- Focus on purpose, constraints, and success criteria using available evidence instead of asking questions.
 
 **Exploring approaches:**
+
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
 
 **Presenting the design:**
+
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Cover: architecture, components, data flow, error handling, testing
@@ -114,14 +122,40 @@ Decisions recorded:
 - Any questions are asked to the user.
 - Implementation starts before the design is presented and decisions recorded.
 
+**Design for isolation and clarity:**
+
+- Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
+- For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
+- Can someone understand what a unit does without reading its internals? Can you change the internals without breaking consumers? If not, the boundaries need work.
+- Smaller, well-bounded units are also easier for you to work with - you reason better about code you can hold in context at once, and your edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
+
+**Working in existing codebases:**
+
+- Explore the current structure before proposing changes. Follow existing patterns.
+- Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
+- Don't propose unrelated refactoring. Stay focused on what serves the current goal.
+
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+
+- Write the validated design (spec) to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+  - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
+**Spec Self-Review:**
+After writing the spec document, look at it with fresh eyes:
+
+1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
+2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
+3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
+4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+
+Fix any issues inline. No need to re-review — just fix and move on.
+
 **Implementation:**
+
 - Invoke the writing-plans skill to create a detailed implementation plan
 - Do NOT invoke any other skill. writing-plans is the next step.
 
@@ -132,4 +166,4 @@ Decisions recorded:
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, then proceed under safe defaults
-- **Be flexible** - Go back and clarify when something doesn't make sense
+- **Be decisive** - If something does not make sense, record the safest assumption and keep moving

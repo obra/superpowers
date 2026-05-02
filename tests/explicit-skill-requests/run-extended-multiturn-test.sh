@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Extended multi-turn test with more conversation history
 # This tries to reproduce the failure by building more context
 
@@ -12,7 +12,7 @@ OUTPUT_DIR="/tmp/superpowers-tests/${TIMESTAMP}/explicit-skill-requests/extended
 mkdir -p "$OUTPUT_DIR"
 
 PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/plans"
+mkdir -p "$PROJECT_DIR/docs/superpowers/plans"
 
 echo "=== Extended Multi-Turn Test ==="
 echo "Output dir: $OUTPUT_DIR"
