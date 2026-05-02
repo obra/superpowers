@@ -1,6 +1,7 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Reference for how to find and use superpowers skills via the Skill tool. Invoke explicitly to load the skill-discovery rules and red-flag table.
+disable-model-invocation: true
 ---
 
 <SUBAGENT-STOP>
