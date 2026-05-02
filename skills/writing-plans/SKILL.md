@@ -145,7 +145,8 @@ After saving the plan, offer execution choice:
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
+- **If Team Mode is available (beta):** offer Standard vs Team Mode — Team mode runs parallel implementers with persistent validators; best for 3+ independent tasks
+- **Otherwise:** use Standard mode — sequential, fresh subagent per task, two-pass review
 
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
