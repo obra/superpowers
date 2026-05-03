@@ -99,6 +99,50 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+## Lifecycle Events
+
+The controller emits lifecycle events at key state transitions so registered plugins can react. Each block below is a no-op when `SUPERPOWERS_HOOK_DIRS` is unset; the legacy TodoWrite-only flow is unchanged.
+
+Resolve the script path once at start of run:
+
+```bash
+SP_ROOT="${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-${SUPERPOWERS_ROOT:-}}}"
+```
+
+<!-- BEGIN lifecycle:TaskClaimed -->
+**TaskClaimed** — emit when transitioning a task to in_progress (before dispatching the implementer subagent):
+
+```bash
+[[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" TaskClaimed \
+  plan_path="<absolute-plan-path>" \
+  task_number="<N>" \
+  task_title="<task heading>"
+```
+<!-- END lifecycle:TaskClaimed -->
+
+<!-- BEGIN lifecycle:TaskCompleted -->
+**TaskCompleted** — emit when marking the task complete in TodoWrite (after both spec and code-quality reviews approve):
+
+```bash
+[[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" TaskCompleted \
+  plan_path="<absolute-plan-path>" \
+  task_number="<N>" \
+  task_title="<task heading>"
+```
+<!-- END lifecycle:TaskCompleted -->
+
+<!-- BEGIN lifecycle:BlockedOnHuman -->
+**BlockedOnHuman** — emit before escalating a BLOCKED implementer status (see "Handling Implementer Status" below):
+
+```bash
+[[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" BlockedOnHuman \
+  plan_path="<absolute-plan-path>" \
+  task_number="<N>" \
+  task_title="<task heading>" \
+  reason="<short explanation of the block>"
+```
+<!-- END lifecycle:BlockedOnHuman -->
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:

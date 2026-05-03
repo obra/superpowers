@@ -24,10 +24,33 @@ Load plan, review critically, execute all tasks, report when complete.
 ### Step 2: Execute Tasks
 
 For each task:
+
 1. Mark as in_progress
+   <!-- BEGIN lifecycle:TaskClaimed -->
+   **Lifecycle event:** also emit `TaskClaimed`:
+   ```bash
+   SP_ROOT="${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-${SUPERPOWERS_ROOT:-}}}"
+   [[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" TaskClaimed \
+     plan_path="<absolute-plan-path>" \
+     task_number="<N>" \
+     task_title="<task heading>"
+   ```
+   No-op when `SUPERPOWERS_HOOK_DIRS` is unset.
+   <!-- END lifecycle:TaskClaimed -->
+
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+   <!-- BEGIN lifecycle:TaskCompleted -->
+   **Lifecycle event:** also emit `TaskCompleted`:
+   ```bash
+   SP_ROOT="${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-${SUPERPOWERS_ROOT:-}}}"
+   [[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" TaskCompleted \
+     plan_path="<absolute-plan-path>" \
+     task_number="<N>" \
+     task_title="<task heading>"
+   ```
+   <!-- END lifecycle:TaskCompleted -->
 
 ### Step 3: Complete Development
 
@@ -45,6 +68,21 @@ After all tasks complete and verified:
 - Verification fails repeatedly
 
 **Ask for clarification rather than guessing.**
+
+<!-- BEGIN lifecycle:BlockedOnHuman -->
+**Lifecycle event:** before stopping, emit `BlockedOnHuman`:
+
+```bash
+SP_ROOT="${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-${SUPERPOWERS_ROOT:-}}}"
+[[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" BlockedOnHuman \
+  plan_path="<absolute-plan-path>" \
+  task_number="<N>" \
+  task_title="<task heading>" \
+  reason="<short explanation of the block>"
+```
+
+No-op when `SUPERPOWERS_HOOK_DIRS` is unset.
+<!-- END lifecycle:BlockedOnHuman -->
 
 ## When to Revisit Earlier Steps
 
