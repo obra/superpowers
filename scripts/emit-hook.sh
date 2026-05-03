@@ -20,10 +20,37 @@ if [[ $# -lt 1 ]]; then
   exit 0
 fi
 
-# Silent no-op if no plugins are registered.
 if [[ -z "${SUPERPOWERS_HOOK_DIRS:-}" ]]; then
   exit 0
 fi
 
-# Further behavior added in Task 2.
+event_name="$1"; shift
+
+declare -a env_assignments=()
+for arg in "$@"; do
+  if [[ "$arg" != *"="* ]]; then
+    echo "[hook warn] emit-hook.sh: malformed arg '$arg' (expected key=value)" >&2
+    continue
+  fi
+  key="${arg%%=*}"
+  val="${arg#*=}"
+  upper_key="SP_$(printf '%s' "$key" | tr '[:lower:]' '[:upper:]')"
+  env_assignments+=("$upper_key=$val")
+done
+
+IFS=':' read -ra dirs <<< "$SUPERPOWERS_HOOK_DIRS"
+for dir in "${dirs[@]}"; do
+  [[ -z "$dir" ]] && continue
+  hook_script="$dir/${event_name}.sh"
+
+  [[ ! -e "$hook_script" ]] && continue
+
+  if [[ ! -x "$hook_script" ]]; then
+    echo "[hook warn] $event_name in $dir: not executable" >&2
+    continue
+  fi
+
+  env "${env_assignments[@]}" "$hook_script" </dev/null >/dev/null
+done
+
 exit 0

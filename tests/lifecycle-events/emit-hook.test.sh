@@ -58,6 +58,40 @@ else
 fi
 teardown_test
 
+# Test: hook script not present in registered dir → silent skip
+setup_test
+mkdir -p "$TEST_DIR/hooks"
+export SUPERPOWERS_HOOK_DIRS="$TEST_DIR/hooks"
+out="$("$EMIT_HOOK" PlanWritten plan_path=/tmp/x 2>&1)"
+rc=$?
+if [[ "$rc" -eq 0 && -z "$out" ]]; then
+  pass "missing hook script: silent skip"
+else
+  fail "missing hook script: silent skip" "rc=$rc out='$out'"
+fi
+teardown_test
+
+# Test: hook script runs and sees SP_* env vars
+setup_test
+mkdir -p "$TEST_DIR/hooks"
+cat > "$TEST_DIR/hooks/PlanWritten.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "plan_path=$SP_PLAN_PATH plan_title=$SP_PLAN_TITLE" > "$SP_TEST_LOG"
+EOF
+chmod +x "$TEST_DIR/hooks/PlanWritten.sh"
+export SUPERPOWERS_HOOK_DIRS="$TEST_DIR/hooks"
+log_file="$TEST_DIR/log"
+"$EMIT_HOOK" PlanWritten \
+  plan_path=/tmp/foo.md \
+  plan_title="My Feature" \
+  test_log="$log_file" >/dev/null 2>&1
+if [[ -f "$log_file" ]] && grep -q "plan_path=/tmp/foo.md plan_title=My Feature" "$log_file"; then
+  pass "hook runs with SP_* env vars exported"
+else
+  fail "hook runs with SP_* env vars exported" "log_file=$log_file contents='$(cat "$log_file" 2>/dev/null)'"
+fi
+teardown_test
+
 # ========== Summary ==========
 echo ""
 echo "=== Results: $passed passed, $failed failed ==="
