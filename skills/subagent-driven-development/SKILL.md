@@ -117,6 +117,20 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+## Domain Context Injection
+
+Before dispatching any subagent, check if MCP tools matching `*_get_context` are available (e.g., `dave_get_context`, `bio_get_context`). These are **domain context providers** — plugins that supply domain-specific protocols for sub-agent work.
+
+If any are available:
+1. Call each `*_get_context` tool with the task description
+2. Each returns a list of skill names to load
+3. Load each returned skill via the Skill tool
+4. Include the loaded skill content in the sub-agent prompt under a "Domain Protocols" section
+
+These protocols are mandatory for the sub-agent to follow — they exist because sub-agents without domain-specific guardrails reliably produce bad work (e.g., brute-forcing simulations instead of computing analytically, debugging by guessing instead of observing).
+
+If no `*_get_context` tools are available, proceed normally.
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent

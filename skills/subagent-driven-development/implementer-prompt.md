@@ -16,6 +16,15 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Domain Protocols
+
+    {domain_protocols}
+
+    If domain protocols are present above, they are mandatory. Follow them exactly.
+    If a protocol conflicts with your task instructions, the protocol wins — it exists
+    because agents without it reliably produce bad work. If no protocols are listed,
+    proceed normally.
+
     ## Before You Begin
 
     If you have questions about:

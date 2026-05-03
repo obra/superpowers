@@ -81,6 +81,12 @@ When agents return:
 - Run full test suite
 - Integrate all changes
 
+## Domain Context
+
+Before constructing agent prompts, check for `*_get_context` MCP tools (e.g., `dave_get_context`). These are domain context providers that return lists of protocol skills to inject.
+
+Call them with the task description for each agent you're dispatching. Include the returned protocol content in each agent's prompt. Different agents may receive different protocols depending on their task domain — an agent doing analog SPICE work gets different protocols than one writing unit tests.
+
 ## Agent Prompt Structure
 
 Good agent prompts are:
