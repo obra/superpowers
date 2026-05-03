@@ -92,6 +92,42 @@ else
 fi
 teardown_test
 
+# Test: hook exits nonzero → warning logged, emit-hook still exits 0
+setup_test
+mkdir -p "$TEST_DIR/hooks"
+cat > "$TEST_DIR/hooks/PlanWritten.sh" <<'EOF'
+#!/usr/bin/env bash
+exit 7
+EOF
+chmod +x "$TEST_DIR/hooks/PlanWritten.sh"
+export SUPERPOWERS_HOOK_DIRS="$TEST_DIR/hooks"
+err="$("$EMIT_HOOK" PlanWritten plan_path=/tmp/x 2>&1 1>/dev/null)"
+rc=$?
+if [[ "$rc" -eq 0 && "$err" == *"PlanWritten"* && "$err" == *"exit 7"* ]]; then
+  pass "nonzero exit: warning logged, emit-hook exits 0"
+else
+  fail "nonzero exit" "rc=$rc err='$err'"
+fi
+teardown_test
+
+# Test: hook script not executable → warning logged, skip
+setup_test
+mkdir -p "$TEST_DIR/hooks"
+cat > "$TEST_DIR/hooks/PlanWritten.sh" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+# Intentionally NOT chmod +x
+export SUPERPOWERS_HOOK_DIRS="$TEST_DIR/hooks"
+err="$("$EMIT_HOOK" PlanWritten plan_path=/tmp/x 2>&1 1>/dev/null)"
+rc=$?
+if [[ "$rc" -eq 0 && "$err" == *"not executable"* ]]; then
+  pass "not executable: warning logged"
+else
+  fail "not executable" "rc=$rc err='$err'"
+fi
+teardown_test
+
 # ========== Summary ==========
 echo ""
 echo "=== Results: $passed passed, $failed failed ==="

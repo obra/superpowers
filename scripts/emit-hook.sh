@@ -51,6 +51,10 @@ for dir in "${dirs[@]}"; do
   fi
 
   env "${env_assignments[@]}" "$hook_script" </dev/null >/dev/null
+  rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    echo "[hook warn] $event_name in $dir: exit $rc" >&2
+  fi
 done
 
 exit 0
