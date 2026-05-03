@@ -1,7 +1,7 @@
 # Lifecycle Events for Plugin Authors
 
 **Date:** 2026-05-02
-**Status:** Draft (spec self-review complete; pending user approval)
+**Status:** Approved
 **Branch:** `lifecycle-events`
 
 ## Problem
@@ -33,7 +33,7 @@ Two new core artifacts:
 1. **`scripts/emit-hook.sh`** — one bash script (~50 lines). Skills call it at lifecycle moments. It scans `$SUPERPOWERS_HOOK_DIRS` for matching plugin scripts and runs them with payload data set as env vars.
 2. **`SUPERPOWERS_HOOK_DIRS`** — colon-separated list of directories (like `$PATH`) the user adds to their shell rc. Each plugin documents one dir to register. Unset = silent no-op.
 
-Skills get small additive emit blocks at lifecycle points, marked with `<!-- LIFECYCLE: EventName -->` comment markers for searchability and future maintainability.
+Skills get small additive emit blocks at lifecycle points, marked with paired `<!-- BEGIN lifecycle:EventName -->` / `<!-- END lifecycle:EventName -->` comments — matching the existing convention used by `<!-- BEGIN beads -->` blocks in the `beads-integration` branch.
 
 ```
                     ┌────────────────────┐
@@ -105,7 +105,7 @@ Behavior:
 - Translates `key=value` args to `SP_<KEY>` env vars (key uppercased; literal `=` separates key from value; values may contain `=` characters).
 - Iterates each path in `SUPERPOWERS_HOOK_DIRS` (colon-separated; like `$PATH`). Unset/empty → silent exit 0.
 - For each dir: if `<dir>/<EventName>.sh` exists and is executable, runs it with the env vars set.
-- Each hook script runs with a 5-second timeout. The user can override via `SUPERPOWERS_HOOK_TIMEOUT` (integer seconds).
+- Each hook script runs with a 10-second timeout. The user can override via `SUPERPOWERS_HOOK_TIMEOUT` (integer seconds).
 - Plugin script's stderr is captured and prefixed in core's stderr log; stdout is discarded.
 - Failures (nonzero exit, timeout, missing exec bit) → log `[hook warn] <EventName> in <dir>: <reason>` to stderr and continue to the next dir.
 - emit-hook.sh always exits 0. The agent's lifecycle step never fails because of a plugin.
@@ -125,7 +125,7 @@ Behavior:
 Each insertion is a small additive block (no existing prose is rewritten):
 
 ````markdown
-<!-- LIFECYCLE: TaskClaimed -->
+<!-- BEGIN lifecycle:TaskClaimed -->
 **Lifecycle event:** after marking the task in_progress, emit:
 
 ```bash
@@ -134,7 +134,7 @@ Each insertion is a small additive block (no existing prose is rewritten):
 ```
 
 When `SUPERPOWERS_HOOK_DIRS` is unset, this is a no-op — the legacy flow is unaffected.
-<!-- END LIFECYCLE -->
+<!-- END lifecycle:TaskClaimed -->
 ````
 
 ## Plugin author contract
@@ -241,7 +241,7 @@ These wait for concrete motivating use cases:
 - The project flags PRs that modify skill content without eval evidence
 - Mitigation: skill changes are **additive blocks**, not rewrites of existing prose
 - Mitigation: each block is a no-op when no plugins are installed (zero behavior change for default users) — explicitly documented in PR description
-- Mitigation: skill blocks include `<!-- LIFECYCLE -->` markers so reviewers can see exactly what changed
+- Mitigation: skill blocks include paired `<!-- BEGIN lifecycle:Event -->` / `<!-- END lifecycle:Event -->` markers so reviewers can see exactly what changed (matches the `<!-- BEGIN beads -->` convention)
 
 **Cross-harness compatibility:**
 
@@ -253,9 +253,9 @@ These wait for concrete motivating use cases:
 - A plugin script that reads stdin or writes large stdout could surprise users
 - Mitigation: emit-hook.sh redirects stdin from /dev/null and discards plugin stdout; documented in plugin author contract
 
-## Open questions for user review
+## Decisions locked
 
-1. Is `SUPERPOWERS_HOOK_DIRS` the right env var name? Alternatives: `SP_HOOK_DIRS`, `SUPERPOWERS_PLUGINS`, `SUPERPOWERS_HOOK_PATH`. The chosen name is explicit and parallel to `SUPERPOWERS_BEADS` and `SUPERPOWERS_ROOT`.
-2. Default timeout of 5s — sufficient for most plugins, or should it be 10s/30s?
-3. Should plugin hooks run in parallel (background, wait-all) or sequentially per dir? Sequential is simpler and preserves ordering across dirs; parallel adds complexity for marginal benefit.
-4. Should the LIFECYCLE marker be `<!-- LIFECYCLE: -->` or follow the existing `<!-- BEGIN/END beads -->` convention used in `beads-integration`? Matching the existing convention may improve consistency.
+- Env var name: `SUPERPOWERS_HOOK_DIRS` (parallel to `SUPERPOWERS_BEADS`, `SUPERPOWERS_ROOT`)
+- Default hook timeout: **10 seconds** (override via `SUPERPOWERS_HOOK_TIMEOUT`)
+- Hook execution model: **sequential per dir, sequential across dirs** — preserves ordering, simpler, sufficient for low-frequency lifecycle events
+- Comment marker style: **`<!-- BEGIN lifecycle:EventName -->` / `<!-- END lifecycle:EventName -->`** — matches the `<!-- BEGIN beads -->` convention
