@@ -128,6 +128,28 @@ else
 fi
 teardown_test
 
+# Test: hook exceeds timeout → killed, warning logged
+# Use SUPERPOWERS_HOOK_TIMEOUT=1 to keep the test fast.
+setup_test
+mkdir -p "$TEST_DIR/hooks"
+cat > "$TEST_DIR/hooks/PlanWritten.sh" <<'EOF'
+#!/usr/bin/env bash
+sleep 30
+EOF
+chmod +x "$TEST_DIR/hooks/PlanWritten.sh"
+export SUPERPOWERS_HOOK_DIRS="$TEST_DIR/hooks"
+export SUPERPOWERS_HOOK_TIMEOUT=1
+start_ts=$(date +%s)
+err="$("$EMIT_HOOK" PlanWritten plan_path=/tmp/x 2>&1 1>/dev/null)"
+rc=$?
+elapsed=$(( $(date +%s) - start_ts ))
+if [[ "$rc" -eq 0 && "$err" == *"timed out"* && "$elapsed" -lt 5 ]]; then
+  pass "timeout: hook killed and warning logged (elapsed=${elapsed}s)"
+else
+  fail "timeout" "rc=$rc elapsed=${elapsed}s err='$err'"
+fi
+teardown_test
+
 # ========== Summary ==========
 echo ""
 echo "=== Results: $passed passed, $failed failed ==="

@@ -12,6 +12,16 @@
 
 set -uo pipefail
 
+readonly DEFAULT_TIMEOUT=10
+
+# Resolve timeout command (Linux: timeout; macOS w/ coreutils: gtimeout).
+TIMEOUT_CMD=""
+if command -v timeout >/dev/null 2>&1; then
+  TIMEOUT_CMD="timeout"
+elif command -v gtimeout >/dev/null 2>&1; then
+  TIMEOUT_CMD="gtimeout"
+fi
+
 # Always exit 0; never propagate plugin failures to caller.
 trap 'exit 0' EXIT
 
@@ -50,10 +60,29 @@ for dir in "${dirs[@]}"; do
     continue
   fi
 
-  env "${env_assignments[@]}" "$hook_script" </dev/null >/dev/null
-  rc=$?
-  if [[ "$rc" -ne 0 ]]; then
-    echo "[hook warn] $event_name in $dir: exit $rc" >&2
+  hook_timeout="${SUPERPOWERS_HOOK_TIMEOUT:-$DEFAULT_TIMEOUT}"
+
+  if [[ -n "$TIMEOUT_CMD" ]]; then
+    env "${env_assignments[@]}" \
+      "$TIMEOUT_CMD" --kill-after=1 "$hook_timeout" "$hook_script" </dev/null >/dev/null
+    rc=$?
+    if [[ "$rc" -eq 124 || "$rc" -eq 137 ]]; then
+      echo "[hook warn] $event_name in $dir: timed out after ${hook_timeout}s" >&2
+    elif [[ "$rc" -ne 0 ]]; then
+      echo "[hook warn] $event_name in $dir: exit $rc" >&2
+    fi
+  else
+    # No timeout(1) available — run unbounded with one-time warning.
+    if [[ -z "${EMIT_HOOK_TIMEOUT_WARNED:-}" ]]; then
+      echo "[hook warn] timeout(1) not available; hooks run unbounded" >&2
+      EMIT_HOOK_TIMEOUT_WARNED=1
+      export EMIT_HOOK_TIMEOUT_WARNED
+    fi
+    env "${env_assignments[@]}" "$hook_script" </dev/null >/dev/null
+    rc=$?
+    if [[ "$rc" -ne 0 ]]; then
+      echo "[hook warn] $event_name in $dir: exit $rc" >&2
+    fi
   fi
 done
 
