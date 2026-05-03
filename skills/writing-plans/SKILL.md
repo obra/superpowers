@@ -131,6 +131,23 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+<!-- BEGIN lifecycle:PlanWritten -->
+## Lifecycle Event: PlanWritten
+
+After self-review passes, emit the `PlanWritten` lifecycle event so any registered plugins (e.g., a Beads mirror) can react. This is a no-op when no plugins are installed (`SUPERPOWERS_HOOK_DIRS` unset).
+
+Resolve the script path and emit:
+
+```bash
+SP_ROOT="${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-${SUPERPOWERS_ROOT:-}}}"
+[[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" PlanWritten \
+  plan_path="<absolute-plan-path>" \
+  plan_title="<plan H1 title>"
+```
+
+Substitute `<absolute-plan-path>` with the path you just saved the plan to, and `<plan H1 title>` with the H1 heading from the plan file. Plugins receive these as `$SP_PLAN_PATH` and `$SP_PLAN_TITLE`.
+<!-- END lifecycle:PlanWritten -->
+
 ## Execution Handoff
 
 After saving the plan, offer execution choice:
