@@ -27,11 +27,14 @@ Superpowers core fires lifecycle events at well-defined moments during plan and 
 
 ## How dispatch works
 
-When core wants to emit an event, it calls:
+When core wants to emit an event, the calling skill resolves the script path through a harness fallback chain and invokes:
 
 ```bash
-$SUPERPOWERS_ROOT/scripts/emit-hook.sh <EventName> [key=value ...]
+SP_ROOT="${CLAUDE_PLUGIN_ROOT:-${CURSOR_PLUGIN_ROOT:-${SUPERPOWERS_ROOT:-}}}"
+[[ -n "$SP_ROOT" ]] && "$SP_ROOT/scripts/emit-hook.sh" <EventName> [key=value ...]
 ```
+
+`CLAUDE_PLUGIN_ROOT` is set by Claude Code; `CURSOR_PLUGIN_ROOT` by Cursor; users on other harnesses (Codex, Gemini, OpenCode) should export `SUPERPOWERS_ROOT` themselves. If none is set, the emit is silently skipped — no error.
 
 `emit-hook.sh` then:
 

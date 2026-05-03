@@ -183,7 +183,7 @@ Plugins that don't care about an event simply don't ship a script for it. Multip
 
 ## Testing
 
-`scripts/tests/emit-hook.test.sh` — bash test suite covering:
+`tests/lifecycle-events/emit-hook.test.sh` — bash test suite covering:
 
 - Unset `HOOK_DIRS` → emit-hook exits 0, no output
 - Empty dir registered → emit-hook exits 0, no output
@@ -222,11 +222,11 @@ These wait for concrete motivating use cases:
   - Test plan: bash test suite + manual end-to-end with stub plugin
   - Roadmap section: 6 deferred events listed with explicit "wait for motivating use case"
 - **Anticipated diff size:**
-  - `scripts/emit-hook.sh` — ~50 LOC
-  - `scripts/tests/emit-hook.test.sh` — ~80 LOC
-  - `docs/superpowers/lifecycle-events.md` — ~150 LOC reference doc
-  - 3 skill files — ~10 LOC additive each (~30 LOC total)
-  - **Total: ~310 LOC, all additive, zero rewrites**
+  - `scripts/emit-hook.sh` — ~90 LOC (includes timeout enforcement)
+  - `tests/lifecycle-events/emit-hook.test.sh` — ~235 LOC
+  - `docs/superpowers/lifecycle-events.md` — ~133 LOC reference doc
+  - 3 skill files — ~99 LOC additive total (writing-plans 17 + executing-plans 38 + subagent-driven-development 44)
+  - **Total: ~557 LOC, all additive, zero rewrites of existing prose**
 
 ## Risks
 
