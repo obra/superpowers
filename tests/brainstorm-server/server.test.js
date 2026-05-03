@@ -45,6 +45,23 @@ async function fetch(url) {
   });
 }
 
+async function expectWebSocketOpen(url, options = {}) {
+  const ws = new WebSocket(url, options);
+  await new Promise((resolve, reject) => {
+    ws.on('open', resolve);
+    ws.on('error', reject);
+  });
+  return ws;
+}
+
+async function expectWebSocketReject(url, options = {}) {
+  const ws = new WebSocket(url, options);
+  await new Promise((resolve, reject) => {
+    ws.on('open', () => reject(new Error('WebSocket should have been rejected')));
+    ws.on('error', resolve);
+  });
+}
+
 function startServer() {
   return spawn('node', [SERVER_PATH], {
     env: { ...process.env, BRAINSTORM_PORT: TEST_PORT, BRAINSTORM_DIR: TEST_DIR }
@@ -188,11 +205,25 @@ async function runTests() {
     console.log('\n--- WebSocket Communication ---');
 
     await test('accepts WebSocket upgrade on /', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise((resolve, reject) => {
-        ws.on('open', resolve);
-        ws.on('error', reject);
+      const ws = await expectWebSocketOpen(`ws://localhost:${TEST_PORT}`);
+      ws.close();
+    });
+
+    await test('accepts localhost Origin on /', async () => {
+      const ws = await expectWebSocketOpen(`ws://localhost:${TEST_PORT}`, {
+        headers: { Origin: `http://localhost:${TEST_PORT}` }
       });
+      ws.close();
+    });
+
+    await test('rejects foreign Origin on /', async () => {
+      await expectWebSocketReject(`ws://localhost:${TEST_PORT}`, {
+        headers: { Origin: 'https://evil.example' }
+      });
+    });
+
+    await test('still accepts clients without Origin header', async () => {
+      const ws = await expectWebSocketOpen(`ws://localhost:${TEST_PORT}`);
       ws.close();
     });
 
