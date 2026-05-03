@@ -192,6 +192,7 @@ already use it in another harness.
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Meta**
+- **retrospective** - End-of-session review to extract and persist improvements
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
