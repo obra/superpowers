@@ -131,6 +131,18 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+## Optional Plan Review Cycle
+
+After saving the plan and completing self-review, ask:
+
+"Would you like me to run an independent plan-review-cycle before execution? This is especially recommended for large plans, plans with many constraints, or plans that will be executed by subagents."
+
+If yes:
+
+**REQUIRED SUB-SKILL:** Use superpowers:plan-review-cycle
+
+Do not offer execution until the review cycle has no open findings. Every reviewer finding must either result in an approved plan change or be recorded in the plan with an approved no-change rationale from your human partner.
+
 ## Execution Handoff
 
 After saving the plan, offer execution choice:

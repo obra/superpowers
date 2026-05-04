@@ -92,6 +92,14 @@ Tests skill content and requirements (~2 minutes):
 - Review loops documented
 - Task context provision documented
 
+#### test-plan-review-cycle.sh
+Tests skill content and requirements (~2 minutes):
+- Skill loading and accessibility
+- Fresh reviewer subagent requirement documented
+- Plan Review Log and No Plan Change dispositions documented
+- Human partner approval required before updating or leaving a finding unchanged
+- Repeated review loop and execution blocking requirements documented
+
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh

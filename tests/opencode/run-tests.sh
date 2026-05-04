@@ -47,6 +47,7 @@ while [[ $# -gt 0 ]]; do
             echo "  test-bootstrap-caching.sh  Verify bootstrap content caching"
             echo "  test-tools.sh           Test use_skill and find_skills tools (integration)"
             echo "  test-priority.sh        Test skill priority resolution (integration)"
+            echo "  test-plan-review-cycle.sh Test plan-review-cycle skill behavior (integration)"
             exit 0
             ;;
         *)
@@ -67,6 +68,7 @@ tests=(
 integration_tests=(
     "test-tools.sh"
     "test-priority.sh"
+    "test-plan-review-cycle.sh"
 )
 
 # Add integration tests if requested
