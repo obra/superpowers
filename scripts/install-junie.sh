@@ -59,13 +59,18 @@ touch "$JUNIE_GUIDELINES"
 
 # Remove existing block if present
 if grep -qF "$SENTINEL_START" "$JUNIE_GUIDELINES"; then
+    if ! grep -qF "$SENTINEL_END" "$JUNIE_GUIDELINES"; then
+        echo "Error: found $SENTINEL_START without matching $SENTINEL_END in $JUNIE_GUIDELINES" >&2
+        echo "The file may be corrupted. Fix it manually before re-running." >&2
+        exit 1
+    fi
     tmp=$(mktemp)
-    awk "
-        /^<!-- BEGIN SUPERPOWERS -->/ { skip=1; next }
-        skip && /^<!-- END SUPERPOWERS -->/ { skip=0; next }
+    awk -v begin="$SENTINEL_START" -v end="$SENTINEL_END" '
+        $0 == begin { skip=1; next }
+        skip && $0 == end { skip=0; next }
         skip { next }
         { print }
-    " "$JUNIE_GUIDELINES" > "$tmp"
+    ' "$JUNIE_GUIDELINES" > "$tmp"
     mv "$tmp" "$JUNIE_GUIDELINES"
 fi
 
