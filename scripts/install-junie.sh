@@ -32,15 +32,32 @@ for skill_dir in "$SUPERPOWERS_SKILLS_DIR"/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
     target="$JUNIE_SKILLS_DIR/superpowers-$skill_name"
-    [ -L "$target" ] && rm "$target"
-    ln -s "$skill_dir" "$target"
-    echo "  Linked: $skill_name"
+    
+    # Clean up previous install (might be a symlink or a directory)
+    rm -rf "$target"
+    mkdir -p "$target"
+    
+    # Copy and modify SKILL.md to include the superpowers: prefix for Junie
+    if [ -f "$skill_dir/SKILL.md" ]; then
+        sed '1,/^name: /s/^name: /name: superpowers:/' "$skill_dir/SKILL.md" > "$target/SKILL.md"
+    fi
+    
+    # Symlink all other files/directories from the skill folder
+    for item in "$skill_dir"*; do
+        [ -e "$item" ] || continue
+        item_name=$(basename "$item")
+        if [ "$item_name" != "SKILL.md" ]; then
+            ln -s "$item" "$target/$item_name"
+        fi
+    done
+    
+    echo "  Installed: $skill_name (prefixed for Junie)"
 done
 
 echo ""
 
 # --- bootstrap ---
-bootstrap_content=$(cat "$SUPERPOWERS_SKILLS_DIR/using-superpowers/SKILL.md")
+bootstrap_content=$(sed '1,/^name: /s/^name: /name: superpowers:/' "$SUPERPOWERS_SKILLS_DIR/using-superpowers/SKILL.md")
 tools_content=$(cat "$SUPERPOWERS_SKILLS_DIR/using-superpowers/references/junie-tools.md")
 
 bootstrap_block="${SENTINEL_START}

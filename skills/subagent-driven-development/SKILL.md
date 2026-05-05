@@ -1,5 +1,5 @@
 ---
-name: superpowers:subagent-driven-development
+name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
 ---
 

@@ -23,10 +23,10 @@ echo ""
 
 # --- skills ---
 if [ -d "$JUNIE_SKILLS_DIR" ]; then
-    while IFS= read -r link; do
-        rm "$link"
-        echo "  Removed: $(basename "$link")"
-    done < <(find "$JUNIE_SKILLS_DIR" -maxdepth 1 -mindepth 1 -type l -name "superpowers-*")
+    while IFS= read -r skill_path; do
+        rm -rf "$skill_path"
+        echo "  Removed: $(basename "$skill_path")"
+    done < <(find "$JUNIE_SKILLS_DIR" -maxdepth 1 -mindepth 1 -name "superpowers-*")
     rmdir "$JUNIE_SKILLS_DIR" 2>/dev/null || true
 fi
 
