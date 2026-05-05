@@ -1,5 +1,5 @@
 ---
-name: using-superpowers
+name: superpowers:using-superpowers
 description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
 
@@ -32,6 +32,8 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 **In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
 
 **In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+
+**In Junie:** Use the `agent_skill_read_doc` tool. Skills are installed at `~/.junie/skills/superpowers-<skill-name>`.
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Uninstall superpowers from Junie (user-level)
 #
-# Removes skill symlinks from ~/.junie/skills/superpowers/ and strips the
-# superpowers sentinel block from ~/.junie/guidelines.md without touching
+# Removes superpowers- prefixed skill symlinks from ~/.junie/skills/ and strips
+# the superpowers sentinel block from ~/.junie/AGENTS.md without touching
 # any surrounding content.
 #
 # Override install location for testing:
@@ -11,8 +11,8 @@
 set -euo pipefail
 
 JUNIE_DIR="${JUNIE_HOME:-${HOME}/.junie}"
-JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills/superpowers"
-JUNIE_GUIDELINES="${JUNIE_DIR}/guidelines.md"
+JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills"
+JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/AGENTS.md"
 
 SENTINEL_START="<!-- BEGIN SUPERPOWERS -->"
 SENTINEL_END="<!-- END SUPERPOWERS -->"
@@ -26,15 +26,14 @@ if [ -d "$JUNIE_SKILLS_DIR" ]; then
     while IFS= read -r link; do
         rm "$link"
         echo "  Removed: $(basename "$link")"
-    done < <(find "$JUNIE_SKILLS_DIR" -maxdepth 1 -mindepth 1 -type l)
+    done < <(find "$JUNIE_SKILLS_DIR" -maxdepth 1 -mindepth 1 -type l -name "superpowers-*")
     rmdir "$JUNIE_SKILLS_DIR" 2>/dev/null || true
-    rmdir "$JUNIE_DIR/skills" 2>/dev/null || true
 fi
 
 # --- bootstrap ---
-if [ -f "$JUNIE_GUIDELINES" ] && grep -qF "$SENTINEL_START" "$JUNIE_GUIDELINES"; then
-    if ! grep -qF "$SENTINEL_END" "$JUNIE_GUIDELINES"; then
-        echo "Error: found $SENTINEL_START without matching $SENTINEL_END in $JUNIE_GUIDELINES" >&2
+if [ -f "$JUNIE_AGENTS_GUIDELINES" ] && grep -qF "$SENTINEL_START" "$JUNIE_AGENTS_GUIDELINES"; then
+    if ! grep -qF "$SENTINEL_END" "$JUNIE_AGENTS_GUIDELINES"; then
+        echo "Error: found $SENTINEL_START without matching $SENTINEL_END in $JUNIE_AGENTS_GUIDELINES" >&2
         echo "The file may be corrupted. Fix it manually before re-running." >&2
         exit 1
     fi
@@ -44,11 +43,11 @@ if [ -f "$JUNIE_GUIDELINES" ] && grep -qF "$SENTINEL_START" "$JUNIE_GUIDELINES";
         skip && $0 == end { skip=0; next }
         skip { next }
         { print }
-    ' "$JUNIE_GUIDELINES" > "$tmp"
-    mv "$tmp" "$JUNIE_GUIDELINES"
-    echo "Sentinel block removed from: $JUNIE_GUIDELINES"
+    ' "$JUNIE_AGENTS_GUIDELINES" > "$tmp"
+    mv "$tmp" "$JUNIE_AGENTS_GUIDELINES"
+    echo "Sentinel block removed from: $JUNIE_AGENTS_GUIDELINES"
 else
-    echo "No superpowers block found in guidelines.md (nothing to remove)"
+    echo "No superpowers block found in AGENTS.md (nothing to remove)"
 fi
 
 echo ""

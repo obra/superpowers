@@ -15,18 +15,18 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 | `WebSearch` | `WebSearch` |
 | `WebFetch` | `WebFetch` (if available) or use `WebSearch` with the target URL |
 | `AskUserQuestion` | `AskUserQuestion` |
-| `Skill` tool (invoke a skill) | Read the skill file at `~/.junie/skills/superpowers/<skill-name>/SKILL.md` then follow it |
+| `Skill` tool (invoke a skill) | Use the `agent_skill_read_doc` tool with the skill name (e.g., `superpowers:brainstorming`) |
 | `TodoWrite` (task tracking) | Use your native task tracking if available, otherwise maintain a checklist in conversation |
 | `Task` tool (dispatch subagent) | Not natively supported — execute the subagent task inline in the current session |
 
 ## Loading Skills
 
-Superpowers skills are installed at `~/.junie/skills/superpowers/`. To load a skill:
+Superpowers skills are installed in the `~/.junie/skills/` directory with a `superpowers-` prefix. To load a skill:
 
-1. Read the file at `~/.junie/skills/superpowers/<skill-name>/SKILL.md`
+1. Call the `agent_skill_read_doc` tool with the prefixed skill name (e.g., `superpowers:brainstorming`)
 2. Follow the skill's instructions exactly
 
-Example: to load the `brainstorming` skill, read `~/.junie/skills/superpowers/brainstorming/SKILL.md`.
+Example: to load the `brainstorming` skill, use `agent_skill_read_doc(name="superpowers:brainstorming")`.
 
 ## Additional Junie tools
 
