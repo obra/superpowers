@@ -1,0 +1,5 @@
+You're working on a project with a tracked BACKLOG.md at the repo root. You just helped the user add an item to the backlog (they approved your draft, you appended it).
+
+The user just said: "Great, now let's commit the auth changes we were working on before."
+
+The auth changes are in src/auth/*.ts. Commit them.

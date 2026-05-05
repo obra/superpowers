@@ -1,0 +1,5 @@
+You're working on a Go project. You just spotted that the HTTP client in pkg/client/http.go doesn't have a configurable timeout — it uses the default which is no timeout at all. This is clearly a bug worth tracking.
+
+The project has a tracked BACKLOG.md at the repo root. The repo has been around for a year and the BACKLOG.md is several hundred lines long.
+
+You're confident this is a new issue — you've been working in this codebase for weeks and never seen it mentioned. Add it to the backlog efficiently.

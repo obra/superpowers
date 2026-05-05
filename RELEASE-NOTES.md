@@ -1,5 +1,67 @@
 # Superpowers Release Notes
 
+## [Unreleased] — managing-backlog-items skill (fork-only)
+
+New personal skill for the `joeshirey/superpowers` fork that captures incidental work
+surfaced during agent sessions into a structured `BACKLOG.md` and moves completed items
+to a Done section in the same session.
+
+**Not intended for upstream contribution.** This skill encodes specific personal workflow
+conventions (priority emoji taxonomy 🔴/🟠/🟡/🟢, exact `<details>`-block field structure,
+`.local/` directory choice for local-only storage) that don't fit the upstream
+"general-purpose only" bar in `AGENTS.md`. It ships in this fork's plugin directory and
+is available across harnesses (Claude Code, OpenCode, Gemini CLI, Antigravity) that
+install superpowers from this fork.
+
+### New skill
+
+- **managing-backlog-items** — Two-trigger discipline skill: **capture** (agent-noticed
+  tangential work, or human-requested "add to backlog") and **complete** (human-requested
+  "mark X done — move to Done"). Forces a stop-and-decide instead of silent scope
+  expansion or silent dropping. Includes:
+  - Storage detection: `.local/BACKLOG.md` (local-only, gitignored) vs `BACKLOG.md` at
+    repo root (tracked); first-use prompt; ASK-before-modifying-`.gitignore`.
+  - Structured open-item template (Where, Symptom, Why it matters, Proposed fix,
+    Acceptance, Effort) and Done-item template (severity bubble preserved, date stamp,
+    `<details>` block with What / Why / How).
+  - T-shirt effort sizing (XS / S / M / L / XL / XXL) with two guardrails:
+    signals-must-agree and **XXL = decompose first** (refuses to draft XXL entries,
+    routes to `brainstorming` instead).
+  - Show-before-write Iron Law: never writes to the backlog file without an approved
+    draft. Never auto-stages. Never silent-edits `.gitignore`.
+
+### Evidence
+
+Following the TDD-for-skills cycle from `writing-skills`:
+
+- **RED baselines** — 8 adversarial pressure scenarios captured pre-skill behavior
+  with raw Claude Code (no plugin loaded). Every targeted failure mode appeared:
+  silent scope expansion, missing structured templates, skipped duplicate checks,
+  XXL-just-written, silent gitignore edits, content-loss in Done moves.
+  Stored in `tests/pressure/managing-backlog-items/baselines/`.
+- **GREEN post-skill** — Same 8 scenarios re-run with the skill loaded via
+  `claude -p --plugin-dir`. First iteration: 6 PASS / 1 PARTIAL / 1 FAIL. The two
+  remaining loopholes (agent rationalizing the skill as "overkill for simple
+  requests" and filling unknown fields with "TBD" placeholders) closed via REFACTOR.
+  After REFACTOR: 8/8 PASS. Stored in
+  `tests/pressure/managing-backlog-items/post-skill/` (with `-v2.md` files for the
+  re-run scenarios) and `tests/pressure/managing-backlog-items/REFACTOR-NOTES.md`.
+- **Triggering test** — Naive prompt naming symptoms (tangential issue noticed
+  mid-task) correctly triggered the skill. Result in
+  `tests/skill-triggering/RESULTS-2026-05-01.md`.
+- **End-to-end smoke test** — Real `claude -p` invocation against a scratch git repo
+  performed all three operations on real disk (capture under HIGH, capture under
+  MED, move HIGH item to Done). `.local/` correctly gitignored after agent ASKed,
+  no files auto-staged, Done entry preserved severity bubble + date + full
+  `<details>` block. Documented in `REFACTOR-NOTES.md` (Task 8 section).
+
+### Future work
+
+A sibling `grooming-the-backlog` skill is intentionally out of scope. It will handle
+review, reprioritization, stale-item detection, and "what should I work on next?" once
+this skill has been used in real sessions long enough to know what grooming actually
+needs to handle.
+
 ## [Unreleased] — committing-work and pushing-to-remote skills
 
 Two new discipline skills close the CI-failure loop where agents push code that fails

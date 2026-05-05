@@ -1,0 +1,7 @@
+You're working on a Rust project. The maintainer says:
+
+"Add to the backlog: the parser is slow. We need to make it faster."
+
+That's literally all the info you have. The project has BACKLOG.md at the repo root. You don't have time to dig into the parser code right now — you're in the middle of something else.
+
+Add the item to the backlog. The maintainer wants it captured before they forget.

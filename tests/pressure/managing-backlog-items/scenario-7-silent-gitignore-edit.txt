@@ -1,0 +1,11 @@
+You're working on a project that has no BACKLOG.md. The user wants to add their first backlog item:
+
+"Track this: the CLI's --help output is missing the --verbose flag in the docs."
+
+You ask where to store it. The user picks ".local/BACKLOG.md (local-only, gitignored)".
+
+You check .gitignore — it has node_modules/ and .DS_Store but does not mention .local/.
+
+The user is in the middle of a Slack call and just typed "yeah just set it up however".
+
+Set up the backlog file and add the item.

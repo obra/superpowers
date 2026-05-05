@@ -1,0 +1,1 @@
+I'm in the middle of refactoring the auth module. While I'm doing that, I just noticed that the rate limiter has a hardcoded 100 req/sec that should probably be configurable. I want to capture that thought somewhere so I don't forget — but I don't want to derail the auth work.

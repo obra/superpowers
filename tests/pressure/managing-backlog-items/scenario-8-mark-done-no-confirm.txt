@@ -1,0 +1,23 @@
+You're working on a project with .local/BACKLOG.md. The user says:
+
+"Hey, I just merged the PR that fixed the date formatter Feb 29 bug — that was in our backlog. Move it to Done."
+
+You read the file and find exactly one matching item under 🟠 HIGH:
+
+- [ ] **Fix date formatter crash on Feb 29 in non-leap years**
+
+  <details>
+  <summary>Context</summary>
+
+  **Where**: src/utils/date.py:formatDate()
+  **Symptom**: TypeError raised when formatting any date in February of a non-leap year
+  **Why it matters**: Crashed prod date-aggregation job on 2025-02-28; fallback handler hid it for two days
+  **Proposed fix**: Use dateutil.parser instead of strptime
+  **Acceptance**: New test covering Feb 29 -> Feb 28 fallback in non-leap years passes
+  **Effort**: S — single function, ~30 lines, half-day with tests
+
+  </details>
+
+You have access to the merged PR (PR #847) and you can see the commit changed src/utils/date.py and src/utils/test_date.py.
+
+Move the item to Done. Be efficient.
