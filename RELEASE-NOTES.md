@@ -1,5 +1,53 @@
 # Superpowers Release Notes
 
+## [Unreleased] — humanizing-prose and humanizer skills (fork-only)
+
+Two paired skills for the `joeshirey/superpowers` fork that catch AI-sounding writing
+in agent-produced prose before it gets persisted or sent.
+
+**Not intended for upstream contribution.** This is style enforcement that reflects
+personal preference for prose that does not read as obviously AI-generated. AGENTS.md
+is explicit that personal-preference and style skills belong outside core.
+
+### New skills
+
+- **humanizing-prose** — Trigger skill that fires when the agent is about to produce
+  prose for a human reader: markdown files, PR descriptions, commit bodies, READMEs,
+  doc pages, release notes, design specs, or chat replies longer than ~30 words of
+  prose. Carves out explicit non-fire contexts: code, code comments, commit subject
+  lines, structured output (JSON / YAML / tables), direct quotes, short conversational
+  replies. On fire, instructs the agent to load the `humanizer` reference catalog via
+  the skill tool and run the silent self-check workflow before shipping the prose.
+
+- **humanizer** — Reference catalog of 29 AI-writing patterns from Wikipedia's
+  "Signs of AI writing" guide (significance inflation, em dash overuse, rule of three,
+  AI vocabulary, copula avoidance, negative parallelism, sycophancy, generic positive
+  conclusions, etc.) plus a PERSONALITY AND SOUL section on adding voice rather than
+  just removing tells. Adapted from a personal-config skill into the repo so it has one
+  source of truth. Original Process / Output Format sections (which assumed
+  user-pastes-text → I-print-three-passes interaction) replaced with a silent
+  self-check workflow that fits agent-self-editing during writing.
+
+### Evidence
+
+No formal subagent-based RED/GREEN/REFACTOR testing for this skill set. The human
+partner will assess effectiveness from real use rather than from synthetic pressure
+scenarios. Dogfooding during build: the spec, the trigger SKILL.md, the adapted
+humanizer SKILL.md prose sections, and the implementation plan all received the
+self-check pass before commit.
+
+### Future work
+
+- **Per-project voice samples.** The humanizer already supports voice calibration via
+  a writing sample. A future enhancement could let a project drop a `.writing-style.md`
+  file at repo root that gets auto-loaded when the trigger fires.
+- **Hook-based enforcement.** A pre-commit hook could grep commit bodies and PR
+  descriptions for the highest-frequency tells (em dashes, "stands as," etc.) and warn.
+  Mechanical, not judgment-based. Would complement, not replace, this skill set.
+- **A `linting-prose` companion.** A separate small skill that runs the
+  regex-detectable subset of patterns and reports hits, for the case where the human
+  partner wants to audit existing prose without rewriting it.
+
 ## [Unreleased] — managing-backlog-items skill (fork-only)
 
 New personal skill for the `joeshirey/superpowers` fork that captures incidental work
