@@ -15,8 +15,9 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 JUNIE_DIR="${JUNIE_HOME:-${HOME}/.junie}"
 JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills"
-JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/AGENTS.md"
+JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/guidelines.md"
 SUPERPOWERS_SKILLS_DIR="${PLUGIN_ROOT}/skills"
+JUNIE_SUPERPOWERS_SKILLS_DIR="${JUNIE_SKILLS_DIR}/superpowers"
 
 SENTINEL_START="<!-- BEGIN SUPERPOWERS -->"
 SENTINEL_END="<!-- END SUPERPOWERS -->"
@@ -26,12 +27,12 @@ echo "Target: $JUNIE_DIR"
 echo ""
 
 # --- skills ---
-mkdir -p "$JUNIE_SKILLS_DIR"
+mkdir -p "$JUNIE_SUPERPOWERS_SKILLS_DIR"
 
 for skill_dir in "$SUPERPOWERS_SKILLS_DIR"/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
-    target="$JUNIE_SKILLS_DIR/superpowers-$skill_name"
+    target="$JUNIE_SUPERPOWERS_SKILLS_DIR/$skill_name"
     
     # Clean up previous install (might be a symlink or a directory)
     rm -rf "$target"

@@ -27,10 +27,10 @@ for skill_dir in "$REPO_ROOT/skills"/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
     link="$JUNIE_HOME/skills/superpowers/$skill_name"
-    if [ -L "$link" ] && [ -e "$link" ]; then
+    if [ -d "$link" ]; then
         skill_count=$((skill_count + 1))
     else
-        echo "  [FAIL] Missing or broken symlink for: $skill_name"
+        echo "  [FAIL] Missing or invalid directory for: $skill_name"
         exit 1
     fi
 done
@@ -41,12 +41,12 @@ else
     exit 1
 fi
 
-# Test 3: using-superpowers skill symlinked (critical for bootstrap)
-echo "Test 3: using-superpowers skill symlinked..."
-if [ -L "$JUNIE_HOME/skills/superpowers/using-superpowers" ]; then
-    echo "  [PASS] using-superpowers symlinked"
+# Test 3: using-superpowers skill directory exists (critical for bootstrap)
+echo "Test 3: using-superpowers skill directory exists..."
+if [ -d "$JUNIE_HOME/skills/superpowers/using-superpowers" ]; then
+    echo "  [PASS] using-superpowers directory exists"
 else
-    echo "  [FAIL] using-superpowers not symlinked"
+    echo "  [FAIL] using-superpowers directory missing"
     exit 1
 fi
 

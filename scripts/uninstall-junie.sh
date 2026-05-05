@@ -12,7 +12,7 @@ set -euo pipefail
 
 JUNIE_DIR="${JUNIE_HOME:-${HOME}/.junie}"
 JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills"
-JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/AGENTS.md"
+JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/guidelines.md"
 
 SENTINEL_START="<!-- BEGIN SUPERPOWERS -->"
 SENTINEL_END="<!-- END SUPERPOWERS -->"
@@ -22,11 +22,9 @@ echo "Target: $JUNIE_DIR"
 echo ""
 
 # --- skills ---
-if [ -d "$JUNIE_SKILLS_DIR" ]; then
-    while IFS= read -r skill_path; do
-        rm -rf "$skill_path"
-        echo "  Removed: $(basename "$skill_path")"
-    done < <(find "$JUNIE_SKILLS_DIR" -maxdepth 1 -mindepth 1 -name "superpowers-*")
+if [ -d "$JUNIE_SKILLS_DIR/superpowers" ]; then
+    rm -rf "$JUNIE_SKILLS_DIR/superpowers"
+    echo "  Removed: superpowers/ skills directory"
     rmdir "$JUNIE_SKILLS_DIR" 2>/dev/null || true
 fi
 
@@ -47,7 +45,7 @@ if [ -f "$JUNIE_AGENTS_GUIDELINES" ] && grep -qF "$SENTINEL_START" "$JUNIE_AGENT
     mv "$tmp" "$JUNIE_AGENTS_GUIDELINES"
     echo "Sentinel block removed from: $JUNIE_AGENTS_GUIDELINES"
 else
-    echo "No superpowers block found in AGENTS.md (nothing to remove)"
+    echo "No superpowers block found in guidelines.md (nothing to remove)"
 fi
 
 echo ""

@@ -21,7 +21,7 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 ## Loading Skills
 
-Superpowers skills are installed in the `~/.junie/skills/` directory with a `superpowers-` prefix. To load a skill:
+Superpowers skills are installed in the `~/.junie/skills/superpowers/` directory. To load a skill:
 
 1. Call the `agent_skill_read_doc` tool with the prefixed skill name (e.g., `superpowers:brainstorming`)
 2. Follow the skill's instructions exactly
