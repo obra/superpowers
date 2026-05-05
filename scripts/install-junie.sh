@@ -44,11 +44,15 @@ bootstrap_content=$(cat "$SUPERPOWERS_SKILLS_DIR/using-superpowers/SKILL.md")
 tools_content=$(cat "$SUPERPOWERS_SKILLS_DIR/using-superpowers/references/junie-tools.md")
 
 bootstrap_block="${SENTINEL_START}
+<EXTREMELY_IMPORTANT>
 You have superpowers.
+
+**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**
 
 ${bootstrap_content}
 
 ${tools_content}
+</EXTREMELY_IMPORTANT>
 ${SENTINEL_END}"
 
 touch "$JUNIE_GUIDELINES"

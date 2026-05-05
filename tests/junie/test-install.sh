@@ -65,12 +65,12 @@ else
     exit 1
 fi
 
-# Test 5: bootstrap content includes using-superpowers key phrase
-echo "Test 5: Bootstrap content..."
-if grep -qF "You have superpowers" "$JUNIE_HOME/guidelines.md"; then
-    echo "  [PASS] Bootstrap content present"
+# Test 5: bootstrap has EXTREMELY_IMPORTANT wrapper (required for skill auto-triggering)
+echo "Test 5: Bootstrap wrapper..."
+if grep -qF "<EXTREMELY_IMPORTANT>" "$JUNIE_HOME/guidelines.md"; then
+    echo "  [PASS] EXTREMELY_IMPORTANT wrapper present"
 else
-    echo "  [FAIL] Bootstrap content missing from guidelines.md"
+    echo "  [FAIL] EXTREMELY_IMPORTANT wrapper missing from guidelines.md"
     exit 1
 fi
 
