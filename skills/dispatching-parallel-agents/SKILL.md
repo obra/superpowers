@@ -73,6 +73,43 @@ Task("Fix tool-approval-race-conditions.test.ts failures")
 // All three run concurrently
 ```
 
+#### Mechanics — How Parallel Actually Happens
+
+**Parallel execution requires N Task tool_use blocks in a SINGLE assistant message.** Multiple messages = sequential, even if you intended parallel.
+
+This is the underlying API behavior: when one assistant turn emits multiple `tool_use` blocks, the runtime executes them concurrently. When tool calls are split across multiple turns, each turn waits for the previous one to complete before issuing the next — that's sequential dispatch, not parallel.
+
+**Correct (parallel — 1 message, N blocks):**
+
+```
+[assistant turn 1]
+  Task("Fix file A")
+  Task("Fix file B")
+  Task("Fix file C")
+[assistant turn 2 observes all 3 results]
+```
+
+All three execute concurrently. Total wall-clock ≈ max(A, B, C).
+
+**Wrong (sequential despite intent — N messages, 1 block each):**
+
+```
+[assistant turn 1] Task("Fix file A")
+[wait for A to complete]
+[assistant turn 2] Task("Fix file B")  ← runs AFTER A
+[wait for B to complete]
+[assistant turn 3] Task("Fix file C")  ← runs AFTER B
+```
+
+This is sequential. Total wall-clock = A + B + C.
+
+**Self-verify before claiming parallel:**
+1. Count assistant turns in your batch — should be **1**.
+2. Count Task tool_use blocks in that single turn — should be **N** (the count you intended).
+3. If you have N turns each with 1 Task, you dispatched sequentially. Consolidate into one turn.
+
+This is a common error: thinking "I'll launch 3 Task calls" mentally maps to 3 separate API calls if you're not careful. Always emit them in one turn for true parallelism.
+
 ### 4. Review and Integrate
 
 When agents return:
