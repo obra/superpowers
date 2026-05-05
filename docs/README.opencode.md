@@ -12,9 +12,13 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 }
 ```
 
-Restart OpenCode. The plugin auto-installs via Bun and registers all skills automatically.
+Restart OpenCode. The plugin installs through OpenCode's plugin manager and
+registers all skills.
 
 Verify by asking: "Tell me about your superpowers"
+
+OpenCode uses its own plugin install. If you also use Claude Code, Codex, or
+another harness, install Superpowers separately for each one.
 
 ### Migrating from the old symlink-based install
 
@@ -78,7 +82,10 @@ Create project-specific skills in `.opencode/skills/` within your project.
 
 ## Updating
 
-Superpowers updates automatically when you restart OpenCode. The plugin is re-installed from the git repository on each launch.
+OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
+and Bun versions pin that resolved git dependency in a lockfile or cache, so a
+restart may not pick up the newest Superpowers commit. If updates do not appear,
+clear OpenCode's package cache or reinstall the plugin.
 
 To pin a specific version, use a branch or tag:
 
@@ -111,6 +118,26 @@ Skills written for Claude Code are automatically adapted for OpenCode:
 1. Check OpenCode logs: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`
 2. Verify the plugin line in your `opencode.json` is correct
 3. Make sure you're running a recent version of OpenCode
+
+### Windows install issues
+
+Some Windows OpenCode builds have upstream installer issues with git-backed
+plugin specs, including cache paths for `git+https` URLs and Bun not finding
+`git.exe` even when it works in a normal terminal. If OpenCode cannot install
+the plugin, try installing with system npm and pointing OpenCode at the local
+package:
+
+```powershell
+npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
+```
+
+Then use the installed package path in `opencode.json`:
+
+```json
+{
+  "plugin": ["~/.config/opencode/node_modules/superpowers"]
+}
+```
 
 ### Skills not found
 

@@ -2,6 +2,10 @@
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
+## Quickstart
+
+Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
+
 ## How it works
 
 It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
@@ -26,76 +30,100 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. 
+Installation differs by harness. If you use more than one, install Superpowers separately for each one.
 
-### Claude Code Official Marketplace
+### Claude Code
 
 Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
 
-Install the plugin from Anthropic's official marketplace:
+#### Official Marketplace
 
-```bash
-/plugin install superpowers@claude-plugins-official
-```
+- Install the plugin from Anthropic's official marketplace:
 
-### Claude Code (Superpowers Marketplace)
+  ```bash
+  /plugin install superpowers@claude-plugins-official
+  ```
+
+#### Superpowers Marketplace
 
 The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
 
-In Claude Code, register the marketplace first:
+- Register the marketplace:
 
-```bash
-/plugin marketplace add obra/superpowers-marketplace
-```
+  ```bash
+  /plugin marketplace add obra/superpowers-marketplace
+  ```
 
-Then install the plugin from this marketplace:
+- Install the plugin from this marketplace:
 
-```bash
-/plugin install superpowers@superpowers-marketplace
-```
+  ```bash
+  /plugin install superpowers@superpowers-marketplace
+  ```
 
-### OpenAI Codex CLI
+### Codex CLI
 
-- Open plugin search interface
+Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
 
-```bash
-/plugins
-```
+- Open the plugin search interface:
 
-Search for Superpowers
+  ```bash
+  /plugins
+  ```
 
-```bash
-superpowers
-```
+- Search for Superpowers:
 
-Select `Install Plugin`
+  ```bash
+  superpowers
+  ```
 
-### OpenAI Codex App
+- Select `Install Plugin`.
+
+### Codex App
+
+Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
 
 - In the Codex app, click on Plugins in the sidebar.
-- You should see `Superpowers` in the Coding section. 
+- You should see `Superpowers` in the Coding section.
 - Click the `+` next to Superpowers and follow the prompts.
 
+### Factory Droid
 
-### Cursor (via Plugin Marketplace)
+- Register the marketplace:
 
-In Cursor Agent chat, install from marketplace:
+  ```bash
+  droid plugin marketplace add https://github.com/obra/superpowers
+  ```
 
-```text
-/add-plugin superpowers
-```
+- Install the plugin:
 
-or search for "superpowers" in the plugin marketplace.
+  ```bash
+  droid plugin install superpowers@superpowers
+  ```
+
+### Gemini CLI
+
+- Install the extension:
+
+  ```bash
+  gemini extensions install https://github.com/obra/superpowers
+  ```
+
+- Update later:
+
+  ```bash
+  gemini extensions update superpowers
+  ```
 
 ### OpenCode
 
-Tell OpenCode:
+OpenCode uses its own plugin install; install Superpowers separately even if you
+already use it in another harness.
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-```
+- Tell OpenCode:
 
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+  ```
+  Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+  ```
 
 ### Lingma IDE
 
@@ -106,23 +134,31 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ```
 
 ### GitHub Copilot CLI
+- Detailed docs: [docs/README.opencode.md](docs/README.opencode.md)
 
-```bash
-copilot plugin marketplace add obra/superpowers-marketplace
-copilot plugin install superpowers@superpowers-marketplace
-```
+### Cursor
 
-### Gemini CLI
+- In Cursor Agent chat, install from marketplace:
 
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
+  ```text
+  /add-plugin superpowers
+  ```
 
-To update:
+- Or search for "superpowers" in the plugin marketplace.
 
-```bash
-gemini extensions update superpowers
-```
+### GitHub Copilot CLI
+
+- Register the marketplace:
+
+  ```bash
+  copilot plugin marketplace add obra/superpowers-marketplace
+  ```
+
+- Install the plugin:
+
+  ```bash
+  copilot plugin install superpowers@superpowers-marketplace
+  ```
 
 ## The Basic Workflow
 
