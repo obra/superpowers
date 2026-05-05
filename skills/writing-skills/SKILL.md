@@ -371,6 +371,22 @@ pptx/
 ```
 When: Reference material too large for inline
 
+## Script vs Prose
+
+Per step in your skill, ask: given the same inputs, could a bash or Python script produce the same output every time? If yes, move that work into a supporting script. If the step needs context, tradeoffs, or interpretation, keep it in prose.
+
+Deterministic work belongs in scripts so the agent does not burn tokens redoing mechanical steps inconsistently. Judgment stays in prose.
+
+| Deterministic (script) | Judgment (prose) |
+|------------------------|-------------------|
+| Find files matching a pattern | Decide whether a file is relevant |
+| Compare lists for overlap or subsets | Decide whether overlap is intentional |
+| Parse structured data and extract fields | Interpret what fields mean here |
+| Count, sort, deduplicate | Prioritize or recommend |
+| Validate schema or format | Assess quality or fitness |
+
+Mixed steps: scripts emit facts (paths, matrices, diffs); prose decides what those facts imply.
+
 ## The Iron Law (Same as TDD)
 
 ```
@@ -611,6 +627,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Clear overview with core principle
 - [ ] Address specific baseline failures identified in RED
 - [ ] Code inline OR link to separate file
+- [ ] Each step reviewed: deterministic → supporting script; judgment → prose
 - [ ] One excellent example (not multi-language)
 - [ ] Run scenarios WITH skill - verify agents now comply
 
