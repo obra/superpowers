@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Test: subagent-driven-development skill
 # Verifies that the skill is loaded and follows correct workflow
+#
+# No drill coverage: this test asks the agent to *describe* SDD (string-
+# matches its verbal explanation against expected keywords like
+# "self-review", "skeptical", "worktree", "Step 1", "loop"). Drill scenarios
+# test behavior (real subagent dispatch, plan-following, review loops),
+# not description-recall. Kept by design.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
