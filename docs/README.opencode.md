@@ -104,12 +104,17 @@ The plugin does two things:
 
 ### Tool Mapping
 
-Skills written for Claude Code are automatically adapted for OpenCode:
+Skills speak in actions rather than naming any one runtime's tools. On OpenCode these resolve to:
 
-- `TodoWrite` → `todowrite`
-- `Task` with subagents → OpenCode's `@mention` system
-- `Skill` tool → OpenCode's native `skill` tool
-- File operations → Native OpenCode tools
+- "Create a todo" / "mark complete in todo list" → `todowrite`
+- `Subagent (general-purpose):` template → OpenCode's `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
+- "Invoke a skill" → OpenCode's native `skill` tool
+- "Read a file" / "create a file" / "edit a file" → `read`, `write`, `edit`
+- "Run a shell command" → `bash`
+- "Search file contents" / "find files by name" → `grep`, `glob`
+- "Fetch a URL" / "search the web" → `webfetch`, `websearch`
+
+(Verified against the installed OpenCode CLI's tool inventory.)
 
 ## Troubleshooting
 
