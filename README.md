@@ -32,7 +32,7 @@ If Superpowers has helped you do stuff that makes money and you are so inclined,
 
 Thanks! 
 
-- Jesse
+\- Jesse
 
 
 ## Installation
