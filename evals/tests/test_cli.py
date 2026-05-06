@@ -59,3 +59,25 @@ class TestCompareCommand:
         runner = CliRunner()
         result = runner.invoke(main, ["compare", "nonexistent", "--sweep", "abc123"])
         assert result.exit_code != 0  # No results dir, but flag is parsed
+
+
+def test_set_superpowers_root_default_when_unset(monkeypatch, tmp_path):
+    """When SUPERPOWERS_ROOT is unset, helper sets it to PROJECT_ROOT.parent."""
+    monkeypatch.delenv("SUPERPOWERS_ROOT", raising=False)
+    from drill.cli import _set_superpowers_root_default, PROJECT_ROOT
+
+    _set_superpowers_root_default()
+
+    import os
+    assert os.environ["SUPERPOWERS_ROOT"] == str(PROJECT_ROOT.parent)
+
+
+def test_set_superpowers_root_default_respects_existing(monkeypatch):
+    """When SUPERPOWERS_ROOT is already set, helper does not override."""
+    monkeypatch.setenv("SUPERPOWERS_ROOT", "/custom/path")
+    from drill.cli import _set_superpowers_root_default
+
+    _set_superpowers_root_default()
+
+    import os
+    assert os.environ["SUPERPOWERS_ROOT"] == "/custom/path"

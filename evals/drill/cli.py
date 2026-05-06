@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import secrets
 from pathlib import Path
 
@@ -11,6 +12,22 @@ from dotenv import load_dotenv
 PROJECT_ROOT: Path = Path(__file__).parent.parent
 
 load_dotenv(PROJECT_ROOT / ".env")
+
+
+def _set_superpowers_root_default() -> None:
+    """Default SUPERPOWERS_ROOT to the parent of evals/ if not already set.
+
+    Drill historically required contributors to export SUPERPOWERS_ROOT
+    pointing at the superpowers checkout. After lifting drill into
+    superpowers/evals/, the parent of PROJECT_ROOT is always the
+    superpowers root, so we can supply this default automatically.
+
+    Existing SUPERPOWERS_ROOT environment values are respected as overrides.
+    """
+    os.environ.setdefault("SUPERPOWERS_ROOT", str(PROJECT_ROOT.parent))
+
+
+_set_superpowers_root_default()
 
 
 @click.group()
