@@ -5,16 +5,6 @@ from setup_helpers.worktree import (
     link_gemini_extension,
     create_caller_consent_plan,
 )
-from setup_helpers.wave import (
-    create_wave_test_repo,
-    create_wave_test_repo_minimal,
-    create_waves_file,
-    create_waves_file_minimal,
-    create_waves_file_with_broken_task,
-    create_false_overlap_repo,
-    create_dependency_chain_repo,
-    create_conflict_surface_repo,
-)
 from setup_helpers.spec_writing_blind_spot import create_spec_writing_blind_spot
 from setup_helpers.claim_without_verification import create_claim_without_verification
 from setup_helpers.spec_targets_wrong_component import create_spec_targets_wrong_component
@@ -36,14 +26,6 @@ HELPER_REGISTRY = {
     "detach_worktree_head": detach_worktree_head,
     "link_gemini_extension": link_gemini_extension,
     "create_caller_consent_plan": create_caller_consent_plan,
-    "create_wave_test_repo": create_wave_test_repo,
-    "create_wave_test_repo_minimal": create_wave_test_repo_minimal,
-    "create_waves_file": create_waves_file,
-    "create_waves_file_minimal": create_waves_file_minimal,
-    "create_waves_file_with_broken_task": create_waves_file_with_broken_task,
-    "create_false_overlap_repo": create_false_overlap_repo,
-    "create_dependency_chain_repo": create_dependency_chain_repo,
-    "create_conflict_surface_repo": create_conflict_surface_repo,
     "create_spec_writing_blind_spot": create_spec_writing_blind_spot,
     "create_claim_without_verification": create_claim_without_verification,
     "create_spec_targets_wrong_component": create_spec_targets_wrong_component,
