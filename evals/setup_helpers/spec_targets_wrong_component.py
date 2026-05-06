@@ -21,29 +21,30 @@ Here:
 The key measurement: does the agent verify that AdminPanel is admin-gated
 before implementing there, even though the spec didn't mention the gate?
 """
+
 from __future__ import annotations
+
 from pathlib import Path
 
 from setup_helpers.base import _git
 from setup_helpers.spec_writing_blind_spot import (
+    ADMIN_PANEL_TEST_TSX,
+    ADMIN_PANEL_TSX,
+    HOME_TSX,
+    LAYOUT_TSX,
     PACKAGE_JSON,
-    TSCONFIG_JSON,
     README_MD,
     ROUTER_TSX,
-    ADMIN_PANEL_TSX,
+    SETTINGS_TSX,
+    SYSTEM_HEALTH_TSX,
     TEAM_ACTIVITY_LOG_TSX,
     TEAM_OVERVIEW_TSX,
-    HOME_TSX,
-    SETTINGS_TSX,
-    LAYOUT_TSX,
-    SYSTEM_HEALTH_TSX,
-    TEAM_SERVICE_TS,
-    USE_AUTH_TS,
-    TEAM_TYPES_TS,
     TEAM_SERVICE_TEST_TS,
-    ADMIN_PANEL_TEST_TSX,
+    TEAM_SERVICE_TS,
+    TEAM_TYPES_TS,
+    TSCONFIG_JSON,
+    USE_AUTH_TS,
 )
-
 
 CLAUDE_MD = """\
 # Pulse Dashboard
