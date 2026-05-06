@@ -1,0 +1,21 @@
+name: codex
+cli: codex
+args:
+  - "--dangerously-bypass-approvals-and-sandbox"
+required_env:
+  - OPENAI_API_KEY
+  - SUPERPOWERS_ROOT
+hooks:
+  pre_run:
+    - symlink_superpowers
+  post_run: []
+shutdown: "<<KEY:ctrl-d>>"
+idle:
+  quiescence_seconds: 5
+  ready_pattern: "^›|codex>|^>"
+startup_timeout: 60
+terminal:
+  cols: 200
+  rows: 50
+session_logs:
+  pattern: "~/.codex/sessions/rollout-*.jsonl"

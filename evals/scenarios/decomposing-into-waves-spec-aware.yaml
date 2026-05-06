@@ -1,0 +1,32 @@
+scenario: decomposing-into-waves-spec-aware
+description: "User explicitly asks the agent to use the decomposing-into-waves skill"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_wave_test_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "test -f docs/superpowers/plans/test-plan.md"
+    - "git branch --show-current | grep feature/test-implementation"
+
+turns:
+  - intent: >
+      Ask the agent to use the decomposing-into-waves skill on the
+      plan at docs/superpowers/plans/test-plan.md. Reference the
+      skill by name.
+  - intent: >
+      Review the waves file output. Verify parallel waves don't have
+      file overlaps. Confirm or ask for corrections.
+
+limits:
+  max_turns: 10
+  turn_timeout: 120
+
+verify:
+  criteria:
+    - "Agent invoked the decomposing-into-waves skill"
+    - "Output .waves.md file has YAML frontmatter with run_id and waves structure"
+    - "File ownership block present for parallel waves"
+    - "Wave ordering respects task dependencies (foundation first)"
+  observe: true

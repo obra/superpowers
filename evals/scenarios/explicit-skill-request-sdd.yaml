@@ -1,0 +1,71 @@
+scenario: explicit-skill-request-sdd
+description: >
+  Lifted from superpowers/tests/explicit-skill-requests/. Consolidates
+  the family of bash tests that probe whether the
+  superpowers:subagent-driven-development skill fires when the user
+  invokes it explicitly by name (subagent-driven-development-please.txt,
+  i-know-what-sdd-means.txt, action-oriented.txt, skip-formalities.txt,
+  after-planning-flow.txt — all paraphrase variants of the same
+  spec-aware invocation).
+
+  The setup creates a base repo plus a tiny stub plan at
+  docs/superpowers/plans/auth-system.md. The user explicitly invokes
+  SDD. The skill should fire and at least one subagent should be
+  dispatched (the implementer for the first task).
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_base_repo
+    - add_sdd_auth_plan
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -f docs/superpowers/plans/auth-system.md"
+
+turns:
+  - intent: >
+      You have a plan ready and want SDD to execute it. You are
+      spec-aware: name the skill explicitly. Use phrasing like:
+
+      "I have a plan at docs/superpowers/plans/auth-system.md. Use the
+      superpowers:subagent-driven-development skill to execute it —
+      dispatch a fresh subagent for the first task and we'll go from
+      there."
+
+      Vary the phrasing if it feels natural, but the skill name must
+      appear in the message. Do NOT explain what the skill does
+      yourself — let the agent load it and act.
+  - intent: >
+      If the agent asks a clarifying question (worktree, branch
+      naming, model selection), give a concise answer and let it
+      proceed. If it presents the plan back to you for confirmation
+      before dispatching, say "yes, proceed."
+  - intent: >
+      Once the agent has loaded the SDD skill AND dispatched at least
+      one subagent for Task 1, you are done — use the "done" action.
+      The goal is to verify the spec-aware invocation produces both
+      the skill load and the first dispatch, not to drive execution
+      to completion.
+
+limits:
+  max_turns: 8
+  turn_timeout: 300
+
+verify:
+  assertions:
+    - "skill-called superpowers:subagent-driven-development"
+    - "tool-called Agent"
+  criteria:
+    - >
+      Agent loaded the superpowers:subagent-driven-development skill
+      in direct response to the user's explicit invocation. Loading
+      a different skill (e.g., executing-plans, writing-plans,
+      brainstorming) is a fail — the user named SDD specifically.
+    - >
+      Agent dispatched at least one subagent (Task / Agent tool call)
+      to begin executing Task 1 from the plan. Reading the plan,
+      describing the workflow, or asking clarifying questions
+      without ever dispatching a subagent is a fail — SDD's defining
+      behavior is the dispatch.
+  observe: true

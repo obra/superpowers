@@ -1,0 +1,36 @@
+scenario: worktree-creation-from-main
+description: "Agent creates an isolated worktree from main branch"
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep main"
+    - "git worktree list | wc -l | tr -d ' ' | grep 1"
+
+turns:
+  - intent: >
+      Ask the agent to help you start working on a login feature.
+      Mention you want to keep main clean.
+      Do NOT mention worktrees, workspaces, or isolation.
+  - intent: >
+      Answer any short clarifying question from the agent
+      (e.g., branch name) concisely. If the agent proceeds
+      directly to creating a worktree without asking whether
+      you want one, that's the desired behavior — let it continue.
+
+limits:
+  max_turns: 20
+  turn_timeout: 120
+
+verify:
+  assertions:
+    - "tool-called EnterWorktree"
+    - "tool-not-called Write"
+  criteria:
+    - "Agent detected it was on main, not in an existing worktree"
+    - "A worktree or isolated workspace now exists with a feature branch"
+    - "Agent used the most appropriate tool available for its platform to create the worktree"
+  observe: true

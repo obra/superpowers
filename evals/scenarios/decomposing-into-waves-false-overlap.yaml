@@ -1,0 +1,32 @@
+scenario: decomposing-into-waves-false-overlap
+description: "Agent uses full paths, not bare filenames, when detecting file overlap between tasks"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_false_overlap_repo
+  assertions:
+    - "test -f docs/superpowers/plans/test-plan.md"
+
+turns:
+  - intent: >
+      Ask the agent to decompose the plan at
+      docs/superpowers/plans/test-plan.md into waves. The plan has
+      three tasks that each create a file named types.ts but in
+      different directories (src/auth/, src/users/, src/billing/).
+      Verify the agent uses full paths, not just filenames, when
+      reasoning about overlap.
+  - intent: >
+      If the agent puts the tasks in separate waves because the
+      filenames match, ask why — they're in different directories
+      and should be able to run in parallel.
+
+limits:
+  max_turns: 10
+  turn_timeout: 120
+
+verify:
+  criteria:
+    - "Tasks with same-named files in different directories are in the same parallel wave"
+    - "Agent displayed overlap matrix or conflict list using full file paths (visible in terminal output)"
+  observe: true

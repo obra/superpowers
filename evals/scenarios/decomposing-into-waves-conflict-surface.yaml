@@ -1,0 +1,31 @@
+scenario: decomposing-into-waves-conflict-surface
+description: "Agent flags a barrel/index file as a conflict surface shared by multiple tasks"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_conflict_surface_repo
+  assertions:
+    - "test -f docs/superpowers/plans/test-plan.md"
+    - "test -f src/services/index.ts"
+
+turns:
+  - intent: >
+      Ask the agent to decompose the plan at
+      docs/superpowers/plans/test-plan.md into waves. Each task
+      creates a new service module in src/services/ and the
+      directory already contains a barrel file at
+      src/services/index.ts. Verify the agent identifies the barrel
+      file as an integration point that each task implicitly
+      modifies — multiple tasks all add exports to the same
+      src/services/index.ts.
+
+limits:
+  max_turns: 10
+  turn_timeout: 120
+
+verify:
+  criteria:
+    - "Agent flagged a barrel/index file as a conflict surface (visible in terminal output)"
+    - "Agent either added the barrel file to each task's file list OR moved the tasks to sequential waves because they all implicitly modify the same barrel file"
+  observe: true

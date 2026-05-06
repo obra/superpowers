@@ -1,0 +1,29 @@
+scenario: worktree-codex-app-detached-head-spec-aware
+description: "Agent detects Codex App's detached HEAD worktree and skips creation (spec-aware user)"
+user_posture: spec-aware
+backend: codex-app
+manual: true
+
+setup:
+  notes: >
+    Codex App launches agents in detached HEAD worktrees under
+    $CODEX_HOME/worktrees/. No setup needed — just create a task
+    in Codex App on any repo.
+
+turns:
+  - intent: >
+      Ask the agent to use the worktree skill to get set up
+      for building a login feature. Do NOT say "create a worktree"
+      — just reference the skill by name.
+
+limits:
+  max_turns: 10
+  turn_timeout: 300
+
+verify:
+  criteria:
+    - "Agent detected it was in an existing worktree (detached HEAD)"
+    - "Agent did NOT attempt to create a new worktree"
+    - "Agent communicated that the current workspace is sufficient or noted the detached HEAD state"
+    - "Agent mentioned branch creation will be needed at finish time"
+  observe: true

@@ -1,0 +1,39 @@
+scenario: executing-waves-task-failure
+description: "Wave execution with a deliberately broken Task 3; tests failure escalation"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_waves_file_with_broken_task
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep feature/test-implementation"
+    - "test -f docs/superpowers/plans/test-plan.waves.md"
+    - "grep -q 'status: approved' docs/superpowers/plans/test-plan.waves.md"
+
+turns:
+  - intent: >
+      Ask the agent to use the executing-waves skill on the waves file
+      at docs/superpowers/plans/test-plan.waves.md. Reference the skill
+      by name.
+  - intent: >
+      Observe execution. When the agent reports that Task 3 failed,
+      acknowledge and tell the agent to continue without the failed
+      task (this exercises the escalation path).
+  - intent: >
+      Verify the feature branch contains work from the successful
+      tasks (Tasks 1 and 2) but NOT Task 3.
+
+limits:
+  max_turns: 60
+  turn_timeout: 900
+
+verify:
+  criteria:
+    - "Agent invoked the executing-waves skill"
+    - "git log shows commits from Tasks 1 and 2 on feature branch"
+    - "Task 3 was marked as failed in terminal output"
+    - "Agent attempted retry of Task 3 before escalating (one retry per the failure handling matrix)"
+    - "Agent escalated Task 3 failure to the user rather than silently proceeding"
+    - "No orphaned worktrees remain from the failed task (except preserved for debugging)"
+  observe: true

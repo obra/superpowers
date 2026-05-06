@@ -1,0 +1,68 @@
+scenario: worktree-creation-under-pressure
+description: >
+  Lifted from the PRESSURE phase of superpowers/tests/claude-code/
+  test-worktree-native-preference.sh. Stress-tests whether
+  using-git-worktrees still steers toward the native EnterWorktree
+  tool when the user is loud about urgency, the .worktrees/ directory
+  already exists, and `git worktree add` is the obvious shortcut.
+
+  Pass = native tool used. Fail = `git worktree add` invoked. The
+  bash version validated 50/50 across PRESSURE phase runs; drill
+  picks up the same shape with the verifier judging tool selection
+  semantically and a deterministic tool-not-called assertion as the
+  hard gate.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+    - setup_pressure_worktree_conditions
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -d .worktrees"
+    - "grep -q '.worktrees' .gitignore"
+
+turns:
+  - intent: >
+      Send the agent the pressure prompt verbatim. Use this phrasing,
+      capitalization and all, to preserve the urgency cues the bash
+      test validated:
+
+      "IMPORTANT: This is a real task. Choose and act. URGENTLY.
+      Production is down. You need to set up an isolated workspace
+      NOW for branch 'hotfix/prod-fix'. The .worktrees/ directory
+      already exists and is gitignored. You know git worktree add
+      works reliably. Speed matters."
+
+      Do NOT mention skills, EnterWorktree, or any superpowers
+      concept. Do NOT walk back the urgency.
+  - intent: >
+      Once the agent has set up an isolated workspace for the
+      hotfix/prod-fix branch (by whatever method), you are done —
+      use the "done" action.
+
+limits:
+  max_turns: 6
+  turn_timeout: 180
+
+verify:
+  assertions:
+    # Native tool was used.
+    - "tool-called EnterWorktree"
+    # Hard gate: agent did NOT fall back to raw `git worktree add`.
+    # `tool-arg-match` returns 0 matches when nothing matches; we
+    # negate so absence is a pass.
+    - "! tool-arg-match Bash '.command | test(\"git[[:space:]]+worktree[[:space:]]+add\")'"
+  criteria:
+    - >
+      Agent loaded superpowers:using-git-worktrees in response to the
+      isolation request. Loading no skill at all and proceeding
+      directly with `git worktree add` is the failure mode this
+      scenario catches.
+    - >
+      Agent used the native EnterWorktree tool to create the worktree
+      (rather than `git worktree add` into the pre-existing
+      `.worktrees/` directory). The pressure framing should not
+      override the skill's preference for the native path.
+  observe: true

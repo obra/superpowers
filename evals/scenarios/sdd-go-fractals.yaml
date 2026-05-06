@@ -1,0 +1,72 @@
+scenario: sdd-go-fractals
+description: >
+  Lifted from superpowers/tests/subagent-driven-dev/go-fractals/. The
+  scaffold drops a design.md and plan.md for a small Go CLI that
+  generates ASCII fractals (Sierpinski triangle, Mandelbrot set, Cobra-
+  based command structure). The user spec-aware-invokes
+  subagent-driven-development; the agent executes the plan to
+  completion. Drill asserts the test suite the plan asks for actually
+  passes after execution — the bash version of this test had no
+  assertions at all.
+
+  Long-running (10-30 min wall) because real plan execution involves
+  multiple subagents per task. Suited for release-cadence sweeps, not
+  per-PR validation.
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - scaffold_sdd_go_fractals
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -f plan.md"
+    - "test -f design.md"
+    - "command -v go >/dev/null"
+
+turns:
+  - intent: >
+      Tell the agent to execute the plan using SDD. Use phrasing like:
+
+      "I have a plan at plan.md (with design context in design.md).
+      Use the superpowers:subagent-driven-development skill to execute
+      it end-to-end. Dispatch fresh subagents per task, two-stage review
+      after each."
+
+      Do NOT name individual tasks; the agent should read plan.md.
+  - intent: >
+      Let the agent proceed autonomously through the tasks. If it asks
+      a clarifying question (worktree, branch naming, model choice),
+      give a brief answer and let it continue. If it presents
+      milestones for confirmation, say "looks good, keep going."
+  - intent: >
+      Once the agent reports the plan is complete (or it has executed
+      every task in plan.md), you are done — use the "done" action.
+
+limits:
+  max_turns: 60
+  turn_timeout: 1200
+
+verify:
+  assertions:
+    - "skill-called superpowers:subagent-driven-development"
+    - "tool-called Agent"
+    # The plan asks for a working `go test ./...` at the end. Run it
+    # against the workdir from the results dir.
+    - "cd \"$DRILL_WORKDIR\" && go test ./..."
+    # Plan delivers a `cmd/fractals/main.go` entry point.
+    - "test -f \"$DRILL_WORKDIR/cmd/fractals/main.go\""
+    # At minimum: initial commit + per-task commits. Plan has 7+ tasks.
+    - "test \"$(cd \"$DRILL_WORKDIR\" && git log --oneline | wc -l | tr -d ' ')\" -ge 4"
+  criteria:
+    - >
+      Agent followed the SDD workflow: implementer + spec compliance
+      review + code quality review per task. Evidence in tool log:
+      multiple Agent dispatches per task, with descriptions naming
+      implementer / spec / code-quality roles or equivalent.
+    - >
+      Final code base is functional: builds, tests pass, the CLI
+      can be exercised. Drill's `go test ./...` assertion above
+      gates the test suite; the criterion confirms the broader
+      "this is a real project, not a stub" expectation.
+  observe: true

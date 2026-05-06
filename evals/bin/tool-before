@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v jq >/dev/null || { echo "jq required"; exit 127; }
+
+TOOL_A="$1"
+TOOL_B="$2"
+FILE="tool_calls.jsonl"
+
+IDX_A=$(jq -s 'to_entries | map(select(.value.tool == "'"$TOOL_A"'")) | first // empty | .key' "$FILE" 2>/dev/null)
+IDX_B=$(jq -s 'to_entries | map(select(.value.tool == "'"$TOOL_B"'")) | first // empty | .key' "$FILE" 2>/dev/null)
+
+if [ -z "$IDX_A" ] || [ "$IDX_A" = "null" ]; then
+    echo "FAIL: $TOOL_A never called"
+    exit 1
+fi
+
+if [ -z "$IDX_B" ] || [ "$IDX_B" = "null" ]; then
+    echo "FAIL: $TOOL_B never called"
+    exit 1
+fi
+
+if [ "$IDX_A" -lt "$IDX_B" ]; then
+    echo "PASS: $TOOL_A (line $((IDX_A + 1))) before $TOOL_B (line $((IDX_B + 1)))"
+    exit 0
+else
+    echo "FAIL: $TOOL_A at line $((IDX_A + 1)) occurred after $TOOL_B at line $((IDX_B + 1))"
+    exit 1
+fi

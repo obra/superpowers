@@ -1,0 +1,26 @@
+name: claude-opus-4-7-1m
+cli: claude
+args:
+  - "--dangerously-skip-permissions"
+  - "--plugin-dir"
+  - "${SUPERPOWERS_ROOT}"
+  - "--model"
+  - "claude-opus-4-7[1m]"
+required_env:
+  - ANTHROPIC_API_KEY
+  - SUPERPOWERS_ROOT
+hooks:
+  pre_run: []
+  post_run: []
+shutdown: "/exit"
+idle:
+  quiescence_seconds: 3
+  ready_pattern: "^❯|^\\$|Human:|Enter to confirm"
+busy_pattern: "esc to cancel|Thinking\\.\\.\\.|\\(esc to cancel[^)]*\\)|[⠇⠏⠋⠙⠹⠸⠼⠴⠦⠧⠶⠾⠽⠻⠿]"
+max_busy_seconds: 1800
+startup_timeout: 60
+terminal:
+  cols: 200
+  rows: 50
+session_logs:
+  pattern: "~/.claude/projects/**/session-*.jsonl"

@@ -1,0 +1,47 @@
+scenario: triggering-requesting-code-review
+description: >
+  Lifted from superpowers/tests/skill-triggering/prompts/requesting-code-review.txt.
+  A naive user announces they finished a feature and asks the agent to review
+  the changes before merging. The agent should load
+  superpowers:requesting-code-review before doing the review itself.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+
+turns:
+  - intent: >
+      Ask the agent to review your changes before merge. Use this exact
+      phrasing:
+
+      "I just finished implementing the user authentication feature. All the
+      code is committed. Can you review the changes before I merge to main?
+
+      The commits are between abc123 and def456."
+
+      Do NOT mention skills, code review templates, or any superpowers
+      concept. Do not worry about the SHAs being fake — the goal is to test
+      whether the request *shape* triggers the skill.
+  - intent: >
+      Once the agent has loaded a skill or started the review (regardless
+      of whether the SHAs resolve), you are done — use the "done" action.
+      If the agent says it cannot find the commits and asks for clarification,
+      that is also fine — the skill should still have fired before then.
+
+limits:
+  max_turns: 4
+  turn_timeout: 180
+
+verify:
+  assertions:
+    - "skill-called superpowers:requesting-code-review"
+  criteria:
+    - >
+      Agent loaded the superpowers:requesting-code-review skill in response
+      to the merge-review request. Loading the skill after attempting the
+      review (or never loading it) is a fail.
+  observe: true

@@ -1,0 +1,90 @@
+scenario: code-review-catches-planted-bugs
+description: >
+  Lifted from superpowers/tests/claude-code/test-requesting-code-review.sh.
+  The setup repo has two commits where the second plants three real
+  security bugs (SQL injection, identity-function password hash, credential
+  logging). The naive user asks for a review before merge. The
+  superpowers:requesting-code-review skill should fire, dispatch a
+  reviewer subagent, and the resulting review must flag the planted bugs
+  at Critical/Important severity and refuse to approve the diff.
+
+  This is the cross-harness, semantically-judged replacement for the bash
+  test that landed in PR #1299. Drill's verifier reads the reviewer's
+  actual report in context instead of regex-grepping for keywords.
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_code_review_planted_bugs
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "git log --oneline | wc -l | tr -d ' ' | grep -q '^2$'"
+    - "test -f src/db.js"
+    # Bug fingerprints — the helper plants string-concatenation in the SQL
+    # and an identity-function hash. If either is missing, the run is
+    # measuring something other than what the scenario claims.
+    - "grep -q '+ email +' src/db.js"
+    - "grep -qE 'function hash\\(s\\) \\{[[:space:]]*return s' src/db.js"
+
+turns:
+  - intent: >
+      You just committed a refactor and want a thorough pre-merge review.
+      You are spec-aware: you know the superpowers workflow and want the
+      agent to use the requesting-code-review skill (which dispatches a
+      reviewer subagent with isolated context). Use phrasing like:
+
+      "I just finished a refactor of our user-lookup code and added a
+      login function. The change is the most recent commit on the only
+      branch (main has just two commits). Use the
+      superpowers:requesting-code-review skill to review the diff before
+      I merge — dispatch the reviewer subagent with the template and
+      report back what it found."
+
+      Do NOT mention SQL injection, hashing, credentials, or any specific
+      bug. Do NOT pre-emptively suggest severities. The skill is named
+      because we want the subagent path; the bugs themselves are for the
+      reviewer to discover.
+  - intent: >
+      If the agent asks a short clarifying question (e.g., "what's the
+      base SHA?" or "anything specific to focus on?"), answer briefly.
+      Sample answers:
+        - "The diff is just `git diff HEAD~1..HEAD` — the most recent commit."
+        - "Just give it a normal pre-merge review."
+      Do NOT volunteer information about the planted bugs or what to
+      look for.
+  - intent: >
+      Once the agent has produced a review (with findings, severity,
+      and a verdict), you are done — use the "done" action. If the
+      agent says "looks good, ready to merge", that is also a complete
+      review (and a fail of the criteria below — but the run itself is
+      complete).
+
+limits:
+  max_turns: 8
+  turn_timeout: 300
+
+verify:
+  assertions:
+    - "skill-called superpowers:requesting-code-review"
+    - "tool-called Agent"
+  criteria:
+    - >
+      Reviewer flagged the SQL injection in findUserByEmail. The query
+      switched from a parameterized statement to string concatenation
+      with the user-supplied email. The reviewer must call this out
+      at Critical or Important severity (not Minor / Nice-to-have).
+    - >
+      Reviewer flagged the credential-handling problem. Either of these
+      counts as catching it: (a) `hash()` is an identity function so
+      passwords are stored / compared in plaintext; (b) `console.log`
+      writes the password_hash to stdout on every successful login.
+      The reviewer must call out at least one at Critical or Important
+      severity.
+    - >
+      Reviewer did not approve the diff for merge. A correct reviewer
+      either says "do not merge", "with fixes", "blocking", or
+      explicitly refuses approval. A reviewer that says "looks good",
+      "ready to merge", or "safe to ship" without qualification fails
+      this criterion.
+  observe: true

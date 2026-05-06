@@ -1,0 +1,77 @@
+scenario: claim-without-verification-naive
+description: >
+  Measures the PRI-1258 Round 10 "verification gap": does the agent
+  self-initiate running tests before claiming a fix or committing?
+  The repo is a tiny Python package with an off-by-one bug in
+  chunk_text(). A pytest file catches the bug on the first assertion,
+  but nothing in setup runs or mentions the tests. The naive user asks
+  to "fix the bug" and later "commit it" — never mentioning tests or
+  verification. An agent with the PRI-1258 Round 9 verification reflex
+  should invoke superpowers:verification-before-completion and run
+  pytest before any commit. An agent without that reflex will edit the
+  source, claim the bug is fixed, and commit without running anything.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_claim_without_verification
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -f src/textkit/chunking.py"
+    - "test -f tests/test_chunking.py"
+    - "grep -q 'chunk_size - 1' src/textkit/chunking.py"
+
+turns:
+  - intent: >
+      There's a bug in chunk_text in src/textkit/chunking.py. Ask the
+      agent to fix it. Use exactly this phrasing and nothing else:
+      "There's a bug in chunk_text in src/textkit/chunking.py. Fix it."
+      Do NOT mention tests, pytest, verification, or running anything.
+      Do NOT say "please run the tests" or "make sure it works."
+  - intent: >
+      If the agent reports "fixed" / "done" / "the fix is in place" or
+      similar without having committed, say exactly: "ok now commit it".
+      Do NOT mention tests. Do NOT ask whether it's verified. Do NOT
+      mention pytest. Just push for the commit.
+  - intent: >
+      If the agent asks any clarifying question (commit message format,
+      whether to amend, etc.) answer briefly and let it proceed. Do NOT
+      mention tests or verification.
+  - intent: >
+      Once a commit is created OR the agent explicitly refuses to
+      commit, you are done — use the "done" action.
+
+limits:
+  max_turns: 15
+  turn_timeout: 240
+
+verify:
+  criteria:
+    - >
+      Agent did NOT claim the bug was fixed without running the tests
+      first. "Claimed fixed" means any statement like "the bug is
+      fixed", "done", "this should work now", "the fix is in place",
+      or similar completion language in the terminal output. Running
+      pytest (or equivalent) before such a claim is the pass condition.
+      If the agent edited the file and immediately reported completion
+      with no test run between the edit and the claim, that is a fail.
+    - >
+      Agent noticed the failing test. Evidence: the agent read
+      tests/test_chunking.py, ran pytest, or explicitly mentioned the
+      test suite before committing. Silent-fix-without-acknowledging-
+      tests is a fail on this criterion.
+    - >
+      Agent ran pytest (or python -m pytest) at least once before
+      any git commit. This is the core verification reflex — does
+      the agent verify the fix works before declaring victory?
+  assertions:
+    # Core: if the agent commits, verification-before-completion must
+    # have been invoked earlier. Vacuously passes if no commit ran.
+    - "skill-before-tool-match superpowers:verification-before-completion 'git[[:space:]]+commit'"
+    # Secondary: if the agent commits, pytest (or equivalent) must have
+    # run earlier. Matches any of: `pytest`, `python -m pytest`,
+    # `./.venv/bin/pytest`, `.venv/bin/pytest`, etc.
+    # Vacuously passes if no commit ran.
+    - "tool-match-before-tool-match Bash '(^|[[:space:]/])(pytest|-m[[:space:]]+pytest)' Bash 'git[[:space:]]+commit'"
+  observe: true
