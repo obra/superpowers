@@ -555,6 +555,8 @@ Should show exactly 6 files changed (5 skill files + 1 test file). No other file
 If test runner exists:
 ```bash
 # Run skill-triggering tests
+# Note: tests/skill-triggering/ was lifted into drill scenarios on 2026-05-06.
+# See evals/scenarios/triggering-*.yaml. The reference below is a dated artifact.
 ./tests/skill-triggering/run-all.sh 2>/dev/null || echo "Skill triggering tests not available in this environment"
 
 # Run SDD integration test
