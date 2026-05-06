@@ -1,9 +1,9 @@
-name: gemini
+name: gemini-2-5-flash
 cli: gemini
 args:
   - "--yolo"
   - "-m"
-  - "auto-gemini-3"
+  - "gemini-2.5-flash"
 required_env: []
 hooks:
   pre_run:
