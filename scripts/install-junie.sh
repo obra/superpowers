@@ -15,9 +15,10 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 JUNIE_DIR="${JUNIE_HOME:-${HOME}/.junie}"
 JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills"
-JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/guidelines.md"
+JUNIE_AGENTS_GUIDELINES="${JUNIE_DIR}/AGENTS.md"
 SUPERPOWERS_SKILLS_DIR="${PLUGIN_ROOT}/skills"
 JUNIE_SUPERPOWERS_SKILLS_DIR="${JUNIE_SKILLS_DIR}/superpowers"
+JUNIE_COMMANDS_DIR="${JUNIE_DIR}/commands"
 
 SENTINEL_START="<!-- BEGIN SUPERPOWERS -->"
 SENTINEL_END="<!-- END SUPERPOWERS -->"
@@ -53,6 +54,23 @@ for skill_dir in "$SUPERPOWERS_SKILLS_DIR"/*/; do
     done
     
     echo "  Installed: $skill_name (prefixed for Junie)"
+done
+
+echo ""
+
+# --- commands ---
+mkdir -p "$JUNIE_COMMANDS_DIR"
+
+for cmd_file in "${PLUGIN_ROOT}/hooks/junie/commands"/*.md; do
+    [ -f "$cmd_file" ] || continue
+    cmd_name=$(basename "$cmd_file")
+    target="$JUNIE_COMMANDS_DIR/$cmd_name"
+    
+    # Clean up previous install (might be a symlink or a file)
+    rm -f "$target"
+    ln -s "$cmd_file" "$target"
+    
+    echo "  Installed command: ${cmd_name%.md}"
 done
 
 echo ""

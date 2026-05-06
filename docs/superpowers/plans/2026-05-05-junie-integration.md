@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add Junie (JetBrains) as a supported superpowers harness via a user-level install script that injects the bootstrap into `~/.junie/guidelines.md` and symlinks skills into `~/.junie/skills/superpowers/`.
+**Goal:** Add Junie (JetBrains) as a supported superpowers harness via a user-level install script that injects the bootstrap into `~/.junie/AGENTS.md` and symlinks skills into `~/.junie/skills/superpowers/`.
 
-**Architecture:** Since Junie has no SessionStart hooks, the bootstrap is injected into `~/.junie/guidelines.md`, which Junie loads automatically at every session start. The install script is idempotent: it uses HTML comment sentinels to find and replace the superpowers block on re-runs without touching surrounding content. Skills are symlinked (not copied) so updates to the repo are reflected immediately.
+**Architecture:** Since Junie has no SessionStart hooks, the bootstrap is injected into `~/.junie/AGENTS.md`, which Junie loads automatically at every session start. The install script is idempotent: it uses HTML comment sentinels to find and replace the superpowers block on re-runs without touching surrounding content. Skills are symlinked (not copied) so updates to the repo are reflected immediately.
 
 **Tech Stack:** Bash (install/uninstall scripts, tests), Markdown (docs, tool mapping)
 
@@ -17,6 +17,7 @@
 | `skills/using-superpowers/references/junie-tools.md` | Create | Tool name mapping for Junie (same pattern as `gemini-tools.md`) |
 | `scripts/install-junie.sh` | Create | User-level install: symlink skills + inject bootstrap |
 | `scripts/uninstall-junie.sh` | Create | Reverse install: remove symlinks + remove sentinel block |
+| `hooks/junie/commands/` | Create | Custom slash commands for Superpowers skills |
 | `tests/junie/setup.sh` | Create | Isolated test environment helpers |
 | `tests/junie/test-install.sh` | Create | Verify install creates correct structure |
 | `tests/junie/test-bootstrap.sh` | Create | Verify idempotency, content preservation, uninstall |
@@ -159,15 +160,15 @@ else
     exit 1
 fi
 
-# Test 4: guidelines.md has sentinel markers
-echo "Test 4: guidelines.md sentinel markers..."
-if grep -qF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md"; then
+# Test 4: AGENTS.md has sentinel markers
+echo "Test 4: AGENTS.md sentinel markers..."
+if grep -qF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] BEGIN sentinel present"
 else
     echo "  [FAIL] BEGIN sentinel missing"
     exit 1
 fi
-if grep -qF "<!-- END SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md"; then
+if grep -qF "<!-- END SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] END sentinel present"
 else
     echo "  [FAIL] END sentinel missing"
@@ -176,10 +177,10 @@ fi
 
 # Test 5: bootstrap content includes using-superpowers key phrase
 echo "Test 5: Bootstrap content..."
-if grep -qF "You have superpowers" "$JUNIE_HOME/guidelines.md"; then
+if grep -qF "You have superpowers" "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] Bootstrap content present"
 else
-    echo "  [FAIL] Bootstrap content missing from guidelines.md"
+    echo "  [FAIL] Bootstrap content missing from AGENTS.md"
     exit 1
 fi
 
@@ -215,14 +216,14 @@ git commit -m "test(junie): add install script tests"
 **Files:**
 - Create: `scripts/install-junie.sh`
 
-- [ ] **Step 1: Create the install script**
+- [x] **Step 1: Create the install script**
 
 ```bash
 #!/usr/bin/env bash
 # Install superpowers for Junie (user-level)
 #
 # Symlinks all skills into ~/.junie/skills/superpowers/ and injects the
-# using-superpowers bootstrap into ~/.junie/guidelines.md using sentinel
+# using-superpowers bootstrap into ~/.junie/AGENTS.md using sentinel
 # markers so the operation is idempotent.
 #
 # Override install location for testing:
@@ -235,7 +236,8 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 JUNIE_DIR="${JUNIE_HOME:-${HOME}/.junie}"
 JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills/superpowers"
-JUNIE_GUIDELINES="${JUNIE_DIR}/guidelines.md"
+JUNIE_COMMANDS_DIR="${JUNIE_DIR}/commands"
+JUNIE_GUIDELINES="${JUNIE_DIR}/AGENTS.md"
 SUPERPOWERS_SKILLS_DIR="${PLUGIN_ROOT}/skills"
 
 SENTINEL_START="<!-- BEGIN SUPERPOWERS -->"
@@ -255,6 +257,20 @@ for skill_dir in "$SUPERPOWERS_SKILLS_DIR"/*/; do
     [ -L "$target" ] && rm "$target"
     ln -s "$skill_dir" "$target"
     echo "  Linked: $skill_name"
+done
+
+echo ""
+
+# --- commands ---
+mkdir -p "$JUNIE_COMMANDS_DIR"
+
+for cmd_file in "${PLUGIN_ROOT}/hooks/junie/commands"/*.md; do
+    [ -f "$cmd_file" ] || continue
+    cmd_name=$(basename "$cmd_file")
+    target="$JUNIE_COMMANDS_DIR/$cmd_name"
+    rm -f "$target"
+    ln -s "$cmd_file" "$target"
+    echo "  Installed command: ${cmd_name%.md}"
 done
 
 echo ""
@@ -346,8 +362,8 @@ echo "=== Test: Idempotency ==="
 "$REPO_ROOT/scripts/install-junie.sh"
 "$REPO_ROOT/scripts/install-junie.sh"
 
-begin_count=$(grep -cF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md")
-end_count=$(grep -cF "<!-- END SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md")
+begin_count=$(grep -cF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md")
+end_count=$(grep -cF "<!-- END SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md")
 
 if [ "$begin_count" -eq 1 ] && [ "$end_count" -eq 1 ]; then
     echo "  [PASS] Exactly one sentinel block after two installs"
@@ -360,10 +376,10 @@ echo ""
 echo "=== Test: Pre-existing content is preserved ==="
 
 # Write pre-existing content then re-install
-printf '# My guidelines\n\nAlways use TypeScript.\n' > "$JUNIE_HOME/guidelines.md"
+printf '# My guidelines\n\nAlways use TypeScript.\n' > "$JUNIE_HOME/AGENTS.md"
 "$REPO_ROOT/scripts/install-junie.sh"
 
-if grep -qF "Always use TypeScript." "$JUNIE_HOME/guidelines.md"; then
+if grep -qF "Always use TypeScript." "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] Pre-existing content preserved after install"
 else
     echo "  [FAIL] Pre-existing content was overwritten"
@@ -375,14 +391,14 @@ echo "=== Test: Uninstall ==="
 
 "$REPO_ROOT/scripts/uninstall-junie.sh"
 
-if grep -qF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md" 2>/dev/null; then
+if grep -qF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md" 2>/dev/null; then
     echo "  [FAIL] Sentinel block still present after uninstall"
     exit 1
 else
     echo "  [PASS] Sentinel block removed"
 fi
 
-if grep -qF "Always use TypeScript." "$JUNIE_HOME/guidelines.md"; then
+if grep -qF "Always use TypeScript." "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] Pre-existing content preserved after uninstall"
 else
     echo "  [FAIL] Pre-existing content was removed by uninstall"
@@ -435,7 +451,7 @@ git commit -m "test(junie): add idempotency and uninstall tests"
 # Uninstall superpowers from Junie (user-level)
 #
 # Removes skill symlinks from ~/.junie/skills/superpowers/ and strips the
-# superpowers sentinel block from ~/.junie/guidelines.md without touching
+# superpowers sentinel block from ~/.junie/AGENTS.md without touching
 # any surrounding content.
 #
 # Override install location for testing:
@@ -445,7 +461,7 @@ set -euo pipefail
 
 JUNIE_DIR="${JUNIE_HOME:-${HOME}/.junie}"
 JUNIE_SKILLS_DIR="${JUNIE_DIR}/skills/superpowers"
-JUNIE_GUIDELINES="${JUNIE_DIR}/guidelines.md"
+JUNIE_GUIDELINES="${JUNIE_DIR}/AGENTS.md"
 
 SENTINEL_START="<!-- BEGIN SUPERPOWERS -->"
 
@@ -475,7 +491,7 @@ if [ -f "$JUNIE_GUIDELINES" ] && grep -qF "$SENTINEL_START" "$JUNIE_GUIDELINES";
     mv "$tmp" "$JUNIE_GUIDELINES"
     echo "Sentinel block removed from: $JUNIE_GUIDELINES"
 else
-    echo "No superpowers block found in guidelines.md (nothing to remove)"
+    echo "No superpowers block found in AGENTS.md (nothing to remove)"
 fi
 
 echo ""
@@ -544,7 +560,7 @@ Junie is JetBrains' AI coding agent, available as a CLI tool and IDE integration
 Junie has no plugin marketplace, so installation uses a shell script that:
 
 1. Symlinks all superpowers skills into `~/.junie/skills/superpowers/`
-2. Injects the bootstrap into `~/.junie/guidelines.md` (loaded automatically at every session start)
+2. Injects the bootstrap into `~/.junie/AGENTS.md` (loaded automatically at every session start)
 
 ### Steps
 
@@ -574,7 +590,7 @@ The install is idempotent — running it again updates the bootstrap block in pl
 ## How it works
 
 Junie has no SessionStart hook mechanism. Instead, `install-junie.sh` writes the
-`using-superpowers` bootstrap into `~/.junie/guidelines.md`. Junie loads this file
+`using-superpowers` bootstrap into `~/.junie/AGENTS.md`. Junie loads this file
 at the start of every session, so the bootstrap is always in context without any
 user action.
 
@@ -607,7 +623,7 @@ Both tests use an isolated temp directory and do not modify `~/.junie`.
 
 - **No real-time bootstrap updates:** Changes to `skills/using-superpowers/SKILL.md`
   are not picked up automatically — re-run `install-junie.sh` to refresh the
-  bootstrap in `guidelines.md`. Skill files under `~/.junie/skills/superpowers/`
+  bootstrap in `AGENTS.md`. Skill files under `~/.junie/skills/superpowers/`
   are symlinks so those update immediately.
 
 - **Skill invocation:** Junie does not have a native `Skill` tool like Claude Code.

@@ -50,15 +50,15 @@ else
     exit 1
 fi
 
-# Test 4: guidelines.md has sentinel markers
-echo "Test 4: guidelines.md sentinel markers..."
-if grep -qF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md"; then
+# Test 4: AGENTS.md has sentinel markers
+echo "Test 4: AGENTS.md sentinel markers..."
+if grep -qF "<!-- BEGIN SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] BEGIN sentinel present"
 else
     echo "  [FAIL] BEGIN sentinel missing"
     exit 1
 fi
-if grep -qF "<!-- END SUPERPOWERS -->" "$JUNIE_HOME/guidelines.md"; then
+if grep -qF "<!-- END SUPERPOWERS -->" "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] END sentinel present"
 else
     echo "  [FAIL] END sentinel missing"
@@ -67,10 +67,38 @@ fi
 
 # Test 5: bootstrap has EXTREMELY_IMPORTANT wrapper (required for skill auto-triggering)
 echo "Test 5: Bootstrap wrapper..."
-if grep -qF "<EXTREMELY_IMPORTANT>" "$JUNIE_HOME/guidelines.md"; then
+if grep -qF "<EXTREMELY_IMPORTANT>" "$JUNIE_HOME/AGENTS.md"; then
     echo "  [PASS] EXTREMELY_IMPORTANT wrapper present"
 else
-    echo "  [FAIL] EXTREMELY_IMPORTANT wrapper missing from guidelines.md"
+    echo "  [FAIL] EXTREMELY_IMPORTANT wrapper missing from AGENTS.md"
+    exit 1
+fi
+
+# Test 6: commands directory and symlinks created
+echo "Test 6: Commands directory and symlinks created..."
+if [ -d "$JUNIE_HOME/commands" ]; then
+    echo "  [PASS] $JUNIE_HOME/commands exists"
+else
+    echo "  [FAIL] Commands directory not found"
+    exit 1
+fi
+
+cmd_count=0
+for cmd_file in "$REPO_ROOT/hooks/junie/commands"/*.md; do
+    [ -f "$cmd_file" ] || continue
+    cmd_name=$(basename "$cmd_file")
+    link="$JUNIE_HOME/commands/$cmd_name"
+    if [ -L "$link" ]; then
+        cmd_count=$((cmd_count + 1))
+    else
+        echo "  [FAIL] Missing or invalid symlink for command: $cmd_name"
+        exit 1
+    fi
+done
+if [ "$cmd_count" -gt 0 ]; then
+    echo "  [PASS] All $cmd_count commands symlinked"
+else
+    echo "  [FAIL] No commands found to symlink"
     exit 1
 fi
 

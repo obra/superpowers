@@ -9,7 +9,7 @@ Junie (JetBrains' AI coding agent) has no SessionStart hook mechanism. All exist
 
 ## Solution
 
-Junie always loads `~/.junie/guidelines.md` into every session's context. Injecting the `using-superpowers` bootstrap into this file achieves the same effect as a SessionStart hook: the agent sees the bootstrap on every session start, without any user action.
+Junie always loads `~/.junie/AGENTS.md` into every session's context. Injecting the `using-superpowers` bootstrap into this file achieves the same effect as a SessionStart hook: the agent sees the bootstrap on every session start, without any user action.
 
 ## Architecture
 
@@ -22,7 +22,8 @@ Junie always loads `~/.junie/guidelines.md` into every session's context. Inject
       brainstorming/     → symlink to <repo>/skills/brainstorming/
       writing-plans/     → symlink to <repo>/skills/writing-plans/
       ...                (one symlink per skill)
-  guidelines.md          ← bootstrap block injected/replaced here
+  AGENTS.md          ← bootstrap block injected/replaced here
+  commands/          ← custom slash commands (e.g. sp-brainstorm) symlinked here
 ```
 
 The bootstrap block is wrapped in HTML comment sentinels so the install script can find and replace it on re-runs:
@@ -42,13 +43,15 @@ scripts/
   install-junie.sh          install script
   uninstall-junie.sh        cleanup script
 
+hooks/junie/commands/       custom slash commands for Superpowers skills
+
 skills/using-superpowers/references/
   junie-tools.md            tool name mapping (same pattern as gemini-tools.md)
 
 tests/junie/
   setup.sh                  isolated test environment helpers
   test-install.sh           verifies install creates correct directory/symlink structure
-  test-bootstrap.sh         verifies guidelines.md content and sentinel idempotency
+  test-bootstrap.sh         verifies AGENTS.md content and sentinel idempotency
 
 docs/
   README.junie.md           Junie-specific install + usage guide
@@ -60,16 +63,17 @@ README.md                   add Junie section alongside existing harnesses
 
 - Creates `~/.junie/skills/superpowers/` if absent
 - Symlinks each skill directory from the repo (one symlink per skill, named by skill directory name)
-- Creates `~/.junie/guidelines.md` if absent
-- If guidelines.md exists and contains the sentinel block, replaces the block in-place
-- If guidelines.md exists without the block, appends the block
+- Symlinks custom slash commands from `hooks/junie/commands/` to `~/.junie/commands/`
+- Creates `~/.junie/AGENTS.md` if absent
+- If AGENTS.md exists and contains the sentinel block, replaces the block in-place
+- If AGENTS.md exists without the block, appends the block
 - Idempotent: running twice produces identical state
 
 ## Uninstall Script Behaviour
 
 - Removes symlinks from `~/.junie/skills/superpowers/`
-- Removes the sentinel block from `~/.junie/guidelines.md`
-- Leaves any pre-existing guidelines.md content intact
+- Removes the sentinel block from `~/.junie/AGENTS.md`
+- Leaves any pre-existing AGENTS.md content intact
 - Does not remove `~/.junie/` itself
 
 ## Tool Mapping
@@ -80,7 +84,7 @@ README.md                   add Junie section alongside existing harnesses
 
 Tests run without requiring a live Junie session — they verify filesystem state:
 
-- **test-install.sh**: runs the install script against a temp `~/.junie`-equivalent directory, asserts symlinks exist for every skill, asserts guidelines.md contains sentinel markers and bootstrap content
+- **test-install.sh**: runs the install script against a temp `~/.junie`-equivalent directory, asserts symlinks exist for every skill, asserts AGENTS.md contains sentinel markers and bootstrap content
 - **test-bootstrap.sh**: asserts sentinel idempotency (running install twice produces one block, not two), asserts uninstall removes the block and leaves surrounding content intact
 
 ## Documentation
