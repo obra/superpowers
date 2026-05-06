@@ -4,7 +4,7 @@ Superpowers skill compliance benchmark. Python 3.11+, managed with uv.
 
 ## Commands
 
-- **install**: `uv sync --dev`
+- **install**: `uv sync --extra dev`
 - **test**: `uv run pytest`
 - **test single**: `uv run pytest tests/test_engine.py -x -q`
 - **lint**: `uv run ruff check`
