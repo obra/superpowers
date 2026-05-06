@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Verify a specific Skill was invoked before any Bash call whose command matches a regex.
+#
+# Usage: skill-before-tool-match <skill-name> <bash-command-regex>
+# Example: skill-before-tool-match superpowers:verification-before-completion 'git[[:space:]]+commit'
+#
+# Semantics:
+#   - If no Bash call matches the regex, PASS (vacuously — the gated event never occurred).
+#   - If Bash matches but Skill with that name never appeared earlier, FAIL.
+#   - If both appeared and Skill came first, PASS.
+#   - If Skill never appeared but Bash matched, FAIL.
+set -euo pipefail
+command -v jq >/dev/null || { echo "jq required"; exit 127; }
+
+SKILL_NAME="$1"
+BASH_REGEX="$2"
+FILE="tool_calls.jsonl"
+
+if [ ! -s "$FILE" ]; then
+    echo "FAIL: tool_calls.jsonl missing or empty"
+    exit 1
+fi
+
+# First index where Skill(skill=SKILL_NAME) appears (0-based).
+SKILL_IDX=$(
+    jq -s --arg name "$SKILL_NAME" \
+        'to_entries | map(select(.value.tool == "Skill" and (.value.args.skill // "") == $name)) | first | (.key // -1)' \
+        "$FILE"
+)
+
+# First index where Bash(command =~ BASH_REGEX) appears.
+BASH_IDX=$(
+    jq -s --arg re "$BASH_REGEX" \
+        'to_entries | map(select(.value.tool == "Bash" and ((.value.args.command // "") | test($re)))) | first | (.key // -1)' \
+        "$FILE"
+)
+
+if [ "$BASH_IDX" -lt 0 ]; then
+    echo "PASS: no Bash call matched /$BASH_REGEX/ — assertion is vacuous"
+    exit 0
+fi
+
+if [ "$SKILL_IDX" -lt 0 ]; then
+    echo "FAIL: Bash /$BASH_REGEX/ fired at line $((BASH_IDX + 1)) but Skill($SKILL_NAME) never fired"
+    exit 1
+fi
+
+if [ "$SKILL_IDX" -lt "$BASH_IDX" ]; then
+    echo "PASS: Skill($SKILL_NAME) at line $((SKILL_IDX + 1)) before Bash /$BASH_REGEX/ at line $((BASH_IDX + 1))"
+    exit 0
+else
+    echo "FAIL: Skill($SKILL_NAME) at line $((SKILL_IDX + 1)) fired after Bash /$BASH_REGEX/ at line $((BASH_IDX + 1))"
+    exit 1
+fi

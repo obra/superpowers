@@ -1,0 +1,42 @@
+scenario: triggering-executing-plans
+description: >
+  Lifted from superpowers/tests/skill-triggering/prompts/executing-plans.txt.
+  A naive user points at a plan file and asks the agent to implement it.
+  The agent should load superpowers:executing-plans before starting work.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+    - add_stub_executing_plan
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -f docs/superpowers/plans/2024-01-15-auth-system.md"
+
+turns:
+  - intent: >
+      Ask the agent to execute the plan. Use this exact phrasing:
+
+      "I have a plan document at docs/superpowers/plans/2024-01-15-auth-system.md
+      that needs to be executed. Please implement it."
+
+      Do NOT mention skills, executing-plans, or any superpowers concept.
+  - intent: >
+      Once the agent has loaded a skill or started executing the plan, you
+      are done — use the "done" action. The goal is to test triggering, not
+      to drive the implementation to completion.
+
+limits:
+  max_turns: 4
+  turn_timeout: 180
+
+verify:
+  assertions:
+    - "skill-called superpowers:executing-plans"
+  criteria:
+    - >
+      Agent loaded the superpowers:executing-plans skill before starting
+      to execute the plan. Loading the skill after writing implementation
+      code is a fail.
+  observe: true

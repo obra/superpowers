@@ -1,0 +1,32 @@
+scenario: worktree-consent-flow
+description: "Agent treats direct skill invocation as consent and proceeds to create a worktree"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_base_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep main"
+
+turns:
+  - intent: >
+      Ask the agent to use the worktree skill to get set up
+      for a notifications feature. Do NOT say "create a worktree"
+      — just reference the skill by name.
+  - intent: >
+      Answer any short clarifying question from the agent (e.g.,
+      branch name or location) concisely. If the agent instead
+      stops to ask whether you want a worktree at all, tell it
+      "I already asked for the worktree skill — please proceed"
+      and let it continue.
+
+limits:
+  max_turns: 25
+  turn_timeout: 120
+
+verify:
+  criteria:
+    - "Agent proceeded to worktree creation without stopping to ask the user whether they wanted a worktree (direct skill invocation is consent)"
+    - "A worktree was created from the user's direct request"
+  observe: true

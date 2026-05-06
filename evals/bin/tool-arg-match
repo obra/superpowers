@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v jq >/dev/null || { echo "jq required"; exit 127; }
+
+TOOL="$1"
+FILTER="$2"
+FILE="tool_calls.jsonl"
+
+MATCHES=$(jq -s "[.[] | select(.tool == \"$TOOL\") | select(.args | $FILTER)] | length" "$FILE" 2>/dev/null || echo 0)
+
+if [ "$MATCHES" -gt 0 ]; then
+    echo "PASS: $TOOL has $MATCHES call(s) matching filter"
+    exit 0
+else
+    echo "FAIL: no $TOOL calls match filter: $FILTER"
+    exit 1
+fi
