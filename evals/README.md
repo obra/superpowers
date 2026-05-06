@@ -20,9 +20,10 @@ uv sync --dev
 
 Required environment:
 ```bash
-export SUPERPOWERS_ROOT=/path/to/superpowers
 export ANTHROPIC_API_KEY=sk-...
 ```
+
+`SUPERPOWERS_ROOT` defaults to the parent of `evals/` (the superpowers repo root) and only needs to be set if you're running drill against a different superpowers checkout.
 
 ## Usage
 

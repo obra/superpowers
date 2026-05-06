@@ -40,6 +40,7 @@ Superpowers skill compliance benchmark. Python 3.11+, managed with uv.
 ## Required env
 
 ```
-SUPERPOWERS_ROOT=/path/to/superpowers
 ANTHROPIC_API_KEY=sk-...
 ```
+
+`SUPERPOWERS_ROOT` defaults to the parent of `evals/` (the superpowers repo root). Override only if running drill against a different superpowers checkout.
