@@ -32,13 +32,13 @@ export ANTHROPIC_API_KEY=sk-...
 uv run drill run worktree-creation-from-main -b claude
 
 # Run with N repetitions
-uv run drill run pattern-match-trap -b claude-opus-4-6 --n 5
+uv run drill run spec-writing-blind-spot -b claude-opus-4-6 --n 5
 
 # Sweep across multiple backends
-uv run drill run pattern-match-trap --models claude-opus-4-6,claude-opus-4-7 --n 10
+uv run drill run spec-writing-blind-spot --models claude-opus-4-6,claude-opus-4-7 --n 10
 
 # Compare results
-uv run drill compare pattern-match-trap
+uv run drill compare spec-writing-blind-spot
 
 # List available scenarios
 uv run drill list
@@ -48,10 +48,11 @@ uv run drill list
 
 | Category | Scenarios | Tests |
 |----------|-----------|-------|
-| Worktree | 8 scenarios (creation, detection, consent, detached HEAD) | Skill compliance for `using-git-worktrees` |
-| Wave decomposition | 5 scenarios (naive, spec-aware, false overlap, dependency chain, conflict surface) | Plan → waves decomposition quality |
-| Wave execution | 3 scenarios (minimal, full, task failure) | End-to-end wave execution + failure escalation |
-| Pattern-match trap | 1 scenario | Investigation depth gap between 4.6 and 4.7 (PRI-1270) |
+| Worktree | 11 scenarios | Worktree creation, detection, consent, detached HEAD, and native-tool pressure |
+| Skill triggering | 6 scenarios | Auto-invocation for core Superpowers skills |
+| SDD workflow | 5 scenarios | Explicit invocation, mid-conversation invocation, real-project execution, and YAGNI enforcement |
+| Review/spec/verification | 6 scenarios | Code review, spec review, architectural targeting, design blind spots, and verification reflexes |
+| Tool mapping | 3 scenarios | Codex and Gemini subagent tool-name mapping |
 
 ## Backends
 

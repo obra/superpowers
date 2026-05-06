@@ -18,11 +18,11 @@ idle:
   ready_pattern: "^❯|^\\$|Human:|Enter to confirm"
 # Matches when Claude is actively working — spinners, "Thinking", time counter,
 # or "esc to cancel". Engine extends its wait deadline when any of these match
-# so the Actor doesn't interrupt long-running subagent work (e.g., wave execution).
+# so the Actor doesn't interrupt long-running subagent work.
 busy_pattern: "esc to cancel|Thinking\\.\\.\\.|\\(esc to cancel[^)]*\\)|[⠇⠏⠋⠙⠹⠸⠼⠴⠦⠧⠶⠾⠽⠻⠿]"
 # Maximum total seconds the engine will extend the deadline across all busy
-# detections during a single _wait_for_ready call. Wave execution can take
-# 10-20 minutes per wave, so 30 minutes gives plenty of headroom.
+# detections during a single _wait_for_ready call. Long-running subagent work
+# can take a while, so 30 minutes gives plenty of headroom.
 max_busy_seconds: 1800
 startup_timeout: 60
 terminal:
