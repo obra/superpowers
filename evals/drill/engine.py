@@ -281,8 +281,8 @@ class Engine:
         ready pattern. If the backend's busy pattern matches (spinner
         visible, "Thinking...", timer counting), the deadline is extended
         by small increments up to `max_busy_seconds` total. This prevents
-        the Actor from interrupting long-running subagent work (wave
-        execution, multi-file implementation, etc.).
+        the Actor from interrupting long-running subagent work (multi-file
+        implementation, parallel dispatch, etc.).
 
         Exits silently if the final deadline (timeout + busy extensions)
         passes without reaching a ready state.

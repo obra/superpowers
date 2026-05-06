@@ -38,4 +38,4 @@ When ANY of these indicators is present:
 
 The cleanest approach when you see the agent is busy: if your goals are done, use "done". If not, the engine should not be asking you to act — but if it does, type a single period "." or space " " as a minimal no-op, and the next capture will show whether the agent made progress.
 
-Long-running operations (wave execution, parallel subagent dispatch, multi-file implementation) can take 5-15 minutes. Do not interrupt them by sending premature messages.
+Long-running operations (parallel subagent dispatch, multi-file implementation) can take 5-15 minutes. Do not interrupt them by sending premature messages.
