@@ -15,7 +15,7 @@ correctly.
 ## Setup
 
 ```bash
-uv sync --dev
+uv sync --extra dev
 ```
 
 Required environment:
