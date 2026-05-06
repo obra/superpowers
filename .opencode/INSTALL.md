@@ -98,11 +98,15 @@ Then use the installed package path in `opencode.json`:
 
 ### Tool mapping
 
-When skills reference Claude Code tools:
-- `TodoWrite` → `todowrite`
-- `Task` with subagents → `@mention` syntax
-- `Skill` tool → OpenCode's native `skill` tool
-- File operations → your native tools
+Skills speak in actions ("create a todo", "dispatch a subagent", "read a file"). On OpenCode these resolve to:
+
+- "Create a todo" / "mark complete in todo list" → `todowrite`
+- `Subagent (general-purpose):` template → `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
+- "Invoke a skill" → OpenCode's native `skill` tool
+- "Read a file" / "create a file" / "edit a file" → `read`, `write`, `edit`
+- "Run a shell command" → `bash`
+- "Search file contents" / "find files by name" → `grep`, `glob`
+- "Fetch a URL" / "search the web" → `webfetch`, `websearch`
 
 ## Getting Help
 
