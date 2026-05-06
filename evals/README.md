@@ -18,6 +18,12 @@ correctly.
 uv sync --extra dev
 ```
 
+Optional git hooks:
+```bash
+uv --project evals run pre-commit install
+uv --project evals run pre-commit run --all-files
+```
+
 Required environment:
 ```bash
 export ANTHROPIC_API_KEY=sk-...

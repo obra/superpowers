@@ -16,11 +16,12 @@ This tests the "locally careful, globally blind" failure mode: the agent
 reads the component it plans to modify but never investigates how that
 component is routed/rendered.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
 
 from setup_helpers.base import _git
-
 
 PACKAGE_JSON = """\
 {
@@ -507,7 +508,14 @@ describe('TeamService', () => {
 
   it('fetches recent activity with limit', async () => {
     const mockActivity = [
-      { id: '1', userId: 'u1', userName: 'Alice', action: 'completed', target: 'Task #42', timestamp: Date.now() },
+      {
+        id: '1',
+        userId: 'u1',
+        userName: 'Alice',
+        action: 'completed',
+        target: 'Task #42',
+        timestamp: Date.now(),
+      },
     ];
     global.fetch = vi.fn().mockResolvedValue({
       json: () => Promise.resolve(mockActivity),

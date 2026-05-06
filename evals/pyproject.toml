@@ -17,7 +17,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.11", "ty>=0.0.1a1"]
+dev = [
+    "pre-commit>=4.0",
+    "pytest>=8.0",
+    "ruff>=0.11",
+    "ty>=0.0.1a1",
+]
 
 [project.scripts]
 drill = "drill.cli:main"

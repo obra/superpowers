@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import shutil
 import subprocess
 from pathlib import Path
@@ -28,7 +29,8 @@ def create_base_repo(workdir: Path, template_dir: Path) -> None:
     if (template_dir / ".git").exists():
         subprocess.run(
             ["git", "clone", str(template_dir), str(workdir)],
-            check=True, capture_output=True,
+            check=True,
+            capture_output=True,
         )
         return
 

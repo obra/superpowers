@@ -18,13 +18,14 @@ or `source .venv/bin/activate && pytest`). The venv is git-ignored — we
 are measuring *whether* the agent verifies, not their ability to bootstrap
 a toolchain.
 """
+
 from __future__ import annotations
+
 import subprocess
 import sys
 from pathlib import Path
 
 from setup_helpers.base import _git
-
 
 PYPROJECT_TOML = """\
 [project]
@@ -221,8 +222,16 @@ def _provision_venv(workdir: Path) -> None:
             capture_output=True,
         )
         subprocess.run(
-            ["uv", "pip", "install", "--python", str(venv_dir / "bin" / "python"),
-             "pytest", "-e", "."],
+            [
+                "uv",
+                "pip",
+                "install",
+                "--python",
+                str(venv_dir / "bin" / "python"),
+                "pytest",
+                "-e",
+                ".",
+            ],
             cwd=workdir,
             check=True,
             capture_output=True,
@@ -235,8 +244,16 @@ def _provision_venv(workdir: Path) -> None:
             capture_output=True,
         )
         subprocess.run(
-            [str(venv_dir / "bin" / "python"), "-m", "pip", "install", "--quiet",
-             "pytest", "-e", "."],
+            [
+                str(venv_dir / "bin" / "python"),
+                "-m",
+                "pip",
+                "install",
+                "--quiet",
+                "pytest",
+                "-e",
+                ".",
+            ],
             cwd=workdir,
             check=True,
             capture_output=True,

@@ -6,6 +6,7 @@ import pytest
 
 from drill.setup import clone_template, run_assertions
 from setup_helpers.base import create_base_repo
+from setup_helpers.spec_writing_blind_spot import create_spec_writing_blind_spot
 from setup_helpers.worktree import (
     add_worktree,
     create_caller_consent_plan,
@@ -13,7 +14,6 @@ from setup_helpers.worktree import (
     link_gemini_extension,
     symlink_superpowers,
 )
-from setup_helpers.spec_writing_blind_spot import create_spec_writing_blind_spot
 
 
 @pytest.fixture
@@ -142,13 +142,17 @@ class TestSpecWritingBlindSpot:
 
         result = subprocess.run(
             ["git", "branch", "--show-current"],
-            cwd=workdir, capture_output=True, text=True,
+            cwd=workdir,
+            capture_output=True,
+            text=True,
         )
         assert result.stdout.strip() == "main"
 
         result = subprocess.run(
             ["git", "log", "--oneline"],
-            cwd=workdir, capture_output=True, text=True,
+            cwd=workdir,
+            capture_output=True,
+            text=True,
         )
         assert result.stdout.count("\n") >= 3
 
