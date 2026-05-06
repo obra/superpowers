@@ -64,7 +64,8 @@ uv run drill list
 | `claude-opus-4-6-1m` | Claude Code | opus-4-6 (1M context) |
 | `claude-opus-4-7-1m` | Claude Code | opus-4-7 (1M context) |
 | `codex` | Codex CLI | — |
-| `gemini` | Gemini CLI | — |
+| `gemini` | Gemini CLI | auto-gemini-3 |
+| `gemini-2-5-flash` | Gemini CLI | gemini-2.5-flash |
 
 ## Project structure
 
