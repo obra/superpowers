@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # Integration Test: subagent-driven-development workflow
 # Actually executes a plan and verifies the new workflow behaviors
+#
+# Drill coverage: evals/scenarios/sdd-rejects-extra-features.yaml covers the
+# YAGNI enforcement subset (forbidden exports + reviewer-as-gate semantics)
+# and is stricter on that axis. This bash test additionally asserts:
+#   - >=3 git commits (initial + per-task commits, exercising SDD's
+#     commit-per-task workflow shape)
+#   - >=2 Agent/Task subagent dispatches (drill only asserts >=1)
+#   - TodoWrite usage (drill makes no assertion)
+#   - test/math.test.js exists (drill relies on `npm test` succeeding)
+#   - analyze-token-usage.py token-budget telemetry
+# Kept until those assertions are added to drill or explicitly retired.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
