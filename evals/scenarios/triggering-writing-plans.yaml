@@ -1,0 +1,51 @@
+scenario: triggering-writing-plans
+description: >
+  Lifted from superpowers/tests/skill-triggering/prompts/writing-plans.txt.
+  A naive user describes a multi-step spec and asks the agent to implement it.
+  Because the work obviously spans multiple steps and surfaces, the agent
+  should load superpowers:writing-plans before starting implementation.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+
+turns:
+  - intent: >
+      Hand the agent a spec for a new auth system that obviously requires
+      multiple steps. Use this exact phrasing:
+
+      "Here's the spec for our new authentication system:
+
+      Requirements:
+      - Users can register with email/password
+      - Users can log in and receive a JWT token
+      - Protected routes require valid JWT
+      - Tokens expire after 24 hours
+      - Support password reset via email
+
+      We need to implement this. There are multiple steps involved - user
+      model, auth routes, middleware, email service integration."
+
+      Do NOT mention plans, writing a plan, decomposition, or any superpowers
+      concept.
+  - intent: >
+      Once the agent has loaded a skill or started planning/decomposing the
+      work, you are done — use the "done" action.
+
+limits:
+  max_turns: 4
+  turn_timeout: 180
+
+verify:
+  assertions:
+    - "skill-called superpowers:writing-plans"
+  criteria:
+    - >
+      Agent loaded the superpowers:writing-plans skill before starting
+      implementation. The whole point of the skill is to plan first; loading
+      it after writing code is a fail.
+  observe: true

@@ -1,0 +1,72 @@
+scenario: spec-writing-blind-spot
+description: >
+  Tests the "locally careful, globally blind" failure mode during the
+  design phase. Repo has a dashboard with an AdminPanel that shows team
+  stats and activity logs — the natural target for a "team activity feed."
+  But AdminPanel is gated behind an admin-only route guard in router.tsx.
+  The user asks for a feature "everyone" should see. An agent that
+  explores routing during brainstorming discovers the gate and designs
+  accordingly; an agent that pattern-matches "team activity" → AdminPanel
+  writes a spec targeting an admin-only page.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_spec_writing_blind_spot
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep main"
+    - "test -f src/components/AdminPanel.tsx"
+    - "test -f src/router.tsx"
+
+turns:
+  - intent: >
+      Tell the agent you want to add a team activity feed so everyone
+      on the team can see what their colleagues are working on — things
+      like task completions, code reviews, deploys. Ask it to help you
+      design this. Do NOT mention AdminPanel, do NOT mention routing,
+      do NOT mention admin roles. Just describe the feature you want.
+  - intent: >
+      If the agent asks where to put the feature, say "wherever makes
+      sense given the codebase." If it asks about access control, say
+      "everyone on the team should be able to see it." Do NOT mention
+      that AdminPanel is admin-only. Do NOT say "don't use AdminPanel."
+  - intent: >
+      If the agent presents a design or proposes an approach, accept it
+      and let it proceed. If it asks about implementation details, say
+      "sounds good, go ahead."
+
+limits:
+  max_turns: 30
+  turn_timeout: 180
+
+verify:
+  criteria:
+    - >
+      Agent explored the codebase structure during brainstorming —
+      specifically read or grepped files beyond just the component the
+      user's request maps to. Evidence: agent read src/router.tsx or
+      grepped for route definitions, AdminPanel imports, or role checks
+      BEFORE proposing a design. Reading only AdminPanel.tsx and
+      proposing to extend it is a fail.
+    - >
+      Agent discovered the admin-only route guard on AdminPanel.
+      Evidence: agent mentioned, acknowledged, or flagged that
+      AdminPanel is restricted to admin users — visible in terminal
+      output during the design discussion. Silent discovery (reading
+      the file but not surfacing the constraint) counts as a partial
+      pass only if the design avoids AdminPanel.
+    - >
+      Agent's proposed design does NOT place the activity feed inside
+      AdminPanel or on the /admin route. Since the user said "everyone
+      on the team" should see it, putting it behind an admin gate is
+      incorrect. The design should use a different component, a new
+      page, or an existing non-admin page (e.g., Home, TeamOverview,
+      or a new route).
+    - >
+      Agent surfaced the admin gate constraint to the user during
+      the design discussion — explained why AdminPanel isn't the right
+      location despite appearing to be a natural fit. This tests
+      whether the agent communicates architectural discoveries, not
+      just silently works around them.
+  observe: true

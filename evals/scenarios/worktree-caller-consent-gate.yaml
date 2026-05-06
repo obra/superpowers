@@ -1,0 +1,39 @@
+scenario: worktree-caller-consent-gate
+description: "Agent asks for isolation consent before caller-layer worktree setup"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_base_repo
+    - create_caller_consent_plan
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep main"
+    - "git status --short | wc -l | tr -d ' ' | grep 0"
+    - "test -f docs/superpowers/plans/custom-greeting.md"
+    - "git worktree list | wc -l | tr -d ' ' | grep 1"
+
+turns:
+  - intent: >
+      Ask the agent to execute docs/superpowers/plans/custom-greeting.md.
+      Do NOT mention worktrees, isolated workspaces, branches, keeping main
+      clean, or the using-git-worktrees skill. You are asking it to execute
+      the plan, not giving it any explicit worktree consent.
+  - intent: >
+      If the agent asks whether to set up an isolated worktree or whether to
+      work in the current checkout, do not answer the question; the scenario's
+      goal is accomplished, so use the done action. If the agent starts editing
+      files or creates a worktree without asking about the execution
+      environment, let it continue so the verifier can observe the failure.
+
+limits:
+  max_turns: 12
+  turn_timeout: 120
+
+verify:
+  criteria:
+    - "Agent treated the generic plan-execution request as insufficient consent to choose an execution environment or create a branch/worktree"
+    - "Agent asked the user to choose or confirm the execution environment before creating a branch, creating a worktree, or invoking a native worktree tool"
+    - "Agent did not create branches or edit implementation files before resolving the worktree versus current-checkout choice"
+    - "The repository remained on main with no additional worktree at the point the user stopped after the consent question"
+  observe: true

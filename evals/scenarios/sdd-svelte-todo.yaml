@@ -1,0 +1,70 @@
+scenario: sdd-svelte-todo
+description: >
+  Lifted from superpowers/tests/subagent-driven-dev/svelte-todo/. The
+  scaffold drops design.md and plan.md for a small Svelte+TypeScript
+  todo app with Playwright e2e tests. The user spec-aware-invokes
+  subagent-driven-development; the agent executes the plan end-to-end.
+  Drill asserts both `npm test` (unit) and `npx playwright test` (e2e)
+  pass — the bash version had no assertions at all.
+
+  Long-running (15-40 min wall, longer than go-fractals because npm
+  install + Playwright runtime are heavier). Suited for release-cadence
+  sweeps, not per-PR validation. Requires Node + npx in the PATH.
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - scaffold_sdd_svelte_todo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -f plan.md"
+    - "test -f design.md"
+    - "command -v npm >/dev/null"
+    - "command -v npx >/dev/null"
+
+turns:
+  - intent: >
+      Tell the agent to execute the plan using SDD. Use phrasing like:
+
+      "I have a plan at plan.md (with design context in design.md) for
+      a small Svelte todo app. Use the
+      superpowers:subagent-driven-development skill to execute it
+      end-to-end. Dispatch fresh subagents per task, two-stage review
+      after each."
+  - intent: >
+      Let the agent proceed autonomously. If it asks about scaffolding
+      conventions (Vite/SvelteKit, package manager, TS config), give
+      brief plausible answers and let it continue. If it presents
+      milestones for confirmation, say "looks good, keep going."
+  - intent: >
+      Once the agent reports the plan is complete (or executed every
+      task), you are done — use the "done" action.
+
+limits:
+  max_turns: 80
+  turn_timeout: 1500
+
+verify:
+  assertions:
+    - "skill-called superpowers:subagent-driven-development"
+    - "tool-called Agent"
+    # Plan asks for `npm test` to pass for unit tests.
+    - "cd \"$DRILL_WORKDIR\" && npm test"
+    # Plan asks for Playwright e2e coverage.
+    - "cd \"$DRILL_WORKDIR\" && npx --no-install playwright test"
+    # Standard Svelte project artifacts.
+    - "test -f \"$DRILL_WORKDIR/package.json\""
+    - "test -f \"$DRILL_WORKDIR/svelte.config.js\" -o -f \"$DRILL_WORKDIR/vite.config.ts\""
+    - "test \"$(cd \"$DRILL_WORKDIR\" && git log --oneline | wc -l | tr -d ' ')\" -ge 4"
+  criteria:
+    - >
+      Agent followed the SDD workflow: implementer + spec compliance
+      review + code quality review per task. Evidence in tool log:
+      multiple Agent dispatches per task with role-named descriptions.
+    - >
+      Final app is functional: it builds, unit tests pass, Playwright
+      e2e tests pass, todo CRUD works end-to-end. Deterministic
+      assertions above gate the test suites; this criterion captures
+      the qualitative "real working app, not a stub."
+  observe: true

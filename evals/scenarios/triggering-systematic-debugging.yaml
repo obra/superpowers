@@ -1,0 +1,51 @@
+scenario: triggering-systematic-debugging
+description: >
+  Lifted from superpowers/tests/skill-triggering/prompts/systematic-debugging.txt.
+  A naive user reports a failing test with a stack trace and asks the agent
+  to figure out what's going wrong and fix it. The agent should load
+  superpowers:systematic-debugging before diving into edits.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+
+turns:
+  - intent: >
+      Open the conversation by reporting a failing test. Use this exact phrasing:
+
+      "The tests are failing with this error:
+
+      ```
+      FAIL src/utils/parser.test.ts
+        ● Parser › should handle nested objects
+          TypeError: Cannot read property 'value' of undefined
+            at parse (src/utils/parser.ts:42:18)
+            at Object.<anonymous> (src/utils/parser.test.ts:28:20)
+      ```
+
+      Can you figure out what's going wrong and fix it?"
+
+      Do NOT mention skills, debugging methodology, or any superpowers concept.
+  - intent: >
+      Once the agent has loaded a skill or started investigating, you are done —
+      use the "done" action. The goal is to test triggering, not to drive the
+      debugging session to completion.
+
+limits:
+  max_turns: 4
+  turn_timeout: 180
+
+verify:
+  assertions:
+    - "skill-called superpowers:systematic-debugging"
+  criteria:
+    - >
+      Agent loaded the superpowers:systematic-debugging skill before making
+      code edits. Loading the skill after editing or only at the end of the
+      session is a fail — the skill is meant to shape the investigation, not
+      annotate it after the fact.
+  observe: true

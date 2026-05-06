@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Verify a specific superpowers Skill was invoked at least once.
+#
+# Usage: skill-called <skill-name>
+# Example: skill-called superpowers:systematic-debugging
+#
+# Wraps the common case of `tool-arg-match Skill '.skill == "<name>"'` so
+# scenario YAML doesn't have to embed jq quoting.
+set -euo pipefail
+command -v jq >/dev/null || { echo "jq required"; exit 127; }
+
+SKILL_NAME="$1"
+FILE="tool_calls.jsonl"
+
+if [ ! -s "$FILE" ]; then
+    echo "FAIL: tool_calls.jsonl missing or empty"
+    exit 1
+fi
+
+COUNT=$(
+    jq -s --arg name "$SKILL_NAME" \
+        '[.[] | select(.tool == "Skill" and (.args.skill // "") == $name)] | length' \
+        "$FILE"
+)
+
+if [ "$COUNT" -gt 0 ]; then
+    echo "PASS: Skill($SKILL_NAME) called $COUNT time(s)"
+    exit 0
+else
+    echo "FAIL: Skill($SKILL_NAME) never called"
+    exit 1
+fi

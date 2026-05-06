@@ -1,0 +1,52 @@
+scenario: triggering-dispatching-parallel-agents
+description: >
+  Lifted from superpowers/tests/skill-triggering/prompts/dispatching-parallel-agents.txt.
+  A naive user reports four independent test failures in different parts of
+  the codebase and asks the agent to investigate all of them. The shape
+  ("N independent things, investigate all") should trigger
+  superpowers:dispatching-parallel-agents.
+user_posture: naive
+
+setup:
+  helpers:
+    - create_base_repo
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+
+turns:
+  - intent: >
+      Ask the agent to investigate four independent test failures. Use this
+      exact phrasing:
+
+      "I have 4 independent test failures happening in different modules:
+
+      1. tests/auth/login.test.ts - 'should redirect after login' is failing
+      2. tests/api/users.test.ts - 'should return user list' returns 500
+      3. tests/components/Button.test.tsx - snapshot mismatch
+      4. tests/utils/date.test.ts - timezone handling broken
+
+      These are unrelated issues in different parts of the codebase. Can you
+      investigate all of them?"
+
+      Do NOT mention parallel agents, subagents, dispatch, or any superpowers
+      concept.
+  - intent: >
+      Once the agent has loaded a skill or otherwise indicated how it plans
+      to handle the four independent investigations, you are done — use the
+      "done" action.
+
+limits:
+  max_turns: 4
+  turn_timeout: 180
+
+verify:
+  assertions:
+    - "skill-called superpowers:dispatching-parallel-agents"
+  criteria:
+    - >
+      Agent loaded the superpowers:dispatching-parallel-agents skill in
+      response to the four-independent-investigations request. Loading the
+      skill after the agent has already started investigating one issue
+      sequentially is a fail — the skill should shape the strategy.
+  observe: true

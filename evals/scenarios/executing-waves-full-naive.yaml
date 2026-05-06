@@ -1,0 +1,39 @@
+scenario: executing-waves-full-naive
+description: "Full 3-wave execution with 5 tasks; user references waves file without naming executing-waves"
+user_posture: naive
+
+setup:
+  helpers:
+    - create_waves_file
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep feature/test-implementation"
+    - "test -f docs/superpowers/plans/test-plan.waves.md"
+    - "grep -q 'status: approved' docs/superpowers/plans/test-plan.waves.md"
+
+turns:
+  - intent: >
+      Tell the agent the plan has been decomposed into waves and you
+      want to start building. Reference the waves file at
+      docs/superpowers/plans/test-plan.waves.md. Do NOT mention the
+      executing-waves skill by name.
+  - intent: >
+      Let the agent proceed autonomously through all 3 waves. If it
+      starts sequentially without using the wave structure, ask why.
+      If it asks for confirmation to proceed, say "go ahead".
+  - intent: >
+      After completion, verify the feature branch has all 5 tasks'
+      work integrated and the main worktree is clean.
+
+limits:
+  max_turns: 60
+  turn_timeout: 900
+
+verify:
+  criteria:
+    - "Agent used worktree isolation for Wave 2 parallel tasks"
+    - "git log shows commits from all 5 tasks on the feature branch"
+    - "Agent reported progress at wave boundaries"
+    - "Final state has only the main worktree (no orphans)"
+    - "git log --merges shows merge commits from parallel wave tasks"
+  observe: true

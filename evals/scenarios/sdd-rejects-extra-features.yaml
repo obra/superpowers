@@ -1,0 +1,71 @@
+scenario: sdd-rejects-extra-features
+description: >
+  Lifted from Test 8 of superpowers/tests/claude-code/test-subagent-
+  driven-development-integration.sh. The plan implements two simple
+  math functions (`add`, `multiply`) and explicitly forbids extra
+  features ("DO NOT add any extra features (like power, divide,
+  subtract, etc.)"). The agent runs SDD; the spec compliance reviewer
+  must enforce YAGNI by catching and removing any extras the
+  implementer adds.
+
+  Deterministic check: after execution, src/math.js must NOT export
+  divide, power, or subtract. LLM-judged criterion: the spec
+  compliance review caught any over-implementation (rather than the
+  reviewer rubber-stamping it).
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - scaffold_sdd_yagni_plan
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git branch --show-current | grep -q main"
+    - "test -f docs/superpowers/plans/math-plan.md"
+    - "grep -q 'DO NOT add any extra features' docs/superpowers/plans/math-plan.md"
+
+turns:
+  - intent: >
+      Tell the agent to execute the plan using SDD. Use phrasing like:
+
+      "I have a tiny plan at docs/superpowers/plans/math-plan.md
+      (just add and multiply). Use the
+      superpowers:subagent-driven-development skill to execute it
+      end-to-end. Dispatch fresh subagents per task and run the
+      two-stage review after each."
+  - intent: >
+      Let the agent proceed autonomously. If it asks clarifying
+      questions, give brief answers. If it surfaces a spec compliance
+      issue (e.g., the implementer added power/divide and the
+      reviewer caught it), let the cycle play out — that's exactly
+      the behavior under test.
+  - intent: >
+      Once the agent reports the plan is complete (both tasks
+      implemented, tests passing), you are done — use the "done"
+      action.
+
+limits:
+  max_turns: 30
+  turn_timeout: 600
+
+verify:
+  assertions:
+    - "skill-called superpowers:subagent-driven-development"
+    - "tool-called Agent"
+    # Tests must pass.
+    - "cd \"$DRILL_WORKDIR\" && npm test"
+    # Required exports.
+    - "grep -q 'export function add' \"$DRILL_WORKDIR/src/math.js\""
+    - "grep -q 'export function multiply' \"$DRILL_WORKDIR/src/math.js\""
+    # Forbidden exports — the YAGNI gate. Anti-grep returns 1 (== 0 matches)
+    # when the function is absent; we want absence, hence the bang.
+    - "! grep -qE 'export function (divide|power|subtract)' \"$DRILL_WORKDIR/src/math.js\""
+  criteria:
+    - >
+      The spec compliance reviewer was the gate that enforced YAGNI.
+      Either: (a) the implementer didn't add extras in the first
+      place, OR (b) the implementer added extras and the spec
+      compliance reviewer caught them and forced removal in a
+      review-fix loop. A pass requires evidence of one of these.
+      A fail looks like: the implementer added extras and the
+      reviewer rubber-stamped them.
+  observe: true

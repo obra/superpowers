@@ -1,0 +1,28 @@
+scenario: worktree-already-inside-spec-aware
+description: "Agent detects it is already inside a worktree and skips creation (spec-aware user)"
+user_posture: spec-aware
+
+setup:
+  helpers:
+    - create_base_repo
+    - add_existing_worktree
+  workdir_override: "../${WORKDIR_NAME}-existing-worktree"
+  assertions:
+    - "git rev-parse --is-inside-work-tree"
+    - "git worktree list | wc -l | tr -d ' ' | grep 2"
+
+turns:
+  - intent: >
+      Ask the agent to use the worktree skill to create
+      an isolated workspace for building a signup feature.
+
+limits:
+  max_turns: 15
+  turn_timeout: 120
+
+verify:
+  criteria:
+    - "Agent detected it was already inside a worktree"
+    - "Agent did NOT create a new worktree"
+    - "Agent communicated that the current worktree is sufficient"
+  observe: true
