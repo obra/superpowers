@@ -4,8 +4,7 @@ args:
   - "--yolo"
   - "-m"
   - "gemini-2.5-flash"
-required_env:
-  - SUPERPOWERS_ROOT
+required_env: []
 hooks:
   pre_run:
     - link_gemini_extension
