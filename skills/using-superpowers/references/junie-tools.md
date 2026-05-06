@@ -28,6 +28,17 @@ Superpowers skills are installed in the `~/.junie/skills/superpowers/` directory
 
 Example: to load the `brainstorming` skill, use `agent_skill_read_doc(name="superpowers:brainstorming")`.
 
+## Slash Commands
+
+Superpowers provides several slash commands as shortcuts for common workflows:
+
+- `/superpowers-brainstorm` -> Brainstorming
+- `/superpowers-plan` -> Plan writing
+- `/superpowers-tdd` -> Test-Driven Development
+- `/superpowers-debug` -> Systematic Debugging
+- `/superpowers-review` -> Requesting Code Review
+- `/superpowers skill=<name>` -> Invoke any skill by name
+
 ## Additional Junie tools
 
 No Junie-specific tools without Claude Code equivalents have been identified. If you discover platform-specific tools (e.g., IDE integration tools), update this mapping.

@@ -7,7 +7,8 @@ Junie is JetBrains' AI coding agent, available as a CLI tool and IDE integration
 Junie has no plugin marketplace, so installation uses a shell script that:
 
 1. Symlinks all superpowers skills into `~/.junie/skills/superpowers/`
-2. Injects the bootstrap into `~/.junie/guidelines.md` (loaded automatically at every session start)
+2. Symlinks custom slash commands into `~/.junie/commands/`
+3. Injects the bootstrap into `~/.junie/AGENTS.md` (loaded automatically at every session start)
 
 ### Steps
 
@@ -37,13 +38,13 @@ The install is idempotent — running it again updates the bootstrap block in pl
 ## How it works
 
 Junie has no SessionStart hook mechanism. Instead, `install-junie.sh` writes the
-`using-superpowers` bootstrap into `~/.junie/guidelines.md`. Junie loads this file
+`using-superpowers` bootstrap into `~/.junie/AGENTS.md`. Junie loads this file
 at the start of every session, so the bootstrap is always in context without any
 user action.
 
 Skills are symlinked (not copied) so a `git pull` in the repo is all you need to
 update skill content. Re-run `install-junie.sh` after pulling to refresh the
-bootstrap block in `guidelines.md`.
+bootstrap block in `AGENTS.md`.
 
 ## Verifying the integration
 
@@ -54,6 +55,21 @@ Let's make a react todo list
 ```
 
 The `brainstorming` skill should auto-trigger before Junie writes any code.
+
+## Slash Commands
+
+The installation script adds several custom slash commands to Junie for quick access to core Superpowers workflows:
+
+| Command | Skill triggered |
+|---------|-----------------|
+| `/superpowers-brainstorm` | `superpowers:brainstorming` |
+| `/superpowers-plan` | `superpowers:writing-plans` |
+| `/superpowers-tdd` | `superpowers:test-driven-development` |
+| `/superpowers-debug` | `superpowers:systematic-debugging` |
+| `/superpowers-review` | `superpowers:requesting-code-review` |
+| `/superpowers skill=<name>` | Invoke any skill by name (e.g. `/superpowers skill=writing-skills`) |
+
+These commands are symlinked into `~/.junie/commands/`, so they are available globally across all your projects.
 
 ## Testing locally
 
@@ -71,7 +87,7 @@ Both tests use an isolated temp directory and do not modify `~/.junie`.
 
 - **No real-time bootstrap updates:** Changes to `skills/using-superpowers/SKILL.md`
   are not picked up automatically — re-run `install-junie.sh` to refresh the
-  bootstrap in `guidelines.md`. Skill files under `~/.junie/skills/superpowers/`
+  bootstrap in `AGENTS.md`. Skill files under `~/.junie/skills/superpowers/`
   are symlinks so those update immediately.
 
 - **Skill invocation:** Junie does not have a native `Skill` tool like Claude Code.
