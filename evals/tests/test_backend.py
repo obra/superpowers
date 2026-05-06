@@ -33,6 +33,17 @@ class TestLoadBackend:
         assert backend.family == "claude"
         assert backend.model == "claude-opus-4-6"
 
+    def test_loads_gemini_default_and_flash_variant(self, backends_dir):
+        backend = load_backend("gemini", backends_dir)
+        assert backend.name == "gemini"
+        assert backend.family == "gemini"
+        assert backend.model == "auto-gemini-3"
+
+        flash_backend = load_backend("gemini-2-5-flash", backends_dir)
+        assert flash_backend.name == "gemini-2-5-flash"
+        assert flash_backend.family == "gemini"
+        assert flash_backend.model == "gemini-2.5-flash"
+
 
 class TestBackendBuildCommand:
     def test_claude_build_command(self, backends_dir, monkeypatch):
