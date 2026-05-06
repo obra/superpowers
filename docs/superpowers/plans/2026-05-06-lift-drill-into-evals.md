@@ -53,8 +53,7 @@ Expected output begins with whatever commit `origin/dev` points to (currently `b
 
 ## Task 2: Capture drill SHA at copy time
 
-**Files:**
-- Create: `evals/.drill-source-sha` (in next task; this task just records the value)
+**Files:** none (records the value for the lift commit message)
 
 - [ ] **Step 1: Get the current drill HEAD SHA**
 
@@ -85,7 +84,6 @@ echo "DRILL_SHA=$DRILL_SHA"  # write this down for use in Task 3
 
 **Files:**
 - Create: `evals/` (entire directory tree from drill, minus excludes)
-- Create: `evals/.drill-source-sha` (records the source SHA)
 
 - [ ] **Step 1: Verify source and destination paths**
 
@@ -127,14 +125,12 @@ find evals -name '*.egg-info' -type d
 
 Expected: every command returns no output. If any returns a path, manually `rm -rf` it before continuing.
 
-- [ ] **Step 4: Write the SHA file**
+- [ ] **Step 4: Confirm the source SHA for the commit message**
 
 ```bash
 cd /Users/jesse/Documents/GitHub/superpowers/drill
 DRILL_SHA=$(git rev-parse HEAD)
-cd /Users/jesse/Documents/GitHub/superpowers/superpowers
-echo "$DRILL_SHA" > evals/.drill-source-sha
-cat evals/.drill-source-sha
+echo "$DRILL_SHA"
 ```
 
 Expected: the SHA from Task 2 step 1.
@@ -151,7 +147,7 @@ Expected output starts with `A  evals/...` lines listing many added files. Many 
 - [ ] **Step 6: Commit**
 
 ```bash
-DRILL_SHA=$(cat evals/.drill-source-sha)
+: "${DRILL_SHA:?Set DRILL_SHA from Task 2 before committing}"
 git commit -m "$(cat <<EOF
 Lift drill into evals/ at $DRILL_SHA
 
@@ -162,8 +158,7 @@ rsync of obra/drill@$DRILL_SHA into superpowers/evals/, excluding
 The drill repo is unaffected by this commit; archival is a separate
 manual step after this PR merges.
 
-Source SHA recorded at evals/.drill-source-sha for divergence
-detection.
+Source SHA recorded in this commit message for provenance.
 EOF
 )"
 ```
@@ -201,19 +196,13 @@ wc -l /tmp/evals-files.txt
 
 - [ ] **Step 3: Diff the two lists**
 
-`evals/.drill-source-sha` is unique to evals; everything else should match.
+The file lists should match exactly after excluded paths are removed.
 
 ```bash
 diff /tmp/drill-files.txt /tmp/evals-files.txt
 ```
 
-Expected output:
-
-```
-> ./.drill-source-sha
-```
-
-(One additional file in evals: the SHA pin. No other differences.)
+Expected: no output.
 
 - [ ] **Step 4: Per-file checksum verification**
 
@@ -259,17 +248,14 @@ You are verifying a verbatim copy of the drill repo at
 
 Verify:
 
-1. The file
-/Users/jesse/Documents/GitHub/superpowers/superpowers/evals/.drill-source-sha
-exists and contains the SHA reported by:
+1. The lift commit message records the SHA reported by:
   cd /Users/jesse/Documents/GitHub/superpowers/drill && git rev-parse HEAD
 
 2. None of these excluded paths exist under evals/: .git/, .venv/,
 results/, .env/, __pycache__/, *.egg-info/, .private-journal/.
 
 3. Every non-excluded file in drill has a SHA-256-identical
-counterpart in evals/, and there is no extra file in evals/ except
-.drill-source-sha.
+counterpart in evals/, and there are no extra files in evals/.
 
 4. The pyproject.toml, uv.lock, scenarios/*.yaml, backends/*.yaml,
 setup_helpers/*.py, drill/*.py, prompts/*.md, fixtures/, bin/, and
@@ -1247,7 +1233,7 @@ Run: git log --oneline dev..HEAD; git diff dev..HEAD --stat
 Look hard at:
 1. Did the rsync-with-excludes actually exclude what it claimed?
    (find evals -name '.git' -type d should return nothing)
-2. Does evals/.drill-source-sha point at a real commit in obra/drill?
+2. Does the lift commit message point at a real commit in obra/drill?
 3. Does the SUPERPOWERS_ROOT helper actually default correctly when
    the env var is unset? (cd evals && unset SUPERPOWERS_ROOT && uv
    run drill list — does it work?)
@@ -1305,7 +1291,7 @@ Drill — the standalone Python skill-compliance benchmark at obra/drill — is 
 
 ## What does this PR change?
 
-- Lifts the obra/drill repo (at SHA `<paste evals/.drill-source-sha>`) into superpowers as `evals/`, with explicit rsync excludes (.git, .venv, results, .env, __pycache__, *.egg-info, .private-journal).
+- Lifts the obra/drill repo into superpowers as `evals/`, with explicit rsync excludes (.git, .venv, results, .env, __pycache__, *.egg-info, .private-journal). The lift commit records the source SHA.
 - Adds a `_set_superpowers_root_default()` helper to drill/cli.py so SUPERPOWERS_ROOT defaults to the parent of evals/ — no manual env-var setup.
 - Drops SUPERPOWERS_ROOT from required_env in codex.yaml/gemini.yaml (the helper supplies it). Claude*.yaml keep it because they interpolate ${SUPERPOWERS_ROOT} into --plugin-dir args.
 - Deletes redundant bash tests under tests/skill-triggering/, tests/explicit-skill-requests/, tests/subagent-driven-dev/, and tests/claude-code/ — gated per-file by a subagent that compared each bash test's assertions to its drill scenario's verify block. Anything not 100% covered was kept.
@@ -1377,12 +1363,12 @@ Expected: browser opens to the new PR. Take a screenshot or note the URL for fol
 ## Verification checklist (run after Task 15)
 
 - [ ] `git log --oneline dev..HEAD` shows the expected commits in order
-- [ ] `evals/.drill-source-sha` matches the SHA recorded in the lift commit message
+- [ ] The lift commit message records the source SHA
 - [ ] `find evals -name '.git' -type d` returns no output
 - [ ] `cd evals && unset SUPERPOWERS_ROOT && uv run pytest` passes
 - [ ] `cd evals && unset SUPERPOWERS_ROOT && uv run drill list` returns scenarios
 - [ ] `cd evals && unset SUPERPOWERS_ROOT && uv run drill run triggering-test-driven-development -b claude` passes
 - [ ] `tests/brainstorm-server/server.test.js` still passes (regression gate for non-LLM tests)
 - [ ] `git diff dev..HEAD docs/superpowers/plans/2026-04-06-worktree-rototill.md docs/superpowers/plans/2026-03-23-codex-app-compatibility.md RELEASE-NOTES.md` shows annotations only, no path rewrites
-- [ ] `cd ../drill && git log --oneline -1` shows obra/drill is unchanged from the recorded source SHA
+- [ ] `cd ../drill && git log --oneline -1` shows obra/drill is unchanged from the source SHA recorded in the lift commit
 - [ ] PR body lists the post-merge archival action item
