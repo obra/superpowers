@@ -4,7 +4,6 @@ args:
   - "--dangerously-bypass-approvals-and-sandbox"
 required_env:
   - OPENAI_API_KEY
-  - SUPERPOWERS_ROOT
 hooks:
   pre_run:
     - symlink_superpowers
