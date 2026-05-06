@@ -1,6 +1,6 @@
 ---
 name: humanizing-prose
-description: Use when about to write prose for a human reader: markdown files, PR descriptions, commit bodies, READMEs, doc pages, release notes, blog posts, or chat replies longer than a couple of sentences. Catches AI-sounding writing (significance inflation, em dash overuse, rule of three, hedging, sycophancy) before it gets sent or committed.
+description: "Use when about to write prose for a human reader: markdown files, PR descriptions, commit bodies, READMEs, doc pages, release notes, blog posts, or chat replies longer than a couple of sentences. Catches AI-sounding writing (significance inflation, em dash overuse, rule of three, hedging, sycophancy) before it gets sent or committed."
 ---
 
 # Humanizing Prose

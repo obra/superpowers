@@ -1,6 +1,6 @@
 ---
 name: managing-backlog-items
-description: Use when noticing a tangential issue mid-session — a TODO, an out-of-scope bug, a refactor opportunity, missing test coverage — or when the human partner explicitly says to add to the backlog or mark a backlog item done. Forces a stop-and-decide: capture, do now, or drop.
+description: "Use when noticing a tangential issue mid-session — a TODO, an out-of-scope bug, a refactor opportunity, missing test coverage — or when the human partner explicitly says to add to the backlog or mark a backlog item done. Forces a stop-and-decide: capture, do now, or drop."
 ---
 
 # Managing Backlog Items
