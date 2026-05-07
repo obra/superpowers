@@ -31,7 +31,7 @@ Antes de qualquer decisão de token, o **Working Model** (visual thesis, content
 
 - Use escala modular com fluid sizing (`clamp`) em headings de páginas de marketing/conteúdo. Use escalas fixas em `rem` para UIs de app e dashboards (nenhum design system sério usa fluid type em UI de produto).
 - Menos tamanhos, mais contraste. Escala de 5 passos com razão ≥ 1.25 entre passos cria hierarquia mais clara que 8 tamanhos 1.1× apart.
-- Line-height escala inversamente ao line-length. Coluna estreita pede leading apertado; coluna larga pede mais ar. Para texto claro sobre fundo escuro, ADICIONE 0.05-0.1 ao line-height normal — tipo leve lê como peso menor e precisa respirar mais.
+- Line-height escala inversamente ao line-length. Coluna estreita pede leading apertado; coluna larga pede mais ar. Para tratamento específico de texto em dark, veja a subseção "Texto em dark" abaixo.
 - Line-length no corpo: ~65-75ch.
 
 ### Procedimento de seleção de fonte (antes de digitar qualquer nome)
@@ -70,6 +70,25 @@ Rejeite toda fonte desta lista. São os defaults de treinamento que criam monocu
 - **DO NOT** uma família só para a página toda. Pareie display + body.
 - **DO NOT** escala plana (tamanhos muito próximos). Mire ≥ 1.25 entre passos.
 - **DO NOT** corpo longo em uppercase. All-caps só para labels curtos e headings.
+
+### Texto em dark
+
+Quando o tema escolhido (ver Cor & Tema) é dark, o tratamento do texto exige duas decisões que diferem do light: como evitar cinza neutro morto e como sustentar hierarquia quando o range útil de lightness encolhe.
+
+**Tintagem.** Texto em dark — principal e secundário — segue a mesma regra dos neutros: chroma `0.005-0.01` na hue da marca. Sem isso, cinzas neutros lem como "mortos" sobre fundo escuro tintado. Não trate texto como exceção à regra de neutros tingidos. Não diferencie chroma entre níveis (principal vs secundário); coesão se quebra.
+
+**Hierarquia.** Em dark, o range útil de lightness do texto encolhe — teto baixo para evitar branco vibrando, piso alto para manter legibilidade. Sustentar h1 → h2 → body → muted variando lightness achata. Use **peso tipográfico** e **letter-spacing** como ferramentas primárias de distinção entre níveis; mantenha lightness próxima entre eles.
+
+**Line-height.** Tipo claro sobre fundo escuro lê como peso menor — adicione `0.05-0.1` ao line-height normal para compensar.
+
+#### Regras
+
+- **DO** tintar texto em dark com chroma `0.005-0.01` na hue da marca, igual aos neutros.
+- **DO** distinguir níveis em dark variando peso e tracking, mantendo lightness próxima.
+- **DO** somar `0.05-0.1` ao line-height para texto claro sobre fundo escuro.
+- **DO NOT** texto em dark sem tinta — cinza neutro puro lê como morto.
+- **DO NOT** sustentar hierarquia em dark só por lightness — o range não comporta.
+- **DO NOT** chromas diferentes entre texto principal e secundário em dark — perde coesão.
 
 ## Cor & Tema
 
@@ -179,3 +198,5 @@ Para o **ritmo** (quantos motions por página, quais momentos ancoram) → `nuxt
 - `background-clip: text` com gradiente em heading.
 - Mesmo token de spacing em tudo (sem ritmo).
 - Default dark ou light sem relação com contexto de uso.
+- Texto em dark sem tintagem (cinza neutro puro sobre fundo escuro tintado).
+- Hierarquia tipográfica em dark sustentada só por lightness.
