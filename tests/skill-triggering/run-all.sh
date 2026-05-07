@@ -2,7 +2,7 @@
 # Run all skill triggering tests
 # Usage: ./run-all.sh
 
-set -e
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPTS_DIR="$SCRIPT_DIR/prompts"
