@@ -1,6 +1,20 @@
-# Lark / Feishu Document Protocol
+# Document Platform Protocol
 
-Use this protocol before reading, creating, or editing Feishu TD documents.
+Use this protocol before reading, creating, or editing TD documents on Lark / Feishu, Confluence, or a fallback local/exported workflow.
+
+## Local config
+
+Before document operations, read `$TECHNICAL_DESIGN_CONFIG` if set; otherwise read `~/.config/technical-design/config.md`.
+
+If the file does not exist or lacks required platform/default-location info, ask the user for:
+
+- preferred doc platform,
+- authentication method and credential reference for Lark / Feishu and/or Confluence,
+- default TD save location,
+- Edit Log location convention,
+- comment support expectations.
+
+Create the config from `local-config-template.md`. Prefer credential references over raw secrets.
 
 ## Preferred path: `lark-cli`
 
@@ -31,6 +45,18 @@ Do not claim to have read or updated Feishu. Ask the engineer for one of:
 
 When writing without direct Lark access, produce paste-ready Markdown/XML chunks and explicit insertion anchors.
 
+## Confluence
+
+Use Confluence only when configured or explicitly requested. Required config:
+
+- base URL,
+- space key,
+- default parent page or save location,
+- auth method / credential reference,
+- whether inline comments are supported by the available tool/API.
+
+If Confluence tooling is unavailable, do not claim direct reads/writes. Ask for exported/pasted page content, or provide paste-ready Markdown/storage-format content with insertion anchors.
+
 ## Required session reads
 
 Before every edit/resume:
@@ -38,10 +64,10 @@ Before every edit/resume:
 1. Fetch/read TD outline and relevant sections.
 2. Fetch/read Edit Log.
 3. Read PRD/TRD inputs or pasted requirements.
-4. Read `td-template.md`, `be-development-guidelines.md`, and `edit-log-template.md` from this skill.
+4. Read `td-template.md`, `be-development-guidelines.md`, `edit-log-template.md`, and local config.
 
 ## Update discipline
 
 - Update smallest stable section, then verify by re-fetching the changed block/section.
-- Never overwrite whole TD unless creating from template or user explicitly asks.
+- Never overwrite whole TD unless creating from local `td-template.md` or user explicitly asks.
 - Keep Edit Log append-only except for correcting obvious formatting mistakes.

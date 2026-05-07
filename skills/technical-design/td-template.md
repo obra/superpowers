@@ -1,10 +1,10 @@
 # Technical Design Markdown Template
 
-Extracted from `[TD]Sample.pdf`, with additional optional sections for implementation completeness. Prefer the live Feishu template when available; use this as the local fallback/checklist.
+Extracted from local `[TD]Sample.pdf`, with additional optional sections for implementation completeness. This local Markdown file is the canonical TD sample/template reference for the skill; do not depend on third-party template links for TD structure.
 
 ## Header
 
-- Title: `[TD][APPlifier] <Title> / <名称>`
+- Title: `[TD] <Title>`
 - Task title/link:
 - Product/module:
 - PM:
@@ -94,7 +94,7 @@ Segment by sub-module/component for large systems, or by feature for specific mo
 
 | Field | Value |
 |-------|-------|
-| Topic | `applifier.<module>.<topic>` |
+| Topic | `<business>.<module>.<topic>` |
 | Producer |  |
 | Consumer |  |
 | QPS |  |
