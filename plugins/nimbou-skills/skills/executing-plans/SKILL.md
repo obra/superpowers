@@ -21,7 +21,7 @@ Prefer `nimbou-skills:subagent-driven-development` when execution should be dele
 2. Review it critically
 3. Raise any blockers or missing assumptions before starting
 4. Confirm wave structure: the plan must contain `## Ondas de Execução` (or the legacy `## Grupos de Execucao`). If it does not, **stop** and ask the plan author to regenerate the plan via `nimbou-skills:nestjs-plan` or `nimbou-skills:nuxt-plan`. Do not fall back to a serial task list.
-5. Detect plan origin: if the header references `nestjs-plan` or the plan path matches a backend slice, the final wave MUST run `nimbou-skills:nestjs-test`. Add the dispatch to TodoWrite if the plan author forgot it.
+5. Detect plan origin: if the header references `nestjs-plan` or the plan path matches a backend slice, the final wave MUST run `nimbou-skills:nestjs-test` scoped strictly to the files the plan touched. Add the dispatch to TodoWrite if the plan author forgot it. Never let the final wave widen into an unfiltered `pnpm test` run.
 6. Detect `## Pos-execucao` (typical for `nuxt-plan` output). Capture those items now to seed the follow-ups artifact in Step 3.
 7. Create TodoWrite (one entry per wave, plus one entry per task inside each wave, plus the post-wave commit, plus a single "collect background review results" entry, plus Step 3) and proceed only when the plan is executable.
 
@@ -32,7 +32,7 @@ For each wave, in declared order:
 1. Confirm which files or tasks are independent inside the wave (default: all of them).
 2. For **each task in the wave**, in parallel — single message, multiple tool calls when the work fans out:
    1. Execute the task (controller does the work).
-   2. Run the verifications declared by the task.
+   2. Run the verifications declared by the task **exactly as written** — they are already scoped to the files that task changes. Do not substitute them for an unfiltered test command (no bare `pnpm test`, `npm test`, `pytest`, etc.).
    3. Mark the task implementation complete in TodoWrite once the work and its verifications land.
 3. Wait for the entire wave to finish (every task implemented and verified) before committing.
 4. **Commit the wave immediately** once every task in the wave is implemented and its verifications pass:
@@ -47,7 +47,7 @@ For each wave, in declared order:
 6. Move to the next wave as soon as the current wave is committed and its two background reviewers are dispatched.
 7. If a task in the wave fails or its verification is impossible to satisfy, stop downstream waves. Report the exact file/task/wave that blocked the flow. **Do not commit a partially completed wave.** Reviewer ❌ findings never trigger this stop — they go to follow-ups.
 
-If the plan came from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`. Run it after the last implementation wave's commit, not before. The dispatch scope must cover **every prior wave's output** — controllers, use-cases, repositories, Prisma adapters, and migrations across the whole plan — not just the last wave's diff. When briefing `nestjs-test`, list the suites/files derived from the full plan surface. The `nestjs-test` wave itself follows the same pattern: commit when green, then dispatch its two background reviewers.
+If the plan came from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`. Run it after the last implementation wave's commit, not before. The dispatch scope must cover **only what this plan changed** — controllers, use-cases, repositories, Prisma adapters, and migrations introduced or modified across waves 1 through N — and nothing else. When briefing `nestjs-test`, list the explicit suite/file paths derived from the plan's diff and require that the test runner be invoked with those paths (e.g., `pnpm test -- --runInBand <suite-path>`); reject any briefing that resolves to an unfiltered suite run. The `nestjs-test` wave itself follows the same pattern: commit when green, then dispatch its two background reviewers.
 
 Do not flatten the wave topology unless the user approves it. Do not invent serial dependencies the plan did not declare.
 
@@ -117,7 +117,7 @@ Return to Step 1 when:
 - commit each wave as soon as its tasks land and verify; do not wait for reviewers
 - dispatch the spec reviewer and the code reviewer as background subagents per wave (run_in_background)
 - never let reviewer output gate the next wave — findings feed `<plan>.followups.md`
-- run `nestjs-test` as the final wave when the plan came from `nestjs-plan`, scoped to every prior wave's output
+- run `nestjs-test` as the final wave when the plan came from `nestjs-plan`, scoped strictly to the files this plan changed (explicit suite paths only — never an unfiltered `pnpm test`)
 - collect every background reviewer's result before producing follow-ups
 - generate `<plan>.followups.md` only when there are deferred items
 - stop when blocked by implementation, not by reviewer output
@@ -131,7 +131,7 @@ Required workflow skills:
 - `nimbou-skills:nestjs-plan` — produces wave-structured backend plans for this skill to execute
 - `nimbou-skills:nuxt-plan` — produces wave-structured frontend plans for this skill to execute
 - `nimbou-skills:request-review` — REQUIRED: dispatched as a background subagent after every wave's commit
-- `nimbou-skills:nestjs-test` — REQUIRED final wave when the plan came from `nestjs-plan`, scoped to every prior wave's output
+- `nimbou-skills:nestjs-test` — REQUIRED final wave when the plan came from `nestjs-plan`, scoped strictly to the files this plan changed (no full-suite runs)
 - `nimbou-skills:finishing-a-development-branch` — completes the branch after execution
 
 Local templates:

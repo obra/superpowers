@@ -120,7 +120,7 @@ Plans from `nestjs-plan` and `nuxt-plan` ship as `## Ondas de Execução`. Honor
 2. For each wave, dispatch every task's implementer subagent in parallel — single message, multiple `Agent` tool calls. The per-task spec → code-quality review loop still runs per task.
 3. Wait for the entire wave to finish (all tasks complete and approved by both reviewers) before opening the next wave.
 4. **After every wave, dispatch a single `nimbou-skills:request-review` over the wave's combined diff.** Resolve any blocker-class findings via the implementer subagents before opening the next wave. Note this as a checkpoint in TodoWrite.
-5. If the plan originated from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`. Run it after the last implementation wave's review checkpoint, and brief it with scope covering **every prior wave's output** — controllers, use-cases, repositories, Prisma adapters, and migrations introduced across the whole plan — not only the last wave's diff.
+5. If the plan originated from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`. Run it after the last implementation wave's review checkpoint, and brief it with scope covering **only the files this plan changed** — controllers, use-cases, repositories, Prisma adapters, and migrations introduced across waves 1 through N — and nothing else. The briefing must enumerate explicit suite/file paths and require the runner to be invoked with those paths; never approve a final-wave dispatch that would resolve to an unfiltered `pnpm test`.
 6. Never dispatch a later wave's tasks until earlier waves are reviewed and green — that is the only legitimate reason a later wave exists.
 
 A later wave that introduces no contract dependency on earlier work is a planning bug. Flag it instead of executing it as-is.
@@ -280,7 +280,7 @@ Done!
 - Proceed with unfixed issues
 - Serialize tasks that share a wave (the wave is the parallelism boundary; only different waves are sequential)
 - Skip the post-wave `nimbou-skills:request-review` checkpoint
-- Skip the final-wave `nimbou-skills:nestjs-test` dispatch when the plan came from `nestjs-plan`, or scope it to only the last wave's diff (must span every prior wave)
+- Skip the final-wave `nimbou-skills:nestjs-test` dispatch when the plan came from `nestjs-plan`, or let it widen beyond the files this plan changed (the scope must span the plan's whole diff but **only** that diff — no full-suite runs, no unfiltered `pnpm test`)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
@@ -314,7 +314,7 @@ Done!
 - **nimbou-skills:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **nimbou-skills:nestjs-plan** - Creates the plan this skill executes
 - **nimbou-skills:request-review** - REQUIRED: dispatched automatically after every wave's diff
-- **nimbou-skills:nestjs-test** - REQUIRED final wave when the plan came from `nestjs-plan`, scoped to every prior wave's output
+- **nimbou-skills:nestjs-test** - REQUIRED final wave when the plan came from `nestjs-plan`, scoped strictly to the files this plan changed (no full-suite runs)
 - **nimbou-skills:finishing-a-development-branch** - Complete development after all waves
 
 **Subagents should use:**

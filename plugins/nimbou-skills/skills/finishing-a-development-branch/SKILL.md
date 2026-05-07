@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests scoped to this branch's changes → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -17,12 +17,21 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, verify the tests that cover this branch's changes pass.** Do not run the project's full suite — only the files/suites touched by the branch diff plus their direct test counterparts.
 
-```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
-```
+1. Compute the changed surface relative to the base branch:
+   ```bash
+   git diff --name-only $(git merge-base HEAD <base-branch>)..HEAD
+   ```
+2. Map those paths to their test files (matching `*.spec.ts` / `*.test.ts` / `*.spec.ts` next to source, or the relevant `test/**` mirror).
+3. If the branch was executed from a plan, reuse the plan's final-wave scope (the suite paths already enumerated by `nestjs-test` / `nuxt-test`). Do not widen it.
+4. Run the test runner with explicit paths only, e.g.:
+   ```bash
+   pnpm test -- --runInBand <scoped-suite-paths>
+   # or pnpm playwright test <scoped-spec-paths>
+   ```
+   Bare `pnpm test` / `npm test` / `pytest` / `go test ./...` are forbidden here.
+5. If the diff is empty, skip Step 1 and continue.
 
 **If tests fail:**
 ```
@@ -75,8 +84,8 @@ git pull
 # Merge feature branch
 git merge <feature-branch>
 
-# Verify tests on merged result
-<test command>
+# Verify tests on merged result — same scoped command from Step 1, not the full suite
+<scoped test command>
 
 # If tests pass
 git branch -d <feature-branch>
@@ -160,7 +169,11 @@ git worktree remove <worktree-path>
 
 **Skipping test verification**
 - **Problem:** Merge broken code, create failing PR
-- **Fix:** Always verify tests before offering options
+- **Fix:** Always verify tests before offering options — but scoped to the branch's diff, never the full project suite
+
+**Running the full suite "to be safe"**
+- **Problem:** Slow loop, masks unrelated failures as if they were the branch's, and contradicts the plan's final-wave scope
+- **Fix:** Always pass explicit suite paths derived from `git diff` against the base branch (or reuse the plan's `nestjs-test` / `nuxt-test` scope)
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
@@ -179,11 +192,12 @@ git worktree remove <worktree-path>
 **Never:**
 - Proceed with failing tests
 - Merge without verifying tests on result
+- Run the full project test suite as the verification step (no bare `npm test` / `pnpm test` / `pytest` / `go test ./...`)
 - Delete work without confirmation
 - Force-push without explicit request
 
 **Always:**
-- Verify tests before offering options
+- Verify tests before offering options, scoped to the branch's diff
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
