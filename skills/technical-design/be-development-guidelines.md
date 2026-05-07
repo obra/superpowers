@@ -1,0 +1,117 @@
+# BE Development Guidelines Extract
+
+Source: `/Users/isaaczhu/Downloads/BE_Development_Guidelines.pdf`
+
+Use this as a TD checklist for backend designs. When a feature touches the area, the TD must state the concrete decision or explain why it is not applicable.
+
+## Scope
+
+Backend systems use Golang 1.24, Protobuf 3.24+, MySQL 8.0+, microservice / Service Mesh architecture. Goals: maintainability, consistency, and stability.
+
+## Golang
+
+- Formatting: `go fmt` / `goimports`; CI should run GolangCI-Lint.
+- File naming: interface files `i_<name>.go`; implementation files `<name>.go`.
+- Type naming: interfaces `I<TheName>`; implementations `<TheName>[OptSuffix]`, e.g. `UserDaoMySQL`.
+- Variables/functions: camelCase / PascalCase as idiomatic Go; package names short and semantic.
+- Errors: use `develop.h2games.net/applifier/lib/common/error`; wrap original errors; every backend module defines its own error codes.
+- Error code ranges: common `00000-09999`; Base Service `10000-19999`; Auth `20000-29999`; Platform `30000-39999`; Asset `50000-59999`; Campaign `70000-79999`; External Gateway `80000-89999`.
+- Concurrency: prefer `context` / `sync.Pool` over global shared state; manage goroutines with `context.WithCancel` or `errgroup`; avoid nested locks.
+- Dependencies: depend on interfaces, not concrete implementations; use `go mod` with locked versions; avoid unmaintained third-party libraries.
+- Shared libraries: prefer common/internal wrappers for JSON (`sonic`), logging, error, and DB client.
+
+## Project Structure
+
+Recommended layout combines go-kit layering with DDD:
+
+- `cmd/`: service entrypoint.
+- `application/`: business API orchestration and construction.
+- `configs/`: service/log config.
+- `internal/<domain>/service`: domain service implementations.
+- `internal/<domain>/model`: domain models.
+- `internal/<domain>/repo`: repository interfaces.
+- `internal/<domain>/rpc`: external service interfaces.
+- `infra/`: RPC clients, config, persistence, entity/DAO, DB/cache/MQ/metric clients.
+- `kit/transport` and `kit/endpoint`: go-kit scaffolding.
+- `pkg/`: technical common utilities.
+
+Principles:
+
+- Expose business logic through interfaces.
+- Keep private logic under `internal`.
+- Application layer wraps APIs; domain service layer owns business logic.
+- Repository interfaces live under domain; concrete persistence lives under `infra/persistence`.
+- DAO layer owns concrete store operations.
+
+## Protobuf
+
+- Contract repo: `https://develop.h2games.net/applifier/service-def`.
+- Field names: snake_case with comments.
+- Keep messages small; split large models into sub-messages.
+- Use `reserved` field numbers/names for removed fields.
+- RPC names: verb + resource, e.g. `GetUser`, `CreateOrder`.
+- Response must contain `*base.Response`.
+- Pagination uses `base.PaginationRequest` and `base.PaginationResponse`.
+- HTTP mappings use `google.api.http`; gateway owns timeout control.
+- Major versions use folders/packages like `auth/v1` and `auth.v1`.
+- Backward compatibility: no changing existing field type/meaning; new fields optional or defaulted; deprecated fields marked.
+- Use `buf` instead of raw `protoc`.
+
+## MySQL
+
+- Table names: `t_` prefix, lower snake_case; relation tables use `_rel`.
+- Required fields: `create_ts`, `updated_ts` as `BIGINT UNSIGNED` unix milliseconds; `tenant_id` when multi-tenant.
+- Numeric decimal values for money/ratio: store scaled integer by `10^6` when required by domain convention; avoid floating precision loss.
+- Primary key: `id` as unsigned `BIGINT`.
+- Sharding/global IDs: use sortable numeric unique IDs (snowflake-like).
+- Indexes: `idx_...` / `uidx_...`; single table <= 8 indexes; composite index <= 4 fields; avoid redundant indexes.
+- Tenant-aware indexes: `tenant_id` should be the first index column for tenant queries.
+- Engine/charset: InnoDB, `utf8mb4`, `utf8mb4_0900_ai_ci`.
+- Query rules: no `SELECT *`; avoid left wildcard LIKE; prefer cursor pagination (`WHERE id > last_id LIMIT N`) for large data.
+- Transactions: repo layer coordinates cross-table transactions; DAO exposes `UseTransaction(tx)` and CRUD should not contain transaction branching.
+- ORM: GORM recommended; use shared DB client wrapper where available.
+
+## Redis
+
+- Key format: `<tenant_id?>:<service>:<entity>:<identifier?>`; shared SDK may inject tenant/service prefix.
+- Use `:` separator, lower case, <= 100 chars, no sensitive raw identifiers.
+- Generate keys through common utilities; do not hardcode dynamic `fmt.Sprintf` key construction everywhere.
+- Avoid `KEYS *`; use `SCAN` with prefixes.
+- Temporary keys and distributed locks require TTL.
+- Token/verification keys use UUID/hash identifiers.
+- Register service prefixes; update utilities/docs when key format changes.
+
+## MQ
+
+- Queue/topic format: `<tenant_id?>:<service>:<topic>`.
+- Event topics should describe events, recommended `<entity>.<action?>.<status?>`, e.g. `ad-account.bind.complete`; multi-word fields use `-`.
+- Queue names <= 100 chars; no sensitive data; generated by shared utility.
+- Message body recommended JSON with header metadata: timestamp, message_type, module.
+- Consider size limit, persistence requirements, retry strategy, order guarantees, rate limiting.
+- Consumers must validate message format, be idempotent, retry recoverable failures, and route unrecoverable failures to DLQ.
+- DLQ format: `<env>:<tenant_id?>:<service>:<topic>:dlq`.
+- Register new services/topics and synchronize doc/tooling changes.
+
+## Multi-Tenancy
+
+- Key goals: data isolation, policy/budget separation, independent access control, shared infrastructure, operability.
+- MySQL: key tables include `tenant_id`; tenant_id first in composite indexes; GORM wrapper injects tenant filter.
+- Redis: tenant prefix prevents cross-tenant pollution and enables tenant cleanup.
+- Analytics/reporting: partition/shard by tenant or use per-tenant storage based on volume.
+- Auth: requests carry or imply tenant_id; JWT/session/gateway/middleware must propagate tenant context.
+- Internal calls pass tenant context through gRPC/HTTP headers.
+- Logs/audit/API records include tenant information.
+- Rate limiting and budget controls should be tenant-scoped when relevant.
+
+## Deployment
+
+- Service files should live under runnable paths: `/configs`, `/log`, etc.
+- Required env vars include `SERVICE_NAME` and `ENV`.
+- Config files: `log-<env>.yml`, `service-<env>.yml`, `secrets-<env>.yml`.
+
+## Testing and Quality
+
+- Unit tests: coverage >= 80%, focus service/DAO; use `testify/assert` and `testcontainers` for DB.
+- Integration tests: verify service calls, e.g. gRPC; use docker-compose for MySQL/Redis dependencies.
+- Performance: key APIs should be benchmarked, guideline example QPS >= 1000 and P99 <= 200ms.
+- CI/CD: `golangci-lint`, unit tests, integration tests before release, dependency security scan with `trivy`.

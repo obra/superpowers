@@ -5,81 +5,56 @@ description: Use when drafting or extending a Feishu technical design with PRD/T
 
 # Technical Design (Feishu / Lark)
 
-Agentic **TD** on Feishu wiki: lock inputs, clarify requirements, explore solutions, write by structure, record **待定** without halting unrelated sections, **resume** via TD + Edit Log.
+Agentic TD workflow for Feishu wiki. The TD must be precise enough to feed directly to an agent for planning + execution and produce stable expected results. Eliminate assumptions: every PRD requirement and every implementation decision must be confirmed, documented, or explicitly marked `待定`.
 
-## Hard rules
+## Required References
 
-- **Ask TD placement first** each start/resume unless the user already gave the TD URL this turn.
-- **REQUIRED SUB-SKILL:** **brainstorming** for clarification and solution exploration. Use **Brainstorming adaptation** so TD work does not hand off to `writing-plans` or repo `docs/superpowers/specs/`.
-- **One blocked decision ≠ stop the TD** — keep writing sections that do not depend on it until the user explicitly pauses/stops.
+Before authoring, read these files in this skill:
 
-## Feishu URLs
+- `lark-doc-protocol.md` — Feishu/Lark read-write protocol and no-tool fallback.
+- `td-template.md` — local TD Markdown template and completeness checklist.
+- `be-development-guidelines.md` — backend design constraints.
+- `edit-log-template.md` — resumable Edit Log format.
 
-| Use | URL |
-|-----|-----|
-| Default parent (new **child** TD if none exists) | https://boke.feishu.cn/wiki/UWLFwotGRiwu5rkNkZacXhJAnJc |
-| **New TD** — copy from template | https://boke.feishu.cn/wiki/YFikw56QTi4WmUkzNhkc25HanQe |
+## Hard Rules
 
-## 0) TD location
+- **Ask TD placement first** unless the user already provided TD URL this turn.
+- **Existing TD:** engineer provides TD link. **New TD:** create child under `https://boke.feishu.cn/wiki/UWLFwotGRiwu5rkNkZacXhJAnJc` from template `https://boke.feishu.cn/wiki/YFikw56QTi4WmUkzNhkc25HanQe`.
+- **REQUIRED SUB-SKILL:** use **brainstorming** for every requirement clarification and every solution decision.
+- **Slow is fast:** do not draft multiple modules in parallel. Confirm one requirement/layer before writing it into TD, then continue deeper or move to the next module.
+- **One blocked decision ≠ stop the TD** only when unrelated next work is already confirmed. Record local blockers as `待定`; stop only if the user explicitly pauses/stops.
 
-1. **Existing TD** → engineer provides **TD link** (authoritative body).
-2. **No TD** → create child under default parent above, from template (team duplicate/copy flow).
+## Session Start
 
-## 1) Edit Log
+1. Use `lark-doc-protocol.md`. If Lark tooling is unavailable, ask for exported/pasted TD + Edit Log; do not pretend to read/update Feishu.
+2. Read TD + Edit Log before edits. If Edit Log is missing, create it from `edit-log-template.md` and link it from TD.
+3. Get PRD/TRD links or pasted requirements.
+4. Read the required references above.
 
-- **Edit Log** sub-doc: progress, decisions, **未完成** (incl. 待定 with pointers into TD).
-- If missing: **create**, link from TD (top or 相关文档).
-- **Before edits:** read **TD + Edit Log** to restore progress (or user message if empty).
-- **After a push:** update Edit Log — date, sections advanced, 未完成, links to Feishu **comments** or headings for 待定.
+## TD Flow
 
-## 2) PRD / TRD
+1. **Understand PRD first.** Build Feature List from all technical + non-technical requirements. Each item needs brainstorming discussion and confirmation before becoming stable TD content.
+2. **Design from coarse to fine:** solution overview → module → service → API/contract → key flow & logic → data store → rollout/testing.
+3. At each level, use brainstorming to discuss options, trade-offs, and the recommended choice. Only write confirmed decisions into TD. If not decidable, record `待定` with enough context to resume.
+4. Ensure coverage: every Feature List item maps to TD sections and implementation-relevant decisions.
 
-TD must trace to requirements. Get **PRD and/or TRD links**, or **pasted description** if no links. If thin → brainstorming before architecture locks.
+## Diagrams
 
-## 3) Brainstorming adaptation
+- Complex interactions: use Feishu whiteboard; also provide text description for agent readability.
+- Key flows and complex flows: include flow chart.
+- Complex logic/algorithms: describe the concrete algorithm steps, state transitions, edge cases, and failure handling clearly enough for implementation.
 
-Use brainstorming for: gaps in PRD/TRD, constraints, success criteria, edge cases, and exploration **overview → by module → details** (options + trade-offs).
+## 待定 and Edit Log
 
-**TD overrides:** output is **Feishu TD + Edit Log**, not `docs/superpowers/specs/...`; **do not** require invoking **writing-plans** after brainstorming.
+For missing information or user says `待定`:
 
-## 4) Writing order
+1. Prefer Feishu comment on the exact anchor: question, context, assumptions removed, options, what is needed, owner.
+2. If comments are unavailable, insert an inline `待定` callout block.
+3. Add/Edit Log entry with TD location, link/path, current phase, progress, unfinished work, and next action.
 
-Match template: **solution overview** → **by module** → **details** (data, APIs, flows, rollout, risks, testing as needed). Align terms with PRD/TRD; note deliberate deviations.
+## Common Mistakes
 
-## 5) 待定 and comments
-
-When info is missing or engineer says **待定** / decide later:
-
-1. **Feishu comment** on the anchor (preferred): question, assumptions, options, what’s needed to decide, owner if known.
-2. Else a **callout** under the heading (`待定` + same fields).
-3. **Continue** other independent sections; log 待定 in **Edit Log** (location + link/path).
-
-On answers: resolve comments/callouts, update Edit Log.
-
-## 6) Stop condition
-
-Stop authoring only on **explicit** pause/stop. Otherwise leave Edit Log ready for next session.
-
-## Quick reference
-
-| Case | Do |
-|------|-----|
-| Cold start | Ask TD link vs new under default parent |
-| New TD | From template; wire Edit Log |
-| Resume | Read TD + Edit Log |
-| Ambiguous reqs | brainstorming |
-| Blocked node | Comment + Edit Log; continue rest |
-| Session end | Edit Log: progress + 未完成 |
-
-## Common mistakes
-
-- Resuming without reading TD + Edit Log.
-- Treating one 待定 as full-stop — branch work.
-- Designing on vague PRD without brainstorming.
-- Letting brainstorming default to `writing-plans` — use adaptation.
-
-## Red flags
-
-- No agreed TD URL / parent for new doc.
-- Guessing requirements instead of clarifying or citing.
-- Dropping 待定 context before resolution.
+- Writing a broad overview without confirming each PRD requirement.
+- Parallel-writing multiple modules before higher-level decisions are confirmed.
+- Leaving assumptions in prose instead of converting them to decisions or `待定`.
+- Letting brainstorming default to repo specs / `writing-plans`; in this workflow the artifacts are Feishu TD + Edit Log.
