@@ -16,7 +16,32 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/antigravity/superpow
 git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.gemini\antigravity\superpowers"
 ```
 
-### 2. Copy skills to your project
+### 2. Choose installation scope
+
+Before copying skills, ask the user which installation scope they want:
+
+- **Global installation**: available across all Antigravity projects.
+- **Current project installation**: available only in the current workspace.
+
+### 3. Copy skills
+
+#### Option A: Global installation
+
+Copy the skills folder to Antigravity's global skills directory:
+
+**Linux/macOS:**
+```bash
+mkdir -p ~/.gemini/antigravity
+cp -r ~/.gemini/antigravity/superpowers/skills ~/.gemini/antigravity/skills
+```
+
+**Windows:**
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gemini\antigravity"
+Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" "$env:USERPROFILE\.gemini\antigravity\skills"
+```
+
+#### Option B: Current project installation
 
 Copy the skills folder to your workspace's `.agent/skills` directory:
 
@@ -32,7 +57,7 @@ New-Item -ItemType Directory -Force -Path ".agent"
 Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" ".agent\skills"
 ```
 
-### 3. Configure Global Rules
+### 4. Configure Global Rules
 
 Add the following content to your `~/.gemini/GEMINI.md` (Linux/macOS) or `$env:USERPROFILE\.gemini\GEMINI.md` (Windows) file:
 
@@ -45,7 +70,21 @@ You have superpowers. Superpowers teach you new skills and capabilities.
 </EXTREMELY_IMPORTANT>
 ```
 
-### 4. Verify installation
+### 5. Verify installation
+
+For global installation:
+
+**Linux/macOS:**
+```bash
+ls ~/.gemini/antigravity/skills/
+```
+
+**Windows:**
+```powershell
+Get-ChildItem "$env:USERPROFILE\.gemini\antigravity\skills"
+```
+
+For current project installation:
 
 **Linux/macOS:**
 ```bash
@@ -65,29 +104,13 @@ Skills are now available in Antigravity IDE. They activate automatically based o
 
 ## Updating
 
-To update skills, pull the latest changes and copy again:
+To update skills, pull the latest changes and copy again to the same scope you chose during installation:
 
 ```bash
 cd ~/.gemini/antigravity/superpowers && git pull
 ```
 
-Then re-copy the skills folder to your project.
-
----
-
-## Global Installation (Alternative)
-
-If you prefer to install skills globally (available across all projects):
-
-**Linux/macOS:**
-```bash
-cp -r ~/.gemini/antigravity/superpowers/skills ~/.gemini/antigravity/skills
-```
-
-**Windows:**
-```powershell
-Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" "$env:USERPROFILE\.gemini\antigravity\skills"
-```
+Then re-copy the skills folder globally or to your current project.
 
 ---
 
