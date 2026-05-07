@@ -3,133 +3,108 @@
 ## Prerequisites
 
 - [OpenCode.ai](https://opencode.ai) installed
-- Node.js installed
-- Git installed
 
-## Installation Steps
+## Installation
 
-### 1. Install Superpowers
+Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
 
-```bash
-mkdir -p ~/.config/opencode/superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+```json
+{
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+}
 ```
 
-### 2. Register the Plugin
+Restart OpenCode. The plugin installs through OpenCode's plugin manager and
+registers all skills.
 
-Create a symlink so OpenCode discovers the plugin:
+Verify by asking: "Tell me about your superpowers"
+
+OpenCode uses its own plugin install. If you also use Claude Code, Codex, or
+another harness, install Superpowers separately for each one.
+
+## Migrating from the old symlink-based install
+
+If you previously installed superpowers using `git clone` and symlinks, remove the old setup:
 
 ```bash
-mkdir -p ~/.config/opencode/plugin
-ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
+# Remove old symlinks
+rm -f ~/.config/opencode/plugins/superpowers.js
+rm -rf ~/.config/opencode/skills/superpowers
+
+# Optionally remove the cloned repo
+rm -rf ~/.config/opencode/superpowers
+
+# Remove skills.paths from opencode.json if you added one for superpowers
 ```
 
-### 3. Restart OpenCode
-
-Restart OpenCode. The plugin will automatically inject superpowers context via the chat.message hook.
-
-You should see superpowers is active when you ask "do you have superpowers?"
+Then follow the installation steps above.
 
 ## Usage
 
-### Finding Skills
-
-Use the `find_skills` tool to list all available skills:
+Use OpenCode's native `skill` tool:
 
 ```
-use find_skills tool
+use skill tool to list skills
+use skill tool to load superpowers/brainstorming
 ```
-
-### Loading a Skill
-
-Use the `use_skill` tool to load a specific skill:
-
-```
-use use_skill tool with skill_name: "superpowers:brainstorming"
-```
-
-### Personal Skills
-
-Create your own skills in `~/.config/opencode/skills/`:
-
-```bash
-mkdir -p ~/.config/opencode/skills/my-skill
-```
-
-Create `~/.config/opencode/skills/my-skill/SKILL.md`:
-
-```markdown
----
-name: my-skill
-description: Use when [condition] - [what it does]
----
-
-# My Skill
-
-[Your skill content here]
-```
-
-Personal skills override superpowers skills with the same name.
-
-### Project Skills
-
-Create project-specific skills in your OpenCode project:
-
-```bash
-# In your OpenCode project
-mkdir -p .opencode/skills/my-project-skill
-```
-
-Create `.opencode/skills/my-project-skill/SKILL.md`:
-
-```markdown
----
-name: my-project-skill
-description: Use when [condition] - [what it does]
----
-
-# My Project Skill
-
-[Your skill content here]
-```
-
-**Skill Priority:** Project skills override personal skills, which override superpowers skills.
-
-**Skill Naming:**
-- `project:skill-name` - Force project skill lookup
-- `skill-name` - Searches project → personal → superpowers
-- `superpowers:skill-name` - Force superpowers skill lookup
 
 ## Updating
 
-```bash
-cd ~/.config/opencode/superpowers
-git pull
+OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
+and Bun versions pin that resolved git dependency in a lockfile or cache, so a
+restart may not pick up the newest Superpowers commit. If updates do not appear,
+clear OpenCode's package cache or reinstall the plugin.
+
+To pin a specific version:
+
+```json
+{
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+}
 ```
 
 ## Troubleshooting
 
 ### Plugin not loading
 
-1. Check plugin file exists: `ls ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
-2. Check OpenCode logs for errors
-3. Verify Node.js is installed: `node --version`
+1. Check logs: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`
+2. Verify the plugin line in your `opencode.json`
+3. Make sure you're running a recent version of OpenCode
+
+### Windows install issues
+
+Some Windows OpenCode builds have upstream installer issues with git-backed
+plugin specs, including cache paths for `git+https` URLs and Bun not finding
+`git.exe` even when it works in a normal terminal. If OpenCode cannot install
+the plugin, try installing with system npm and pointing OpenCode at the local
+package:
+
+```powershell
+npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
+```
+
+Then use the installed package path in `opencode.json`:
+
+```json
+{
+  "plugin": ["~/.config/opencode/node_modules/superpowers"]
+}
+```
 
 ### Skills not found
 
-1. Verify skills directory exists: `ls ~/.config/opencode/superpowers/skills`
-2. Use `find_skills` tool to see what's discovered
-3. Check file structure: each skill should have a `SKILL.md` file
+1. Use `skill` tool to list what's discovered
+2. Check that the plugin is loading (see above)
 
-### Tool mapping issues
+### Tool mapping
 
-When a skill references a Claude Code tool you don't have:
-- `TodoWrite` → use `update_plan`
-- `Task` with subagents → use `@mention` syntax to invoke OpenCode subagents
-- `Skill` → use `use_skill` tool
-- File operations → use your native tools
+When skills reference Claude Code tools:
+- `TodoWrite` → `todowrite`
+- `Task` with subagents → `@mention` syntax
+- `Skill` tool → OpenCode's native `skill` tool
+- File operations → your native tools
 
 ## Getting Help
 
 - Report issues: https://github.com/obra/superpowers/issues
-- Documentation: https://github.com/obra/superpowers
+- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md

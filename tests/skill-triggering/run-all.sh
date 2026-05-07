@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run all skill triggering tests
 # Usage: ./run-all.sh
 

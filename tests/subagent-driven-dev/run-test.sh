@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run a subagent-driven-development test
 # Usage: ./run-test.sh <test-name> [--plugin-dir <path>]
 #
@@ -77,6 +77,7 @@ claude -p "$PROMPT" \
   --plugin-dir "$PLUGIN_DIR" \
   --dangerously-skip-permissions \
   --output-format stream-json \
+  --verbose \
   > "$LOG_FILE" 2>&1 || true
 
 # Extract final stats

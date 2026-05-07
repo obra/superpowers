@@ -1,4 +1,4 @@
-I have my implementation plan ready at docs/plans/auth-system.md.
+I have my implementation plan ready at docs/superpowers/plans/auth-system.md.
 
 I want to use subagent-driven-development to execute it. That means:
 - Dispatch a fresh subagent for each task in the plan

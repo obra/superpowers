@@ -143,7 +143,7 @@ cleanup_test_project() {
 create_test_plan() {
     local project_dir="$1"
     local plan_name="${2:-test-plan}"
-    local plan_file="$project_dir/docs/plans/$plan_name.md"
+    local plan_file="$project_dir/docs/superpowers/plans/$plan_name.md"
 
     mkdir -p "$(dirname "$plan_file")"
 
