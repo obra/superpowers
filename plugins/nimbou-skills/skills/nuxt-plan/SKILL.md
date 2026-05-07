@@ -73,7 +73,7 @@ This file map drives the waves.
   1. **Onda 1 — Contratos compartilhados:** shared types, composables that expose APIs consumed elsewhere, route file when it owns the data contract for child components.
   2. **Onda 2 — Componentes e configs independentes:** isolated components, feature-local utils, configs. Parallel.
   3. **Onda 3 — Integração de página e estados:** page composition, loading/empty/error/success wiring, responsive checks.
-  4. **Onda Final — Verificação:** catalog validate→generate and the suggested test scope (e.g., `/test <route>`). Test runs MUST be limited to the routes/components/composables this plan changed — never `/test` over the whole app or unscoped `pnpm test`.
+  4. **Onda Final — Verificação:** run `/nuxt-catalog` (validate → generate) and the suggested test scope (e.g., `/test <route>`). Test runs MUST be limited to the routes/components/composables this plan changed — never `/test` over the whole app or unscoped `pnpm test`.
 - Collapse waves when there is no contract dependency between them. Two single-task waves with no dependency should be one wave.
 - After each wave, the executor MUST automatically dispatch `nimbou-skills:request-review` over the wave's diff before opening the next wave. Mark each checkpoint inside the plan; do not leave it implicit.
 - Make the handoff between page, components, and composables explicit.
@@ -123,7 +123,7 @@ Create a project details page using the existing status badge and a new sidebar.
 - Verify loading and empty states against the real API payload.
 
 ## Pos-execucao
-- [ ] Rodar `nuxt-catalog` no fluxo `validate -> generate`
+- [ ] /nuxt-catalog
 - [ ] Sugestao: /test projects
 ```
 
@@ -151,7 +151,7 @@ After writing the complete plan, check:
 4. **Review checkpoints:** every wave ends with an explicit `nimbou-skills:request-review` checkpoint
 5. **Boundary clarity:** page, component, and composable responsibilities are clear
 6. **Guideline clarity:** local wrapper reuse, state locality, and hardening obligations are represented where relevant
-7. **Verification clarity:** catalog verification and test suggestions still appear at the end, and every test suggestion is scoped to the routes/components/composables this plan changed (never the full suite)
+7. **Verification clarity:** `/nuxt-catalog` and test suggestions still appear at the end, and every test suggestion is scoped to the routes/components/composables this plan changed (never the full suite)
 
 Fix issues inline before handing off the plan.
 
