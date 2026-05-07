@@ -190,6 +190,7 @@ already use it in another harness.
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+- **subagent-model-reconciliation** - Confirm subagents will run on a mid-tier model rather than silently inheriting a top-tier orchestrator model
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

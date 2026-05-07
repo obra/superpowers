@@ -21,7 +21,13 @@ Load plan, review critically, execute all tasks, report when complete.
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create TodoWrite and proceed
 
-### Step 2: Execute Tasks
+### Step 2: Reconcile Subagent Model (if dispatching subagents)
+
+If executing this plan involves dispatching subagents — even one — run **superpowers:subagent-model-reconciliation** before the first dispatch. That skill confirms with the user which model each subagent should run on (looked up at decision time for whichever provider you're on) and pins `model:` on every dispatch in this flow. Cache the answer for the rest of plan execution.
+
+If the plan is going to be executed entirely inline (no subagents), skip this step.
+
+### Step 3: Execute Tasks
 
 For each task:
 1. Mark as in_progress
@@ -29,7 +35,7 @@ For each task:
 3. Run verifications as specified
 4. Mark as completed
 
-### Step 3: Complete Development
+### Step 4: Complete Development
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
@@ -67,4 +73,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:subagent-model-reconciliation** - Pins `model:` on subagent dispatches when the plan involves any subagent (skip if execution is fully inline)
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks

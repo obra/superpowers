@@ -5,6 +5,7 @@ Use this template when dispatching an implementer subagent.
 ```
 Task tool (general-purpose):
   description: "Implement Task N: [task name]"
+  model: <mid-tier model for current provider — set during subagent-model-reconciliation>
   prompt: |
     You are implementing Task N: [task name]
 

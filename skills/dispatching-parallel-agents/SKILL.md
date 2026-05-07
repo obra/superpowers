@@ -65,11 +65,15 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+Before the first dispatch, run **superpowers:subagent-model-reconciliation** so each parallel agent runs on the appropriate mid-tier model for the current provider rather than silently inheriting a top-tier orchestrator model. Cache the user's answer and pass `model:` on every dispatch in the fan-out.
+
 ```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+// In Claude Code / AI environment.
+// `<mid-tier model for current provider>` is the model chosen during
+// reconciliation — looked up at decision time, not hardcoded here.
+Task("Fix agent-tool-abort.test.ts failures",                   model: <mid-tier model for current provider>)
+Task("Fix batch-completion-behavior.test.ts failures",          model: <mid-tier model for current provider>)
+Task("Fix tool-approval-race-conditions.test.ts failures",      model: <mid-tier model for current provider>)
 // All three run concurrently
 ```
 
@@ -171,6 +175,11 @@ After agents return:
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
+
+## Integration
+
+**Required before dispatch:**
+- **superpowers:subagent-model-reconciliation** — confirms which model the parallel agents will run on so they don't silently inherit a top-tier orchestrator model. Run once before the fan-out and cache the answer for the rest of the dispatch batch.
 
 ## Real-World Impact
 

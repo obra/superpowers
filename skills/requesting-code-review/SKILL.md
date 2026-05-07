@@ -31,7 +31,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code reviewer subagent:**
 
-Use Task tool with `general-purpose` type, fill template at `code-reviewer.md`
+Use Task tool with `general-purpose` type, fill template at `code-reviewer.md`. Pass `model:` explicitly — code review is mid-tier work and should not silently inherit a top-tier orchestrator model. If you haven't already run **superpowers:subagent-model-reconciliation** for this flow, do so now to pick the right mid-tier model for the current provider and cache the answer.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built

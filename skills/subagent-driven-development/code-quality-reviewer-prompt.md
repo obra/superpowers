@@ -8,6 +8,7 @@ Use this template when dispatching a code quality reviewer subagent.
 
 ```
 Task tool (general-purpose):
+  model: <mid-tier model for current provider — set during subagent-model-reconciliation>
   Use template at requesting-code-review/code-reviewer.md
 
   DESCRIPTION: [task summary, from implementer's report]

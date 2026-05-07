@@ -101,6 +101,14 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+### Reconciliation Before First Dispatch
+
+Before dispatching the first implementer subagent, run **superpowers:subagent-model-reconciliation**. That skill detects whether the orchestrator is on a top-tier model, looks up the current mid-tier model for the provider you're running on (Sonnet for Claude, the current "fast" tier for OpenAI/Codex, Flash for Gemini, etc.), confirms with the user, and pins `model:` on every subsequent dispatch in this flow.
+
+Do this **once** per plan execution and cache the answer — don't re-ask before each task.
+
+If the harness you're on doesn't support per-dispatch model selection, that skill will tell you to surface the gap to the user; don't pretend the work is reconciled when it isn't.
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:
@@ -269,6 +277,7 @@ Done!
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:subagent-model-reconciliation** - Pins `model:` on subagent dispatches so they don't inherit a top-tier orchestrator model
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
