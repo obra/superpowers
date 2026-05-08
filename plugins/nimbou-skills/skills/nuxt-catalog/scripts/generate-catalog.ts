@@ -62,10 +62,20 @@ const compatibilityOutputFile = join(
   'components.meta.json',
 )
 const componentFiles = fg.sync('components/**/*.vue', { cwd: projectRoot, absolute: true })
-const checker = createChecker(join(projectRoot, 'tsconfig.json'), { forceUseTs: true })
 const rawArgs = process.argv.slice(2)
 const validateOnly = rawArgs.includes('--validate')
 const domainFilter = rawArgs.find((arg) => !arg.startsWith('--')) ?? null
+
+// Lazy: only initialized during generate, never during validate-only runs.
+// Avoids a baseline TypeError from vue-component-meta when tsconfig or the
+// TypeScript version is incompatible with the checker.
+let _checker: ReturnType<typeof createChecker> | null = null
+function getChecker(): ReturnType<typeof createChecker> {
+  if (!_checker) {
+    _checker = createChecker(join(projectRoot, 'tsconfig.json'), { forceUseTs: true })
+  }
+  return _checker
+}
 
 function readCatalog(filePath: string): CatalogEntry {
   const source = readFileSync(filePath, 'utf8')
@@ -170,28 +180,32 @@ function collectComponent(filePath: string): OutputComponent {
 
   let meta: { props: OutputComponent['meta']['props']; emits: OutputComponent['meta']['emits']; slots: OutputComponent['meta']['slots']; exposed: OutputComponent['meta']['exposed'] }
 
-  try {
-    const rawMeta = checker.getComponentMeta(filePath)
-    const props = rawMeta.props
-      .filter((p) => !p.global)
-      .map((prop) => ({
-        name: prop.name,
-        type: prop.type ?? 'unknown',
-        required: Boolean(prop.required),
-        default: prop.default ?? null,
-      }))
+  if (validateOnly) {
+    meta = { props: [], emits: [], slots: [], exposed: [] }
+  } else {
+    try {
+      const rawMeta = getChecker().getComponentMeta(filePath)
+      const props = rawMeta.props
+        .filter((p) => !p.global)
+        .map((prop) => ({
+          name: prop.name,
+          type: prop.type ?? 'unknown',
+          required: Boolean(prop.required),
+          default: prop.default ?? null,
+        }))
 
-    meta = {
-      props: props.length > 0 ? props : readScriptSetupProps(filePath),
-      emits: rawMeta.events.map((event) => ({ name: event.name })),
-      slots: rawMeta.slots.map((slot) => ({
-        name: slot.name,
-        description: slot.description ?? '',
-      })),
-      exposed: rawMeta.exposed.map((item) => ({ name: item.name })),
+      meta = {
+        props: props.length > 0 ? props : readScriptSetupProps(filePath),
+        emits: rawMeta.events.map((event) => ({ name: event.name })),
+        slots: rawMeta.slots.map((slot) => ({
+          name: slot.name,
+          description: slot.description ?? '',
+        })),
+        exposed: rawMeta.exposed.map((item) => ({ name: item.name })),
+      }
+    } catch {
+      meta = { props: readScriptSetupProps(filePath), emits: [], slots: [], exposed: [] }
     }
-  } catch {
-    meta = { props: readScriptSetupProps(filePath), emits: [], slots: [], exposed: [] }
   }
 
   return {
