@@ -231,7 +231,9 @@ function handleMessage(text) {
   }
   touchActivity();
   console.log(JSON.stringify({ source: 'user-event', ...event }));
-  if (event.choice) {
+  // event may be null (JSON.parse('null')); property access on null throws
+  // and would escape the socket 'data' handler as an uncaughtException.
+  if (event && event.choice) {
     const eventsFile = path.join(STATE_DIR, 'events');
     fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
   }

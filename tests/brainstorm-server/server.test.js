@@ -295,6 +295,53 @@ async function runTests() {
       ws.close();
     });
 
+    await test('handles JSON null from client without crashing', async () => {
+      // JSON.parse('null') yields null; reading .choice on null throws and,
+      // before the handleMessage guard, killed the server process.
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      await new Promise(resolve => ws.on('open', resolve));
+
+      ws.send('null');
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200, 'Server should still be running after JSON null');
+      ws.close();
+    });
+
+    await test('handles JSON primitive values from client without crashing', async () => {
+      // Numbers, strings, booleans are valid JSON top-level values. They
+      // should be ignored (no .choice, so no events file write) without
+      // throwing.
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      await new Promise(resolve => ws.on('open', resolve));
+
+      ws.send('42');
+      ws.send('"hello"');
+      ws.send('true');
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200, 'Server should still be running after primitive values');
+      ws.close();
+    });
+
+    await test('does NOT write events file for JSON null', async () => {
+      // Regression for the null guard: ensure null doesn't slip past the
+      // truthiness check and write a stray events file.
+      const eventsFile = path.join(STATE_DIR, 'events');
+      if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
+
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      await new Promise(resolve => ws.on('open', resolve));
+
+      ws.send('null');
+      await sleep(300);
+
+      assert(!fs.existsSync(eventsFile), 'state/events should not exist for null payload');
+      ws.close();
+    });
+
     // ========== File Watching ==========
     console.log('\n--- File Watching ---');
 
