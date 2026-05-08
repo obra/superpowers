@@ -164,6 +164,23 @@ gh pr checks <PR-number> --watch
 
 If checks fail: investigate and fix failures, push fixes, and re-check until all green. Never declare work done while CI is red.
 
+**After CI is green: ask whether to merge.**
+
+```
+CI is green. Would you like to merge the PR now?
+```
+
+If yes:
+
+```bash
+gh pr merge <PR-number> --merge
+git push origin --delete <feature-branch>
+git checkout <base-branch>
+git pull
+```
+
+If no: Report "PR is open at <url>. Branch preserved." Done.
+
 #### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
@@ -223,7 +240,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
 | 1. Merge locally | yes | - | - | yes |
-| 2. Create PR | - | yes | yes | - |
+| 2. Create PR | - | yes | yes | if user merges PR |
 | 3. Keep as-is | - | - | yes | - |
 | 4. Discard | - | - | - | yes (force) |
 
