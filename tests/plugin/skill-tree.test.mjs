@@ -100,6 +100,7 @@ test('shared specification skills are shipped with the tree', () => {
   assert.ok(shippedSkills.includes('doc-domain'))
   assert.ok(shippedSkills.includes('doc-gherkin'))
   assert.ok(shippedSkills.includes('doc-openapi'))
+  assert.ok(shippedSkills.includes('change-spec'))
   assert.ok(shippedSkills.includes('feat-spec'))
   assert.ok(shippedSkills.includes('request-review'))
   assert.ok(shippedSkills.includes('apply-review'))

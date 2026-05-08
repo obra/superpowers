@@ -11,6 +11,7 @@ Clarify what to build before frontend implementation. Consult `components.meta.j
 
 Use this skill instead of `nestjs-think` when the request is clearly Nuxt/Vuetify-first.
 Use `feat-spec` when the request changes both frontend and backend or depends on a new backend contract.
+Use `change-spec` when the request changes both frontend and backend in an existing flow.
 
 This skill owns discovery and design closure for frontend work. Resolve UI structure, reuse choices, state ownership, user interactions, and responsive behavior here so `nuxt-plan` can stay focused on execution topology.
 

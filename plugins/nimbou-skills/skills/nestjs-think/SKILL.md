@@ -11,6 +11,7 @@ This skill owns backend coherence end to end at the design level: use-cases, tra
 
 When the request is clearly frontend-first for Nuxt/Vuetify, use `nuxt-think` instead of forcing this workflow.
 Use `feat-spec` when the request changes both frontend and backend or when the frontend depends on a new backend contract.
+Use `change-spec` when the request changes both frontend and backend in an existing flow.
 
 Before closing backend design decisions, locate the nearest backend `GUIDELINES.md` in the target project when one exists. Start from the likely owning module or app, walk upward, and treat the closest file as the primary local implementation source. If none exists, continue with this skill as the fallback baseline.
 

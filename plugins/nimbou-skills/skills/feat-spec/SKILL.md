@@ -6,6 +6,7 @@ description: Use when a feature changes both frontend and backend, or when the f
 # Feat Spec
 
 Use this skill when the request changes both frontend and backend in the same feature slice, or when frontend delivery depends on a new or changed backend contract.
+For mixed changes over behavior that already exists, use `change-spec`.
 
 If the request is frontend-only, use `nuxt-think`.
 If the request is backend-only, use `nestjs-think`.
