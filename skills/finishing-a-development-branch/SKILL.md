@@ -9,11 +9,30 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Check branch → Verify tests → Detect environment → Present options → Execute choice → Wait for CI → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
+
+### Step 0: Verify Branch
+
+**Before doing anything, confirm you are NOT on `main` or `master`:**
+
+```bash
+git branch --show-current
+```
+
+If on `main` or `master`:
+```
+Cannot finish work directly on <branch>. Create a feature branch first:
+
+  git checkout -b feat/<topic>
+
+Then re-run this skill.
+```
+
+Stop. Do not proceed to Step 1.
 
 ### Step 1: Verify Tests
 
@@ -137,6 +156,14 @@ EOF
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
+**After PR is created: wait for CI, fix if red.**
+
+```bash
+gh pr checks <PR-number> --watch
+```
+
+If checks fail: investigate and fix failures, push fixes, and re-check until all green. Never declare work done while CI is red.
+
 #### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
@@ -202,6 +229,14 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 ## Common Mistakes
 
+**Working on main/master**
+- **Problem:** Commits land directly on the base branch with no PR or review
+- **Fix:** Stop at Step 0 if on main/master; create a feature branch first
+
+**Declaring done with red CI**
+- **Problem:** Broken code merges or PR sits with failing checks
+- **Fix:** After pushing, watch `gh pr checks --watch` and fix failures before calling it done
+
 **Skipping test verification**
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
@@ -233,6 +268,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 ## Red Flags
 
 **Never:**
+- Work directly on `main` or `master` — stop and create a feature branch first
 - Proceed with failing tests
 - Merge without verifying tests on result
 - Delete work without confirmation
@@ -240,8 +276,10 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Remove a worktree before confirming merge success
 - Clean up worktrees you didn't create (provenance check)
 - Run `git worktree remove` from inside the worktree
+- Declare work done while CI is red
 
 **Always:**
+- Check current branch before anything else (Step 0)
 - Verify tests before offering options
 - Detect environment before presenting menu
 - Present exactly 4 options (or 3 for detached HEAD)
@@ -249,3 +287,4 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Clean up worktree for Options 1 & 4 only
 - `cd` to main repo root before worktree removal
 - Run `git worktree prune` after removal
+- After Option 2: watch CI and fix failures before declaring done
