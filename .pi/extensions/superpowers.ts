@@ -7,7 +7,7 @@ const EXTREMELY_IMPORTANT_MARKER = "<EXTREMELY_IMPORTANT>";
 const BOOTSTRAP_MARKER = "superpowers:using-superpowers bootstrap for pi";
 
 const extensionDir = dirname(fileURLToPath(import.meta.url));
-const packageRoot = resolve(extensionDir, "..");
+const packageRoot = resolve(extensionDir, "../..");
 const skillsDir = resolve(packageRoot, "skills");
 const bootstrapSkillPath = resolve(skillsDir, "using-superpowers", "SKILL.md");
 
