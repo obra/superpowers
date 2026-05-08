@@ -1,6 +1,6 @@
 {
   "name": "nimbou-skills",
-  "version": "0.2.0",
+  "version": "3.0.0",
   "description": "Unified Claude Code skill library with NestJS backend core and Nuxt/Vuetify frontend skills",
   "skills": "./skills/"
 }
