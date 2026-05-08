@@ -44,6 +44,22 @@ Superpowers is available via the [official Claude plugin marketplace](https://cl
   /plugin install superpowers@claude-plugins-official
   ```
 
+#### ryanpeach's Fork
+
+- Register the marketplace from the fork:
+
+  ```bash
+  /plugin marketplace add ryanpeach/superpowers
+  ```
+
+  This registers a marketplace named `superpowers-dev` (defined in the repo's `marketplace.json`).
+
+- Install the plugin:
+
+  ```bash
+  /plugin install superpowers@superpowers-dev
+  ```
+
 #### Superpowers Marketplace
 
 The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
