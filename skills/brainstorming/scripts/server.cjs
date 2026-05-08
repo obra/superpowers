@@ -101,6 +101,26 @@ h1 { color: #333; } p { color: #666; }</style>
 const frameTemplate = fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
 const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
+const ALPINE_VENDOR_PATH = path.join(__dirname, 'vendor', 'alpine.js');
+
+function loadVendorFile(filePath, name) {
+  try {
+    return fs.readFileSync(filePath);
+  } catch (error) {
+    throw new Error(
+      `Failed to load vendored ${name} at ${filePath}; ` +
+      'run the refresh command in skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md. ' +
+      error.message
+    );
+  }
+}
+
+const VENDOR_FILES = new Map([
+  ['/vendor/alpine.js', {
+    content: loadVendorFile(ALPINE_VENDOR_PATH, 'Alpine'),
+    contentType: 'application/javascript; charset=utf-8'
+  }]
+]);
 
 // ========== Helper Functions ==========
 
@@ -124,11 +144,30 @@ function getNewestScreen() {
   return files.length > 0 ? files[0].path : null;
 }
 
+function parseRequestUrl(req) {
+  // Vendor routing depends on URL normalization before exact pathname allowlist checks.
+  return new URL(req.url, 'http://localhost');
+}
+
+function serveVendorFile(requestUrl, res) {
+  const vendorFile = VENDOR_FILES.get(requestUrl.pathname);
+  if (!vendorFile) {
+    res.writeHead(404);
+    res.end('Not found');
+    return;
+  }
+
+  res.writeHead(200, { 'Content-Type': vendorFile.contentType });
+  res.end(vendorFile.content);
+}
+
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
   touchActivity();
-  if (req.method === 'GET' && req.url === '/') {
+  const requestUrl = parseRequestUrl(req);
+
+  if (req.method === 'GET' && requestUrl.pathname === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
       ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
@@ -142,8 +181,10 @@ function handleRequest(req, res) {
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(html);
-  } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
-    const fileName = req.url.slice(7);
+  } else if (req.method === 'GET' && requestUrl.pathname.startsWith('/vendor/')) {
+    serveVendorFile(requestUrl, res);
+  } else if (req.method === 'GET' && requestUrl.pathname.startsWith('/files/')) {
+    const fileName = requestUrl.pathname.slice(7);
     const filePath = path.join(CONTENT_DIR, path.basename(fileName));
     if (!fs.existsSync(filePath)) {
       res.writeHead(404);

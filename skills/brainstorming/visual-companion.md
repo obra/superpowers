@@ -26,7 +26,7 @@ A question *about* a UI topic is not automatically a visual question. "What kind
 
 ## How It Works
 
-The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content to `screen_dir`, the user sees it in their browser and can click to select options. Selections are recorded to `state_dir/events` that you read on your next turn.
+The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content to `screen_dir`, the user tries the mockup in their browser, and they respond in the terminal. Use `[data-choice]` only when you are deliberately asking the user to pick among named A/B/C visual options.
 
 **Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, selection indicator, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
 
@@ -103,8 +103,9 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
 2. **Tell user what to expect and end your turn:**
    - Remind them of the URL (every step, not just first)
-   - Give a brief text summary of what's on screen (e.g., "Showing 3 layout options for the homepage")
-   - Ask them to respond in the terminal: "Take a look and let me know what you think. Click to select an option if you'd like."
+   - Give a brief text summary of what's on screen (e.g., "Showing an interactive meal-planning mockup with tabs and an editable grocery list")
+   - Ask them to respond in the terminal: "Take a look, try the mockup, and tell me what feels right or wrong."
+   - If the screen is a deliberate A/B/C choice, also say: "Click an option if you'd like; your terminal feedback is still the source of truth."
 
 3. **On your next turn** — after the user responds in the terminal:
    - Read `$STATE_DIR/events` if it exists — this contains the user's browser interactions (clicks, selections) as JSON lines
@@ -129,6 +130,48 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 ## Writing Content Fragments
 
 Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, selection indicator, and all interactive infrastructure).
+
+## Interactive Mockups With Alpine
+
+Frame-wrapped fragments automatically load Alpine.js. Use Alpine when visible interaction is central to the design question: tabs, toggles, accordions, modal open/close, wizard next/back, lightweight form validation, or simple add/remove list behavior.
+
+Keep it illustrative. Do not build a fake application just because realistic chrome includes many controls. If an interaction is not part of the question, render that area as passive content.
+
+```html
+<div x-data="{ tab: 'week', items: [{ id: 1, label: 'Taco night' }, { id: 2, label: 'Soup prep' }], nextId: 3, newItem: '' }">
+  <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+    <button class="mock-button" @click="tab = 'week'">Week</button>
+    <button class="mock-button" @click="tab = 'list'">Grocery list</button>
+  </div>
+
+  <section x-show="tab === 'week'">
+    <h3>Week plan</h3>
+    <p class="subtitle">Three realistic meals are enough for the mockup.</p>
+  </section>
+
+  <section x-show="tab === 'list'">
+    <h3>Grocery list</h3>
+    <ul>
+      <template x-for="item in items" :key="item.id">
+        <li x-text="item.label"></li>
+      </template>
+    </ul>
+    <input class="mock-input" x-model="newItem" placeholder="Add item">
+    <button class="mock-button" @click="if (newItem.trim()) { items.push({ id: nextId++, label: newItem.trim() }); newItem = '' }">Add</button>
+  </section>
+</div>
+```
+
+Rules:
+
+- Write content fragments by default; do not add an Alpine `<script>` tag.
+- Generate 2-5 compact, realistic records for the user's domain. Put records in `x-data` only when interaction needs state.
+- Use stable ids for repeatable records; do not key dynamic lists by user-entered labels.
+- Keep terminal feedback primary. Alpine interactions are for understanding, not telemetry.
+- Use `data-choice` only for deliberate named options the agent should read next turn.
+- Use `@click.stop` or separate controls when an Alpine control is near a `[data-choice]` surface.
+- Do not call `fetch`, simulate backend writes, or use `localStorage` / `sessionStorage`.
+- Do not load live network images. Use local `/files/<basename>` assets when the project provides them, or use a simple local placeholder.
 
 **Minimal example:**
 
@@ -160,7 +203,9 @@ That's it. No `<html>`, no CSS, no `<script>` tags needed. The server provides a
 
 The frame template provides these CSS classes for your content:
 
-### Options (A/B/C choices)
+### Deliberate Options (A/B/C choices)
+
+Use these only when you want a structured choice event. Do not wrap ordinary Alpine controls in `[data-choice]`.
 
 ```html
 <div class="options">
@@ -182,7 +227,9 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-### Cards (visual designs)
+### Deliberate Cards (visual design choices)
+
+Use `[data-choice]` cards for visual alternatives, not for normal clickable app UI.
 
 ```html
 <div class="cards">
@@ -246,7 +293,7 @@ The frame template provides these CSS classes for your content:
 
 ## Browser Events Format
 
-When the user clicks options in the browser, their interactions are recorded to `$STATE_DIR/events` (one JSON object per line). The file is cleared automatically when you push a new screen.
+When the user clicks deliberate `[data-choice]` options in the browser, those selections are recorded to `$STATE_DIR/events` (one JSON object per line). Ordinary Alpine interactions such as tabs, toggles, forms, and modals are not recorded. The file is cleared automatically when you push a new screen, so each screen starts with a clean event log. The terminal message remains the primary feedback.
 
 ```jsonl
 {"type":"click","choice":"a","text":"Option A - Simple Layout","timestamp":1706000101}
@@ -264,7 +311,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 - **Explain the question on each page** — "Which layout feels more professional?" not just "Pick one"
 - **Iterate before advancing** — if feedback changes current screen, write a new version
 - **2-4 options max** per screen
-- **Use real content when it matters** — for a photography portfolio, use actual images (Unsplash). Placeholder content obscures design issues.
+- **Use local assets when images matter** — if the project has relevant images, reference them through `/files/<basename>`. Do not pull images from remote URLs just to make a mockup feel polished.
 - **Keep mockups simple** — focus on layout and structure, not pixel-perfect design
 
 ## File Naming

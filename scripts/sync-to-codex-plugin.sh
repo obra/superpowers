@@ -415,6 +415,53 @@ fi
 
 git add "$DEST_REL"
 
+vendor_notice_for_pr_body() {
+  local provenance_glob="$DEST"/skills/*/scripts/vendor/*.provenance.json
+
+  if ! compgen -G "$provenance_glob" > /dev/null; then
+    return 0
+  fi
+
+  command -v python3 >/dev/null || die "python3 not found in PATH"
+  python3 - "$DEST" <<'PY'
+import glob
+import json
+import os
+import sys
+
+dest = sys.argv[1]
+provenance_files = sorted(glob.glob(os.path.join(dest, "skills", "*", "scripts", "vendor", "*.provenance.json")))
+if not provenance_files:
+    raise SystemExit(0)
+
+print()
+print()
+print("Vendored third-party code included in this sync:")
+for provenance_file in provenance_files:
+    with open(provenance_file, "r", encoding="utf-8") as fh:
+        provenance = json.load(fh)
+
+    rel_provenance = os.path.relpath(provenance_file, dest)
+    rel_vendor_dir = os.path.dirname(rel_provenance)
+    basename = os.path.basename(provenance_file)
+    suffix = ".provenance.json"
+    if basename.endswith(suffix):
+        basename = basename[:-len(suffix)]
+    local_path = provenance.get("localPath") or os.path.join(rel_vendor_dir, f"{basename}.js")
+    notice_path = os.path.join(rel_vendor_dir, "THIRD_PARTY_NOTICES.md")
+    name = provenance.get("name", "unknown")
+    version = provenance.get("version", "unknown")
+    approval = provenance.get("approvalArtifact", "not recorded")
+    sha256 = provenance.get("sha256", "not recorded")
+
+    print(f"- `{local_path}`: {name} {version}")
+    print(f"  - Approval artifact: {approval}")
+    print(f"  - License notice: `{notice_path}`")
+    print(f"  - Provenance: `{rel_provenance}`")
+    print(f"  - SHA256: `{sha256}`")
+PY
+}
+
 if [[ $BOOTSTRAP -eq 1 ]]; then
   COMMIT_TITLE="bootstrap superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
   PR_BODY="Initial bootstrap of the superpowers plugin from upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
@@ -424,7 +471,7 @@ Creates \`plugins/superpowers/\` by copying the tracked plugin files from upstre
 Run via: \`scripts/sync-to-codex-plugin.sh --bootstrap\`
 Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
 
-This is a one-time bootstrap. Subsequent syncs will be normal (non-bootstrap) runs using the same tracked upstream plugin files."
+This is a one-time bootstrap. Subsequent syncs will be normal (non-bootstrap) runs using the same tracked upstream plugin files.$(vendor_notice_for_pr_body)"
 else
   COMMIT_TITLE="sync superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
   PR_BODY="Automated sync from superpowers upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
@@ -434,7 +481,7 @@ Copies the tracked plugin files from upstream, including the committed Codex man
 Run via: \`scripts/sync-to-codex-plugin.sh\`
 Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
 
-Running the sync tool again against the same upstream SHA should produce a PR with an identical diff — use that to verify the tool is behaving."
+Running the sync tool again against the same upstream SHA should produce a PR with an identical diff — use that to verify the tool is behaving.$(vendor_notice_for_pr_body)"
 fi
 
 git commit --quiet -m "$COMMIT_TITLE

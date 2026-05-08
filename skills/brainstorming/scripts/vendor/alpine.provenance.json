@@ -1,0 +1,12 @@
+{
+  "name": "alpinejs",
+  "version": "3.15.12",
+  "license": "MIT",
+  "sourceUrl": "https://registry.npmjs.org/alpinejs/-/alpinejs-3.15.12.tgz",
+  "sourcePackagePath": "package/dist/cdn.min.js",
+  "localPath": "skills/brainstorming/scripts/vendor/alpine.js",
+  "npmIntegrity": "sha512-nJvPAQVNPdZZ0NrExJ/kzQco3ijR8LwvCOadQecllESiqT4NyZ/57sN9V2XyvhlBGAbmlKYgeWZvYdKq99ij/Q==",
+  "sha256": "57b37d7cae9a27d965fdae4adcc844245dfdc407e655aee85dcfff3a08036a3f",
+  "approvalArtifact": "SUP-215",
+  "vendoredAt": "2026-05-08"
+}

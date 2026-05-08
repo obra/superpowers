@@ -51,7 +51,7 @@
       const container = target.closest('.options') || target.closest('.cards');
       const selected = container ? container.querySelectorAll('.selected') : [];
       if (selected.length === 0) {
-        indicator.textContent = 'Click an option above, then return to the terminal';
+        indicator.textContent = 'Interact with the mockup, then return to the terminal';
       } else if (selected.length === 1) {
         const label = selected[0].querySelector('h3, .content h3, .card-body h3')?.textContent?.trim() || selected[0].dataset.choice;
         indicator.innerHTML = '<span class="selected-text">' + label + ' selected</span> — return to terminal to continue';
