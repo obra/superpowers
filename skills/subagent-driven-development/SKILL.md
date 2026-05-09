@@ -98,7 +98,7 @@ Qwen returns a `stop_reason` field in every delegation response. Handle each val
 
 **`complete`:** Proceed to spec compliance review.
 
-**`error`:** Connection or server failure. Check the `result` field for details. Retry once if it looks transient (connection reset, timeout on first attempt). If it fails again, treat as BLOCKED and escalate to the user.
+**`error`:** Connection or server failure. Check the `result` field for details. Retry once if it looks transient (connection reset, timeout on first attempt). If it fails again, treat as BLOCKED and escalate to the user with the `transcript_path` for diagnosis.
 
 **`max_steps` / `timeout` / `token_limit`:** Budget exhausted with partial work. Inspect `result` and `files_changed`:
 - If a clear remaining piece exists (e.g., implementation written but tests not written), decompose into sub-tasks and delegate each to Qwen separately.
@@ -158,8 +158,10 @@ Spec reviewer: ❌ Issues:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
 
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
+[Re-delegate fix to Qwen (spec): remove --json flag, add progress reporting per spec]
+Qwen result:
+  stop_reason: complete
+  result: "Removed --json flag, added progress reporting every 100 items. Committed."
 
 [Spec reviewer reviews again]
 Spec reviewer: ✅ Spec compliant now
@@ -167,8 +169,10 @@ Spec reviewer: ✅ Spec compliant now
 [Dispatch code quality reviewer]
 Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
+[Re-delegate quality fix to Qwen (quality): extract magic number 100 to constant]
+Qwen result:
+  stop_reason: complete
+  result: "Extracted PROGRESS_INTERVAL = 100 constant. Committed."
 
 [Code reviewer reviews again]
 Code reviewer: ✅ Approved
@@ -204,7 +208,6 @@ Done!
 - Questions surfaced before work begins (not after)
 
 **Quality gates:**
-- Self-review catches issues before handoff
 - Two-stage review: spec compliance, then code quality
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
@@ -243,9 +246,9 @@ Done!
 - Repeat until approved
 - Don't skip the re-review
 
-**If subagent fails task:**
-- Dispatch fix subagent with specific instructions
-- Don't try to fix manually (context pollution)
+**If Qwen delegation fails (stop_reason=error):**
+- Retry once for transient failures
+- If it fails again, escalate to the user — don't re-delegate without changing something
 
 ## Integration
 
