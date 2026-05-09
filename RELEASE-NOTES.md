@@ -1,5 +1,89 @@
 # Superpowers Release Notes
 
+## v5.1.0 (2026-04-30)
+
+### Removals
+
+- **Legacy slash commands removed** — `/brainstorm`, `/execute-plan`, and `/write-plan` are gone. They were deprecated stubs that did nothing but tell the user to invoke the corresponding skill. Invoke `superpowers:brainstorming`, `superpowers:executing-plans`, and `superpowers:writing-plans` directly instead. (#1188)
+- **`superpowers:code-reviewer` named agent removed** — the agent was the plugin's only named agent and was used by exactly two skills, while every other reviewer/implementer subagent in the repo dispatches `general-purpose` with a prompt template alongside its skill. The agent's persona and checklist have been merged into `skills/requesting-code-review/code-reviewer.md` as a self-contained Task-dispatch template. Anyone dispatching `Task (superpowers:code-reviewer)` should switch to `Task (general-purpose)` with the prompt template instead. (PR #1299)
+- **Integration sections removed from skills** — these were a legacy of the time before agents had native skills systems and didn't help with steering.
+
+### Worktree Skills Rewrite
+
+`using-git-worktrees` and `finishing-a-development-branch` now detect when the agent is already running inside an isolated worktree and prefer the harness's native worktree controls before falling back to `git worktree`. Behavior was TDD-validated and cross-platform-checked across five harnesses. (PRI-974, PR #1121)
+
+- **Environment detection** — both skills check `GIT_DIR != GIT_COMMON` before doing anything; if already in a linked worktree, creation is skipped entirely. A submodule guard prevents false detection.
+- **Consent before creating worktrees** — `using-git-worktrees` no longer creates worktrees implicitly; the skill asks the user first. Fixes #991 (subagent-driven-development was auto-creating worktrees without consent).
+- **Native tool preference (Step 1a)** — when the harness exposes its own worktree tool (e.g. Codex), the skill defers to it. The user's stated preference is respected when expressed.
+- **Provenance-based cleanup** — `finishing-a-development-branch` only cleans up worktrees inside `.worktrees/` (created by superpowers); anything outside is left alone. Fixes #940 (Option 2 was incorrectly cleaning up worktrees), #999 (merge-then-remove ordering), and #238 (`cd` to repo root before `git worktree remove`).
+- **Detached HEAD handling** — the finishing menu collapses to two options when there is no branch to merge from.
+- **Hardcoded `/Users/jesse` paths** in skill examples replaced with generic placeholders. (#858, PR #1122)
+
+### Contributor Guidelines for AI Agents
+
+Two new sections at the top of `CLAUDE.md` (symlinked to `AGENTS.md`) speak directly to AI agents. An audit of the last 100 closed PRs against this repo showed a 94% rejection rate driven by AI-generated slop: agents that didn't read the PR template, opened duplicates, fabricated problem descriptions, or pushed fork- or domain-specific changes upstream.
+
+- **Pre-submission checklist** — read the PR template, search for existing PRs, verify a real problem exists, confirm the change belongs in core, and show the human partner the complete diff before submitting.
+- **What we will not accept** — third-party dependencies, "compliance" rewrites of skill content, project-specific configuration, bulk PRs, speculative fixes, domain-specific skills, fork-specific changes, fabricated content, and bundled unrelated changes.
+- **New harness PRs require a session transcript** — most past new-harness integrations copied skill files or wrapped with `npx skills` instead of loading the `using-superpowers` bootstrap at session start. The acceptance test ("Let's make a react todo list" must auto-trigger `brainstorming` in a clean session) and a complete transcript are now required.
+
+### Codex Plugin Mirror Tooling
+
+New `sync-to-codex-plugin` script mirrors superpowers into the OpenAI Codex plugin marketplace as `prime-radiant-inc/openai-codex-plugins`. Path/user-agnostic so any team member can run it. (PR #1165)
+
+- Clones the fork fresh into a temp directory per run, regenerates overlays inline, and opens a PR; auto-detects upstream from the script's own location and preflights `rsync`/`git`/`gh auth`/`python3`.
+- `--bootstrap` flag for first-time setup; `EXCLUDES` patterns anchored to source root; `assets/` excluded.
+- Mirrors `CODE_OF_CONDUCT.md`; drops the `agents/openai.yaml` overlay.
+- Seeds `interface.defaultPrompt` in the mirrored `plugin.json`. (PR #1180 by @arittr)
+- Codex plugin files are committed to the source repo so the sync script uses canonical versions; Codex marketplace metadata is preserved.
+
+### OpenCode
+
+- **Bootstrap content cached at module level** — `getBootstrapContent()` was calling `fs.existsSync` + `fs.readFileSync` + frontmatter regex on every agent step (the `experimental.chat.messages.transform` hook fires on every step in OpenCode's agent loop). Now read once, cached for the session lifetime, with a null sentinel for the missing-file case. 15 regression tests cover cache behavior, fs call counts, the injection guard, the missing-file sentinel, and cache reset. (Fixes #1202)
+- **Integration tests modernized**.
+- **Install caveats clarified** in the README.
+
+### Code Review Consolidation
+
+`requesting-code-review` is now self-contained: the persona, checklist, and dispatch template live in `skills/requesting-code-review/code-reviewer.md` and the skill dispatches `Task (general-purpose)` directly. (PR #1299)
+
+- **Single source of truth** — the persona/checklist that previously lived in both `agents/code-reviewer.md` and the skill's placeholder template (and drifted independently) is now one file.
+- **`subagent-driven-development` follows suit** — its `code-quality-reviewer-prompt.md` now dispatches `Task (general-purpose)` instead of the named agent.
+- **Behavioral test added** — `tests/claude-code/test-requesting-code-review.sh` plants real bugs (SQL injection, plaintext password handling, credential logging) into a tiny project and asserts the dispatched reviewer flags every planted issue at Critical/Important severity and refuses to approve the diff.
+- **Codex and Copilot workaround docs trimmed** — the "Named agent dispatch" sections in `references/codex-tools.md` and `references/copilot-tools.md` documented how to flatten a named agent into a generic dispatch. With no named agents shipping, the workaround is unnecessary; both sections were dropped.
+
+### Subagent-Driven Development
+
+- **No more pause every 3 tasks** — the "review after each batch (3 tasks)" cadence in `requesting-code-review` (originally for `executing-plans`) was leaking into `subagent-driven-development`. Replaced with "each task or at natural checkpoints" plus an explicit continuous-execution directive.
+- **SDD integration test now runs its assertions** — three independent bugs caused the test to silently bail before printing any verification results: an unresolved `..` segment in the working-dir path, a `set -euo pipefail` interaction with `find | sort | head -1` (SIGPIPE on the producer killed the script), and a missing `--plugin-dir` on the `claude -p` invocation that caused the test to load the installed plugin instead of the working tree. All three fixed; six verification tests now actually run against a real end-to-end SDD run.
+
+### Cursor
+
+- **Windows SessionStart hook** routed through `run-hook.cmd` instead of invoking the extensionless `session-start` script directly. Fixes Windows opening the file in an editor instead of running it. Also removed an accidental UTF-8 BOM from `hooks-cursor.json`.
+
+### Gemini CLI
+
+- **Subagent dispatch mapping** — Gemini's `Task` dispatch now maps to `@agent-name` / `@generalist`, with parallel subagent dispatch documented for independent tasks.
+
+### Skills
+
+- **Terminology cleanups** across skill content.
+
+### Documentation & Install
+
+- **Factory Droid installation instructions** added to README.
+- **Quickstart install links** in README. (PR #1293 by @arittr)
+- **Codex plugin install guidance** updated. (PR #1288 by @arittr)
+- **Codex `wait` mapping corrected** to `wait_agent` in the tools reference.
+- **Install order reorganized**; Codex install instructions cleaned up.
+- **Removed vestigial `CHANGELOG.md`** in favor of `RELEASE-NOTES.md` as the single source. (PR #1163 by @shaanmajid)
+- **Discord invite link** fixed; release announcements link and a detailed Discord description added to the Community section.
+
+### Community
+
+- @shaanmajid — vestigial `CHANGELOG.md` removal (PR #1163)
+- @arittr — README quickstart install links (#1293), Codex plugin install guidance (#1288), `sync-to-codex-plugin` `interface.defaultPrompt` seed (#1180)
+
 ## v5.0.7 (2026-03-31)
 
 ### GitHub Copilot CLI Support
