@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "在任何创造性工作之前你必须使用此技能——创建功能、构建组件、添加功能或修改行为。在实施之前探索用户意图、需求和设计。"
 ---
 
 # Brainstorming Ideas Into Designs

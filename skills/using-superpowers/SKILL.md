@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: 在任何对话开始时使用——建立如何查找和使用技能的规则，要求在包括澄清问题在内的任何回应之前必须调用Skill工具
 ---
 
 <SUBAGENT-STOP>
