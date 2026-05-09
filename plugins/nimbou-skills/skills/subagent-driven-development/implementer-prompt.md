@@ -2,7 +2,7 @@
 
 Use this template when dispatching an implementer subagent.
 
-**Routing:** Read the task's `**Role:**` field from the plan. Substitute `[ROLE]` below with the matching role slug (`prisma-schema-author`, `prisma-repository-author`, `nestjs-usecase-author`, `nestjs-controller-author`, `vue-component-author`, `nuxt-composable-author`, `nuxt-page-author`). If the task has no `**Role:**` field, fall back to `general-purpose` and surface the missing role as a planning warning in your post-task report.
+**Routing:** Read the task's `**Role:**` field from the plan. Substitute `[ROLE]` below with the matching `subagent_type` value (always prefixed with `nimbou-skills:`): `nimbou-skills:prisma-schema-author`, `nimbou-skills:prisma-repository-author`, `nimbou-skills:nestjs-usecase-author`, `nimbou-skills:nestjs-controller-author`, `nimbou-skills:vue-component-author`, `nimbou-skills:nuxt-composable-author`, `nimbou-skills:nuxt-page-author`. If the task has no `**Role:**` field, fall back to `general-purpose` and surface the missing role as a planning warning in your post-task report.
 
 The role agent already carries Clean Architecture, naming, and boundary rules in its own system prompt. Do not repeat those rules in this template — keep the dispatch lean.
 

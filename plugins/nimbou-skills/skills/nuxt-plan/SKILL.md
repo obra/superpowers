@@ -85,9 +85,9 @@ Every row in `## Arquivos` MUST set a `Role` slug so `subagent-driven-developmen
 
 | Role slug | When to use |
 |---|---|
-| `vue-component-author` | File lives under `components/` (SFC) |
-| `nuxt-composable-author` | File lives under `composables/` or `utils/` (consumed by composables) |
-| `nuxt-page-author` | File lives under `pages/`, `layouts/`, or wires routes |
+| `nimbou-skills:vue-component-author` | File lives under `components/` (SFC) |
+| `nimbou-skills:nuxt-composable-author` | File lives under `composables/` or `utils/` (consumed by composables) |
+| `nimbou-skills:nuxt-page-author` | File lives under `pages/`, `layouts/`, or wires routes |
 
 Rules:
 

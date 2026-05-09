@@ -47,17 +47,17 @@ Do not use it when the plan should simply be executed inline by the controller a
 
 ## Role Routing
 
-Plans produced by `nimbou-skills:nestjs-plan` and `nimbou-skills:nuxt-plan` declare a `**Role:**` slug per task. Before dispatching the implementer for a task, read that slug and pass it as the `subagent_type` argument of the `Task` tool. The role agent already carries Clean Architecture, naming, and boundary rules — keep the dispatch prompt lean (task spec + scene-setting + delivery contract).
+Plans produced by `nimbou-skills:nestjs-plan` and `nimbou-skills:nuxt-plan` declare a `**Role:**` slug per task. The slug already includes the `nimbou-skills:` prefix — use it **directly** as the `subagent_type` argument of the `Agent` tool. Do not strip the prefix. The role agent already carries Clean Architecture, naming, and boundary rules — keep the dispatch prompt lean (task spec + scene-setting + delivery contract).
 
-| Role slug | Subagent dispatched as | Use when |
-|---|---|---|
-| `prisma-schema-author` | `prisma-schema-author` | task evolves `schema.prisma` and/or migrations |
-| `prisma-repository-author` | `prisma-repository-author` | task implements/extends a repository adapter against an application port |
-| `nestjs-usecase-author` | `nestjs-usecase-author` | task creates one application use-case (one verb) and its ports |
-| `nestjs-controller-author` | `nestjs-controller-author` | task wires HTTP transport: controller, DTOs, guards, module |
-| `vue-component-author` | `vue-component-author` | task creates/evolves a Vue SFC under `components/` |
-| `nuxt-composable-author` | `nuxt-composable-author` | task creates/evolves a composable or its util |
-| `nuxt-page-author` | `nuxt-page-author` | task creates/evolves a page, layout, or route wiring |
+| Role slug (use as `subagent_type`) | Use when |
+|---|---|
+| `nimbou-skills:prisma-schema-author` | task evolves `schema.prisma` and/or migrations |
+| `nimbou-skills:prisma-repository-author` | task implements/extends a repository adapter against an application port |
+| `nimbou-skills:nestjs-usecase-author` | task creates one application use-case (one verb) and its ports |
+| `nimbou-skills:nestjs-controller-author` | task wires HTTP transport: controller, DTOs, guards, module |
+| `nimbou-skills:vue-component-author` | task creates/evolves a Vue SFC under `components/` |
+| `nimbou-skills:nuxt-composable-author` | task creates/evolves a composable or its util |
+| `nimbou-skills:nuxt-page-author` | task creates/evolves a page, layout, or route wiring |
 
 **Fallback:** if a task has no `**Role:**` field, dispatch with `general-purpose` and surface the missing role as a planning warning in your TodoWrite/post-task report. Do not silently rely on the fallback — fix the plan instead.
 
