@@ -34,7 +34,7 @@ mcp__qwen-mcp__delegate_to_qwen:
     - What tests you ran and their results
     - Any issues or concerns
 
-  working_dir: [absolute path to project root or relevant subtree]
+  working_dir: [absolute path — use project root unless the task is fully contained in a subtree]
   context_hints:
     - [file changed by a prior task that this task depends on]
     - [file the plan explicitly references for this task]
@@ -48,4 +48,5 @@ Inspect the response fields:
 - **`files_changed`** — files Qwen wrote or edited
 - **`commands_run`** — commands Qwen executed
 - **`stop_reason`** — see "Handling Qwen stop_reason" in SKILL.md
+- **Note:** `result` is freeform text from Qwen — it may not follow the "On completion" format. Treat it as a best-effort summary.
 - **`transcript_path`** — full JSONL transcript; include this path in any escalation to the user
