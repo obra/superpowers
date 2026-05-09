@@ -12,6 +12,10 @@ hooks/session-start text eol=lf
 *.mjs text eol=lf
 *.ts text eol=lf
 
+# pi-superpowers fork: always use ours for these files on merge
+README.md merge=ours
+skills/using-git-worktrees/SKILL.md merge=ours
+
 # Explicitly mark binary files
 *.png binary
 *.jpg binary
