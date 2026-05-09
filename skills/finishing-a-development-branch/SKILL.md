@@ -137,6 +137,8 @@ EOF
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
+**Commit message style:** Optionally use **superpowers:caveman-commit** for terse Conventional Commits (subject ≤50 chars, body only when "why" isn't obvious).
+
 #### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."

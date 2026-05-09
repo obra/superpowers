@@ -112,6 +112,15 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Optional Efficiency Skills
+
+These skills don't change workflow discipline — they change communication density. Use them when context budget matters or speed is priority:
+
+- **superpowers:cavecrew** — Compressed subagents (investigator, builder, reviewer). Same rigor, ~60% fewer tokens in tool results. Use when delegating in long sessions.
+- **superpowers:caveman-commit** — Terse commit messages (Conventional Commits, ≤50 chars). Use when generating commits.
+- **superpowers:caveman-review** — One-line-per-finding PR comments. Use when fast review is enough.
+- **superpowers:compress** — Compress memory files (CLAUDE.md, todos) to reduce input tokens. Use before long sessions.
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.

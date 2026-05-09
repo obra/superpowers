@@ -29,7 +29,12 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Choose review style:**
+
+- **Standard review** (default): Deep analysis with rationale, strengths, and recommendations. Use template at `code-reviewer.md`.
+- **Fast review** (optional): When context is tight or you only need findings. Use **superpowers:caveman-review** for one-line-per-finding output (~60% fewer tokens).
+
+**3. Dispatch code reviewer subagent:**
 
 Use Task tool with `general-purpose` type, fill template at `code-reviewer.md`
 
@@ -39,7 +44,7 @@ Use Task tool with `general-purpose` type, fill template at `code-reviewer.md`
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
-**3. Act on feedback:**
+**4. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later

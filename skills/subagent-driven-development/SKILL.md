@@ -275,5 +275,8 @@ Done!
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
 
+**Optional compressed subagents (for token-constrained sessions):**
+- **superpowers:cavecrew** - Use cavecrew-investigator, cavecrew-builder, or cavecrew-reviewer when context budget matters. Same rigor, ~60% fewer tokens in tool results.
+
 **Alternative workflow:**
 - **superpowers:executing-plans** - Use for parallel session instead of same-session execution
