@@ -88,40 +88,27 @@ digraph process {
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+**Implementation:** Always use Qwen via `mcp__qwen-mcp__delegate_to_qwen`. Qwen runs locally and handles mechanical coding tasks — writing functions, adding tests, threading parameters.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+**Review roles** still use Claude subagents. Use the most capable available model for spec compliance and code quality review — these roles require judgment and diff-reading that benefit from stronger reasoning.
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+## Handling Qwen stop_reason
 
-**Architecture, design, and review tasks**: use the most capable available model.
+Qwen returns a `stop_reason` field in every delegation response. Handle each value:
 
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+**`complete`:** Proceed to spec compliance review.
 
-## Handling Implementer Status
+**`error`:** Connection or server failure. Check the `result` field for details. Retry once if it looks transient (connection reset, timeout on first attempt). If it fails again, treat as BLOCKED and escalate to the user.
 
-Implementer subagents report one of four statuses. Handle each appropriately:
+**`max_steps` / `timeout` / `token_limit`:** Budget exhausted with partial work. Inspect `result` and `files_changed`:
+- If a clear remaining piece exists (e.g., implementation written but tests not written), decompose into sub-tasks and delegate each to Qwen separately.
+- If the task is already atomic and cannot be split further, escalate to the user. Include the `transcript_path` so they can inspect what Qwen completed before deciding how to proceed.
 
-**DONE:** Proceed to spec compliance review.
-
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
-
-**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
-
-**BLOCKED:** The implementer cannot complete the task. Assess the blocker:
-1. If it's a context problem, provide more context and re-dispatch with the same model
-2. If the task requires more reasoning, re-dispatch with a more capable model
-3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, escalate to the human
-
-**Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
+**Never** ignore a non-`complete` stop_reason or proceed to spec review with partial work without assessing it first.
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
+- `./implementer-prompt.md` - Delegate implementation task to Qwen
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
@@ -137,18 +124,13 @@ You: I'm using Subagent-Driven Development to execute this plan.
 Task 1: Hook installation script
 
 [Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Context prep: plan references hooks.py; no ambiguity — install path is explicit in spec]
+[delegate_to_qwen(task=<full text + context>, working_dir=..., context_hints=[hooks.py])]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
-
-You: "User level (~/.config/superpowers/hooks/)"
-
-Implementer: "Got it. Implementing now..."
-[Later] Implementer:
-  - Implemented install-hook command
-  - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
-  - Committed
+Qwen result:
+  stop_reason: complete
+  result: "Implemented install-hook command. Added 5 tests, all passing. Committed."
+  files_changed: [hooks.py, tests/test_hooks.py]
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
@@ -161,14 +143,15 @@ Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 Task 2: Recovery modes
 
 [Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Context prep: ambiguity — spec says "report progress" but doesn't say how often]
+[Ask user: "How often should progress be reported during recovery?"]
+You: "Every 100 items"
+[delegate_to_qwen(task=<full text + context + "report every 100 items">, working_dir=..., context_hints=[recovery.py])]
 
-Implementer: [No questions, proceeds]
-Implementer:
-  - Added verify/repair modes
-  - 8/8 tests passing
-  - Self-review: All good
-  - Committed
+Qwen result:
+  stop_reason: complete
+  result: "Added verify/repair modes with progress every 100 items. 8/8 tests passing. Committed."
+  files_changed: [recovery.py, tests/test_recovery.py]
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ❌ Issues:
@@ -207,7 +190,7 @@ Done!
 - Subagents follow TDD naturally
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
-- Subagent can ask questions (before AND during work)
+- Context prep step ensures Qwen has everything it needs upfront
 
 **vs. Executing Plans:**
 - Same session (no handoff)
@@ -239,20 +222,20 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
-- Make subagent read plan file (provide full text instead)
-- Skip scene-setting context (subagent needs to understand where task fits)
-- Ignore subagent questions (answer before letting them proceed)
+- Delegate to Qwen without running the context preparation step first
+- Make Qwen read the plan file (provide full text in the `task` string instead)
+- Skip scene-setting context (Qwen needs to understand where the task fits)
+- Leave genuine ambiguity unresolved before delegating (Qwen cannot ask questions)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
 
-**If subagent asks questions:**
-- Answer clearly and completely
-- Provide additional context if needed
-- Don't rush them into implementation
+**If context prep reveals ambiguity:**
+- Resolve from existing context if possible (don't ask the user unnecessarily)
+- If you must ask the user, ask one question at a time
+- Include the resolved answer inline in the `task` string — don't leave Qwen to guess
 
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
