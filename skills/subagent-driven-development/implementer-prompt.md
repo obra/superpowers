@@ -1,4 +1,3 @@
----
 # Qwen Implementer Delegation Template
 
 Use this template when delegating an implementation task to Qwen via the `mcp__qwen-mcp__delegate_to_qwen` MCP tool.
@@ -50,4 +49,3 @@ Inspect the response fields:
 - **`commands_run`** — commands Qwen executed
 - **`stop_reason`** — see "Handling Qwen stop_reason" in SKILL.md
 - **`transcript_path`** — full JSONL transcript; include this path in any escalation to the user
----
