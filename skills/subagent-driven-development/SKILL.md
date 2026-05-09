@@ -53,10 +53,10 @@ digraph process {
         "Decompose or escalate to user" [shape=box];
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Re-delegate fix to Qwen" [shape=box];
+        "Re-delegate fix to Qwen (spec)" [shape=box];
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
-        "Re-delegate quality fix to Qwen" [shape=box];
+        "Re-delegate quality fix to Qwen (quality)" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
@@ -72,12 +72,12 @@ digraph process {
     "Decompose or escalate to user" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="decomposed"];
     "Qwen stop_reason?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="complete"];
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Re-delegate fix to Qwen" [label="no"];
-    "Re-delegate fix to Qwen" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Re-delegate fix to Qwen (spec)" [label="no"];
+    "Re-delegate fix to Qwen (spec)" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
     "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Re-delegate quality fix to Qwen" [label="no"];
-    "Re-delegate quality fix to Qwen" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Code quality reviewer subagent approves?" -> "Re-delegate quality fix to Qwen (quality)" [label="no"];
+    "Re-delegate quality fix to Qwen (quality)" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="yes"];
