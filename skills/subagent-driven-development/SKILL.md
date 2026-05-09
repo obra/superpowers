@@ -11,7 +11,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: a Qwen delegation failure you cannot resolve after retry or decomposition, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
 ## When to Use
 
@@ -70,6 +70,7 @@ digraph process {
     "Delegate to Qwen (mcp__qwen-mcp__delegate_to_qwen)" -> "Qwen stop_reason?";
     "Qwen stop_reason?" -> "Decompose or escalate to user" [label="budget/error"];
     "Decompose or escalate to user" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="decomposed"];
+    "Decompose or escalate to user" -> "STOP — awaiting user decision" [label="escalate"];
     "Qwen stop_reason?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="complete"];
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Re-delegate fix to Qwen (spec)" [label="no"];
@@ -214,7 +215,7 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
+- More invocations per task (Qwen delegation + 2 reviewer subagents)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
@@ -231,7 +232,7 @@ Done!
 - Leave genuine ambiguity unresolved before delegating (Qwen cannot ask questions)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let implementer self-review replace actual review (both are needed)
+- Let Qwen's result summary replace actual review (both spec and quality review are required)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
 
@@ -241,7 +242,7 @@ Done!
 - Include the resolved answer inline in the `task` string — don't leave Qwen to guess
 
 **If reviewer finds issues:**
-- Implementer (same subagent) fixes them
+- Re-delegate to Qwen with specific fix instructions
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
