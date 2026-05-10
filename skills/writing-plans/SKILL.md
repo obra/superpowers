@@ -131,6 +131,21 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+## Push to Draft PR and Get User Approval
+
+After self-review, before offering execution choice:
+
+1. Commit the plan document to git.
+2. Push the branch to the remote.
+3. Open a GitHub **draft** pull request titled `Plan: <feature-name>` containing the plan (or push the plan as an additional commit on the existing spec PR if one is already open for this feature).
+4. Share the PR URL with the user:
+
+   > "Plan written and pushed as draft PR: `<PR URL>` (file: `docs/superpowers/plans/<filename>.md`). Please review it on your phone or laptop and approve before I start execution."
+
+5. Wait for the user's explicit approval. Silence is not approval. If they request changes, make them, push the update so the PR reflects the latest plan, and re-run self-review.
+
+Only proceed to the execution handoff once the user has approved the plan on the PR.
+
 ## Execution Handoff
 
 After saving the plan, offer execution choice:
