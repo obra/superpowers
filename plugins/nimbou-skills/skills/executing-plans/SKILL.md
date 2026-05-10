@@ -68,15 +68,23 @@ After **all** waves have finished and committed (including the final `nestjs-tes
    - **Descrição** — short one-liner with `file:line` when applicable.
    - **Próximo passo** — the reviewer's suggested action, or `a definir` if none was given.
 
-The follow-ups artifact is **not** part of any wave commit. Either commit it separately as a docs commit or hand it to the user — let `nimbou-skills:finishing-a-development-branch` decide how to integrate it.
+The follow-ups artifact is **not** part of any wave commit. Commit it separately as a docs commit. Then proceed to Step 4 to execute the collected follow-ups.
 
-## Step 4: Complete Development
+## Step 4: Execute Follow-ups
 
-After every wave is committed, every background review has been collected, and Step 3 is finalized:
+After `<plan>.followups.md` is committed (or confirmed empty), work through the collected items before declaring the plan complete:
 
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- Use `nimbou-skills:finishing-a-development-branch`.
-- If a `<plan>.followups.md` was generated, mention its path in the completion summary and call out any `review-critical` or `spec-issue` entries explicitly so the user can decide whether to address them before merge.
+1. Triage the follow-ups list by severity: `review-critical` and `spec-issue` first, then `review-important`, then everything else.
+2. For each item in priority order:
+   - Read the finding and the affected file(s).
+   - Implement the fix or change.
+   - Run the scoped verification declared for the affected file (never an unfiltered suite run).
+   - Mark the entry resolved in `<plan>.followups.md` with a one-line resolution note and the commit that fixed it.
+3. Commit all follow-up fixes together in a single commit (or one commit per logical group when fixes are unrelated). Stage explicitly — never `git add -A`.
+4. Dispatch a final background code reviewer subagent over the follow-up commit(s) to confirm the fixes landed correctly. Append any new findings back to `<plan>.followups.md` as `review-*` entries marked `(follow-up round)`.
+5. When all critical and important items are resolved, announce: "Plano executado. Follow-ups críticos e importantes resolvidos. Itens menores documentados em `<plan>.followups.md`."
+
+Items typed `review-minor`, `concern`, or `pos-execucao` that do not have a clear fix are left documented and announced to the user — they do not block completion.
 
 ## Boundary
 
@@ -120,6 +128,7 @@ Return to Step 1 when:
 - run `nestjs-test` as the final wave when the plan came from `nestjs-plan`, scoped strictly to the files this plan changed (explicit suite paths only — never an unfiltered `pnpm test`)
 - collect every background reviewer's result before producing follow-ups
 - generate `<plan>.followups.md` only when there are deferred items
+- execute follow-ups (critical and important) before declaring completion — minor items are documented only
 - stop when blocked by implementation, not by reviewer output
 - do not start implementation on `main` or `master` without explicit user consent
 
@@ -132,8 +141,6 @@ Required workflow skills:
 - `nimbou-skills:nuxt-plan` — produces wave-structured frontend plans for this skill to execute
 - `nimbou-skills:request-review` — REQUIRED: dispatched as a background subagent after every wave's commit
 - `nimbou-skills:nestjs-test` — REQUIRED final wave when the plan came from `nestjs-plan`, scoped strictly to the files this plan changed (no full-suite runs)
-- `nimbou-skills:finishing-a-development-branch` — completes the branch after execution
-
 Local templates:
 
 - `./spec-reviewer-prompt.md` — per-wave spec compliance reviewer prompt (dispatched as a background subagent)
