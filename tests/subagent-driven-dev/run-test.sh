@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run a subagent-driven-development test
 # Usage: ./run-test.sh <test-name> [--plugin-dir <path>]
 #
