@@ -1,0 +1,60 @@
+# role-bindings.yaml · Team Baseline
+#
+# 此文件位于 Superpowers/templates/，作为团队级 baseline。
+# 项目侧覆盖：在 <项目>/.harness/role-bindings.yaml 中只写差异。
+#
+# Schema 见 spec §4.2:
+#   {BLUEPRINT}/docs/superpowers/specs/2026-05-08-blueprint-harness-redesign-design.md
+
+# ---------------------------------------------------------------------------
+# users: 团队成员列表（baseline 留空，项目侧补齐）
+# ---------------------------------------------------------------------------
+# Schema:
+#   - id: ou_xxx                # Lark / Feishu open_id
+#     name: 张三                 # 显示名（仅展示用）
+#     function: frontend-dev    # frontend-dev | non-frontend-dev | non-dev
+#     strictness: low           # low | medium | high
+#     products: [video-editor]  # 可选
+users: []
+
+# ---------------------------------------------------------------------------
+# function_skills: 职能 → skill 映射（默认值；项目可覆盖）
+# ---------------------------------------------------------------------------
+# 注：role-* skills 尚未实现（属于 Plan B 工作项）。
+#     CLI 在 init 时仅做占位引用；调用方需检测 skill 是否存在，缺失时降级。
+function_skills:
+  frontend-dev:
+    primary: role-frontend-dev
+    additional:
+      - verification-before-completion
+      - prepare-context
+
+  non-frontend-dev:
+    primary: role-non-frontend-dev
+    additional:
+      - verification-before-completion
+      - prepare-context
+
+  non-dev:
+    primary: role-non-dev
+    additional:
+      - prepare-context
+
+# ---------------------------------------------------------------------------
+# strictness_levels: 经验维度行为参数
+# ---------------------------------------------------------------------------
+strictness_levels:
+  low:
+    ai_question_density: low       # AI 假定经验丰富，少问问题
+    auto_advance: true             # 自动推进 Pipeline 阶段
+    require_explicit_approval: false
+
+  medium:
+    ai_question_density: medium
+    auto_advance: false
+    require_explicit_approval: false
+
+  high:
+    ai_question_density: high      # AI 多问 / 多确认
+    auto_advance: false
+    require_explicit_approval: true # 关键节点强制人工 approve

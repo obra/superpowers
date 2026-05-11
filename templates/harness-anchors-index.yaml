@@ -1,0 +1,12 @@
+# .harness/anchors/index.yaml
+#
+# 自动生成的 freshness anchor 索引。**不要手动编辑**。
+#
+# 来源：CI 在 capability/convention 文件变更时聚合所有 `anchors:` frontmatter 字段
+# 重新生成本文件（见 spec §8.1、§8.2）。
+#
+# 手动编辑此文件不会被尊重 —— 下次 CI 跑 freshness-anchor-check 时会被覆盖。
+
+anchors: []
+generated_at: null
+generated_by: null

@@ -1,0 +1,55 @@
+# CODEOWNERS · {PROJECT_NAME}
+#
+# 此文件由 GitHub 在 PR 时自动 enforce 守门人 approve。
+# 配合 Branch Protection（Required Reviewers）阻止未授权 merge。
+#
+# 路径靠后的规则覆盖靠前的；最具体的匹配生效。
+#
+# 占位符说明：
+#   @TODO-* 为 placeholder，必须替换为真实 GitHub team / 用户后才能启用。
+#   未替换的 @TODO-* 会被 GitHub 当作不存在的 user，等同未配置守门人 → CI 失败。
+
+# ---------------------------------------------------------------------------
+# Default owner（兜底）
+# ---------------------------------------------------------------------------
+*                                   @TODO-tech-lead
+
+# ---------------------------------------------------------------------------
+# Harness 配置（基础设施变更）
+# ---------------------------------------------------------------------------
+/AGENTS.md                          @TODO-harness-working-group
+/CLAUDE.md                          @TODO-harness-working-group
+/.harness/                          @TODO-harness-working-group
+/.github/CODEOWNERS                 @TODO-harness-working-group @TODO-tech-lead
+
+# ---------------------------------------------------------------------------
+# L1 持久基线
+# ---------------------------------------------------------------------------
+/docs/reference/capabilities/       @TODO-capability-owners
+/docs/reference/architecture.md     @TODO-architects
+/docs/reference/conventions.md      @TODO-tech-lead
+
+# ---------------------------------------------------------------------------
+# L1 设计系统
+# ---------------------------------------------------------------------------
+/docs/design/system/                @TODO-design-leads
+
+# ---------------------------------------------------------------------------
+# L2 / L3 变更目录（变更内 owner 在 spec.md frontmatter 列出，此处仅设兜底）
+# ---------------------------------------------------------------------------
+/docs/plan/                         @TODO-tech-lead
+/docs/design/changes/               @TODO-design-leads
+
+# ---------------------------------------------------------------------------
+# 代码区域（按维度三：前 / 后 / SDK）
+# ---------------------------------------------------------------------------
+# 示例（按项目实际目录结构调整）：
+# /packages/frontend/                @TODO-frontend-team
+# /packages/backend/                 @TODO-backend-team
+# /packages/sdk/                     @TODO-sdk-team
+
+# ---------------------------------------------------------------------------
+# CI / 构建
+# ---------------------------------------------------------------------------
+/.github/workflows/                 @TODO-devops
+/package.json                       @TODO-tech-lead

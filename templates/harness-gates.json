@@ -1,0 +1,49 @@
+{
+  "$schema": "https://vattention.dev/schemas/harness-gates.schema.json",
+  "version": "1.0.0",
+  "description": "Quality Gate definitions for Harness Engineering. See spec §5.3.",
+  "universal": {
+    "ci_build": {
+      "description": "Compilation / type check passes.",
+      "implementation": "tsc --noEmit (or language-equivalent: cargo check, swift build, go build)",
+      "blocks_merge": true,
+      "enforced_by": "branch_protection"
+    },
+    "ci_test": {
+      "description": "Test suite passes.",
+      "implementation": "yarn test | bun test | cargo test | swift test",
+      "blocks_merge": true,
+      "enforced_by": "branch_protection"
+    },
+    "ai_code_review": {
+      "description": "Claude Code GitHub Action posts review comment on PR.",
+      "implementation": "anthropic/claude-code github action",
+      "blocks_merge": false,
+      "advisory_to": "codeowner"
+    },
+    "codeowner_approve": {
+      "description": "CODEOWNERS-resolved owners approve the PR.",
+      "implementation": ".github/CODEOWNERS + Required Reviewers",
+      "blocks_merge": true,
+      "enforced_by": "branch_protection"
+    }
+  },
+  "normal_and_large": {
+    "spec_ratification": {
+      "description": "docs/plan/<change>/spec.md status is Ratified — PM/Designer/Engineer owners all approved.",
+      "implementation": "spec.md frontmatter status field; checked by AI before implement stage",
+      "blocks_advance": true,
+      "applies_to_stages": ["implement", "review", "test", "verify"]
+    },
+    "test_plan_present": {
+      "description": "PR description contains a 'Test plan' section (PR rule 2).",
+      "implementation": "AI checks PR body before submitting for review",
+      "blocks_merge": true
+    },
+    "ac_coverage": {
+      "description": "Every AC in spec.md is covered by at least one task in tasks.md.",
+      "implementation": "AI cross-references spec.md AC list with tasks.md content before PR creation",
+      "blocks_merge": true
+    }
+  }
+}
