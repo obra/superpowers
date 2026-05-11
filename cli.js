@@ -106,6 +106,8 @@ function init(projectLevel = false, harnessMode = false) {
       'docs/design',
       'docs/design/system',
       'docs/design/changes',
+      'docs/superpowers/specs',
+      'docs/superpowers/plans',
     );
   }
 
@@ -245,7 +247,9 @@ function init(projectLevel = false, harnessMode = false) {
     // .gitkeep for empty Harness sub-directories
     ['docs/reference/capabilities/.gitkeep',
      'docs/design/system/.gitkeep',
-     'docs/design/changes/.gitkeep'].forEach(p => {
+     'docs/design/changes/.gitkeep',
+     'docs/superpowers/specs/.gitkeep',
+     'docs/superpowers/plans/.gitkeep'].forEach(p => {
       const full = path.join(cwd, p);
       if (!fs.existsSync(full)) {
         fs.writeFileSync(full, '');
@@ -505,7 +509,8 @@ function harnessLint() {
   const cwd = process.cwd();
   let failed = false;
 
-  // 10 required files (per spec §2.2; docs/plan/ dropped in v1.3.1)
+  // 12 required files (per spec §2.2; docs/plan/ dropped in v1.3.1;
+  // docs/superpowers/{specs,plans} .gitkeep added in v1.3.2)
   const requiredFiles = [
     'AGENTS.md',
     '.harness/pipeline.md',
@@ -517,6 +522,8 @@ function harnessLint() {
     'docs/reference/architecture.md',
     'docs/reference/conventions.md',
     'docs/design/README.md',
+    'docs/superpowers/specs/.gitkeep',
+    'docs/superpowers/plans/.gitkeep',
   ];
 
   requiredFiles.forEach(f => {
