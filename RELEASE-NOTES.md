@@ -1,5 +1,25 @@
 # Superpowers Release Notes
 
+## v1.3.0 (2026-05-11) — `@vattention/facio-superpowers` CLI
+
+### Added
+
+- `--harness` flag for `init`: scaffold Harness Engineering project structure (AGENTS.md hierarchy, `.harness/` configs, three-tier `docs/{reference,design,plan}/` layout, CLAUDE.md → AGENTS.md symlink, CODEOWNERS template).
+- `harness-lint` subcommand: verifies the 11 required Harness files exist, AGENTS.md contains `@import` directives, and CLAUDE.md is a symlink to AGENTS.md. Exits non-zero on any failure.
+- 14 new templates in `templates/`: `AGENTS-{TEAM,PROJECT}.md`, `role-bindings{,-project}.yaml`, `harness-{pipeline.md,gates.json,anchors-index.yaml,readme.md}`, `docs-{reference-{readme,architecture-stub,conventions-stub},design-readme,plan-readme}.md`, `codeowners.template`.
+- Local-source template preference: when `cli.js` runs from a clone, templates resolve from `<repo>/templates/` instead of the remote cache. Enables local testing before publish.
+
+### Notes
+
+- `{SUPERPOWERS}` and `{BLUEPRINT}` placeholders are intentionally left unsubstituted in scaffolded files; AI resolves them at `@import`-parse time via `FACIO_SUPERPOWERS_PATH` / `FACIO_BLUEPRINT_PATH` (spec §3.2).
+- Source spec: `facio-blueprint/docs/superpowers/specs/2026-05-08-blueprint-harness-redesign-design.md`.
+
+### Migration
+
+- Existing projects continue working unchanged. To opt in to Harness, run `npx @vattention/facio-superpowers init --project --harness` in your repo. The flag does not modify the legacy `docs/adr/`, `docs/plans/`, etc. dirs that `init --project` already creates.
+
+---
+
 ## v5.1.0 (2026-04-30)
 
 ### Removals
