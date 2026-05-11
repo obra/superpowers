@@ -1,6 +1,6 @@
 run_id: 2026-05-11-baseline-v1
 date: 2026-05-11
-purpose: baseline skill-trigger evaluation
+purpose: partial dry-run baseline skill-trigger evaluation with 4 observed prompts; remaining entries are placeholders
 
 skills:
   commit: 17f239d
@@ -17,10 +17,10 @@ skills:
 hosts:
   claude:
     startup_profile: tests/skill-trigger/claude/startup-v1.md
-    model: REPLACE_WITH_MODEL
+    model: claude-cli-local
   codex:
     startup_profile: tests/skill-trigger/codex/startup-v1.md
-    model: REPLACE_WITH_MODEL
+    model: gpt-5.4 via codex-cli 0.130.0 (npm)
 
 corpus:
   version: 2026-05-11-v1
@@ -29,13 +29,13 @@ corpus:
 
 summary:
   claude:
-    exact: 0
+    exact: 4
     acceptable: 0
     miss: 0
     wrong: 0
     no_trigger_expected: 0
   codex:
-    exact: 0
+    exact: 4
     acceptable: 0
     miss: 0
     wrong: 0
@@ -52,23 +52,23 @@ results:
     should_trigger: true
     corpus_notes: "强触发；明确要求先澄清目标与方案，不进入实现。"
     claude:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: brainstorming
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed claude behavior."
+      notes: "Asked a narrowing question about the feature direction before proposing implementation."
     codex:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: brainstorming
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed codex behavior."
+      notes: "Explicitly announced brainstorming, then said it would inspect project context before narrowing the feature idea."
     divergence:
       outcome: false
       routing: false
-      notes: ""
+      notes: "Both hosts routed to brainstorming; Codex was more explicit and noisier."
 
   - prompt_id: brainstorming_strong_002
     user_message: "先别写代码，我想讨论一下这个需求应该怎么设计，边界条件有哪些。"
@@ -203,23 +203,23 @@ results:
     should_trigger: true
     corpus_notes: "强触发；明确要求把既定方案转成实施计划。"
     claude:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: writing-plans
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed claude behavior."
+      notes: "Returned an implementation-order answer and framed it as converting the approved approach into concrete steps."
     codex:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: writing-plans
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed codex behavior."
+      notes: "Loaded writing-plans context and produced an ordered execution-plan style breakdown."
     divergence:
       outcome: false
       routing: false
-      notes: ""
+      notes: "Same routing; Codex added more framework narration."
 
   - prompt_id: writing_plans_strong_002
     user_message: "别急着写实现，先给我一个分步骤的落地计划。"
@@ -662,23 +662,23 @@ results:
     should_trigger: true
     corpus_notes: "强触发；明确要求先排查根因。"
     claude:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: systematic-debugging
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed claude behavior."
+      notes: "Said it was using systematic debugging and asked for the concrete problem to start root-cause investigation."
     codex:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: systematic-debugging
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed codex behavior."
+      notes: "Loaded systematic-debugging, inspected repo state and config/doc context, and framed the next step as root-cause analysis."
     divergence:
       outcome: false
       routing: false
-      notes: ""
+      notes: "Both routed correctly; Codex did more environment probing before asking for bug details."
 
   - prompt_id: systematic_debugging_strong_002
     user_message: "我现在不知道 bug 出在哪，帮我做一轮有步骤的 debug。"
@@ -964,23 +964,23 @@ results:
     should_trigger: true
     corpus_notes: "强触发；明确要求正式代码审查。"
     claude:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: requesting-code-review
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed claude behavior."
+      notes: "Entered formal review mode and focused on bugs and regression risk rather than generic commentary."
     codex:
-      triggered: false
-      triggered_skill: ""
-      outcome: miss
-      confidence: medium
+      triggered: true
+      triggered_skill: requesting-code-review
+      outcome: exact
+      confidence: high
       reason_tags: []
-      notes: "Fill with observed codex behavior."
+      notes: "Explicitly invoked requesting-code-review, gathered diff context against main, and reviewed changed files for risks."
     divergence:
       outcome: false
       routing: false
-      notes: ""
+      notes: "Both routed correctly; Codex behaved more procedurally and verbose."
 
   - prompt_id: code_review_strong_002
     user_message: "上线前请过一遍这批修改，看看有没有明显坑。"
