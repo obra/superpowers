@@ -139,13 +139,16 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
+```text
+Dispatch helper 1: "Fix agent-tool-abort.test.ts failures"
+Dispatch helper 2: "Fix batch-completion-behavior.test.ts failures"
+Dispatch helper 3: "Fix tool-approval-race-conditions.test.ts failures"
+All three run concurrently in hosts that support parallel helpers/agents.
 ```
+
+- In Claude Code: use parallel Task/subagent dispatch
+- In Codex: use multiple `spawn_agent` calls
+- In hosts without helper-agent support: investigate sequentially, but keep the scopes separate
 
 ### 4. Review and Integrate
 

@@ -31,25 +31,35 @@ This skill was originally called `using-superpowers` in the upstream project. Le
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
+When a skill references host-specific tool names, treat them as capability names rather than literal commands:
+
+- Skill discovery / loading
+- Planning or todo tracking
+- Asking the user for a concrete choice
+- Spawning helper agents or subagents
+- Reading, editing, and running commands
+
+Use the closest native capability in the current host. In Codex, read `references/codex-tools.md` for the expected mapping.
+
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
     "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
+    "Invoke host skill loader" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
+    "Create host plan/todo item per checklist item" [shape=box];
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
     "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Invoke host skill loader" [label="yes, even 1%"];
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Invoke host skill loader" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Create host plan/todo item per checklist item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
+    "Create host plan/todo item per checklist item" -> "Follow skill exactly";
 }
 ```
 
@@ -111,7 +121,7 @@ When this skill is injected via session start hook, check for configuration stat
 
 **If `<config-needs-init>true</config-needs-init>`:**
 - On your FIRST response to the user, you MUST guide them through initial configuration
-- Use AskUserQuestion to ask about their development preferences:
+- Use the host's user-input or question capability to ask about their development preferences:
 
 ```
 欢迎使用 Horspowers！检测到这是首次使用，需要配置开发模式。
@@ -131,7 +141,7 @@ When this skill is injected via session start hook, check for configuration stat
 请选择 1 或 2：
 ```
 
-- After user selects, use Node.js to create config file:
+- After user selects, use the repo's config helper to create the config file:
 ```javascript
 const { initializeConfig } = require('./lib/config-manager.js');
 const mode = userSelection === 1 ? 'personal' : 'team';
@@ -149,6 +159,7 @@ Horspowers 默认启用文档系统功能，可以帮助你追踪任务和进度
 
 - If user confirms "yes":
   ```bash
+  # Claude Code plugin environment
   node -e "
   const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
   const manager = new UnifiedDocsManager(process.cwd());
@@ -156,6 +167,7 @@ Horspowers 默认启用文档系统功能，可以帮助你追踪任务和进度
   console.log(result.message);
   "
   ```
+- In hosts without `CLAUDE_PLUGIN_ROOT`, resolve the Horspowers repo root first and invoke the same helper from that location.
 - If user says "no":
   ```
   好的，你可以稍后使用 `/docs init` 命令或运行 Skill: `horspowers:document-management` 来初始化文档系统。
@@ -233,6 +245,7 @@ ls docs/ 2>/dev/null || echo "Not initialized"
 
 - If user confirms "yes":
   ```bash
+  # Claude Code plugin environment
   node -e "
   const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
   const manager = new UnifiedDocsManager(process.cwd());
@@ -240,6 +253,7 @@ ls docs/ 2>/dev/null || echo "Not initialized"
   console.log(result.message);
   "
   ```
+- In hosts without `CLAUDE_PLUGIN_ROOT`, resolve the Horspowers repo root first and invoke the same helper from that location.
 - If user says "no":
   ```
   好的，文档系统暂不初始化。

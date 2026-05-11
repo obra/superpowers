@@ -176,13 +176,19 @@ Confirm:
 
 IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 
+Resolve `docs-core.js` from the Horspowers installation, not from the user's project:
+
+- In Claude Code plugin environments, use `${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js`
+- In Codex or other hosts, resolve the Horspowers installation root first, then import `lib/docs-core.js` from there
+
 **IF test fails unexpectedly (not expected RED phase failure):**
 - This indicates a potential bug in existing code
 - Create bug tracking document:
   ```bash
   # 创建 bug 文档并捕获路径
+  # 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
   BUG_DOC=$(node -e "
-  const DocsCore = require('./lib/docs-core.js');
+  const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
   const manager = new DocsCore(process.cwd());
   const result = manager.createActiveDocument('bug', 'Bug: [test name]', \`
 ## 问题描述
@@ -269,8 +275,9 @@ IF `$BUG_DOC` is set (from RED phase):
 
 **Update bug document with fix details:**
 ```bash
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 manager.updateActiveDocument(process.env.BUG_DOC, {
   status: '已修复',
@@ -296,8 +303,9 @@ EOF
 IF `$TASK_DOC` is set (from writing-plans):
 - Also update task document with progress:
   ```bash
+  # 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
   node -e "
-  const DocsCore = require('./lib/docs-core.js');
+  const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
   const manager = new DocsCore(process.cwd());
   manager.updateActiveDocument(process.env.TASK_DOC, {
     progress: '已修复 bug: [bug title]'

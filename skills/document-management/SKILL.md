@@ -9,7 +9,11 @@ description: Use when user needs to manage, search, or organize project document
 
 Manage the unified documentation system for horspowers, including initialization, search, organization, and migration capabilities.
 
-**IMPORTANT:** All documentation commands use `${CLAUDE_PLUGIN_ROOT}` environment variable to locate the `docs-core.js` module within the plugin installation directory. **DO NOT** check for `lib/docs-core.js` in the user's project directory.
+**IMPORTANT:** Documentation commands must load Horspowers' shared `docs-core.js` from the Horspowers installation, not from the user's project directory.
+
+- In Claude Code plugin environments, `${CLAUDE_PLUGIN_ROOT}` points to the installation root
+- In Codex or other hosts, resolve the Horspowers repo/skill root first, then use that root to find `lib/docs-core.js`
+- **DO NOT** assume the user's project contains `lib/docs-core.js`
 
 **Announce at start:** "我正在使用文档管理技能..." (I'm using document-management...)
 
@@ -57,6 +61,7 @@ docs/ 目录不存在，无法执行文档操作。
 
 - If user says "yes":
   ```javascript
+  // Resolve Horspowers config helper from the Horspowers installation root
   const { readConfig, updateConfig } = require('./lib/config-manager.js');
   const config = readConfig(process.cwd());
   if (!config.documentation) config.documentation = {};
@@ -83,7 +88,7 @@ ls docs/ 2>/dev/null || echo "Not initialized"
 
 **IF not initialized:**
 ```bash
-# Create directory structure using horspowers plugin
+# Create directory structure using Horspowers shared helper
 node -e "
 const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const manager = new UnifiedDocsManager(process.cwd());
@@ -91,6 +96,8 @@ const result = manager.init();
 console.log(result.message);
 "
 ```
+
+If `${CLAUDE_PLUGIN_ROOT}` is unavailable, first resolve the Horspowers installation root in the current host and replace the import path with `<horspowers-root>/lib/docs-core.js`.
 
 Expected output:
 ```

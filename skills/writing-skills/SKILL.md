@@ -11,7 +11,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills` for Codex)** 
 
-You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
+You write test cases (pressure scenarios with helper agents / subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
@@ -31,7 +31,7 @@ A **skill** is a reference guide for proven techniques, patterns, or tools. Skil
 
 | TDD Concept | Skill Creation |
 |-------------|----------------|
-| **Test case** | Pressure scenario with subagent |
+| **Test case** | Pressure scenario with helper agent / subagent |
 | **Production code** | Skill document (SKILL.md) |
 | **Test fails (RED)** | Agent violates rule without skill (baseline) |
 | **Test passes (GREEN)** | Agent complies with skill present |
@@ -257,6 +257,18 @@ You: Searching...
 - Don't repeat what's in cross-referenced skills
 - Don't explain what's obvious from command
 - Don't include multiple examples of same pattern
+
+## Cross-Host Compatibility
+
+Skills in Horspowers should work across Claude Code, Codex, and similar hosts.
+
+When authoring or editing a skill:
+
+- Prefer capability names in the main workflow instead of hard-coding a single host's tool names
+- If a host-specific tool name appears, provide the equivalent host capability or a fallback
+- Do not assume `${CLAUDE_PLUGIN_ROOT}` exists unless you also explain the non-Claude fallback
+- Do not assume `./lib/docs-core.js` exists in the user's project; docs helpers come from the Horspowers installation
+- Keep host-specific mappings in references or short notes, not as the core workflow
 
 **Verification:**
 ```bash
@@ -595,7 +607,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 ## Skill Creation Checklist (TDD Adapted)
 
-**IMPORTANT: Use TodoWrite to create todos for EACH checklist item below.**
+**IMPORTANT: Use the current host's native planning/todo capability to create a tracked item for EACH checklist item below.**
 
 **RED Phase - Write Failing Test:**
 - [ ] Create pressure scenarios (3+ combined pressures for discipline skills)

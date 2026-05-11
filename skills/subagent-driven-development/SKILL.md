@@ -5,9 +5,9 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching a fresh helper agent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh helper agent per task + two-stage review (spec then quality) = high quality, fast iteration
 
 **Continuous execution:** After reading the plan and extracting task context, continue straight into the next task without "Should I continue?" style check-ins. Only stop for `BLOCKED` status, genuine ambiguity that prevents safe progress, or when all tasks are complete.
 
@@ -99,8 +99,8 @@ IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
    fi
    ```
 
-3. **Pass document paths to subagents**:
-   Each subagent prompt should include relevant document paths for context
+3. **Pass document paths to helper agents**:
+   Each helper-agent prompt should include relevant document paths for context
 
 **Note:** 如果文档不存在，跳过加载并使用可用上下文继续执行任务。
 
@@ -113,7 +113,7 @@ digraph process {
     rankdir=TB;
 
     "Load document context ($TASK_DOC, design, plan)" [shape=box style=filled fillcolor=lightyellow];
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Read plan, extract all tasks with full text, note context, create host plan/todo list" [shape=box];
 
     subgraph cluster_per_task {
         label="Per Task";
@@ -128,15 +128,15 @@ digraph process {
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Update task document progress" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
+        "Mark task complete in host plan/todo tracker" [shape=box];
     }
 
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use horspowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Load document context ($TASK_DOC, design, plan)" -> "Read plan, extract all tasks with full text, note context, create TodoWrite";
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Load document context ($TASK_DOC, design, plan)" -> "Read plan, extract all tasks with full text, note context, create host plan/todo list";
+    "Read plan, extract all tasks with full text, note context, create host plan/todo list" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -150,8 +150,8 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Update task document progress" [label="yes"];
-    "Update task document progress" -> "Mark task complete in TodoWrite";
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
+    "Update task document progress" -> "Mark task complete in host plan/todo tracker";
+    "Mark task complete in host plan/todo tracker" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use horspowers:finishing-a-development-branch";
@@ -171,7 +171,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
+[Create the host's plan/todo list with all tasks]
 
 Task 1: Hook installation script
 
@@ -243,10 +243,10 @@ Done!
 ## Advantages
 
 **vs. Manual execution:**
-- Subagents follow TDD naturally
+- Helper agents follow TDD naturally
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
-- Subagent can ask questions (before AND during work)
+- Helper agent can ask questions (before AND during work)
 
 **vs. Executing Plans:**
 - Same session (no handoff)
@@ -293,6 +293,8 @@ Done!
 - Answer clearly and completely
 - Provide additional context if needed
 - Don't rush them into implementation
+
+If the current host does not support native subagents/helper agents, execute the same workflow locally in order: implementer pass, spec review pass, then code-quality review pass.
 
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
@@ -362,7 +364,7 @@ For each completed task:
 - **horspowers:requesting-code-review** - Code review template for reviewer subagents
 - **horspowers:finishing-a-development-branch** - Complete development after all tasks
 
-**Subagents should use:**
+**Helper agents should use:**
 - **horspowers:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**

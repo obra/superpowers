@@ -41,12 +41,18 @@ Stop. Don't proceed to Step 2.
 
 IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 
+Resolve `docs-core.js` from the Horspowers installation, not from the user's project:
+
+- In Claude Code plugin environments, use `${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js`
+- In Codex or other hosts, resolve the Horspowers installation root first, then import `lib/docs-core.js` from there
+
 **Step 1: Complete task document**
 **IF `$TASK_DOC` is set (from writing-plans):**
 ```bash
 # Update task document to completed
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 manager.updateActiveDocument(process.env.TASK_DOC, {
   status: '已完成',
@@ -55,8 +61,9 @@ manager.updateActiveDocument(process.env.TASK_DOC, {
 "
 
 # Archive completed task
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const result = manager.archiveDocument(process.env.TASK_DOC);
 console.log('Task archived to:', result.archivedPath);
@@ -69,8 +76,9 @@ console.log('Task archived to:', result.archivedPath);
 First, verify bug status:
 ```bash
 # Check if bug is marked as fixed
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const fs = require('fs');
 const content = fs.readFileSync(process.env.BUG_DOC, 'utf8');
@@ -91,8 +99,9 @@ console.log('Bug fixed:', isFixed ? 'yes' : 'no');
 **IF user chooses 删除 Bug 文档:**
 ```bash
 # Delete the bug document
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const result = manager.deleteBugDocument(process.env.BUG_DOC, {
   verifyStatus: true,
@@ -105,8 +114,9 @@ console.log(result.message);
 **ELSE IF user chooses 归档 Bug 文档:**
 ```bash
 # Archive resolved bug
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const result = manager.archiveDocument(process.env.BUG_DOC);
 console.log('Bug archived to:', result.archivedPath);
@@ -119,8 +129,9 @@ Do nothing, bug document remains in active/
 **Step 3: Clear environment variables**
 ```bash
 # Clear active task tracking
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 manager.clearActiveTask();
 "
@@ -133,8 +144,9 @@ unset BUG_DOC
 **Step 4: Check for other active documents**
 ```bash
 # List all active documents
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const files = manager.getActiveFiles();
 if (files.length > 0) {
@@ -150,8 +162,9 @@ if (files.length > 0) {
 **Step 5: Verify core document count**
 ```bash
 # Check if core document count is within limits
+# 先将 HORSPOWERS_ROOT 解析为 Horspowers 安装根目录
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require(process.env.HORSPOWERS_ROOT + '/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const count = manager.countCoreDocs();
 console.log('Core documents:', count.total);
