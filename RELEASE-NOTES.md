@@ -1,5 +1,54 @@
 # Superpowers Release Notes
 
+## v1.3.3 (2026-05-12) — `@vattention/facio-superpowers` CLI
+
+### Fixed
+
+Real-world `init --harness` execution on a repo with pre-existing `AGENTS.md` (OpenSpec stub) and `CLAUDE.md` (project workflow rules) revealed two silent-corruption bugs in v1.3.2:
+
+1. **AGENTS.md silently kept as stub** — `harnessTemplates.forEach` skipped any pre-existing destination, so a 17-line `openspec init` stub blocked the proper Harness `AGENTS-PROJECT.md` template from installing. `harness-lint` still passed because `@import` was missing from the stub but no check warned about it.
+2. **CLAUDE.md destructively replaced** — when CLAUDE.md was a regular file (e.g. containing project rules or `/prepare-context` workflow reminders), the symlink-creation branch called `fs.unlinkSync(claudePath)` with no backup, no warning, and no merge — destroying user content.
+
+This release introduces a **safe-merge pass** that runs before the template install loop in `--harness` mode:
+
+- Non-Harness `AGENTS.md` (no `@import`) → backed up to `AGENTS.md.bak.<unix-timestamp>`, content captured.
+- Non-empty regular-file `CLAUDE.md` → backed up to `CLAUDE.md.bak.<unix-timestamp>`, content captured.
+- Empty `CLAUDE.md` or wrong-target symlink → silently removed (no content to preserve).
+- Harness-compliant `AGENTS.md` and correct `CLAUDE.md → AGENTS.md` symlink → left untouched.
+
+Captured content is then appended to the freshly-installed `AGENTS.md` under a clearly-labelled section:
+
+```markdown
+## 项目级既有约束（合并自 init 前的 AGENTS.md / CLAUDE.md）
+> 由 facio-superpowers init --harness 自动合并...
+> 原始备份：`AGENTS.md.bak.<ts>`, `CLAUDE.md.bak.<ts>`
+
+### 来自原 AGENTS.md
+<!-- OPENSPEC:START --> ... <!-- OPENSPEC:END -->
+
+### 来自原 CLAUDE.md
+[prior rules verbatim]
+```
+
+This preserves `OPENSPEC:START/END` markers verbatim (so `openspec update` keeps working) and lets Harness's `@import` baseline take effect first via closest-wins / later-overrides-earlier.
+
+### Added
+
+- `templates/AGENTS-PROJECT.md` §9 **Superpowers Mandatory Development Workflow** — bakes `/prepare-context` and `/verification-before-completion` reminders into the Harness AGENTS.md template directly, so future projects don't need to re-merge them from a separate `CLAUDE-WORKFLOW.md`.
+- `harness-lint` now flags two new stub conditions in `AGENTS.md`:
+  - Missing `@import` → "looks like a foreign-tool stub (e.g. openspec). Re-run init --harness."
+  - Missing `/prepare-context` and `/verification-before-completion` → "AGENTS.md predates the v1.3.3 template."
+- `tests/harness-merge/test.js` — 10 unit tests covering all merge / preserve / symlink branches (no external test framework; Node 14+ compatible).
+- `cli.js` now exports `harnessSafeMerge` and `buildPreservedSection` via `module.exports` and guards CLI dispatch with `require.main === module` so the module is safely require-able from tests.
+
+### Migration
+
+- Existing v1.3.0–v1.3.2 `--harness` repos: no action needed. The safe-merge is a no-op on already-Harness-compliant repos.
+- Repos that ran `--harness` over a pre-existing stub (and silently kept the wrong AGENTS.md): re-run `init --harness`. v1.3.3 will detect the stub, back it up, and install the proper template with the stub content preserved under §「项目级既有约束」.
+- If you previously manually merged `CLAUDE-WORKFLOW.md` content into AGENTS.md, the v1.3.3 template now includes equivalent reminders in §9; deduplicate at your discretion.
+
+---
+
 ## v1.3.2 (2026-05-12) — `@vattention/facio-superpowers` CLI
 
 ### Fixed
