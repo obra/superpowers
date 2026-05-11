@@ -1,5 +1,24 @@
 # Superpowers Release Notes
 
+## v1.3.1 (2026-05-12) — `@vattention/facio-superpowers` CLI
+
+### Fixed
+
+After the 2026-05-11 design review, the Harness scaffold layout is simplified and the OpenSpec-style delta artifact concept is dropped. This patch realigns the v1.3.0 scaffold with the updated `2026-05-08-blueprint-harness-redesign-design.md` §2.2 / §2.6.
+
+- `init --harness` no longer creates `docs/plan/` — L2 specs now live at `docs/superpowers/specs/<date-slug>.md`, L3 plans at `docs/superpowers/plans/<date-slug>.md`.
+- `templates/docs-plan-readme.md` removed (no longer scaffolded).
+- `harness-lint` required-file count reduced from 11 → 10 (drops `docs/plan/README.md` check).
+- Templates updated to drop `delta.md` references and the auto-merge flow: AI directly edits the L1 capability spec on merge; the PR diff is the audit trail (spec §2.6).
+- `codeowners.template` updated to map L2/L3 ownership under `/docs/superpowers/{specs,plans}/`.
+
+### Migration
+
+- Existing v1.3.0 `init --harness` projects: none yet (Plan A had not started), so no migration needed.
+- For anyone who already ran v1.3.0: delete `docs/plan/` and `templates/docs-plan-readme.md`, re-run lint to confirm. New L2/L3 work goes under `docs/superpowers/{specs,plans}/`.
+
+---
+
 ## v1.3.0 (2026-05-11) — `@vattention/facio-superpowers` CLI
 
 ### Added
