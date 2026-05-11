@@ -100,3 +100,15 @@ For every non-`exact` result, include a short note covering:
 - what layer probably needs adjustment next
 
 Keep notes factual and short so they can be aggregated later.
+
+## Which Layer To Change Next
+
+Use the scored outcomes to decide where to tune:
+
+- both hosts `miss` on the same prompt -> check shared `SKILL.md` descriptions first
+- both hosts trigger the same wrong skill -> check for broad or overlapping shared descriptions first
+- Claude alone misses, over-triggers, or picks the wrong adjacent skill -> check Claude startup guidance first
+- Codex alone misses, over-triggers, or picks the wrong adjacent skill -> check Codex startup guidance first
+- both hosts score `acceptable` but choose different fallback skills -> inspect boundary wording in both the shared descriptions and the host startup notes before changing either
+
+When in doubt, prefer changing the narrowest layer that explains the observed failure.

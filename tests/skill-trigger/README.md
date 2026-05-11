@@ -26,6 +26,7 @@ The first evaluation pass focuses on core workflow and routing skills whose boun
 
 ## Files
 
+- `corpus.yaml`: prompt corpus shared by both hosts
 - `rubric.md`: scoring rules and labeling guidance
 - `claude/startup-v1.md`: baseline Claude Code startup profile for trigger evaluation
 - `codex/startup-v1.md`: baseline Codex startup profile for trigger evaluation
@@ -35,14 +36,30 @@ The first evaluation pass focuses on core workflow and routing skills whose boun
 ## Evaluation Workflow
 
 1. Choose one startup profile per host.
-2. Run the same prompt corpus against Claude Code and Codex.
+2. Use the same `corpus.yaml` prompts against Claude Code and Codex.
 3. Record one result row per prompt in a copy of `runs/baseline-template.yaml`.
 4. Score each result with the rubric in `rubric.md`.
-5. Summarize exact, acceptable, miss, wrong, and host-divergence rates.
-6. Change only one layer before the next run:
+5. Summarize exact, acceptable, miss, wrong, `no-trigger-expected`, and host-divergence rates.
+6. Decide the next experiment layer from the scored results:
+   - both hosts miss -> inspect shared `SKILL.md` descriptions first
+   - only Claude misses or over-triggers -> inspect Claude startup guidance first
+   - only Codex misses or over-triggers -> inspect Codex startup guidance first
+   - both hosts route to the same wrong skill -> inspect overlapping or overly broad descriptions first
+7. Change only one layer before the next run:
    - shared `SKILL.md` descriptions
    - Claude-specific startup guidance
    - Codex-specific startup guidance
+
+## Iteration Order
+
+Use the same layering order for every A/B cycle:
+
+1. baseline: change nothing; only measure current behavior
+2. description tuning: adjust shared skill descriptions only
+3. Claude host tuning: revert to the chosen shared baseline, then adjust Claude startup guidance only
+4. Codex host tuning: revert to the chosen shared baseline, then adjust Codex startup guidance only
+
+Do not tune multiple layers in the same comparison run.
 
 ## Guardrails
 
@@ -53,4 +70,4 @@ The first evaluation pass focuses on core workflow and routing skills whose boun
 
 ## Notes
 
-This directory is intentionally documentation-first. It provides the scoring and run structure before adding automation scripts or a finalized corpus.
+This directory is documentation-first, but it now includes a maintained corpus and run template. Automation may evolve separately; the evaluation contract lives in these files.

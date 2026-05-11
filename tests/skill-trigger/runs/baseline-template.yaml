@@ -25,6 +25,7 @@ hosts:
 corpus:
   version: REPLACE_WITH_CORPUS_VERSION
   source: REPLACE_WITH_CORPUS_PATH
+  sample_count: REPLACE_WITH_CORPUS_SAMPLE_COUNT
 
 summary:
   claude:
@@ -49,6 +50,7 @@ results:
     expected_skill: brainstorming
     secondary_ok_skills: []
     should_trigger: true
+    corpus_notes: Example prompt note.
     claude:
       triggered: true
       triggered_skill: brainstorming
@@ -73,6 +75,7 @@ results:
     expected_skill: writing-plans
     secondary_ok_skills: []
     should_trigger: true
+    corpus_notes: Example prompt note.
     claude:
       triggered: false
       triggered_skill: ""
