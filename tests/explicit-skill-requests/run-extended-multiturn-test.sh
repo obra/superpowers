@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Extended multi-turn test with more conversation history
 # This tries to reproduce the failure by building more context
 

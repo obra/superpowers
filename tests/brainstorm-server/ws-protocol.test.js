@@ -16,7 +16,7 @@ const crypto = require('crypto');
 const path = require('path');
 
 // The module under test — will be the new zero-dep server file
-const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.js');
+const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 let ws;
 
 try {

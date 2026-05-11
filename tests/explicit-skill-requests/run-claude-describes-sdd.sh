@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test where Claude explicitly describes subagent-driven-development before user requests it
 # This mimics the original failure scenario
 
