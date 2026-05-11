@@ -1,5 +1,20 @@
 # Superpowers Release Notes
 
+## v1.3.2 (2026-05-12) — `@vattention/facio-superpowers` CLI
+
+### Fixed
+
+External review caught a scaffold gap: v1.3.1 redirected L2/L3 spec paths to `docs/superpowers/{specs,plans}/<date-slug>.md` in all templates, but `cli.js` never created those directories. The first call to `writing-plans` or the future `spec-author` skill would have failed because the parent directory did not exist.
+
+- `init --harness` now creates `docs/superpowers/specs/` and `docs/superpowers/plans/` with `.gitkeep` placeholders.
+- `harness-lint` required-file count extended from 10 → 12 to validate those `.gitkeep`s as a scaffold contract.
+
+### Known pre-existing inconsistency (not fixed in this patch)
+
+`cli.js` baseline `projectDirs` creates `docs/plans/` (no `superpowers/` prefix), while the upstream `writing-plans` skill saves to `docs/superpowers/plans/`. This split predates v1.3.x and is independent of the Harness work. Fixing it is a separate (potentially breaking) change for non-`--harness` users and is deferred.
+
+---
+
 ## v1.3.1 (2026-05-12) — `@vattention/facio-superpowers` CLI
 
 ### Fixed
