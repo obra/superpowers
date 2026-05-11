@@ -52,8 +52,8 @@
 2. **Test plan 必填**：PR description 必须含 "Test plan" 章节（Normal / Large 强制；Micro 可一行说明）
 3. **CODEOWNERS approve**：相关代码区域的守门人必须 approve，由 Branch Protection enforce
 4. **CI 全绿**：编译 + 测试 + AI Code Review 三项；AI Code Review 不阻 merge 但守门人参考
-5. **Spec ratification（仅 Normal / Large）**：`docs/plan/<change>/spec.md` 三 owner（PM / 设计 / 研发）全部 approve 后方可进实施
-6. **AC 覆盖检查（仅 Normal / Large）**：spec 中的 AC 必须在 `tasks.md` 中均有对应 task，AI 在 PR 前自动校验
+5. **Spec ratification（仅 Normal / Large）**：`docs/superpowers/specs/<date-slug>.md` 三 owner（PM / 设计 / 研发）全部 approve 后方可进实施
+6. **AC 覆盖检查（仅 Normal / Large）**：spec 中的 AC 必须在 `docs/superpowers/plans/<date-slug>.md` 中均有对应 task，AI 在 PR 前自动校验
 
 ---
 
@@ -84,10 +84,10 @@
 | 层 | 含义 | 持久度 | 产出方 |
 |----|------|--------|-------|
 | **L1** | `docs/reference/capabilities/*.md`、`architecture.md`、`conventions.md` —— 系统当前 MUST 做什么 | 永久 | 人主导 + AI 起草 |
-| **L2** | `docs/plan/<change>/spec.md`、`delta.md` —— 这次改什么、为什么 | 临时（归档） | AI 起草 + 人审 |
-| **L3** | `docs/plan/<change>/tasks.md` —— 怎么一步步做 | 临时（可丢） | AI 全产 |
+| **L2** | `docs/superpowers/specs/<date-slug>.md` —— 这次改什么、为什么 | 临时（归档） | AI 起草 + 人审 |
+| **L3** | `docs/superpowers/plans/<date-slug>.md` —— 怎么一步步做 | 临时（可丢） | AI 全产 |
 
-变更合入 main 后，AI 产 `delta.md` 并合并到对应 `reference/capabilities/`。详见 `{SUPERPOWERS}/docs/specs/2026-05-08-blueprint-harness-redesign-design.md` §2。
+**不使用 delta artifact**：变更合入 main 后，AI 直接编辑对应 `reference/capabilities/*.md`（在 PR 中体现 diff），无中间产物。理由：减少同步开销，diff 即是 audit trail。详见 `{SUPERPOWERS}/docs/specs/2026-05-08-blueprint-harness-redesign-design.md` §2.6。
 
 ---
 
@@ -120,7 +120,7 @@
 - **不要写厚知识**：能在代码 / spec 里直接读到的，AGENTS.md / 知识库只放指针 + 解读
   - ❌ "我们 video-editor 用 Bun 1.x"
   - ✅ "运行时见 `package.json#engines.bun`，原因见 [decision-2026-03 Node→Bun]"
-- **不要复制 spec 内容**：若信息已在 `docs/reference/` 或 `docs/plan/` 中，引用而非复述
+- **不要复制 spec 内容**：若信息已在 `docs/reference/` 或 `docs/superpowers/{specs,plans}/` 中，引用而非复述
 - **不要把临时讨论写进 AGENTS.md**：临时决策走 L2 spec，永久能力走 L1 capability
 
 ---
@@ -129,6 +129,5 @@
 
 - Spec 源：`{BLUEPRINT}/docs/superpowers/specs/2026-05-08-blueprint-harness-redesign-design.md`
 - AGENTS.md 标准：<https://agents.md>
-- OpenSpec delta 语义：<https://github.com/Fission-AI/OpenSpec>
 - 团队交付质量手册 v1（飞书）
 - AI Coding 协作方式（飞书）

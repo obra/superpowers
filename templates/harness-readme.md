@@ -19,7 +19,7 @@
 
 - **Team baseline**：`{SUPERPOWERS}/templates/role-bindings.yaml` —— 项目侧仅写差异
 - **PR 守门人**：`.github/CODEOWNERS` —— 由 GitHub 在 PR 时 enforce，与 `.harness/` 解耦
-- **三层 spec**：`docs/reference/` / `docs/design/` / `docs/plan/` —— Pipeline 通过 gates.json 中的 `spec_ratification` 与之联动
+- **三层 spec**：`docs/reference/`（L1） / `docs/design/`（L1 系统 + L2 资产） / `docs/superpowers/{specs,plans}/`（L2 + L3） —— Pipeline 通过 gates.json 中的 `spec_ratification` 与之联动
 
 ---
 

@@ -47,13 +47,13 @@ docs/design/
 - `interaction-notes.md`：交互细节、动画时序、边界态描述
 - 若有 demo 分支：`design/<feature>` git ref
 
-**命名约定**：与 `docs/plan/<change>/` 保持同名（如 `2026-05-08-feature-x/`）。
+**命名约定**：目录名与对应的 L2 spec `<date-slug>` 一致（如 spec 在 `docs/superpowers/specs/2026-05-08-feature-x.md`，则视觉资产在 `docs/design/changes/2026-05-08-feature-x/`）。
 
 ---
 
 ## 与 spec 的关系
 
-L2 spec（`docs/plan/<change>/spec.md`）的 §2 设计视角节会引用本目录的视觉产物：
+L2 spec（`docs/superpowers/specs/<date-slug>.md`）的 §2 设计视角节会引用本目录的视觉产物：
 
 ```markdown
 ## §2 设计视角

@@ -35,9 +35,10 @@
 /docs/design/system/                @TODO-design-leads
 
 # ---------------------------------------------------------------------------
-# L2 / L3 变更目录（变更内 owner 在 spec.md frontmatter 列出，此处仅设兜底）
+# L2 / L3 变更（变更内 owner 在 spec frontmatter 列出，此处仅设兜底）
 # ---------------------------------------------------------------------------
-/docs/plan/                         @TODO-tech-lead
+/docs/superpowers/specs/            @TODO-tech-lead
+/docs/superpowers/plans/            @TODO-tech-lead
 /docs/design/changes/               @TODO-design-leads
 
 # ---------------------------------------------------------------------------

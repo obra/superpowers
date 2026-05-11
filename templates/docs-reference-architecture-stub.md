@@ -13,8 +13,8 @@ decay_horizon: 180d
 > **维护**：本文件**演进式更新**；不为单次变更而频繁重写。
 
 <!--
-本文件描述项目的**当前**架构状态。单次架构变更应在 docs/plan/<change>/spec.md 中提出，
-合入后通过 delta.md 自动合并到本文件。
+本文件描述项目的**当前**架构状态。单次架构变更应在 docs/superpowers/specs/<date-slug>.md
+中提出（含 §5 L1 Impact 节）；合入 main 时 AI 直接编辑本文件，PR diff 即是 audit trail。
 -->
 
 ## 1. 概览

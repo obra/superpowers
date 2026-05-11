@@ -44,8 +44,9 @@
 |----|------|-----------|
 | L1 持久能力 | `docs/reference/` | `docs/reference/README.md` |
 | L1 设计系统 | `docs/design/system/` | `docs/design/README.md` |
-| L2 单次变更 | `docs/plan/<change>/` `docs/design/changes/<change>/` | `docs/plan/README.md` |
-| L3 实施计划 | `docs/plan/<change>/tasks.md` | 同上 |
+| L2 单次变更 spec | `docs/superpowers/specs/<date-slug>.md` | — |
+| L2 单次变更视觉产物 | `docs/design/changes/<date-slug>/` | `docs/design/README.md` |
+| L3 实施计划 | `docs/superpowers/plans/<date-slug>.md` | — |
 
 ---
 

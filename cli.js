@@ -106,7 +106,6 @@ function init(projectLevel = false, harnessMode = false) {
       'docs/design',
       'docs/design/system',
       'docs/design/changes',
-      'docs/plan',
     );
   }
 
@@ -220,7 +219,6 @@ function init(projectLevel = false, harnessMode = false) {
       { src: 'docs-reference-architecture-stub.md', dest: 'docs/reference/architecture.md',       substitute: true },
       { src: 'docs-reference-conventions-stub.md',  dest: 'docs/reference/conventions.md',        substitute: true },
       { src: 'docs-design-readme.md',               dest: 'docs/design/README.md' },
-      { src: 'docs-plan-readme.md',                 dest: 'docs/plan/README.md' },
       { src: 'codeowners.template',                 dest: '.github/CODEOWNERS.template',          substitute: true },
     ];
 
@@ -507,7 +505,7 @@ function harnessLint() {
   const cwd = process.cwd();
   let failed = false;
 
-  // 11 required files (per spec §2.2)
+  // 10 required files (per spec §2.2; docs/plan/ dropped in v1.3.1)
   const requiredFiles = [
     'AGENTS.md',
     '.harness/pipeline.md',
@@ -519,7 +517,6 @@ function harnessLint() {
     'docs/reference/architecture.md',
     'docs/reference/conventions.md',
     'docs/design/README.md',
-    'docs/plan/README.md',
   ];
 
   requiredFiles.forEach(f => {

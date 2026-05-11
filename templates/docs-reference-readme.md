@@ -80,15 +80,17 @@ CI 在 PR 触及 anchor `path` 且 `last_verified` 距今 > 30 天时标记 drif
 ## 演进规则
 
 - **新增 capability**：单独 PR，走 Normal / Large pipeline
-- **修改既有 capability**：变更经 `docs/plan/<change>/delta.md` 表达，合入后 AI 自动合并到对应 `capabilities/*.md`
-- **删除 capability**：显式删除文件 + 在 `delta.md` 中 REMOVED 节标注，PR 中说明替代路径
+- **修改既有 capability**：AI 直接编辑对应 `capabilities/*.md` 文件，PR diff 即是 audit trail。L2 spec（`docs/superpowers/specs/<date-slug>.md`）的 §5 L1 Impact 节描述受影响的 capability 与变更理由
+- **删除 capability**：显式删除文件，L2 spec 的 §5 L1 Impact 节说明替代路径
+
+**不使用 delta artifact**：v1.3.0 设计阶段考虑过 OpenSpec 风格的 `delta.md` 中间产物，最终弃用 —— 减少同步开销，PR diff 自然承担 audit 责任。详见 spec §2.6。
 
 ---
 
 ## 进一步阅读
 
 - Spec §2.3（L1 capability spec schema）
-- Spec §2.6（L2 delta schema + 冲突处理）
+- Spec §2.6（为何弃用 delta artifact）
 - Spec §8（Freshness anchors）
 
 完整 spec：`{BLUEPRINT}/docs/superpowers/specs/2026-05-08-blueprint-harness-redesign-design.md`
