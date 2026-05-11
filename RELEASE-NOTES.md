@@ -1,5 +1,59 @@
 # Superpowers Release Notes
 
+## v1.3.2 (2026-05-12) — `@vattention/facio-superpowers` CLI
+
+### Fixed
+
+External review caught a scaffold gap: v1.3.1 redirected L2/L3 spec paths to `docs/superpowers/{specs,plans}/<date-slug>.md` in all templates, but `cli.js` never created those directories. The first call to `writing-plans` or the future `spec-author` skill would have failed because the parent directory did not exist.
+
+- `init --harness` now creates `docs/superpowers/specs/` and `docs/superpowers/plans/` with `.gitkeep` placeholders.
+- `harness-lint` required-file count extended from 10 → 12 to validate those `.gitkeep`s as a scaffold contract.
+
+### Known pre-existing inconsistency (not fixed in this patch)
+
+`cli.js` baseline `projectDirs` creates `docs/plans/` (no `superpowers/` prefix), while the upstream `writing-plans` skill saves to `docs/superpowers/plans/`. This split predates v1.3.x and is independent of the Harness work. Fixing it is a separate (potentially breaking) change for non-`--harness` users and is deferred.
+
+---
+
+## v1.3.1 (2026-05-12) — `@vattention/facio-superpowers` CLI
+
+### Fixed
+
+After the 2026-05-11 design review, the Harness scaffold layout is simplified and the OpenSpec-style delta artifact concept is dropped. This patch realigns the v1.3.0 scaffold with the updated `2026-05-08-blueprint-harness-redesign-design.md` §2.2 / §2.6.
+
+- `init --harness` no longer creates `docs/plan/` — L2 specs now live at `docs/superpowers/specs/<date-slug>.md`, L3 plans at `docs/superpowers/plans/<date-slug>.md`.
+- `templates/docs-plan-readme.md` removed (no longer scaffolded).
+- `harness-lint` required-file count reduced from 11 → 10 (drops `docs/plan/README.md` check).
+- Templates updated to drop `delta.md` references and the auto-merge flow: AI directly edits the L1 capability spec on merge; the PR diff is the audit trail (spec §2.6).
+- `codeowners.template` updated to map L2/L3 ownership under `/docs/superpowers/{specs,plans}/`.
+
+### Migration
+
+- Existing v1.3.0 `init --harness` projects: none yet (Plan A had not started), so no migration needed.
+- For anyone who already ran v1.3.0: delete `docs/plan/` and `templates/docs-plan-readme.md`, re-run lint to confirm. New L2/L3 work goes under `docs/superpowers/{specs,plans}/`.
+
+---
+
+## v1.3.0 (2026-05-11) — `@vattention/facio-superpowers` CLI
+
+### Added
+
+- `--harness` flag for `init`: scaffold Harness Engineering project structure (AGENTS.md hierarchy, `.harness/` configs, three-tier `docs/{reference,design,plan}/` layout, CLAUDE.md → AGENTS.md symlink, CODEOWNERS template).
+- `harness-lint` subcommand: verifies the 11 required Harness files exist, AGENTS.md contains `@import` directives, and CLAUDE.md is a symlink to AGENTS.md. Exits non-zero on any failure.
+- 14 new templates in `templates/`: `AGENTS-{TEAM,PROJECT}.md`, `role-bindings{,-project}.yaml`, `harness-{pipeline.md,gates.json,anchors-index.yaml,readme.md}`, `docs-{reference-{readme,architecture-stub,conventions-stub},design-readme,plan-readme}.md`, `codeowners.template`.
+- Local-source template preference: when `cli.js` runs from a clone, templates resolve from `<repo>/templates/` instead of the remote cache. Enables local testing before publish.
+
+### Notes
+
+- `{SUPERPOWERS}` and `{BLUEPRINT}` placeholders are intentionally left unsubstituted in scaffolded files; AI resolves them at `@import`-parse time via `FACIO_SUPERPOWERS_PATH` / `FACIO_BLUEPRINT_PATH` (spec §3.2).
+- Source spec: `facio-blueprint/docs/superpowers/specs/2026-05-08-blueprint-harness-redesign-design.md`.
+
+### Migration
+
+- Existing projects continue working unchanged. To opt in to Harness, run `npx @vattention/facio-superpowers init --project --harness` in your repo. The flag does not modify the legacy `docs/adr/`, `docs/plans/`, etc. dirs that `init --project` already creates.
+
+---
+
 ## v5.1.0 (2026-04-30)
 
 ### Removals

@@ -1,0 +1,38 @@
+# role-bindings.yaml · Project Override
+#
+# 此文件位于 <项目>/.harness/role-bindings.yaml。
+# 仅写**与 baseline 不同**的内容；与 {SUPERPOWERS}/templates/role-bindings.yaml 合并使用。
+#
+# 合并规则：项目侧的字段覆盖 baseline 的同名字段（closest-wins）。
+# users: 列表直接替换（不合并）；function_skills / strictness_levels 按 key 覆盖。
+#
+# Schema 见 spec §4.2:
+#   {BLUEPRINT}/docs/superpowers/specs/2026-05-08-blueprint-harness-redesign-design.md
+
+# ---------------------------------------------------------------------------
+# users: 项目成员列表（必填）
+# ---------------------------------------------------------------------------
+# 示例：
+# users:
+#   - id: ou_xxx
+#     name: 张三
+#     function: frontend-dev
+#     strictness: medium
+users: []
+
+# ---------------------------------------------------------------------------
+# function_skills override（可选；省略则用 baseline）
+# ---------------------------------------------------------------------------
+# 示例：本项目 frontend-dev 额外加载一个项目独有 skill
+# function_skills:
+#   frontend-dev:
+#     primary: role-frontend-dev
+#     additional:
+#       - verification-before-completion
+#       - prepare-context
+#       - project-specific-skill
+
+# ---------------------------------------------------------------------------
+# strictness_levels override（可选；省略则用 baseline）
+# ---------------------------------------------------------------------------
+# 通常不需要项目级覆盖；除非项目有特殊规范。
