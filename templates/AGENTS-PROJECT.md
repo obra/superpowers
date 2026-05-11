@@ -83,3 +83,30 @@
 列出本项目独占的 skill / agent，及其 trigger 条件。
 - skill-name: 触发条件
 -->
+
+---
+
+## 9. Superpowers Mandatory Development Workflow
+
+> 本节继承自 `facio-superpowers`，定义**工具级**开发约束（不是项目业务约束）。
+> 由 `init --harness` 自动注入；如需删除请用 PR 显式说明。
+
+### 开发前（BEFORE）
+
+任何 implement / add / create / modify / refactor / build / 功能开发前，**必须**主动提醒并调用 `/prepare-context` skill：
+
+- 搜索相关 ADR 与 design docs
+- 提供既有架构决策的上下文（约 30 秒）
+
+**仅以下情况可跳过**：typo / 格式调整 / emergency hotfix。
+
+### 完成后（AFTER）
+
+代码完成、提交前，**必须**主动提醒并调用 `/verification-before-completion` skill：
+
+- 运行测试并验证通过
+- 检查文档是否需要更新
+- 如有架构决策 → 自动生成 ADR
+- 自动更新文档索引
+
+> ⚠️ 跳过该步骤可能导致测试失败、文档缺失、ADR 漏记。

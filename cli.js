@@ -59,6 +59,75 @@ function applySubstitutions(content, cwd) {
   return content.replace(/\{PROJECT_NAME\}/g, path.basename(cwd));
 }
 
+// Harness mode safe merge: before installing Harness templates, detect existing
+// AGENTS.md / CLAUDE.md that would otherwise be silently skipped (AGENTS.md stub
+// case) or destructively replaced (CLAUDE.md regular file → symlink).
+//
+// Strategy:
+//   - AGENTS.md with `@import` → already Harness-compliant, leave alone.
+//   - AGENTS.md without `@import` → back up to AGENTS.md.bak.<ts>, capture content.
+//   - CLAUDE.md symlink → AGENTS.md → leave alone.
+//   - CLAUDE.md symlink → other → unlink (will be recreated).
+//   - CLAUDE.md regular file, non-empty → back up to CLAUDE.md.bak.<ts>, capture content.
+//   - CLAUDE.md regular file, empty → unlink.
+//
+// Returns { sections, backups } where `sections` is captured content to be
+// appended to the new AGENTS.md as a "项目级既有约束" section by the caller.
+function harnessSafeMerge(cwd) {
+  const ts = Math.floor(Date.now() / 1000);
+  const backups = [];
+  const sections = [];
+
+  const agentsPath = path.join(cwd, 'AGENTS.md');
+  if (fs.existsSync(agentsPath)) {
+    const stat = fs.lstatSync(agentsPath);
+    if (!stat.isSymbolicLink()) {
+      const content = fs.readFileSync(agentsPath, 'utf8');
+      if (!content.includes('@import')) {
+        const bakName = `AGENTS.md.bak.${ts}`;
+        fs.renameSync(agentsPath, path.join(cwd, bakName));
+        backups.push({ from: 'AGENTS.md', to: bakName });
+        sections.push({ source: 'AGENTS.md', content });
+      }
+    }
+  }
+
+  const claudePath = path.join(cwd, 'CLAUDE.md');
+  if (fs.existsSync(claudePath)) {
+    const stat = fs.lstatSync(claudePath);
+    if (stat.isSymbolicLink()) {
+      if (fs.readlinkSync(claudePath) !== 'AGENTS.md') {
+        fs.unlinkSync(claudePath);
+      }
+    } else {
+      const content = fs.readFileSync(claudePath, 'utf8');
+      if (content.trim()) {
+        const bakName = `CLAUDE.md.bak.${ts}`;
+        fs.renameSync(claudePath, path.join(cwd, bakName));
+        backups.push({ from: 'CLAUDE.md', to: bakName });
+        sections.push({ source: 'CLAUDE.md', content });
+      } else {
+        fs.unlinkSync(claudePath);
+      }
+    }
+  }
+
+  return { sections, backups };
+}
+
+function buildPreservedSection(sections, backups) {
+  if (sections.length === 0) return null;
+  const bakList = backups.map(b => `\`${b.to}\``).join(', ');
+  let out = '\n---\n\n## 项目级既有约束（合并自 init 前的 AGENTS.md / CLAUDE.md）\n\n';
+  out += `> 由 \`facio-superpowers init --harness\` 自动合并。Harness 骨架通过 \`@import\` 先打底，本节由 closest-wins 后置覆盖（later-overrides-earlier）。\n`;
+  out += `> 原始备份：${bakList}\n\n`;
+  for (const { source, content } of sections) {
+    out += `### 来自原 ${source}\n\n`;
+    out += content.trim() + '\n\n';
+  }
+  return out;
+}
+
 function init(projectLevel = false, harnessMode = false) {
   log('\n🚀 Initializing Facio Superpowers\n', 'green');
 
@@ -209,6 +278,17 @@ function init(projectLevel = false, harnessMode = false) {
 
   // Install Harness templates (with {PROJECT_NAME} substitution where requested)
   if (harnessMode) {
+    // Safe-merge pass: back up + capture existing AGENTS.md / CLAUDE.md content
+    // before the template install loop, so prior project rules (OpenSpec stubs,
+    // workflow reminders, etc.) aren't silently dropped.
+    log('\n🔄 Checking existing AGENTS.md / CLAUDE.md...', 'blue');
+    const { sections: preservedSections, backups: preservedBackups } = harnessSafeMerge(cwd);
+    if (preservedBackups.length > 0) {
+      preservedBackups.forEach(b => log(`  ↳ Backed up: ${b.from} → ${b.to}`, 'yellow'));
+    } else {
+      log(`  - nothing to preserve (clean slate or already Harness-compliant)`, 'yellow');
+    }
+
     log('\n🏗  Installing Harness templates...', 'blue');
     const harnessTemplates = [
       { src: 'AGENTS-PROJECT.md',                   dest: 'AGENTS.md',                            substitute: true },
@@ -257,21 +337,25 @@ function init(projectLevel = false, harnessMode = false) {
       }
     });
 
-    // CLAUDE.md → AGENTS.md symlink (Codex/Claude both follow it)
-    const claudePath = path.join(cwd, 'CLAUDE.md');
+    // Append captured prior content (if any) to the freshly-installed AGENTS.md
+    // before creating the symlink. Skipped when AGENTS.md was already
+    // Harness-compliant (harnessSafeMerge left it untouched).
     const agentsPath = path.join(cwd, 'AGENTS.md');
+    const preservedSection = buildPreservedSection(preservedSections, preservedBackups);
+    if (preservedSection && fs.existsSync(agentsPath)) {
+      fs.appendFileSync(agentsPath, preservedSection);
+      log(`  ✓ Appended preserved project rules to AGENTS.md`, 'green');
+    }
+
+    // CLAUDE.md → AGENTS.md symlink (Codex/Claude both follow it).
+    // harnessSafeMerge has already handled any conflicting regular file or
+    // wrong-target symlink, so by this point CLAUDE.md either does not exist
+    // or is already the correct symlink.
+    const claudePath = path.join(cwd, 'CLAUDE.md');
     if (fs.existsSync(agentsPath)) {
-      let needsCreate = true;
       if (fs.existsSync(claudePath)) {
-        const stat = fs.lstatSync(claudePath);
-        if (stat.isSymbolicLink() && fs.readlinkSync(claudePath) === 'AGENTS.md') {
-          log(`  - CLAUDE.md (already symlink → AGENTS.md)`, 'yellow');
-          needsCreate = false;
-        } else {
-          fs.unlinkSync(claudePath);
-        }
-      }
-      if (needsCreate) {
+        log(`  - CLAUDE.md (already symlink → AGENTS.md)`, 'yellow');
+      } else {
         fs.symlinkSync('AGENTS.md', claudePath);
         log(`  ✓ CLAUDE.md → AGENTS.md (symlink)`, 'green');
       }
@@ -536,7 +620,9 @@ function harnessLint() {
     }
   });
 
-  // AGENTS.md must contain @import directives
+  // AGENTS.md must contain @import directives AND Superpowers workflow reminders.
+  // Missing @import → caller likely has a foreign-tool stub (e.g. openspec init);
+  // missing reminders → AGENTS.md predates v1.3.3 template.
   const agentsPath = path.join(cwd, 'AGENTS.md');
   if (fs.existsSync(agentsPath)) {
     const content = fs.readFileSync(agentsPath, 'utf8');
@@ -544,6 +630,19 @@ function harnessLint() {
       log(`  ✓ AGENTS.md contains @import directives`, 'green');
     } else {
       log(`  ✗ AGENTS.md missing @import directives`, 'red');
+      log(`     ↳ AGENTS.md looks like a foreign-tool stub (e.g. openspec). Re-run`, 'red');
+      log(`       \`facio-superpowers init --project --harness\` — v1.3.3+ safely`, 'red');
+      log(`       backs up and merges the existing content.`, 'red');
+      failed = true;
+    }
+    const hasPrepare = content.includes('/prepare-context');
+    const hasVerify = content.includes('/verification-before-completion');
+    if (hasPrepare && hasVerify) {
+      log(`  ✓ AGENTS.md contains Superpowers workflow reminders`, 'green');
+    } else {
+      log(`  ✗ AGENTS.md missing Superpowers workflow reminders (/prepare-context, /verification-before-completion)`, 'red');
+      log(`     ↳ AGENTS.md predates the v1.3.3 template. Re-run init --harness or`, 'red');
+      log(`       merge §9 from templates/AGENTS-PROJECT.md.`, 'red');
       failed = true;
     }
   }
@@ -593,33 +692,38 @@ function copyRecursive(src, dest) {
   }
 }
 
-// CLI
-const args = process.argv.slice(2);
-const command = args[0];
-const projectLevel = args.includes('--project');
-const harnessMode = args.includes('--harness');
+// Expose internals for unit tests (no side-effects on require()).
+module.exports = { harnessSafeMerge, buildPreservedSection };
 
-switch (command) {
-  case 'init':
-    init(projectLevel, harnessMode);
-    break;
-  case 'sync':
-    sync(projectLevel);
-    break;
-  case 'harness-lint':
-    harnessLint();
-    break;
-  default:
-    log('\nFacio Superpowers CLI\n', 'green');
-    log('Usage:');
-    log('  npx facio-superpowers init                          Install skills globally (~/.claude/skills)');
-    log('  npx facio-superpowers init --project                Install skills to project (.claude/skills)');
-    log('  npx facio-superpowers init --project --harness      Scaffold Harness Engineering layout (AGENTS.md / .harness/ / docs/{reference,design,plan}/)');
-    log('  npx facio-superpowers sync                          Sync global skills to latest version');
-    log('  npx facio-superpowers sync --project                Sync project skills to latest version');
-    log('  npx facio-superpowers harness-lint                  Verify Harness file layout in current project');
-    log('\nGlobal skills are shared across all projects (recommended).');
-    log('Project skills are specific to the current project.');
-    log('Harness mode adds AGENTS.md hierarchy + .harness/ configs + three-tier docs/.\n');
-    break;
+// CLI dispatch only runs when the script is invoked directly, not on require().
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const command = args[0];
+  const projectLevel = args.includes('--project');
+  const harnessMode = args.includes('--harness');
+
+  switch (command) {
+    case 'init':
+      init(projectLevel, harnessMode);
+      break;
+    case 'sync':
+      sync(projectLevel);
+      break;
+    case 'harness-lint':
+      harnessLint();
+      break;
+    default:
+      log('\nFacio Superpowers CLI\n', 'green');
+      log('Usage:');
+      log('  npx facio-superpowers init                          Install skills globally (~/.claude/skills)');
+      log('  npx facio-superpowers init --project                Install skills to project (.claude/skills)');
+      log('  npx facio-superpowers init --project --harness      Scaffold Harness Engineering layout (AGENTS.md / .harness/ / docs/{reference,design,plan}/)');
+      log('  npx facio-superpowers sync                          Sync global skills to latest version');
+      log('  npx facio-superpowers sync --project                Sync project skills to latest version');
+      log('  npx facio-superpowers harness-lint                  Verify Harness file layout in current project');
+      log('\nGlobal skills are shared across all projects (recommended).');
+      log('Project skills are specific to the current project.');
+      log('Harness mode adds AGENTS.md hierarchy + .harness/ configs + three-tier docs/.\n');
+      break;
+  }
 }
