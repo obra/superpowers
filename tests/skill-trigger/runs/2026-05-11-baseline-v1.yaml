@@ -3,7 +3,7 @@ date: 2026-05-11
 purpose: partial dry-run baseline skill-trigger evaluation with 4 observed prompts; remaining entries are placeholders
 
 skills:
-  commit: 17f239d
+  commit: 2f6b6fa
   scope:
     - brainstorming
     - writing-plans

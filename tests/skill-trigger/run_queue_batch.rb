@@ -26,19 +26,6 @@ HOSTS = {
   end
 }.freeze
 
-COMPLETED_IDS = %w[
-  brainstorming_strong_001
-  brainstorming_strong_002
-  brainstorming_weak_001
-  brainstorming_weak_002
-  brainstorming_confusion_001
-  brainstorming_confusion_002
-  writing_plans_strong_001
-  writing_plans_strong_002
-  systematic_debugging_strong_001
-  code_review_strong_001
-].freeze
-
 def slug(text)
   text.gsub(/[^a-z0-9]+/i, "-").gsub(/\A-+|-+\z/, "").downcase
 end
@@ -96,69 +83,87 @@ def stability_flags(text)
   flags
 end
 
-ensure_skill_symlink
-FileUtils.mkdir_p(ARTIFACT_ROOT)
+def completed_ids_from_run(run_path)
+  data = Psych.load_file(run_path)
+  data.fetch("results").map do |result|
+    hosts = %w[claude codex]
+    next unless hosts.all? { |host| !result.dig(host, "notes").to_s.include?("Fill with observed") }
 
-corpus = Psych.load_file(CORPUS_PATH)
-pending = corpus.reject { |sample| COMPLETED_IDS.include?(sample.fetch("id")) }
-batch = pending.first(BATCH_SIZE)
-
-if batch.empty?
-  puts JSON.pretty_generate({
-    status: "done",
-    message: "No pending cases left in queue.",
-    completed_case_count: COMPLETED_IDS.size
-  })
-  exit 0
+    result.fetch("prompt_id")
+  end.compact
 end
 
-batch_label = batch.map { |sample| sample.fetch("id") }.join("__")
-batch_dir = File.join(ARTIFACT_ROOT, "#{Time.now.strftime("%Y%m%d-%H%M%S")}-#{slug(batch_label)}")
-FileUtils.mkdir_p(batch_dir)
+def completed_ids
+  completed_ids_from_run(RUN_PATH)
+end
 
-summary = {
-  "started_at" => Time.now.iso8601,
-  "timeout_seconds" => TIMEOUT_SECONDS,
-  "batch_size" => batch.size,
-  "cases" => batch.map { |sample| sample.fetch("id") },
-  "results" => []
-}
+def main
+  ensure_skill_symlink
+  FileUtils.mkdir_p(ARTIFACT_ROOT)
 
-batch.each_with_index do |sample, index|
-  sample_dir = File.join(batch_dir, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
-  FileUtils.mkdir_p(sample_dir)
+  corpus = Psych.load_file(CORPUS_PATH)
+  pending = corpus.reject { |sample| completed_ids.include?(sample.fetch("id")) }
+  batch = pending.first(BATCH_SIZE)
 
-  HOSTS.each do |host, build_command|
-    run = run_with_capture(build_command.call(sample.fetch("user_message")), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
-    stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
-    stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
-
-    File.write(stdout_path, run[:stdout])
-    File.write(stderr_path, run[:stderr])
-
-    summary["results"] << {
-      "sample_id" => sample.fetch("id"),
-      "host" => host,
-      "expected_skill" => sample.fetch("expected_skill"),
-      "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
-      "stdout_path" => stdout_path,
-      "stderr_path" => stderr_path,
-      "exit_code" => run[:exit_code],
-      "success" => run[:success],
-      "timed_out" => run[:timed_out],
-      "stability_flags" => stability_flags("#{run[:stdout]}\n#{run[:stderr]}")
-    }
+  if batch.empty?
+    puts JSON.pretty_generate({
+      status: "done",
+      message: "No pending cases left in queue.",
+      completed_case_count: completed_ids.size
+    })
+    return
   end
+
+  batch_label = batch.map { |sample| sample.fetch("id") }.join("__")
+  batch_dir = File.join(ARTIFACT_ROOT, "#{Time.now.strftime("%Y%m%d-%H%M%S")}-#{slug(batch_label)}")
+  FileUtils.mkdir_p(batch_dir)
+
+  summary = {
+    "started_at" => Time.now.iso8601,
+    "timeout_seconds" => TIMEOUT_SECONDS,
+    "batch_size" => batch.size,
+    "cases" => batch.map { |sample| sample.fetch("id") },
+    "results" => []
+  }
+
+  batch.each_with_index do |sample, index|
+    sample_dir = File.join(batch_dir, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
+    FileUtils.mkdir_p(sample_dir)
+
+    HOSTS.each do |host, build_command|
+      run = run_with_capture(build_command.call(sample.fetch("user_message")), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
+      stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
+      stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
+
+      File.write(stdout_path, run[:stdout])
+      File.write(stderr_path, run[:stderr])
+
+      summary["results"] << {
+        "sample_id" => sample.fetch("id"),
+        "host" => host,
+        "expected_skill" => sample.fetch("expected_skill"),
+        "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
+        "stdout_path" => stdout_path,
+        "stderr_path" => stderr_path,
+        "exit_code" => run[:exit_code],
+        "success" => run[:success],
+        "timed_out" => run[:timed_out],
+        "stability_flags" => stability_flags("#{run[:stdout]}\n#{run[:stderr]}")
+      }
+    end
+  end
+
+  summary["finished_at"] = Time.now.iso8601
+  summary_path = File.join(batch_dir, "summary.json")
+  File.write(summary_path, JSON.pretty_generate(summary))
+
+  puts JSON.pretty_generate({
+    status: "ok",
+    run_file: RUN_PATH,
+    artifact_batch_dir: batch_dir,
+    finished_cases: batch.map { |sample| sample.fetch("id") },
+    summary_path: summary_path
+  })
 end
 
-summary["finished_at"] = Time.now.iso8601
-summary_path = File.join(batch_dir, "summary.json")
-File.write(summary_path, JSON.pretty_generate(summary))
-
-puts JSON.pretty_generate({
-  status: "ok",
-  run_file: RUN_PATH,
-  artifact_batch_dir: batch_dir,
-  finished_cases: batch.map { |sample| sample.fetch("id") },
-  summary_path: summary_path
-})
+main if __FILE__ == $PROGRAM_NAME

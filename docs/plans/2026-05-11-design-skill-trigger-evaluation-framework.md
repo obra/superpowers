@@ -1,7 +1,7 @@
 # Horspowers 技能触发评估与 A/B 迭代框架设计文档
 
 **设计时间**: 2026-05-11
-**状态**: 设计完成，待实施
+**状态**: 第一轮已交付（评估框架基础设施已落地）
 **适用分支**: `codex/skill-compat-review`
 
 ---
@@ -336,3 +336,28 @@ tests/skill-trigger/
 - 可按层做 A/B 的迭代方法
 
 这会显著降低后续优化 trigger 时的试错成本，并避免“某一边变好、另一边偷偷变坏”的不可见回归。
+
+---
+
+## 16. 第一轮交付记录
+
+**交付日期**: 2026-05-11
+
+**已交付产物:**
+
+1. `tests/skill-trigger/` 目录骨架
+2. `tests/skill-trigger/corpus.yaml` — 48 条样本（8 skills × 6）
+3. `tests/skill-trigger/rubric.md` — 5 档评分 + 9 个失败标签
+4. `tests/skill-trigger/claude/startup-v1.md` — Claude baseline startup profile
+5. `tests/skill-trigger/codex/startup-v1.md` — Codex baseline startup profile
+6. `tests/skill-trigger/runs/baseline-template.yaml` — 双宿主结果记录模板
+7. `tests/skill-trigger/runs/README.md` — run 命名与存储规范
+8. `tests/skill-trigger/runs/2026-05-11-baseline-v1.yaml` — 部分 baseline（4/48 已观测）
+9. `tests/skill-trigger/run_full_baseline.rb` — 并行双宿主 corpus runner
+10. `tests/skill-trigger/run_queue_batch.rb` — 增量队列式 runner
+
+**下一步建议:**
+
+1. 运行完整 baseline（补全 48 条样本观测结果）
+2. 分析高混淆 pair 的失败原因
+3. 进入第 2 轮：共享 description 微调实验

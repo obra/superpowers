@@ -96,111 +96,115 @@ def stability_flags(text)
   flags
 end
 
-ensure_skill_symlink
-FileUtils.mkdir_p(ARTIFACT_ROOT)
+def main
+  ensure_skill_symlink
+  FileUtils.mkdir_p(ARTIFACT_ROOT)
 
-corpus = Psych.load_file(CORPUS_PATH)
-summary = {
-  "started_at" => Time.now.iso8601,
-  "cwd" => ROOT,
-  "timeout_seconds" => TIMEOUT_SECONDS,
-  "max_workers" => MAX_WORKERS,
-  "claude_bin" => CLAUDE_BIN,
-  "codex_bin" => CODEX_BIN,
-  "sample_count" => corpus.size,
-  "host_runs" => {}
-}
-
-HOSTS.each_key do |host|
-  summary["host_runs"][host] = {
-    "completed" => 0,
-    "exit_0" => 0,
-    "timed_out" => 0,
-    "stream_disconnected" => 0,
-    "reconnecting" => 0
+  corpus = Psych.load_file(CORPUS_PATH)
+  summary = {
+    "started_at" => Time.now.iso8601,
+    "cwd" => ROOT,
+    "timeout_seconds" => TIMEOUT_SECONDS,
+    "max_workers" => MAX_WORKERS,
+    "claude_bin" => CLAUDE_BIN,
+    "codex_bin" => CODEX_BIN,
+    "sample_count" => corpus.size,
+    "host_runs" => {}
   }
-end
 
-jobs = []
-corpus.each_with_index do |sample, index|
-  HOSTS.each do |host, build_command|
-    prompt = sample.fetch("user_message")
-    sample_dir = File.join(ARTIFACT_ROOT, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
-    FileUtils.mkdir_p(sample_dir)
-    jobs << {
-      "sample" => sample,
-      "host" => host,
-      "command" => build_command.call(prompt),
-      "sample_dir" => sample_dir
+  HOSTS.each_key do |host|
+    summary["host_runs"][host] = {
+      "completed" => 0,
+      "exit_0" => 0,
+      "timed_out" => 0,
+      "stream_disconnected" => 0,
+      "reconnecting" => 0
     }
   end
-end
 
-results_mutex = Mutex.new
-jobs_mutex = Mutex.new
-results_file = File.open(RESULTS_PATH, "w")
-
-workers = Array.new(MAX_WORKERS) do
-  Thread.new do
-    loop do
-      job = nil
-      jobs_mutex.synchronize { job = jobs.shift }
-      break unless job
-
-      sample = job.fetch("sample")
-      host = job.fetch("host")
-      command = job.fetch("command")
-      sample_dir = job.fetch("sample_dir")
-
-      run = run_with_capture(command, cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
-
-      stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
-      stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
-      meta_path = File.join(sample_dir, "#{host}.meta.json")
-
-      File.write(stdout_path, run[:stdout])
-      File.write(stderr_path, run[:stderr])
-
-      flags = stability_flags("#{run[:stdout]}\n#{run[:stderr]}")
-      meta = {
-        "sample_id" => sample.fetch("id"),
+  jobs = []
+  corpus.each_with_index do |sample, index|
+    HOSTS.each do |host, build_command|
+      prompt = sample.fetch("user_message")
+      sample_dir = File.join(ARTIFACT_ROOT, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
+      FileUtils.mkdir_p(sample_dir)
+      jobs << {
+        "sample" => sample,
         "host" => host,
-        "expected_skill" => sample.fetch("expected_skill"),
-        "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
-        "should_trigger" => sample.fetch("should_trigger"),
-        "command" => command,
-        "exit_code" => run[:exit_code],
-        "success" => run[:success],
-        "timed_out" => run[:timed_out],
-        "stability_flags" => flags,
-        "stdout_path" => stdout_path,
-        "stderr_path" => stderr_path,
-        "ran_at" => Time.now.iso8601
+        "command" => build_command.call(prompt),
+        "sample_dir" => sample_dir
       }
-      File.write(meta_path, JSON.pretty_generate(meta))
-
-      results_mutex.synchronize do
-        results_file.puts(JSON.generate(meta))
-        results_file.flush
-
-        host_summary = summary["host_runs"][host]
-        host_summary["completed"] += 1
-        host_summary["exit_0"] += 1 if run[:exit_code] == 0
-        host_summary["timed_out"] += 1 if run[:timed_out]
-        host_summary["stream_disconnected"] += 1 if flags.include?("stream_disconnected")
-        host_summary["reconnecting"] += 1 if flags.include?("reconnecting")
-      end
-
-      puts "[#{host}] #{sample.fetch("id")} exit=#{run[:exit_code]} timeout=#{run[:timed_out]} flags=#{flags.join(",")}"
     end
   end
+
+  results_mutex = Mutex.new
+  jobs_mutex = Mutex.new
+  results_file = File.open(RESULTS_PATH, "w")
+
+  workers = Array.new(MAX_WORKERS) do
+    Thread.new do
+      loop do
+        job = nil
+        jobs_mutex.synchronize { job = jobs.shift }
+        break unless job
+
+        sample = job.fetch("sample")
+        host = job.fetch("host")
+        command = job.fetch("command")
+        sample_dir = job.fetch("sample_dir")
+
+        run = run_with_capture(command, cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
+
+        stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
+        stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
+        meta_path = File.join(sample_dir, "#{host}.meta.json")
+
+        File.write(stdout_path, run[:stdout])
+        File.write(stderr_path, run[:stderr])
+
+        flags = stability_flags("#{run[:stdout]}\n#{run[:stderr]}")
+        meta = {
+          "sample_id" => sample.fetch("id"),
+          "host" => host,
+          "expected_skill" => sample.fetch("expected_skill"),
+          "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
+          "should_trigger" => sample.fetch("should_trigger"),
+          "command" => command,
+          "exit_code" => run[:exit_code],
+          "success" => run[:success],
+          "timed_out" => run[:timed_out],
+          "stability_flags" => flags,
+          "stdout_path" => stdout_path,
+          "stderr_path" => stderr_path,
+          "ran_at" => Time.now.iso8601
+        }
+        File.write(meta_path, JSON.pretty_generate(meta))
+
+        results_mutex.synchronize do
+          results_file.puts(JSON.generate(meta))
+          results_file.flush
+
+          host_summary = summary["host_runs"][host]
+          host_summary["completed"] += 1
+          host_summary["exit_0"] += 1 if run[:exit_code] == 0
+          host_summary["timed_out"] += 1 if run[:timed_out]
+          host_summary["stream_disconnected"] += 1 if flags.include?("stream_disconnected")
+          host_summary["reconnecting"] += 1 if flags.include?("reconnecting")
+        end
+
+        puts "[#{host}] #{sample.fetch("id")} exit=#{run[:exit_code]} timeout=#{run[:timed_out]} flags=#{flags.join(",")}"
+      end
+    end
+  end
+
+  workers.each(&:join)
+  results_file.close
+  summary["finished_at"] = Time.now.iso8601
+  File.write(SUMMARY_PATH, JSON.pretty_generate(summary))
+
+  puts
+  puts "Artifacts: #{ARTIFACT_ROOT}"
+  puts "Summary:   #{SUMMARY_PATH}"
 end
 
-workers.each(&:join)
-results_file.close
-summary["finished_at"] = Time.now.iso8601
-File.write(SUMMARY_PATH, JSON.pretty_generate(summary))
-
-puts
-puts "Artifacts: #{ARTIFACT_ROOT}"
-puts "Summary:   #{SUMMARY_PATH}"
+main if __FILE__ == $PROGRAM_NAME
