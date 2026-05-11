@@ -1,13 +1,13 @@
 {
   "name": "@vattention/facio-superpowers",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Documentation management for AI-assisted development with Claude Code and Cursor",
   "main": "cli.js",
   "bin": {
     "facio-superpowers": "./cli.js"
   },
   "scripts": {
-    "test": "node cli.js",
+    "test": "node tests/harness-merge/test.js",
     "version:patch": "npm version patch -m 'chore: bump version to %s'",
     "version:minor": "npm version minor -m 'chore: bump version to %s'",
     "version:major": "npm version major -m 'chore: bump version to %s'",
