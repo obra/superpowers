@@ -36,44 +36,20 @@ Installation differs by harness. If you use more than one, install Superpowers s
 
 Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
 
-#### Official Marketplace
-
-- Install the plugin from Anthropic's official marketplace:
-
-  ```bash
-  /plugin install superpowers@claude-plugins-official
-  ```
-
-#### ryanpeach's Fork
-
-- Register the marketplace from the fork:
-
-  ```bash
-  /plugin marketplace add ryanpeach/superpowers
-  ```
-
-  This registers a marketplace named `superpowers-dev` (defined in the repo's `marketplace.json`).
-
-- Install the plugin:
-
-  ```bash
-  /plugin install superpowers@superpowers-dev
-  ```
-
-#### Superpowers Marketplace
+#### Ryan Peach's Marketplace
 
 The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
 
 - Register the marketplace:
 
   ```bash
-  /plugin marketplace add obra/superpowers-marketplace
+  /plugin marketplace add ryanpeach/skills-marketplace
   ```
 
 - Install the plugin from this marketplace:
 
   ```bash
-  /plugin install superpowers@superpowers-marketplace
+  /plugin install superpowers@ryanpeach
   ```
 
 ### Codex CLI
