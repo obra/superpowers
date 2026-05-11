@@ -1,0 +1,335 @@
+- id: brainstorming_strong_001
+  user_message: "我有个新功能想法，但范围和交互还没想清楚，你先帮我理一理思路。"
+  expected_skill: "brainstorming"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确要求先澄清目标与方案，不进入实现。"
+
+- id: brainstorming_strong_002
+  user_message: "先别写代码，我想讨论一下这个需求应该怎么设计，边界条件有哪些。"
+  expected_skill: "brainstorming"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；直接要求讨论设计与边界。"
+
+- id: brainstorming_weak_001
+  user_message: "这个方向我有点拿不准，你帮我想想有没有更合适的做法。"
+  expected_skill: "brainstorming"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；未显式提到方案设计，但表达了需要共同探索方案。"
+
+- id: brainstorming_weak_002
+  user_message: "I have a rough idea, but I need help narrowing the scope before we build anything."
+  expected_skill: "brainstorming"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；英文抽象表达，强调缩小范围。"
+
+- id: brainstorming_confusion_001
+  user_message: "我想先把这个功能的大方向想明白，再决定要不要拆开发计划。"
+  expected_skill: "brainstorming"
+  secondary_ok_skills: ["writing-plans"]
+  should_trigger: true
+  notes: "混淆样本；与 writing-plans 邻近，但当前主目标仍是明确方向。"
+
+- id: brainstorming_confusion_002
+  user_message: "这个需求还很模糊，你先帮我澄清用户价值、风险和可能路径。"
+  expected_skill: "brainstorming"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "混淆样本；容易被泛化到 planning，但更适合先做需求澄清。"
+
+- id: writing_plans_strong_001
+  user_message: "方案已经定了，帮我拆成具体开发步骤和文件改动顺序。"
+  expected_skill: "writing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确要求把既定方案转成实施计划。"
+
+- id: writing_plans_strong_002
+  user_message: "别急着写实现，先给我一个分步骤的落地计划。"
+  expected_skill: "writing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；直接要求分步骤计划。"
+
+- id: writing_plans_weak_001
+  user_message: "这个设计我认可了，下一步我们该怎么推进比较稳？"
+  expected_skill: "writing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；通过推进方式暗示需要计划。"
+
+- id: writing_plans_weak_002
+  user_message: "Can you turn this approved spec into an execution plan with checkpoints?"
+  expected_skill: "writing-plans"
+  secondary_ok_skills: ["executing-plans"]
+  should_trigger: true
+  notes: "弱触发；英文表达，主要是生成计划而非立刻执行。"
+
+- id: writing_plans_confusion_001
+  user_message: "大方向差不多了，你帮我整理一下先做什么、后做什么。"
+  expected_skill: "writing-plans"
+  secondary_ok_skills: ["brainstorming"]
+  should_trigger: true
+  notes: "混淆样本；前半句仍有模糊空间，但后半句更接近任务拆解。"
+
+- id: writing_plans_confusion_002
+  user_message: "把这个需求拆成可以 review 的几个阶段，但先别真的开始做。"
+  expected_skill: "writing-plans"
+  secondary_ok_skills: ["executing-plans"]
+  should_trigger: true
+  notes: "混淆样本；提到阶段和 review，但核心仍是产出计划。"
+
+- id: executing_plans_strong_001
+  user_message: "按这份计划开始做，先完成第一批，然后停下来汇报进展。"
+  expected_skill: "executing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确是按已有计划批次执行。"
+
+- id: executing_plans_strong_002
+  user_message: "我们就照文档里的步骤推进，每做完一个阶段都回顾一次。"
+  expected_skill: "executing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；强调阶段推进与检查点。"
+
+- id: executing_plans_weak_001
+  user_message: "Continue with the plan, but keep the work easy to pause and resume."
+  expected_skill: "executing-plans"
+  secondary_ok_skills: ["subagent-driven-development"]
+  should_trigger: true
+  notes: "弱触发；英文表达，突出可暂停与恢复。"
+
+- id: executing_plans_weak_002
+  user_message: "按计划往前推，不过中间要给我几个检查点。"
+  expected_skill: "executing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；没有直说分批，但明确要求检查点。"
+
+- id: executing_plans_confusion_001
+  user_message: "这个计划里的任务可以一个个做，但每完成一段都先停一下。"
+  expected_skill: "executing-plans"
+  secondary_ok_skills: ["subagent-driven-development"]
+  should_trigger: true
+  notes: "混淆样本；与 subagent-driven-development 邻近，但暂停汇报更关键。"
+
+- id: executing_plans_confusion_002
+  user_message: "先从计划里挑最顺手的一块做起，做完我再决定后面怎么排。"
+  expected_skill: "executing-plans"
+  secondary_ok_skills: ["subagent-driven-development"]
+  should_trigger: true
+  notes: "混淆样本；仍基于既有计划执行，但后续需停下来重排。"
+
+- id: subagent_dev_strong_001
+  user_message: "这个计划里的任务彼此独立，当前会话直接连续推进，边做边 review。"
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确独立任务、当前会话、连续推进。"
+
+- id: subagent_dev_strong_002
+  user_message: "按现有计划往下做，每个子任务做完就自查，然后接着下一个。"
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；强调子任务串行推进与持续 review。"
+
+- id: subagent_dev_weak_001
+  user_message: "We already have the plan. Just keep moving through the independent tasks in this session."
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: ["executing-plans"]
+  should_trigger: true
+  notes: "弱触发；英文表达，突出现会话内连续推进。"
+
+- id: subagent_dev_weak_002
+  user_message: "别再单独写计划了，直接按已有任务列表一个接一个做。"
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: ["executing-plans"]
+  should_trigger: true
+  notes: "弱触发；隐含计划已存在，核心是持续执行。"
+
+- id: subagent_dev_confusion_001
+  user_message: "按计划继续做，不过这些任务比较独立，你可以自己安排顺序。"
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: ["executing-plans"]
+  should_trigger: true
+  notes: "混淆样本；与 executing-plans 邻近，但独立任务与自主排序是主信号。"
+
+- id: subagent_dev_confusion_002
+  user_message: "当前会话就把这几个拆开的开发项尽量往前推，不用每一步都等我确认。"
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "混淆样本；强调当前会话内持续推进，无需频繁暂停。"
+
+- id: systematic_debugging_strong_001
+  user_message: "这个问题先别急着修，先系统排查根因，看看是设计问题还是实现问题。"
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确要求先排查根因。"
+
+- id: systematic_debugging_strong_002
+  user_message: "我现在不知道 bug 出在哪，帮我做一轮有步骤的 debug。"
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；直接要求结构化 debug。"
+
+- id: systematic_debugging_weak_001
+  user_message: "Something is off here. I need help isolating the cause before we touch the fix."
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；英文表达，强调隔离原因。"
+
+- id: systematic_debugging_weak_002
+  user_message: "线上有个异常，但我还不确定复现路径，你先帮我缩小问题范围。"
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；通过缩小范围体现排查意图。"
+
+- id: systematic_debugging_confusion_001
+  user_message: "这个 bug 最终可能也要补测试，但现在先帮我定位根因。"
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: ["test-driven-development"]
+  should_trigger: true
+  notes: "混淆样本；与 TDD 邻近，但当前主要目标是定位问题。"
+
+- id: systematic_debugging_confusion_002
+  user_message: "先梳理一下现象、假设和验证步骤，确认问题到底在哪一层。"
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "混淆样本；容易被当成泛 planning，但本质是调试流程。"
+
+- id: tdd_strong_001
+  user_message: "这个 bug 我们用 TDD 来修，先补一个失败测试，再写实现。"
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；直接声明 TDD。"
+
+- id: tdd_strong_002
+  user_message: "先写测试把预期行为钉住，然后再改代码。"
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；清晰的先测后改流程。"
+
+- id: tdd_weak_001
+  user_message: "Let's drive this feature from a failing test first."
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；英文表达，典型测试驱动语气。"
+
+- id: tdd_weak_002
+  user_message: "这个功能开始实现前，先把验收行为写成自动化测试。"
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；没有直说 TDD，但明确先写测试。"
+
+- id: tdd_confusion_001
+  user_message: "我怀疑这里有 bug，不过别先查太久，先补个能复现问题的测试。"
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: ["systematic-debugging"]
+  should_trigger: true
+  notes: "混淆样本；与 debug 邻近，但优先动作是写复现测试。"
+
+- id: tdd_confusion_002
+  user_message: "先用一个 failing case 把问题固定住，后面实现可以再慢慢补。"
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "混淆样本；强调先建立失败用例。"
+
+- id: code_review_strong_001
+  user_message: "这次改动已经写完了，帮我做一轮正式 code review，重点看 bug 和回归风险。"
+  expected_skill: "requesting-code-review"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确要求正式代码审查。"
+
+- id: code_review_strong_002
+  user_message: "上线前请过一遍这批修改，看看有没有明显坑。"
+  expected_skill: "requesting-code-review"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；典型口语化 review 请求。"
+
+- id: code_review_weak_001
+  user_message: "Can you review these changes for requirement mismatches and regressions?"
+  expected_skill: "requesting-code-review"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；英文表达，聚焦需求偏差和回归。"
+
+- id: code_review_weak_002
+  user_message: "我把功能先做完了，你帮我过一遍有没有遗漏。"
+  expected_skill: "requesting-code-review"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；口语表达，没有直接说 code review。"
+
+- id: code_review_confusion_001
+  user_message: "先别继续写了，看看我这版实现是不是已经偏离需求。"
+  expected_skill: "requesting-code-review"
+  secondary_ok_skills: ["brainstorming"]
+  should_trigger: true
+  notes: "混淆样本；可能像需求讨论，但主目标是审实现是否偏离。"
+
+- id: code_review_confusion_002
+  user_message: "帮我快速扫一下这次提交，确认没有明显问题我再继续下一个任务。"
+  expected_skill: "requesting-code-review"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "混淆样本；容易被当成随手查看，但应进入结构化 review。"
+
+- id: document_management_strong_001
+  user_message: "帮我看看 docs 里之前有没有记录过这个决策，顺便把相关文档找出来。"
+  expected_skill: "document-management"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确要求从文档系统检索上下文。"
+
+- id: document_management_strong_002
+  user_message: "先把项目的文档系统初始化好，我后面要开始记设计和任务。"
+  expected_skill: "document-management"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；直接要求初始化文档系统。"
+
+- id: document_management_weak_001
+  user_message: "Can you recover the project context from docs and show me what is still active?"
+  expected_skill: "document-management"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；英文表达，要求恢复上下文与活跃状态。"
+
+- id: document_management_weak_002
+  user_message: "我记得以前写过一份相关方案，帮我从文档里翻出来。"
+  expected_skill: "document-management"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "弱触发；自然口语检索请求。"
+
+- id: document_management_confusion_001
+  user_message: "这个任务先别实现，先检查一下有没有现成的 docs 可以接着用。"
+  expected_skill: "document-management"
+  secondary_ok_skills: ["brainstorming"]
+  should_trigger: true
+  notes: "混淆样本；有流程暂停语气，但当前重点是文档上下文检查。"
+
+- id: document_management_confusion_002
+  user_message: "把已经做完的这批事项从活跃文档里清掉，并归档到合适的位置。"
+  expected_skill: "document-management"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "混淆样本；偏维护动作，验证 archive 场景。"

@@ -1,0 +1,94 @@
+run_id: 2026-05-11-baseline-example
+date: 2026-05-11
+purpose: baseline skill-trigger evaluation
+
+skills:
+  commit: REPLACE_WITH_SKILLS_COMMIT
+  scope:
+    - brainstorming
+    - writing-plans
+    - executing-plans
+    - subagent-driven-development
+    - systematic-debugging
+    - test-driven-development
+    - requesting-code-review
+    - document-management
+
+hosts:
+  claude:
+    startup_profile: tests/skill-trigger/claude/startup-v1.md
+    model: REPLACE_WITH_MODEL
+  codex:
+    startup_profile: tests/skill-trigger/codex/startup-v1.md
+    model: REPLACE_WITH_MODEL
+
+corpus:
+  version: REPLACE_WITH_CORPUS_VERSION
+  source: REPLACE_WITH_CORPUS_PATH
+
+summary:
+  claude:
+    exact: 0
+    acceptable: 0
+    miss: 0
+    wrong: 0
+    no_trigger_expected: 0
+  codex:
+    exact: 0
+    acceptable: 0
+    miss: 0
+    wrong: 0
+    no_trigger_expected: 0
+  host_divergence:
+    outcome_count: 0
+    routing_count: 0
+
+results:
+  - prompt_id: EXAMPLE_001
+    user_message: "I have a feature idea, but I have not figured out the approach yet."
+    expected_skill: brainstorming
+    secondary_ok_skills: []
+    should_trigger: true
+    claude:
+      triggered: true
+      triggered_skill: brainstorming
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: Replace with observed Claude behavior.
+    codex:
+      triggered: true
+      triggered_skill: brainstorming
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: Replace with observed Codex behavior.
+    divergence:
+      outcome: false
+      routing: false
+      notes: ""
+
+  - prompt_id: EXAMPLE_002
+    user_message: "The design is approved. Break it into implementation steps."
+    expected_skill: writing-plans
+    secondary_ok_skills: []
+    should_trigger: true
+    claude:
+      triggered: false
+      triggered_skill: ""
+      outcome: miss
+      confidence: medium
+      reason_tags:
+        - missing_trigger_phrase
+      notes: Example placeholder showing a non-exact result.
+    codex:
+      triggered: true
+      triggered_skill: writing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: Example placeholder showing a correct result.
+    divergence:
+      outcome: true
+      routing: true
+      notes: Claude missed while Codex routed correctly.
