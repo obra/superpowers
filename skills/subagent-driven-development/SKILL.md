@@ -112,6 +112,28 @@ The controller never sees per-task review status — only the final pipeline sta
 
 When the plan declares no `depends_on` on any task, run the original sequential flow: one task at a time, foreground, with per-task spec review and code-quality review surfaced to the controller. Use this for plans written before the DAG format existed and for any plan whose author chose pure sequential.
 
+### Permissions Handling
+
+Backgrounded subagents cannot answer interactive permission prompts. If a dispatched subagent needs a tool not in the allowlist, it returns BLOCKED on permissions.
+
+When this happens (or you anticipate it before dispatch), invoke the `update-config` skill to add the missing permission to `.claude/settings.local.json`. **Always ask the human before adding any permission.**
+
+Allowlist scope is restricted by policy:
+
+- ✅ Allowed: `Edit`, `Write`, `Read`, `Bash(git *)`, `Bash(gh *)`, narrow path-scoped variants like `Edit(skills/**)`
+- ❌ Forbidden: broad code-execution permissions like `Bash(python *)`, `Bash(node *)`, `Bash(npm *)`, `Bash(*)`, or any rule that lets a subagent run arbitrary user code without review
+
+If a task genuinely needs forbidden permissions, reschedule it to non-parallel sequential execution.
+
+### Edge Cases
+
+- **Cycle in DAG** — controller errors before any dispatch, surfaces to human
+- **Worktree creation fails** — fall back to foreground sequential execution for that task
+- **Background agent never returns** — timeout (default 30 min, configurable) → mark BLOCKED, surface to human
+- **Test suite flaky after merge** — re-run once; if still failing, mark BLOCKED
+- **All ready tasks `parallel_safe: false`** — degrades gracefully to foreground sequential
+- **Reviewer fix loop exceeds 3 iterations** — implementer returns BLOCKED with full transcript; controller continues other ready tasks
+
 ## Model Selection
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.
