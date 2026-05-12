@@ -30,7 +30,7 @@ BRANCH=$(git branch --show-current)
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
-**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 3 (Project Setup). Do NOT create another worktree.
+**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 2 (Project Setup). Do NOT create another worktree.
 
 Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
@@ -42,7 +42,7 @@ Has the user already indicated their worktree preference in your instructions? I
 
 > "Would you like me to set up an isolated worktree? It protects your current branch from changes."
 
-Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 3.
+Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
 ## Step 1: Create Isolated Workspace
 
@@ -50,7 +50,7 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 3.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
 
@@ -111,7 +111,7 @@ cd "$path"
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
-## Step 3: Project Setup
+## Step 2: Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -130,7 +130,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-## Step 4: Verify Clean Baseline
+## Step 3: Verify Clean Baseline
 
 Run tests to ensure workspace starts clean:
 
