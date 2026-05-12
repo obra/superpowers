@@ -1,8 +1,8 @@
 ---
 run_id: 2026-05-11-baseline-v1
 date: 2026-05-11
-purpose: partial baseline with 4 observed claude prompts and 40 observed codex prompts;
-  remaining entries are placeholders
+purpose: baseline with 4 observed claude prompts and all 48 codex prompts backfilled;
+  remaining placeholders are claude-only
 skills:
   commit: 2f6b6fa
   scope:
@@ -33,7 +33,7 @@ summary:
     wrong: 0
     no_trigger_expected: 0
   codex:
-    exact: 36
+    exact: 44
     acceptable: 4
     miss: 0
     wrong: 0
@@ -82,12 +82,14 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Explicitly switched into requirements clarification and design discussion,
+      loaded horspowers:brainstorming, and said it would sort out design direction
+      and boundary conditions before any code.
   divergence:
     outcome: false
     routing: false
@@ -106,12 +108,13 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Loaded horspowers:brainstorming and framed the response as helping choose
+      a better direction before implementation.
   divergence:
     outcome: false
     routing: false
@@ -131,12 +134,13 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Treated the request as a scoping and design pass before implementation
+      and explicitly loaded brainstorming to narrow the idea.
   divergence:
     outcome: false
     routing: false
@@ -156,12 +160,14 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Used brainstorming first to converge on direction, then decide whether
+      implementation planning should come later, which matches the intended confusion-case
+      routing.
   divergence:
     outcome: false
     routing: false
@@ -180,12 +186,13 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Routed to brainstorming to clarify user value, risks, and paths before
+      any planning or implementation work.
   divergence:
     outcome: false
     routing: false
@@ -230,12 +237,13 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Explicitly loaded horspowers:writing-plans and produced an implementation-plan
+      style response with goals, boundaries, and phased structure.
   divergence:
     outcome: false
     routing: false
@@ -254,12 +262,13 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Used horspowers:writing-plans and recommended a stable next-step sequence,
+      pointing to an executable formal plan as the correct next artifact.
   divergence:
     outcome: false
     routing: false
@@ -279,12 +288,13 @@ results:
     reason_tags: []
     notes: Fill with observed claude behavior.
   codex:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed codex behavior.
+    notes: Explicitly chose horspowers:writing-plans because the user wanted an execution
+      plan with checkpoints, matching the expected route exactly.
   divergence:
     outcome: false
     routing: false
