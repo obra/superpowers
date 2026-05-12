@@ -1,8 +1,10 @@
 # Facio Superpowers
 
-> **Version 1.1.4** | Built on [obra/superpowers](https://github.com/obra/superpowers)
+> **Version 2.0.0** | Built on [obra/superpowers](https://github.com/obra/superpowers)
 
-AI 辅助开发框架，在 superpowers 基础上增加了 **Facio Flow 团队协作** 和 **自动文档管理** 能力。
+AI 辅助开发框架，在 superpowers 基础上增加了 **Facio Flow 团队协作**、**Harness Engineering** 与 **自动文档管理** 能力。
+
+> 🚨 **v2.0.0 BREAKING**：`init` 现在默认安装 global skills **并**搭建 Harness 骨架（AGENTS.md / .harness/ / docs/{reference,design,superpowers}/）。如果只想装 skills，使用 `init --no-harness`。详见 [RELEASE-NOTES.md](RELEASE-NOTES.md#v200-2026-05-12--breaking)。
 
 ## 核心特性
 
@@ -31,16 +33,30 @@ claude init
 npx @vattention/facio-superpowers init
 ```
 
-这会：
-- ✅ 安装所有 skills（16 个）
-- ✅ 创建文档结构（docs/adr, docs/plans, templates）
-- ✅ 注入工作流指令到 CLAUDE.md
+这会（v2.0.0 默认行为）：
+- ✅ 安装所有 skills 到 **`~/.claude/skills/`**（global，跨项目共享）
+- ✅ 搭建 **Harness 骨架**：`AGENTS.md`（+ `CLAUDE.md` symlink）、`.harness/`、`docs/{reference,design,superpowers}/`
+- ✅ 创建传统文档结构（`docs/adr`、`docs/plans`、`templates`）
 - ✅ 创建文档索引
+
+如果只想装 skills、不要 Harness 骨架（罕见，例如脚手架仓库）：
+
+```bash
+npx @vattention/facio-superpowers init --no-harness
+```
 
 ### 更新到最新版本
 
 ```bash
 npx @vattention/facio-superpowers sync
+```
+
+`sync` 只更新 skills，不会改动 Harness 骨架。
+
+### 验证 Harness 布局
+
+```bash
+npx @vattention/facio-superpowers harness-lint
 ```
 
 ## Facio Flow 团队协作
@@ -83,6 +99,28 @@ AI 角色：产品经理                 AI 角色：研发专家
 ```
 
 AI 会创建 Context 并开始结构化的 brainstorming 流程。
+
+## Harness Engineering
+
+Harness 是 Vattention 团队的架构原则——通过 `AGENTS.md` 层级 + `.harness/` 配置 + 三层 `docs/`（reference / design / superpowers）把"AI 协作所需的项目知识"组织成机器与人都能读的形式。
+
+v2.0.0 起 `init` 默认搭建 Harness 骨架。`CLAUDE.md` 会被创建为指向 `AGENTS.md` 的 symlink，所以 Claude Code 与 Codex 等读 `AGENTS.md` 的工具都能命中同一份配置。
+
+### Harness 文件布局
+
+| 路径 | 用途 |
+|------|------|
+| `AGENTS.md` | 项目级 agent 入口（含 `@import` 导入团队 / superpowers 默认） |
+| `CLAUDE.md` → `AGENTS.md` | symlink，Claude Code 兼容 |
+| `.harness/pipeline.md` | 角色管线（哪些角色在什么 gate 介入） |
+| `.harness/gates.json` | gate 配置 |
+| `.harness/role-bindings.yaml` | 角色 → 人/agent 绑定 |
+| `.harness/anchors/index.yaml` | anchor 索引（关键文件 ↔ 概念） |
+| `docs/reference/` | 稳态参考文档（architecture, conventions, capabilities） |
+| `docs/design/` | 演进中的设计文档（system / changes） |
+| `docs/superpowers/{specs,plans}/` | superpowers spec 与实施 checklist |
+
+> 完整 spec 与设计动机：见 [facio-blueprint](https://github.com/vattention/facio-blueprint) 的 `docs/superpowers/specs/` 目录。
 
 ## 推荐工作流
 
@@ -217,30 +255,45 @@ Which version should this task reference?
 
 ## 目录结构
 
-安装后的项目结构：
+v2.0.0 默认 `init`（global skills + Harness 骨架）后的项目结构：
 
 ```
 your-project/
-├── CLAUDE.md                    # 项目配置（Claude Code 自动读取）
-├── CLAUDE-TEAM.md               # 团队标准
-├── .claude/skills/              # Skills 目录
-│   ├── brainstorming/
-│   ├── flow/                    # Facio Flow 集成
-│   ├── prepare-context/         # 上下文准备（增强版）
-│   ├── verification-before-completion/
-│   └── ... (共 16 个)
+├── AGENTS.md                    # Harness 入口（含 @import 团队默认）
+├── CLAUDE.md                    # → AGENTS.md (symlink)
+├── .harness/                    # Harness 配置
+│   ├── pipeline.md
+│   ├── gates.json
+│   ├── role-bindings.yaml
+│   ├── anchors/index.yaml
+│   └── README.md
+├── .github/
+│   └── CODEOWNERS.template
 ├── docs/
+│   ├── reference/               # 稳态参考（架构 / 约定 / 能力）
+│   │   ├── architecture.md
+│   │   ├── conventions.md
+│   │   └── capabilities/
+│   ├── design/                  # 演进中的设计
+│   │   ├── system/
+│   │   └── changes/
+│   ├── superpowers/
+│   │   ├── specs/               # superpowers spec
+│   │   └── plans/               # 实施 checklist
 │   ├── adr/                     # 架构决策记录
-│   │   ├── 001-use-zustand.md
 │   │   └── README.md            # 自动维护的索引
-│   ├── plans/                   # 设计文档
-│   │   └── README.md
-│   └── specs/                   # 本地规格文档
+│   └── plans/                   # 设计文档
+│       └── README.md
 ├── templates/
 │   └── adr-template.md
 └── scripts/
     └── sync-skills.sh
+
+~/.claude/skills/                # Skills 全局安装（跨项目共享）
+└── ... (19 个)
 ```
+
+> Skills 默认安装到 `~/.claude/skills/`（global），Codex 也通过 `~/.agents/skills/superpowers` symlink 共享同一份。如果用 `--project` 强制 project-level，会触发 38 目录复制 warning。
 
 ## 与原版 Superpowers 对比
 
