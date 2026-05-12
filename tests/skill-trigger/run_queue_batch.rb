@@ -16,6 +16,8 @@ CLAUDE_BIN = ENV.fetch("CLAUDE_BIN", "claude")
 CODEX_BIN = ENV.fetch("CODEX_BIN", "codex")
 TIMEOUT_SECONDS = Integer(ENV.fetch("SKILL_TRIGGER_TIMEOUT", "300"))
 BATCH_SIZE = Integer(ENV.fetch("SKILL_TRIGGER_BATCH_SIZE", "2"))
+SELECTED_HOSTS = ENV.fetch("SKILL_TRIGGER_HOSTS", "claude,codex").split(",").map(&:strip).reject(&:empty?)
+ONLY_CASE_IDS = ENV.fetch("SKILL_TRIGGER_ONLY_CASE_IDS", "").split(",").map(&:strip).reject(&:empty?)
 
 HOSTS = {
   "claude" => lambda do |prompt|
@@ -25,6 +27,13 @@ HOSTS = {
     [CODEX_BIN, "exec", prompt]
   end
 }.freeze
+
+def selected_hosts
+  unknown = SELECTED_HOSTS - HOSTS.keys
+  raise "Unknown host(s): #{unknown.join(', ')}" unless unknown.empty?
+
+  SELECTED_HOSTS
+end
 
 def slug(text)
   text.gsub(/[^a-z0-9]+/i, "-").gsub(/\A-+|-+\z/, "").downcase
@@ -86,7 +95,7 @@ end
 def completed_ids_from_run(run_path)
   data = Psych.load_file(run_path)
   data.fetch("results").map do |result|
-    hosts = %w[claude codex]
+    hosts = selected_hosts
     next unless hosts.all? { |host| !result.dig(host, "notes").to_s.include?("Fill with observed") }
 
     result.fetch("prompt_id")
@@ -97,13 +106,25 @@ def completed_ids
   completed_ids_from_run(RUN_PATH)
 end
 
+def select_pending_batch(corpus)
+  if ONLY_CASE_IDS.any?
+    wanted = corpus.select { |sample| ONLY_CASE_IDS.include?(sample.fetch("id")) }
+    missing = ONLY_CASE_IDS - wanted.map { |sample| sample.fetch("id") }
+    raise "Unknown case id(s): #{missing.join(', ')}" unless missing.empty?
+
+    return wanted.first(BATCH_SIZE)
+  end
+
+  pending = corpus.reject { |sample| completed_ids.include?(sample.fetch("id")) }
+  pending.first(BATCH_SIZE)
+end
+
 def main
   ensure_skill_symlink
   FileUtils.mkdir_p(ARTIFACT_ROOT)
 
   corpus = Psych.load_file(CORPUS_PATH)
-  pending = corpus.reject { |sample| completed_ids.include?(sample.fetch("id")) }
-  batch = pending.first(BATCH_SIZE)
+  batch = select_pending_batch(corpus)
 
   if batch.empty?
     puts JSON.pretty_generate({
@@ -122,6 +143,7 @@ def main
     "started_at" => Time.now.iso8601,
     "timeout_seconds" => TIMEOUT_SECONDS,
     "batch_size" => batch.size,
+    "hosts" => selected_hosts,
     "cases" => batch.map { |sample| sample.fetch("id") },
     "results" => []
   }
@@ -130,7 +152,8 @@ def main
     sample_dir = File.join(batch_dir, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
     FileUtils.mkdir_p(sample_dir)
 
-    HOSTS.each do |host, build_command|
+    selected_hosts.each do |host|
+      build_command = HOSTS.fetch(host)
       run = run_with_capture(build_command.call(sample.fetch("user_message")), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
       stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
       stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
