@@ -5,6 +5,7 @@ require "fileutils"
 require "json"
 require "open3"
 require "psych"
+require "set"
 require "time"
 
 ROOT = File.expand_path("../..", __dir__)
@@ -16,6 +17,7 @@ CLAUDE_BIN = ENV.fetch("CLAUDE_BIN", "claude")
 CODEX_BIN = ENV.fetch("CODEX_BIN", "codex")
 TIMEOUT_SECONDS = Integer(ENV.fetch("SKILL_TRIGGER_TIMEOUT", "300"))
 BATCH_SIZE = Integer(ENV.fetch("SKILL_TRIGGER_BATCH_SIZE", "2"))
+MAX_BATCH_LOOPS = Integer(ENV.fetch("SKILL_TRIGGER_BATCH_LOOPS", "1"))
 SELECTED_HOSTS = ENV.fetch("SKILL_TRIGGER_HOSTS", "claude,codex").split(",").map(&:strip).reject(&:empty?)
 ONLY_CASE_IDS = ENV.fetch("SKILL_TRIGGER_ONLY_CASE_IDS", "").split(",").map(&:strip).reject(&:empty?)
 
@@ -106,16 +108,19 @@ def completed_ids
   completed_ids_from_run(RUN_PATH)
 end
 
-def select_pending_batch(corpus)
+def select_pending_batch(corpus, completed_id_set)
   if ONLY_CASE_IDS.any?
-    wanted = corpus.select { |sample| ONLY_CASE_IDS.include?(sample.fetch("id")) }
+    wanted = corpus.select do |sample|
+      ONLY_CASE_IDS.include?(sample.fetch("id")) && !completed_id_set.include?(sample.fetch("id"))
+    end
     missing = ONLY_CASE_IDS - wanted.map { |sample| sample.fetch("id") }
-    raise "Unknown case id(s): #{missing.join(', ')}" unless missing.empty?
+    unknown = missing.reject { |sample_id| completed_id_set.include?(sample_id) }
+    raise "Unknown case id(s): #{unknown.join(', ')}" unless unknown.empty?
 
     return wanted.first(BATCH_SIZE)
   end
 
-  pending = corpus.reject { |sample| completed_ids.include?(sample.fetch("id")) }
+  pending = corpus.reject { |sample| completed_id_set.include?(sample.fetch("id")) }
   pending.first(BATCH_SIZE)
 end
 
@@ -124,9 +129,71 @@ def main
   FileUtils.mkdir_p(ARTIFACT_ROOT)
 
   corpus = Psych.load_file(CORPUS_PATH)
-  batch = select_pending_batch(corpus)
+  completed_id_set = completed_ids.to_set
+  completed_batches = []
 
-  if batch.empty?
+  MAX_BATCH_LOOPS.times do
+    batch = select_pending_batch(corpus, completed_id_set)
+
+    break if batch.empty?
+
+    batch_label = batch.map { |sample| sample.fetch("id") }.join("__")
+    batch_dir = File.join(ARTIFACT_ROOT, "#{Time.now.strftime("%Y%m%d-%H%M%S")}-#{slug(batch_label)}")
+    FileUtils.mkdir_p(batch_dir)
+
+    summary = {
+      "started_at" => Time.now.iso8601,
+      "timeout_seconds" => TIMEOUT_SECONDS,
+      "batch_size" => batch.size,
+      "hosts" => selected_hosts,
+      "cases" => batch.map { |sample| sample.fetch("id") },
+      "results" => []
+    }
+
+    batch.each_with_index do |sample, index|
+      sample_dir = File.join(batch_dir, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
+      FileUtils.mkdir_p(sample_dir)
+
+      selected_hosts.each do |host|
+        build_command = HOSTS.fetch(host)
+        run = run_with_capture(build_command.call(sample.fetch("user_message")), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
+        stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
+        stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
+
+        File.write(stdout_path, run[:stdout])
+        File.write(stderr_path, run[:stderr])
+
+        summary["results"] << {
+          "sample_id" => sample.fetch("id"),
+          "host" => host,
+          "expected_skill" => sample.fetch("expected_skill"),
+          "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
+          "stdout_path" => stdout_path,
+          "stderr_path" => stderr_path,
+          "exit_code" => run[:exit_code],
+          "success" => run[:success],
+          "timed_out" => run[:timed_out],
+          "stability_flags" => stability_flags("#{run[:stdout]}\n#{run[:stderr]}")
+        }
+      end
+    end
+
+    summary["finished_at"] = Time.now.iso8601
+    summary_path = File.join(batch_dir, "summary.json")
+    File.write(summary_path, JSON.pretty_generate(summary))
+
+    completed_batches << {
+      "artifact_batch_dir" => batch_dir,
+      "finished_cases" => batch.map { |sample| sample.fetch("id") },
+      "summary_path" => summary_path
+    }
+
+    batch.each do |sample|
+      completed_id_set.add(sample.fetch("id"))
+    end
+  end
+
+  if completed_batches.empty?
     puts JSON.pretty_generate({
       status: "done",
       message: "No pending cases left in queue.",
@@ -135,57 +202,13 @@ def main
     return
   end
 
-  batch_label = batch.map { |sample| sample.fetch("id") }.join("__")
-  batch_dir = File.join(ARTIFACT_ROOT, "#{Time.now.strftime("%Y%m%d-%H%M%S")}-#{slug(batch_label)}")
-  FileUtils.mkdir_p(batch_dir)
-
-  summary = {
-    "started_at" => Time.now.iso8601,
-    "timeout_seconds" => TIMEOUT_SECONDS,
-    "batch_size" => batch.size,
-    "hosts" => selected_hosts,
-    "cases" => batch.map { |sample| sample.fetch("id") },
-    "results" => []
-  }
-
-  batch.each_with_index do |sample, index|
-    sample_dir = File.join(batch_dir, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
-    FileUtils.mkdir_p(sample_dir)
-
-    selected_hosts.each do |host|
-      build_command = HOSTS.fetch(host)
-      run = run_with_capture(build_command.call(sample.fetch("user_message")), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
-      stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
-      stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
-
-      File.write(stdout_path, run[:stdout])
-      File.write(stderr_path, run[:stderr])
-
-      summary["results"] << {
-        "sample_id" => sample.fetch("id"),
-        "host" => host,
-        "expected_skill" => sample.fetch("expected_skill"),
-        "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
-        "stdout_path" => stdout_path,
-        "stderr_path" => stderr_path,
-        "exit_code" => run[:exit_code],
-        "success" => run[:success],
-        "timed_out" => run[:timed_out],
-        "stability_flags" => stability_flags("#{run[:stdout]}\n#{run[:stderr]}")
-      }
-    end
-  end
-
-  summary["finished_at"] = Time.now.iso8601
-  summary_path = File.join(batch_dir, "summary.json")
-  File.write(summary_path, JSON.pretty_generate(summary))
-
   puts JSON.pretty_generate({
     status: "ok",
     run_file: RUN_PATH,
-    artifact_batch_dir: batch_dir,
-    finished_cases: batch.map { |sample| sample.fetch("id") },
-    summary_path: summary_path
+    batch_loops_requested: MAX_BATCH_LOOPS,
+    batch_loops_completed: completed_batches.size,
+    batches: completed_batches,
+    finished_cases: completed_batches.flat_map { |batch_info| batch_info.fetch("finished_cases") }
   })
 end
 
