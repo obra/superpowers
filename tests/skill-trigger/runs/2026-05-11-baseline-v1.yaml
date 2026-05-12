@@ -1,8 +1,8 @@
 ---
 run_id: 2026-05-11-baseline-v1
 date: 2026-05-11
-purpose: baseline with 4 observed claude prompts and all 48 codex prompts backfilled;
-  remaining placeholders are claude-only
+purpose: baseline with 27 observed claude prompts and all 48 codex prompts backfilled;
+  remaining 21 placeholders are claude-only
 skills:
   commit: 2f6b6fa
   scope:
@@ -27,10 +27,10 @@ corpus:
   sample_count: 48
 summary:
   claude:
-    exact: 4
-    acceptable: 0
-    miss: 0
-    wrong: 0
+    exact: 12
+    acceptable: 3
+    miss: 10
+    wrong: 2
     no_trigger_expected: 0
   codex:
     exact: 44
@@ -39,8 +39,8 @@ summary:
     wrong: 0
     no_trigger_expected: 0
   host_divergence:
-    outcome_count: 0
-    routing_count: 0
+    outcome_count: 15
+    routing_count: 2
 results:
 - prompt_id: brainstorming_strong_001
   user_message: 我有个新功能想法，但范围和交互还没想清楚，你先帮我理一理思路。
@@ -75,12 +75,13 @@ results:
   should_trigger: true
   corpus_notes: 强触发；直接要求讨论设计与边界。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Asked which requirement the user wanted to discuss and framed the response
+      as a design-and-boundary discussion before any coding.
   codex:
     triggered: true
     triggered_skill: brainstorming
@@ -101,12 +102,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；未显式提到方案设计，但表达了需要共同探索方案。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Analyzed the direction question as an idea-refinement problem and compared
+      alternative paths before implementation.
   codex:
     triggered: true
     triggered_skill: brainstorming
@@ -127,12 +129,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；英文抽象表达，强调缩小范围。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Explicitly announced the brainstorming workflow and asked the user to describe
+      the rough idea so it could narrow scope before building.
   codex:
     triggered: true
     triggered_skill: brainstorming
@@ -153,12 +156,14 @@ results:
   should_trigger: true
   corpus_notes: 混淆样本；与 writing-plans 邻近，但当前主目标仍是明确方向。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Stayed in idea-clarification mode and asked whether the user meant the
+      framework itself, broader Codex compatibility, or another direction before planning
+      work.
   codex:
     triggered: true
     triggered_skill: brainstorming
@@ -179,12 +184,13 @@ results:
   should_trigger: true
   corpus_notes: 混淆样本；容易被泛化到 planning，但更适合先做需求澄清。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: acceptable
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Responded with a follow-up asking the user to focus the direction first,
+      which is still consistent with early-stage brainstorming and scope clarification.
   codex:
     triggered: true
     triggered_skill: brainstorming
@@ -194,9 +200,10 @@ results:
     notes: Routed to brainstorming to clarify user value, risks, and paths before
       any planning or implementation work.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude rated acceptable vs Codex exact; both chose brainstorming but Claude
+      was less explicit.
 - prompt_id: writing_plans_strong_001
   user_message: 方案已经定了，帮我拆成具体开发步骤和文件改动顺序。
   expected_skill: writing-plans
@@ -230,12 +237,13 @@ results:
   should_trigger: true
   corpus_notes: 强触发；直接要求分步骤计划。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Produced a staged implementation plan based on the current repo state and
+      baseline workflow, which matches the writing-plans intent directly.
   codex:
     triggered: true
     triggered_skill: writing-plans
@@ -255,12 +263,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；通过推进方式暗示需要计划。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: acceptable
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Produced a stable next-step sequence grounded in the current implementation
+      plan and recommended creating an executable formal plan before further work.
   codex:
     triggered: true
     triggered_skill: writing-plans
@@ -270,9 +279,10 @@ results:
     notes: Used horspowers:writing-plans and recommended a stable next-step sequence,
       pointing to an executable formal plan as the correct next artifact.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude rated acceptable vs Codex exact; both chose writing-plans but Claude
+      was less explicit about the skill workflow.
 - prompt_id: writing_plans_weak_002
   user_message: Can you turn this approved spec into an execution plan with checkpoints?
   expected_skill: writing-plans
@@ -281,12 +291,14 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；英文表达，主要是生成计划而非立刻执行。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Asked the user to identify which approved spec should be turned into an
+      execution plan, which matches the writing-plans intent and keeps the conversation
+      in plan-construction mode.
   codex:
     triggered: true
     triggered_skill: writing-plans
@@ -307,12 +319,13 @@ results:
   should_trigger: true
   corpus_notes: 混淆样本；前半句仍有模糊空间，但后半句更接近任务拆解。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: acceptable
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Summarized current branch status and ordered the next priorities, which
+      stays within plan-construction intent even though it leaned toward roadmap triage.
   codex:
     triggered: true
     triggered_skill: writing-plans
@@ -322,9 +335,10 @@ results:
     notes: Routed to writing-plans and organized the next-step order instead of reopening
       broad discovery.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude acceptable vs Codex exact; both chose writing-plans but Claude was
+      less explicit about the skill workflow.
 - prompt_id: writing_plans_confusion_002
   user_message: 把这个需求拆成可以 review 的几个阶段，但先别真的开始做。
   expected_skill: writing-plans
@@ -333,12 +347,14 @@ results:
   should_trigger: true
   corpus_notes: 混淆样本；提到阶段和 review，但核心仍是产出计划。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    triggered: true
+    triggered_skill: brainstorming
+    outcome: wrong
+    confidence: high
+    reason_tags:
+    - neighbor_skill_confusion
+    notes: Asked to clarify review scope and entered brainstorming-style scope framing
+      instead of turning the request into reviewable implementation phases.
   codex:
     triggered: true
     triggered_skill: writing-plans
@@ -348,9 +364,9 @@ results:
     notes: Framed the request as producing reviewable phases without starting execution,
       matching writing-plans.
   divergence:
-    outcome: false
-    routing: false
-    notes: ''
+    outcome: true
+    routing: true
+    notes: Claude triggered brainstorming (wrong); Codex triggered writing-plans (exact).
 - prompt_id: executing_plans_strong_001
   user_message: 按这份计划开始做，先完成第一批，然后停下来汇报进展。
   expected_skill: executing-plans
@@ -383,12 +399,14 @@ results:
   should_trigger: true
   corpus_notes: 强触发；强调阶段推进与检查点。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    triggered: true
+    triggered_skill: writing-plans
+    outcome: wrong
+    confidence: high
+    reason_tags:
+    - neighbor_skill_confusion
+    notes: Reviewed current branch state and asked the user to choose a next-phase
+      direction instead of executing an existing plan stage-by-stage with review checkpoints.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -398,9 +416,10 @@ results:
     notes: Interpreted the request as stage-by-stage execution with review pauses,
       matching executing-plans.
   divergence:
-    outcome: false
-    routing: false
-    notes: ''
+    outcome: true
+    routing: true
+    notes: Claude triggered writing-plans (wrong); Codex triggered executing-plans
+      (exact).
 - prompt_id: executing_plans_weak_001
   user_message: Continue with the plan, but keep the work easy to pause and resume.
   expected_skill: executing-plans
@@ -692,12 +711,14 @@ results:
   should_trigger: true
   corpus_notes: 强触发；直接要求结构化 debug。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: systematic-debugging
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Entered systematic-debugging mode explicitly, asked for concrete symptoms
+      (error messages, affected functionality, expected vs actual behavior) before
+      proposing any fix.
   codex:
     triggered: true
     triggered_skill: systematic-debugging
@@ -743,12 +764,14 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；通过缩小范围体现排查意图。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: systematic-debugging
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Explicitly stated using the systematic-debugging skill, asked for bug symptoms,
+      frequency, impact range, and recent changes per the debugging workflow's first
+      phase.
   codex:
     triggered: true
     triggered_skill: systematic-debugging
@@ -773,8 +796,13 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    - overlapping_skills
+    notes: Asked which specific bug the user meant and pointed out a suspicious untracked
+      directory, but did not reference the systematic-debugging workflow or terminology;
+      stayed in generic information-gathering mode instead of entering a structured
+      debugging process.
   codex:
     triggered: true
     triggered_skill: systematic-debugging
@@ -784,9 +812,10 @@ results:
     notes: Kept root-cause identification primary even though the prompt mentioned
       tests as a later possibility.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude asked generic clarifying questions without invoking the skill; Codex
+      routed to systematic-debugging and followed the workflow.
 - prompt_id: systematic_debugging_confusion_002
   user_message: 先梳理一下现象、假设和验证步骤，确认问题到底在哪一层。
   expected_skill: systematic-debugging
@@ -823,8 +852,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Mentioned wanting to follow TDD flow to write a precise failing test, but
+      stayed in information-gathering mode asking for bug details instead of entering
+      the TDD workflow (RED-GREEN-REFACTOR).
   codex:
     triggered: true
     triggered_skill: test-driven-development
@@ -834,9 +866,9 @@ results:
     notes: Explicitly followed the failing-test-first workflow before implementation,
       matching TDD exactly.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude stayed in information-gathering mode; Codex entered the TDD workflow.
 - prompt_id: tdd_strong_002
   user_message: 先写测试把预期行为钉住，然后再改代码。
   expected_skill: test-driven-development
@@ -924,8 +956,12 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    - overlapping_skills
+    notes: Asked which specific bug the user meant and requested details (error info,
+      affected file/functionality, expected vs actual behavior) instead of starting
+      a TDD workflow to write a reproducing test first.
   codex:
     triggered: true
     triggered_skill: test-driven-development
@@ -935,9 +971,10 @@ results:
     notes: Prioritized writing a reproducing test first; systematic-debugging was
       also loaded as nearby context but not as the main route.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude asked for bug details without TDD routing; Codex prioritized writing
+      a reproducing test.
 - prompt_id: tdd_confusion_002
   user_message: 先用一个 failing case 把问题固定住，后面实现可以再慢慢补。
   expected_skill: test-driven-development
@@ -1076,8 +1113,12 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Performed a detailed analysis of whether the implementation deviated from
+      requirements, comparing commits against spec, but answered directly without
+      invoking the requesting-code-review skill or following its structured review
+      checklist.
   codex:
     triggered: true
     triggered_skill: requesting-code-review
@@ -1087,9 +1128,10 @@ results:
     notes: Checked whether the implementation drifted from requirements instead of
       reopening product-direction discussion.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude analyzed deviation directly without skill invocation; Codex routed
+      to requesting-code-review.
 - prompt_id: code_review_confusion_002
   user_message: 帮我快速扫一下这次提交，确认没有明显问题我再继续下一个任务。
   expected_skill: requesting-code-review
@@ -1101,8 +1143,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Scanned both commits and working-directory changes and concluded no obvious
+      issues, but did so directly without invoking the requesting-code-review skill
+      or following its structured review checklist workflow.
   codex:
     triggered: true
     triggered_skill: requesting-code-review
@@ -1112,9 +1157,9 @@ results:
     notes: Handled the quick-scan request as a structured review for obvious problems
       before continuing.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude scanned directly without skill invocation; Codex routed to requesting-code-review.
 - prompt_id: document_management_strong_001
   user_message: 帮我看看 docs 里之前有没有记录过这个决策，顺便把相关文档找出来。
   expected_skill: document-management
@@ -1126,8 +1171,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Found and listed relevant decision records from docs in a structured table,
+      but did not invoke the document-management skill or follow its retrieval workflow;
+      answered by directly searching the filesystem.
   codex:
     triggered: true
     triggered_skill: document-management
@@ -1137,9 +1185,10 @@ results:
     notes: Used document-management to search prior decision records and collect related
       documentation context.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude searched docs directly without skill invocation; Codex routed to
+      document-management.
 - prompt_id: document_management_strong_002
   user_message: 先把项目的文档系统初始化好，我后面要开始记设计和任务。
   expected_skill: document-management
@@ -1151,8 +1200,12 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Initialized the document system (created directories, config, metadata)
+      and reported status, but did not explicitly invoke the document-management skill
+      or reference its initialization workflow; executed setup steps directly without
+      skill routing.
   codex:
     triggered: true
     triggered_skill: document-management
@@ -1162,9 +1215,10 @@ results:
     notes: Recognized the request as initializing the project documentation system
       before later design and task tracking.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude initialized docs directly without skill invocation; Codex routed
+      to document-management.
 - prompt_id: document_management_weak_001
   user_message: Can you recover the project context from docs and show me what is
     still active?
@@ -1177,8 +1231,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Recovered and summarized active project context from docs with a priority-ordered
+      overview, but did not invoke the document-management skill; answered by directly
+      reading and organizing the filesystem content.
   codex:
     triggered: true
     triggered_skill: document-management
@@ -1188,9 +1245,10 @@ results:
     notes: Used document-management to recover active context from docs, then asked
       whether active work should mean plans, tasks, or both.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude recovered context directly without skill invocation; Codex routed
+      to document-management.
 - prompt_id: document_management_weak_002
   user_message: 我记得以前写过一份相关方案，帮我从文档里翻出来。
   expected_skill: document-management
@@ -1202,8 +1260,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Found and listed relevant plan documents from docs with descriptions, but
+      did not invoke the document-management skill; answered by directly searching
+      the filesystem and presenting results without skill routing.
   codex:
     triggered: true
     triggered_skill: document-management
@@ -1213,9 +1274,10 @@ results:
     notes: Explicitly used document-management to verify whether existing docs were
       in the right places and to locate the prior plan.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude searched docs directly without skill invocation; Codex routed to
+      document-management.
 - prompt_id: document_management_confusion_001
   user_message: 这个任务先别实现，先检查一下有没有现成的 docs 可以接着用。
   expected_skill: document-management
@@ -1228,8 +1290,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - host_prompt_bias
+    notes: Inventoried existing reusable documents organized by category with reuse-value
+      ratings, but did not invoke the document-management skill; answered by directly
+      scanning the filesystem instead of routing through the skill workflow.
   codex:
     triggered: true
     triggered_skill: document-management
@@ -1239,9 +1304,10 @@ results:
     notes: Checked for reusable existing documentation before any implementation work,
       which matches document-management.
   divergence:
-    outcome: false
+    outcome: true
     routing: false
-    notes: ''
+    notes: Claude inventoried docs directly without skill invocation; Codex routed
+      to document-management.
 - prompt_id: document_management_confusion_002
   user_message: 把已经做完的这批事项从活跃文档里清掉，并归档到合适的位置。
   expected_skill: document-management

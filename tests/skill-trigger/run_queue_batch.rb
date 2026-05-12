@@ -6,6 +6,7 @@ require "json"
 require "open3"
 require "psych"
 require "set"
+require "date"
 require "time"
 
 ROOT = File.expand_path("../..", __dir__)
@@ -94,8 +95,15 @@ def stability_flags(text)
   flags
 end
 
+def load_yaml_file(path)
+  content = File.read(path)
+  Psych.safe_load(content, permitted_classes: [Date], aliases: true)
+rescue ArgumentError
+  Psych.safe_load(content, [Date], [], true)
+end
+
 def completed_ids_from_run(run_path)
-  data = Psych.load_file(run_path)
+  data = load_yaml_file(run_path)
   data.fetch("results").map do |result|
     hosts = selected_hosts
     next unless hosts.all? { |host| !result.dig(host, "notes").to_s.include?("Fill with observed") }
@@ -128,7 +136,7 @@ def main
   ensure_skill_symlink
   FileUtils.mkdir_p(ARTIFACT_ROOT)
 
-  corpus = Psych.load_file(CORPUS_PATH)
+  corpus = load_yaml_file(CORPUS_PATH)
   completed_id_set = completed_ids.to_set
   completed_batches = []
 

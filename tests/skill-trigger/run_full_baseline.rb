@@ -100,7 +100,7 @@ def main
   ensure_skill_symlink
   FileUtils.mkdir_p(ARTIFACT_ROOT)
 
-  corpus = Psych.load_file(CORPUS_PATH)
+  corpus = Psych.load_file(CORPUS_PATH, permitted_classes: [Date])
   summary = {
     "started_at" => Time.now.iso8601,
     "cwd" => ROOT,
