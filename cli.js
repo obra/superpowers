@@ -5,8 +5,9 @@
  * Initialize documentation management for AI-assisted development
  *
  * Usage:
- *   npx facio-superpowers init [--project]
+ *   npx facio-superpowers init [--no-harness] [--project]
  *   npx facio-superpowers sync [--project]
+ *   npx facio-superpowers harness-lint
  */
 
 const fs = require('fs');
@@ -700,7 +701,26 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   const command = args[0];
   const projectLevel = args.includes('--project');
-  const harnessMode = args.includes('--harness');
+  const noHarness = args.includes('--no-harness');
+
+  // --harness is deprecated in v2.0.0 (Harness is now the default).
+  // Detect it only to emit a warning; behavior is unaffected.
+  const hasLegacyHarnessFlag = args.includes('--harness');
+  if (hasLegacyHarnessFlag) {
+    log('⚠️  --harness flag is deprecated (Harness is now the default).', 'yellow');
+    log('   Drop the flag for the same behavior. See RELEASE-NOTES.md v2.0.0.', 'yellow');
+  }
+
+  // Real intent: Harness on unless explicitly opted out.
+  const harnessMode = !noHarness;
+
+  // Warn on --project (regardless of harness): copies skills locally — usually wrong.
+  if (command === 'init' && projectLevel) {
+    log('⚠️  --project copies 19 skills × 2 IDEs (38 directories) into this repo.', 'yellow');
+    log('   This is rarely what you want. Industry standard is global skills.', 'yellow');
+    log('   See: https://code.claude.com/docs/en/skills', 'yellow');
+    log('   Recommended: drop --project (skills install globally to ~/.claude/skills/).', 'yellow');
+  }
 
   switch (command) {
     case 'init':
@@ -715,15 +735,14 @@ if (require.main === module) {
     default:
       log('\nFacio Superpowers CLI\n', 'green');
       log('Usage:');
-      log('  npx facio-superpowers init                          Install skills globally (~/.claude/skills)');
-      log('  npx facio-superpowers init --project                Install skills to project (.claude/skills)');
-      log('  npx facio-superpowers init --project --harness      Scaffold Harness Engineering layout (AGENTS.md / .harness/ / docs/{reference,design,plan}/)');
-      log('  npx facio-superpowers sync                          Sync global skills to latest version');
-      log('  npx facio-superpowers sync --project                Sync project skills to latest version');
-      log('  npx facio-superpowers harness-lint                  Verify Harness file layout in current project');
-      log('\nGlobal skills are shared across all projects (recommended).');
-      log('Project skills are specific to the current project.');
-      log('Harness mode adds AGENTS.md hierarchy + .harness/ configs + three-tier docs/.\n');
+      log('  npx facio-superpowers init                          [DEFAULT] Install skills globally + scaffold Harness layout');
+      log('  npx facio-superpowers init --no-harness             Install skills globally only (no Harness scaffold, advanced)');
+      log('  npx facio-superpowers init --project                Install skills to project + Harness scaffold (rare)');
+      log('  npx facio-superpowers sync                          Sync global skills to latest');
+      log('  npx facio-superpowers sync --project                Sync project skills (only if --project was used at init)');
+      log('  npx facio-superpowers harness-lint                  Verify Harness file layout in cwd');
+      log('\nDeprecated:');
+      log('  --harness                                            v1.x flag; now default. Drop the flag.\n');
       break;
   }
 }
