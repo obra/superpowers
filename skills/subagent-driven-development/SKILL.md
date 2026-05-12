@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with a task DAG. Default flow dispatches one backgrounded subagent per ready task into its own git worktree (parallel-by-default). Falls back to sequential for plans without `depends_on`.
 ---
 
 # Subagent-Driven Development

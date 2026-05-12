@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Use when you have a spec or requirements for a multi-step task, before touching code. Plans declare a task DAG (`depends_on`, `parallel_safe`) so execution can parallelize automatically.
 ---
 
 # Writing Plans
