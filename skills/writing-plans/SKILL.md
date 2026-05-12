@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Use when you have a spec or requirements for a multi-step task, before touching code. Plans declare a task DAG (`depends_on`, `parallel_safe`) so execution can parallelize automatically.
 ---
 
 # Writing Plans
@@ -62,8 +62,20 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Task Structure
 
+**Task metadata block.** Each task starts with three metadata fields, used by the controller to compute parallel execution order:
+
+- `id`: short kebab-case identifier, unique within the plan. Required when any task in the plan declares `depends_on`.
+- `depends_on`: list of task ids this task waits on. Empty (`[]`) means it can start immediately. Omit if no other task uses `depends_on`.
+- `parallel_safe`: `true` (default) or `false`. Set `false` only for genuinely global state (env files, DB migrations, config singletons). Most apparent conflicts should be resolved by adding a dependency instead.
+
+When omitted entirely across every task, the plan runs in sequential back-compat mode.
+
 ````markdown
 ### Task N: [Component Name]
+
+**id**: example-task
+**depends_on**: []
+**parallel_safe**: true
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -102,6 +114,23 @@ git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
 ````
+
+## Plan Design Heuristic
+
+When drafting a plan, organize tasks for maximum parallel execution with clean merges.
+
+1. **Decompose by file/module boundary first.** Tasks touching disjoint files are parallel-safe by construction.
+2. **Identify shared edits early.** If multiple tasks need the same file, restructure: extract the shared edit as an upstream task; the others depend on it.
+3. **Push integration to leaves.** Wiring and glue tasks live late in the DAG and depend on the units they integrate. Unit work stays parallel; only integration serializes.
+4. **Maximize ready-set width.** The goal is the fattest possible parallel layer at each round. If the DAG looks like a chain, reconsider whether tasks can split.
+5. **Predict merge cleanliness per task.** For each task, list the files it will touch. If any file appears in a sibling task, those tasks are not actually parallel — add a dependency or merge them.
+6. **`parallel_safe: false` is a last resort.** Only for genuinely global state (env, DB migrations, config singletons).
+
+Every plan ends with a **Parallelism analysis** section listing:
+
+- Ready-set width per layer of the DAG
+- Sequential bottlenecks and why they exist
+- Justification for any `parallel_safe: false` task
 
 ## No Placeholders
 

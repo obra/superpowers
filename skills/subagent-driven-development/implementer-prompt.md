@@ -111,3 +111,23 @@ Task tool (general-purpose):
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
 ```
+
+## Worktree Pipeline
+
+You are running inside a git worktree dispatched by the parallel controller. Your full responsibility is the entire per-task pipeline, not just implementation.
+
+After you have implemented, tested, committed, and self-reviewed:
+
+1. **Dispatch the spec reviewer subagent** with the prompt from `skills/subagent-driven-development/spec-reviewer-prompt.md`, providing it the task spec and the diff you produced. Run it as `run_in_background: true`. Wait for completion.
+   - If reviewer returns ❌ with issues, fix them in this worktree, commit the fix, and re-dispatch the spec reviewer. Repeat until ✅.
+   - Hard stop after 3 fix iterations: return BLOCKED with the full reviewer transcript.
+
+2. **Dispatch the code-quality reviewer subagent** with the prompt from `skills/subagent-driven-development/code-quality-reviewer-prompt.md`, on the now spec-compliant diff. Run it as `run_in_background: true`. Wait for completion.
+   - Same fix-and-re-review loop. Same 3-iteration hard stop.
+
+3. **Return to controller** with one of:
+   - `DONE` — both reviews ✅, commits in place
+   - `DONE_WITH_CONCERNS` — both reviews ✅ but you noted observations the controller should know
+   - `BLOCKED` — fix loop exhausted, or you cannot proceed; include full transcript
+
+Do not ask the controller for input mid-pipeline. Do not surface review failures to the human directly. The controller decides what to escalate.

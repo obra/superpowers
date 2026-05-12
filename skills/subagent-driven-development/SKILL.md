@@ -1,90 +1,138 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with a task DAG. Default flow dispatches one backgrounded subagent per ready task into its own git worktree (parallel-by-default). Falls back to sequential for plans without `depends_on`.
 ---
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute a plan by dispatching one backgrounded subagent per ready task into its own git worktree, with full per-task review pipeline (implementer → spec review → code-quality review) running autonomously inside each worktree. Controller merges results as they arrive.
 
-**Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+**Why parallel-by-default:** plans expose their structure as a DAG via `depends_on`. The controller computes the ready set each round and dispatches every parallel-safe ready task concurrently. Sequential is the fallback for chain DAGs and `parallel_safe: false` tasks, not the default.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Why subagents:** you delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They never inherit your session's context — you construct exactly what they need. This preserves your own context for coordination.
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+**Continuous execution:** do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete.
 
 ## When to Use
 
-```dot
-digraph when_to_use {
-    "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
-    "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
-
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
-}
-```
-
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
-- Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
-- Faster iteration (no human-in-loop between tasks)
+Default execution path for any plan with task `depends_on` metadata. For plans without `depends_on` declared on any task, see the **Sequential Mode** subsection below.
 
 ## The Process
 
 ```dot
-digraph process {
+digraph parallel_process {
     rankdir=TB;
+    "Read plan, build DAG, create TodoWrite" [shape=box];
+    "More tasks pending?" [shape=diamond];
+    "Compute ready set" [shape=box];
+    "Ready set has 1 task or only sequential tasks?" [shape=diamond];
+    "Dispatch foreground (no worktree)" [shape=box];
+    "Dispatch all parallel_safe ready tasks (background + worktree)" [shape=box];
+    "Wait for next agent completion (notification)" [shape=box];
+    "Merge result" [shape=box];
+    "Merge clean?" [shape=diamond];
+    "Run tests" [shape=box];
+    "Tests pass?" [shape=diamond];
+    "Push branch, open draft PR, mark BLOCKED-on-human" [shape=box];
+    "Dispatch fix subagent in fresh worktree" [shape=box];
+    "Mark DONE in TodoWrite" [shape=box];
+    "Dispatch final code-quality reviewer on merged branch" [shape=box];
+    "superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
-    }
-
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
-    "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
-
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "Read plan, build DAG, create TodoWrite" -> "More tasks pending?";
+    "More tasks pending?" -> "Compute ready set" [label="yes"];
+    "Compute ready set" -> "Ready set has 1 task or only sequential tasks?";
+    "Ready set has 1 task or only sequential tasks?" -> "Dispatch foreground (no worktree)" [label="yes"];
+    "Ready set has 1 task or only sequential tasks?" -> "Dispatch all parallel_safe ready tasks (background + worktree)" [label="no"];
+    "Dispatch foreground (no worktree)" -> "Merge result";
+    "Dispatch all parallel_safe ready tasks (background + worktree)" -> "Wait for next agent completion (notification)";
+    "Wait for next agent completion (notification)" -> "Merge result";
+    "Merge result" -> "Merge clean?";
+    "Merge clean?" -> "Run tests" [label="yes"];
+    "Merge clean?" -> "Push branch, open draft PR, mark BLOCKED-on-human" [label="no"];
+    "Run tests" -> "Tests pass?";
+    "Tests pass?" -> "Mark DONE in TodoWrite" [label="yes"];
+    "Tests pass?" -> "Dispatch fix subagent in fresh worktree" [label="no"];
+    "Dispatch fix subagent in fresh worktree" -> "Wait for next agent completion (notification)";
+    "Push branch, open draft PR, mark BLOCKED-on-human" -> "More tasks pending?";
+    "Mark DONE in TodoWrite" -> "More tasks pending?";
+    "More tasks pending?" -> "Dispatch final code-quality reviewer on merged branch" [label="no"];
+    "Dispatch final code-quality reviewer on merged branch" -> "superpowers:finishing-a-development-branch";
 }
 ```
+
+### Controller pseudocode
+
+```
+build DAG from plan
+done = {}
+blocked = {}
+in_flight = {}
+
+while (done | blocked | in_flight) != all_tasks:
+    ready = {t for t in tasks
+             if t not in done and t not in blocked and t not in in_flight
+             and all(d in done for d in t.depends_on)}
+
+    parallel_batch = [t for t in ready if t.parallel_safe]
+    sequential     = [t for t in ready if not t.parallel_safe]
+
+    for t in parallel_batch:
+        Agent(isolation="worktree", run_in_background=true,
+              prompt=per_task_pipeline_prompt(t))
+        in_flight.add(t)
+
+    for t in sequential:
+        Agent(prompt=per_task_pipeline_prompt(t))   # foreground
+        merge_result(t)                              # see merge step
+
+    on each background completion:
+        merge_result(t)                              # may mark DONE or BLOCKED
+        in_flight.remove(t)
+
+dispatch final code-quality reviewer on merged branch
+hand off to superpowers:finishing-a-development-branch
+```
+
+The dispatch + merge mechanics live in `superpowers:dispatching-parallel-agents`. Read that skill for the worktree, background, and conflict-PR details. Do not duplicate them here.
+
+### Per-task pipeline (inside each worktree)
+
+The implementer prompt instructs the worktree subagent to run the full review pipeline itself before returning:
+
+1. Implement + test + commit (TDD)
+2. Self-review
+3. Dispatch spec reviewer subagent (also background) — fix loop until ✅
+4. Dispatch code-quality reviewer subagent (also background) — fix loop until ✅
+5. Return DONE to controller
+
+The controller never sees per-task review status — only the final pipeline status. Reviewer subagents are explicitly forbidden from escalating to the human (see reviewer prompts).
+
+### Sequential Mode (fallback)
+
+When the plan declares no `depends_on` on any task, run the original sequential flow: one task at a time, foreground, with per-task spec review and code-quality review surfaced to the controller. Use this for plans written before the DAG format existed and for any plan whose author chose pure sequential.
+
+### Permissions Handling
+
+Backgrounded subagents cannot answer interactive permission prompts. If a dispatched subagent needs a tool not in the allowlist, it returns BLOCKED on permissions.
+
+When this happens (or you anticipate it before dispatch), invoke the `update-config` skill to add the missing permission to `.claude/settings.local.json`. **Always ask the human before adding any permission.**
+
+Allowlist scope is restricted by policy:
+
+- ✅ Allowed: `Edit`, `Write`, `Read`, `Bash(git *)`, `Bash(gh *)`, narrow path-scoped variants like `Edit(skills/**)`
+- ❌ Forbidden: broad code-execution permissions like `Bash(python *)`, `Bash(node *)`, `Bash(npm *)`, `Bash(*)`, or any rule that lets a subagent run arbitrary user code without review
+
+If a task genuinely needs forbidden permissions, reschedule it to non-parallel sequential execution.
+
+### Edge Cases
+
+- **Cycle in DAG** — controller errors before any dispatch, surfaces to human
+- **Worktree creation fails** — fall back to foreground sequential execution for that task
+- **Background agent never returns** — timeout (default 30 min, configurable) → mark BLOCKED, surface to human
+- **Test suite flaky after merge** — re-run once; if still failing, mark BLOCKED
+- **All ready tasks `parallel_safe: false`** — degrades gracefully to foreground sequential
+- **Reviewer fix loop exceeds 3 iterations** — implementer returns BLOCKED with full transcript; controller continues other ready tasks
 
 ## Model Selection
 
@@ -239,7 +287,9 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch multiple parallel implementation subagents WITHOUT worktree isolation (conflicts)
+- Mark a task `parallel_safe: false` without justifying why in the plan's Parallelism analysis
+- Halt the entire pipeline because one task hit a merge conflict (other ready tasks should continue)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
@@ -268,6 +318,7 @@ Done!
 
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+- **superpowers:dispatching-parallel-agents** - Worktree + background dispatch mechanics (canonical reference)
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
