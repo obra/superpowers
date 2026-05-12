@@ -13,7 +13,25 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
+## Parallel Sessions via DAG
+
+When a plan declares `depends_on` on its tasks, execute the DAG using parallel sessions instead of single sequential handoff:
+
+1. Build the DAG from the plan.
+2. Compute the ready set: tasks whose dependencies have all completed.
+3. For each parallel-safe ready task, spawn a separate session in its own git worktree (`git worktree add ../wt-<task-id> -b task/<task-id>`). Hand each session the full task spec plus the constraint that it commit its work to its own branch.
+4. When a session completes, attempt `git merge --no-ff task/<task-id>` into the work branch. Clean → mark DONE. Conflict → push the branch, open a draft PR with `gh pr create --draft`, mark BLOCKED-on-human, continue with other ready tasks.
+5. Recompute the ready set and dispatch the next layer.
+
+For tasks marked `parallel_safe: false`, run a single foreground session on the work branch (no worktree).
+
+For plans with no `depends_on` declarations, fall back to the original single-session sequential execution flow described below.
+
+Worktree, dispatch, and conflict-PR mechanics: see `superpowers:dispatching-parallel-agents` (canonical reference).
+
 ## The Process
+
+> **Sequential mode** — used only when the plan has no `depends_on` declarations. For DAG plans, see "Parallel Sessions via DAG" above.
 
 ### Step 1: Load and Review Plan
 1. Read plan file
