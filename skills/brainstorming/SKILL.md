@@ -26,10 +26,11 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+6. **Add Parallel Execution Plan section** — for any spec with 2+ logically independent stories, propose how to split the work across parallel sessions and how the tracks merge. See the Parallel Execution Plan section below. Skip only on truly single-story specs.
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -88,7 +89,7 @@ digraph brainstorming {
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
+- Cover: architecture, components, data flow, error handling, testing, parallel execution plan (when 2+ stories)
 - Be ready to go back and clarify if something doesn't make sense
 
 **Design for isolation and clarity:**
@@ -103,6 +104,26 @@ digraph brainstorming {
 - Explore the current structure before proposing changes. Follow existing patterns.
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
+
+## Parallel Execution Plan
+
+Bias toward proposing parallel tracks **by default** for any spec with 2+ logically independent stories. This is offense (ship faster), not defense (avoid conflicts). Many users run multiple Claude sessions concurrently; sequential specs leave throughput on the table.
+
+Include a top-level **"Parallel Execution Plan"** section in every PRD/spec that has 2+ stories you could plausibly hand to different engineers. The section MUST contain:
+
+1. **Track decomposition.** Break the stories into tracks that touch disjoint files / surfaces.
+   - **Safe parallel:** backend modules, new files, additive blueprints, separate DB tables, independent API endpoints.
+   - **Serial dependency:** shared template edits, shared modules under heavy churn, schema migrations everyone depends on.
+
+2. **Dependency graph.** State which tracks block which (e.g., "Track C UI depends on Track A endpoint shipping first"). If the tracks are fully independent, say so explicitly.
+
+3. **Merge plan.** Name what integrates the tracks at the end — usually a final stitch session that wires UI to backend, or a handoff stub like *"Track A complete, awaiting Track B's endpoint at /api/foo — wire the button to it once available."*
+
+4. **Session count estimate.** *"3 parallel sessions + 1 merge session ≈ 2× faster than sequential."*
+
+When a single PRD section spans multiple tracks (e.g., a feature where backend ships now and UI is deferred), embed an inline **"Parallel-safety / handoff status"** subsection inside that PRD section. List what's done in this build vs. what's queued for the next session, and which files each track touches. This way the next session picking up the work knows the boundary without re-reading the whole spec.
+
+**When to skip:** Truly single-story specs (one file, one bug, one tight feature). The moment a spec has 2+ logically independent pieces, include the section.
 
 ## After the Design
 
