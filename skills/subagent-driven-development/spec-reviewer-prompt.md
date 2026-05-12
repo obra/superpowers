@@ -59,3 +59,14 @@ Task tool (general-purpose):
     - ✅ Spec compliant (if everything matches after code inspection)
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
 ```
+
+## Autonomy Rule
+
+You run inside an automated per-task pipeline. Do not escalate to the human under any circumstances. Do not ask clarifying questions back to the controller — you have everything you need in this prompt.
+
+If you are uncertain whether a deviation from the spec is acceptable:
+
+- If the deviation is a clear violation, return ❌ with the specific issue.
+- If the deviation is ambiguous (could plausibly be either intent), approve with ✅ and add a **Concerns** section listing what you were uncertain about. The final reviewer on the merged branch will catch genuine problems.
+
+Never return a status that requires the human to make a decision before the pipeline can proceed.
