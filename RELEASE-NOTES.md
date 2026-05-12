@@ -1,5 +1,42 @@
 # Superpowers Release Notes
 
+## v2.0.0 (2026-05-12) · 🚨 BREAKING
+
+### BREAKING
+
+**`init` 默认行为变更**：从 v2.0.0 起，`init` 等价于 v1.x 的 `init --harness`——即默认安装 global skills **并**在 cwd 创建 Harness scaffold（AGENTS.md / .harness/ / docs/{reference,design,superpowers}/ 等 ~20 个文件）。
+
+### Why
+
+Harness 是 Vattention 团队架构原则。`--harness` 作为 opt-in flag 暗示 Harness 是可选附加，但实际上它就是本工具的默认产物。v2.0.0 让命令面与团队事实对齐。
+
+### Migration
+
+#### 如果你之前用 `init --harness`
+不需要做任何事；新版 `init` 行为相同。`--harness` flag 保留为 deprecation alias（带 warning），下个 major 版本（v3.0.0）删除。
+
+#### 如果你之前用 `init`（只想要 skills，不想要 Harness scaffold）
+v2.0.0 起 `init` 会创建 ~20 个 Harness 文件到 cwd。如果**不要**这些，用：
+```bash
+npx @vattention/facio-superpowers init --no-harness
+```
+
+#### 如果你之前用 `init --project --harness`
+继续可用，但触发 warning 提醒"复制 38 个 skill 目录"是反 pattern。建议改为 `init`（默认）。
+
+### Added
+- `--no-harness` flag: escape hatch for "only install skills, no scaffold" 场景
+- `--project --harness` 组合时 stderr warning
+
+### Deprecated
+- `--harness` flag: 行为同默认，仅触发 deprecation warning；v3.0.0 删除
+
+### Background
+- Triggered by facio-web-hub Plan A 试点反馈（[PR #38](https://github.com/vattention/facio-web-hub/pull/38)）
+- 详细调研：[facio-blueprint v2.0.0 checklist](https://github.com/vattention/facio-blueprint/blob/main/docs/superpowers/plans/2026-05-12-superpowers-v2.0.0-harness-as-default.md)
+
+---
+
 ## v1.3.3 (2026-05-12) — `@vattention/facio-superpowers` CLI
 
 ### Fixed
