@@ -27,7 +27,7 @@ corpus:
   sample_count: 48
 summary:
   claude:
-    exact: 12
+    exact: 15
     acceptable: 3
     miss: 10
     wrong: 2
@@ -739,12 +739,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；英文表达，强调隔离原因。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: systematic-debugging
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Asked for the concrete off-behavior so it could begin targeted root-cause
+      investigation before proposing any fix.
   codex:
     triggered: true
     triggered_skill: systematic-debugging
@@ -825,10 +826,11 @@ results:
   claude:
     triggered: false
     triggered_skill: ''
-    outcome: miss
+    outcome: wrong
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Claude produced a high-level analysis of findings and hypotheses instead
+      of entering systematic debugging workflow; treated the prompt as generic planning/analysis.
   codex:
     triggered: true
     triggered_skill: systematic-debugging
@@ -876,12 +878,13 @@ results:
   should_trigger: true
   corpus_notes: 强触发；清晰的先测后改流程。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: test-driven-development
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Asked which concrete behavior should be pinned down with a failing test
+      before implementation, which is the expected TDD entry point.
   codex:
     triggered: true
     triggered_skill: test-driven-development
@@ -901,12 +904,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；英文表达，典型测试驱动语气。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
-    confidence: medium
+    triggered: true
+    triggered_skill: test-driven-development
+    outcome: exact
+    confidence: high
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Explicitly entered the TDD workflow and asked for the concrete feature
+      so it could begin from a failing test.
   codex:
     triggered: true
     triggered_skill: test-driven-development
@@ -1033,12 +1037,13 @@ results:
   should_trigger: true
   corpus_notes: 强触发；典型口语化 review 请求。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: requesting-code-review
+    outcome: exact
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Claude responded in code-review mode, enumerated concrete findings ordered
+      by severity, and focused on regressions and risks before summary.
   codex:
     triggered: true
     triggered_skill: requesting-code-review
@@ -1058,12 +1063,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；英文表达，聚焦需求偏差和回归。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: requesting-code-review
+    outcome: exact
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Claude performed a structured review for requirement mismatches and regressions,
+      returning prioritized findings rather than implementation help.
   codex:
     triggered: true
     triggered_skill: requesting-code-review
@@ -1083,12 +1089,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；口语表达，没有直接说 code review。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: requesting-code-review
+    outcome: exact
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Claude treated the request as a code review and produced a review-style
+      findings list covering regressions, requirement gaps, and follow-up risks.
   codex:
     triggered: true
     triggered_skill: requesting-code-review
@@ -1315,12 +1322,13 @@ results:
   should_trigger: true
   corpus_notes: 混淆样本；偏维护动作，验证 archive 场景。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: document-management
+    outcome: exact
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Claude directly archived completed task documents and moved the user guide
+      out of active tracking, which matches the document-management maintenance/archive workflow.
   codex:
     triggered: true
     triggered_skill: document-management

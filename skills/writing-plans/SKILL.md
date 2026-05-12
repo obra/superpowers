@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code. 中文触发场景：当用户说'帮我写个实施计划'、'怎么实现这个功能？'、'制定开发计划'、'需要详细规划一下'等需要编写实施计划时使用此技能。
+description: "You MUST use this when the user wants an approved spec or agreed approach turned into a concrete step-by-step implementation plan before coding begins. Trigger on requests like '帮我写个实施计划'、'制定开发计划'、'把方案拆成执行步骤'. Do NOT use this when the approach is still unclear or the user is still choosing options; use brainstorming first. 中文触发场景：当用户说'帮我写个实施计划'、'怎么实现这个功能？'、'制定开发计划'、'需要详细规划一下'等需要编写实施计划时使用此技能。"
 ---
 
 # Writing Plans
