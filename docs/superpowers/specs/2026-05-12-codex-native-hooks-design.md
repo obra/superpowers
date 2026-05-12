@@ -54,16 +54,31 @@ Codex users should get the same startup bootstrap after installing and trusting 
 
 1. User installs Superpowers from the Codex plugin marketplace.
 2. User enables plugin hooks while the feature is gated:
-   - CLI: `codex features enable plugin_hooks`, or launch with `--enable plugin_hooks`.
-   - App: launch with `codex app --enable plugin_hooks`, or use the equivalent app configuration when available.
+   - CLI: `codex features enable plugin_hooks`.
+   - App: use the same persisted feature configuration, or an App-native feature setting if one is verified.
 3. User starts Codex.
 4. Codex discovers the Superpowers plugin `SessionStart` hook.
 5. Codex asks the user to review and trust it through `/hooks`.
 6. Once trusted, new Codex sessions receive the `using-superpowers` bootstrap automatically.
 
-If `plugin_hooks` is unavailable, disabled, or untrusted, Superpowers still works through the current Codex plugin and skills path. The native hook path is preferred, but not required yet.
+While `plugin_hooks` is under development and default-off, this is an optional preview automatic startup path, not the default quickstart. If `plugin_hooks` is unavailable, disabled, or untrusted, Superpowers still works through the current Codex plugin and skills path: skills are installed and callable, but the automatic startup bootstrap does not run.
+
+Do not document `codex app --enable plugin_hooks` as the App enablement path unless implementation re-verifies that it affects the App process. Codex source review indicates the `app` subcommand does not currently inherit root CLI `--enable` feature overrides, so persisted config is the safer documented path.
 
 ## Design
+
+### 0. Run A Contract Discovery Spike First
+
+Before choosing the final shared-vs-Codex-specific hook declaration, implementation should stage a minimal local Codex plugin on Codex 0.130.x and record the observed contract:
+
+- Whether manifest `hooks` paths resolve as expected.
+- Whether omitted manifest `hooks` discovers the default `hooks/hooks.json`.
+- Which environment variables are available to the hook process and which variables Codex expands inside hook commands.
+- The exact `SessionStart` source values sent by fresh startup, resume, and clear flows.
+- Whether `/hooks` review, trust, modified-hash blocking, and enabled/disabled toggling behave the same for plugin hooks as for user hooks.
+- Whether the Codex App exposes the same review/trust path after `plugin_hooks` is enabled through persisted config.
+
+This spike is not a separate product feature. It is the first implementation task, and its findings decide whether Superpowers can keep one shared hook declaration or needs a Codex-specific declaration file.
 
 ### 1. Ship Hooks In The Codex Plugin
 
@@ -75,7 +90,7 @@ The Codex plugin package should include:
 
 The sync script currently excludes `/hooks/` from the Codex plugin package. Remove that exclusion or replace it with a narrower rule if future hook assets need filtering.
 
-The sync test should assert that the generated Codex plugin contains the hook files.
+The sync tests should assert that the generated Codex plugin contains all hook files, and should use fixture coverage that fails if future sync changes accidentally drop hooks from the Codex package or PR/update preview output.
 
 ### 2. Declare The Hook In The Codex Manifest
 
@@ -89,20 +104,38 @@ Update `.codex-plugin/plugin.json` to declare the bundled hook:
 
 Codex can also discover default `hooks/hooks.json` when the manifest omits `hooks`, but declaring it makes the contract explicit and easier to test.
 
-### 3. Reuse The Existing Hook Configuration
+Codex manifest hook rules to preserve in tests and implementation:
 
-Prefer reusing `hooks/hooks.json` as the shared hook declaration for Claude Code and Codex:
+- `hooks` may be a manifest path string, a manifest path string array, an inline hook object, or an inline hook object array.
+- Manifest hook paths must use plugin-relative `./...` paths.
+- If manifest `hooks` is present, it replaces default `hooks/hooks.json` discovery; tests should not expect both to load.
+
+### 3. Choose The Hook Declaration And Matcher
+
+Claude Code currently uses `hooks/hooks.json` with a `SessionStart` matcher of `startup|clear|compact`.
+
+Codex source review and local testing should treat Codex `SessionStart` source values as `startup`, `resume`, and `clear`. `compact` is not a Codex `SessionStart` source today. The implementation must cover resumed Codex sessions; otherwise a resumed session can miss the bootstrap.
+
+Preferred outcome:
+
+- Keep one shared `hooks/hooks.json` if both harnesses accept a superset matcher.
+- Use matcher `startup|clear|resume|compact` in the shared declaration if verified safe for Claude Code and Codex.
+- Use a command variable that both harnesses expand. Codex plugin hooks provide `PLUGIN_ROOT` and `CLAUDE_PLUGIN_ROOT`; they do not require or provide `CODEX_PLUGIN_ROOT`.
+
+If a shared declaration is not safe, introduce `hooks/hooks-codex.json` and point `.codex-plugin/plugin.json` at it. The Codex-specific declaration should use `startup|resume|clear` and a Codex-verified command variable, preferably `PLUGIN_ROOT`.
+
+Shared declaration candidate:
 
 ```json
 {
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|clear|compact",
+        "matcher": "startup|clear|resume|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
             "async": false
           }
         ]
@@ -112,12 +145,7 @@ Prefer reusing `hooks/hooks.json` as the shared hook declaration for Claude Code
 }
 ```
 
-Implementation must verify whether Codex expands `CLAUDE_PLUGIN_ROOT`, `CODEX_PLUGIN_ROOT`, both, or neither for plugin-bundled hooks. If Codex only expands `CODEX_PLUGIN_ROOT`, either:
-
-- make the command use a Codex-compatible variable in a shared-safe way, or
-- introduce `hooks/hooks-codex.json` only if a shared declaration cannot work.
-
-The preferred end state is one shared hook declaration. A Codex-specific hook file is acceptable only if the platform variable contract forces it.
+If Claude Code does not expand `PLUGIN_ROOT`, the shared declaration can continue using `CLAUDE_PLUGIN_ROOT` because Codex also provides that variable for plugin hooks. Do not design around `CODEX_PLUGIN_ROOT`.
 
 ### 4. Keep One Session-Start Script
 
@@ -125,10 +153,13 @@ The preferred end state is one shared hook declaration. A Codex-specific hook fi
 
 Update it only as needed to make Codex explicit:
 
-- Detect Codex via `CODEX_PLUGIN_ROOT`, Codex-specific environment, or a reliable fallback discovered during implementation.
+- Simulate Codex with `PLUGIN_ROOT` and `CLAUDE_PLUGIN_ROOT`, not `CODEX_PLUGIN_ROOT`.
 - Emit nested `hookSpecificOutput.additionalContext` for Codex `SessionStart`.
 - Avoid the current unknown-platform top-level `additionalContext` fallback when running under Codex, because Codex's `SessionStart` parser expects `hookSpecificOutput.additionalContext`.
 - Preserve existing Claude Code, Cursor, and Copilot behavior.
+- Preserve Cursor's top-level `additional_context` behavior from `hooks/hooks-cursor.json`.
+- Preserve Copilot's top-level `additionalContext` behavior.
+- Make the legacy custom-skills warning platform-aware. The current warning tells users to move skills to `~/.claude/skills`; Codex users should not see Claude-specific migration advice unless it is also correct for their harness.
 - Keep failure behavior quiet: if the script cannot read the skill file or a platform does not run hooks, basic plugin install still works.
 
 The injected bootstrap content should match Claude Code parity: same `using-superpowers` content, same "You have superpowers" wrapper, and no Codex-specific policy beyond platform tool mappings already present in the skill references.
@@ -137,16 +168,16 @@ The injected bootstrap content should match Claude Code parity: same `using-supe
 
 Do not remove or downplay current Codex plugin support. Update docs to describe two paths:
 
-**Recommended automatic startup path:** Codex 0.130.0+ with `plugin_hooks` enabled and the Superpowers hook trusted.
+**Optional preview automatic startup path:** Codex 0.130.0+ with `plugin_hooks` enabled and the Superpowers hook trusted.
 
 **Fallback path:** install the Superpowers plugin and use the available skills without native hook bootstrap. This remains necessary for users on older Codex builds, users who do not enable under-development features, and users who choose not to trust executable hooks.
 
 ## Documentation Changes
 
-Update the README Codex CLI and Codex App sections:
+Update the README Codex CLI section:
 
 - Keep the existing marketplace install steps.
-- Add a short "Enable automatic startup hook" subsection:
+- Add a short "Optional preview: enable automatic startup hook" subsection:
   - `codex features enable plugin_hooks`
   - install or update Superpowers
   - start Codex
@@ -154,8 +185,16 @@ Update the README Codex CLI and Codex App sections:
   - review and trust the Superpowers `SessionStart` hook
 - Explain that the trust prompt is expected because hooks execute local commands.
 - Say that if users skip hook enablement/trust, the plugin skills remain installed but the automatic startup bootstrap may not run.
+- Say that after updating Superpowers, users may need to open `/hooks` and re-review the hook if Codex marks it modified since last trust.
+
+Update the Codex App section only as far as evidence supports:
+
+- If App smoke passes, document the same persisted feature configuration and `/hooks` review path.
+- If App smoke does not pass, say App automatic startup hook parity is pending verified App support while normal plugin skills remain available.
 
 Update any Codex plugin install docs or sync docs that describe the shipped file set so they include `hooks/`.
+
+Update `docs/windows/polyglot-hooks.md` if it still describes older hook filenames. The current wrapper path is `hooks/run-hook.cmd` dispatching to extensionless `hooks/session-start`, and docs should match the implementation before Codex hook support ships.
 
 ## Safety And Trust
 
@@ -169,12 +208,18 @@ This is especially important because a plugin `SessionStart` hook runs a local c
 
 ### Automated
 
-1. Sync script test: generated Codex plugin includes `hooks/hooks.json`, `hooks/session-start`, and `hooks/run-hook.cmd`.
-2. Manifest test: `.codex-plugin/plugin.json` declares the hook path.
-3. Hook JSON test: `hooks/hooks.json` remains valid JSON and contains exactly one `SessionStart` hook.
-4. Hook output test: running `hooks/session-start` with a simulated Codex environment emits valid JSON with `hookSpecificOutput.hookEventName = "SessionStart"` and non-empty `additionalContext`.
-5. Regression test: simulated Claude Code environment still emits the existing Claude-compatible nested output.
-6. Documentation test or grep check: README Codex sections mention `plugin_hooks`, `/hooks`, trust, and fallback.
+1. Contract spike: record manifest discovery, hook command variable expansion, hook environment, trust-state behavior, and App availability before finalizing the hook declaration.
+2. Sync script test: generated Codex plugin includes `hooks/hooks.json`, `hooks/session-start`, and `hooks/run-hook.cmd`.
+3. Sync fixture test: sync previews and marketplace/update outputs mention the hook file set when relevant.
+4. Manifest test: `.codex-plugin/plugin.json` declares the hook path and uses a valid `./...` manifest-relative path.
+5. Hook JSON test: the Codex hook declaration remains valid JSON and contains exactly one `SessionStart` hook.
+6. Hook matcher test: Codex declaration covers `startup`, `resume`, and `clear`; shared declaration may also include `compact` only if verified safe.
+7. Hook output test: running `hooks/session-start` with a simulated Codex plugin environment emits valid JSON with `hookSpecificOutput.hookEventName = "SessionStart"` and non-empty `additionalContext`.
+8. Regression test: simulated Claude Code environment still emits the existing Claude-compatible nested output.
+9. Regression test: simulated Cursor environment still emits top-level `additional_context`.
+10. Regression test: simulated Copilot environment still emits top-level `additionalContext`.
+11. Warning test: when a legacy `~/.config/superpowers/skills` directory exists, Codex output does not show Claude-specific migration advice.
+12. Documentation test or grep check: README Codex CLI section mentions `plugin_hooks`, `/hooks`, trust, update re-review, and fallback.
 
 ### Manual Codex CLI Smoke
 
@@ -185,29 +230,56 @@ This is especially important because a plugin `SessionStart` hook runs a local c
 5. Confirm Superpowers `SessionStart` appears as a plugin hook needing review.
 6. Trust the hook.
 7. Start a fresh session.
-8. Ask for a simple build task and confirm the agent begins with Superpowers skill discipline without manual bootstrap prompting.
+8. Send exactly: `Let's make a react todo list`.
+9. Confirm the agent auto-triggers `superpowers:brainstorming` before writing code.
+10. Resume a session and confirm the bootstrap still runs or remains available under the `resume` source.
+11. Clear a session and confirm the bootstrap still runs under the `clear` source.
 
 ### Manual Codex App Smoke
 
-1. Launch Codex App with plugin hooks enabled: `codex app --enable plugin_hooks`.
+1. Enable plugin hooks with persisted Codex feature config: `codex features enable plugin_hooks`.
 2. Install or stage the Superpowers plugin in the App-managed plugin surface.
-3. Confirm the App exposes the hook review/trust path.
-4. Trust the Superpowers `SessionStart` hook.
-5. Start a fresh App session.
-6. Confirm the `using-superpowers` bootstrap is injected automatically.
+3. Restart the Codex App.
+4. Confirm the App exposes the hook review/trust path.
+5. Trust the Superpowers `SessionStart` hook.
+6. Start a fresh App session.
+7. Send exactly: `Let's make a react todo list`.
+8. Confirm the agent auto-triggers `superpowers:brainstorming` before writing code.
 
 If the App cannot expose the hook review path yet, the implementation is still useful for CLI but the release notes and docs must say App hook parity is pending verified App support.
 
+### Manual Windows/Path Smoke
+
+1. Stage the plugin at a path containing spaces.
+2. Run the hook through `hooks/run-hook.cmd` to verify the Windows/Git Bash dispatch chain still finds extensionless `hooks/session-start`.
+3. Confirm no shell quoting regression from the hook command variable change.
+
+### Marketplace Rollout Smoke
+
+1. Bump plugin metadata version as required by the existing release flow.
+2. Run the sync script and verify the Codex plugin output includes hooks and manifest hook metadata.
+3. Verify any marketplace PR or publication artifact includes hooks.
+4. After marketplace publication, run `codex plugin marketplace upgrade` or reinstall/update through the supported path.
+5. Restart Codex.
+6. Open `/hooks`; if the hook is untrusted or modified since last trust, review and trust it again.
+7. Run the CLI acceptance transcript.
+
 ## Acceptance Criteria
 
+- The Codex contract spike is recorded in the implementation notes or PR body.
 - Codex plugin packages include the Superpowers hook files.
 - Codex manifest declares the hook path.
+- The final hook declaration covers Codex `startup`, `resume`, and `clear` sources.
 - Codex CLI can discover, review, trust, and run the Superpowers `SessionStart` hook.
-- Codex App support is verified manually or explicitly marked as pending in docs.
+- Codex CLI acceptance transcript shows `Let's make a react todo list` auto-triggering `superpowers:brainstorming` before code is written.
+- Codex App support is verified manually with the same acceptance transcript or explicitly marked as pending in docs.
 - Claude Code hook behavior is unchanged.
+- Cursor and Copilot hook output shapes are unchanged.
 - Current Codex plugin/skills fallback remains documented and functional.
+- README does not imply automatic startup for Codex users who have not enabled and trusted plugin hooks.
 - No enforcement hooks are added.
 - No normal user install path writes trusted hook hashes directly.
+- Hook updates require the normal Codex re-review/re-trust path.
 
 ## Alternatives Considered
 
@@ -215,7 +287,7 @@ If the App cannot expose the hook review path yet, the implementation is still u
 
 Create `hooks/hooks-codex.json` and possibly `hooks/session-start-codex`.
 
-This lowers the risk of breaking Claude Code, but it duplicates behavior and makes future drift likely. Use this only if Codex's hook command variable contract makes a shared hook file impractical.
+This lowers the risk of breaking Claude Code, but it duplicates behavior and makes future drift likely. Use this only if Codex's source matcher or command variable contract makes a shared hook file impractical.
 
 ### Docs-Only Hook Guidance
 
@@ -232,14 +304,18 @@ This is technically possible for development automation, but it is the wrong pro
 ## Open Risks
 
 - Codex App may lag Codex CLI in hook review UI exposure even though the app bundle includes a 0.130.x Codex binary.
-- Codex may not expand `CLAUDE_PLUGIN_ROOT`, requiring a Codex-compatible command variable or a Codex-specific hook declaration.
-- The `startup|clear|compact` matcher should be verified against Codex's `SessionStart` source values before release.
+- Claude Code may not expand `PLUGIN_ROOT`, requiring the shared declaration to keep using `CLAUDE_PLUGIN_ROOT` or the Codex package to use a separate declaration.
+- A shared matcher of `startup|clear|resume|compact` must be verified in both harnesses before release. If either harness rejects unknown sources, split the declaration files.
 - `plugin_hooks` is under development and default-off, so docs must avoid implying this is stable-by-default behavior.
+- App support should not be claimed until the App review/trust path and clean-session transcript are proven.
 
 ## Rollout
 
-1. Land the shared hook packaging and docs while keeping fallback instructions.
-2. Verify Codex CLI.
-3. Verify Codex App.
-4. Publish/update the Codex plugin package.
-5. Revisit the fallback wording once `plugin_hooks` becomes stable and default-enabled in Codex.
+1. Run the Codex contract discovery spike.
+2. Choose shared `hooks/hooks.json` or Codex-specific `hooks/hooks-codex.json` based on evidence.
+3. Land hook packaging, tests, and README updates while keeping fallback instructions.
+4. Verify Codex CLI with the exact acceptance transcript.
+5. Verify Codex App, or mark App automatic startup as pending.
+6. Publish/update the Codex plugin package through the existing marketplace flow.
+7. Re-test from the marketplace-installed plugin and re-trust the hook if Codex marks it modified.
+8. Revisit fallback wording once `plugin_hooks` becomes stable and default-enabled in Codex.
