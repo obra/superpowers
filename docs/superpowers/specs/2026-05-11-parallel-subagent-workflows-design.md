@@ -136,6 +136,19 @@ After all tasks reach DONE (including any human-merged conflict PRs), controller
 | `executing-plans` | Same DAG loop, but tasks dispatch as parallel sessions (handoff format) instead of in-session subagents. Worktree+branch handoff per task. |
 | `dispatching-parallel-agents` | Promote to canonical "how to dispatch": worktree + background pattern documented in detail. Becomes the reference all other skills link to. Remove "Don't use when shared state" framing — replace with "use `parallel_safe: false` instead." |
 
+## Permissions Handling
+
+Backgrounded subagents cannot answer interactive permission prompts. If the controller dispatches a subagent that needs a tool not in the allowlist, the agent will return BLOCKED on permissions.
+
+When this happens (or when the controller anticipates it before dispatch), the controller invokes the `update-config` skill (`/update-config`) to add the missing permission to `.claude/settings.local.json`. **The controller must ask the human before adding any permission.**
+
+Allowlist scope is restricted by policy:
+
+- ✅ Allowed: `Edit`, `Write`, `Read`, `Bash(git *)`, `Bash(gh *)`, narrow path-scoped variants like `Edit(skills/**)`
+- ❌ Forbidden in this workflow: broad code-execution permissions like `Bash(python *)`, `Bash(node *)`, `Bash(npm *)`, `Bash(*)`, or any rule that lets a subagent run arbitrary user code without further review
+
+If a task genuinely needs forbidden permissions, reschedule it to non-parallel sequential execution.
+
 ## Edge Cases
 
 - **Cycle in DAG** — controller errors before any dispatch, surfaces to human
