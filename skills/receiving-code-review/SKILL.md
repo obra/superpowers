@@ -126,7 +126,7 @@ Push back when:
 - Reference working tests/code
 - Involve your human partner if architectural
 
-**If you feel hesitant to push back:** Name the tension plainly, then tell your human partner the technical concern you see. Honesty is more helpful than quiet compliance.
+**If you're uncomfortable pushing back out loud:** Name that tension, then tell your partner about the issue you've seen. They'll appreciate your honesty.
 
 ## Acknowledging Correct Feedback
 
