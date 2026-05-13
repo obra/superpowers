@@ -21,13 +21,21 @@ TIMEOUT_SECONDS = Integer(ENV.fetch("SKILL_TRIGGER_TIMEOUT", "240"))
 MAX_WORKERS = Integer(ENV.fetch("SKILL_TRIGGER_MAX_WORKERS", "4"))
 CLAUDE_BARE = ENV.fetch("SKILL_TRIGGER_CLAUDE_BARE", "false") == "true"
 CLAUDE_PLUGIN_DIR = ENV.fetch("SKILL_TRIGGER_CLAUDE_PLUGIN_DIR", "")
+ROUTE_ONLY = ENV.fetch("SKILL_TRIGGER_ROUTE_ONLY", "false") == "true"
+SKILL_LINK_DIR = ENV.fetch("SKILL_TRIGGER_SKILLS_DIR", File.expand_path("~/.agents/skills"))
+
+ROUTE_ONLY_INSTRUCTION = "Evaluation mode: Do not use tools. Do not inspect the repository. Do not execute the request. Only output the first routing response, including the skill-style opening and at most one brief clarifying question."
 
 HOSTS = {
   "claude" => lambda do |prompt, startup_text|
+    effective_startup = startup_text.to_s.dup
+    effective_startup << "\n\n#{ROUTE_ONLY_INSTRUCTION}" if ROUTE_ONLY
+
     command = [CLAUDE_BIN, "-p", prompt]
-    command += ["--append-system-prompt", startup_text] if startup_text && !startup_text.empty?
+    command += ["--append-system-prompt", effective_startup] unless effective_startup.empty?
     command << "--bare" if CLAUDE_BARE
     command += ["--plugin-dir", CLAUDE_PLUGIN_DIR] unless CLAUDE_PLUGIN_DIR.empty?
+    command += ["--tools", ""] if ROUTE_ONLY
     command + ["--permission-mode", "bypassPermissions"]
   end,
   "codex" => lambda do |prompt, startup_text|
@@ -36,6 +44,13 @@ HOSTS = {
         "#{startup_text}\n\nUser request:\n#{prompt}"
       else
         prompt
+      end
+
+    effective_prompt =
+      if ROUTE_ONLY
+        "#{effective_prompt}\n\n#{ROUTE_ONLY_INSTRUCTION}"
+      else
+        effective_prompt
       end
 
     [CODEX_BIN, "exec", effective_prompt]
@@ -47,10 +62,20 @@ def slug(text)
 end
 
 def ensure_skill_symlink
-  skills_dir = File.expand_path("~/.agents/skills")
+  skills_dir = SKILL_LINK_DIR
   target = File.join(skills_dir, "horspowers")
+  source_root = File.join(ROOT, "skills")
   FileUtils.mkdir_p(skills_dir)
-  FileUtils.ln_sf(File.join(ROOT, "skills"), target)
+  FileUtils.rm_rf(target) if File.exist?(target) || File.symlink?(target)
+  FileUtils.mkdir_p(target)
+
+  Dir.children(source_root).sort.each do |entry|
+    source = File.join(source_root, entry)
+    next unless File.directory?(source)
+    next unless File.exist?(File.join(source, "SKILL.md"))
+
+    FileUtils.ln_s(source, File.join(target, entry))
+  end
 end
 
 def run_with_capture(command, cwd:, timeout_seconds:)

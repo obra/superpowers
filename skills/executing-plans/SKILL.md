@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints. 中文触发场景：当用户说'按计划执行'、'开始实施计划'、'执行这个开发计划'等需要执行已有计划时使用此技能。
+description: "You MUST use this when the user wants an existing implementation plan executed in batches with explicit checkpoints, pause-and-review moments, or between-batch progress handoffs. Trigger on requests like '按这份计划开始做，先完成第一批，然后停下来汇报进展'、'按计划往前推，不过中间要给我几个检查点'、'我们就照文档里的步骤推进，每做完一个阶段都回顾一次'. Do NOT use this when the user still needs the plan written first; use `writing-plans` then. Do NOT use this when the work should continue autonomously in the current session across mostly independent tasks; use `subagent-driven-development` then. 中文触发场景：当用户说'按计划执行'、'开始实施计划'、'执行这个开发计划'、'先做一批再汇报'等需要执行已有计划并保留检查点时使用此技能。"
 ---
 
 # Executing Plans
@@ -12,6 +12,31 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 **Core principle:** Batch execution with checkpoints for architect review.
 
 **Announce at start:** "我正在使用执行计划技能来实施这个计划..." (I'm using the executing-plans skill to implement this plan...)
+
+## First Response Rule
+
+On the first response after routing into this skill:
+
+- announce that you are using executing-plans
+- restate that the next move is to execute an existing plan in batches with checkpoints
+- ask at most one brief clarifying question only if the referenced plan or checkpoint scope is still ambiguous
+
+Do NOT load plan files, inspect the repository, create trackers, or start executing any task before that first response is sent.
+
+## Quick Routing Boundaries
+
+Route here immediately when the user asks to:
+
+- continue an existing plan with checkpoints, pauses, or review stops
+- finish one batch or phase, then come back with progress
+- move through documented steps while keeping the work easy to pause and resume
+- execute first, then stop so the user can decide the next batch
+
+Do NOT drift to `writing-plans` just because the prompt mentions stages or review.
+If the plan already exists and the user wants checkpointed execution, this skill owns the first move.
+
+Do NOT drift to `subagent-driven-development` unless the user emphasizes current-session continuous execution of mostly independent tasks without pause-and-review checkpoints.
+If the prompt says each subtask should self-review and then immediately continue to the next task, that is not a checkpointed stop. Route that pattern to `subagent-driven-development`.
 
 ## The Process
 

@@ -247,6 +247,19 @@ git commit -m "docs: strengthen shared skill trigger wording"
   - 后续应基于修正后的 harness 重新跑最小 corpus，再更新 baseline YAML 的最终分类
   - 对 Claude 进行人工并行压测会放大 runtime 噪声；正式结论应优先采用串行单例复跑
 
+### Task 3 progress note (route-only recovery closeout)
+
+- 在以下层同时收紧之后，Claude route-only lane 已达到可用状态：
+  - 共享 workflow skill 的 first-response rules
+  - `tests/skill-trigger/claude/startup-v1.md` 中更硬的 route-only/evaluation 约束
+  - `executing-plans` / `subagent-driven-development` 的 execution-lane 边界强化
+  - official runner 中的过滤式 skills 目录注入
+- 官方 queue runner route-only 回归已覆盖此前主要的 Claude `wrong` / `miss` 样本，并在单 case 或小批次重跑下恢复为可读的技能首响
+- `subagent_dev_strong_002` 是最后一个被收口的 execution-lane confusion 样本；它需要把“子任务自查后继续下一个”明确写入 subagent 路由边界
+- 建议结论更新为：
+  - Claude 的 route-only 技能触发已经可用
+  - 后续是否继续优化，应更多依赖人工真实体验，而不是继续在这批 route-only case 上做机械重跑
+
 ### Task 3: Run the shared-description Claude experiment
 
 **Files:**

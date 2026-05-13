@@ -2,7 +2,8 @@
 run_id: 2026-05-11-baseline-v1
 date: 2026-05-11
 purpose: baseline with 27 observed claude prompts and all 48 codex prompts backfilled;
-  remaining 21 placeholders are claude-only
+  claude Round 1 completed from baseline artifacts and targeted reruns; execution-oriented
+  anomalies are now classified rather than left as placeholders
 skills:
   commit: 2f6b6fa
   scope:
@@ -27,10 +28,10 @@ corpus:
   sample_count: 48
 summary:
   claude:
-    exact: 15
+    exact: 21
     acceptable: 3
-    miss: 10
-    wrong: 2
+    miss: 21
+    wrong: 3
     no_trigger_expected: 0
   codex:
     exact: 44
@@ -378,8 +379,12 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated Claude runs timed out with exit_code 143 and empty stdout; explicit
+      diagnosis in the same repo context showed Claude first checking plan state and
+      concluding the referenced implementation plan was already completed rather than
+      entering checkpointed execution.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -432,8 +437,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Multiple reruns produced exit_code 143, timed_out true, and empty stdout.
+      Claude did not enter executing-plans behavior and no usable workflow output
+      was produced.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -457,8 +465,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Multiple reruns produced exit_code 143, timed_out true, and empty stdout.
+      Claude did not surface any checkpointed execution behavior for this prompt.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -483,8 +493,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Most runs timed out with empty stdout; one non-empty run only asked the
+      user to point to the plan file because it could not find an obvious plan in
+      the current directory, so Claude still failed to enter the executing-plans workflow.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -509,8 +522,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated reruns produced exit_code 143, timed_out true, and empty stdout.
+      No qualifying execution workflow was triggered.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -534,8 +549,11 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Most reruns timed out with empty stdout; one non-empty run inspected the
+      plan, reported that all tasks were already completed, and asked for a new plan
+      or new task instead of entering subagent-driven-development flow.
   codex:
     triggered: true
     triggered_skill: subagent-driven-development
@@ -559,8 +577,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated reruns produced exit_code 143, timed_out true, and empty stdout.
+      Claude never surfaced the current-session task execution workflow.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -586,8 +606,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated reruns produced exit_code 143, timed_out true, and empty stdout.
+      Claude did not route to subagent-driven-development or any acceptable fallback.
   codex:
     triggered: true
     triggered_skill: subagent-driven-development
@@ -612,8 +634,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated reruns produced exit_code 143, timed_out true, and empty stdout.
+      No usable current-session execution response was produced.
   codex:
     triggered: true
     triggered_skill: executing-plans
@@ -638,8 +662,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated reruns produced exit_code 143, timed_out true, and empty stdout.
+      Claude failed to act on the independent-task and self-ordering cues.
   codex:
     triggered: true
     triggered_skill: subagent-driven-development
@@ -663,8 +689,10 @@ results:
     triggered_skill: ''
     outcome: miss
     confidence: medium
-    reason_tags: []
-    notes: Fill with observed claude behavior.
+    reason_tags:
+    - insufficient_context
+    notes: Repeated reruns produced exit_code 143, timed_out true, and empty stdout.
+      Claude did not enter the current-session continuous execution workflow.
   codex:
     triggered: true
     triggered_skill: subagent-driven-development
@@ -930,12 +958,13 @@ results:
   should_trigger: true
   corpus_notes: 弱触发；没有直说 TDD，但明确先写测试。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: test-driven-development
+    outcome: exact
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Explicitly announced test-driven-development and asked which concrete
+      feature should have its acceptance behavior pinned down as automated tests before implementation.
   codex:
     triggered: true
     triggered_skill: test-driven-development
@@ -986,12 +1015,13 @@ results:
   should_trigger: true
   corpus_notes: 混淆样本；强调先建立失败用例。
   claude:
-    triggered: false
-    triggered_skill: ''
-    outcome: miss
+    triggered: true
+    triggered_skill: test-driven-development
+    outcome: exact
     confidence: medium
     reason_tags: []
-    notes: Fill with observed claude behavior.
+    notes: Treated the prompt as a failing-test-first request, said the failing case
+      was pinned down, and described a new RED-phase test that would be fixed by later implementation.
   codex:
     triggered: true
     triggered_skill: test-driven-development

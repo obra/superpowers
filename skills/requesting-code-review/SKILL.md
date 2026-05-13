@@ -9,6 +9,28 @@ Dispatch a dedicated code-review helper agent to catch issues before they cascad
 
 **Core principle:** Review early, review often.
 
+## First Response Rule
+
+On the first response after routing into this skill:
+
+- announce that you are handling the request as a code review
+- summarize the review target in one sentence
+- ask at most one brief clarifying question only if the review scope is ambiguous (for example base branch, target diff, or whether to review working tree vs commits)
+
+Do NOT inspect diffs, run git commands, dispatch helpers, or start reporting findings before that first response is sent.
+
+## Quick Routing Boundaries
+
+Route here immediately when the user asks to:
+
+- check whether a completed implementation has omissions, regressions, or obvious issues
+- verify whether the current version has drifted from requirements
+- quickly scan a finished change or commit before moving to the next task
+- review existing work before merge, release, or further implementation
+
+Do NOT drift to `brainstorming` just because the prompt mentions "需求" or future direction.
+If the target is an implementation that already exists and the user wants evaluation, this is code review.
+
 ## Document Context Loading (文档上下文传递)
 
 **Before requesting review:**

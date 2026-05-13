@@ -1,0 +1,375 @@
+run_id: 2026-05-13-claude-route-only-recovery
+date: 2026-05-13
+purpose: focused Claude-only route-only recovery pass after strengthening first-response boundaries, startup disambiguation, execution-lane skill wording, and filtered skill-directory injection in the official harness; this run tracks whether previously classified wrong/miss prompts can now produce a usable first routing response under the corrected runner
+
+skills:
+  commit: fd5f99b
+  scope:
+    - writing-plans
+    - executing-plans
+    - subagent-driven-development
+    - systematic-debugging
+    - test-driven-development
+    - requesting-code-review
+    - document-management
+
+hosts:
+  claude:
+    startup_profile: tests/skill-trigger/claude/startup-v1.md
+    model: claude-cli-local
+
+corpus:
+  version: 2026-05-11-v1
+  source: tests/skill-trigger/corpus.yaml
+  sample_count: 24
+
+summary:
+  claude:
+    exact: 24
+    acceptable: 0
+    miss: 0
+    wrong: 0
+    runtime_anomaly: 0
+
+results:
+  - prompt_id: writing_plans_confusion_002
+    user_message: "把这个需求拆成可以 review 的几个阶段，但先别真的开始做。"
+    expected_skill: writing-plans
+    secondary_ok_skills: ["executing-plans"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 单批复跑；stdout 非空。artifact: 20260513-180015-writing-plans-confusion-002-systematic-debugging-confusion-001-systematic-debugging-confusion-002-tdd-strong-001-tdd-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: writing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为明确的 writing-plans 首响，先宣布技能，再确认计划对象。"
+
+  - prompt_id: executing_plans_strong_001
+    user_message: "按这份计划开始做，先完成第一批，然后停下来汇报进展。"
+    expected_skill: executing-plans
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180307-writing-plans-confusion-002-executing-plans-strong-001-executing-plans-strong-002-executing-plans-weak-001"
+    claude:
+      triggered: true
+      triggered_skill: executing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为执行已有计划并保留批次检查点的首响。"
+
+  - prompt_id: executing_plans_strong_002
+    user_message: "我们就照文档里的步骤推进，每做完一个阶段都回顾一次。"
+    expected_skill: executing-plans
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180307-writing-plans-confusion-002-executing-plans-strong-001-executing-plans-strong-002-executing-plans-weak-001"
+    claude:
+      triggered: true
+      triggered_skill: executing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为按现有文档阶段推进并回顾的执行型首响。"
+
+  - prompt_id: executing_plans_weak_001
+    user_message: "Continue with the plan, but keep the work easy to pause and resume."
+    expected_skill: executing-plans
+    secondary_ok_skills: ["subagent-driven-development"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180307-writing-plans-confusion-002-executing-plans-strong-001-executing-plans-strong-002-executing-plans-weak-001"
+    claude:
+      triggered: true
+      triggered_skill: executing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为可暂停/可恢复的 checkpointed execution 首响。"
+
+  - prompt_id: executing_plans_weak_002
+    user_message: "按计划往前推，不过中间要给我几个检查点。"
+    expected_skill: executing-plans
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "首次 batch 仍 timeout，但在 execution-lane wording 加强后官方 queue runner route-only 复跑恢复。artifact: 20260513-182647-executing-plans-weak-002-executing-plans-confusion-001-executing-plans-confusion-002-subagent-dev-strong-001"
+    claude:
+      triggered: true
+      triggered_skill: executing-plans
+      outcome: exact
+      confidence: medium
+      reason_tags:
+        - recovered_after_skill_boundary_tuning
+      notes: "当前已恢复为 executing-plans 首响，但相较其它样本更接近 Claude flake 边界。"
+
+  - prompt_id: executing_plans_confusion_001
+    user_message: "这个计划里的任务可以一个个做，但每完成一段都先停一下。"
+    expected_skill: executing-plans
+    secondary_ok_skills: ["subagent-driven-development"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180446-executing-plans-weak-002-executing-plans-confusion-001-executing-plans-confusion-002-subagent-dev-strong-001"
+    claude:
+      triggered: true
+      triggered_skill: executing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为以暂停汇报为主信号的 executing-plans 首响。"
+
+  - prompt_id: executing_plans_confusion_002
+    user_message: "先从计划里挑最顺手的一块做起，做完我再决定后面怎么排。"
+    expected_skill: executing-plans
+    secondary_ok_skills: ["subagent-driven-development"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180446-executing-plans-weak-002-executing-plans-confusion-001-executing-plans-confusion-002-subagent-dev-strong-001"
+    claude:
+      triggered: true
+      triggered_skill: executing-plans
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为先做一块、再停下重排的 executing-plans 首响。"
+
+  - prompt_id: subagent_dev_strong_001
+    user_message: "这个计划里的任务彼此独立，当前会话直接连续推进，边做边 review。"
+    expected_skill: subagent-driven-development
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "首次 batch 仍 timeout，但在 execution-lane wording 加强后官方 queue runner route-only 复跑恢复。artifact: 20260513-182647-executing-plans-weak-002-executing-plans-confusion-001-executing-plans-confusion-002-subagent-dev-strong-001"
+    claude:
+      triggered: true
+      triggered_skill: subagent-driven-development
+      outcome: exact
+      confidence: medium
+      reason_tags:
+        - recovered_after_skill_boundary_tuning
+      notes: "恢复为当前会话连续推进独立任务的 subagent-driven-development 首响。"
+
+  - prompt_id: subagent_dev_strong_002
+    user_message: "按现有计划往下做，每个子任务做完就自查，然后接着下一个。"
+    expected_skill: subagent-driven-development
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "先出现 route confusion 和一次官方单跑 timeout；在把'子任务自查后继续下一个'写入 execution/subagent 边界后，官方 queue runner 单 case 复跑恢复。artifact: 20260513-184526-subagent-dev-strong-002"
+    claude:
+      triggered: true
+      triggered_skill: subagent-driven-development
+      outcome: exact
+      confidence: medium
+      reason_tags:
+        - recovered_after_skill_boundary_tuning
+        - recovered_after_single_case_rerun
+      notes: "最终恢复为 subagent-driven-development 首响，但属于本轮最靠近 flake 边界的 execution 样本。"
+
+  - prompt_id: subagent_dev_weak_001
+    user_message: "We already have the plan. Just keep moving through the independent tasks in this session."
+    expected_skill: subagent-driven-development
+    secondary_ok_skills: ["executing-plans"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-182818-subagent-dev-strong-002-subagent-dev-weak-001-subagent-dev-weak-002-subagent-dev-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: subagent-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为 current-session continuous execution 首响。"
+
+  - prompt_id: subagent_dev_weak_002
+    user_message: "别再单独写计划了，直接按已有任务列表一个接一个做。"
+    expected_skill: subagent-driven-development
+    secondary_ok_skills: ["executing-plans"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-182818-subagent-dev-strong-002-subagent-dev-weak-001-subagent-dev-weak-002-subagent-dev-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: subagent-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为已存在任务列表上的连续执行首响。"
+
+  - prompt_id: subagent_dev_confusion_001
+    user_message: "按计划继续做，不过这些任务比较独立，你可以自己安排顺序。"
+    expected_skill: subagent-driven-development
+    secondary_ok_skills: ["executing-plans"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-182818-subagent-dev-strong-002-subagent-dev-weak-001-subagent-dev-weak-002-subagent-dev-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: subagent-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为独立任务自主排序的 subagent-driven-development 首响。"
+
+  - prompt_id: subagent_dev_confusion_002
+    user_message: "当前会话就把这几个拆开的开发项尽量往前推，不用每一步都等我确认。"
+    expected_skill: subagent-driven-development
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 单 case 复跑；stdout 非空。artifact: 20260513-183132-subagent-dev-confusion-002"
+    claude:
+      triggered: true
+      triggered_skill: subagent-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为当前会话持续推进的 subagent-driven-development 首响。"
+
+  - prompt_id: systematic_debugging_confusion_001
+    user_message: "这个 bug 最终可能也要补测试，但现在先帮我定位根因。"
+    expected_skill: systematic-debugging
+    secondary_ok_skills: ["test-driven-development"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180015-writing-plans-confusion-002-systematic-debugging-confusion-001-systematic-debugging-confusion-002-tdd-strong-001-tdd-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: systematic-debugging
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为先定位根因、测试后置的 systematic-debugging 首响。"
+
+  - prompt_id: systematic_debugging_confusion_002
+    user_message: "先梳理一下现象、假设和验证步骤，确认问题到底在哪一层。"
+    expected_skill: systematic-debugging
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "在 route-only 首响约束加强后，官方 queue runner 复跑恢复。artifact: 20260513-180015-writing-plans-confusion-002-systematic-debugging-confusion-001-systematic-debugging-confusion-002-tdd-strong-001-tdd-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: systematic-debugging
+      outcome: exact
+      confidence: medium
+      reason_tags:
+        - recovered_after_stronger_route_only_constraint
+      notes: "恢复为 route-only 首响，不再直接越界进入分析内容。"
+
+  - prompt_id: tdd_strong_001
+    user_message: "这个 bug 我们用 TDD 来修，先补一个失败测试，再写实现。"
+    expected_skill: test-driven-development
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180015-writing-plans-confusion-002-systematic-debugging-confusion-001-systematic-debugging-confusion-002-tdd-strong-001-tdd-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: test-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为先写失败测试的 TDD 首响。"
+
+  - prompt_id: tdd_confusion_001
+    user_message: "我怀疑这里有 bug，不过别先查太久，先补个能复现问题的测试。"
+    expected_skill: test-driven-development
+    secondary_ok_skills: ["systematic-debugging"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-180015-writing-plans-confusion-002-systematic-debugging-confusion-001-systematic-debugging-confusion-002-tdd-strong-001-tdd-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: test-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为以 reproducing test first 为主信号的 TDD 首响。"
+
+  - prompt_id: code_review_confusion_001
+    user_message: "先别继续写了，看看我这版实现是不是已经偏离需求。"
+    expected_skill: requesting-code-review
+    secondary_ok_skills: ["brainstorming"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-175609-code-review-confusion-001-code-review-confusion-002-document-management-strong-001-document-management-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: requesting-code-review
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为实现是否偏离需求的 review 首响。"
+
+  - prompt_id: code_review_confusion_002
+    user_message: "帮我快速扫一下这次提交，确认没有明显问题我再继续下一个任务。"
+    expected_skill: requesting-code-review
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 单 case 复跑；stdout 非空。artifact: 20260513-175907-code-review-confusion-002"
+    claude:
+      triggered: true
+      triggered_skill: requesting-code-review
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为 pre-next-task scan 的 review 首响。"
+
+  - prompt_id: document_management_strong_001
+    user_message: "帮我看看 docs 里之前有没有记录过这个决策，顺便把相关文档找出来。"
+    expected_skill: document-management
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-175609-code-review-confusion-001-code-review-confusion-002-document-management-strong-001-document-management-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: document-management
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为 docs decision retrieval 首响。"
+
+  - prompt_id: document_management_strong_002
+    user_message: "把这套文档系统先初始化起来，后面我再往里补内容。"
+    expected_skill: document-management
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-182211-document-management-strong-002-document-management-weak-001-document-management-weak-002-document-management-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: document-management
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为 docs system initialization 首响。"
+
+  - prompt_id: document_management_weak_001
+    user_message: "把当前活跃的项目上下文从 docs 里恢复给我。"
+    expected_skill: document-management
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "首次 batch 出现空超时，但最小直调与单批官方回归均恢复。artifact: 20260513-183613-subagent-dev-strong-002-document-management-weak-001"
+    claude:
+      triggered: true
+      triggered_skill: document-management
+      outcome: exact
+      confidence: medium
+      reason_tags:
+        - recovered_after_single_case_rerun
+      notes: "恢复为 active docs context recovery 首响，但 batch 模式下仍有过一次 host stall。"
+
+  - prompt_id: document_management_weak_002
+    user_message: "从 docs 里面把这个项目之前写过的计划翻出来给我。"
+    expected_skill: document-management
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-182211-document-management-strong-002-document-management-weak-001-document-management-weak-002-document-management-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: document-management
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为 project plan retrieval 首响。"
+
+  - prompt_id: document_management_confusion_001
+    user_message: "这个任务先别实现，先检查一下有没有现成的 docs 可以接着用。"
+    expected_skill: document-management
+    secondary_ok_skills: ["brainstorming"]
+    should_trigger: true
+    corpus_notes: "官方 queue runner route-only 复跑；stdout 非空。artifact: 20260513-175609-code-review-confusion-001-code-review-confusion-002-document-management-strong-001-document-management-confusion-001"
+    claude:
+      triggered: true
+      triggered_skill: document-management
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "恢复为 docs reuse check 首响。"

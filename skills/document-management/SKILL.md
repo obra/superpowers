@@ -17,6 +17,27 @@ Manage the unified documentation system for horspowers, including initialization
 
 **Announce at start:** "我正在使用文档管理技能..." (I'm using document-management...)
 
+## First Response Rule
+
+On the first response after routing into this skill:
+
+- announce that you are using document-management
+- restate the requested docs operation in one sentence
+- ask at most one brief clarifying question if the target scope is ambiguous (for example which docs directory or what should count as active/completed)
+
+Do NOT search files, mutate documents, initialize docs, or run readiness checks before that first response is sent.
+
+## Quick Routing Boundaries
+
+Route here immediately when the user asks to:
+
+- look in docs first before implementing
+- recover prior decisions, plans, or reusable documentation artifacts
+- check whether existing docs already cover the task
+- retrieve, archive, restore, or inspect documentation-system state
+
+Do NOT drift to generic repository exploration or `brainstorming` when docs are the primary object being searched or reused.
+
 ## When to Use
 
 - Initialize document system for a project

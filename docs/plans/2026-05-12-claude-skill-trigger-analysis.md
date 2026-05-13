@@ -16,6 +16,29 @@ This document summarizes the Claude Code findings from the skill-trigger evaluat
   - `wrong`: 3
   - `miss`: 21
 
+## Current Usability Update (2026-05-13)
+
+A later Claude-only route-only recovery pass materially changed the practical picture.
+
+- The original `2026-05-11-baseline-v1.yaml` remains the historical Round 1 baseline and should not be reinterpreted as a current usability score.
+- Under the corrected official runner, filtered skill-directory injection, stronger first-response rules, and tightened startup disambiguation, the previously problematic `wrong` / `miss` samples were rerun as route-only prompts.
+- In that route-only recovery pass, the 24 targeted Claude samples all produced a usable first routing response:
+  - `writing-plans`
+  - `executing-plans`
+  - `subagent-driven-development`
+  - `systematic-debugging`
+  - `test-driven-development`
+  - `requesting-code-review`
+  - `document-management`
+
+Working interpretation:
+
+- Claude Code has now reached a usable state for skill-trigger routing when evaluated as "first routing response only".
+- The remaining instability is better described as Claude CLI host flake in some batch runs, not as a broad routing blind spot.
+- For future comparisons, keep two lenses separate:
+  - historical baseline behavior
+  - current route-only trigger usability
+
 ## What Is Stable
 
 Claude can route correctly for these categories often enough that the main issue is not "skills are entirely broken":
@@ -257,6 +280,17 @@ Both now have explicit TDD-style outputs and no longer need reruns.
 
 - Keep current baseline as the Round 1 Claude reference
 - Mark `executing-plans` and `subagent-driven-development` as deferred anomaly groups
+
+### Step 1 update (2026-05-13 evening)
+
+- The anomaly-group classification is no longer the best current summary for route-only trigger evaluation.
+- Execution-lane prompts were recovered after:
+  - stronger `executing-plans` and `subagent-driven-development` descriptions
+  - explicit first-response rules in those two skill bodies
+  - startup-level wording that distinguishes checkpointed execution from continuous in-session task flow
+- The remaining recommendation is not "keep classifying execution lane as broken", but:
+  - treat route-only trigger routing as usable
+  - keep monitoring batch-level Claude flake separately from routing correctness
 
 ### Step 2: run a description-strength experiment
 

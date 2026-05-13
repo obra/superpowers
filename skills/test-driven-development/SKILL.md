@@ -15,6 +15,28 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Announce at start:** "我正在使用测试驱动开发技能..." (I'm using test-driven development...)
 
+## First Response Rule
+
+On the first response after routing into this skill:
+
+- announce that you are using test-driven development
+- state that the next step is to pin behavior with a failing or reproducing test
+- ask at most one brief clarifying question if the concrete feature or bug to lock down is still unspecified
+
+Do NOT inspect the repository, run tests, or write implementation guidance before that first response is sent.
+
+## Quick Routing Boundaries
+
+Route here immediately when the user asks to:
+
+- write a failing test first
+- add a reproducing test before implementation
+- lock the bug down with a test instead of guessing at a fix
+- fix or build behavior through RED-GREEN-REFACTOR
+
+Do NOT drift to `systematic-debugging` just because the concrete bug details are still thin.
+If the user explicitly asks for a failing or reproducing test first, this skill owns the first move.
+
 ## When to Use
 
 **Always:**

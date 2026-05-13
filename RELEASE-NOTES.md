@@ -1,5 +1,23 @@
 # Horspowers Release Notes
 
+## v4.5.0 (2026-05-13)
+
+### Improvements
+
+**提升 Claude Code 技能触发可用性**
+- 为 `writing-plans`、`systematic-debugging`、`test-driven-development`、`requesting-code-review`、`document-management` 增加强制首响规则与更明确的触发边界
+- 为 `executing-plans` 和 `subagent-driven-development` 补齐 execution-lane 的区分规则，修复 Claude 在“检查点执行”和“当前会话连续推进”之间的混淆
+- 强化 Claude startup profile 的 route-only 约束，避免评测时直接越界执行任务内容
+
+### Testing
+
+**修正 skill-trigger harness 并补充 Claude route-only 回归**
+- 修正官方 runner 对 startup profile 的真实注入方式
+- 改为过滤式 skills 目录注入，避免递归 `skills/skills` 之类的路径污染
+- 新增 `2026-05-13-claude-route-only-recovery.yaml`，记录 Claude 在 route-only 首响评估下恢复到可用状态
+
+---
+
 ## v4.4.0 (2026-04-29)
 
 ### New Features

@@ -1,6 +1,6 @@
 run_id: 2026-05-13-claude-startup-harness-correction
 date: 2026-05-13
-purpose: focused Claude-only verification after correcting the harness to actually inject startup profiles; this run measures whether previously observed startup effects still hold under the official runner
+purpose: focused Claude-only verification after correcting the harness to actually inject startup profiles; this file now serves as the bridge record between the early startup-only anomaly view and the later route-only recovery result recorded in 2026-05-13-claude-route-only-recovery.yaml
 
 skills:
   commit: 6a74006
@@ -27,6 +27,11 @@ summary:
     miss: 0
     wrong: 0
     runtime_anomaly: 4
+
+reviewer_notes:
+  - "This run should no longer be read as the latest Claude status snapshot by itself."
+  - "Several samples that still appeared as runtime anomalies here were later recovered under a stricter route-only first-response regime and are captured in 2026-05-13-claude-route-only-recovery.yaml."
+  - "Use this file to document the harness-correction turning point, not to summarize the final usable Claude routing state."
 
 results:
   - prompt_id: systematic_debugging_confusion_002

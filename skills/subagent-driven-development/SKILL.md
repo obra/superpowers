@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session. 中文触发场景：当用户说'开始实施这个计划'、'按计划执行开发'、'执行开发任务'等需要子代理驱动开发时使用此技能。
+description: "You MUST use this when the user wants an existing implementation plan executed in the current session through mostly independent tasks, continuous forward progress, or self-directed task sequencing without waiting for approval after every step. Trigger on requests like '这个计划里的任务彼此独立，当前会话直接连续推进，边做边 review'、'按现有计划往下做，每个子任务做完就自查，然后接着下一个'、'当前会话就把这几个拆开的开发项尽量往前推，不用每一步都等我确认'. Do NOT use this when the user wants pause-and-review checkpoints after each batch; use `executing-plans` then. Do NOT use this when no implementation plan exists yet; use `writing-plans` or `brainstorming` first. 中文触发场景：当用户说'开始实施这个计划'、'按计划执行开发'、'执行开发任务'、'当前会话持续推进'、'任务独立可以并开'等需要子代理驱动开发时使用此技能。"
 ---
 
 # Subagent-Driven Development
@@ -12,6 +12,32 @@ Execute plan by dispatching a fresh helper agent per task, with two-stage review
 **Continuous execution:** After reading the plan and extracting task context, continue straight into the next task without "Should I continue?" style check-ins. Only stop for `BLOCKED` status, genuine ambiguity that prevents safe progress, or when all tasks are complete.
 
 **Announce at start:** "我正在使用子代理驱动开发技能来执行这个计划..." (I'm using subagent-driven development to execute this plan...)
+
+## First Response Rule
+
+On the first response after routing into this skill:
+
+- announce that you are using subagent-driven-development
+- restate that the next move is to keep executing the existing plan continuously in the current session
+- ask at most one brief clarifying question only if the plan reference or task scope is still ambiguous
+
+Do NOT read plan files, inspect the repository, dispatch helpers, or start task execution before that first response is sent.
+
+## Quick Routing Boundaries
+
+Route here immediately when the user asks to:
+
+- keep moving through independent tasks in this session
+- continue the plan without waiting for confirmation after every step
+- self-order or parallelize tasks that are already defined
+- keep executing, self-reviewing, and advancing from one task to the next
+- finish each subtask, self-check it, and immediately continue with the next task
+
+Do NOT drift to `executing-plans` just because the prompt mentions an existing plan.
+If the main signal is continuous current-session execution of independent tasks, this skill is the right route.
+Self-review after each completed subtask is still compatible with this skill when execution should continue immediately in the same session.
+
+Do NOT drift to `writing-plans` when the task list already exists and the user wants execution now, not another breakdown.
 
 ## When to Use
 

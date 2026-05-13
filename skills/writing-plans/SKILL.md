@@ -17,6 +17,17 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Quick Routing Boundaries
+
+Route here immediately when the approach is already accepted and the user asks to:
+
+- break the work into stages, steps, phases, or implementation order
+- hold off on coding for now and convert the chosen direction into an execution plan
+- structure work into reviewable batches before any implementation starts
+
+Do NOT drift to `brainstorming` just because the user says "先别做" or "先别动代码".
+If the direction is already approved and the user wants staged breakdown, this skill is still the correct route.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**

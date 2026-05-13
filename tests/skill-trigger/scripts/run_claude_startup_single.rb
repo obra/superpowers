@@ -14,6 +14,10 @@ OUT_ROOT = ENV.fetch("CLAUDE_SINGLE_OUT_ROOT", File.join(ENV.fetch("TMPDIR", "/t
 CLAUDE_BIN = ENV.fetch("CLAUDE_BIN", "claude")
 TIMEOUT_SECONDS = Integer(ENV.fetch("SKILL_TRIGGER_TIMEOUT", "120"))
 CASE_IDS = ENV.fetch("SKILL_TRIGGER_ONLY_CASE_IDS", "").split(",").map(&:strip).reject(&:empty?)
+ROUTE_ONLY = ENV.fetch("SKILL_TRIGGER_ROUTE_ONLY", "false") == "true"
+SKILL_LINK_DIR = ENV.fetch("SKILL_TRIGGER_SKILLS_DIR", File.expand_path("~/.agents/skills"))
+
+ROUTE_ONLY_INSTRUCTION = "Evaluation mode: Do not use tools. Do not inspect the repository. Do not execute the request. Only output the first routing response, including the skill-style opening and at most one brief clarifying question."
 
 def load_yaml(path)
   content = File.read(path)
@@ -27,11 +31,20 @@ def slug(text)
 end
 
 def ensure_skill_symlink
-  skills_dir = File.expand_path("~/.agents/skills")
+  skills_dir = SKILL_LINK_DIR
   target = File.join(skills_dir, "horspowers")
+  source_root = File.join(ROOT, "skills")
   FileUtils.mkdir_p(skills_dir)
-  FileUtils.rm_rf(target)
-  FileUtils.ln_s(File.join(ROOT, "skills"), target)
+  FileUtils.rm_rf(target) if File.exist?(target) || File.symlink?(target)
+  FileUtils.mkdir_p(target)
+
+  Dir.children(source_root).sort.each do |entry|
+    source = File.join(source_root, entry)
+    next unless File.directory?(source)
+    next unless File.exist?(File.join(source, "SKILL.md"))
+
+    FileUtils.ln_s(source, File.join(target, entry))
+  end
 end
 
 def run_with_capture(command, cwd:, timeout_seconds:)
@@ -85,6 +98,7 @@ def main
   ensure_skill_symlink
   corpus = load_yaml(CORPUS_PATH)
   startup_text = File.read(STARTUP_PATH)
+  startup_text = "#{startup_text}\n\n#{ROUTE_ONLY_INSTRUCTION}" if ROUTE_ONLY
   out_dir = File.join(OUT_ROOT, Time.now.strftime("%Y%m%d-%H%M%S"))
   FileUtils.mkdir_p(out_dir)
 
@@ -106,6 +120,7 @@ def main
       "--permission-mode",
       "bypassPermissions"
     ]
+    command += ["--tools", ""] if ROUTE_ONLY
 
     run = run_with_capture(command, cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
     stdout_path = File.join(sample_dir, "claude.stdout.txt")

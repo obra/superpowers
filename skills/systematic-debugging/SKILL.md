@@ -15,6 +15,27 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 
 **Announce at start:** "我正在使用系统化调试技能..." (I'm using systematic debugging...)
 
+## First Response Rule
+
+On the first response after routing into this skill:
+
+- announce that you are using systematic debugging
+- summarize the suspected debugging frame in one sentence
+- ask at most one brief clarifying question if the concrete failing symptom is still unspecified
+
+Do NOT inspect the repository, run tools, or start gathering files before that first response is sent.
+
+## Quick Routing Boundaries
+
+Route here immediately when the user asks to:
+
+- locate the root cause before fixing
+- sort symptoms, hypotheses, and verification steps
+- determine which layer the failure lives in
+- narrow the problem before deciding whether tests or fixes come next
+
+If the user briefly mentions "later we may add tests" but the immediate ask is to locate the issue first, stay in `systematic-debugging`, not `test-driven-development`.
+
 ## The Iron Law
 
 ```

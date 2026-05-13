@@ -23,6 +23,7 @@ Start from `baseline-template.yaml` for every new run:
 - `2026-05-11-baseline-v1.yaml` is a dry-run baseline record, not a completed full-corpus benchmark.
 - It may contain a mix of observed samples and untouched placeholders.
 - When only part of the corpus is observed, state that explicitly in the `purpose` field and keep the remaining rows clearly unfilled.
+- Follow-up route-only recovery passes should be recorded as separate run files rather than overwriting the original baseline. This keeps "historical baseline" and "recovered route-only usability" distinct.
 
 ## What Each Run Should Capture
 
