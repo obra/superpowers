@@ -122,6 +122,20 @@ Qwen returns a `stop_reason` field in every delegation response. Handle each val
 
 **Fix-loop context discipline:** When re-delegating after a reviewer finds issues, do not paste the original task plus the full review back to Qwen. Send a fresh, focused delegation that names only the specific change required and the file(s) it affects. The reviewer's context belongs to you; Qwen only needs the next concrete action. If a single review surfaces multiple unrelated fixes, split them into separate delegations rather than batching.
 
+## Reviewer Output Discipline
+
+Reviewer subagents are not free — their replies sit in your context for the rest of the task. Both reviewer prompts (`./spec-reviewer-prompt.md` and `./code-quality-reviewer-prompt.md`) demand a terse, structured output format: a one-word verdict plus a bulleted issue list with `file:line` references. No strengths section, no recommendations, no preamble. Always use those prompts as written — don't ad-lib a verbose "review this task" dispatch, and don't ask follow-up questions that pull more reviewer prose into your context. If a verdict isn't clear from the structured reply, re-read the diff yourself rather than asking the reviewer to elaborate.
+
+## Focused Re-Review After a Fix
+
+When the implementer pushes a fix and you need the reviewer to confirm it, do **not** dispatch a fresh full review. Dispatch a focused re-review that:
+
+1. Pastes the prior review's issue list verbatim.
+2. Points the reviewer at the diff for the fix only (`git diff <SHA-before-fix>..HEAD`).
+3. Asks one question: did each listed issue get resolved, yes or no, and are there regressions?
+
+Both reviewer prompt files include a "Re-Review After a Fix" template — use it. Do not ask for a fresh full review just because you want a "second pass." Full re-reviews on every fix loop are how a single task's review context grows past Qwen's budget — and past your own working memory.
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Delegate implementation task to Qwen
@@ -248,6 +262,8 @@ Done!
 - Skip scene-setting context (Qwen needs to understand where the task fits)
 - Leave genuine ambiguity unresolved before delegating (Qwen cannot ask questions)
 - Stack the full review history into a fix-loop re-delegation instead of sending a focused fix prompt
+- Dispatch reviewers without the terse-output overrides from the prompt templates (verbose review output bloats every subsequent fix loop)
+- Re-dispatch a fresh full review after a fix instead of the focused re-review (issue list + diff only)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let Qwen's result summary replace actual review (both spec and quality review are required)
