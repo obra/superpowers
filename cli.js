@@ -397,6 +397,18 @@ function init(projectLevel = false, harnessMode = false) {
     }
   }
 
+  // Copy spec-status script (M0+; superpowers util for spec.md status
+  // frontmatter transitions; consumed by spec-ratifier Step 5)
+  if (harnessMode) {
+    const specStatusSrc = path.join(templatesDir, 'spec-status.mjs');
+    const specStatusDest = path.join(cwd, 'scripts', 'spec-status.mjs');
+    if (fs.existsSync(specStatusSrc)) {
+      fs.copyFileSync(specStatusSrc, specStatusDest);
+      fs.chmodSync(specStatusDest, '755');
+      log('  ✓ scripts/spec-status.mjs', 'green');
+    }
+  }
+
   // Copy generate-spec-html script (M1+; spec-author Step 14 / spec-ratifier
   // regenerate; produces L2 dual-artifact spec.html. Mermaid pre-rendered via
   // build-time mmdc; output has zero runtime deps.)
