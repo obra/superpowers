@@ -4,17 +4,17 @@
 
 ## Scope
 
-This document summarizes the current Claude Code findings from the skill-trigger evaluation work on branch `codex/skill-compat-review`, based on the partially completed baseline in `tests/skill-trigger/runs/2026-05-11-baseline-v1.yaml`.
+This document summarizes the Claude Code findings from the skill-trigger evaluation work on branch `codex/skill-compat-review`, based on the completed Round 1 baseline in `tests/skill-trigger/runs/2026-05-11-baseline-v1.yaml`.
 
 ## Current Status
 
-- Claude observed cases with explicit outcomes: 35 / 48
-- Claude remaining placeholders: 13 / 48
+- Claude observed cases with explicit outcomes: 48 / 48
+- Claude remaining placeholders: 0 / 48
 - Current Claude outcome breakdown:
-  - `exact`: 19
+  - `exact`: 21
   - `acceptable`: 3
   - `wrong`: 3
-  - `miss`: 10
+  - `miss`: 21
 
 ## What Is Stable
 
@@ -51,7 +51,6 @@ Affected prompts:
 
 - `executing_plans_*`
 - most `subagent_dev_*`
-- some tail `tdd_*`
 - one `systematic_debugging_confusion_*`
 
 This pattern is different from a normal wrong-route response. It means Claude often produced no usable content at all.
@@ -68,6 +67,99 @@ These are more actionable because Claude did respond, but chose the wrong workfl
   - Returned a general analysis memo instead of entering the debugging workflow
 
 These are routing/description/startup-guidance problems, not host silence problems.
+
+## Reduced Corpus Follow-Up
+
+### Shared-description experiment result
+
+A reduced 10-sample Claude-only corpus was run after strengthening the shared skill descriptions.
+
+Observed:
+
+- `writing-plans`
+  - `weak` sample routed correctly and produced an explicit planning response
+  - `confusion` sample timed out with empty stdout
+- `systematic-debugging`
+  - `weak` sample routed correctly and asked for symptoms/details first
+  - `confusion` sample timed out with empty stdout
+- `test-driven-development`
+  - both `weak` and `confusion` samples timed out with empty stdout
+- `requesting-code-review`
+  - `weak` sample timed out with empty stdout
+  - `confusion` sample routed correctly and produced a review-style critique
+- `document-management`
+  - `weak` sample routed correctly and produced a doc-search response
+  - `confusion` sample did not complete cleanly in the batch and was left for a single-case retry, which also stalled
+
+### Interpretation of the reduced corpus
+
+- Shared description strengthening helped the clearer `writing-plans`, `systematic-debugging`, `requesting-code-review`, and `document-management` prompts.
+- `test-driven-development` is still unstable on Claude, even after wording strengthening.
+- Confusion prompts remain the most timeout-prone class, so the next layer to tune is still likely host/startup guidance rather than more shared description edits.
+
+### Startup-strengthening follow-up
+
+After adding a short mandatory-routing paragraph to `tests/skill-trigger/claude/startup-v1.md` and tightening `test-driven-development` trigger phrasing, a second focused verification round showed:
+
+- `writing-plans`
+  - `weak` sample: still routed correctly
+  - `confusion` sample: improved from timeout to a usable planning response
+- `systematic-debugging`
+  - `weak` sample: still routed correctly
+  - `confusion` sample: still timed out / empty stdout, including single-case rerun
+- `test-driven-development`
+  - both `weak` and `confusion` samples: still timed out / empty stdout
+- `requesting-code-review`
+  - results were unstable across batch vs single-case runs; one batch run produced a usable review-style response for a confusion sample, but single-case rerun stalled
+- `document-management`
+  - `weak` sample: still routed correctly
+  - `confusion` sample: still timed out / empty stdout
+
+Interpretation:
+
+- The startup guidance helped `writing-plans` confusion routing materially.
+- It did not resolve `systematic-debugging` confusion, `test-driven-development`, or `document-management` confusion stalls.
+- `requesting-code-review` remains partly host-unstable, so it should not be treated as fully fixed yet.
+
+### Startup-injected single-case verification
+
+The earlier reduced-corpus harness did not explicitly inject `tests/skill-trigger/claude/startup-v1.md` into the Claude CLI invocation. A follow-up single-case runner was added to test the startup profile directly.
+
+Observed with explicit startup injection:
+
+- `systematic_debugging_confusion_002`
+  - recovered from prior timeout / empty stdout in the ad hoc single-case runner
+  - but still timed out with empty stdout/stderr under the corrected official queue runner, even in a serial rerun with `startup_profile_loaded: true`
+- `tdd_weak_002`
+  - recovered from prior timeout / empty stdout
+  - under the corrected official queue runner, also produced a stable `test-driven-development` style opening with `startup_profile_loaded: true`
+- `tdd_confusion_002`
+  - produced a short TDD-style response in the ad hoc single-case runner
+  - but still timed out with empty stdout/stderr under the corrected official queue runner serial rerun
+- `code_review_weak_002`
+  - still hung with no stdout or stderr written to disk, even when using Claude CLI's native `--append-system-prompt`
+  - after the harness fix, the same sample still timed out under the official queue runner with `startup_profile_loaded: true`, `SKILL_TRIGGER_CLAUDE_BARE=true`, and `--plugin-dir /Users/zego/Zego/horspowers`
+- `document_management_confusion_002`
+  - timed out with empty stdout/stderr in both the corrected official queue runner and the ad hoc single-case runner
+
+Interpretation:
+
+- at least part of the earlier `TDD` startup-strengthening result was masked by harness fidelity rather than pure routing failure
+- `systematic_debugging_confusion_002` remains inconsistent between the ad hoc single-case runner and the corrected official queue runner, so it is not yet a confirmed fix
+- `tdd_confusion_002` also remains inconsistent between the ad hoc single-case runner and the corrected official queue runner, so it is not yet a confirmed fix
+- the Claude startup profile is materially useful when it is actually injected into the host
+- `requesting-code-review` still shows a lower-level host/runtime anomaly on at least one weak sample, so it should now be treated as a confirmed runtime anomaly rather than a simple miss-route
+- `document-management` confusion currently looks like a stable runtime anomaly rather than a mere routing miss
+
+### Harness fidelity correction
+
+The root measurement bug is now identified: `tests/skill-trigger/run_queue_batch.rb` and `tests/skill-trigger/run_full_baseline.rb` previously recorded `startup_profile` paths in YAML metadata but did not load those profiles into Claude or Codex invocations.
+
+Consequences:
+
+- previous "startup-strengthening" observations were directionally useful but not fully attributable
+- any host-specific startup experiment run before this harness fix should be treated as provisional
+- future Claude/Codex comparisons must use the corrected harness or an explicitly documented single-case runner
 
 ## Interpretation
 
@@ -123,25 +215,41 @@ It does not affect abstract skills like:
 
 So part of Claude's poor performance here is not pure routing failure; it is routing plus state collision.
 
+### 4. Clean fixture reduced the state variable, but not the host/runtime anomaly
+
+An isolated execution-lane fixture was created with:
+
+- one unfinished plan
+- no completed checkpoint history
+- minimal docs configuration
+
+Early execution-lane runs showed that `executing-plans` and `subagent-driven-development` samples still produced empty stdout in Claude even inside the clean fixture.
+
+Interpretation:
+
+- repository-state pollution is real, but it is not the whole explanation
+- there is still a lower-level Claude CLI / host runtime failure mode for execution-oriented prompts
+- execution-oriented skills should remain in a dedicated anomaly lane rather than being tuned through shared descriptions
+
 ## Working Classification For Remaining Claude Placeholders
 
 ### Bucket 1: treat as host anomaly / deferred regression
 
-Do not spend more baseline time forcing these in the current round:
+Round 1 now classifies these without further reruns:
 
-- all remaining `executing_plans_*`
-- all remaining `subagent_dev_*`
+- all `executing_plans_*`
+- all `subagent_dev_*`
 
 These should move to a dedicated Claude regression track with host-focused investigation.
 
-### Bucket 2: continue baseline completion
+### Bucket 2: completed late in Round 1
 
-Still worth finishing in this round:
+Resolved from captured stdout:
 
 - `tdd_weak_002`
 - `tdd_confusion_002`
 
-These still have a reasonable chance of yielding useful text without changing the environment.
+Both now have explicit TDD-style outputs and no longer need reruns.
 
 ## Next Optimization Steps
 
@@ -203,7 +311,7 @@ For Claude optimization, the best next move is not another broad baseline sweep.
 
 The best next move is:
 
-1. finish the few remaining non-execution/non-subagent samples
-2. freeze `executing-plans` and `subagent-driven-development` as anomaly groups
-3. run a description-strength A/B experiment on the softer but otherwise healthy skill groups
+1. freeze `executing-plans` and `subagent-driven-development` as anomaly groups
+2. use the completed Round 1 baseline as the frozen reference
+3. treat `test-driven-development` as the next shared-description candidate for deeper host/startup inspection
 4. investigate execution-oriented skills separately in a cleaner repo context

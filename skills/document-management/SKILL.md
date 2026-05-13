@@ -1,6 +1,6 @@
 ---
 name: document-management
-description: "You MUST use this when the user wants project documentation initialized, searched, reorganized, archived, restored, or otherwise maintained as a docs system task. Trigger on requests like '初始化文档系统'、'搜索文档'、'把完成事项归档'. Do NOT use this for generic repository exploration unless the primary object is project documentation. 中文触发场景：当用户说'文档管理'、'搜索文档'、'查看文档统计'、'初始化文档系统'、'迁移文档'等需要管理文档时使用此技能。"
+description: "You MUST use this when the user wants project documentation initialized, searched, reorganized, archived, restored, or otherwise maintained as a docs system task. Trigger on requests like '初始化文档系统'、'搜索文档'、'从 docs 里翻出来'、'恢复项目上下文'、'查看当前活跃文档'、'把完成事项从活跃文档归档'. Do NOT use this for generic repository exploration or code search unless the primary object is the documentation system itself. 中文触发场景：当用户说'文档管理'、'搜索文档'、'查看文档统计'、'初始化文档系统'、'迁移文档'等需要管理文档时使用此技能。"
 ---
 
 # Document Management

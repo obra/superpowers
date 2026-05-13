@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: "You MUST use this when the user wants a feature or bugfix driven from a failing test before implementation code is written. Trigger on requests like '先写失败测试'、'用 TDD 修这个 bug'、'drive this from a failing test first'. Do NOT use this when the root cause is still unknown and the immediate need is investigation; use systematic-debugging first. 中文触发场景：当用户说'开始写这个功能'、'实现XXX功能'、'修复这个bug'、'用TDD方式开发'等需要测试驱动开发时使用此技能。"
+description: "You MUST use this when the user wants a feature or bugfix driven from a failing test, reproducing case, or acceptance test before implementation code is written. Trigger on requests like '先写失败测试'、'先补一个复现测试'、'先补一个能复现问题的测试'、'把验收行为写成自动化测试'、'先用一个 failing case 把问题固定住'、'drive this from a failing test first'. Do NOT use this when the root cause is still unknown and the immediate need is investigation; use systematic-debugging first. Also do NOT use it for generic test-after implementation work when the user did not ask for test-first flow. 中文触发场景：当用户说'开始写这个功能'、'实现XXX功能'、'修复这个bug'、'用TDD方式开发'等需要测试驱动开发时使用此技能。"
 ---
 
 # Test-Driven Development (TDD)

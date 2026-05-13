@@ -18,6 +18,21 @@ Ruby, YAML, Markdown, Claude CLI, Codex CLI, existing `tests/skill-trigger` harn
 
 ---
 
+## 当前状态（2026-05-13）
+
+- Task 1 已完成：Claude Round 1 baseline 已回填为 48 / 48
+- Task 2 已完成：5 个共享 workflow skills 的 description 已强化
+- Task 3 已完成一轮 reduced corpus 验证：10 条样本中 9 条已稳定落盘，1 条 `document-management` confusion 样本在单条补跑中仍表现为 host stall
+- 当前 Claude Round 1 结果：
+  - `exact`: 21
+  - `acceptable`: 3
+  - `wrong`: 3
+  - `miss`: 21
+- `executing-plans` 与 `subagent-driven-development` 已确认进入 anomaly lane
+- 后续重点是共享描述实验与执行型技能独立 regression lane，而不是继续重跑已分类 case
+
+---
+
 ### Task 1: Freeze current baseline and normalize evidence
 
 **Files:**
@@ -92,6 +107,12 @@ Expected: `yaml-ok`
 git add tests/skill-trigger/runs/2026-05-11-baseline-v1.yaml docs/plans/2026-05-12-claude-skill-trigger-analysis.md
 git commit -m "docs: freeze claude round 1 baseline"
 ```
+
+**Status (2026-05-13): Completed**
+
+- 已利用 queue artifacts、诊断输出和 targeted reruns 完成全部 48 条 Claude baseline 分类
+- `executing_plans_*` 与 `subagent_dev_*` 以 repeated timeout / state-collision anomaly 收口
+- `tdd_weak_002` 与 `tdd_confusion_002` 已依据现有 stdout 回填为 TDD exact
 
 ### Task 2: Strengthen shared skill descriptions for routing
 
@@ -171,6 +192,61 @@ git add skills/writing-plans/SKILL.md skills/systematic-debugging/SKILL.md skill
 git commit -m "docs: strengthen shared skill trigger wording"
 ```
 
+**Status (2026-05-13): Completed**
+
+- 已修改：
+  - `skills/writing-plans/SKILL.md`
+  - `skills/systematic-debugging/SKILL.md`
+  - `skills/test-driven-development/SKILL.md`
+  - `skills/requesting-code-review/SKILL.md`
+  - `skills/document-management/SKILL.md`
+- 仅调整 frontmatter description，不改技能主体流程
+
+### Task 3 progress note (2026-05-13)
+
+- Reduced corpus 已完成 9 条稳定落盘，剩余 1 条 `document-management_confusion_002` 的单条补跑仍卡住
+- 现有可读结果显示：
+  - `writing-plans` / `systematic-debugging` / `requesting-code-review` / `document-management` 的 weak 样本表现出明确的 skill-style 开场
+  - `test-driven-development` 仍然不稳定，2 条样本均为 timeout
+- 结论：shared description strengthening 对前四个技能有正向作用，但对 TDD 和 confusion prompt 仍不足
+
+### Task 3 progress note (startup-strengthening rerun)
+
+- 在 `tests/skill-trigger/claude/startup-v1.md` 添加 mandatory-routing 段落后，`writing_plans_confusion_001` 从 timeout 改善为可读规划响应
+- `systematic_debugging_confusion_002`、`tdd_weak_002`、`tdd_confusion_002`、`document_management_confusion_002` 仍然 timeout / empty stdout
+- `requesting-code-review` 在 batch 与 single-case rerun 之间仍然表现不稳定
+- 当前判断：
+  - `writing-plans` 的 startup 修复有效
+  - `systematic-debugging` confusion、`TDD`、`document-management` confusion 还没有被当前层修复
+  - 下一步应转入 execution-lane 隔离，并把 `TDD` 作为独立共享技能问题继续处理
+
+### Task 3 progress note (startup-injected single verification)
+
+- 新增 `tests/skill-trigger/scripts/run_claude_startup_single.rb`，用于把 `tests/skill-trigger/claude/startup-v1.md` 显式注入 Claude CLI，再跑单条 case
+- 直接 startup 注入后：
+  - `systematic_debugging_confusion_002` 在 ad hoc single runner 中从 timeout 变为 `exit_code 0`，并出现明确的 `systematic-debugging` 开场
+  - `tdd_weak_002` 从 timeout 变为 `exit_code 0`，并出现明确的 `test-driven-development` 开场
+  - `tdd_confusion_002` 也能在 ad hoc single runner 中返回简短的 TDD 风格响应
+- `code_review_weak_002` 在两种 startup 注入方式下都可能挂起且不写 stdout/stderr，当前更像 Claude CLI host/runtime anomaly，而不是纯路由失配
+- 在修正后的正式 queue runner 中，`code_review_weak_002` 仍然是 `startup_profile_loaded: true`、`timeout=true`、`exit_code 143`、`stdout_bytes=0`、`stderr_bytes=0`
+- 更新判断：
+  - startup 层对 `TDD` 的修复是有效的，但原队列脚本没有真实注入 startup profile，放大了 timeout 观测
+  - `systematic_debugging_confusion_002` 在正式 queue runner 下仍然 timeout，说明 ad hoc runner 与正式 harness 之间还存在未解释差异
+  - `tdd_confusion_002` 也存在同类 runner 差异：ad hoc runner 可出短响应，但正式 runner 串行仍 timeout
+  - `requesting-code-review` 的至少一个 weak 样本已经可以升级为 confirmed runtime anomaly
+
+### Task 3 progress note (harness correction)
+
+- 已修复 `tests/skill-trigger/run_queue_batch.rb`、`tests/skill-trigger/run_full_baseline.rb` 与 `tests/skill-trigger/scripts/run_execution_lane.sh`
+- 修复内容：
+  - Claude 调用现在会真实加载 `startup_profile` 并通过 `--append-system-prompt` 注入
+  - Codex 调用现在会把 startup profile 拼接到初始 prompt，保证 host 侧 guidance 真正参与评测
+  - batch runner 新增 `SKILL_TRIGGER_RERUN_COMPLETED=true`，便于在不改 baseline YAML 的前提下重跑已分类 case
+- 当前判断：
+  - 之前所有 startup-only 结论都需要视为 provisional evidence
+  - 后续应基于修正后的 harness 重新跑最小 corpus，再更新 baseline YAML 的最终分类
+  - 对 Claude 进行人工并行压测会放大 runtime 噪声；正式结论应优先采用串行单例复跑
+
 ### Task 3: Run the shared-description Claude experiment
 
 **Files:**
@@ -193,6 +269,9 @@ Exclude:
 
 - `executing-plans`
 - `subagent-driven-development`
+
+Use the frozen Round 1 baseline as the source of truth for completed ids. Do not
+rerun any case already classified in `tests/skill-trigger/runs/2026-05-11-baseline-v1.yaml`.
 
 **Step 2: Run Claude-only batches**
 

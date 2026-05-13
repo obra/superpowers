@@ -1,0 +1,42 @@
+- id: execution_lane_executing_strong_001
+  user_message: "按这份计划开始做，先完成第一批，然后停下来汇报进展。"
+  expected_skill: "executing-plans"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；明确要求按已有计划执行并停在检查点。"
+
+- id: execution_lane_executing_weak_001
+  user_message: "Continue with the plan, but keep the work easy to pause and resume."
+  expected_skill: "executing-plans"
+  secondary_ok_skills: ["subagent-driven-development"]
+  should_trigger: true
+  notes: "弱触发；强调 pause/resume 和已有计划。"
+
+- id: execution_lane_subagent_strong_001
+  user_message: "这个计划里的任务彼此独立，当前会话直接连续推进，边做边 review。"
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "强触发；独立任务 + 当前会话连续推进。"
+
+- id: execution_lane_subagent_weak_001
+  user_message: "We already have the plan. Just keep moving through the independent tasks in this session."
+  expected_skill: "subagent-driven-development"
+  secondary_ok_skills: ["executing-plans"]
+  should_trigger: true
+  notes: "弱触发；英文表达，强调 current session 和 independent tasks。"
+
+- id: execution_lane_control_debug_001
+  user_message: "线上有个异常，但我还不确定复现路径，你先帮我缩小问题范围。"
+  expected_skill: "systematic-debugging"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "控制样本；验证非执行型技能在 fixture 中仍可响应。"
+
+- id: execution_lane_control_tdd_001
+  user_message: "先用一个 failing case 把问题固定住，后面实现可以再慢慢补。"
+  expected_skill: "test-driven-development"
+  secondary_ok_skills: []
+  should_trigger: true
+  notes: "控制样本；验证 TDD 在 fixture 中是否仍然 stall。"
+

@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: "You MUST use this when the user needs a bug, failure, or unexpected behavior investigated systematically before any fix is proposed. Trigger on requests like '帮忙调试一下'、'先梳理现象和假设'、'确认问题到底在哪一层'. Do NOT use this when the first required action is to write a failing test for implementation; use test-driven-development then. 中文触发场景：当用户说'这里有个bug'、'测试失败了'、'为什么报错？'、'帮忙调试一下'、'出问题了'等遇到任何技术问题时使用此技能。"
+description: "You MUST use this when the user needs a bug, failure, or unexpected behavior investigated systematically before any fix is proposed. Trigger on requests like '帮忙调试一下'、'先梳理现象、假设和验证步骤'、'确认问题到底在哪一层'、'先缩小问题范围'. Do NOT use this for generic planning or implementation sequencing, and do NOT use it when the first required action is to write a failing or reproducing test; use test-driven-development then. 中文触发场景：当用户说'这里有个bug'、'测试失败了'、'为什么报错？'、'帮忙调试一下'、'出问题了'等遇到任何技术问题时使用此技能。"
 ---
 
 # Systematic Debugging

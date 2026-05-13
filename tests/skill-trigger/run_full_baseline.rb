@@ -19,23 +19,26 @@ CLAUDE_BIN = ENV.fetch("CLAUDE_BIN", "claude")
 CODEX_BIN = ENV.fetch("CODEX_BIN", "codex")
 TIMEOUT_SECONDS = Integer(ENV.fetch("SKILL_TRIGGER_TIMEOUT", "240"))
 MAX_WORKERS = Integer(ENV.fetch("SKILL_TRIGGER_MAX_WORKERS", "4"))
+CLAUDE_BARE = ENV.fetch("SKILL_TRIGGER_CLAUDE_BARE", "false") == "true"
+CLAUDE_PLUGIN_DIR = ENV.fetch("SKILL_TRIGGER_CLAUDE_PLUGIN_DIR", "")
 
 HOSTS = {
-  "claude" => lambda do |prompt|
-    [
-      CLAUDE_BIN,
-      "-p",
-      prompt,
-      "--permission-mode",
-      "bypassPermissions"
-    ]
+  "claude" => lambda do |prompt, startup_text|
+    command = [CLAUDE_BIN, "-p", prompt]
+    command += ["--append-system-prompt", startup_text] if startup_text && !startup_text.empty?
+    command << "--bare" if CLAUDE_BARE
+    command += ["--plugin-dir", CLAUDE_PLUGIN_DIR] unless CLAUDE_PLUGIN_DIR.empty?
+    command + ["--permission-mode", "bypassPermissions"]
   end,
-  "codex" => lambda do |prompt|
-    [
-      CODEX_BIN,
-      "exec",
-      prompt
-    ]
+  "codex" => lambda do |prompt, startup_text|
+    effective_prompt =
+      if startup_text && !startup_text.empty?
+        "#{startup_text}\n\nUser request:\n#{prompt}"
+      else
+        prompt
+      end
+
+    [CODEX_BIN, "exec", effective_prompt]
   end
 }.freeze
 
@@ -96,6 +99,24 @@ def stability_flags(text)
   flags
 end
 
+def startup_profiles_by_host
+  @startup_profiles_by_host ||= begin
+    run_metadata = Psych.load_file(File.join(RUNS_DIR, "baseline-template.yaml"), permitted_classes: [Date])
+    hosts = run_metadata.fetch("hosts")
+    hosts.each_with_object({}) do |(host, meta), acc|
+      profile_path = meta["startup_profile"]
+      acc[host] =
+        if profile_path && !profile_path.empty?
+          File.read(File.join(ROOT, profile_path))
+        else
+          nil
+        end
+    end
+  rescue Psych::Exception
+    {}
+  end
+end
+
 def main
   ensure_skill_symlink
   FileUtils.mkdir_p(ARTIFACT_ROOT)
@@ -128,11 +149,13 @@ def main
       prompt = sample.fetch("user_message")
       sample_dir = File.join(ARTIFACT_ROOT, format("%02d-%s", index + 1, slug(sample.fetch("id"))))
       FileUtils.mkdir_p(sample_dir)
+      startup_text = startup_profiles_by_host[host]
       jobs << {
         "sample" => sample,
         "host" => host,
-        "command" => build_command.call(prompt),
-        "sample_dir" => sample_dir
+        "command" => build_command.call(prompt, startup_text),
+        "sample_dir" => sample_dir,
+        "startup_profile_loaded" => !startup_text.to_s.empty?
       }
     end
   end
@@ -152,6 +175,7 @@ def main
         host = job.fetch("host")
         command = job.fetch("command")
         sample_dir = job.fetch("sample_dir")
+        startup_profile_loaded = job.fetch("startup_profile_loaded")
 
         run = run_with_capture(command, cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
 
@@ -169,6 +193,7 @@ def main
           "expected_skill" => sample.fetch("expected_skill"),
           "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
           "should_trigger" => sample.fetch("should_trigger"),
+          "startup_profile_loaded" => startup_profile_loaded,
           "command" => command,
           "exit_code" => run[:exit_code],
           "success" => run[:success],

@@ -21,13 +21,27 @@ BATCH_SIZE = Integer(ENV.fetch("SKILL_TRIGGER_BATCH_SIZE", "2"))
 MAX_BATCH_LOOPS = Integer(ENV.fetch("SKILL_TRIGGER_BATCH_LOOPS", "1"))
 SELECTED_HOSTS = ENV.fetch("SKILL_TRIGGER_HOSTS", "claude,codex").split(",").map(&:strip).reject(&:empty?)
 ONLY_CASE_IDS = ENV.fetch("SKILL_TRIGGER_ONLY_CASE_IDS", "").split(",").map(&:strip).reject(&:empty?)
+RERUN_COMPLETED = ENV.fetch("SKILL_TRIGGER_RERUN_COMPLETED", "false") == "true"
+CLAUDE_BARE = ENV.fetch("SKILL_TRIGGER_CLAUDE_BARE", "false") == "true"
+CLAUDE_PLUGIN_DIR = ENV.fetch("SKILL_TRIGGER_CLAUDE_PLUGIN_DIR", "")
 
 HOSTS = {
-  "claude" => lambda do |prompt|
-    [CLAUDE_BIN, "-p", prompt, "--permission-mode", "bypassPermissions"]
+  "claude" => lambda do |prompt, startup_text|
+    command = [CLAUDE_BIN, "-p", prompt]
+    command += ["--append-system-prompt", startup_text] if startup_text && !startup_text.empty?
+    command << "--bare" if CLAUDE_BARE
+    command += ["--plugin-dir", CLAUDE_PLUGIN_DIR] unless CLAUDE_PLUGIN_DIR.empty?
+    command + ["--permission-mode", "bypassPermissions"]
   end,
-  "codex" => lambda do |prompt|
-    [CODEX_BIN, "exec", prompt]
+  "codex" => lambda do |prompt, startup_text|
+    effective_prompt =
+      if startup_text && !startup_text.empty?
+        "#{startup_text}\n\nUser request:\n#{prompt}"
+      else
+        prompt
+      end
+
+    [CODEX_BIN, "exec", effective_prompt]
   end
 }.freeze
 
@@ -102,7 +116,25 @@ rescue ArgumentError
   Psych.safe_load(content, [Date], [], true)
 end
 
+def startup_profiles_by_host
+  @startup_profiles_by_host ||= begin
+    run_data = load_yaml_file(RUN_PATH)
+    hosts = run_data.fetch("hosts")
+    hosts.each_with_object({}) do |(host, meta), acc|
+      profile_path = meta["startup_profile"]
+      acc[host] =
+        if profile_path && !profile_path.empty?
+          File.read(File.join(ROOT, profile_path))
+        else
+          nil
+        end
+    end
+  end
+end
+
 def completed_ids_from_run(run_path)
+  return [] if RERUN_COMPLETED
+
   data = load_yaml_file(run_path)
   data.fetch("results").map do |result|
     hosts = selected_hosts
@@ -164,7 +196,8 @@ def main
 
       selected_hosts.each do |host|
         build_command = HOSTS.fetch(host)
-        run = run_with_capture(build_command.call(sample.fetch("user_message")), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
+        startup_text = startup_profiles_by_host[host]
+        run = run_with_capture(build_command.call(sample.fetch("user_message"), startup_text), cwd: ROOT, timeout_seconds: TIMEOUT_SECONDS)
         stdout_path = File.join(sample_dir, "#{host}.stdout.txt")
         stderr_path = File.join(sample_dir, "#{host}.stderr.txt")
 
@@ -176,6 +209,7 @@ def main
           "host" => host,
           "expected_skill" => sample.fetch("expected_skill"),
           "secondary_ok_skills" => sample.fetch("secondary_ok_skills"),
+          "startup_profile_loaded" => !startup_text.to_s.empty?,
           "stdout_path" => stdout_path,
           "stderr_path" => stderr_path,
           "exit_code" => run[:exit_code],

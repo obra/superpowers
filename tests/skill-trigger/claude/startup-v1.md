@@ -12,6 +12,8 @@ Use this profile as the baseline Claude Code startup guidance during skill-trigg
 
 Before answering, inspect whether the user's request maps to an existing workflow skill.
 
+Workflow skills are routing decisions, not optional style suggestions. If a request clearly matches a workflow boundary, invoke the narrowest matching skill first instead of answering generically.
+
 Prefer triggering a skill when the request clearly asks for one of these behaviors:
 
 - clarify goals, constraints, or solution options before implementation
@@ -37,6 +39,13 @@ When the request overlaps between adjacent workflow skills, prefer these boundar
 - failing-test-first implementation or bug fix -> `test-driven-development`
 - formal review of existing code changes -> `requesting-code-review`
 - documentation retrieval or docs-system maintenance -> `document-management`
+
+Apply these narrower disambiguation rules when wording is indirect:
+
+- requests to outline symptoms, hypotheses, verification steps, or failing layers still route to `systematic-debugging`, not generic planning
+- requests to lock behavior with a failing test, reproducing case, or acceptance test before implementation still route to `test-driven-development`, not generic debugging
+- requests to scan completed work for omissions, requirement drift, regressions, or obvious issues still route to `requesting-code-review`, even if the user does not say "code review"
+- requests to recover context from docs, find prior plans, inspect active docs, or archive completed items still route to `document-management`, not generic repository exploration
 
 ## Evaluation Constraint
 

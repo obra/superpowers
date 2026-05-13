@@ -36,6 +36,12 @@ Every run file should include:
 - summary totals for each host
 - divergence totals between hosts
 
+## Startup Profile Integrity
+
+- Recording `startup_profile` in a run YAML is not enough by itself.
+- The runner used for that pass must actually inject the profile into the host invocation.
+- If startup guidance was tested through an ad hoc script or a corrected runner, say that explicitly in the `purpose` field or per-case notes.
+
 ## Change Discipline
 
 For clean attribution, change only one layer between neighboring runs:

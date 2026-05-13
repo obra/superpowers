@@ -1,0 +1,105 @@
+run_id: 2026-05-13-claude-startup-harness-correction
+date: 2026-05-13
+purpose: focused Claude-only verification after correcting the harness to actually inject startup profiles; this run measures whether previously observed startup effects still hold under the official runner
+
+skills:
+  commit: 6a74006
+  scope:
+    - systematic-debugging
+    - test-driven-development
+    - requesting-code-review
+    - document-management
+
+hosts:
+  claude:
+    startup_profile: tests/skill-trigger/claude/startup-v1.md
+    model: claude-cli-local
+
+corpus:
+  version: 2026-05-11-v1
+  source: tests/skill-trigger/corpus.yaml
+  sample_count: 5
+
+summary:
+  claude:
+    exact: 1
+    acceptable: 0
+    miss: 0
+    wrong: 0
+    runtime_anomaly: 4
+
+results:
+  - prompt_id: systematic_debugging_confusion_002
+    user_message: "先梳理一下现象、假设和验证步骤，确认问题到底在哪一层。"
+    expected_skill: systematic-debugging
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "正式 queue runner 串行复跑；startup_profile_loaded: true，但 120s timeout 且 stdout/stderr 为空。"
+    claude:
+      triggered: false
+      triggered_skill: ""
+      outcome: runtime_anomaly
+      confidence: medium
+      reason_tags:
+        - host_runtime_anomaly
+      notes: "Ad hoc single-case runner 曾出现 systemtic-debugging 风格开场，但修正后的正式 runner 串行重跑仍是 exit_code 143 + empty stdout/stderr，因此暂不视为已修复。"
+
+  - prompt_id: tdd_weak_002
+    user_message: "这个功能开始实现前，先把验收行为写成自动化测试。"
+    expected_skill: test-driven-development
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "正式 queue runner 串行复跑；startup_profile_loaded: true，exit_code 0。"
+    claude:
+      triggered: true
+      triggered_skill: test-driven-development
+      outcome: exact
+      confidence: high
+      reason_tags: []
+      notes: "修正后的正式 runner 中稳定出现测试驱动开发开场，说明 startup 注入在该样本上有效。"
+
+  - prompt_id: tdd_confusion_002
+    user_message: "先用一个 failing case 把问题固定住，后面实现可以再慢慢补。"
+    expected_skill: test-driven-development
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "正式 queue runner 串行复跑仍 timeout；ad hoc single-case runner 可返回简短 TDD 风格响应。"
+    claude:
+      triggered: false
+      triggered_skill: ""
+      outcome: runtime_anomaly
+      confidence: medium
+      reason_tags:
+        - host_runtime_anomaly
+        - harness_runner_divergence
+      notes: "在 ad hoc runner 中是短 TDD 风格回答，但正式 runner 中稳定 exit_code 143 + empty stdout/stderr，仍未闭环。"
+
+  - prompt_id: code_review_weak_002
+    user_message: "我把功能先做完了，你帮我过一遍有没有遗漏。"
+    expected_skill: requesting-code-review
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "正式 queue runner bare 模式复跑；startup_profile_loaded: true，60s timeout 且 stdout/stderr 为空。"
+    claude:
+      triggered: false
+      triggered_skill: ""
+      outcome: runtime_anomaly
+      confidence: high
+      reason_tags:
+        - host_runtime_anomaly
+      notes: "在修正后的正式 harness 中已可稳定复现为 runtime anomaly，而不是简单的路由 miss。"
+
+  - prompt_id: document_management_confusion_002
+    user_message: "把已经做完的这批事项从活跃文档里清掉，并归档到合适的位置。"
+    expected_skill: document-management
+    secondary_ok_skills: []
+    should_trigger: true
+    corpus_notes: "正式 queue runner 串行复跑与 ad hoc single-case runner 都 timeout；stdout/stderr 为空。"
+    claude:
+      triggered: false
+      triggered_skill: ""
+      outcome: runtime_anomaly
+      confidence: high
+      reason_tags:
+        - host_runtime_anomaly
+      notes: "目前更像稳定的 Claude runtime anomaly，而不是单纯的文档路由弱信号。"
