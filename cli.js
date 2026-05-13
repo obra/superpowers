@@ -397,6 +397,31 @@ function init(projectLevel = false, harnessMode = false) {
     }
   }
 
+  // Copy spec-status script (M0+; superpowers util for spec.md status
+  // frontmatter transitions; consumed by spec-ratifier Step 5)
+  if (harnessMode) {
+    const specStatusSrc = path.join(templatesDir, 'spec-status.mjs');
+    const specStatusDest = path.join(cwd, 'scripts', 'spec-status.mjs');
+    if (fs.existsSync(specStatusSrc)) {
+      fs.copyFileSync(specStatusSrc, specStatusDest);
+      fs.chmodSync(specStatusDest, '755');
+      log('  ✓ scripts/spec-status.mjs', 'green');
+    }
+  }
+
+  // Copy generate-spec-html script (M1+; spec-author Step 14 / spec-ratifier
+  // regenerate; produces L2 dual-artifact spec.html. Mermaid pre-rendered via
+  // build-time mmdc; output has zero runtime deps.)
+  if (harnessMode) {
+    const genSpecHtmlSrc = path.join(templatesDir, 'scripts-generate-spec-html.mjs');
+    const genSpecHtmlDest = path.join(cwd, 'scripts', 'generate-spec-html.mjs');
+    if (fs.existsSync(genSpecHtmlSrc)) {
+      fs.copyFileSync(genSpecHtmlSrc, genSpecHtmlDest);
+      fs.chmodSync(genSpecHtmlDest, '755');
+      log('  ✓ scripts/generate-spec-html.mjs', 'green');
+    }
+  }
+
   // Create README indexes
   log('\n📋 Creating document indexes...', 'blue');
 

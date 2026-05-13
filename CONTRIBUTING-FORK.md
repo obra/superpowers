@@ -4,7 +4,7 @@
 
 ## 红线 1：不修改 upstream 文件
 
-**永远不修改** 来自 upstream 的 `skills/*/SKILL.md`、`hooks/*`、`templates/*`（注：`templates/` 中 `docs-reference-decisions-readme.md` / `docs-reference-guidelines-readme.md` / `docs-reference-pitfalls-readme.md` / `docs-reference-catalog-stub.md` / `rebuild-catalog.sh` / `github-workflows-catalog-sync.yml` / `github-workflows-spec-sync.yml` 是 fork 新增、非 upstream 文件，可改）。
+**永远不修改** 来自 upstream 的 `skills/*/SKILL.md`、`hooks/*`、`templates/*`（注：`templates/` 中 `docs-reference-decisions-readme.md` / `docs-reference-guidelines-readme.md` / `docs-reference-pitfalls-readme.md` / `docs-reference-catalog-stub.md` / `rebuild-catalog.sh` / `github-workflows-catalog-sync.yml` / `github-workflows-spec-sync.yml` / `scripts-generate-spec-html.mjs` / `spec-html-fixture.md` / `spec-html-fixture.expected.html` / `scripts-generate-spec-html.test.mjs` 是 fork 新增、非 upstream 文件，可改）。
 
 理由：
 
