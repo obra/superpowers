@@ -1,0 +1,27 @@
+name: Catalog Sync Check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/reference/decisions/**'
+      - 'docs/reference/guidelines/**'
+      - 'docs/reference/pitfalls/**'
+      - 'docs/reference/catalog.md'
+      - 'scripts/rebuild-catalog.sh'
+
+jobs:
+  verify-catalog-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x scripts/rebuild-catalog.sh
+
+      - name: Rebuild catalog to temp
+        run: ./scripts/rebuild-catalog.sh --out /tmp/regenerated-catalog.md
+
+      - name: Compare against committed catalog (ignore Last rebuild timestamp)
+        run: |
+          diff <(head -n -2 docs/reference/catalog.md) <(head -n -2 /tmp/regenerated-catalog.md) \
+            || { echo "::error::catalog.md out of sync with notes. Run scripts/rebuild-catalog.sh and commit."; exit 1; }

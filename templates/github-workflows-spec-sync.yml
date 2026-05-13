@@ -1,0 +1,48 @@
+name: L2 Spec Dual-Artifact Sync Check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/superpowers/specs/**'
+
+jobs:
+  verify-dual-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Identify changed L2 spec files in PR
+        id: changed
+        run: |
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.event.pull_request.head.sha }}"
+          changed=$(git diff --name-only "$base_sha" "$head_sha" \
+            | grep -E '^docs/superpowers/specs/[0-9]{4}-[0-9]{2}-[0-9]{2}-.*\.(md|html)$' || true)
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$changed" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Verify .md ↔ .html pairing for L2 specs with change_id frontmatter
+        run: |
+          set -e
+          files="${{ steps.changed.outputs.files }}"
+          if [ -z "$files" ]; then echo "No L2 spec changes; skip."; exit 0; fi
+          slugs=$(echo "$files" | sed -E 's|^docs/superpowers/specs/(.*)\.(md\|html)$|\1|' | sort -u)
+          fail=0
+          for slug in $slugs; do
+            md="docs/superpowers/specs/${slug}.md"
+            html="docs/superpowers/specs/${slug}.html"
+            if [ -f "$md" ] && head -30 "$md" | grep -q '^change_id:'; then
+              if [ ! -f "$html" ]; then
+                echo "::error file=$md::L2 spec has 'change_id' frontmatter but missing companion .html"
+                fail=1
+              fi
+            fi
+            if [ -f "$html" ] && [ ! -f "$md" ]; then
+              echo "::error file=$html::orphan .html with no companion .md"
+              fail=1
+            fi
+          done
+          exit $fail
