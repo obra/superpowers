@@ -1,0 +1,3 @@
+[submodule "evals"]
+	path = evals
+	url = git@github.com:prime-radiant-inc/superpowers-evals.git
