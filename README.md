@@ -86,6 +86,18 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Select `Install Plugin`.
 
+#### Automatic startup bootstrap
+
+Codex plugin hooks are still gated behind Codex's `plugin_hooks` feature. To opt in:
+
+```bash
+codex features enable plugin_hooks
+```
+
+Restart Codex, open `/hooks`, review the Superpowers `SessionStart` hook, and trust it. Codex may require you to re-review the hook after Superpowers updates if the hook definition changes.
+
+Fallback: if `plugin_hooks` is disabled, unavailable, or untrusted, Superpowers still installs as a normal Codex plugin and the skills remain available. The automatic startup bootstrap is the part that waits for the trusted hook.
+
 ### Cursor
 
 - In Cursor Agent chat, install from marketplace:
