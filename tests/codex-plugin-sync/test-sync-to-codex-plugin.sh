@@ -177,6 +177,7 @@ write_upstream_fixture() {
         "$repo/.codex-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
+        "$repo/evals/drill" \
         "$repo/scripts" \
         "$repo/skills/example"
 
@@ -215,6 +216,7 @@ EOF
 EOF
 
     printf 'png fixture\n' > "$repo/assets/app-icon.png"
+    printf 'eval harness fixture\n' > "$repo/evals/drill/README.md"
 
     cat > "$repo/skills/example/SKILL.md" <<'EOF'
 # Example Skill
@@ -233,6 +235,7 @@ EOF
         .gitignore \
         assets/app-icon.png \
         assets/superpowers-small.svg \
+        evals/drill/README.md \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
@@ -542,6 +545,7 @@ main() {
     assert_contains "$preview_section" ".private-journal/keep.txt" "Preview includes tracked ignored file"
     assert_not_contains "$preview_section" ".private-journal/leak.txt" "Preview excludes ignored untracked file"
     assert_not_contains "$preview_section" "ignored-cache/" "Preview excludes pure ignored directories"
+    assert_not_contains "$preview_section" "evals/" "Preview excludes eval harness"
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
