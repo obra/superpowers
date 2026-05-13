@@ -93,6 +93,19 @@ digraph process {
 
 **Review roles** still use Claude subagents. Use the most capable available model for spec compliance and code quality review — these roles require judgment and diff-reading that benefit from stronger reasoning.
 
+## Right-Sizing Before Delegating
+
+Plans are written for a general-purpose implementer, but Qwen runs locally with a much smaller context window. Before every delegation — including the first one for a task — sanity-check the unit of work against Qwen's actual budget. Splitting up front is cheap; recovering from a `token_limit` stop with partial work already on disk is not.
+
+Walk these checks before each `delegate_to_qwen` call:
+
+- **One concern per delegation.** If the task touches more than one file non-trivially, or mixes "write the failing test" with "implement and refactor," split it into back-to-back delegations. Land the first one (review + commit), then delegate the next.
+- **Trim `context_hints`.** Pass only files Qwen will actually read. If a file is large and only a region matters, paste that region directly into the `task` string with a line-range citation instead of attaching the whole file.
+- **Tighten "Done when."** If you can't state the acceptance criteria for a single delegation in a short paragraph, the delegation is doing too much.
+- **Resolve, don't relay.** Inline the answers to any ambiguities you resolved — don't make Qwen carry the plan context just to interpret the task.
+
+If a task as written in the plan is too big for Qwen even after this trimming, split it on the fly. Update TodoWrite to reflect the sub-deliveries so progress stays accurate.
+
 ## Handling Qwen stop_reason
 
 Qwen returns a `stop_reason` field in every delegation response. Handle each value:
@@ -106,6 +119,8 @@ Qwen returns a `stop_reason` field in every delegation response. Handle each val
 - If the task is already atomic and cannot be split further, escalate to the user. Include the `transcript_path` so they can inspect what Qwen completed before deciding how to proceed.
 
 **Never** ignore a non-`complete` stop_reason or proceed to spec review with partial work without assessing it first.
+
+**Fix-loop context discipline:** When re-delegating after a reviewer finds issues, do not paste the original task plus the full review back to Qwen. Send a fresh, focused delegation that names only the specific change required and the file(s) it affects. The reviewer's context belongs to you; Qwen only needs the next concrete action. If a single review surfaces multiple unrelated fixes, split them into separate delegations rather than batching.
 
 ## Prompt Templates
 
@@ -227,9 +242,12 @@ Done!
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Delegate to Qwen without running the context preparation step first
+- Delegate without running the right-size check (a single task that won't fit Qwen's budget)
 - Make Qwen read the plan file (provide full text in the `task` string instead)
+- Attach large files via `context_hints` when only a region is needed
 - Skip scene-setting context (Qwen needs to understand where the task fits)
 - Leave genuine ambiguity unresolved before delegating (Qwen cannot ask questions)
+- Stack the full review history into a fix-loop re-delegation instead of sending a focused fix prompt
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let Qwen's result summary replace actual review (both spec and quality review are required)
