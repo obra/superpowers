@@ -1,5 +1,36 @@
 # Superpowers Release Notes
 
+## v2.1.0 (2026-05-14)
+
+### Added — Harness M1 skills
+
+- `spec-author/SKILL.md`（509 行）：重路径主入口，L2 三视角 spec 起草 + Step 0 catalog 查询 + Step 5 知识提取 + Step N spec.html 生成 + 15 项 self-review；按需 wrap brainstorming
+- `spec-ratifier/SKILL.md`（321 行）：3 owner 评审调度 + status transition + spec.html 重生成
+- `templates/generate-spec-html.mjs`：L2 spec.md → spec.html dual-artifact 生成器（inline CSS + Mermaid + three-viewpoint coloring + §K References footer 自动注入）
+
+### Fixed
+
+- `cli.js`：补装 M0 漏装的 `scripts/spec-status.mjs` 到 product repo `scripts/`（M0 cli.js 集成段 bug）
+- `cli.js`：补装 spec-author / spec-ratifier 相关模板到 product repo 时的路径处理
+
+### Refactored
+
+- `spec-status.mjs` canonical 统一到 `templates/`（去除 `scripts/spec-status.mjs` 副本）
+
+### Background
+
+Harness Engineering M1 milestone 代码闭环（2026-05-14，3 PR merged）。
+- Spec: [facio-blueprint:docs/superpowers/specs/2026-05-13-blueprint-harness-redesign-design.md](https://github.com/vattention/facio-blueprint/blob/main/docs/superpowers/specs/2026-05-13-blueprint-harness-redesign-design.md) §9.2
+- M1 plan: [facio-blueprint:docs/superpowers/plans/2026-05-13-m1-spec-author-and-ratifier.md](https://github.com/vattention/facio-blueprint/blob/main/docs/superpowers/plans/2026-05-13-m1-spec-author-and-ratifier.md)
+- facio-superpowers PR #6（M1 主体）
+- facio-flow PR #3（notify_spec_event MCP tool 配套）
+
+### Migration
+
+不需要 migration。`npx @vattention/facio-superpowers init` 在已 init 过的项目上 re-run 即安装新 skill；skip-existing 保护原有文件不被覆盖。
+
+---
+
 ## v2.0.0 (2026-05-12) · 🚨 BREAKING
 
 ### BREAKING
