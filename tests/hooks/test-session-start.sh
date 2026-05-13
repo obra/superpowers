@@ -216,6 +216,19 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+claude_data_home="$(make_home claude-data-warning)"
+claude_data="$TEST_ROOT/claude-data-warning/data"
+mkdir -p "$claude_data_home/.config/superpowers/skills" "$claude_data"
+assert_command_output \
+    "Claude with CLAUDE_PLUGIN_DATA still uses Claude legacy warning" \
+    "nested" \
+    "Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead." \
+    "" \
+    "$claude_data_home" \
+    CLAUDE_PLUGIN_DATA="$claude_data" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$HOOK_UNDER_TEST"
+
 codex_legacy_home="$(make_home codex-legacy-warning)"
 codex_legacy_data="$TEST_ROOT/codex-legacy-warning/data"
 mkdir -p "$codex_legacy_home/.config/superpowers/skills" "$codex_legacy_data"

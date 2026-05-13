@@ -134,6 +134,12 @@ verified `${PLUGIN_ROOT}` placeholder and the `startup|resume|clear` matcher:
 }
 ```
 
+The matcher differs from Claude Code intentionally: the Codex spike verified
+`startup`, `resume`, and `clear` as Codex `SessionStart` sources. Keep
+Claude Code on `startup|clear|compact` until `resume` is explicitly verified
+there, and keep Codex off `compact` until Codex support for that source is
+verified.
+
 Note: The path must be quoted because plugin roots may contain spaces on
 Windows, for example `C:\Program Files\...`.
 

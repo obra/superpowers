@@ -7,10 +7,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Codex plugin hooks set Claude-compatible root env vars, so detect Codex
-# through its plugin data env before building platform-specific context.
+# Codex plugin hooks set both unprefixed PLUGIN_* vars and Claude-compatible
+# CLAUDE_* vars. Only the unprefixed data var is Codex-specific enough to
+# distinguish Codex from Claude Code.
 is_codex_hook=0
-if [ -n "${PLUGIN_DATA:-}" ] || [ -n "${CLAUDE_PLUGIN_DATA:-}" ]; then
+if [ -n "${PLUGIN_DATA:-}" ]; then
     is_codex_hook=1
 fi
 
