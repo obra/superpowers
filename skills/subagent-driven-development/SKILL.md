@@ -13,6 +13,8 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
+**Parallel dispatch:** Before starting, scan the plan and identify groups of tasks that are file-independent (no shared files, no sequential dependency). Dispatch those groups in parallel using `isolation: "worktree"` — each subagent gets its own git worktree, eliminating staged-index conflicts. Spec and quality reviewers for independent tasks can also be dispatched in parallel (they are read-only). Only run tasks sequentially when a later task depends on an earlier task's output or when they touch overlapping files. Parallel dispatch with worktree isolation is faster and equally safe when tasks don't share state.
+
 ## When to Use
 
 ```dot
@@ -239,7 +241,7 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch multiple implementation subagents in parallel **when they touch overlapping files or share sequential dependencies** — for file-independent tasks, use `isolation: "worktree"` and dispatch in parallel instead (that's the preferred approach for speed)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
