@@ -1,4 +1,0 @@
-{"tool": "EnterWorktree", "args": {"branch": "feature/login"}, "source": "native"}
-{"tool": "Read", "args": {"file_path": "/tmp/foo.py"}, "source": "native"}
-{"tool": "Edit", "args": {"file_path": "/tmp/foo.py"}, "source": "native"}
-{"tool": "Bash", "args": {"command": "pytest"}, "source": "shell"}

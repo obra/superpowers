@@ -1,6 +1,0 @@
-{
-  "name": "drill-test-project",
-  "version": "1.0.0",
-  "description": "Test project for Drill scenarios",
-  "main": "src/index.js"
-}

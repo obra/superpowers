@@ -1,5 +1,0 @@
-{"tool": "Read", "args": {"file_path": "/tmp/foo.py"}, "source": "native"}
-{"tool": "Skill", "args": {"skill": "superpowers:worktree"}, "source": "native"}
-{"tool": "Edit", "args": {"file_path": "/tmp/foo.py"}, "source": "native"}
-{"tool": "Read", "args": {"file_path": "/tmp/bar.py"}, "source": "native"}
-{"tool": "Bash", "args": {"command": "git status"}, "source": "shell"}
