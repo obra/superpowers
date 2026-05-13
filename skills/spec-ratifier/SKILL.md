@@ -191,13 +191,15 @@ echo "✓ all approvals fresh + complete"
 调 superpowers util（M0 已实装，spec §4.5 + spec-status.mjs）：
 
 ```bash
-node scripts/spec-status.mjs transition <spec.md> ratified
+node scripts/spec-status.mjs write <spec.md> ratified
 ```
 
 util 行为：
-1. 校验合法转换（draft → ratified ∈ 合法表）
+1. 校验合法转换（draft → ratified ∈ `LEGAL_TRANSITIONS` 表；非法 → throw + exit 1）
 2. 改 frontmatter `status: draft` → `status: ratified`
 3. 不 commit（caller 决定时机；本 step Step 6 一并 commit）
+
+CLI 命令也支持 `read <spec.md>` 查询当前 status，`validate <from> <to>` 提前预检（exit 0 = 合法）。
 
 若 spec-status.mjs 不存在 → product repo 没 init 过 harness → 提示用户先 init。
 
