@@ -42,6 +42,19 @@ This structure informs the task decomposition. Each task should produce self-con
 - "Run the tests and make sure they pass" - step
 - "Commit" - step
 
+## Task-Level Right-Sizing
+
+A task is the unit that gets delegated to an implementer in one shot — possibly a small local model with a tight context window. Assume the implementer starts with no prior session memory and a budget that runs out fast.
+
+Signs a task is too big to delegate as one unit:
+- Touches more than one file in non-trivial ways
+- Introduces more than one new concept, interface, or abstraction
+- Requires reading large existing files end-to-end just to begin
+- Its "Done when" cannot be stated in a short paragraph
+- Combines writing tests, implementing, and refactoring in the same task
+
+When in doubt, split. Two focused tasks (e.g. "add failing test for X" then "make X pass") cost less than one task that the implementer can't finish and has to be retried with partial work already on disk.
+
 ## Plan Document Header
 
 **Every plan MUST start with this header:**
@@ -128,6 +141,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Implementer fit:** Walk each task and ask: could a small-context implementer finish this in one focused pass, without reading large files end-to-end? If a task fails that check, split it against the "Task-Level Right-Sizing" signs above.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
