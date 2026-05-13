@@ -39,41 +39,6 @@ digraph when_to_use {
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
-## Flow Integration
-
-When working with Facio Flow contexts:
-
-### Detecting Flow Context
-
-Check if user has a claimed Flow context:
-1. Look for `nextAction` in recent `context_claim` or `task_claim` response
-2. If `nextAction.mode` is "feature", read spec from Flow Context
-3. If `nextAction.mode` is "bugfix", use task description as spec
-
-### Getting Spec from Flow Context
-
-Instead of reading a plan file, get spec from Flow:
-
-1. Call `context_read(contextId)` to get acceptanceCriteria
-2. Call `context_get_artifact(contextId, 'test-cases')` to get test cases
-3. Use acceptanceCriteria as task list (each AC = one task)
-4. Use test-cases as verification criteria
-
-### Task Extraction from AC
-
-Each acceptance criterion becomes a task:
-- AC1: "用户能够 X" → Task 1: Implement X
-- AC2: "系统应该 Y" → Task 2: Implement Y
-
-### After Completion
-
-**CRITICAL:** After all tasks complete, call:
-```
-task_update(taskId, status="待测试")
-```
-
-This syncs progress back to Flow.
-
 ## The Process
 
 ```dot
@@ -234,36 +199,6 @@ Code reviewer: ✅ Approved
 Final reviewer: All requirements met, ready to merge
 
 Done!
-```
-
-## Flow Integration Example
-
-```
-[After context_claim returned nextAction]
-
-You: I'm using Subagent-Driven Development with Flow Context.
-
-[Call context_read to get AC]
-AC1: 用户能够添加收藏
-AC2: 用户能够取消收藏
-AC3: 系统显示收藏列表
-
-[Call context_get_artifact('test-cases') to get test cases]
-Test cases loaded.
-
-[Create TodoWrite with 3 tasks from AC]
-
-Task 1: Implement "用户能够添加收藏"
-
-[Dispatch implementer subagent with AC1 + related test cases]
-...
-
-[After all tasks complete]
-
-[Call task_update to sync status]
-task_update(taskId, status="待测试")
-
-Done! Flow status synced.
 ```
 
 ## Advantages
