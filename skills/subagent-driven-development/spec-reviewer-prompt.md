@@ -55,7 +55,49 @@ Task tool (general-purpose):
 
     **Verify by reading code, not by trusting report.**
 
-    Report:
-    - ✅ Spec compliant (if everything matches after code inspection)
-    - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    ## Output Format
+
+    Reply with exactly one of:
+
+    **✅ Spec compliant** — no other text, no preamble, no praise.
+
+    **❌ Issues found** — followed only by a bulleted list, one line per issue:
+    - `path/to/file.py:LINE` — [missing | extra | wrong] — what's wrong
+
+    No analysis paragraphs, no "what went well," no recommendations.
+    The controller will hold this list verbatim and pass it as the fix
+    prompt to the implementer, so issues must be actionable on their own.
+```
+
+## Re-Review After a Fix
+
+When dispatching this reviewer for a second time on the same task (after the implementer fixed issues from a prior pass), do **not** re-run the full spec review. Dispatch a focused re-review instead:
+
+```
+Task tool (general-purpose):
+  description: "Confirm fixes for Task N spec issues"
+  prompt: |
+    You previously reviewed Task N and reported these issues:
+
+    [PASTE the bulleted issue list from your prior review verbatim]
+
+    The implementer has pushed a fix. Confirm whether each listed issue
+    is now resolved. Read only the diff:
+
+    ```bash
+    git diff [SHA-before-fix]..HEAD
+    ```
+
+    Do not re-review unchanged code. Do not surface new issues unless they
+    are regressions introduced by this fix.
+
+    ## Output Format
+
+    Reply with exactly one of:
+
+    **✅ All prior issues resolved** — no other text.
+
+    **❌ Still failing** — followed only by a bulleted list, one line per
+    still-failing or regressed issue, in the same format as before:
+    - `path/to/file.py:LINE` — [unresolved | regressed] — what's still wrong
 ```
