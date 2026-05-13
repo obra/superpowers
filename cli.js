@@ -171,8 +171,12 @@ function init(projectLevel = false, harnessMode = false) {
       '.harness',
       '.harness/anchors',
       '.github',
+      '.github/workflows',
       'docs/reference',
       'docs/reference/capabilities',
+      'docs/reference/decisions',
+      'docs/reference/guidelines',
+      'docs/reference/pitfalls',
       'docs/design',
       'docs/design/system',
       'docs/design/changes',
@@ -303,6 +307,12 @@ function init(projectLevel = false, harnessMode = false) {
       { src: 'docs-reference-conventions-stub.md',  dest: 'docs/reference/conventions.md',        substitute: true },
       { src: 'docs-design-readme.md',               dest: 'docs/design/README.md' },
       { src: 'codeowners.template',                 dest: '.github/CODEOWNERS.template',          substitute: true },
+      { src: 'docs-reference-decisions-readme.md',  dest: 'docs/reference/decisions/README.md' },
+      { src: 'docs-reference-guidelines-readme.md', dest: 'docs/reference/guidelines/README.md' },
+      { src: 'docs-reference-pitfalls-readme.md',   dest: 'docs/reference/pitfalls/README.md' },
+      { src: 'docs-reference-catalog-stub.md',      dest: 'docs/reference/catalog.md' },
+      { src: 'github-workflows-catalog-sync.yml',   dest: '.github/workflows/catalog-sync.yml' },
+      { src: 'github-workflows-spec-sync.yml',      dest: '.github/workflows/spec-sync.yml' },
     ];
 
     harnessTemplates.forEach(({ src, dest, substitute }) => {
@@ -327,6 +337,9 @@ function init(projectLevel = false, harnessMode = false) {
 
     // .gitkeep for empty Harness sub-directories
     ['docs/reference/capabilities/.gitkeep',
+     'docs/reference/decisions/.gitkeep',
+     'docs/reference/guidelines/.gitkeep',
+     'docs/reference/pitfalls/.gitkeep',
      'docs/design/system/.gitkeep',
      'docs/design/changes/.gitkeep',
      'docs/superpowers/specs/.gitkeep',
@@ -371,6 +384,17 @@ function init(projectLevel = false, harnessMode = false) {
     fs.copyFileSync(syncScriptSrc, syncScriptDest);
     fs.chmodSync(syncScriptDest, '755');
     log('  ✓ scripts/sync-skills.sh', 'green');
+  }
+
+  // Copy rebuild-catalog script (M0+; for catalog-sync CI workflow)
+  if (harnessMode) {
+    const rebuildCatalogSrc = path.join(templatesDir, 'rebuild-catalog.sh');
+    const rebuildCatalogDest = path.join(cwd, 'scripts', 'rebuild-catalog.sh');
+    if (fs.existsSync(rebuildCatalogSrc)) {
+      fs.copyFileSync(rebuildCatalogSrc, rebuildCatalogDest);
+      fs.chmodSync(rebuildCatalogDest, '755');
+      log('  ✓ scripts/rebuild-catalog.sh', 'green');
+    }
   }
 
   // Create README indexes

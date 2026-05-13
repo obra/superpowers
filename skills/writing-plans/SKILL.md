@@ -133,27 +133,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, check for Flow context and proceed accordingly:
-
-### Flow Context Detection
-
-**Check if coming from Flow context:**
-1. Look for `nextAction` in recent `context_claim` or `task_claim` response
-2. Check if there's an active Flow contextId in the conversation
-
-### If Flow Context Detected (Auto-Execute)
-
-**DO NOT ask user which approach.** Automatically proceed:
-
-```
-Plan complete and saved to `docs/superpowers/plans/<filename>.md`.
-
-Detected Flow context. Automatically proceeding with Subagent-Driven Development...
-```
-
-Then **immediately invoke** `superpowers:subagent-driven-development` skill.
-
-### If No Flow Context (Manual Choice)
+After saving the plan, offer execution choice:
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
