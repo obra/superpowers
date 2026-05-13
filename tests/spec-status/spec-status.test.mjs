@@ -9,7 +9,7 @@ import {
   readSpecStatus,
   writeSpecStatus,
   LEGAL_TRANSITIONS,
-} from '../../scripts/spec-status.mjs';
+} from '../../templates/spec-status.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(__dirname, 'fixtures');
