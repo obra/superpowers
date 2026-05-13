@@ -67,18 +67,35 @@ Do not document `codex app --enable plugin_hooks` as the App enablement path unl
 
 ## Design
 
-### 0. Run A Contract Discovery Spike First
+### 0. Contract Discovery Spike
 
-Before choosing the final shared-vs-Codex-specific hook declaration, implementation should stage a minimal local Codex plugin on Codex 0.130.x and record the observed contract:
+Completed 2026-05-12 against:
 
-- Whether manifest `hooks` paths resolve as expected.
-- Whether omitted manifest `hooks` discovers the default `hooks/hooks.json`.
-- Which environment variables are available to the hook process and which variables Codex expands inside hook commands.
-- The exact `SessionStart` source values sent by fresh startup, resume, and clear flows.
-- Whether `/hooks` review, trust, modified-hash blocking, and enabled/disabled toggling behave the same for plugin hooks as for user hooks.
-- Whether the Codex App exposes the same review/trust path after `plugin_hooks` is enabled through persisted config.
+- Official `openai/codex` source checkout `ac466c0` (`2026-05-12T16:50:45-07:00`).
+- Installed CLI: `codex-cli 0.130.0`.
+- App-bundled runtime: `/Applications/Codex.app/Contents/Resources/codex`, `codex-cli 0.130.0-alpha.5`.
 
-This spike is not a separate product feature. It is the first implementation task, and its findings decide whether Superpowers can keep one shared hook declaration or needs a Codex-specific declaration file.
+Observed contract:
+
+- Manifest `hooks: "./hooks/manifest-hooks.json"` resolves and appears in `hooks/list`.
+- Omitted manifest `hooks` discovers default `hooks/hooks.json`.
+- Manifest hook paths replace default discovery; a plugin with both `hooks: "./hooks/manifest-hooks.json"` and `hooks/hooks.json` listed only the manifest hook.
+- Manifest hook paths must start with `./` and stay within the plugin root.
+- Plugin hook commands expand `${PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_ROOT}` to the plugin root, and `${PLUGIN_DATA}` and `${CLAUDE_PLUGIN_DATA}` to the plugin data root.
+- Hook process environment includes the same plugin root/data variables.
+- `SessionStart` source values are `startup`, `resume`, and `clear`.
+- `hooks/list` reports plugin hook keys in the form `plugin-id:relative-hook-source:event:index:index`, with `currentHash` and `trustStatus`.
+- Untrusted plugin hooks list as enabled but do not run until trusted.
+- Writing `hooks.state.<key>.trusted_hash` through `config/batchWrite` changes `trustStatus` to `trusted`.
+- Changing the hook command after trust changes `trustStatus` to `modified`.
+- A trusted plugin `SessionStart` hook runs on the first turn, emits `hook/started` and `hook/completed`, and injects `hookSpecificOutput.additionalContext`.
+- Modified plugin hooks do not run.
+- The App-bundled app-server runtime lists the same plugin hooks and trust states as the CLI runtime.
+
+Unproven:
+
+- The desktop App's visible `/hooks` review/trust UI path was not manually exercised. App runtime support is present, but docs should not claim user-facing App parity until that UI smoke passes.
+- Claude Code acceptance of a `startup|clear|resume|compact` superset matcher still needs verification before changing the shared Claude hook declaration.
 
 ### 1. Ship Hooks In The Codex Plugin
 
@@ -208,7 +225,7 @@ This is especially important because a plugin `SessionStart` hook runs a local c
 
 ### Automated
 
-1. Contract spike: record manifest discovery, hook command variable expansion, hook environment, trust-state behavior, and App availability before finalizing the hook declaration.
+1. Contract spike: use the recorded discovery results above; re-run the spike if the target Codex version changes materially before implementation.
 2. Sync script test: generated Codex plugin includes `hooks/hooks.json`, `hooks/session-start`, and `hooks/run-hook.cmd`.
 3. Sync fixture test: sync previews and marketplace/update outputs mention the hook file set when relevant.
 4. Manifest test: `.codex-plugin/plugin.json` declares the hook path and uses a valid `./...` manifest-relative path.
@@ -266,7 +283,7 @@ If the App cannot expose the hook review path yet, the implementation is still u
 
 ## Acceptance Criteria
 
-- The Codex contract spike is recorded in the implementation notes or PR body.
+- The Codex contract spike is recorded in this spec and summarized in the implementation notes or PR body.
 - Codex plugin packages include the Superpowers hook files.
 - Codex manifest declares the hook path.
 - The final hook declaration covers Codex `startup`, `resume`, and `clear` sources.
@@ -311,8 +328,8 @@ This is technically possible for development automation, but it is the wrong pro
 
 ## Rollout
 
-1. Run the Codex contract discovery spike.
-2. Choose shared `hooks/hooks.json` or Codex-specific `hooks/hooks-codex.json` based on evidence.
+1. Use the recorded contract discovery results; re-run only if Codex changes materially before implementation.
+2. Choose shared `hooks/hooks.json` or Codex-specific `hooks/hooks-codex.json` based on the recorded evidence plus Claude Code matcher verification.
 3. Land hook packaging, tests, and README updates while keeping fallback instructions.
 4. Verify Codex CLI with the exact acceptance transcript.
 5. Verify Codex App, or mark App automatic startup as pending.
