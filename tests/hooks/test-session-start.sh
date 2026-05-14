@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HOOK_UNDER_TEST="$REPO_ROOT/hooks/session-start"
+CODEX_HOOK_UNDER_TEST="$REPO_ROOT/hooks/session-start-codex"
 WRAPPER_UNDER_TEST="$REPO_ROOT/hooks/run-hook.cmd"
 
 FAILURES=0
@@ -157,7 +158,7 @@ codex_home="$(make_home codex-plugin-hooks)"
 codex_data="$TEST_ROOT/codex-plugin-hooks/data"
 mkdir -p "$codex_data"
 assert_command_output \
-    "Codex plugin hooks emit nested SessionStart additionalContext" \
+    "Codex plugin hooks use dedicated script and emit nested SessionStart additionalContext" \
     "nested" \
     "" \
     "" \
@@ -166,13 +167,13 @@ assert_command_output \
     CLAUDE_PLUGIN_DATA="$codex_data" \
     PLUGIN_ROOT="$REPO_ROOT" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-    bash "$HOOK_UNDER_TEST"
+    bash "$CODEX_HOOK_UNDER_TEST"
 
 codex_wrapper_home="$(make_home codex-wrapper)"
 codex_wrapper_data="$TEST_ROOT/codex-wrapper/data"
 mkdir -p "$codex_wrapper_data"
 assert_command_output \
-    "Codex wrapper path emits nested SessionStart additionalContext" \
+    "Codex wrapper path dispatches to dedicated script" \
     "nested" \
     "" \
     "" \
@@ -181,7 +182,7 @@ assert_command_output \
     CLAUDE_PLUGIN_DATA="$codex_wrapper_data" \
     PLUGIN_ROOT="$REPO_ROOT" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-    bash "$WRAPPER_UNDER_TEST" session-start
+    bash "$WRAPPER_UNDER_TEST" session-start-codex
 
 cursor_home="$(make_home cursor)"
 assert_command_output \
@@ -205,44 +206,31 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
-claude_legacy_home="$(make_home claude-legacy-warning)"
-mkdir -p "$claude_legacy_home/.config/superpowers/skills"
+legacy_home="$(make_home legacy-warning-removed)"
+mkdir -p "$legacy_home/.config/superpowers/skills"
 assert_command_output \
-    "Claude legacy warning points custom skills to ~/.claude/skills" \
+    "SessionStart omits obsolete legacy custom-skill warning" \
     "nested" \
-    "Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead." \
     "" \
-    "$claude_legacy_home" \
+    "Superpowers now uses"$'\037'"~/.config/superpowers/skills"$'\037'"~/.claude/skills"$'\037'"legacy" \
+    "$legacy_home" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
-claude_data_home="$(make_home claude-data-warning)"
-claude_data="$TEST_ROOT/claude-data-warning/data"
-mkdir -p "$claude_data_home/.config/superpowers/skills" "$claude_data"
-assert_command_output \
-    "Claude with CLAUDE_PLUGIN_DATA still uses Claude legacy warning" \
-    "nested" \
-    "Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead." \
-    "" \
-    "$claude_data_home" \
-    CLAUDE_PLUGIN_DATA="$claude_data" \
-    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-    bash "$HOOK_UNDER_TEST"
-
-codex_legacy_home="$(make_home codex-legacy-warning)"
-codex_legacy_data="$TEST_ROOT/codex-legacy-warning/data"
+codex_legacy_home="$(make_home codex-legacy-warning-removed)"
+codex_legacy_data="$TEST_ROOT/codex-legacy-warning-removed/data"
 mkdir -p "$codex_legacy_home/.config/superpowers/skills" "$codex_legacy_data"
 assert_command_output \
-    "Codex legacy warning uses harness-neutral custom-skill wording" \
+    "Codex SessionStart omits obsolete legacy custom-skill warning" \
     "nested" \
-    "WARNING: Superpowers now uses your coding agent's native skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to a skills location supported by your coding agent. To make this message go away, remove ~/.config/superpowers/skills" \
-    "~/.claude/skills"$'\037'"Claude Code's skills system" \
+    "" \
+    "Superpowers now uses"$'\037'"~/.config/superpowers/skills"$'\037'"~/.claude/skills"$'\037'"legacy" \
     "$codex_legacy_home" \
     PLUGIN_DATA="$codex_legacy_data" \
     CLAUDE_PLUGIN_DATA="$codex_legacy_data" \
     PLUGIN_ROOT="$REPO_ROOT" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-    bash "$HOOK_UNDER_TEST"
+    bash "$CODEX_HOOK_UNDER_TEST"
 
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"

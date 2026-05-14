@@ -228,7 +228,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
             "async": false
           }
         ]
@@ -242,12 +242,16 @@ EOF
 #!/usr/bin/env sh
 echo "session-start fixture"
 EOF
+    cat > "$repo/hooks/session-start-codex" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start-codex fixture"
+EOF
 
     cat > "$repo/hooks/run-hook.cmd" <<'EOF'
 @echo off
 echo run-hook fixture
 EOF
-    chmod +x "$repo/hooks/session-start" "$repo/hooks/run-hook.cmd"
+    chmod +x "$repo/hooks/session-start" "$repo/hooks/session-start-codex" "$repo/hooks/run-hook.cmd"
 
     cat > "$repo/skills/example/SKILL.md" <<'EOF'
 # Example Skill
@@ -270,6 +274,7 @@ EOF
         hooks/hooks-codex.json \
         hooks/run-hook.cmd \
         hooks/session-start \
+        hooks/session-start-codex \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
@@ -353,7 +358,7 @@ EOF
         "hooks": [
           {
             "type": "command",
-            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
             "async": false
           }
         ]
@@ -367,12 +372,16 @@ EOF
 #!/usr/bin/env sh
 echo "session-start fixture"
 EOF
+    cat > "$repo/plugins/superpowers/hooks/session-start-codex" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start-codex fixture"
+EOF
 
     cat > "$repo/plugins/superpowers/hooks/run-hook.cmd" <<'EOF'
 @echo off
 echo run-hook fixture
 EOF
-    chmod +x "$repo/plugins/superpowers/hooks/session-start" "$repo/plugins/superpowers/hooks/run-hook.cmd"
+    chmod +x "$repo/plugins/superpowers/hooks/session-start" "$repo/plugins/superpowers/hooks/session-start-codex" "$repo/plugins/superpowers/hooks/run-hook.cmd"
 
     cat > "$repo/plugins/superpowers/skills/example/SKILL.md" <<'EOF'
 # Example Skill
@@ -395,6 +404,7 @@ EOF
         plugins/superpowers/hooks/hooks-codex.json \
         plugins/superpowers/hooks/run-hook.cmd \
         plugins/superpowers/hooks/session-start \
+        plugins/superpowers/hooks/session-start-codex \
         plugins/superpowers/skills/example/agents/openai.yaml \
         plugins/superpowers/skills/example/SKILL.md \
         plugins/superpowers/.private-journal/keep.txt
@@ -612,6 +622,7 @@ main() {
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
     assert_contains "$preview_section" "hooks/session-start" "Preview includes session-start hook"
+    assert_contains "$preview_section" "hooks/session-start-codex" "Preview includes Codex session-start hook"
     assert_contains "$preview_section" "hooks/run-hook.cmd" "Preview includes hook command wrapper"
     assert_contains "$preview_section" ".private-journal/keep.txt" "Preview includes tracked ignored file"
     assert_not_contains "$preview_section" ".private-journal/leak.txt" "Preview excludes ignored untracked file"
