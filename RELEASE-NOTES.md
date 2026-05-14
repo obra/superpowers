@@ -1,5 +1,55 @@
 # Superpowers Release Notes
 
+## v2.2.0 (2026-05-15)
+
+### Added — Harness M2a + M2b + M3 + M4a skills（主体上线整包发布）
+
+**M2a (Review System Skills)** — facio-superpowers PR #8:
+- `expert-reviewer/SKILL.md`：tier-aware evaluator dispatch (wrap upstream requesting-code-review + harness-evaluator + ui-evaluator)
+- `expert-reviewer/harness-evaluator.md`：10-item Harness-specific code review template (Items 14-18 implementation + 21-25 doc, includes M0.x absorbed Documentation Check)
+- `expert-reviewer/ui-evaluator.md`：Playwright UI evaluation template (Large + UI changes)
+- `l1-updater/SKILL.md`：ARCHIVE subtask (applies §5 L1 Impact + ref_count + maturity)
+
+**M2b (Bug Fixes + Hint Chains)** — facio-superpowers PR #9:
+- BUG-1: expert-reviewer Step 3 reads `ui_change: true` frontmatter as OR-condition trigger
+- BUG-2: harness-evaluator / l1-updater sentinel grep range `src/ + scripts/` (frontmatter `sentinel_paths:` overridable)
+- BUG-3: harness-evaluator Item 14 explicit automated test framework allowlist + reject CLI smoke
+- expert-reviewer Step 5 formalized PASS/MUST_FIX/escalation hint chain
+- l1-updater Pre-conditions State A (on main) / State B (follow-up branch)
+
+**M3 (Knowledge Sedimentation)** — facio-superpowers PR #10:
+- `freshness-anchor-check/SKILL.md`：ambient CI skill, broken/stale anchor detection with Tier-aware fail/warn matrix
+- l1-updater Step 4 enhanced：strict §C.4 9-field schema validation + NDJSON audit at `.harness/audit/maturity-transitions.jsonl`
+- harness-evaluator Item 26：catalog-notes consistency check (M2a deferred follow-up)
+
+**M4a (Ambient + Role + Promote)** — facio-superpowers PR #11:
+- `mitchell-loop/SKILL.md`：post-merge ambient skill (review-2+/escalation triggered, drafts K-guidelines note in production namespace 001-799)
+- `role-frontend-dev/SKILL.md`：frontend role workflow wrap (prepare-context + brainstorming)
+- `role-non-frontend-dev/SKILL.md`：backend/data/devops role workflow wrap
+- `role-non-dev/SKILL.md`：PM/designer role workflow wrap (no source code modify)
+- `promote_context_to_spec/SKILL.md`：light path → heavy path upgrade bridge (`status: open` context only per Flow MCP enum)
+- `.github/workflows/mitchell-loop.yml`：detection-only workflow (AI drafting requires Claude session)
+- `templates/github-workflows-mitchell-loop.yml`：product repo template
+- `cli.js`：harnessTemplates wires mitchell-loop workflow to product repo `.github/workflows/`
+
+### Fixed
+
+- D8 K-id grep tightening from M4a fixture probe (mitchell-loop Step 2 uses `[0-9]{3}` strict 3-digit match to prevent K-id ≥1000 sort drift; codex 3-round review missed this; fixture probe caught it — validates Gate 2 fixture pattern ROI)
+
+### Background
+
+Harness Engineering 主体上线（M0-M4a 全 milestone 完成；M2/M3/M4 close-out + M4b rollout 为长期 close-out track）。
+
+- Spec: facio-blueprint `docs/superpowers/specs/2026-05-13-blueprint-harness-redesign-design.md` v0.3
+- Plans: `docs/superpowers/plans/2026-05-{13,14}-*.md` (9 plan + 3 codex audit)
+- PRs (this consolidated release): #8 M2a + #9 M2b + #10 M3 + #11 M4a
+
+### Migration
+
+不需要 migration。`npx @vattention/facio-superpowers@2.2.0 init` 在已 init 项目上 re-run 即安装新 skill / workflow；skip-existing 保护原有文件不被覆盖。
+
+已 init 项目额外可手工跑 `sync-skills.sh` 拉新 skill。
+
 ## v2.1.0 (2026-05-14)
 
 ### Added — Harness M1 skills
