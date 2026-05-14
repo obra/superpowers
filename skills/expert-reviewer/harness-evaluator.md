@@ -33,7 +33,11 @@ Task tool (general-purpose):
     Tier: {TIER}
     Iteration: {ITERATION}
 
-    ## Setup
+    ## Setup (Inline — Self-Contained for Subagent Dispatch)
+
+    This template is dispatched as a Task tool subagent prompt. It cannot inherit shell state
+    from the dispatching skill (expert-reviewer). All variables and logic below are
+    self-contained.
 
     Run these first:
     ```bash
@@ -41,21 +45,74 @@ Task tool (general-purpose):
     cat {SPEC_PATH}
     ```
 
+    Bind `SPEC_PATH` from the template placeholder (so SENTINEL_PATHS override branch works):
+    ```bash
+    SPEC_PATH="{SPEC_PATH}"
+    ```
+
+    **Sentinel grep range (subagent-safe inline block — no shared shell helpers)**:
+    ```bash
+    # 默认 grep 范围（覆盖典型项目布局：业务代码 src/ + 工程脚本 scripts/）
+    SENTINEL_PATHS_DEFAULT="src/ scripts/"
+
+    # Override: spec frontmatter sentinel_paths 可覆盖默认（YAML 数组形式）
+    SENTINEL_PATHS_OVERRIDE=""
+    if [ -n "$SPEC_PATH" ]; then
+      SENTINEL_PATHS_OVERRIDE=$(grep -A 10 "^sentinel_paths:" "$SPEC_PATH" 2>/dev/null \
+        | grep -E "^[[:space:]]+-[[:space:]]" \
+        | sed -E "s/^[[:space:]]+-[[:space:]]+//" | tr '\n' ' ')
+    fi
+    SENTINEL_PATHS="${SENTINEL_PATHS_OVERRIDE:-$SENTINEL_PATHS_DEFAULT}"
+    ```
+
+    Parse ANCHOR_IDS from spec §5.x Anchor IDs subsection (per A2 amendment):
+    ```bash
+    ANCHOR_IDS=$(sed -n '/§5.x Anchor IDs/,/^## /p' "$SPEC_PATH" 2>/dev/null \
+      | grep -E "^[[:space:]]+-[[:space:]]" \
+      | sed -E "s/^[[:space:]]+-[[:space:]]+//")
+    ```
+
     ---
 
     ## Item 14 · AC Coverage
 
-    Read spec §1 (product perspective). List every Acceptance Criterion (AC).
+    Read spec §1 (product perspective — `Given / When / Then` rows in scenarios table).
+    List every Acceptance Criterion (AC).
 
-    For each AC, verify an automated test exists:
+    For each AC, verify an **automated test** exists in the diff.
+
+    **"Automated test" 定义（v2 / codex finding #5 文档化）**:
+    - ✅ Acceptable: unit test / integration test / e2e test in any of the following frameworks:
+      - Node.js: `node:test` built-in（since Node 18）/ `vitest` / `jest` / `mocha` / `ava`
+      - Python: `pytest` / `unittest`
+      - Browser: `playwright` / `cypress` / `vitest --browser`
+      - Other: any framework with deterministic exit code + machine-readable output
+    - ❌ NOT acceptable as Item 14 evidence:
+      - 手动 CLI behavior probe (`node script.mjs && verify stdout`)
+      - manual screenshot diff
+      - `git status --porcelain` 状态检查
+      - **理由**: M2 chain 要求 review iteration 可机器复跑；CLI smoke 缺 deterministic exit + machine output
+      - **轻例外**：unit smoke 已包含在自动化测试框架内（例如 `node:test` 调 CLI）
+
+    **Test discovery heuristic**:
+    - Look for `tests/`, `test/`, `__tests__/`, `*.test.{ts,tsx,js,jsx,mjs,cjs,py,vue}`, `*_test.py`, `spec/`
+    - Verify diff 含 (a) test 新增 / (b) test 修改 / 至少其一 — 单纯改 implementation 不补 test = FAIL
+
     ```bash
-    git diff --name-only {BASE_SHA}..{HEAD_SHA} | grep -E "test|\.spec\."
+    git diff --name-only {BASE_SHA}..{HEAD_SHA} \
+      | grep -E "(^|/)(tests?|__tests__|spec)/|\.test\.|\.spec\.|_test\.py$"
     ```
     Cross-reference test filenames/descriptions against each AC description.
 
+    **Pass criteria**:
+    - 每条 AC（§1 Given/When/Then row）能 trace 到 ≥1 测试 case 名（grep by AC keywords）
+    - 测试 case in diff 或在 base branch 已存在但被 implementation 修改路径覆盖到
+
     **Output:**
-    - MUST FIX if any AC has no automated test
+    - MUST FIX if any AC has no automated test in the above-acceptable set
     - PASS if all ACs are covered (or spec has no ACs — check §1 explicitly)
+
+    **FAIL response**: 标 MUST FIX；reviewer 在 review-N.md "## MUST FIX" 段列出"AC #N 无 automated test"。
 
     ---
 
@@ -65,11 +122,15 @@ Task tool (general-purpose):
 
     **ADDED capability** — verify:
     1. Implementation exists in diff
-    2. Sentinel comment present:
+    2. Sentinel comment present (uses `SENTINEL_PATHS` from Setup section):
     ```bash
-    grep -r "@capability: ANCHOR_ID" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py"
+    for ANCHOR_ID in $ANCHOR_IDS; do
+      grep -r "@capability: $ANCHOR_ID" $SENTINEL_PATHS \
+        --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+        --include="*.mjs" --include="*.cjs" --include="*.py" --include="*.vue" \
+        2>/dev/null
+    done
     ```
-    (Replace ANCHOR_ID with each anchor from §5)
 
     **MODIFIED capability** — verify the described change is present in the diff.
 
@@ -120,9 +181,14 @@ Task tool (general-purpose):
     ## Item 18 · Anchor Consistency  *(Normal + Large only)*
 
     Read spec §5 L1 Impact `§5.x Anchor IDs` subsection (per spec amendment A2).
-    For each anchor:
+    For each anchor (uses `$ANCHOR_IDS` + `$SENTINEL_PATHS` from Setup section):
     ```bash
-    grep -r "@capability: ANCHOR_ID" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py"
+    for ANCHOR_ID in $ANCHOR_IDS; do
+      grep -r "@capability: $ANCHOR_ID" $SENTINEL_PATHS \
+        --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+        --include="*.mjs" --include="*.cjs" --include="*.py" --include="*.vue" \
+        2>/dev/null
+    done
     ```
 
     **Output:**
@@ -153,9 +219,11 @@ Task tool (general-purpose):
     *(Absorbs d976064 "Check module documentation" — component/API list sync + architecture.md)*
 
     **Module README sync:**
-    Identify changed source directories:
+    Identify changed source directories (filter by `SENTINEL_PATHS` so non-src/ projects work):
     ```bash
-    git diff --name-only {BASE_SHA}..{HEAD_SHA} | grep "^src/" | sed 's|/[^/]*$||' | sort -u
+    SENTINEL_REGEX="^($(echo $SENTINEL_PATHS | tr ' ' '|' | sed 's/|$//'))"
+    git diff --name-only {BASE_SHA}..{HEAD_SHA} | grep -E "$SENTINEL_REGEX" \
+      | sed 's|/[^/]*$||' | sort -u
     ```
 
     For each changed directory that has a `docs/modules/<module>/README.md`:
@@ -164,7 +232,7 @@ Task tool (general-purpose):
 
     **Architecture doc:**
     ```bash
-    git diff --name-only {BASE_SHA}..{HEAD_SHA} | grep -E "^src/" | head -5
+    git diff --name-only {BASE_SHA}..{HEAD_SHA} | grep -E "$SENTINEL_REGEX" | head -5
     # If new top-level directory created:
     git diff --name-only {BASE_SHA}..{HEAD_SHA} | awk -F/ '{print $1"/"$2}' | sort -u
     ```
