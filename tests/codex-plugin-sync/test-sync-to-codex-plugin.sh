@@ -178,6 +178,7 @@ write_upstream_fixture() {
         "$repo/.private-journal" \
         "$repo/assets" \
         "$repo/evals/drill" \
+        "$repo/hooks" \
         "$repo/scripts" \
         "$repo/skills/example"
 
@@ -218,6 +219,40 @@ EOF
     printf 'png fixture\n' > "$repo/assets/app-icon.png"
     printf 'eval harness fixture\n' > "$repo/evals/drill/README.md"
 
+    cat > "$repo/hooks/hooks-codex.json" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    cat > "$repo/hooks/session-start" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start fixture"
+EOF
+    cat > "$repo/hooks/session-start-codex" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start-codex fixture"
+EOF
+
+    cat > "$repo/hooks/run-hook.cmd" <<'EOF'
+@echo off
+echo run-hook fixture
+EOF
+    chmod +x "$repo/hooks/session-start" "$repo/hooks/session-start-codex" "$repo/hooks/run-hook.cmd"
+
     cat > "$repo/skills/example/SKILL.md" <<'EOF'
 # Example Skill
 
@@ -236,6 +271,10 @@ EOF
         assets/app-icon.png \
         assets/superpowers-small.svg \
         evals/drill/README.md \
+        hooks/hooks-codex.json \
+        hooks/run-hook.cmd \
+        hooks/session-start \
+        hooks/session-start-codex \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
@@ -293,6 +332,7 @@ write_synced_destination_fixture() {
         "$repo/plugins/superpowers/.codex-plugin" \
         "$repo/plugins/superpowers/.private-journal" \
         "$repo/plugins/superpowers/assets" \
+        "$repo/plugins/superpowers/hooks" \
         "$repo/plugins/superpowers/skills/example/agents" \
         "$repo/plugins/superpowers/skills/example"
 
@@ -308,6 +348,40 @@ EOF
 EOF
 
     printf 'png fixture\n' > "$repo/plugins/superpowers/assets/app-icon.png"
+
+    cat > "$repo/plugins/superpowers/hooks/hooks-codex.json" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    cat > "$repo/plugins/superpowers/hooks/session-start" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start fixture"
+EOF
+    cat > "$repo/plugins/superpowers/hooks/session-start-codex" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start-codex fixture"
+EOF
+
+    cat > "$repo/plugins/superpowers/hooks/run-hook.cmd" <<'EOF'
+@echo off
+echo run-hook fixture
+EOF
+    chmod +x "$repo/plugins/superpowers/hooks/session-start" "$repo/plugins/superpowers/hooks/session-start-codex" "$repo/plugins/superpowers/hooks/run-hook.cmd"
 
     cat > "$repo/plugins/superpowers/skills/example/SKILL.md" <<'EOF'
 # Example Skill
@@ -327,6 +401,10 @@ EOF
         plugins/superpowers/.codex-plugin/plugin.json \
         plugins/superpowers/assets/app-icon.png \
         plugins/superpowers/assets/superpowers-small.svg \
+        plugins/superpowers/hooks/hooks-codex.json \
+        plugins/superpowers/hooks/run-hook.cmd \
+        plugins/superpowers/hooks/session-start \
+        plugins/superpowers/hooks/session-start-codex \
         plugins/superpowers/skills/example/agents/openai.yaml \
         plugins/superpowers/skills/example/SKILL.md \
         plugins/superpowers/.private-journal/keep.txt
@@ -542,6 +620,10 @@ main() {
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
+    assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
+    assert_contains "$preview_section" "hooks/session-start" "Preview includes session-start hook"
+    assert_contains "$preview_section" "hooks/session-start-codex" "Preview includes Codex session-start hook"
+    assert_contains "$preview_section" "hooks/run-hook.cmd" "Preview includes hook command wrapper"
     assert_contains "$preview_section" ".private-journal/keep.txt" "Preview includes tracked ignored file"
     assert_not_contains "$preview_section" ".private-journal/leak.txt" "Preview excludes ignored untracked file"
     assert_not_contains "$preview_section" "ignored-cache/" "Preview excludes pure ignored directories"
