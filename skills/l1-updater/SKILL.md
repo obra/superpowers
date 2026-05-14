@@ -227,43 +227,204 @@ Keep the file (historical record).
 
 ## Step 4: Update §K ref_count and last_referenced
 
-> **M2 scope note:** spec §6.6 assigns full ref_count CI automation to M3. M2 l1-updater does a simplified manual update only if the spec has §K links. Full CI-based ref_count + maturity promotion is M3 work.
-
-```bash
-cat $SPEC_PATH
-```
-
 Parse the §K Knowledge References section. Find all markdown links to `docs/reference/` files:
+
 ```
-[K-decisions-001](./decisions/some-decision.md) — ...
+[K-decisions-001](./decisions/some-decision.md) — context sentence
 ```
 
-For each linked Knowledge note file, update its §C.4 frontmatter (NOT capability spec frontmatter):
+For each linked Knowledge note file, verify §C.4 schema completeness, then update ref_count + last_referenced + maturity promotion.
+
+### §C.4 schema validation (REQUIRED before any write)
+
+Per spec §C.4, each Knowledge note frontmatter has **7 REQUIRED + 2 OPTIONAL** fields:
+
+| Field | Required? | Format |
+|-------|-----------|--------|
+| `id` | ✅ REQUIRED | `^K-(decisions\|guidelines\|pitfalls\|model\|process)-[0-9]{3}$` (3-digit zero-padded NNN per `docs/reference/<type>/README.md`) |
+| `type` | ✅ REQUIRED | enum: decision \| guideline \| pitfall \| model \| process |
+| `title` | ✅ REQUIRED | string |
+| `maturity` | ✅ REQUIRED | enum: draft \| verified \| proven |
+| `ref_count` | ✅ REQUIRED | integer ≥ 0 |
+| `created` | ✅ REQUIRED | YYYY-MM-DD |
+| `source` | ✅ REQUIRED | spec change_id or `"manual"` |
+| `tags` | ⚠️ OPTIONAL | array, may be empty/absent |
+| `last_referenced` | ⚠️ OPTIONAL | YYYY-MM-DD or absent (CI-managed) |
+
+> **Codex review Round 1 MUST FIX #2 correction**: prior plan版本 标"9 required fields"——错。Spec §C.4 明示 tags / last_referenced 是 OPTIONAL。Validator 不 require 它们 present；但若 present 必须格式正确。
+
+Validation block:
 
 ```bash
-NOTE_PATH="docs/reference/decisions/some-decision.md"
+validate_note_schema() {
+  local note="$1"
+  local missing=""
 
-# Read current values
-REF_COUNT=$(grep "^ref_count:" "$NOTE_PATH" | awk '{print $2}')
-MATURITY=$(grep "^maturity:" "$NOTE_PATH" | awk '{print $2}')
-NEW_COUNT=$((REF_COUNT + 1))
+  # REQUIRED fields (7)
+  for field in id type title maturity ref_count created source; do
+    grep -qE "^${field}:" "$note" || missing="${missing} ${field}"
+  done
+  if [ -n "$missing" ]; then
+    echo "✗ note schema invalid: $note missing REQUIRED fields:$missing"
+    return 1
+  fi
 
-# Update ref_count and last_referenced (macOS sed)
-sed -i '' "s/^ref_count: .*/ref_count: $NEW_COUNT/" "$NOTE_PATH"
-sed -i '' "s/^last_referenced: .*/last_referenced: $TODAY/" "$NOTE_PATH"
+  # ID format (REQUIRED + regex)
+  local id_val
+  id_val=$(awk '/^id:/ { sub(/^id:[[:space:]]*/, ""); print; exit }' "$note")
+  if ! [[ "$id_val" =~ ^K-(decisions|guidelines|pitfalls|model|process)-[0-9]{3}$ ]]; then
+    echo "✗ note $note id violates K-<type>-<NNN> 3-digit zero-padded format: $id_val"
+    return 1
+  fi
 
-# Maturity auto-promotion
-if [ "$MATURITY" = "draft" ] && [ "$NEW_COUNT" -ge 1 ]; then
-  sed -i '' "s/^maturity: draft/maturity: verified/" "$NOTE_PATH"
-  echo "Promoted $NOTE_PATH: draft → verified (ref_count=$NEW_COUNT)"
+  # Enum: maturity
+  local maturity_val
+  maturity_val=$(awk '/^maturity:/ { sub(/^maturity:[[:space:]]*/, ""); print; exit }' "$note")
+  case "$maturity_val" in
+    draft|verified|proven) ;;
+    *) echo "✗ note $note maturity must be draft|verified|proven (got: $maturity_val)"; return 1 ;;
+  esac
+
+  # Enum: type (also cross-check vs id prefix)
+  local type_val
+  type_val=$(awk '/^type:/ { sub(/^type:[[:space:]]*/, ""); print; exit }' "$note")
+  case "$type_val" in
+    decision|guideline|pitfall|model|process) ;;
+    *) echo "✗ note $note type invalid: $type_val"; return 1 ;;
+  esac
+  # id prefix must align with type (decisions↔decision, guidelines↔guideline, pitfalls↔pitfall)
+  local id_type_prefix
+  id_type_prefix=$(echo "$id_val" | awk -F- '{print $2}')
+  case "$type_val:$id_type_prefix" in
+    decision:decisions|guideline:guidelines|pitfall:pitfalls|model:model|process:process) ;;
+    *) echo "✗ note $note id prefix ($id_type_prefix) does not match type ($type_val)"; return 1 ;;
+  esac
+
+  # ref_count must be integer
+  local rc_val
+  rc_val=$(awk '/^ref_count:/ { sub(/^ref_count:[[:space:]]*/, ""); print; exit }' "$note")
+  if ! [[ "$rc_val" =~ ^[0-9]+$ ]]; then
+    echo "✗ note $note ref_count not integer: $rc_val"
+    return 1
+  fi
+
+  # OPTIONAL fields: if present, validate format
+  if grep -qE "^last_referenced:" "$note"; then
+    local lr_val
+    lr_val=$(awk '/^last_referenced:/ { sub(/^last_referenced:[[:space:]]*/, ""); print; exit }' "$note")
+    # Empty value OK; else must be YYYY-MM-DD
+    if [ -n "$lr_val" ] && ! [[ "$lr_val" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+      echo "✗ note $note last_referenced not YYYY-MM-DD: $lr_val"
+      return 1
+    fi
+  fi
+
+  return 0
+}
+```
+
+### Per-link update loop
+
+```bash
+mkdir -p .harness/audit
+AUDIT_FILE=".harness/audit/maturity-transitions.jsonl"
+
+# Parse §K body links.
+# R3 MUST FIX B + R4 MUST FIX: spec §6.4:843 describes target form 是
+# `docs/reference/(decisions|guidelines|pitfalls)/*.md`；spec §4.2:503 example 用 `../../reference/...`.
+# Parser MUST accept ONLY the 2 supported local forms; reject anything else (URLs / absolute /
+# bare filename / arbitrary paths).
+#
+# Supported forms:
+#   1) Short: `./decisions/foo.md` | `./guidelines/foo.md` | `./pitfalls/foo.md` | `./model/foo.md` | `./process/foo.md`
+#   2) Long:  `(../)+reference/decisions/foo.md` | ...
+#
+# Tight regex enforces this; broad-permissive `[^)]+\.md` (R3 form) was R4-flagged as
+# accepting URLs / absolute paths / bare filenames.
+
+K_TYPE_ALT='(decisions|guidelines|pitfalls|model|process)'
+K_LINKS_RAW=$(awk '/^## §K/, /^## /' "$SPEC_PATH" \
+  | grep -oE "\((\./|(\.\./)+reference/)${K_TYPE_ALT}/[^)]+\.md\)" \
+  | sed -E 's/^\(//;s/\)$//')
+
+# Detect "§K has .md link(s) but none matched our supported forms" → fail loudly
+RAW_LINK_COUNT=$(awk '/^## §K/, /^## /' "$SPEC_PATH" | grep -cE "\([^)]+\.md\)" || true)
+MATCHED_COUNT=$(printf "%s\n" "$K_LINKS_RAW" | grep -c . || true)
+if [ "$RAW_LINK_COUNT" -gt "$MATCHED_COUNT" ]; then
+  echo "✗ §K has $RAW_LINK_COUNT .md link(s) but only $MATCHED_COUNT match supported forms"
+  echo "  Supported: ./<type>/<file>.md  OR  (../)+reference/<type>/<file>.md"
+  echo "  <type> ∈ {decisions, guidelines, pitfalls, model, process}"
+  echo "  Offending links (raw):"
+  awk '/^## §K/, /^## /' "$SPEC_PATH" | grep -oE "\([^)]+\.md\)"
+  exit 1
 fi
-if [ "$MATURITY" = "verified" ] && [ "$NEW_COUNT" -ge 2 ]; then
-  sed -i '' "s/^maturity: verified/maturity: proven/" "$NOTE_PATH"
-  echo "Promoted $NOTE_PATH: verified → proven (ref_count=$NEW_COUNT)"
+
+if [ -z "$K_LINKS_RAW" ]; then
+  echo "ℹ §K is empty or absent — skip ref_count update"
+else
+  for LINK in $K_LINKS_RAW; do
+    # Normalize: take portion after `reference/` if long form, else strip leading `./`.
+    # Both branches yield `<type>/<file>.md` relative to docs/reference/.
+    if [[ "$LINK" == */reference/* ]]; then
+      REL_AFTER="${LINK#*/reference/}"      # e.g., "decisions/foo.md"
+    elif [[ "$LINK" == ./* ]]; then
+      REL_AFTER="${LINK#./}"                 # e.g., "decisions/foo.md"
+    else
+      # Defense in depth: regex above enforces leading ./ or (../)+reference/. Should never hit.
+      echo "✗ §K link form unexpected (parser bug — should have been filtered by grep): $LINK"
+      exit 1
+    fi
+    NOTE_PATH="docs/reference/${REL_AFTER}"
+    [ -f "$NOTE_PATH" ] || { echo "✗ §K link target missing: $NOTE_PATH"; exit 1; }
+
+    validate_note_schema "$NOTE_PATH" || exit 1
+
+    REF_COUNT=$(awk '/^ref_count:/ { sub(/^ref_count:[[:space:]]*/, ""); print; exit }' "$NOTE_PATH")
+    MATURITY=$(awk '/^maturity:/ { sub(/^maturity:[[:space:]]*/, ""); print; exit }' "$NOTE_PATH")
+    NOTE_ID=$(awk '/^id:/ { sub(/^id:[[:space:]]*/, ""); print; exit }' "$NOTE_PATH")
+    NEW_COUNT=$((REF_COUNT + 1))
+
+    sed -i '' "s/^ref_count: .*/ref_count: $NEW_COUNT/" "$NOTE_PATH"
+
+    # R2 MUST FIX B + R3 MUST FIX A: last_referenced is OPTIONAL (§C.4)；
+    # 既有 sed-replace 在字段缺失时 no-op；并且 README schema 用空值形式 `last_referenced:`
+    # (无 trailing space) — R3 codex 指出 `^last_referenced: .*` regex 不匹配 empty form.
+    # Solution: regex 不要求 trailing space；branch test + replace 都用 `^last_referenced:.*` 形式.
+    if grep -qE "^last_referenced:" "$NOTE_PATH"; then
+      # Matches both `last_referenced:` (empty) and `last_referenced: 2026-..` (populated)
+      sed -i '' "s/^last_referenced:.*/last_referenced: $TODAY/" "$NOTE_PATH"
+    else
+      # Field truly absent: insert after ref_count line (within frontmatter; macOS BSD sed)
+      sed -i '' "/^ref_count: /a\\
+last_referenced: $TODAY
+" "$NOTE_PATH"
+    fi
+
+    NEW_MATURITY="$MATURITY"
+    if [ "$MATURITY" = "draft" ] && [ "$NEW_COUNT" -ge 1 ]; then
+      sed -i '' "s/^maturity: draft/maturity: verified/" "$NOTE_PATH"
+      NEW_MATURITY="verified"
+    fi
+    if [ "$MATURITY" = "verified" ] && [ "$NEW_COUNT" -ge 2 ]; then
+      sed -i '' "s/^maturity: verified/maturity: proven/" "$NOTE_PATH"
+      NEW_MATURITY="proven"
+    fi
+
+    # Append audit entry (one JSON per line)
+    printf '{"ts":"%s","change_id":"%s","note_id":"%s","note_path":"%s","ref_count":{"from":%d,"to":%d},"maturity":{"from":"%s","to":"%s"}}\n' \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CHANGE_ID" "$NOTE_ID" "$NOTE_PATH" \
+      "$REF_COUNT" "$NEW_COUNT" "$MATURITY" "$NEW_MATURITY" >> "$AUDIT_FILE"
+
+    echo "✓ $NOTE_ID: ref_count $REF_COUNT→$NEW_COUNT, maturity $MATURITY→$NEW_MATURITY"
+  done
 fi
 ```
 
-Repeat for every Knowledge note linked in §K. If §K section is absent or empty → skip this step.
+### Maturity promotion boundaries (per spec §6.2)
+
+- `draft → verified`: `ref_count ≥ 1` (≥1 后续 spec 引用)
+- `verified → proven`: `ref_count ≥ 2` (≥2 引用)
+- Decay (6 months no reference → manual lint downgrade) is OUT OF SCOPE for M3 (spec §6.2 explicitly defers automation)
 
 ## Step 5: Transition spec status merged → archived + notify
 

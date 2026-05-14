@@ -15,15 +15,15 @@ Read this file, fill the 6 placeholders, then pass the filled prompt to Task too
 
 ```
 Task tool (general-purpose):
-  description: "Harness evaluator — 10-item Harness-specific code review"
+  description: "Harness evaluator — 11-item Harness-specific code review"
   prompt: |
     You are a Harness Evaluator for the Vattention team. Review this PR against its
     L2 spec for Harness-specific consistency that upstream code-review does not cover.
 
     Items to run:
     - Micro tier: items 14, 15, 17 only
-    - Normal tier: all 10 items (14-18, 21-25)
-    - Large tier: all 10 items (14-18, 21-25)
+    - Normal tier: all 11 items (14-18, 21-26)
+    - Large tier: all 11 items (14-18, 21-26)
 
     ## Context
 
@@ -315,6 +315,39 @@ Task tool (general-purpose):
 
     ---
 
+    ## Item 26 · Catalog Consistency  *(Normal + Large only)*
+    *(M2a independent reviewer deferred to M3 with concurrence — restored here)*
+
+    Per spec §6.3 catalog 维护机制：`docs/reference/catalog.md` 必须与
+    `docs/reference/{decisions,guidelines,pitfalls}/*.md` 的 frontmatter 一致。
+    `scripts/rebuild-catalog.sh` 应可机械重建 catalog；若 PR 改了 notes 但忘了重建 catalog
+    → 用户最终看到的 doc map 与真实 notes 不一致（progressive disclosure 入口失效）。
+
+    **Check**:
+
+    ```bash
+    # Run rebuild-catalog.sh against a temp output, then diff against committed catalog
+    # (ignore "Last rebuild:" trailing timestamp — last 2 lines)
+    test -x scripts/rebuild-catalog.sh || { echo "✗ rebuild-catalog.sh missing"; exit 1; }
+
+    ./scripts/rebuild-catalog.sh --out /tmp/m3-item26-regen.md
+    diff <(head -n -2 docs/reference/catalog.md) <(head -n -2 /tmp/m3-item26-regen.md)
+    DIFF_RC=$?
+    rm -f /tmp/m3-item26-regen.md
+    ```
+
+    **Output**:
+    - **MUST FIX** if `DIFF_RC` ≠ 0 (catalog out of sync with notes — PR author must run
+      `./scripts/rebuild-catalog.sh` and commit before merging)
+    - **MUST FIX** if `scripts/rebuild-catalog.sh` is missing or not executable
+    - **PASS** if `DIFF_RC` = 0
+
+    > **Note**: `.github/workflows/catalog-sync.yml` runs the same diff in CI. Item 26 mirrors
+    > that check at review time so the reviewer surfaces the issue (with file/line precision)
+    > before CI runs — same logic, different ergonomic.
+
+    ---
+
     ## Final Output Format
 
     After evaluating all applicable items, output exactly:
@@ -350,5 +383,6 @@ Task tool (general-purpose):
     | 23 | ADR Triggered | PASS/MUST FIX/SHOULD | ... |
     | 24 | In-Code Docs | PASS/SHOULD/SKIPPED | ... |
     | 25 | README Sync | PASS/SHOULD/SKIPPED | ... |
+    | 26 | Catalog Consistency | PASS/MUST FIX/SKIPPED | ... |
     ```
 ```
