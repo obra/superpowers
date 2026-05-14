@@ -13,9 +13,9 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Search the web | `web_search` |
 | Invoke a skill | `skill` |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `task` with `agent_type: "general-purpose"` (other accepted types: `explore`, `task`, `code-review`, `research`, `configure-copilot`) |
-| Multiple parallel dispatches | Multiple `task` calls in one response (or wrap with the `parallel` tool) |
+| Multiple parallel dispatches | Multiple `task` calls in one response |
 | Subagent status/output/control | `read_agent`, `list_agents`, `write_agent` |
-| Task tracking ("create a todo", "mark complete") | `sql` with the built-in `todos` table |
+| Task tracking ("create a todo", "mark complete") | `update_todo` |
 | Enter / exit plan mode | No equivalent — stay in the main session |
 
 ## Instructions file

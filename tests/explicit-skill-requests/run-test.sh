@@ -103,11 +103,11 @@ echo "Checking for premature action..."
 FIRST_SKILL_LINE=$(grep -n '"name":"Skill"' "$LOG_FILE" | head -1 | cut -d: -f1)
 if [ -n "$FIRST_SKILL_LINE" ]; then
     # Check if any non-Skill, non-system tools were invoked before the first Skill invocation
-    # Filter out system messages, TodoWrite (planning is ok), and other non-action tools
+    # Filter out task tracking tools (planning is ok) and other non-action tools
     PREMATURE_TOOLS=$(head -n "$FIRST_SKILL_LINE" "$LOG_FILE" | \
         grep '"type":"tool_use"' | \
         grep -v '"name":"Skill"' | \
-        grep -v '"name":"TodoWrite"' || true)
+        grep -vE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' || true)
     if [ -n "$PREMATURE_TOOLS" ]; then
         echo "WARNING: Tools invoked BEFORE Skill tool:"
         echo "$PREMATURE_TOOLS" | head -5

@@ -7,8 +7,8 @@
 # and is stricter on that axis. This bash test additionally asserts:
 #   - >=3 git commits (initial + per-task commits, exercising SDD's
 #     commit-per-task workflow shape)
-#   - >=2 Agent/Task subagent dispatches (drill only asserts >=1)
-#   - TodoWrite usage (drill makes no assertion)
+#   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1)
+#   - Claude Code task-tracking tool usage (drill makes no assertion)
 #   - test/math.test.js exists (drill relies on `npm test` succeeding)
 #   - analyze-token-usage.py token-budget telemetry
 # Kept until those assertions are added to drill or explicitly retired.
@@ -224,13 +224,13 @@ else
 fi
 echo ""
 
-# Test 3: TodoWrite was used for tracking
+# Test 3: Claude Code task-tracking tool was used
 echo "Test 3: Task tracking..."
-todo_count=$(grep -c '"name":"TodoWrite"' "$SESSION_FILE" || echo "0")
+todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || echo "0")
 if [ "$todo_count" -ge 1 ]; then
-    echo "  [PASS] TodoWrite used $todo_count time(s) for task tracking"
+    echo "  [PASS] Task tracking used $todo_count time(s)"
 else
-    echo "  [FAIL] TodoWrite not used"
+    echo "  [FAIL] No Claude Code task-tracking tool used"
     FAILED=$((FAILED + 1))
 fi
 echo ""

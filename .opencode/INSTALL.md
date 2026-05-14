@@ -45,7 +45,7 @@ Use OpenCode's native `skill` tool:
 
 ```
 use skill tool to list skills
-use skill tool to load superpowers/brainstorming
+use skill tool to load brainstorming
 ```
 
 ## Updating
@@ -103,10 +103,11 @@ Skills speak in actions ("create a todo", "dispatch a subagent", "read a file").
 - "Create a todo" / "mark complete in todo list" → `todowrite`
 - `Subagent (general-purpose):` template → `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
 - "Invoke a skill" → OpenCode's native `skill` tool
-- "Read a file" / "create a file" / "edit a file" → `read`, `write`, `edit`
+- "Read a file" → `read`
+- "Create a file" / "edit a file" / "delete a file" → `apply_patch`
 - "Run a shell command" → `bash`
 - "Search file contents" / "find files by name" → `grep`, `glob`
-- "Fetch a URL" / "search the web" → `webfetch`, `websearch`
+- "Fetch a URL" → `webfetch`
 
 ## Getting Help
 
