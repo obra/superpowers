@@ -29,14 +29,14 @@ User-level skills live at **`~/.gemini/skills/`**, with **`~/.agents/skills/`** 
 
 ## Subagent support
 
-Gemini CLI dispatches subagents through the `invoke_agent` tool, which takes `agent_name` and `prompt` parameters. The same dispatch is also surfaced as a chat-syntax shortcut: typing `@generalist <prompt>` is equivalent to calling `invoke_agent` with `agent_name: "generalist"`. Built-in agent names include `generalist`, `cli_help`, `codebase_investigator`, and (with browser tooling enabled) the browser agent.
+Gemini CLI dispatches subagents through the `invoke_agent` tool, which takes `agent_name` and `prompt` parameters. The same dispatch is also surfaced as a chat-syntax shortcut: typing `@generalist <prompt>` is equivalent to calling `invoke_agent` with `agent_name: "generalist"`. Built-in agent names include `generalist`, `cli_help`, `codebase_investigator`, and (with browser tooling enabled) `browser_agent`.
 
-Skills dispatch with `Subagent (general-purpose):` and either reference a prompt-template file (e.g., `subagent-driven-development/implementer-prompt.md`) or supply an inline prompt. On Gemini CLI:
+Skills dispatch with `Subagent (general-purpose):` and either reference a prompt-template file (e.g., `superpowers:subagent-driven-development`'s `./implementer-prompt.md`) or supply an inline prompt. On Gemini CLI:
 
 | Skill dispatch form | Gemini CLI equivalent |
 |---------------------|----------------------|
 | References a `*-prompt.md` template (implementer, spec-reviewer, code-quality-reviewer, code-reviewer, etc.) | Fill the template, then `invoke_agent` with `agent_name: "generalist"` and the filled prompt |
-| References `requesting-code-review/code-reviewer.md` | `invoke_agent` with `agent_name: "generalist"` and the filled review template |
+| References `superpowers:requesting-code-review`'s `./code-reviewer.md` | `invoke_agent` with `agent_name: "generalist"` and the filled review template |
 | Inline prompt (no template referenced) | `invoke_agent` with `agent_name: "generalist"` and your inline prompt |
 
 ### Prompt filling
@@ -53,11 +53,11 @@ These tools are unique to Gemini CLI:
 
 | Tool | Purpose |
 |------|---------|
-| `save_memory` | Persist facts to GEMINI.md across sessions |
+| `save_memory` (legacy) | Persist facts across sessions when `experimental.memoryV2 = false` |
 | `get_internal_docs` | Look up Gemini CLI's bundled documentation |
 | `ask_user` | Pose structured questions to the user (text / single-select / multi-select) |
 | `enter_plan_mode` / `exit_plan_mode` | Switch into and out of read-only plan mode |
 | `update_topic` | Update the current conversation's topic / strategic-intent metadata |
-| `complete_task` | Signal completion of the current top-level task |
+| `complete_task` | Signal that a Gemini subagent has completed and return its result to the parent agent |
 | `tracker_create_task`, `tracker_update_task`, `tracker_get_task`, `tracker_list_tasks`, `tracker_add_dependency`, `tracker_visualize` | Rich task tracker with dependency and visualization support |
 | `read_mcp_resource`, `list_mcp_resources` | MCP resource access |

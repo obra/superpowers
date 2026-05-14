@@ -121,9 +121,9 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
+- [spec-reviewer-prompt.md](spec-reviewer-prompt.md) - Dispatch spec compliance reviewer subagent
+- [code-quality-reviewer-prompt.md](code-quality-reviewer-prompt.md) - Dispatch code quality reviewer subagent
 
 ## Example Workflow
 
