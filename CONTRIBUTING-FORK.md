@@ -19,9 +19,11 @@
 - **新建 wrapper skill** 在 `skills/<wrapper-name>/SKILL.md`，内部 invoke upstream skill
 - **不要**在 upstream skill 末尾 / 中间插逻辑
 
-范例：
-- `spec-author` wraps `brainstorming`（意图模糊时 invoke）
-- `expert-reviewer` wraps `requesting-code-review`
+范例 / Fork-local skills（均为 fork-new，不在 upstream 中）：
+- `skills/spec-author/` — L2 spec draft + 15-item self-review；意图模糊时 wraps upstream `brainstorming`
+- `skills/spec-ratifier/` — 3-owner spec approval gate；Tier-aware；无 upstream 对应
+- `skills/expert-reviewer/` — Harness-specific review dispatch; wraps upstream `requesting-code-review`; harness-evaluator.md and ui-evaluator.md are skill-local templates (not installed to product repos)
+- `skills/l1-updater/` — Harness ARCHIVE subtask; no upstream equivalent; applies §5 L1 Impact + updates knowledge note ref_count + transitions spec status merged→archived
 
 ## 红线 3：chain 用 HARD-GATE，不改 upstream
 
