@@ -1,4 +1,4 @@
-# Harness Pipeline · {PROJECT_NAME}
+# Harness Pipeline
 
 > Pipeline 三档（Micro / Normal / Large）与 tier 判定规则。AI 在创建 PR 前依据本文件自动判定 tier。
 >

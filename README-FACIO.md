@@ -287,7 +287,9 @@ your-project/
 ├── templates/
 │   └── adr-template.md
 └── scripts/
-    └── sync-skills.sh
+    ├── rebuild-catalog.sh          # Harness: knowledge catalog rebuilder
+    ├── spec-status.mjs             # Harness: L2 spec status state machine util
+    └── generate-spec-html.mjs      # Harness: L2 spec.md → spec.html generator
 
 ~/.claude/skills/                # Skills 全局安装（跨项目共享）
 └── ... (19 个)

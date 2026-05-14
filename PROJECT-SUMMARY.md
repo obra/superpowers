@@ -36,11 +36,11 @@ facio-superpowers/
 │   └── verification-before-completion/  # 验证与文档检查 skill
 ├── templates/
 │   ├── adr-template.md             # ADR 模板
-│   ├── CLAUDE-TEAM.md              # 团队规范模板
-│   ├── CLAUDE-PROJECT.md           # 项目配置模板
+│   ├── CLAUDE-PROJECT.md           # 项目配置模板（non-harness）
 │   ├── CLAUDE-WORKFLOW.md          # 工作流指令模板
-│   ├── setup.sh                    # 项目初始化脚本
-│   └── sync-skills.sh              # Skills 同步脚本
+│   ├── AGENTS-PROJECT.md           # 项目 Agents 模板（harness mode）
+│   ├── harness-*.md / .json / .yaml # Harness scaffold 配置
+│   └── github-workflows-*.yml      # CI workflow 模板
 ├── README-FACIO.md                 # 使用文档
 ├── PUBLISH-GITHUB.md               # GitHub Packages 发布指南
 └── vibe-coding-documentation-guide.md  # 完整文档指南

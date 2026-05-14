@@ -60,6 +60,85 @@ function applySubstitutions(content, cwd) {
   return content.replace(/\{PROJECT_NAME\}/g, path.basename(cwd));
 }
 
+// Single source of truth for which files install during init vs sync.
+//
+// phase:
+//   'sync'       — team baseline (logic / CI workflows / generic templates).
+//                  init: write if missing. sync: ALWAYS overwrite.
+//   'init-only'  — repo-local seed (project name, owners, users, README).
+//                  init: write if missing. sync: SKIP (preserve local edits).
+//   'ci-managed' — runtime-rewritten artifact (anchors index).
+//                  init: write empty seed if missing. sync: SKIP (CI owns it).
+//
+// flags:
+//   harness     — only install when running with Harness mode (default in v2.x).
+//   nonHarness  — only install when --no-harness.
+//   substitute  — apply {PROJECT_NAME} substitution.
+//   executable  — chmod 755 after copy.
+const TEMPLATE_MANIFEST = [
+  // ── Generic templates ──
+  { src: 'adr-template.md',      dest: 'templates/adr-template.md',      phase: 'sync' },
+  { src: 'DOCUMENTATION-MAP.md', dest: 'templates/DOCUMENTATION-MAP.md', phase: 'sync' },
+  { src: 'README-ROOT.md',       dest: 'templates/README-ROOT.md',       phase: 'init-only' },
+  { src: 'CLAUDE-PROJECT.md',    dest: 'CLAUDE.md',                      phase: 'init-only', nonHarness: true },
+
+  // ── Harness · team baseline (sync) ──
+  { src: 'rebuild-catalog.sh',                 dest: 'scripts/rebuild-catalog.sh',          phase: 'sync', harness: true, executable: true },
+  { src: 'spec-status.mjs',                    dest: 'scripts/spec-status.mjs',             phase: 'sync', harness: true, executable: true },
+  { src: 'scripts-generate-spec-html.mjs',     dest: 'scripts/generate-spec-html.mjs',      phase: 'sync', harness: true, executable: true },
+  { src: 'github-workflows-catalog-sync.yml',  dest: '.github/workflows/catalog-sync.yml',  phase: 'sync', harness: true },
+  { src: 'github-workflows-spec-sync.yml',     dest: '.github/workflows/spec-sync.yml',     phase: 'sync', harness: true },
+  { src: 'github-workflows-mitchell-loop.yml', dest: '.github/workflows/mitchell-loop.yml', phase: 'sync', harness: true },
+  { src: 'harness-pipeline.md',                dest: '.harness/pipeline.md',                phase: 'sync', harness: true },
+  { src: 'harness-gates.json',                 dest: '.harness/gates.json',                 phase: 'sync', harness: true },
+
+  // ── Harness · project-specific seed (init-only) ──
+  { src: 'AGENTS-PROJECT.md',                   dest: 'AGENTS.md',                          phase: 'init-only', harness: true, substitute: true },
+  { src: 'role-bindings-project.yaml',          dest: '.harness/role-bindings.yaml',        phase: 'init-only', harness: true },
+  { src: 'harness-readme.md',                   dest: '.harness/README.md',                 phase: 'init-only', harness: true },
+  { src: 'codeowners.template',                 dest: '.github/CODEOWNERS.template',        phase: 'init-only', harness: true, substitute: true },
+  { src: 'docs-reference-readme.md',            dest: 'docs/reference/README.md',           phase: 'init-only', harness: true },
+  { src: 'docs-reference-architecture-stub.md', dest: 'docs/reference/architecture.md',     phase: 'init-only', harness: true, substitute: true },
+  { src: 'docs-reference-conventions-stub.md',  dest: 'docs/reference/conventions.md',      phase: 'init-only', harness: true, substitute: true },
+  { src: 'docs-design-readme.md',               dest: 'docs/design/README.md',              phase: 'init-only', harness: true },
+  { src: 'docs-reference-decisions-readme.md',  dest: 'docs/reference/decisions/README.md', phase: 'init-only', harness: true },
+  { src: 'docs-reference-guidelines-readme.md', dest: 'docs/reference/guidelines/README.md', phase: 'init-only', harness: true },
+  { src: 'docs-reference-pitfalls-readme.md',   dest: 'docs/reference/pitfalls/README.md',  phase: 'init-only', harness: true },
+  { src: 'docs-reference-catalog-stub.md',      dest: 'docs/reference/catalog.md',          phase: 'init-only', harness: true },
+
+  // ── Harness · CI-managed (seed empty on init; sync never touches) ──
+  { src: 'harness-anchors-index.yaml', dest: '.harness/anchors/index.yaml', phase: 'ci-managed', harness: true },
+];
+
+// Filter manifest entries for the current run mode.
+function selectEntries(harnessMode) {
+  return TEMPLATE_MANIFEST.filter(e => {
+    if (e.harness && !harnessMode) return false;
+    if (e.nonHarness && harnessMode) return false;
+    return true;
+  });
+}
+
+// Install one manifest entry. Returns 'written' | 'skipped-exists' | 'skipped-missing-src' | 'overwritten'.
+function installEntry(entry, { templatesDir, cwd, overwrite }) {
+  const srcPath = path.join(templatesDir, entry.src);
+  const destPath = path.join(cwd, entry.dest);
+
+  if (!fs.existsSync(srcPath)) return 'skipped-missing-src';
+
+  const exists = fs.existsSync(destPath);
+  if (exists && !overwrite) return 'skipped-exists';
+
+  fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+  let content = fs.readFileSync(srcPath, 'utf8');
+  if (entry.substitute) content = applySubstitutions(content, cwd);
+  fs.writeFileSync(destPath, content);
+  if (entry.executable) fs.chmodSync(destPath, 0o755);
+
+  return exists ? 'overwritten' : 'written';
+}
+
 // Harness mode safe merge: before installing Harness templates, detect existing
 // AGENTS.md / CLAUDE.md that would otherwise be silently skipped (AGENTS.md stub
 // case) or destructively replaced (CLAUDE.md regular file → symlink).
@@ -255,87 +334,40 @@ function init(projectLevel = false, harnessMode = false) {
   log('\n🔗 Setting up Codex integration...', 'blue');
   setupCodexSymlink();
 
-  // Copy templates
-  log('\n📄 Installing templates...', 'blue');
-  const templatesDir = getTemplatesDir();
-  const templates = [
-    { src: 'adr-template.md', dest: 'templates/adr-template.md' },
-    { src: 'README-ROOT.md', dest: 'templates/README-ROOT.md' },
-    { src: 'DOCUMENTATION-MAP.md', dest: 'templates/DOCUMENTATION-MAP.md' },
-    // In harness mode, AGENTS.md (installed below) is the canonical entry
-    // and CLAUDE.md becomes a symlink to it; skip the legacy CLAUDE-PROJECT.md copy.
-    ...(harnessMode ? [] : [{ src: 'CLAUDE-PROJECT.md', dest: 'CLAUDE.md' }]),
-  ];
-
-  templates.forEach(({ src, dest }) => {
-    const srcPath = path.join(templatesDir, src);
-    const destPath = path.join(cwd, dest);
-
-    if (fs.existsSync(srcPath)) {
-      if (!fs.existsSync(destPath)) {
-        fs.copyFileSync(srcPath, destPath);
-        log(`  ✓ ${dest}`, 'green');
-      } else {
-        log(`  - ${dest} (already exists, skipping)`, 'yellow');
-      }
-    }
-  });
-
-  // Install Harness templates (with {PROJECT_NAME} substitution where requested)
+  // Safe-merge pass (Harness mode only): back up + capture existing AGENTS.md /
+  // CLAUDE.md content before the template install loop, so prior project rules
+  // (OpenSpec stubs, workflow reminders, etc.) aren't silently dropped.
+  let preservedSections = [];
+  let preservedBackups = [];
   if (harnessMode) {
-    // Safe-merge pass: back up + capture existing AGENTS.md / CLAUDE.md content
-    // before the template install loop, so prior project rules (OpenSpec stubs,
-    // workflow reminders, etc.) aren't silently dropped.
     log('\n🔄 Checking existing AGENTS.md / CLAUDE.md...', 'blue');
-    const { sections: preservedSections, backups: preservedBackups } = harnessSafeMerge(cwd);
+    const merged = harnessSafeMerge(cwd);
+    preservedSections = merged.sections;
+    preservedBackups = merged.backups;
     if (preservedBackups.length > 0) {
       preservedBackups.forEach(b => log(`  ↳ Backed up: ${b.from} → ${b.to}`, 'yellow'));
     } else {
       log(`  - nothing to preserve (clean slate or already Harness-compliant)`, 'yellow');
     }
+  }
 
-    log('\n🏗  Installing Harness templates...', 'blue');
-    const harnessTemplates = [
-      { src: 'AGENTS-PROJECT.md',                   dest: 'AGENTS.md',                            substitute: true },
-      { src: 'harness-pipeline.md',                 dest: '.harness/pipeline.md',                 substitute: true },
-      { src: 'harness-gates.json',                  dest: '.harness/gates.json' },
-      { src: 'role-bindings-project.yaml',          dest: '.harness/role-bindings.yaml' },
-      { src: 'harness-anchors-index.yaml',          dest: '.harness/anchors/index.yaml' },
-      { src: 'harness-readme.md',                   dest: '.harness/README.md' },
-      { src: 'docs-reference-readme.md',            dest: 'docs/reference/README.md' },
-      { src: 'docs-reference-architecture-stub.md', dest: 'docs/reference/architecture.md',       substitute: true },
-      { src: 'docs-reference-conventions-stub.md',  dest: 'docs/reference/conventions.md',        substitute: true },
-      { src: 'docs-design-readme.md',               dest: 'docs/design/README.md' },
-      { src: 'codeowners.template',                 dest: '.github/CODEOWNERS.template',          substitute: true },
-      { src: 'docs-reference-decisions-readme.md',  dest: 'docs/reference/decisions/README.md' },
-      { src: 'docs-reference-guidelines-readme.md', dest: 'docs/reference/guidelines/README.md' },
-      { src: 'docs-reference-pitfalls-readme.md',   dest: 'docs/reference/pitfalls/README.md' },
-      { src: 'docs-reference-catalog-stub.md',      dest: 'docs/reference/catalog.md' },
-      { src: 'github-workflows-catalog-sync.yml',   dest: '.github/workflows/catalog-sync.yml' },
-      { src: 'github-workflows-spec-sync.yml',      dest: '.github/workflows/spec-sync.yml' },
-      { src: 'github-workflows-mitchell-loop.yml',  dest: '.github/workflows/mitchell-loop.yml' },
-    ];
+  // Install templates from the unified manifest. On init we always skip
+  // existing files (overwrite=false) — including 'sync'-phase entries — so
+  // re-running init never clobbers local edits. Upgrades happen via `sync`.
+  log('\n📄 Installing templates...', 'blue');
+  const templatesDir = getTemplatesDir();
+  const entries = selectEntries(harnessMode);
 
-    harnessTemplates.forEach(({ src, dest, substitute }) => {
-      const srcPath = path.join(templatesDir, src);
-      const destPath = path.join(cwd, dest);
+  entries.forEach(entry => {
+    const result = installEntry(entry, { templatesDir, cwd, overwrite: false });
+    switch (result) {
+      case 'written':            log(`  ✓ ${entry.dest}`, 'green'); break;
+      case 'skipped-exists':     log(`  - ${entry.dest} (already exists, skipping)`, 'yellow'); break;
+      case 'skipped-missing-src': log(`  ⚠ ${entry.dest} (template missing: ${entry.src})`, 'yellow'); break;
+    }
+  });
 
-      if (!fs.existsSync(srcPath)) {
-        log(`  ⚠ ${dest} (template missing: ${src})`, 'yellow');
-        return;
-      }
-      if (fs.existsSync(destPath)) {
-        log(`  - ${dest} (already exists, skipping)`, 'yellow');
-        return;
-      }
-      let content = fs.readFileSync(srcPath, 'utf8');
-      if (substitute) {
-        content = applySubstitutions(content, cwd);
-      }
-      fs.writeFileSync(destPath, content);
-      log(`  ✓ ${dest}`, 'green');
-    });
-
+  if (harnessMode) {
     // .gitkeep for empty Harness sub-directories
     ['docs/reference/capabilities/.gitkeep',
      'docs/reference/decisions/.gitkeep',
@@ -374,52 +406,6 @@ function init(projectLevel = false, harnessMode = false) {
         fs.symlinkSync('AGENTS.md', claudePath);
         log(`  ✓ CLAUDE.md → AGENTS.md (symlink)`, 'green');
       }
-    }
-  }
-
-  // Copy sync script
-  const syncScriptSrc = path.join(templatesDir, 'sync-skills.sh');
-  const syncScriptDest = path.join(cwd, 'scripts', 'sync-skills.sh');
-
-  if (fs.existsSync(syncScriptSrc)) {
-    fs.copyFileSync(syncScriptSrc, syncScriptDest);
-    fs.chmodSync(syncScriptDest, '755');
-    log('  ✓ scripts/sync-skills.sh', 'green');
-  }
-
-  // Copy rebuild-catalog script (M0+; for catalog-sync CI workflow)
-  if (harnessMode) {
-    const rebuildCatalogSrc = path.join(templatesDir, 'rebuild-catalog.sh');
-    const rebuildCatalogDest = path.join(cwd, 'scripts', 'rebuild-catalog.sh');
-    if (fs.existsSync(rebuildCatalogSrc)) {
-      fs.copyFileSync(rebuildCatalogSrc, rebuildCatalogDest);
-      fs.chmodSync(rebuildCatalogDest, '755');
-      log('  ✓ scripts/rebuild-catalog.sh', 'green');
-    }
-  }
-
-  // Copy spec-status script (M0+; superpowers util for spec.md status
-  // frontmatter transitions; consumed by spec-ratifier Step 5)
-  if (harnessMode) {
-    const specStatusSrc = path.join(templatesDir, 'spec-status.mjs');
-    const specStatusDest = path.join(cwd, 'scripts', 'spec-status.mjs');
-    if (fs.existsSync(specStatusSrc)) {
-      fs.copyFileSync(specStatusSrc, specStatusDest);
-      fs.chmodSync(specStatusDest, '755');
-      log('  ✓ scripts/spec-status.mjs', 'green');
-    }
-  }
-
-  // Copy generate-spec-html script (M1+; spec-author Step 14 / spec-ratifier
-  // regenerate; produces L2 dual-artifact spec.html. Mermaid pre-rendered via
-  // build-time mmdc; output has zero runtime deps.)
-  if (harnessMode) {
-    const genSpecHtmlSrc = path.join(templatesDir, 'scripts-generate-spec-html.mjs');
-    const genSpecHtmlDest = path.join(cwd, 'scripts', 'generate-spec-html.mjs');
-    if (fs.existsSync(genSpecHtmlSrc)) {
-      fs.copyFileSync(genSpecHtmlSrc, genSpecHtmlDest);
-      fs.chmodSync(genSpecHtmlDest, '755');
-      log('  ✓ scripts/generate-spec-html.mjs', 'green');
     }
   }
 
@@ -591,23 +577,31 @@ function sync(projectLevel = false) {
   log('\n🔗 Checking Codex integration...', 'blue');
   setupCodexSymlink();
 
-  // Sync templates
-  log('\n📄 Updating templates...', 'blue');
-  const templates = [
-    { src: 'adr-template.md', dest: 'templates/adr-template.md' },
-    { src: 'README-ROOT.md', dest: 'templates/README-ROOT.md' },
-    { src: 'DOCUMENTATION-MAP.md', dest: 'templates/DOCUMENTATION-MAP.md' },
-  ];
+  // Sync templates from the unified manifest.
+  //   'sync'       → overwrite (team baseline).
+  //   'init-only'  → skip (repo-local; preserve project edits).
+  //   'ci-managed' → skip (CI rewrites at runtime).
+  //
+  // Harness detection: presence of `.harness/` in cwd. Lets sync work in
+  // non-Harness consumer repos (rare) by simply ignoring harness-tagged entries.
+  log('\n📄 Updating team-baseline templates...', 'blue');
+  const templatesDir = getTemplatesDir();
+  const harnessMode = fs.existsSync(path.join(cwd, '.harness'));
+  const syncableEntries = selectEntries(harnessMode).filter(e => e.phase === 'sync');
 
-  templates.forEach(({ src, dest }) => {
-    const srcPath = path.join(CACHE_DIR, 'templates', src);
-    const destPath = path.join(cwd, dest);
-
-    if (fs.existsSync(srcPath)) {
-      fs.copyFileSync(srcPath, destPath);
-      log(`  ✓ ${dest}`, 'green');
+  let overwritten = 0;
+  let written = 0;
+  syncableEntries.forEach(entry => {
+    const result = installEntry(entry, { templatesDir, cwd, overwrite: true });
+    switch (result) {
+      case 'overwritten':         log(`  ✓ ${entry.dest} (updated)`, 'green'); overwritten++; break;
+      case 'written':             log(`  ✓ ${entry.dest} (new)`, 'green'); written++; break;
+      case 'skipped-missing-src': log(`  ⚠ ${entry.dest} (template missing: ${entry.src})`, 'yellow'); break;
     }
   });
+
+  log(`\n  Templates: ${overwritten} updated, ${written} new`, 'green');
+  log(`  (init-only / ci-managed files preserved)`, 'reset');
 
   log('\n✅ Sync complete!\n', 'green');
 }

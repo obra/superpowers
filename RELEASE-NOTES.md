@@ -1,5 +1,36 @@
 # Superpowers Release Notes
 
+## v2.3.0 (2026-05-15)
+
+### Changed — `sync` 真正能拉到 harness 全套
+
+**问题**：v2.2.0 上线后，`sync` 命令实际上拉不到新加的 harness skill / template / CI workflow——`scripts/sync-skills.sh` 是写死 4 项的 bash 脚本，`cli.js sync()` 的 templates 列表也只写死 3 项；新增的 harness scaffolding 全部漏掉。
+
+**改动**：
+
+- `cli.js`：新增 `TEMPLATE_MANIFEST`（25 条），统一驱动 init / sync。每条带 `phase` 标记：
+  - `sync` — 团队 baseline（pipeline / gates / CI workflows / 3 个 harness 脚本 / generic templates），sync 时覆盖
+  - `init-only` — 项目侧 seed（role-bindings / CODEOWNERS / AGENTS.md / docs README / catalog stub 等），sync 时跳过保留本地编辑
+  - `ci-managed` — 运行时被 CI 重写（`.harness/anchors/index.yaml`），sync 永不触碰
+- `sync` 自动检测 `.harness/` 存在与否决定是否处理 harness 条目；不再需要额外 flag
+- 删除 `scripts/sync-skills.sh` 与 `templates/sync-skills.sh`（已废弃；`init` 不再向消费仓铺这份脚本）
+- `templates/harness-pipeline.md` 标题移除 `· {PROJECT_NAME}` 占位，pipeline.md 现为纯 baseline，无需 substitution
+
+**消费仓升级路径**：
+
+```bash
+# 已 init 项目直接 sync 拉新
+npx @vattention/facio-superpowers@2.3.0 sync
+```
+
+`sync` 会覆盖团队 baseline（pipeline / gates / CI workflows / harness 脚本 / adr-template / DOCUMENTATION-MAP），保留所有项目侧编辑（role-bindings / CODEOWNERS / AGENTS.md / docs README）。
+
+消费仓里残留的 `scripts/sync-skills.sh` 可手动删掉。
+
+### Background
+
+v2.2.0 主体上线后内部反馈：实际更新链路断了，新加的 expert-reviewer / spec-author / mitchell-loop / role-* / `.github/workflows/*` 等都拿不到。这次是修通发布管道，让 v2.2.0 的成果真正能流到消费仓。
+
 ## v2.2.0 (2026-05-15)
 
 ### Added — Harness M2a + M2b + M3 + M4a skills（主体上线整包发布）
@@ -48,7 +79,7 @@ Harness Engineering 主体上线（M0-M4a 全 milestone 完成；M2/M3/M4 close-
 
 不需要 migration。`npx @vattention/facio-superpowers@2.2.0 init` 在已 init 项目上 re-run 即安装新 skill / workflow；skip-existing 保护原有文件不被覆盖。
 
-已 init 项目额外可手工跑 `sync-skills.sh` 拉新 skill。
+已 init 项目可直接跑 `npx @vattention/facio-superpowers sync` 拉新 skill 与团队 baseline 模板（pipeline / gates / CI workflows / harness 脚本）；项目侧文件（role-bindings / CODEOWNERS / AGENTS.md / docs 各 README 等）不会被覆盖。
 
 ## v2.1.0 (2026-05-14)
 
