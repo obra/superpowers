@@ -313,6 +313,7 @@ function init(projectLevel = false, harnessMode = false) {
       { src: 'docs-reference-catalog-stub.md',      dest: 'docs/reference/catalog.md' },
       { src: 'github-workflows-catalog-sync.yml',   dest: '.github/workflows/catalog-sync.yml' },
       { src: 'github-workflows-spec-sync.yml',      dest: '.github/workflows/spec-sync.yml' },
+      { src: 'github-workflows-mitchell-loop.yml',  dest: '.github/workflows/mitchell-loop.yml' },
     ];
 
     harnessTemplates.forEach(({ src, dest, substitute }) => {

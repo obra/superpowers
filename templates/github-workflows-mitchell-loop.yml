@@ -1,0 +1,122 @@
+name: mitchell-loop
+
+# Ambient post-merge hook per spec §A.3.
+# Trigger condition: PR has been merged AND .harness/changes/<id>/ contains
+# review-N.md (N≥2) OR review-escalation.md (indicates review struggle that's
+# worth extracting into a guideline note).
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - '.harness/changes/**'
+
+permissions:
+  contents: write       # to commit guideline draft
+  pull-requests: write  # to open draft PR
+
+jobs:
+  mitchell-loop:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Detect changed .harness/changes/<id> dirs from this PR
+        id: detect
+        run: |
+          # Files changed by the merged PR (from base..merge)
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          MERGE_SHA="${{ github.event.pull_request.merge_commit_sha }}"
+          mapfile -t CHANGE_DIRS < <(git diff --name-only "$BASE_SHA" "$MERGE_SHA" \
+            | grep '^\.harness/changes/' \
+            | awk -F/ '{ print $1"/"$2"/"$3 }' | sort -u)
+
+          if [ ${#CHANGE_DIRS[@]} -eq 0 ]; then
+            echo "ℹ no .harness/changes/<id> dirs touched; mitchell-loop skipped"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check trigger condition per change dir
+          QUALIFYING=""
+          for D in "${CHANGE_DIRS[@]}"; do
+            HAS_REVIEW_2=$(find "$D" -maxdepth 1 -name "review-[0-9]*.md" 2>/dev/null \
+              | awk -F'review-' '{print $2}' | awk -F'.md' '{print $1}' \
+              | awk '$1+0 >= 2 { found=1 } END { exit !found }' && echo yes || echo no)
+            HAS_ESCALATION=$([ -e "$D/review-escalation.md" ] && echo yes || echo no)
+            if [ "$HAS_REVIEW_2" = "yes" ] || [ "$HAS_ESCALATION" = "yes" ]; then
+              QUALIFYING="$QUALIFYING $D"
+            fi
+          done
+
+          if [ -z "$QUALIFYING" ]; then
+            echo "ℹ no change dirs qualify (no review-N≥2 or escalation); skipped"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "✓ qualifying change dirs: $QUALIFYING"
+            echo "qualifying=$QUALIFYING" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node (for mitchell-loop skill schema validate + notify fallback)
+        if: steps.detect.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Resolve mitchell-loop skill path
+        if: steps.detect.outputs.skip != 'true'
+        id: skill
+        run: |
+          # Prefer ~/.claude/skills (if installed) else fall back to facio-superpowers checkout
+          if [ -e "$HOME/.claude/skills/mitchell-loop/SKILL.md" ]; then
+            echo "path=$HOME/.claude/skills/mitchell-loop/SKILL.md" >> $GITHUB_OUTPUT
+          else
+            # In CI on the facio-superpowers repo itself, skill source is in the checkout
+            echo "path=skills/mitchell-loop/SKILL.md" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run mitchell-loop shell sections per qualifying change dir
+        if: steps.detect.outputs.skip != 'true'
+        env:
+          QUALIFYING: ${{ steps.detect.outputs.qualifying }}
+          SKILL_PATH: ${{ steps.skill.outputs.path }}
+        run: |
+          # The skill's shell sections (Steps 1, 2, 4, 5) are bash-extractable from
+          # the markdown. AI-driven Step 3 (drafting body content) requires a Claude
+          # Code session — workflow stops at "qualifying detected" and emits an issue
+          # comment instead of fully autonomous note generation. M4a/M4b will evolve
+          # this; per spec §A.3 "发 Lark 邀请人审" is the spec-aligned terminal.
+
+          for D in $QUALIFYING; do
+            echo "::group::mitchell-loop probe for $D"
+            ls "$D"
+            echo "Trigger conditions present — human or Claude Code session needed for Step 3 drafting"
+            # Emit summary for later steps
+            echo "MITCHELL_TRIGGER_DIR=$D" >> $GITHUB_ENV
+            echo "::endgroup::"
+          done
+
+      - name: Comment on merged PR with mitchell-loop trigger summary
+        if: steps.detect.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" \
+            --body "## mitchell-loop triggered
+
+          This merged PR touched \`.harness/changes/<id>\` dir(s) containing \`review-N.md\` (N≥2) or \`review-escalation.md\` — qualifying for ambient guideline extraction per spec §A.3.
+
+          **Qualifying change dirs**: ${{ steps.detect.outputs.qualifying }}
+
+          Next step: run \`Skill(mitchell-loop)\` locally with \`CHANGE_DIR=<dir>\` to draft a \`docs/reference/guidelines/K-guidelines-NNN.md\` note. Skill commits the draft + opens a draft PR (which Lark sees via GitHub webhook).
+
+          **Workflow is detection-only** (F5 codex P2 explicit per M4a charter) — drafting requires AI session. M4b may automate full extraction via scheduled remote agent.
+
+          **Notification path is PR-based, NOT \`notify_spec_event\`** (F2 codex P1) — guideline notes lack a \`status:\` frontmatter field, so \`notify_spec_event\` cannot accept them. Lark broadcast happens via GitHub→Lark webhook on the draft PR open."
