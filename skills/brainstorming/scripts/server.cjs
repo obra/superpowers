@@ -7,6 +7,7 @@ const path = require('path');
 
 const OPCODES = { TEXT: 0x01, CLOSE: 0x08, PING: 0x09, PONG: 0x0A };
 const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+const MAX_FRAME_PAYLOAD_BYTES = 10 * 1024 * 1024;
 
 function computeAcceptKey(clientKey) {
   return crypto.createHash('sha1').update(clientKey + WS_MAGIC).digest('base64');
@@ -53,8 +54,16 @@ function decodeFrame(buffer) {
     offset = 4;
   } else if (payloadLen === 127) {
     if (buffer.length < 10) return null;
-    payloadLen = Number(buffer.readBigUInt64BE(2));
+    const extendedLen = buffer.readBigUInt64BE(2);
+    if (extendedLen > BigInt(MAX_FRAME_PAYLOAD_BYTES)) {
+      throw new Error('WebSocket frame payload exceeds maximum allowed size');
+    }
+    payloadLen = Number(extendedLen);
     offset = 10;
+  }
+
+  if (payloadLen > MAX_FRAME_PAYLOAD_BYTES) {
+    throw new Error('WebSocket frame payload exceeds maximum allowed size');
   }
 
   const maskOffset = offset;
@@ -351,4 +360,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
+module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES, MAX_FRAME_PAYLOAD_BYTES };
