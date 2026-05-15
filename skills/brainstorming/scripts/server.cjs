@@ -142,6 +142,53 @@ let TOKEN = tokenInfo.value;
 let tokenSource = tokenInfo.source;
 let COOKIE_NAME = 'brainstorm-key-' + PORT; // refined to the actual bound port in onListen
 
+// ========== Host Header Allowlist (DNS-rebinding defense, secondary) ==========
+//
+// The per-session key above is the PRIMARY defense against DNS rebinding: a
+// rebound page on another origin can never present the key (nor will the browser
+// attach the loopback cookie to a foreign origin), so it is refused with 403
+// before any content is served. This Host allowlist is a cheap, explicit backstop
+// on the same axis — every HTTP request and WS upgrade must additionally carry a
+// recognized `Host`, so a foreign/rebound name is rejected even in the unlikely
+// event the key gate is bypassed. The browser always sends the rebound name in
+// `Host`, which is exactly what this catches.
+//
+// Default allowlist: the literal loopback names plus the configured URL_HOST
+// (what start-server.sh prints) and the bind HOST, each both bare and with the
+// listening port appended. Operators serving the companion behind a tunnel or
+// container hostname can extend it with the BRAINSTORM_ALLOWED_HOSTS env var
+// (comma-separated, case-insensitive).
+function buildAllowedHosts() {
+  const set = new Set();
+  const portStr = String(PORT);
+  const add = (h) => {
+    if (!h) return;
+    const hl = String(h).trim().toLowerCase();
+    if (!hl) return;
+    set.add(hl);
+    set.add(hl + ':' + portStr);
+  };
+  // Always allow the loopback names: every legitimate browser session
+  // resolves the server via one of these even when URL_HOST differs.
+  add('localhost');
+  add('127.0.0.1');
+  add('[::1]');
+  // Allow the printed/displayed URL_HOST and the bind HOST verbatim.
+  add(URL_HOST);
+  add(HOST);
+  // Operator-provided extras for tunneled / containerized setups.
+  const extra = process.env.BRAINSTORM_ALLOWED_HOSTS || '';
+  for (const h of extra.split(',')) add(h);
+  return set;
+}
+const ALLOWED_HOSTS = buildAllowedHosts();
+
+function isHostAllowed(req) {
+  const host = req.headers && req.headers.host;
+  if (typeof host !== 'string' || host.length === 0) return false;
+  return ALLOWED_HOSTS.has(host.toLowerCase());
+}
+
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',
@@ -324,6 +371,16 @@ function handleRequest(req, res) {
     res.end(FORBIDDEN_PAGE);
     return;
   }
+  // Defense in depth (DNS rebinding): the per-session key above is the primary
+  // gate — a rebound page can never present it, so it is already turned away with
+  // 403. As a backstop we also require a recognized Host, refusing any otherwise
+  // authorized request that arrives under a foreign/rebound Host with the canonical
+  // 421 Misdirected Request before it can touch state or content.
+  if (!isHostAllowed(req)) {
+    res.writeHead(421, securityHeaders({ 'Content-Type': 'text/plain; charset=utf-8' }));
+    res.end('Misdirected Request');
+    return;
+  }
   touchActivity(); // only authorized requests count as activity
 
   // Mirror the key into a cookie so same-origin subresources (/files/*) can
@@ -380,6 +437,12 @@ function handleUpgrade(req, socket) {
 
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
+
+  // Host-allowlist backstop, mirroring handleRequest: the isAuthorized check
+  // above already turns away a rebound page (it cannot present the key), and this
+  // additionally refuses any authorized upgrade arriving under a foreign/rebound
+  // Host before the handshake completes.
+  if (!isHostAllowed(req)) { socket.destroy(); return; }
 
   const accept = computeAcceptKey(key);
   socket.write(

@@ -49,6 +49,36 @@ async function fetch(url) {
   });
 }
 
+// Like fetch() but lets the caller override the Host header so we can
+// exercise the DNS-rebinding Host allowlist directly. The TCP target stays
+// 127.0.0.1:PORT; only the HTTP/1.1 Host line is forged. By default the request
+// also carries the session key, because the Host check is a backstop *behind*
+// the key gate and only fires on otherwise-authorized requests; pass
+// { authorized: false } to omit the key and observe the primary 403 gate.
+async function fetchWithHost(path, hostHeader, { authorized = true } = {}) {
+  return new Promise((resolve, reject) => {
+    const headers = { Host: hostHeader };
+    if (authorized) headers.Cookie = `brainstorm-key-${TEST_PORT}=${TOKEN}`;
+    const req = http.request({
+      host: '127.0.0.1',
+      port: TEST_PORT,
+      path,
+      method: 'GET',
+      headers
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve({
+        status: res.statusCode,
+        headers: res.headers,
+        body: data
+      }));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function startServer() {
   return spawn('node', [SERVER_PATH], {
     env: { ...process.env, BRAINSTORM_PORT: TEST_PORT, BRAINSTORM_DIR: TEST_DIR, BRAINSTORM_TOKEN: TOKEN }
@@ -323,6 +353,67 @@ async function runTests() {
     await test('returns 404 for non-root paths', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/other`);
       assert.strictEqual(res.status, 404);
+    });
+
+    // ========== Host Header Validation (DNS-rebinding backstop) ==========
+    // The per-session key is the primary DNS-rebinding defense; these cover the
+    // secondary Host allowlist, which only fires on otherwise-authorized requests.
+    console.log('\n--- Host Header Validation ---');
+
+    await test('accepts authorized request with Host: localhost:PORT', async () => {
+      const res = await fetchWithHost('/', `localhost:${TEST_PORT}`);
+      assert.strictEqual(res.status, 200);
+    });
+
+    await test('accepts authorized request with Host: 127.0.0.1:PORT', async () => {
+      const res = await fetchWithHost('/', `127.0.0.1:${TEST_PORT}`);
+      assert.strictEqual(res.status, 200);
+    });
+
+    await test('accepts authorized bare loopback Host without port', async () => {
+      const res = await fetchWithHost('/', 'localhost');
+      assert.strictEqual(res.status, 200);
+    });
+
+    await test('rejects authorized request with DNS-rebound Host (421)', async () => {
+      const res = await fetchWithHost('/', `evil.example:${TEST_PORT}`);
+      assert.strictEqual(res.status, 421, 'foreign Host should be rejected even when authorized');
+      assert(!res.body.includes('Waiting for the agent'), 'should not leak screen content');
+    });
+
+    await test('rejects DNS-rebound Host on /files/ endpoint (421)', async () => {
+      const res = await fetchWithHost('/files/anything', 'attacker.example');
+      assert.strictEqual(res.status, 421, 'foreign Host should be rejected before file lookup');
+    });
+
+    await test('token stays primary: no key + foreign Host returns 403, not 421', async () => {
+      // Precedence guard: an unauthenticated request is refused by the key gate
+      // before the Host backstop ever runs, so a rebound page (which lacks the
+      // key) sees 403, not 421. This is what actually defeats DNS rebinding.
+      const res = await fetchWithHost('/', `evil.example:${TEST_PORT}`, { authorized: false });
+      assert.strictEqual(res.status, 403, 'missing key must be refused before the Host backstop');
+    });
+
+    await test('rejects authorized WebSocket upgrade from foreign Host', async () => {
+      // Authenticate with the session key (so isAuthorized passes) but forge the
+      // Host to a rebound name: the upgrade must still be refused by the Host
+      // backstop. The ws client sends `Host: <hostname>:<port>` from the URL, so
+      // we point it at evil.example and route the TCP lookup back to loopback.
+      const ws = new WebSocket(`ws://evil.example:${TEST_PORT}/?key=${TOKEN}`, {
+        lookup: (_hostname, _opts, cb) => cb(null, '127.0.0.1', 4)
+      });
+      let opened = false;
+      let errored = false;
+      await new Promise((resolve) => {
+        ws.on('open', () => { opened = true; resolve(); });
+        ws.on('error', () => { errored = true; resolve(); });
+        ws.on('unexpected-response', () => resolve());
+        ws.on('close', resolve);
+        setTimeout(resolve, 1500);
+      });
+      try { ws.terminate(); } catch (_) { /* ignore */ }
+      assert(!opened, 'WS upgrade with foreign Host must not complete');
+      assert(errored, 'WS client should observe a connection error');
     });
 
     // ========== WebSocket Communication ==========
