@@ -31,13 +31,15 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 **In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
 
+**In Codex:** Codex loads plugin skills natively. When this skill applies, follow this SKILL.md directly; use `references/codex-tools.md` for tool-name translation.
+
 **In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
 ## Platform Adaptation
 
-Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+Skills use Claude Code tool names. Codex agents MUST use `references/codex-tools.md` for tool equivalents. Other non-CC platforms: see `references/copilot-tools.md` (Copilot CLI) or `references/gemini-tools.md` (Gemini CLI).
 
 # Using Skills
 
