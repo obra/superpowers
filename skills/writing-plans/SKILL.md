@@ -132,6 +132,14 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
+## Delegate Plan-Body Expansion
+
+You have just done the judgment-heavy work yourself: the Scope Check, the File Structure map, and the task-list outline — which tasks exist and in what order. That decomposition is now locked in.
+
+Delegate the *expansion* of that outline into the full plan body — each task rendered in the bite-sized step structure above, with real code blocks — to the Llama planner. See `planner-prompt.md` for the brief-preparation checklist and the delegation template.
+
+You still own the Self-Review below: run it yourself on the plan Llama produces.
+
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
