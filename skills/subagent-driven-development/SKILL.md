@@ -104,7 +104,7 @@ digraph process {
 
 ## Model Selection
 
-**Implementation:** Always use Llama via `mcp__llama-mcp__delegate_to_llama`. Llama runs locally and handles mechanical coding tasks — writing functions, adding tests, threading parameters.
+**Test authoring and implementation:** Always use Llama via `mcp__llama-mcp__delegate_to_llama`. Llama runs locally and handles mechanical coding tasks — writing failing tests, writing functions, threading parameters. Each task is two back-to-back Llama delegations: the test author writes the failing tests, then the implementer makes them pass.
 
 **Review roles** still use Claude subagents. Use the most capable available model for spec compliance and code quality review — these roles require judgment and diff-reading that benefit from stronger reasoning.
 
@@ -114,7 +114,7 @@ Plans are written for a general-purpose implementer, but Llama runs locally with
 
 Walk these checks before each `delegate_to_llama` call:
 
-- **One concern per delegation.** If the task touches more than one file non-trivially, or mixes "write the failing test" with "implement and refactor," split it into back-to-back delegations. Land the first one (review + commit), then delegate the next.
+- **One concern per delegation.** The per-task process already separates test authoring from implementation into two delegations. Beyond that: if a single delegation still touches more than one file non-trivially, or bundles unrelated changes, split it further into back-to-back delegations. Land the first one (review + commit), then delegate the next.
 - **Trim `context_hints`.** Pass only files Llama will actually read. If a file is large and only a region matters, paste that region directly into the `task` string with a line-range citation instead of attaching the whole file.
 - **Tighten "Done when."** If you can't state the acceptance criteria for a single delegation in a short paragraph, the delegation is doing too much.
 - **Resolve, don't relay.** Inline the answers to any ambiguities you resolved — don't make Llama carry the plan context just to interpret the task.
@@ -153,6 +153,7 @@ Both reviewer prompt files include a "Re-Review After a Fix" template — use it
 
 ## Prompt Templates
 
+- `./test-author-prompt.md` - Delegate failing-test authoring to Llama
 - `./implementer-prompt.md` - Delegate implementation task to Llama
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
