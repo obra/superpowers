@@ -20,14 +20,14 @@ Task tool (general-purpose):
 
     {PLAN_OR_REQUIREMENTS}
 
-    ## Git Range to Review
+    ## Revision Range to Review
 
-    **Base:** {BASE_SHA}
-    **Head:** {HEAD_SHA}
+    **Base:** {BASE_REV}
+    **Head:** {HEAD_REV}
 
     ```bash
-    git diff --stat {BASE_SHA}..{HEAD_SHA}
-    git diff {BASE_SHA}..{HEAD_SHA}
+    jj diff --stat --from {BASE_REV} --to {HEAD_REV}
+    jj diff        --from {BASE_REV} --to {HEAD_REV}
     ```
 
     ## What to Check
@@ -124,8 +124,8 @@ Task tool (general-purpose):
 **Placeholders:**
 - `{DESCRIPTION}` — brief summary of what was built
 - `{PLAN_OR_REQUIREMENTS}` — what it should do (plan file path, task text, or requirements)
-- `{BASE_SHA}` — starting commit
-- `{HEAD_SHA}` — ending commit
+- `{BASE_REV}` — starting change/commit (jj change id, commit id, or revset)
+- `{HEAD_REV}` — ending change/commit
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

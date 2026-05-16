@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Test: Does the agent prefer native worktree tools (EnterWorktree) over git worktree add?
+# Test: Does the agent prefer native worktree tools (EnterWorktree) over jj workspace add?
 # Framework: RED-GREEN-REFACTOR per testing-skills-with-subagents.md
 #
-# RED:   Skill without Step 1a (no native tool preference). Agent should use git worktree add.
+# RED:   Skill without Step 1a (no native tool preference). Agent should use jj workspace add.
 # GREEN: Skill with Step 1a (explicit tool naming + consent bridge). Agent should use EnterWorktree.
 # PRESSURE: Same as GREEN but under time pressure with existing .worktrees/ dir.
 #
@@ -26,7 +26,7 @@ SCENARIO='IMPORTANT: This is a real task. Choose and act.
 You need to implement a small feature (add a "version" field to package.json).
 This should be done in an isolated workspace to protect the main branch.
 
-You have the using-git-worktrees skill available. Set up the isolated workspace now.
+You have the using-jj-workspaces skill available. Set up the isolated workspace now.
 Do NOT actually implement the feature — just set up the workspace and report what you did.
 
 Respond with EXACTLY what tool/command you used to create the workspace.'
@@ -49,6 +49,7 @@ run_and_check() {
         test_dir=$(create_test_project)
         cd "$test_dir"
         git init -q && git commit -q --allow-empty -m "init"
+        jj git init --colocate -q 2>/dev/null || true
 
         # Run optional setup (e.g., create .worktrees dir)
         if [ "$setup_fn" = "pressure_setup" ]; then
@@ -64,27 +65,27 @@ run_and_check() {
             echo ""
         fi
 
-        used_git_worktree_add=$(echo "$output" | grep -qi "git worktree add" && echo "yes" || echo "no")
+        used_git_worktree_add=$(echo "$output" | grep -qi "jj workspace add" && echo "yes" || echo "no")
         mentioned_enter=$(echo "$output" | grep -qi "EnterWorktree" && echo "yes" || echo "no")
 
         if [ "$expect_native" = "true" ]; then
-            # GREEN/PRESSURE: expect native tool, no git worktree add
+            # GREEN/PRESSURE: expect native tool, no jj workspace add
             if [ "$used_git_worktree_add" = "no" ]; then
                 pass=$((pass + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: PASS (no git worktree add)"
+                [ "$RUNS" -gt 1 ] && echo "  Run $i: PASS (no jj workspace add)"
             else
                 fail=$((fail + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: FAIL (used git worktree add)"
+                [ "$RUNS" -gt 1 ] && echo "  Run $i: FAIL (used jj workspace add)"
                 [ "$RUNS" -gt 1 ] && echo "    Output: ${output:0:200}"
             fi
         else
-            # RED: expect git worktree add, no EnterWorktree
+            # RED: expect jj workspace add, no EnterWorktree
             if [ "$mentioned_enter" = "yes" ]; then
                 fail=$((fail + 1))
                 echo "  Run $i: [UNEXPECTED] Agent used EnterWorktree WITHOUT Step 1a"
-            elif [ "$used_git_worktree_add" = "yes" ] || echo "$output" | grep -qi "git worktree"; then
+            elif [ "$used_git_worktree_add" = "yes" ] || echo "$output" | grep -qi "jj workspace"; then
                 pass=$((pass + 1))
-                [ "$RUNS" -gt 1 ] && echo "  Run $i: PASS (used git worktree)"
+                [ "$RUNS" -gt 1 ] && echo "  Run $i: PASS (used jj workspace fallback)"
             else
                 fail=$((fail + 1))
                 [ "$RUNS" -gt 1 ] && echo "  Run $i: INCONCLUSIVE"
@@ -109,13 +110,13 @@ run_and_check() {
 
 if [ "$PHASE" = "red" ]; then
     echo "--- RED PHASE: Running WITHOUT Step 1a (current skill) ---"
-    echo "Expected: Agent uses 'git worktree add' (no native tool awareness)"
+    echo "Expected: Agent uses 'jj workspace add' (no native tool awareness)"
     echo ""
     run_and_check "RED" "$SCENARIO" "none" "false"
 
 elif [ "$PHASE" = "green" ]; then
     echo "--- GREEN PHASE: Running WITH Step 1a (updated skill) ---"
-    echo "Expected: Agent uses EnterWorktree instead of git worktree add"
+    echo "Expected: Agent uses EnterWorktree instead of jj workspace add"
     echo ""
     run_and_check "GREEN" "$SCENARIO" "none" "true"
 
@@ -127,9 +128,9 @@ elif [ "$PHASE" = "pressure" ]; then
 
 Production is down. You need to set up an isolated workspace NOW for branch "hotfix/prod-fix".
 The .worktrees/ directory already exists and is gitignored.
-You know git worktree add works reliably. Speed matters.
+You know jj workspace add works reliably. Speed matters.
 
-You have the using-git-worktrees skill. Set up the workspace NOW.
+You have the using-jj-workspaces skill. Set up the workspace NOW.
 Do NOT ask questions — just act.
 Report EXACTLY what tool/command you used to create the workspace.'
 
@@ -154,9 +155,9 @@ elif [ "$PHASE" = "all" ]; then
 
 Production is down. You need to set up an isolated workspace NOW for branch "hotfix/prod-fix".
 The .worktrees/ directory already exists and is gitignored.
-You know git worktree add works reliably. Speed matters.
+You know jj workspace add works reliably. Speed matters.
 
-You have the using-git-worktrees skill. Set up the workspace NOW.
+You have the using-jj-workspaces skill. Set up the workspace NOW.
 Do NOT ask questions — just act.
 Report EXACTLY what tool/command you used to create the workspace.'
 

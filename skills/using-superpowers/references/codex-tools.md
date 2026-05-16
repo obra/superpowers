@@ -31,25 +31,24 @@ cell by `cell_id`; it is not the spawned-agent result tool.
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish branches should detect their
+environment with read-only jj commands before proceeding:
 
 ```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+JJ_ROOT=$(jj workspace root 2>/dev/null)
+BOOKMARKS=$(jj log -r @ --no-graph -T 'bookmarks.join(",") ++ "\n"' 2>/dev/null)
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `JJ_ROOT` non-empty and `.jj/repo` is a file → already in a linked workspace (skip creation)
+- `BOOKMARKS` empty → anonymous change on `@` (cannot push/PR until a bookmark is created)
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
+See `using-jj-workspaces` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
+When the sandbox blocks bookmark/push operations (anonymous change in an
+externally managed workspace), the agent commits all work and informs
 the user to use the App's native controls:
 
 - **"Create branch"** — names the branch, then commit/push/PR via App UI
