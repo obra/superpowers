@@ -1,4 +1,4 @@
-# Qwen Persona Delegation Across the Development Workflow
+# Llama Persona Delegation Across the Development Workflow
 
 **Date:** 2026-05-16
 **Author:** Kyle Diedrick (with Claude)
@@ -7,7 +7,7 @@
 ## Problem
 
 The `subagent-driven-development` skill already delegates the *implementer* role to
-a local Qwen instance via `mcp__qwen-mcp__delegate_to_qwen`, at zero marginal cost.
+a local Llama instance via `mcp__llama-mcp__delegate_to_llama`, at zero marginal cost.
 But the rest of the development workflow — drafting the design spec, writing the
 implementation plan, authoring tests, updating documentation — still consumes paid
 Claude tokens for what is largely *production* work: turning decisions Claude has
@@ -15,15 +15,15 @@ already made into a concrete artifact.
 
 Claude should remain the "smart manager": it does the judgment work (deciding what
 to build, resolving ambiguity, locking in decisions) and hands a precise brief to a
-task-specialized Qwen agent that produces the artifact.
+task-specialized Llama agent that produces the artifact.
 
 ## Goals
 
-- Add four Qwen personas alongside the existing implementer: **feature designer**,
+- Add four Llama personas alongside the existing implementer: **feature designer**,
   **planner**, **test author**, **documenter**.
 - Each persona lives in its natural home skill and is triggered at that skill's
   produce-artifact step.
-- Claude composes a complete brief before every delegation; Qwen never has to make
+- Claude composes a complete brief before every delegation; Llama never has to make
   the judgment calls Claude already made.
 - Reuse the delegation discipline (`stop_reason` handling, right-sizing, context
   prep) already tuned in `subagent-driven-development` rather than re-deriving it.
@@ -34,9 +34,9 @@ task-specialized Qwen agent that produces the artifact.
 - No persona/system-prompt parameter on the MCP tool — it accepts only
   `task` / `working_dir` / `context_hints`. Persona identity is baked into the
   `task` string.
-- No Qwen involvement in code review. Spec-compliance and code-quality review stay
+- No Llama involvement in code review. Spec-compliance and code-quality review stay
   Claude subagents, as they do today.
-- No tiered model selection (Qwen vs. Claude per task complexity).
+- No tiered model selection (Llama vs. Claude per task complexity).
 
 ## Personas
 
@@ -48,18 +48,18 @@ task-specialized Qwen agent that produces the artifact.
 | Documenter | `finishing-a-development-branch` | New step after test verification | None: pure scribe |
 
 **Division of labor.** Claude always makes the judgment calls and writes the brief.
-Qwen produces the artifact. The personas sit at different points on a judgment
+Llama produces the artifact. The personas sit at different points on a judgment
 spectrum:
 
 - **Documenter** — pure scribe. Claude names every doc to touch and the substance
-  of each change; Qwen only phrases it.
+  of each change; Llama only phrases it.
 - **Test author** — mostly mechanical. Claude names the behaviors and edge cases to
-  cover; Qwen writes idiomatic, failing test code.
+  cover; Llama writes idiomatic, failing test code.
 - **Planner** — moderate. Claude locks the decomposition (File Structure map and the
-  task list); Qwen expands each task into bite-sized steps and writes the code
+  task list); Llama expands each task into bite-sized steps and writes the code
   blocks.
 - **Feature designer** — most latitude. Claude supplies all substance and every
-  resolved decision; Qwen has latitude on how to structure the document and word it.
+  resolved decision; Llama has latitude on how to structure the document and word it.
 
 ## Architecture
 
@@ -74,11 +74,11 @@ No new skill. Each persona gets one prompt file alongside its home skill's
 Each prompt file contains three parts:
 
 1. **Persona preamble** — the role identity and judgment latitude, written to be
-   prepended verbatim into the `task` string Claude sends to Qwen.
+   prepended verbatim into the `task` string Claude sends to Llama.
 2. **Brief Preparation checklist** — what Claude must nail down *before* delegating
    (the "important details" the manager lays out). This is the persona-specific
    counterpart to `implementer-prompt.md`'s "Context Preparation" section.
-3. **Delegation-call template** — the `delegate_to_qwen` call shape with `task`,
+3. **Delegation-call template** — the `delegate_to_llama` call shape with `task`,
    `working_dir`, `context_hints`.
 
 ### Shared delegation discipline (no duplication)
@@ -98,10 +98,10 @@ skill.
 Checklist step 6 ("Write design doc") currently has Claude write the spec directly.
 Change: after the design is approved with the user (step 5), Claude composes the
 brief — every design section, every resolved decision and tradeoff, the exact spec
-file path — and delegates the *writing* of the spec file to the Qwen feature
+file path — and delegates the *writing* of the spec file to the Llama feature
 designer via `feature-designer-prompt.md`.
 
-- Step 7 (spec self-review) is unchanged in intent but now reviews Qwen's draft:
+- Step 7 (spec self-review) is unchanged in intent but now reviews Llama's draft:
   Claude runs the existing placeholder / consistency / scope / ambiguity checks. If
   issues are found, Claude re-delegates a focused fix or fixes inline.
 - Step 8 (user reviews the written spec) is unchanged.
@@ -117,7 +117,7 @@ Claude still does the judgment-heavy parts itself: the **Scope Check**, the **Fi
 Structure** map, and the **task-list outline** (which tasks exist, in what order) —
 "this is where decomposition decisions get locked in." Claude then delegates the
 *expansion* of that outline into the full plan body — each task rendered in the
-bite-sized step structure with real code blocks — to the Qwen planner via
+bite-sized step structure with real code blocks — to the Llama planner via
 `planner-prompt.md`.
 
 - The **Self-Review** section runs unchanged: Claude reviews the produced plan
@@ -135,11 +135,11 @@ splitting "write the failing test" from "implement"; this formalizes it:
 
 1. Claude prepares the brief: the behaviors and edge cases the task's tests must
    cover.
-2. **Test author** delegation (`test-author-prompt.md`) — Qwen writes the failing
+2. **Test author** delegation (`test-author-prompt.md`) — Llama writes the failing
    test(s) only, no implementation.
 3. Claude runs the tests and confirms they fail for the right reason. If they pass,
    compile-error, or fail wrongly, Claude re-delegates a focused fix.
-4. **Implementer** delegation (existing `implementer-prompt.md`) — Qwen makes the
+4. **Implementer** delegation (existing `implementer-prompt.md`) — Llama makes the
    tests pass.
 5. The existing two-stage Claude reviewer subagents (spec compliance, then code
    quality) run unchanged on the combined result.
@@ -156,7 +156,7 @@ Environment): **Documentation Sweep**.
 - Claude identifies what user-facing documentation and changelog entries the
   completed feature touched (reading the branch diff).
 - Claude composes the brief — each doc file to update and the substance of each
-  change — and delegates to the Qwen documenter via `documenter-prompt.md`.
+  change — and delegates to the Llama documenter via `documenter-prompt.md`.
 - Claude reviews the documentation diff, then commits it on the feature branch so
   the docs land before merge/PR.
 - If no docs need updating, the step is a no-op and the skill proceeds.
@@ -195,13 +195,13 @@ section-by-section rather than escalating immediately.
 No automated tests for skill files. Validation is manual:
 
 - Run `brainstorming` to the design-doc step and confirm the spec file is produced
-  via `delegate_to_qwen` with the feature-designer preamble.
+  via `delegate_to_llama` with the feature-designer preamble.
 - Run `writing-plans` and confirm Claude produces the File Structure and task
-  outline itself, then delegates plan-body expansion to Qwen.
+  outline itself, then delegates plan-body expansion to Llama.
 - Run a `subagent-driven-development` task and confirm two delegations occur
   (test author, then implementer) with a Claude test-fails-correctly check between.
 - Run `finishing-a-development-branch` and confirm the documentation sweep delegates
-  to the Qwen documenter and commits the result before the options menu.
+  to the Llama documenter and commits the result before the options menu.
 - Confirm each new persona file cross-references the shared `stop_reason` mechanics
   rather than restating them.
 
@@ -212,6 +212,6 @@ No automated tests for skill files. Validation is manual:
   steps and prompt-file pointers only; Red Flags tables, anti-pattern sections, and
   process diagrams are not reworded. This is a fork-local customization, not an
   upstream contribution.
-- **Extra delegation latency.** Each prose artifact and each test add a Qwen
+- **Extra delegation latency.** Each prose artifact and each test add a Llama
   round-trip. Acceptable: the cost is local compute, and Claude's context and paid
   tokens are preserved for the judgment work.
