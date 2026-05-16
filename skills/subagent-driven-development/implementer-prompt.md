@@ -1,6 +1,6 @@
-# Qwen Implementer Delegation Template
+# Llama Implementer Delegation Template
 
-Use this template when delegating an implementation task to Qwen via the `mcp__qwen-mcp__delegate_to_qwen` MCP tool.
+Use this template when delegating an implementation task to Llama via the `mcp__llama-mcp__delegate_to_llama` MCP tool.
 
 ## Context Preparation (do this before delegating)
 
@@ -11,11 +11,11 @@ Use this template when delegating an implementation task to Qwen via the `mcp__q
 ## Delegation Call
 
 ```
-mcp__qwen-mcp__delegate_to_qwen:
+mcp__llama-mcp__delegate_to_llama:
   task: |
     ## Task
 
-    [FULL TEXT of task from plan — paste it here, do not make Qwen read the plan file]
+    [FULL TEXT of task from plan — paste it here, do not make Llama read the plan file]
 
     ## Context
 
@@ -44,9 +44,9 @@ mcp__qwen-mcp__delegate_to_qwen:
 
 Inspect the response fields:
 
-- **`result`** — Qwen's summary of what it did (or partial progress if stopped early)
-- **`files_changed`** — files Qwen wrote or edited
-- **`commands_run`** — commands Qwen executed
-- **`stop_reason`** — see "Handling Qwen stop_reason" in SKILL.md
-- **Note:** `result` is freeform text from Qwen — it may not follow the "On completion" format. Treat it as a best-effort summary.
+- **`result`** — Llama's summary of what it did (or partial progress if stopped early)
+- **`files_changed`** — files Llama wrote or edited
+- **`commands_run`** — commands Llama executed
+- **`stop_reason`** — see "Handling Llama stop_reason" in SKILL.md
+- **Note:** `result` is freeform text from Llama — it may not follow the "On completion" format. Treat it as a best-effort summary.
 - **`transcript_path`** — full JSONL transcript; include this path in any escalation to the user
