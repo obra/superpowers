@@ -47,10 +47,16 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Prepare context (resolve ambiguities / ask user if needed)" [shape=box];
-        "Delegate to Llama (mcp__llama-mcp__delegate_to_llama)" [shape=box];
-        "Llama stop_reason?" [shape=diamond];
-        "Decompose or escalate to user" [shape=box];
+        "Prepare test brief (behaviors + edge cases)" [shape=box];
+        "Delegate test author (mcp__llama-mcp__delegate_to_llama, ./test-author-prompt.md)" [shape=box];
+        "Test author stop_reason?" [shape=diamond];
+        "Decompose or escalate to user (test author)" [shape=box];
+        "Run tests — fail for the right reason?" [shape=diamond];
+        "Re-delegate focused test fix to Llama" [shape=box];
+        "Prepare implementer context (resolve ambiguities / ask user if needed)" [shape=box];
+        "Delegate implementer (mcp__llama-mcp__delegate_to_llama, ./implementer-prompt.md)" [shape=box];
+        "Implementer stop_reason?" [shape=diamond];
+        "Decompose or escalate to user (implementer)" [shape=box];
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Re-delegate fix to Llama (spec)" [shape=box];
@@ -65,13 +71,22 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Prepare context (resolve ambiguities / ask user if needed)";
-    "Prepare context (resolve ambiguities / ask user if needed)" -> "Delegate to Llama (mcp__llama-mcp__delegate_to_llama)";
-    "Delegate to Llama (mcp__llama-mcp__delegate_to_llama)" -> "Llama stop_reason?";
-    "Llama stop_reason?" -> "Decompose or escalate to user" [label="budget/error"];
-    "Decompose or escalate to user" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="decomposed"];
-    "Decompose or escalate to user" -> "STOP — awaiting user decision" [label="escalate"];
-    "Llama stop_reason?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="complete"];
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Prepare test brief (behaviors + edge cases)";
+    "Prepare test brief (behaviors + edge cases)" -> "Delegate test author (mcp__llama-mcp__delegate_to_llama, ./test-author-prompt.md)";
+    "Delegate test author (mcp__llama-mcp__delegate_to_llama, ./test-author-prompt.md)" -> "Test author stop_reason?";
+    "Test author stop_reason?" -> "Decompose or escalate to user (test author)" [label="budget/error"];
+    "Decompose or escalate to user (test author)" -> "Delegate test author (mcp__llama-mcp__delegate_to_llama, ./test-author-prompt.md)" [label="decomposed"];
+    "Decompose or escalate to user (test author)" -> "STOP — awaiting user decision" [label="escalate"];
+    "Test author stop_reason?" -> "Run tests — fail for the right reason?" [label="complete"];
+    "Run tests — fail for the right reason?" -> "Re-delegate focused test fix to Llama" [label="no"];
+    "Re-delegate focused test fix to Llama" -> "Run tests — fail for the right reason?" [label="re-check"];
+    "Run tests — fail for the right reason?" -> "Prepare implementer context (resolve ambiguities / ask user if needed)" [label="yes"];
+    "Prepare implementer context (resolve ambiguities / ask user if needed)" -> "Delegate implementer (mcp__llama-mcp__delegate_to_llama, ./implementer-prompt.md)";
+    "Delegate implementer (mcp__llama-mcp__delegate_to_llama, ./implementer-prompt.md)" -> "Implementer stop_reason?";
+    "Implementer stop_reason?" -> "Decompose or escalate to user (implementer)" [label="budget/error"];
+    "Decompose or escalate to user (implementer)" -> "Prepare implementer context (resolve ambiguities / ask user if needed)" [label="decomposed"];
+    "Decompose or escalate to user (implementer)" -> "STOP — awaiting user decision" [label="escalate"];
+    "Implementer stop_reason?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="complete"];
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Re-delegate fix to Llama (spec)" [label="no"];
     "Re-delegate fix to Llama (spec)" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
@@ -81,7 +96,7 @@ digraph process {
     "Re-delegate quality fix to Llama (quality)" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="yes"];
+    "More tasks remain?" -> "Prepare test brief (behaviors + edge cases)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
