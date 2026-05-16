@@ -11,7 +11,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: a Qwen delegation failure you cannot resolve after retry or decomposition, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: a Llama delegation failure you cannot resolve after retry or decomposition, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
 ## When to Use
 
@@ -48,15 +48,15 @@ digraph process {
     subgraph cluster_per_task {
         label="Per Task";
         "Prepare context (resolve ambiguities / ask user if needed)" [shape=box];
-        "Delegate to Qwen (mcp__qwen-mcp__delegate_to_qwen)" [shape=box];
-        "Qwen stop_reason?" [shape=diamond];
+        "Delegate to Llama (mcp__llama-mcp__delegate_to_llama)" [shape=box];
+        "Llama stop_reason?" [shape=diamond];
         "Decompose or escalate to user" [shape=box];
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Re-delegate fix to Qwen (spec)" [shape=box];
+        "Re-delegate fix to Llama (spec)" [shape=box];
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
-        "Re-delegate quality fix to Qwen (quality)" [shape=box];
+        "Re-delegate quality fix to Llama (quality)" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
@@ -66,19 +66,19 @@ digraph process {
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Prepare context (resolve ambiguities / ask user if needed)";
-    "Prepare context (resolve ambiguities / ask user if needed)" -> "Delegate to Qwen (mcp__qwen-mcp__delegate_to_qwen)";
-    "Delegate to Qwen (mcp__qwen-mcp__delegate_to_qwen)" -> "Qwen stop_reason?";
-    "Qwen stop_reason?" -> "Decompose or escalate to user" [label="budget/error"];
+    "Prepare context (resolve ambiguities / ask user if needed)" -> "Delegate to Llama (mcp__llama-mcp__delegate_to_llama)";
+    "Delegate to Llama (mcp__llama-mcp__delegate_to_llama)" -> "Llama stop_reason?";
+    "Llama stop_reason?" -> "Decompose or escalate to user" [label="budget/error"];
     "Decompose or escalate to user" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="decomposed"];
     "Decompose or escalate to user" -> "STOP — awaiting user decision" [label="escalate"];
-    "Qwen stop_reason?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="complete"];
+    "Llama stop_reason?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="complete"];
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Re-delegate fix to Qwen (spec)" [label="no"];
-    "Re-delegate fix to Qwen (spec)" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Re-delegate fix to Llama (spec)" [label="no"];
+    "Re-delegate fix to Llama (spec)" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
     "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Re-delegate quality fix to Qwen (quality)" [label="no"];
-    "Re-delegate quality fix to Qwen (quality)" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Code quality reviewer subagent approves?" -> "Re-delegate quality fix to Llama (quality)" [label="no"];
+    "Re-delegate quality fix to Llama (quality)" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Prepare context (resolve ambiguities / ask user if needed)" [label="yes"];
@@ -89,38 +89,38 @@ digraph process {
 
 ## Model Selection
 
-**Implementation:** Always use Qwen via `mcp__qwen-mcp__delegate_to_qwen`. Qwen runs locally and handles mechanical coding tasks — writing functions, adding tests, threading parameters.
+**Implementation:** Always use Llama via `mcp__llama-mcp__delegate_to_llama`. Llama runs locally and handles mechanical coding tasks — writing functions, adding tests, threading parameters.
 
 **Review roles** still use Claude subagents. Use the most capable available model for spec compliance and code quality review — these roles require judgment and diff-reading that benefit from stronger reasoning.
 
 ## Right-Sizing Before Delegating
 
-Plans are written for a general-purpose implementer, but Qwen runs locally with a much smaller context window. Before every delegation — including the first one for a task — sanity-check the unit of work against Qwen's actual budget. Splitting up front is cheap; recovering from a `token_limit` stop with partial work already on disk is not.
+Plans are written for a general-purpose implementer, but Llama runs locally with a much smaller context window. Before every delegation — including the first one for a task — sanity-check the unit of work against Llama's actual budget. Splitting up front is cheap; recovering from a `token_limit` stop with partial work already on disk is not.
 
-Walk these checks before each `delegate_to_qwen` call:
+Walk these checks before each `delegate_to_llama` call:
 
 - **One concern per delegation.** If the task touches more than one file non-trivially, or mixes "write the failing test" with "implement and refactor," split it into back-to-back delegations. Land the first one (review + commit), then delegate the next.
-- **Trim `context_hints`.** Pass only files Qwen will actually read. If a file is large and only a region matters, paste that region directly into the `task` string with a line-range citation instead of attaching the whole file.
+- **Trim `context_hints`.** Pass only files Llama will actually read. If a file is large and only a region matters, paste that region directly into the `task` string with a line-range citation instead of attaching the whole file.
 - **Tighten "Done when."** If you can't state the acceptance criteria for a single delegation in a short paragraph, the delegation is doing too much.
-- **Resolve, don't relay.** Inline the answers to any ambiguities you resolved — don't make Qwen carry the plan context just to interpret the task.
+- **Resolve, don't relay.** Inline the answers to any ambiguities you resolved — don't make Llama carry the plan context just to interpret the task.
 
-If a task as written in the plan is too big for Qwen even after this trimming, split it on the fly. Update TodoWrite to reflect the sub-deliveries so progress stays accurate.
+If a task as written in the plan is too big for Llama even after this trimming, split it on the fly. Update TodoWrite to reflect the sub-deliveries so progress stays accurate.
 
-## Handling Qwen stop_reason
+## Handling Llama stop_reason
 
-Qwen returns a `stop_reason` field in every delegation response. Handle each value:
+Llama returns a `stop_reason` field in every delegation response. Handle each value:
 
 **`complete`:** Proceed to spec compliance review.
 
 **`error`:** Connection or server failure. Check the `result` field for details. Retry once if it looks transient (connection reset, timeout on first attempt). If it fails again, treat as BLOCKED and escalate to the user with the `transcript_path` for diagnosis.
 
 **`max_steps` / `timeout` / `token_limit`:** Budget exhausted with partial work. Inspect `result` and `files_changed`:
-- If a clear remaining piece exists (e.g., implementation written but tests not written), decompose into sub-tasks and delegate each to Qwen separately.
-- If the task is already atomic and cannot be split further, escalate to the user. Include the `transcript_path` so they can inspect what Qwen completed before deciding how to proceed.
+- If a clear remaining piece exists (e.g., implementation written but tests not written), decompose into sub-tasks and delegate each to Llama separately.
+- If the task is already atomic and cannot be split further, escalate to the user. Include the `transcript_path` so they can inspect what Llama completed before deciding how to proceed.
 
 **Never** ignore a non-`complete` stop_reason or proceed to spec review with partial work without assessing it first.
 
-**Fix-loop context discipline:** When re-delegating after a reviewer finds issues, do not paste the original task plus the full review back to Qwen. Send a fresh, focused delegation that names only the specific change required and the file(s) it affects. The reviewer's context belongs to you; Qwen only needs the next concrete action. If a single review surfaces multiple unrelated fixes, split them into separate delegations rather than batching.
+**Fix-loop context discipline:** When re-delegating after a reviewer finds issues, do not paste the original task plus the full review back to Llama. Send a fresh, focused delegation that names only the specific change required and the file(s) it affects. The reviewer's context belongs to you; Llama only needs the next concrete action. If a single review surfaces multiple unrelated fixes, split them into separate delegations rather than batching.
 
 ## Reviewer Output Discipline
 
@@ -134,11 +134,11 @@ When the implementer pushes a fix and you need the reviewer to confirm it, do **
 2. Points the reviewer at the diff for the fix only (`git diff <SHA-before-fix>..HEAD`).
 3. Asks one question: did each listed issue get resolved, yes or no, and are there regressions?
 
-Both reviewer prompt files include a "Re-Review After a Fix" template — use it. Do not ask for a fresh full review just because you want a "second pass." Full re-reviews on every fix loop are how a single task's review context grows past Qwen's budget — and past your own working memory.
+Both reviewer prompt files include a "Re-Review After a Fix" template — use it. Do not ask for a fresh full review just because you want a "second pass." Full re-reviews on every fix loop are how a single task's review context grows past Llama's budget — and past your own working memory.
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Delegate implementation task to Qwen
+- `./implementer-prompt.md` - Delegate implementation task to Llama
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
@@ -155,9 +155,9 @@ Task 1: Hook installation script
 
 [Get Task 1 text and context (already extracted)]
 [Context prep: plan references hooks.py; no ambiguity — install path is explicit in spec]
-[delegate_to_qwen(task=<full text + context>, working_dir=..., context_hints=[hooks.py])]
+[delegate_to_llama(task=<full text + context>, working_dir=..., context_hints=[hooks.py])]
 
-Qwen result:
+Llama result:
   stop_reason: complete
   result: "Implemented install-hook command. Added 5 tests, all passing. Committed."
   files_changed: [hooks.py, tests/test_hooks.py]
@@ -176,9 +176,9 @@ Task 2: Recovery modes
 [Context prep: ambiguity — spec says "report progress" but doesn't say how often]
 [Ask user: "How often should progress be reported during recovery?"]
 You: "Every 100 items"
-[delegate_to_qwen(task=<full text + context + "report every 100 items">, working_dir=..., context_hints=[recovery.py])]
+[delegate_to_llama(task=<full text + context + "report every 100 items">, working_dir=..., context_hints=[recovery.py])]
 
-Qwen result:
+Llama result:
   stop_reason: complete
   result: "Added verify/repair modes with progress every 100 items. 8/8 tests passing. Committed."
   files_changed: [recovery.py, tests/test_recovery.py]
@@ -188,8 +188,8 @@ Spec reviewer: ❌ Issues:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
 
-[Re-delegate fix to Qwen (spec): remove --json flag, add progress reporting per spec]
-Qwen result:
+[Re-delegate fix to Llama (spec): remove --json flag, add progress reporting per spec]
+Llama result:
   stop_reason: complete
   result: "Removed --json flag, added progress reporting every 100 items. Committed."
 
@@ -199,8 +199,8 @@ Spec reviewer: ✅ Spec compliant now
 [Dispatch code quality reviewer]
 Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 
-[Re-delegate quality fix to Qwen (quality): extract magic number 100 to constant]
-Qwen result:
+[Re-delegate quality fix to Llama (quality): extract magic number 100 to constant]
+Llama result:
   stop_reason: complete
   result: "Extracted PROGRESS_INTERVAL = 100 constant. Committed."
 
@@ -224,7 +224,7 @@ Done!
 - Subagents follow TDD naturally
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
-- Context prep step ensures Qwen has everything it needs upfront
+- Context prep step ensures Llama has everything it needs upfront
 
 **vs. Executing Plans:**
 - Same session (no handoff)
@@ -244,7 +244,7 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- More invocations per task (Qwen delegation + 2 reviewer subagents)
+- More invocations per task (Llama delegation + 2 reviewer subagents)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
@@ -255,33 +255,33 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Delegate to Qwen without running the context preparation step first
-- Delegate without running the right-size check (a single task that won't fit Qwen's budget)
-- Make Qwen read the plan file (provide full text in the `task` string instead)
+- Delegate to Llama without running the context preparation step first
+- Delegate without running the right-size check (a single task that won't fit Llama's budget)
+- Make Llama read the plan file (provide full text in the `task` string instead)
 - Attach large files via `context_hints` when only a region is needed
-- Skip scene-setting context (Qwen needs to understand where the task fits)
-- Leave genuine ambiguity unresolved before delegating (Qwen cannot ask questions)
+- Skip scene-setting context (Llama needs to understand where the task fits)
+- Leave genuine ambiguity unresolved before delegating (Llama cannot ask questions)
 - Stack the full review history into a fix-loop re-delegation instead of sending a focused fix prompt
 - Dispatch reviewers without the terse-output overrides from the prompt templates (verbose review output bloats every subsequent fix loop)
 - Re-dispatch a fresh full review after a fix instead of the focused re-review (issue list + diff only)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let Qwen's result summary replace actual review (both spec and quality review are required)
+- Let Llama's result summary replace actual review (both spec and quality review are required)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
 
 **If context prep reveals ambiguity:**
 - Resolve from existing context if possible (don't ask the user unnecessarily)
 - If you must ask the user, ask one question at a time
-- Include the resolved answer inline in the `task` string — don't leave Qwen to guess
+- Include the resolved answer inline in the `task` string — don't leave Llama to guess
 
 **If reviewer finds issues:**
-- Re-delegate to Qwen with specific fix instructions
+- Re-delegate to Llama with specific fix instructions
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
 
-**If Qwen delegation fails (stop_reason=error):**
+**If Llama delegation fails (stop_reason=error):**
 - Retry once for transient failures
 - If it fails again, escalate to the user — don't re-delegate without changing something
 
