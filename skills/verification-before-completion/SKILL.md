@@ -1,139 +1,111 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: >
+  Invoke BEFORE saying "done", "tests pass", "ready to merge", or any
+  completion claim. Requires fresh command output as evidence — no
+  completion without proof. Also routed by using-superpowers at task end.
 ---
 
 # Verification Before Completion
 
-## Overview
+Do not claim success without fresh command evidence.
 
-Claiming work is complete without verification is dishonesty, not efficiency.
+## Gate
 
-**Core principle:** Evidence before claims, always.
+Before any completion claim:
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+1. Identify the command that proves the claim.
+2. Run the full command now.
+3. Inspect exit code and output.
+4. State results exactly as observed.
+5. **If the change includes a condition or gate that determines when something applies: explicitly state what it does NOT cover. If the answer reveals a gap that should be covered, fix it before proceeding.**
 
-## The Iron Law
+## Applies To
 
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
+- "Tests pass"
+- "Bug is fixed"
+- "Build succeeds"
+- "Ready to merge"
+- Any equivalent wording
 
-If you haven't run the verification command in this message, you cannot claim it passes.
+## Not Acceptable
 
-## The Gate Function
+- "Should pass"
+- "Looks good"
+- Trusting old outputs
+- Trusting subagent reports without verification
 
-```
-BEFORE claiming any status or expressing satisfaction:
+## Minimum Evidence Examples
 
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
+- Tests: command output with zero failures
+- Build: successful exit code
+- Bugfix: reproduction case now passes
+- Requirements: explicit checklist against plan
 
-Skip any step = lying, not verifying
-```
+## Stub Scan (Implementation Tasks)
 
-## Common Failures
+When verifying completion of any task that created or modified production code, run a stub scan before claiming done:
 
-| Claim | Requires | Not Sufficient |
-|-------|----------|----------------|
-| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
-| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
-| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
-| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | Tests passing |
-
-## Red Flags - STOP
-
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
-
-## Rationalization Prevention
-
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
-
-## Key Patterns
-
-**Tests:**
-```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
+```bash
+grep -rn "TODO\|FIXME\|placeholder\|NotImplementedError\|raise NotImplementedError" <src-dir> \
+  --include="*.ts" --include="*.js" --include="*.py" --include="*.go" --include="*.rs" \
+  | grep -v -i "test\|spec\|__tests__"
 ```
 
-**Regression tests (TDD Red-Green):**
+Adjust `<src-dir>` and `--include` patterns to the project's language and source structure. If any match falls in a file this task created or modified: the task is not done. Remove the stub or confirm with the user it is intentional before claiming completion.
+
+## Regression Test Verification (Red-Green Cycle)
+
+When verifying a bugfix with a regression test, the test must prove it catches the bug:
+
 ```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
+✅ Write test → Run (PASS) → Revert fix → Run (MUST FAIL) → Restore fix → Run (PASS)
 ❌ "I've written a regression test" (without red-green verification)
 ```
 
-**Build:**
-```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
-```
+A regression test that has never been seen failing proves nothing — it might pass for the wrong reason.
 
-**Requirements:**
-```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
-```
+## Agent Delegation Verification
 
-**Agent delegation:**
+When a subagent reports success, verify independently:
+
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
+✅ Agent reports success → Check VCS diff → Verify changes match task → Report actual state
+❌ Trust agent report at face value
 ```
 
-## Why This Matters
+## Rule
 
-From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+If evidence is missing, report current status as unverified and run the command.
 
-## When To Apply
+## Self-Consistency Verification
 
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
+When the verification reasoning is non-trivial (multi-step inference, ambiguous evidence, or configuration changes), apply multi-path reasoning (see `self-consistency-reasoner`) before declaring the verdict:
 
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
+1. Generate 3 **independent** reasoning paths evaluating: "Does this evidence actually prove the claim?"
+2. Each path should approach the evaluation differently: one checks what the evidence proves, one checks what it *doesn't* prove, one considers alternative explanations for the output.
+3. Take the majority-vote verdict:
+   - **All agree "verified"**: claim is proven.
+   - **Majority agrees but minority dissents**: flag what the dissenting path identified — it may reveal a gap in the evidence.
+   - **No majority**: evidence is insufficient. Do not claim completion. State what additional evidence is needed.
 
-## The Bottom Line
+This prevents the most expensive verification failure: confidently declaring "done" based on evidence that doesn't actually prove what you think it proves.
 
-**No shortcuts for verification.**
+## Configuration Change Verification
 
-Run the command. Read the output. THEN claim the result.
+When a change affects provider selection, feature flags, environment variables, or credentials:
 
-This is non-negotiable.
+Do not claim success based on operation success alone. Verify the **outcome reflects the intended change**.
+
+| Change | Insufficient | Required |
+|--------|-------------|----------|
+| Switch API/LLM provider | Status 200 | Response contains expected provider or model name |
+| Enable feature flag | No errors | Feature behavior is actually active |
+| Change environment | Deploy succeeds | Logs or env vars reference the new environment |
+| Set credentials | Auth succeeds | Authenticated identity or context is correct |
+
+**Gate:**
+1. Identify: what should be *different* after this change?
+2. Locate: where is that difference observable? (response field, log line, runtime behavior)
+3. Run: a command that shows the observable difference.
+4. Verify: output contains the expected difference — not just that the operation completed.

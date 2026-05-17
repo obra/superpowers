@@ -2,6 +2,21 @@
 .private-journal/
 .claude/
 .DS_Store
+todo
+codex-parity-findings.md
+loss-report.md
+
+# AI assistant artifacts
+context-snapshot.json
+project-map.md
+session-log.md
+state.md
+known-issues.md
+
+*.txt
+docs/superpowers-optimized/specs/2026-03-23-extension-ecosystem-design.md
+docs/plugin-overview.txt
+plugin.universal.old.yaml
 node_modules/
 inspo
 triage/

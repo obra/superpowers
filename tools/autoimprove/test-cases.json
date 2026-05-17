@@ -1,0 +1,137 @@
+[
+  {
+    "prompt": "My API is returning 500 errors intermittently and I can't figure out why. Here's what the logs show...",
+    "expectedSkill": "systematic-debugging",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "I want to build a new notification system for the app that sends alerts when orders ship",
+    "expectedSkill": "brainstorming",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "Can you look over my changes before I merge to main? I want to make sure nothing is broken",
+    "expectedSkill": "requesting-code-review",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "The login page just shows a blank white screen on Safari but works fine in Chrome",
+    "expectedSkill": "systematic-debugging",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "We need to add a way for users to export their data as CSV files",
+    "expectedSkill": "brainstorming",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "I have a plan ready at docs/plans/auth-system.md, let's start implementing it",
+    "expectedSkill": "executing-plans",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "The CI pipeline is green and all tests pass. I think we're ready to merge this branch",
+    "expectedSkill": "verification-before-completion",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "I'm torn between using PostgreSQL or MongoDB for this new service. What are the trade-offs?",
+    "expectedSkill": "deliberation",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "Let's create a pull request for this feature branch and get it merged",
+    "expectedSkill": "finishing-a-development-branch",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "The response time for the /users endpoint went from 200ms to 3 seconds after yesterday's deploy",
+    "expectedSkill": "systematic-debugging",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "After upgrading to React 19, half our components throw hydration mismatch warnings in the console",
+    "expectedSkill": "systematic-debugging",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "The Docker container keeps getting OOMKilled in production but runs fine locally with the same dataset",
+    "expectedSkill": "systematic-debugging",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "We need to refactor the payment module to support multiple currencies and different tax rules per region",
+    "expectedSkill": "brainstorming",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "Should we go with GraphQL or stick with REST for the new API? The team is split on this",
+    "expectedSkill": "deliberation",
+    "expectedRank": 1
+  },
+  {
+    "prompt": "Take a look at my implementation of the rate limiter middleware, I want a second pair of eyes on it",
+    "expectedSkill": "requesting-code-review",
+    "expectedRank": 1
+  },
+  {
+    "type": "negative",
+    "prompt": "Build a React dashboard with charts showing error rates and failure metrics over time",
+    "notExpectedSkill": "systematic-debugging",
+    "reason": "Contains 'error' and 'failure' but this is a build request, not debugging"
+  },
+  {
+    "type": "negative",
+    "prompt": "Write a function that throws a custom ValidationError when input is invalid",
+    "notExpectedSkill": "systematic-debugging",
+    "reason": "Contains 'throws' and 'error' but this is implementation, not debugging"
+  },
+  {
+    "type": "negative",
+    "prompt": "Add a warning banner component to the top of the admin page",
+    "notExpectedSkill": "systematic-debugging",
+    "reason": "Contains 'warning' but this is a UI feature request, not debugging"
+  },
+  {
+    "type": "negative",
+    "prompt": "Create a test helper that simulates network failures and error responses",
+    "notExpectedSkill": "systematic-debugging",
+    "reason": "Contains 'failures' and 'error' but this is test infrastructure, not debugging"
+  },
+  {
+    "type": "negative",
+    "prompt": "Document how the error handling middleware works in the README",
+    "notExpectedSkill": "systematic-debugging",
+    "reason": "Contains 'error' but this is documentation, not debugging"
+  },
+  {
+    "type": "negative",
+    "prompt": "I'm new to this codebase, can you explain how the authentication flow works?",
+    "notExpectedSkill": "brainstorming",
+    "reason": "Exploratory question, not a design/build request"
+  },
+  {
+    "type": "negative",
+    "prompt": "Refactor the CSS to use CSS variables instead of hardcoded hex colors",
+    "notExpectedSkill": "deliberation",
+    "reason": "Contains 'refactor' but this is a clear implementation task, not a decision"
+  },
+  {
+    "type": "negative",
+    "prompt": "Update the Node.js version from 18 to 20 in the Dockerfile and CI config",
+    "notExpectedSkill": "brainstorming",
+    "reason": "Version bump is operational, not a design task"
+  },
+  {
+    "type": "negative",
+    "prompt": "Run the test suite and tell me what passes and what fails",
+    "notExpectedSkill": "test-driven-development",
+    "reason": "Asking to run existing tests, not write new ones"
+  },
+  {
+    "type": "negative",
+    "prompt": "What does the useEffect hook in ProfilePage.tsx do? I'm trying to understand the data fetching logic",
+    "notExpectedSkill": "systematic-debugging",
+    "reason": "Code comprehension question, not debugging"
+  }
+]

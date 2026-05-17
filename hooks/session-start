@@ -7,19 +7,424 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Check if legacy skills directory exists and build warning
+# ── Update check ──────────────────────────────────────────────────────────────
+# Two paths depending on install type:
+#
+# Path A — git-based install (Codex / OpenCode / self-hosted clone):
+#   If PLUGIN_ROOT is a git repo, fetch origin and apply a non-destructive
+#   fast-forward-only merge. When the VERSION file changes after the merge,
+#   extract "What's New" from RELEASE-NOTES.md and inject it into session
+#   context. Never applies if the clone has local changes or is diverged.
+#
+# Path B — marketplace install (Claude Code / Cursor):
+#   If PLUGIN_ROOT is NOT a git repo, compare the locally installed version
+#   against the remote plugin.json on GitHub. If an update is available,
+#   tell the user to run /plugin update superpowers-prepared.
+#
+# Both paths: cached for 24h to avoid network access on every session start.
+# Both paths: fail silently — never block session startup.
+# Both paths: respect SUPERPOWERS_AUTO_UPDATE env var and update.conf opt-out.
+
+update_notice=""
+
+is_auto_update_enabled() {
+    # Environment variable override (highest priority).
+    case "${SUPERPOWERS_AUTO_UPDATE:-}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        0|false|FALSE|no|NO|off|OFF) return 1 ;;
+    esac
+
+    # Optional user config: ~/.config/superpowers/update.conf
+    local cfg_file="${HOME}/.config/superpowers/update.conf"
+    if [ -f "$cfg_file" ]; then
+        local raw=""
+        raw=$(awk -F '=' '
+            /^[[:space:]]*auto_update[[:space:]]*=/ {
+                v=$2
+                gsub(/[[:space:]]/, "", v)
+                print tolower(v)
+                exit
+            }
+        ' "$cfg_file" 2>/dev/null || echo "")
+        case "$raw" in
+            1|true|yes|on) return 0 ;;
+            0|false|no|off) return 1 ;;
+        esac
+    fi
+
+    # Default: enabled.
+    return 0
+}
+
+check_for_updates() {
+    local cache_dir="${HOME}/.claude/hooks-logs"
+    local cache_file="${cache_dir}/update-check.cache"
+    local cache_ttl=86400  # 24 hours in seconds
+
+    is_auto_update_enabled || return
+
+    # ── Path A: git-based install (Codex / OpenCode / self-hosted clone) ──────
+    if git -C "${PLUGIN_ROOT}" rev-parse --git-dir > /dev/null 2>&1; then
+
+        # Check cache freshness — skip fetch if cache is recent
+        if [ -f "$cache_file" ]; then
+            local file_mtime
+            file_mtime=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file" 2>/dev/null || echo 0)
+            local cache_age=$(( $(date +%s) - file_mtime ))
+            if [ "$cache_age" -lt "$cache_ttl" ]; then
+                return
+            fi
+        fi
+
+        # Fetch origin with timeout (3s on Linux/macOS, best-effort without timeout command)
+        local fetch_ok=0
+        if command -v timeout > /dev/null 2>&1; then
+            timeout 3 git -C "${PLUGIN_ROOT}" fetch origin --quiet 2>/dev/null && fetch_ok=1
+        elif command -v gtimeout > /dev/null 2>&1; then
+            gtimeout 3 git -C "${PLUGIN_ROOT}" fetch origin --quiet 2>/dev/null && fetch_ok=1
+        else
+            git -C "${PLUGIN_ROOT}" fetch origin --quiet 2>/dev/null && fetch_ok=1
+        fi
+        [ "$fetch_ok" -eq 1 ] || return
+
+        # Compare HEAD vs origin/main
+        local local_head
+        local remote_head
+        local_head=$(git -C "${PLUGIN_ROOT}" rev-parse HEAD 2>/dev/null || echo "")
+        remote_head=$(git -C "${PLUGIN_ROOT}" rev-parse origin/main 2>/dev/null || echo "")
+        [ -n "$local_head" ] && [ -n "$remote_head" ] || return
+
+        # Update cache timestamp (we checked, regardless of whether there's an update)
+        mkdir -p "$cache_dir"
+        touch "$cache_file"
+
+        [ "$local_head" = "$remote_head" ] && return
+
+        # Never auto-update if the plugin clone has local changes.
+        git -C "${PLUGIN_ROOT}" diff --quiet --ignore-submodules -- || return
+        git -C "${PLUGIN_ROOT}" diff --cached --quiet --ignore-submodules -- || return
+        [ -z "$(git -C "${PLUGIN_ROOT}" ls-files --others --exclude-standard 2>/dev/null)" ] || return
+
+        # Require local HEAD to be an ancestor of origin/main.
+        # This skips local-ahead or diverged states (no destructive sync).
+        local base_head
+        base_head=$(git -C "${PLUGIN_ROOT}" merge-base HEAD origin/main 2>/dev/null || echo "")
+        [ -n "$base_head" ] && [ "$base_head" = "$local_head" ] || return
+
+        # Save old version before update
+        local old_version=""
+        if [ -f "${PLUGIN_ROOT}/VERSION" ]; then
+            old_version=$(head -1 "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]')
+        fi
+
+        # Apply update silently (fast-forward only).
+        git -C "${PLUGIN_ROOT}" merge --ff-only origin/main > /dev/null 2>&1 || return
+
+        # Read new version after update
+        local new_version=""
+        if [ -f "${PLUGIN_ROOT}/VERSION" ]; then
+            new_version=$(head -1 "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]')
+        fi
+
+        # Extract "What's New" if version changed
+        if [ -n "$old_version" ] && [ -n "$new_version" ] && [ "$old_version" != "$new_version" ]; then
+            local whats_new=""
+            if [ -f "${PLUGIN_ROOT}/RELEASE-NOTES.md" ]; then
+                # Extract content between ## v{new_version} and ## v{old_version} (or EOF)
+                whats_new=$(awk -v new="## v${new_version}" -v old="## v${old_version}" '
+                    $0 ~ new { found=1; next }
+                    found && $0 ~ old { exit }
+                    found { print }
+                ' "${PLUGIN_ROOT}/RELEASE-NOTES.md" 2>/dev/null || echo "")
+
+                # Trim to 30 lines if longer
+                local line_count
+                line_count=$(printf '%s' "$whats_new" | wc -l)
+                if [ "$line_count" -gt 30 ]; then
+                    whats_new=$(printf '%s' "$whats_new" | head -30)
+                    whats_new="${whats_new}
+...
+
+See RELEASE-NOTES.md for full details."
+                fi
+            fi
+
+            update_notice="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:
+
+**Superpowers Optimized has been updated to v${new_version}** (was v${old_version})
+
+**What's New:**
+${whats_new}</important-reminder>"
+        fi
+
+    else
+        # ── Path B: marketplace install (Claude Code / Cursor) ────────────────
+        # No git repo — compare local version against the remote plugin.json via curl.
+        # Tell the user to run /plugin update if a newer version is available.
+
+        # Read local version — prefer installed_plugins.json (authoritative: reflects the
+        # currently active installed version even if this hook is running from an older
+        # cached directory after a plugin update). Falls back to this script's own plugin.json.
+        local local_version=""
+        local registry_file="${HOME}/.claude/plugins/installed_plugins.json"
+        if [ -f "$registry_file" ]; then
+            local_version=$(grep -A 10 '"superpowers-prepared@superpowers-prepared"' "$registry_file" 2>/dev/null \
+                | grep '"version"' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+        fi
+        if [ -z "$local_version" ]; then
+            local_version=$(grep '"version"' "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null \
+                | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+        fi
+        [ -z "$local_version" ] && return
+
+        # Check cache freshness (skip remote fetch if cache is recent).
+        # Cache stores the last-seen remote version string so we can still
+        # surface a notification even when the fetch is skipped.
+        local cached_remote=""
+        if [ -f "$cache_file" ]; then
+            local file_mtime
+            file_mtime=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file" 2>/dev/null || echo 0)
+            local cache_age=$(( $(date +%s) - file_mtime ))
+            if [ "$cache_age" -lt "$cache_ttl" ]; then
+                cached_remote=$(cat "$cache_file" 2>/dev/null || echo "")
+            fi
+        fi
+
+        # Fetch remote version if cache is stale or missing
+        local remote_version="$cached_remote"
+        if [ -z "$remote_version" ]; then
+            remote_version=$(curl -sf --max-time 3 \
+                "https://raw.githubusercontent.com/REPOZY/superpowers-prepared/refs/heads/main/.claude-plugin/plugin.json" \
+                2>/dev/null \
+                | grep '"version"' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+            # Cache the result (even if empty, to avoid hammering GitHub on no-internet)
+            if [ -n "$remote_version" ]; then
+                mkdir -p "$cache_dir"
+                printf '%s' "$remote_version" > "$cache_file"
+            fi
+        fi
+
+        [ -z "$remote_version" ] && return
+        [ "$remote_version" = "$local_version" ] && return
+
+        # Semver comparison: is remote > local?
+        local IFS='.'
+        local local_parts=($local_version)
+        local remote_parts=($remote_version)
+        for i in 0 1 2; do
+            local l="${local_parts[$i]:-0}"
+            local r="${remote_parts[$i]:-0}"
+            if [ "$r" -gt "$l" ]; then
+                update_notice="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER: 🔄 **Superpowers Optimized v${remote_version} is available** (you have v${local_version}). Run \`/plugin update superpowers-prepared\` which opens the plugin manager UI. From there:
+
+Marketplaces tab → select REPOZY/superpowers-prepared → Update marketplace (refreshes the version catalog)
+Installed tab → select superpowers-prepared → Update now
+
+Tip: To skip manual steps in future, enable Auto-update for the marketplace in step 1.</important-reminder>"
+                return
+            elif [ "$l" -gt "$r" ]; then
+                return  # local is ahead of remote (dev build)
+            fi
+        done
+    fi
+}
+
+# Run silently — a failure here must never break the session
+check_for_updates 2>/dev/null || true
+
+# ── Git repository check ──────────────────────────────────────────────────────
+# Detects when the working directory has no git repo and injects a quiet note.
+# This lets the AI offer git init during project-map.md generation without
+# announcing it verbally on every session start (no <important-reminder> tag).
+git_notice=""
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    git_notice="\n\n<project-git-status>No git repository detected in the current working directory. When the user generates or updates project-map.md, offer to run 'git init' (creates a .git folder, touches no user files). If they decline, use file timestamps for staleness detection instead. Do not announce this proactively — only act on it when project-map.md is relevant.</project-git-status>"
+fi
+
+# ── Legacy skills warning ──────────────────────────────────────────────────────
 warning_message=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
 if [ -d "$legacy_skills_dir" ]; then
     warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# ── Project map injection ─────────────────────────────────────────────────────
+# If project-map.md exists in the current working directory, inject its content
+# directly into session context so Claude has it from turn 1 — unconditionally,
+# without relying on Claude following the entry sequence instruction to read it.
+# ≤200 lines: inject full content. >200 lines: inject Critical Constraints and
+# Hot Files only (highest-value sections), with a note pointing to the full file.
+#
+# Staleness check: extracts the git hash from the map header and compares it to
+# the current HEAD. If they differ, injects a <project-map-stale> warning so the
+# AI sees it immediately — no AI compliance with entry sequence step 6 required.
+project_map_content=""
+if [ -f "project-map.md" ]; then
+    line_count=$(wc -l < "project-map.md" 2>/dev/null || echo "0")
+    if [ "$line_count" -le 200 ]; then
+        project_map_raw=$(cat "project-map.md" 2>/dev/null || echo "")
+    else
+        project_map_raw=$(awk '
+            /^## / { in_section = (/^## Critical Constraints/ || /^## Hot Files/) ? 1 : 0 }
+            in_section { print }
+        ' "project-map.md" 2>/dev/null || echo "")
+        if [ -n "$project_map_raw" ]; then
+            project_map_raw="*(project-map.md is large — showing Critical Constraints and Hot Files only. Full map at project-map.md)*
 
-# Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
+${project_map_raw}"
+        fi
+    fi
+    if [ -n "$project_map_raw" ]; then
+        project_map_content="\n\n<project-map>\n${project_map_raw}\n</project-map>"
+    fi
+
+    # Staleness check — compare map header hash to current git HEAD
+    map_hash=$(grep -oE 'Git: [a-f0-9]+' "project-map.md" 2>/dev/null | head -1 | awk '{print $2}' || echo "")
+    current_hash=$(git rev-parse --short HEAD 2>/dev/null || echo "")
+    if [ -n "$map_hash" ] && [ -n "$current_hash" ] && [ "$map_hash" != "$current_hash" ]; then
+        project_map_content="${project_map_content}\n\n<project-map-stale>project-map.md is stale — map records Git: ${map_hash} but current HEAD is ${current_hash}. Run the staleness update (using-superpowers entry sequence step 6) before making any recommendations about project structure or file locations.</project-map-stale>"
+    fi
+fi
+
+# ── session-log.md injection ──────────────────────────────────────────────────
+# Inject the last 2 [saved] entries from session-log.md so the AI has decision
+# history from day 1 without needing to grep it manually.
+# [auto] entries (just file lists) are skipped — only [saved] entries carry rationale.
+session_log_content=""
+if [ -f "session-log.md" ]; then
+    saved_raw=$(awk '
+        /^## .* \[saved\]/ { if (found && block != "") saved_entries[++n] = block; found=1; block="" }
+        found { block = block "\n" $0 }
+        /^## / && !/\[saved\]/ && found && block != "" { saved_entries[++n] = block; found=0; block="" }
+        END { if (found && block != "") saved_entries[++n] = block
+              # Print last 2 saved entries
+              start = (n > 2) ? n-1 : 1
+              for (i = start; i <= n; i++) print saved_entries[i] }
+    ' "session-log.md" 2>/dev/null || echo "")
+    if [ -n "$saved_raw" ]; then
+        session_log_content="\n\n<session-log>\n*(Last saved decisions from session-log.md — full history searchable at session-log.md)*\n${saved_raw}\n</session-log>"
+    fi
+fi
+
+# ── state.md injection ────────────────────────────────────────────────────────
+# If state.md exists, inject it — but with a staleness gate so old or completed
+# task state never silently misleads with "resume from here" framing.
+#
+# Three-way logic:
+#   cleared  — "Current Goal" contains "no active task" → soft notice only
+#   stale    — state.md is 7+ days old AND commits exist after its mtime → warn
+#   active   — everything else → normal "ACTIVE TASK STATE" injection
+state_content=""
+if [ -f "state.md" ]; then
+    state_raw=$(cat "state.md" 2>/dev/null || echo "")
+    if [ -n "$state_raw" ]; then
+        # Extract the Current Goal line (case-insensitive match on "no active task")
+        goal_line=$(grep -i "^Current Goal:" "state.md" 2>/dev/null | head -1 || echo "")
+
+        # Compute age of state.md in days
+        state_mtime=$(stat -c %Y "state.md" 2>/dev/null || stat -f %m "state.md" 2>/dev/null || echo 0)
+        now=$(date +%s)
+        state_age_days=$(( (now - state_mtime) / 86400 ))
+
+        # Check if any git commit is newer than state.md
+        last_commit_time=$(git log --format="%ct" -1 2>/dev/null || echo "0")
+
+        if echo "$goal_line" | grep -qi "no active task"; then
+            # Explicitly cleared — inject with soft framing so AI doesn't "resume"
+            state_content="\n\n<state>\n*(state.md exists but indicates no active task — review before treating as a resume point)*\n${state_raw}\n</state>"
+        elif [ "$state_age_days" -ge 7 ] && [ "$last_commit_time" -gt "$state_mtime" ]; then
+            # Stale: old + commits have landed since it was written
+            state_content="\n\n<state>\n**state.md may be stale** (written ${state_age_days} days ago; newer commits exist). Confirm the task is still active before resuming — do not treat this as a guaranteed resume point:\n${state_raw}\n</state>"
+        else
+            # Active: recent or no newer commits — normal injection
+            state_content="\n\n<state>\n**ACTIVE TASK STATE — resume from here, do not start fresh:**\n${state_raw}\n</state>"
+        fi
+    fi
+fi
+
+# ── known-issues.md injection ─────────────────────────────────────────────────
+# Inject open (non-fixed) known issues so the AI never re-debugs a known error.
+# Fixed entries (## ~~...~~) are skipped — they are resolved.
+# Capped at the 5 most recent open entries to prevent the file growing into
+# unconditional noise. If more exist, a count note is appended. Full file is
+# always greppable via the UserPromptSubmit hook's keyword-recall feature.
+known_issues_content=""
+if [ -f "known-issues.md" ]; then
+    known_raw=$(node -e "
+        try {
+            const lines = require('fs').readFileSync('known-issues.md','utf8').split('\n');
+            const entries = [];
+            let cur = null;
+            for (const line of lines) {
+                if (line.startsWith('## ')) {
+                    if (cur !== null) entries.push(cur.trim());
+                    cur = line.startsWith('## ~~') ? null : line;
+                } else if (cur !== null) {
+                    cur += '\n' + line;
+                }
+            }
+            if (cur !== null) entries.push(cur.trim());
+            const MAX = 5;
+            const total = entries.length;
+            if (total > 0) {
+                const shown = entries.slice(-MAX);
+                let out = shown.join('\n\n');
+                if (total > MAX) out += '\n\n*(+ ' + (total - MAX) + ' more open issues — see known-issues.md)*';
+                process.stdout.write(out);
+            }
+        } catch(e) {}
+    " 2>/dev/null || echo "")
+    if [ -n "$known_raw" ]; then
+        known_issues_content="\n\n<known-issues>\n${known_raw}\n</known-issues>"
+    fi
+fi
+
+# ── context-snapshot.json injection ───────────────────────────────────────────
+# Inject changed files + recent commits from context-snapshot.json so the AI
+# knows what changed since last session without reading the file manually.
+# Also surfaces blast radius — dependents of changed files not already in the
+# changed set — so the AI knows which other files may need review. Capped at
+# 3 entries to stay concise. Only non-trivial blast radius lines are shown.
+context_snapshot_content=""
+if [ -f "context-snapshot.json" ]; then
+    changed=$(node -e "
+        try {
+            const s = JSON.parse(require('fs').readFileSync('context-snapshot.json','utf8'));
+            const files = (s.changed_files||[]).join(', ');
+            const commits = (s.recent_commits||[]).slice(0,3).join('\n  ');
+            const changedSet = new Set(s.changed_files||[]);
+            const br = s.blast_radius || {};
+            const brLines = Object.entries(br)
+              .map(([f, deps]) => {
+                const newDeps = (deps||[]).filter(d => !changedSet.has(d));
+                return newDeps.length > 0 ? '  ' + f + ' \u2192 ' + newDeps.slice(0,3).join(', ') : null;
+              })
+              .filter(Boolean)
+              .slice(0,3);
+            const xsFiles = s.cross_session_files || [];
+            const xsCount = s.cross_session_commit_count || 0;
+            let out = '';
+            if (files) out += 'Changed since last commit: ' + files + '\nRecent commits:\n  ' + commits;
+            if (brLines.length > 0) out += '\nBlast radius (dependents to review):\n' + brLines.join('\n');
+            if (xsFiles.length > 0 && xsCount > 1) {
+                out += '\nChanged since last session (' + xsCount + ' commits): ' + xsFiles.join(', ');
+            }
+            if (out) process.stdout.write(out);
+        } catch(e) {}
+    " 2>/dev/null || echo "")
+    if [ -n "$changed" ]; then
+        context_snapshot_content="\n\n<context-snapshot>\n${changed}\n</context-snapshot>"
+    fi
+fi
+
+# ── Load using-superpowers skill body ─────────────────────────────────────────
+using_superpowers_content=$(awk '
+NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+in_frontmatter && $0 == "---" { in_frontmatter = 0; next }
+!in_frontmatter { print }
+' "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null || echo "Error reading using-superpowers skill")
+
+# ── JSON escaping ──────────────────────────────────────────────────────────────
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -32,26 +437,30 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+update_escaped=$(escape_for_json "$update_notice")
+git_escaped=$(escape_for_json "$git_notice")
+project_map_escaped=$(escape_for_json "$project_map_content")
+session_log_escaped=$(escape_for_json "$session_log_content")
+state_escaped=$(escape_for_json "$state_content")
+known_issues_escaped=$(escape_for_json "$known_issues_content")
+context_snapshot_escaped=$(escape_for_json "$context_snapshot_content")
 
-# Output context injection as JSON.
-# Cursor hooks expect additional_context (snake_case).
-# Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
-# Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
-# Claude Code reads BOTH additional_context and hookSpecificOutput without
-# deduplication, so we must emit only the field the current platform consumes.
-#
-# Uses printf instead of heredoc to work around bash 5.3+ heredoc hang.
-# See: https://github.com/obra/superpowers/issues/571
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers-prepared.\n\n**The \`superpowers-prepared:using-superpowers\` guidance is loaded below. For all other skills, use the \`Skill\` tool.**\n\n**MANDATORY FIRST ACTIONS — before ANY tool calls beyond reading files:**\n1. Silently activate token-efficiency (its rules apply immediately)\n2. Classify the task complexity (micro/lightweight/full) per the Entry Sequence below\n3. If the user names a specific skill (e.g. use brainstorming, use context management), that IS a Skill tool invocation — call \`Skill\` with that skill name. Do NOT re-implement the skill's purpose with ad-hoc agents or manual steps.\n\n${using_superpowers_escaped}\n\n${warning_escaped}${update_escaped}${git_escaped}\n</EXTREMELY_IMPORTANT>${project_map_escaped}${session_log_escaped}${state_escaped}${known_issues_escaped}${context_snapshot_escaped}"
+
+# ── Output ─────────────────────────────────────────────────────────────────────
+# Uses printf instead of heredoc (cat <<EOF) to work around a bash 5.3+
+# bug where heredoc variable expansion hangs when content exceeds ~512 bytes.
+# Platform detection: emit only the field consumed by the current platform
+# to avoid double context injection.
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
-  # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
+  # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT) — emit additional_context only
   printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
-elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
-  # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  # Claude Code sets CLAUDE_PLUGIN_ROOT — emit hookSpecificOutput only
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 else
-  # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
-  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
+  # Other platforms — emit additional_context as fallback
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
 fi
 
 exit 0

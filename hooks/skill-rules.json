@@ -1,0 +1,163 @@
+{
+  "rules": [
+    {
+      "skill": "systematic-debugging",
+      "type": "process",
+      "priority": "critical",
+      "keywords": ["bug", "error", "broken", "not working", "crash", "exception", "stack trace", "failing", "fails", "traceback", "undefined", "null pointer", "segfault", "warning"],
+      "intentPatterns": ["fix\\s+(this|the|a)\\s+(bug|error|issue)", "why\\s+(is|does|isn't)", "not\\s+work(ing)?", "stopped\\s+working", "something\\s+(is\\s+)?wrong", "unexpected\\s+(behavior|result|output|error)", "can('t|\\s*not)\\s+(figure|find|tell|determine)", "(shows?|displays?|renders?|gives?)\\s+(a\\s+)?(blank|white|empty|wrong|incorrect)", "(went|jumped|spiked|increased|degraded)\\s+(from|to|up|down)", "(but|except|however)\\s+(it\\s+)?(works?|runs?)\\s+(fine|ok|correctly|locally)", "(works?|runs?)\\s+(fine|ok|correctly|locally|on\\s+my)\\s+(but|except|however|only)", "(throw|throwing|throws)\\s+(?!.{0,10}(custom|new|my|our|a\\s+new)).{0,30}(error|warning|exception)"]
+    },
+    {
+      "skill": "test-driven-development",
+      "type": "process",
+      "priority": "critical",
+      "keywords": ["tdd", "test first", "tests first", "write tests", "failing test", "red green", "test driven", "test strategy", "test coverage", "integration test", "e2e test", "unit test", "improve coverage"],
+      "intentPatterns": ["write\\s+(a\\s+)?test", "add\\s+test", "test\\s+(for|that|this)", "need(s)?\\s+test", "(improve|increase|add)\\s+(test\\s+)?coverage", "(write|create|design)\\s+(a\\s+)?test\\s+strategy", "failing\\s+tests?\\s+first", "tests?\\s+first\\s+before", "write\\s+the\\s+failing\\s+tests?"]
+    },
+    {
+      "skill": "verification-before-completion",
+      "type": "process",
+      "priority": "critical",
+      "keywords": ["ready to merge", "ship it", "wrap up", "verify everything", "all done", "we're done", "i'm done"],
+      "intentPatterns": ["(i('m|\\s+am)|we('re|\\s+are))\\s+(done|finished)\\s*(with|here|now|$)", "ready\\s+(to|for)\\s+(merge|ship|deploy|pr)", "this\\s+is\\s+(done|complete|ready)\\s+(to|for)", "let('s|\\s+us)\\s+(merge|ship|commit)", "verify\\s+(everything|it'?s?\\s+(all\\s+)?correct|this\\s+is\\s+(correct|done|complete))", "before\\s+we\\s+(say|call|mark)\\s+(it|this)\\s+(done|complete|finished)", "think\\s+(i('m|\\s+am)|we('re|\\s+are))\\s+(done|finished)"]
+    },
+    {
+      "skill": "deliberation",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["trade-off", "tradeoff", "trade off", "evaluate options", "compare approaches", "architecture decision", "technology choice", "not sure which", "which approach", "should we use", "help me decide", "weigh the options"],
+      "intentPatterns": ["should\\s+we\\s+(use|go\\s+with|choose|pick|switch|migrate)", "not\\s+sure\\s+(which|what|whether|if\\s+we)", "(evaluate|compare|weigh)\\s+(these|the|our)\\s+(options|approaches|alternatives)", "what\\s+are\\s+the\\s+trade.?offs", "help\\s+me\\s+(think|decide|choose)\\s+(through|between|among)"]
+    },
+    {
+      "skill": "premise-check",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["design a system", "create a plan", "build out", "should we build", "worth building", "validate the premise", "question the premise"],
+      "intentPatterns": ["(design|create|build|implement)\\s+(a\\s+)?system", "should\\s+(we|i)\\s+(really\\s+)?build\\s+this", "(is\\s+(this|it)|are\\s+we)\\s+worth\\s+build", "validate\\s+(the\\s+)?premise", "(before|prior\\s+to)\\s+(design|plan|build)"]
+    },
+    {
+      "skill": "brainstorming",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["design", "architect", "new feature", "build this", "add a feature", "how should we", "new project", "from scratch", "refactor"],
+      "intentPatterns": ["(build|create|design|architect)\\s+(a|the|this|new)", "how\\s+should\\s+(we|i)", "what('s|\\s+is)\\s+the\\s+best\\s+(way|approach)", "i\\s+want\\s+to\\s+(add|build|create)", "(we|i)\\s+need\\s+to\\s+(add|build|create|implement|refactor|redesign|rework|overhaul)"]
+    },
+    {
+      "skill": "writing-plans",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["write a plan", "break this down", "plan the implementation", "decompose", "task list"],
+      "intentPatterns": ["(write|create|make)\\s+(a\\s+)?plan", "break\\s+(this|it)\\s+down", "plan\\s+(the|this)\\s+implementation"]
+    },
+    {
+      "skill": "executing-plans",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["execute the plan", "follow the plan", "start building", "implement the plan"],
+      "intentPatterns": ["(execute|follow|implement|run)\\s+(the|this)\\s+plan", "start\\s+(building|implementing|coding)", "let('s|\\s+us)\\s+(go|start|begin)"]
+    },
+    {
+      "skill": "dispatching-parallel-agents",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["dispatch", "simultaneously", "at the same time", "fire off", "independent tasks"],
+      "intentPatterns": [
+        "(dispatch|fire\\s+off)\\s+(these|them|the|\\d+)\\s+(agents?|tasks?|subagents?)",
+        "run\\s+(these|them|the\\s+tasks?)\\s+(simultaneously|at\\s+the\\s+same\\s+time)",
+        "do\\s+(these|them|all)\\s+(simultaneously|at\\s+the\\s+same\\s+time|in\\s+one\\s+go)",
+        "(all|both)\\s+(at\\s+the\\s+same\\s+time|simultaneously)"
+      ]
+    },
+    {
+      "skill": "subagent-driven-development",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["parallel", "subagent", "run in parallel", "concurrent"],
+      "intentPatterns": ["(run|do|execute)\\s+(these|them|tasks?)\\s+(in\\s+)?parallel", "use\\s+subagent"]
+    },
+    {
+      "skill": "finishing-a-development-branch",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["merge", "create a pr", "pull request", "done with this branch", "clean up branch", "push this"],
+      "intentPatterns": ["(merge|push)\\s+(this|the)\\s+(branch|code|changes)", "create\\s+(a\\s+)?(pr|pull\\s+request)", "(done|finished)\\s+with\\s+(this\\s+)?branch"]
+    },
+    {
+      "skill": "requesting-code-review",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["code review", "look over", "review my code", "security review", "is this secure", "security", "vulnerability"],
+      "intentPatterns": ["review\\s+(my|the|this)\\s+code", "check\\s+(this|these)\\s+(before|for)", "look\\s+(over|at)\\s+(my|the|this)\\s+(code|implementation|changes|diff|tests?|pr|pull.?request|files?|codebase|repo)", "(is|are)\\s+(this|these)\\s+secure", "security\\s+review", "check\\s+(for\\s+)?vulnerabilit"]
+    },
+    {
+      "skill": "receiving-code-review",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["address review", "review feedback", "review comments", "fix the review", "respond to review", "pr feedback", "pull request feedback"],
+      "intentPatterns": ["address\\s+(the\\s+)?(review|feedback|comments?)", "(fix|resolve|handle)\\s+(the\\s+)?review\\s+(comments?|feedback)", "respond\\s+to\\s+(the\\s+)?review"]
+    },
+    {
+      "skill": "frontend-design",
+      "type": "domain",
+      "priority": "high",
+      "keywords": ["frontend", "ui", "ux", "website", "landing page", "dashboard", "component", "react", "vue", "svelte", "html", "css", "responsive", "accessibility"],
+      "intentPatterns": ["(build|create|make|design)\\s+(a\\s+)?(ui|frontend|website|page|dashboard|component)", "make\\s+it\\s+look\\s+(good|better|professional|nice)", "(style|design)\\s+(this|the)"]
+    },
+    {
+      "skill": "error-recovery",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["known issues", "save this fix", "remember this error", "recurring error", "known-issues"],
+      "intentPatterns": ["(save|record|remember)\\s+(this\\s+)?(fix|error|solution)", "(update|add to|check)\\s+known.?issues"]
+    },
+    {
+      "skill": "context-management",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["map this project", "project map", "map the project", "generate project map", "create project map", "update project map", "context management"],
+      "intentPatterns": ["map\\s+(this|the)\\s+project", "generate\\s+(a\\s+)?project\\s+map", "(create|update|write)\\s+(the\\s+|a\\s+)?project.?map", "use\\s+(the\\s+)?context.?management"]
+    },
+    {
+      "skill": "context-management",
+      "type": "workflow",
+      "priority": "low",
+      "keywords": ["save state", "compress context", "continue later", "pick up later", "cross-session"],
+      "intentPatterns": ["save\\s+(the\\s+)?(state|context|progress)", "continue\\s+(this\\s+)?later", "pick\\s+(this\\s+)?up\\s+(later|tomorrow|next)"]
+    },
+    {
+      "skill": "using-git-worktrees",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["worktree", "isolate", "isolated branch", "don't touch main", "experimental"],
+      "intentPatterns": ["use\\s+(a\\s+)?worktree", "isolate\\s+(this|the)\\s+work", "don('t|\\s+not)\\s+touch\\s+main"]
+    },
+    {
+      "skill": "claude-md-creator",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["init", "claude.md", "agents.md", "set up claude code", "create claude.md"],
+      "intentPatterns": ["(create|update|write)\\s+claude\\.md", "set\\s+up\\s+claude\\s+code", "\\/init"]
+    },
+    {
+      "skill": "refactoring",
+      "type": "process",
+      "priority": "high",
+      "keywords": ["refactor", "restructure", "reorganize", "clean up", "extract", "inline", "simplify", "decouple", "modularize", "rename across", "move files", "split module", "consolidate"],
+      "intentPatterns": ["(refactor|restructure|reorganize|simplify|decouple|modularize)\\s+(this|the|my|our|a)", "clean\\s+up\\s+(this|the|my)", "extract\\s+(this|a|the)\\s+(into|to|as)", "inline\\s+(this|the)", "split\\s+(this|the)\\s+(module|file|class|component)", "move\\s+(these|the|this)\\s+files?", "rename\\s+.+\\s+across"]
+    },
+    {
+      "skill": "performance-investigation",
+      "type": "process",
+      "priority": "medium",
+      "keywords": ["slow", "performance", "optimize", "speed up", "latency", "throughput", "memory leak", "high cpu", "profiling", "benchmark", "bottleneck", "loading time", "response time"],
+      "intentPatterns": ["(why\\s+is|make)\\s+(this|it)\\s+(so\\s+)?slow", "speed\\s+(this|it)\\s+up", "make\\s+(this|it)\\s+faster", "reduce\\s+(memory|cpu|latency|load\\s+time)", "optimize\\s+(this|the|my)", "takes\\s+too\\s+long", "performance\\s+(issue|problem|degradation|regression)"]
+    },
+    {
+      "skill": "dependency-management",
+      "type": "process",
+      "priority": "medium",
+      "keywords": ["dependency", "dependencies", "upgrade packages", "npm update", "pip upgrade", "outdated", "vulnerability", "CVE", "security advisory", "breaking change", "migration guide", "peer dependency", "dependabot", "npm audit"],
+      "intentPatterns": ["update\\s+(the\\s+)?(dependencies|packages|deps)", "upgrade\\s+(to|packages|deps)", "(fix|resolve|address)\\s+(the\\s+)?(vulnerabilit|CVE|security\\s+advisory)", "npm\\s+(audit|outdated|update)", "pip\\s+(audit|install\\s+--upgrade)", "breaking\\s+change(s)?\\s+(in|from|after)", "migrate\\s+to\\s+(v?\\d|new\\s+version|latest)"]
+    }
+  ]
+}

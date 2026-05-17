@@ -3,7 +3,34 @@
   "hooks": {
     "sessionStart": [
       {
-        "command": "./hooks/run-hook.cmd session-start"
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CURSOR_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "async": false
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/hooks/context-engine.js\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/hooks/bash-compress-hook.js\""
+          }
+        ]
       }
     ]
   }

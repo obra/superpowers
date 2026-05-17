@@ -1,7 +1,7 @@
 {
-  "name": "superpowers",
-  "version": "5.1.0",
-  "description": "An agentic skills framework & software development methodology that works: planning, TDD, debugging, and collaboration workflows.",
+  "name": "superpowers-prepared",
+  "version": "6.0.0",
+  "description": "Agentic development framework for Claude Code — disciplined workflow routing, TDD enforcement, safety hooks, systematic debugging, and code review",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com",

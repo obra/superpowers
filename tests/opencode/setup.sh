@@ -21,7 +21,7 @@ export OPENCODE_CONFIG_DIR="$TEST_HOME/.config/opencode"
 
 SUPERPOWERS_DIR="$OPENCODE_CONFIG_DIR/superpowers"
 SUPERPOWERS_SKILLS_DIR="$SUPERPOWERS_DIR/skills"
-SUPERPOWERS_PLUGIN_FILE="$SUPERPOWERS_DIR/.opencode/plugins/superpowers.js"
+SUPERPOWERS_PLUGIN_FILE="$SUPERPOWERS_DIR/.opencode/plugins/superpowers-prepared.js"
 
 # Install skills
 mkdir -p "$SUPERPOWERS_DIR"
@@ -29,11 +29,12 @@ cp -r "$REPO_ROOT/skills" "$SUPERPOWERS_DIR/"
 
 # Install plugin
 mkdir -p "$(dirname "$SUPERPOWERS_PLUGIN_FILE")"
-cp "$REPO_ROOT/.opencode/plugins/superpowers.js" "$SUPERPOWERS_PLUGIN_FILE"
+cp "$REPO_ROOT/.opencode/plugins/superpowers-prepared.js" "$SUPERPOWERS_PLUGIN_FILE"
 
 # Register plugin via symlink (what OpenCode actually reads)
 mkdir -p "$OPENCODE_CONFIG_DIR/plugins"
-ln -sf "$SUPERPOWERS_PLUGIN_FILE" "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+ln -sf "$SUPERPOWERS_PLUGIN_FILE" "$OPENCODE_CONFIG_DIR/plugins/superpowers-prepared.js" \
+       "$OPENCODE_CONFIG_DIR/plugins/superpowers-prepared.js"
 
 # Create test skills in different locations for testing
 
@@ -66,11 +67,13 @@ PROJECT_SKILL_MARKER_67890
 EOF
 
 echo "Setup complete: $TEST_HOME"
+
 echo "OPENCODE_CONFIG_DIR:  $OPENCODE_CONFIG_DIR"
 echo "Superpowers dir:      $SUPERPOWERS_DIR"
 echo "Skills dir:           $SUPERPOWERS_SKILLS_DIR"
 echo "Plugin file:          $SUPERPOWERS_PLUGIN_FILE"
-echo "Plugin registered at: $OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+echo "Plugin installed to:  $OPENCODE_CONFIG_DIR/superpowers/.opencode/plugins/superpowers-prepared.js"
+echo "Plugin registered at: $OPENCODE_CONFIG_DIR/plugins/superpowers-prepared.js"
 echo "Test project at:      $TEST_HOME/test-project"
 
 # Helper function for cleanup (call from tests or trap)

@@ -1,16 +1,19 @@
 # Spec Document Reviewer Prompt Template
 
-Use this template when dispatching a spec document reviewer subagent.
+Use this template when dispatching a spec document reviewer subagent after the design document is saved.
 
 **Purpose:** Verify the spec is complete, consistent, and ready for implementation planning.
 
-**Dispatch after:** Spec document is written to docs/superpowers/specs/
+**Dispatch after:** Spec document is written to `docs/specs/`
 
 ```
-Task tool (general-purpose):
+Agent tool (general-purpose):
   description: "Review spec document"
   prompt: |
     You are a spec document reviewer. Verify this spec is complete and ready for planning.
+
+    You are a focused subagent. Do NOT invoke any skills from the superpowers-optimized plugin.
+    Do NOT use the Skill tool. Your only job is the review task described below.
 
     **Spec to review:** [SPEC_FILE_PATH]
 

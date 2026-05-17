@@ -1,17 +1,22 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: >
+  Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback.Triggers on: "use a worktree", "isolate this work", "don't touch main", experimental or risky changes that need isolation.
 ---
 
 # Using Git Worktrees
 
-## Overview
+Create an isolated branch workspace with safe defaults.
 
 Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available.
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
 
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+## Required Start
+
+Announce: `I'm using the using-git-worktrees skill to set up an isolated workspace.`
+
+## Directory Selection Priority
 
 ## Step 0: Detect Existing Isolation
 
@@ -113,7 +118,9 @@ cd "$path"
 
 ## Step 3: Project Setup
 
-Auto-detect and run appropriate setup:
+### 3. Run project setup
+
+Auto-detect the project ecosystem and run the appropriate setup:
 
 ```bash
 # Node.js
@@ -139,9 +146,9 @@ Run tests to ensure workspace starts clean:
 npm test / cargo test / pytest / go test ./...
 ```
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
+## Failure Handling
 
-**If tests pass:** Report ready.
+If baseline tests fail, report the failures and ask whether to continue or investigate before proceeding.
 
 ### Report
 
@@ -213,3 +220,12 @@ Ready to implement <feature-name>
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
+
+## Integration
+
+Use with:
+- `writing-plans`
+- `subagent-driven-development` — REQUIRED before executing any tasks
+- `executing-plans` — REQUIRED before executing any tasks
+
+Cleanup is handled by `finishing-a-development-branch`.

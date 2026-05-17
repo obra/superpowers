@@ -2,6 +2,30 @@
 
 Use this template when dispatching a code reviewer subagent.
 
+## Inputs
+
+- WHAT_WAS_IMPLEMENTED: {WHAT_WAS_IMPLEMENTED}
+- PLAN_OR_REQUIREMENTS: {PLAN_OR_REQUIREMENTS}
+- DESCRIPTION: {DESCRIPTION}
+- BASE_SHA: {BASE_SHA}
+- HEAD_SHA: {HEAD_SHA}
+
+## Required: Read Files Before Reviewing
+
+Before analyzing, explicitly read the changed files:
+
+```bash
+git diff --name-only {BASE_SHA}..{HEAD_SHA}
+```
+
+Use the Read tool to load each file listed. If a file cannot be found:
+- Try alternate paths from the diff output
+- Report: "Cannot locate [path] — review may be incomplete"
+
+Do NOT proceed with findings until you have read the actual code.
+
+## Review Scope
+
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
 
 ```
@@ -121,12 +145,6 @@ Task tool (general-purpose):
     - Avoid giving a clear verdict
 ```
 
-**Placeholders:**
-- `{DESCRIPTION}` — brief summary of what was built
-- `{PLAN_OR_REQUIREMENTS}` — what it should do (plan file path, task text, or requirements)
-- `{BASE_SHA}` — starting commit
-- `{HEAD_SHA}` — ending commit
-
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
 ## Example Output
@@ -136,6 +154,15 @@ Task tool (general-purpose):
 - Clean database schema with proper migrations (db.ts:15-42)
 - Comprehensive test coverage (18 tests, all edge cases)
 - Good error handling with fallbacks (summarizer.ts:85-92)
+
+### Coverage and Testing Risks
+- Missing tests
+- Weak assertions
+- Untested edge/error paths
+
+### Spec Alignment
+- Missing requirements
+- Extra scope not requested
 
 ### Issues
 
@@ -160,9 +187,9 @@ Task tool (general-purpose):
 - Add progress reporting for user experience
 - Consider config file for excluded projects (portability)
 
-### Assessment
-
-**Ready to merge: With fixes**
+### Verdict
+- Ready to merge: Yes | No | Yes with follow-ups
+- One-paragraph rationale
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

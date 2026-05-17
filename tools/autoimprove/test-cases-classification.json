@@ -1,0 +1,77 @@
+[
+  {
+    "prompt": "Fix the typo in the README where it says 'teh' instead of 'the'",
+    "expectedClassification": "micro",
+    "reason": "Single typo fix, one file, no behavior change"
+  },
+  {
+    "prompt": "Rename the variable 'usr' to 'user' in auth.ts",
+    "expectedClassification": "micro",
+    "reason": "Single variable rename in one file"
+  },
+  {
+    "prompt": "Change the default timeout from 30 to 60 in config.json",
+    "expectedClassification": "micro",
+    "reason": "Single config value change"
+  },
+  {
+    "prompt": "Update the error message in the login handler to say 'Invalid credentials' instead of 'Login failed'",
+    "expectedClassification": "lightweight",
+    "reason": "Small scope (~1 file), no new behavior, no cross-module risk, no migration"
+  },
+  {
+    "prompt": "Add a .env.example file with the required environment variables documented",
+    "expectedClassification": "lightweight",
+    "reason": "Small scope (1 new file), no behavior change, no cross-module risk"
+  },
+  {
+    "prompt": "We need to add WebSocket support for real-time notifications across the entire app",
+    "expectedClassification": "full",
+    "reason": "New behavior, touches multiple modules, architecture change"
+  },
+  {
+    "prompt": "Refactor the authentication system to support OAuth2 providers alongside password login",
+    "expectedClassification": "full",
+    "reason": "Adds new behavior path, affects what users experience, cross-module dependency"
+  },
+  {
+    "prompt": "Add input validation to the user registration endpoint",
+    "expectedClassification": "full",
+    "reason": "Hard override: adds a condition/gate that determines when behavior fires"
+  },
+  {
+    "prompt": "Build a dashboard page showing user analytics with charts and filters",
+    "expectedClassification": "full",
+    "reason": "New feature, affects what user sees, introduces paths that didn't exist"
+  },
+  {
+    "prompt": "Migrate the database from MySQL to PostgreSQL",
+    "expectedClassification": "full",
+    "reason": "Migration, cross-module dependency, high blast radius"
+  },
+  {
+    "prompt": "Add a feature flag system so we can gradually roll out new features",
+    "expectedClassification": "full",
+    "reason": "New behavior, modifies how other components work, architecture change"
+  },
+  {
+    "prompt": "Update the copyright year in the footer from 2025 to 2026",
+    "expectedClassification": "micro",
+    "reason": "Single value change in one file"
+  },
+  {
+    "prompt": "Add rate limiting middleware to the API routes",
+    "expectedClassification": "full",
+    "reason": "Hard override: adds a gate/condition that determines when behavior fires"
+  },
+  {
+    "prompt": "Remove the unused helper function formatLegacyDate from utils.ts",
+    "expectedClassification": "micro",
+    "reason": "Removing dead code, single file, no behavior change"
+  },
+  {
+    "prompt": "Swap the order of two CSS classes in the button component so hover state takes priority",
+    "expectedClassification": "lightweight",
+    "reason": "Small scope (1 file), no new behavior, no cross-module risk, no migration"
+  }
+]
