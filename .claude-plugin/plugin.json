@@ -16,5 +16,6 @@
     "collaboration",
     "best-practices",
     "workflows"
-  ]
+  ],
+  "skills": "./skills/"
 }
