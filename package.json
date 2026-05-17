@@ -2,5 +2,12 @@
   "name": "superpowers-prepared",
   "version": "6.0.0",
   "type": "module",
-  "main": ".opencode/plugins/superpowers-prepared.js"
+  "main": ".opencode/plugins/superpowers-prepared.js",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.8.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.9",
+    "typescript": "^6.0.3"
+  }
 }
