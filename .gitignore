@@ -20,3 +20,9 @@ plugin.universal.old.yaml
 node_modules/
 inspo
 triage/
+
+# Harness reports (optional - uncomment to track in git)
+# .harness/reports/
+
+# Harness workspace config (auto-generated)
+.harness-workspace.json

@@ -3,11 +3,12 @@
   "version": "6.0.0",
   "type": "module",
   "main": ".opencode/plugins/superpowers-prepared.js",
-  "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^25.8.0",
-    "jest": "^30.4.2",
-    "ts-jest": "^29.4.9",
-    "typescript": "^6.0.3"
+  "scripts": {
+    "harness:local": "npx ts-node tools/harness/cli.ts local",
+    "harness:all": "npx ts-node tools/harness/cli.ts all",
+    "harness:security": "npx ts-node tools/harness/cli.ts security",
+    "harness:install": "npx ts-node tools/harness/install-tools.ts",
+    "harness:scan": "npx ts-node tools/harness/scan-workspace.ts"
   }
+}
 }

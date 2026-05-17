@@ -84,6 +84,28 @@ digraph sdd_process {
 4. Run final whole-branch review.
 5. Invoke `finishing-a-development-branch`.
 
+## Harness Integration
+
+Before dispatching any implementer subagent:
+
+1. Invoke `extract-boundary` to gather minimal context for the task's files.
+2. Include in the implementer prompt: "After each change, run `npx ts-node tools/harness/cli.ts local` to verify."
+
+After each implementer completes:
+
+1. Main Agent spawns ReviewerAgent subagent with the diff and relevant stack modules.
+2. ReviewerAgent analyzes -> generates structured report.
+3. If issues found -> Main Agent delegates fixes to the same implementer subagent.
+4. Implementer fixes -> re-runs verify-local -> returns.
+5. ReviewerAgent re-reviews only affected files -> approves or repeats loop.
+
+After all tasks in a wave complete:
+
+1. Main Agent merges all branches.
+2. Main Agent runs `npx ts-node tools/harness/cli.ts all` (verify-all).
+3. If verify-all fails -> delegate fixes to relevant subagents.
+4. If verify-all passes -> proceed to `finishing-a-development-branch`.
+
 ## Parallel Waves (default for independent tasks)
 
 When tasks are independent and touch disjoint files, dispatch them as a wave — this is the preferred mode, not a special case. Sequential execution is the fallback for dependent tasks, not the default.
@@ -172,6 +194,8 @@ Exclude unrelated prior assistant analysis and old failed hypotheses. Subagents 
 
 **Why this is also the cache-optimal approach:** All subagents share the same system prompt prefix, which the API caches. Keeping each subagent's input as `[cached system prompt] + [small unique task prompt]` means every agent hits the cache for the heavy shared prefix and only pays full input token price for its small task-specific tail. Forwarding parent conversation history would make each subagent's prefix unique, breaking cache sharing and multiplying input costs across the wave.
 
+**Harness context injection:** Use `extract-boundary` to provide only the types, interfaces, and function signatures the subagent needs. Do not include full file contents or implementation details from unrelated modules.
+
 ## Subagent Skill Leakage Prevention
 
 Subagents can discover superpowers-prepared skills via filesystem access and invoke them, causing a focused implementer to behave as a workflow orchestrator. Every subagent prompt MUST include this instruction:
@@ -205,7 +229,7 @@ Use:
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/plans/feature-plan.md]
+[Read plan file once: docs/superpowers-prepared/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create TodoWrite with all tasks]
 
