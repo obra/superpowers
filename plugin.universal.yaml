@@ -6,9 +6,9 @@ meta:
   name: superpowers-prepared
   version: "6.5.2"
   description: "Workflow skills and hooks for Claude Code and Codex"
-  author: "Jesse Vincent, forked by REPOZY"
-  homepage: "https://github.com/REPOZY/superpowers-prepared"
-  repository: "https://github.com/REPOZY/superpowers-prepared"
+  author: "Jesse Vincent, forked by josuerf"
+  homepage: "https://github.com/josuerf/superpowers-prepared"
+  repository: "https://github.com/josuerf/superpowers-prepared"
   license: "MIT"
   keywords: ["skills", "tdd", "debugging", "code-review", "workflows", "agentic", "token-efficiency", "hooks", "safety", "subagent"]
   platforms: [claude-code, codex]
@@ -84,6 +84,15 @@ hooks:
   # Claude Code only: subagent guard
   - event: SubagentStop
     command: "node {PLUGIN_ROOT}/hooks/subagent-guard.js"
+    platforms: [claude-code]
+
+  # --- PostTaskValidation ---
+
+  # Claude Code: automatic validation after edits
+  - event: PostTaskValidation
+    matcher: "Edit|Write"
+    command: "node {PLUGIN_ROOT}/hooks/post-task-validation.js"
+    async: false
     platforms: [claude-code]
 
   # --- PreToolUse ---
