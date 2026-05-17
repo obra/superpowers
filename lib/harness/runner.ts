@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { type ParsedError } from "./types";
+import type { ParsedError } from "./types";
 
 const execAsync = promisify(exec);
 

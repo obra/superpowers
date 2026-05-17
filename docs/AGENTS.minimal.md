@@ -11,6 +11,7 @@ Rules:
 Additional specialized skills are available and orchestrated through this workflow:
 - `requesting-code-review` for code review with integrated security analysis.
 - `frontend-design` for production-grade UI/UX work.
+- `vercel-react-best-practices` for React/Next.js performance optimization.
 - `error-recovery` for maintaining project-specific error→solution mappings.
 - `claude-md-creator` for repository-level agent context.
 

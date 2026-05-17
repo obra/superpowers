@@ -4,7 +4,7 @@ Use this template when dispatching a spec document reviewer subagent after the d
 
 **Purpose:** Verify the spec is complete, consistent, and ready for implementation planning.
 
-**Dispatch after:** Spec document is written to `docs/specs/`
+**Dispatch after:** Spec document is written to `docs/superpowers-prepared/specs/`
 
 ```
 Agent tool (general-purpose):

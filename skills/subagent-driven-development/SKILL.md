@@ -80,7 +80,8 @@ digraph sdd_process {
 - If quality fails, return to implementer and re-review.
 - Mark task complete: update the task’s checkbox in plan.md from `- [ ]` to `- [x]`. If `state.md` exists with a plan status section, update it to reflect the completed task.
    - For complex or high-risk tasks, validate the approach against requirements and consider simpler alternatives before or after the implementer’s work.
-   - For tasks centered on frontend/UI, apply `frontend-design` standards to guide structure, styling, and accessibility.
+    - For tasks centered on frontend/UI, apply `frontend-design` standards to guide structure, styling, and accessibility.
+    - For tasks involving React/Next.js code, apply `vercel-react-best-practices` for performance optimization, data fetching patterns, and bundle size.
 4. Run final whole-branch review.
 5. Invoke `finishing-a-development-branch`.
 

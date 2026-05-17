@@ -6,10 +6,10 @@ Superpowers is a complete software development methodology for your coding agent
 
 Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
 
-[![GitHub stars](https://img.shields.io/github/stars/REPOZY/superpowers-prepared?style=for-the-badge&color=white)](https://github.com/REPOZY/superpowers-prepared/stargazers)
-[![Version](https://img.shields.io/github/v/release/REPOZY/superpowers-prepared?style=for-the-badge&color=white)](https://github.com/REPOZY/superpowers-prepared/releases)
+[![GitHub stars](https://img.shields.io/github/stars/josuerf/superpowers-prepared?style=for-the-badge&color=white)](https://github.com/josuerf/superpowers-prepared/stargazers)
+[![Version](https://img.shields.io/github/v/release/josuerf/superpowers-prepared?style=for-the-badge&color=white)](https://github.com/josuerf/superpowers-prepared/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-white?style=for-the-badge)](LICENSE)
-[![Install](https://img.shields.io/badge/install-now-white?style=for-the-badge&logo=claude)](https://github.com/REPOZY/superpowers-prepared#installation)
+[![Install](https://img.shields.io/badge/install-now-white?style=for-the-badge&logo=claude)](https://github.com/josuerf/superpowers-prepared#installation)
 
 </div>
 
@@ -104,7 +104,7 @@ User sends a prompt
 ┌─ skill-activator.js (UserPromptSubmit hook) ──────────────┐
 │  Is this a micro-task? ("fix typo on line 42")            │
 │    YES → {} (no routing, zero overhead)                   │
-│    NO  → Score against 22 skill rules                     │
+│    NO  → Score against 23 skill rules                     │
 │          Score < 2? → {} (weak match, skip)               │
 │          Score ≥ 2? → Inject skill suggestions            │
 └───────────────────────────────────────────────────────────┘
@@ -255,7 +255,7 @@ Generate once with "map this project". After that, the session-start hook inject
 _Generated: 2026-03-20 14:32 | Git: a4b9c2d_
 
 ## Directory Structure
-skills/ — 24 skills, each in skills/<name>/SKILL.md
+skills/ — 25 skills, each in skills/<name>/SKILL.md
 hooks/ — 10 hooks (JS) + hooks.json registry + skill-rules.json
 
 ## Key Files
@@ -287,7 +287,7 @@ Written automatically by the `context-engine` hook on every session start. No se
   "change_stat": "2 files changed, 140 insertions(+)",
   "recent_commits": ["9636c5c Check context-snapshot.json in Phase 1", "..."],
   "blast_radius": {
-    "hooks/context-engine.js": ["hooks/hooks.json", "docs/plans/..."]
+    "hooks/context-engine.js": ["hooks/hooks.json", "docs/superpowers-prepared/plans/..."]
   }
 }
 ```
@@ -365,7 +365,7 @@ With this stack, sessions start with full context and zero re-discovery overhead
 ---
 
 
-## Skills Library (24 skills)
+## Skills Library (25 skills)
 
 ### Core Workflow
 - **using-superpowers** — Mandatory workflow router with 3-tier complexity classification (micro/lightweight/full) and instruction priority hierarchy
@@ -405,6 +405,7 @@ With this stack, sessions start with full context and zero re-discovery overhead
 ### Intelligence
 - **error-recovery** — Maintains project-specific `known-issues.md` mapping recurring errors to solutions, consulted before debugging
 - **frontend-design** — Design intelligence system with industry-aware style selection, 25 UI styles, 30 product-category mappings, page structure patterns, UI state management, and 10 priority quality standards (accessibility, touch, performance, animation, forms, navigation, charts)
+- **vercel-react-best-practices** — React and Next.js performance optimization guide from Vercel Engineering with 70+ rules across 8 categories: eliminating waterfalls, bundle size optimization, server-side performance, client-side data fetching, re-render optimization, rendering performance, JavaScript performance, and advanced patterns
 
 ### Hooks (10 total)
 This is the full cross-platform hook inventory for the plugin. Claude Code gets the full set. Codex currently wires the smaller `SessionStart` / `UserPromptSubmit` / `PreToolUse(Bash)` / `PostToolUse(Bash)` / `Stop` subset through `hooks/codex/*`, subject to Codex platform limits.
@@ -442,7 +443,7 @@ This is the full cross-platform hook inventory for the plugin. Claude Code gets 
 
 **Install**
 ```
-/plugin marketplace add REPOZY/superpowers-prepared
+/plugin marketplace add josuerf/superpowers-prepared
 /plugin install superpowers-prepared@superpowers-prepared
 ```
 
@@ -450,7 +451,7 @@ This is the full cross-platform hook inventory for the plugin. Claude Code gets 
 
 `/plugin update superpowers-prepared` opens the plugin manager UI. From there:
 
-1. **Marketplaces** tab → select `REPOZY/superpowers-prepared` → **Update marketplace** (refreshes the version catalog)
+1. **Marketplaces** tab → select `josuerf/superpowers-prepared` → **Update marketplace** (refreshes the version catalog)
 2. **Installed** tab → select `superpowers-prepared` → **Update now**
 
 > **Tip:** To skip manual steps in future, enable **Auto-update** for the marketplace in step 1.
@@ -489,12 +490,12 @@ For live Codex hooks, use `codex-cli 0.118.0` or newer. Older CLI builds may sil
 
 **Install** — tell the agent:
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-prepared/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/josuerf/superpowers-prepared/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Update** — tell the agent:
 ```
-Fetch and follow the update instructions from https://raw.githubusercontent.com/REPOZY/superpowers-prepared/refs/heads/main/.codex/INSTALL.md
+Fetch and follow the update instructions from https://raw.githubusercontent.com/josuerf/superpowers-prepared/refs/heads/main/.codex/INSTALL.md
 ```
 
 Or manually: follow the `Updating` section in the linked install doc. A plain `git pull` is not always sufficient for a complete update.
@@ -507,12 +508,12 @@ If the installed Codex copy looks stale, dirty, or inconsistent after update, us
 
 **Install** — tell the agent:
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-prepared/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/josuerf/superpowers-prepared/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Update** — tell the agent:
 ```
-Fetch and follow the update instructions from https://raw.githubusercontent.com/REPOZY/superpowers-prepared/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow the update instructions from https://raw.githubusercontent.com/josuerf/superpowers-prepared/refs/heads/main/.opencode/INSTALL.md
 ```
 
 Or manually: `git pull` in your local clone of the repository.
@@ -633,7 +634,7 @@ The general contribution process for Superpowers is below. Keep in mind that we 
 3. Follow the existing skill structure in `skills/` (each skill has a `SKILL.md` with YAML frontmatter)
 4. Submit a PR
 
-**Modifying hooks:** Hook files (`hooks/hooks.json`, `hooks/codex-hooks.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`) are generated — never edit them directly. Edit `plugin.universal.yaml` at the repo root, then run `hookbridge compile` to regenerate. See [hookbridge](https://github.com/REPOZY/Hookbridge) for the compiler tool.
+**Modifying hooks:** Hook files (`hooks/hooks.json`, `hooks/codex-hooks.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`) are generated — never edit them directly. Edit `plugin.universal.yaml` at the repo root, then run `hookbridge compile` to regenerate. See [hookbridge](https://github.com/josuerf/Hookbridge) for the compiler tool.
 
 
 ### License
@@ -642,6 +643,6 @@ MIT License - see LICENSE file for details
 
 
 **Support**
-- Issues: https://github.com/REPOZY/superpowers-prepared/issues
+- Issues: https://github.com/josuerf/superpowers-prepared/issues
 - Original: https://github.com/obra/superpowers
-- Discussions: https://github.com/REPOZY/superpowers-prepared/discussions
+- Discussions: https://github.com/josuerf/superpowers-prepared/discussions

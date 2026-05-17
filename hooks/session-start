@@ -194,7 +194,7 @@ ${whats_new}</important-reminder>"
         local remote_version="$cached_remote"
         if [ -z "$remote_version" ]; then
             remote_version=$(curl -sf --max-time 3 \
-                "https://raw.githubusercontent.com/REPOZY/superpowers-prepared/refs/heads/main/.claude-plugin/plugin.json" \
+                "https://raw.githubusercontent.com/josuerf/superpowers-prepared/refs/heads/main/.claude-plugin/plugin.json" \
                 2>/dev/null \
                 | grep '"version"' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
             # Cache the result (even if empty, to avoid hammering GitHub on no-internet)
@@ -217,7 +217,7 @@ ${whats_new}</important-reminder>"
             if [ "$r" -gt "$l" ]; then
                 update_notice="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER: 🔄 **Superpowers Optimized v${remote_version} is available** (you have v${local_version}). Run \`/plugin update superpowers-prepared\` which opens the plugin manager UI. From there:
 
-Marketplaces tab → select REPOZY/superpowers-prepared → Update marketplace (refreshes the version catalog)
+Marketplaces tab → select josuerf/superpowers-prepared → Update marketplace (refreshes the version catalog)
 Installed tab → select superpowers-prepared → Update now
 
 Tip: To skip manual steps in future, enable Auto-update for the marketplace in step 1.</important-reminder>"

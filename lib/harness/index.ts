@@ -1,7 +1,4 @@
-import {
-	type ValidationResult,
-	type VerifyReport,
-} from "./types";
+import type { ValidationResult, VerifyReport } from "./types";
 import {
 	loadProjectConfig,
 	loadWorkspaceConfig,
@@ -30,7 +27,7 @@ export async function verify(
 ): Promise<VerifyReport> {
 	const cwd = options.cwd || process.cwd();
 	const config = loadProjectConfig(cwd);
-	let stack = detectStack(cwd);
+	const stack = detectStack(cwd);
 
 	if (!stack) {
 		const wsConfig = loadWorkspaceConfig(cwd);

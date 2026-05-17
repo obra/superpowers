@@ -38,6 +38,7 @@ const SKILL_NAMES = [
   'finishing-a-development-branch',
   'error-recovery',
   'frontend-design',
+  'vercel-react-best-practices',
   'claude-md-creator',
   'self-consistency-reasoner',
   'using-git-worktrees',
@@ -54,7 +55,7 @@ const VIOLATION_PATTERNS = [
   /Invoke the superpowers-prepared/i,
   /I'm using the .+ skill/i,
   /Skill\s*\(\s*["']?superpowers/i,
-  /skill:\s*["']?(superpowers|using-superpowers|brainstorming|deliberation|systematic-debugging|test-driven-development|verification|executing-plans|writing-plans|context-management|frontend-design|refactoring|performance-investigation|dependency-management)/i,
+  /skill:\s*["']?(superpowers|using-superpowers|brainstorming|deliberation|systematic-debugging|test-driven-development|verification|executing-plans|writing-plans|context-management|frontend-design|vercel-react-best-practices|refactoring|performance-investigation|dependency-management)/i,
   ...SKILL_NAMES.map(name => new RegExp(ACTION_VERB + name, 'i')),
 ];
 

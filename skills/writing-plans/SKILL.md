@@ -21,7 +21,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Output Path
 
-Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
+Save to `docs/superpowers-prepared/plans/YYYY-MM-DD-<feature-name>.md`.
 - User preferences for plan location override this default.
 
 ## Plan Header
@@ -164,7 +164,7 @@ After saving the plan and completing self-review, auto-select the execution appr
 ### Ready Message
 
 ```
-Plan saved to `docs/plans/<filename>.md`. Ready to execute with **[Subagent-Driven / Inline Execution]** (<N> tasks[, <one-word reason>]). Reply to start, or say "inline" / "subagent" to switch.
+Plan saved to `docs/superpowers-prepared/plans/<filename>.md`. Ready to execute with **[Subagent-Driven / Inline Execution]** (<N> tasks[, <one-word reason>]). Reply to start, or say "inline" / "subagent" to switch.
 ```
 
 **Stop here.** Do not invoke any execution skill until the user replies.

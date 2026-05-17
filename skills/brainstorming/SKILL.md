@@ -38,7 +38,7 @@ You MUST create a task for each of these items and complete them in order:
    - **Critical** (design fails for a significant user scenario): revise the design before proceeding.
    - **Minor** (edge case, acceptable limitation): document as a non-goal in the design.
    Do not skip this step. An approach that survives adversarial questioning is an approach worth approving.
-10. Save approved design to `docs/specs/YYYY-MM-DD-<topic>-design.md`.
+10. Save approved design to `docs/superpowers-prepared/specs/YYYY-MM-DD-<topic>-design.md`.
 11. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see Spec Self-Review below). Fix issues inline; no subagent dispatch needed.
 12. **User reviews written spec** — ask user to review the spec file before proceeding (see User Review Gate below).
 13. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -127,7 +127,7 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/superpowers-prepared/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
@@ -198,7 +198,7 @@ Apply senior engineering judgment during design:
 
 - User approved the design.
 - Failure-mode check completed — critical failure modes resolved, minor ones documented as non-goals.
-- Design document exists at the required path (`docs/specs/`).
+- Design document exists at the required path (`docs/superpowers-prepared/specs/`).
 - Spec self-review completed — placeholders, contradictions, ambiguity, and scope issues resolved.
 - User reviewed the written spec and approved.
 - `writing-plans` is invoked as the next skill.

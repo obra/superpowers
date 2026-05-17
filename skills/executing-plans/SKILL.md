@@ -65,6 +65,7 @@ For each task:
 2. Run verifications as specified.
 3. Mark task complete.
 4. For tasks involving UI/UX or frontend implementation, apply guidance from `frontend-design`.
+5. For tasks involving React/Next.js code, apply `vercel-react-best-practices` for performance optimization.
 
 **Note:** Superpowers works significantly better with subagent support. If subagents are available, use `subagent-driven-development` instead — the quality of work will be higher with fresh-context-per-task and two-stage review gates.
 

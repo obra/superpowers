@@ -104,6 +104,13 @@
       "intentPatterns": ["(build|create|make|design)\\s+(a\\s+)?(ui|frontend|website|page|dashboard|component)", "make\\s+it\\s+look\\s+(good|better|professional|nice)", "(style|design)\\s+(this|the)"]
     },
     {
+      "skill": "vercel-react-best-practices",
+      "type": "domain",
+      "priority": "high",
+      "keywords": ["react performance", "next.js", "waterfall", "bundle size", "server component", "rsc", "memo", "usememo", "usecallback", "suspense", "code splitting", "dynamic import", "server action", "hydration", "re-render", "react cache", "swr", "barrel import", "optimization"],
+      "intentPatterns": ["(optimize|improve|fix)\\s+(react|next\\.?js)\\s+(performance|bundle|render)", "(review|check)\\s+(react|next\\.?js)\\s+(code|component|page)", "react\\s+best\\s+practices", "(eliminate|avoid)\\s+waterfal", "(reduce|minimize)\\s+(bundle|package)\\s+size", "server\\s+component\\s+(fetch|data|parallel)", "(memo|memoize|memoization)\\s+(component|function|callback)"]
+    },
+    {
       "skill": "error-recovery",
       "type": "workflow",
       "priority": "medium",

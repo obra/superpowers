@@ -101,6 +101,10 @@ test('Includes new dependency-management skill', () => {
   assert.ok(source.includes("'dependency-management'"), 'Missing dependency-management skill');
 });
 
+test('Includes new vercel-react-best-practices skill', () => {
+  assert.ok(source.includes("'vercel-react-best-practices'"), 'Missing vercel-react-best-practices skill');
+});
+
 // ── Action verb coverage ─────────────────────────────────────────────────────
 
 console.log('\nAction verb coverage');
@@ -180,6 +184,11 @@ test('Blocks "starting the performance-investigation skill"', () => {
 
 test('Blocks "calling the dependency-management skill"', () => {
   const result = runGuard('I am calling the dependency-management skill for updates.');
+  assert.strictEqual(result.decision, 'block', `Expected block, got: ${JSON.stringify(result)}`);
+});
+
+test('Blocks "using the vercel-react-best-practices skill"', () => {
+  const result = runGuard('I am using the vercel-react-best-practices skill to optimize this React component.');
   assert.strictEqual(result.decision, 'block', `Expected block, got: ${JSON.stringify(result)}`);
 });
 

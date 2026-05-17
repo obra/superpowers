@@ -190,6 +190,7 @@ digraph planmode_intercept {
 - Performance issues (slow, high memory/CPU, latency): `performance-investigation` (measure → profile → fix → re-measure)
 - Dependency updates, security vulnerabilities, migrations: `dependency-management` (audit → assess impact → update incrementally → verify)
 - UI/frontend implementation: apply `frontend-design` standards
+- React/Next.js code: apply `vercel-react-best-practices` for performance optimization
 - CLAUDE.md / AGENTS.md creation or update: `claude-md-creator` (applies at any complexity level — never implement directly)
 - *(Internal skills — not directly routed):* `self-consistency-reasoner` is invoked internally by `systematic-debugging` and `verification-before-completion`; do not invoke it directly. `token-efficiency` is always-on and invoked at step 1 of the Entry Sequence.
 
@@ -227,7 +228,7 @@ If a red flag appears, restart from Entry Sequence.
 When multiple skills could apply, use this order:
 
 1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+2. **Implementation skills second** (frontend-design, vercel-react-best-practices, mcp-builder) - these guide execution
 
 "Let's build X" → brainstorming first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.

@@ -24,7 +24,7 @@ Context pressure gate, Tailwind v4 reference, plan-level security flag, stub sca
 
 **Dependency-management trigger refinement** — Removed "version bump" from the dependency-management trigger keywords. It was overlapping with the dedicated `version-bump` skill, causing the wrong workflow to load on plain version-bump requests.
 
-**Cleaner docs output paths** — Brainstorming specs and writing-plans plans now save to `docs/specs/` and `docs/plans/` instead of `docs/superpowers-prepared/specs/` and `docs/superpowers-prepared/plans/`. The plugin name no longer surfaces in the folder structure of every project that uses these skills. CLAUDE.md, both skill files, both reviewer prompt templates, the autoimprove fixture, and all integration tests were updated. The `stop-reminders` decision-log detection was unaffected — its regex already matched any `specs/` or `plans/` parent folder rather than the plugin-namespaced one, so existing repos with the old path continue triggering reminders correctly.
+**Cleaner docs output paths** — Brainstorming specs and writing-plans plans now save to `docs/superpowers-prepared/specs/` and `docs/superpowers-prepared/plans/` instead of `docs/superpowers/specs/` and `docs/superpowers/plans/`. The plugin name no longer surfaces in the folder structure of every project that uses these skills. CLAUDE.md, both skill files, both reviewer prompt templates, the autoimprove fixture, and all integration tests were updated. The `stop-reminders` decision-log detection was unaffected — its regex already matched any `specs/` or `plans/` parent folder rather than the plugin-namespaced one, so existing repos with the old path continue triggering reminders correctly.
 
 **Test coverage** — ~290 lines of new tests in `test-skill-activator.js` cover the context pressure gate: execution-trigger pattern matching, Windows/Unix `cwdToProjectDir` encoding, JSONL pressure parsing, threshold behavior, and the block message format.
 
@@ -135,7 +135,7 @@ The `codex-hooks.json` now registers all four Codex hook events: `SessionStart`,
 
 **OpenCode `tool.execute.before` safety hook** — The OpenCode plugin now intercepts all bash, read, edit, and write tool calls before execution, applying the same safety checks as the Claude Code hooks: 19 dangerous command patterns, 25 sensitive file path patterns, 14 secret-leaking bash patterns, and hardcoded secret detection for write operations. Blocking is via thrown errors, matching OpenCode's native hook contract. Previously the OpenCode plugin only injected the system prompt; it had no pre-execution safety layer.
 
-**`plugin.universal.yaml` as single source of truth** — All hook files and platform manifests (`hooks/hooks.json`, `hooks/codex-hooks.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`) are now generated from `plugin.universal.yaml` in the repo root via `hookbridge compile`. Do not hand-edit the generated files — they will be overwritten. This eliminates the previous duplication where hooks were maintained in three places and could drift out of sync. Compiled with the new open source tool Hookbridge: https://github.com/REPOZY/Hookbridge
+**`plugin.universal.yaml` as single source of truth** — All hook files and platform manifests (`hooks/hooks.json`, `hooks/codex-hooks.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`) are now generated from `plugin.universal.yaml` in the repo root via `hookbridge compile`. Do not hand-edit the generated files — they will be overwritten. This eliminates the previous duplication where hooks were maintained in three places and could drift out of sync. Compiled with the new open source tool Hookbridge: https://github.com/josuerf/Hookbridge
 
 **Context-management: structured grep workflow** — The skill now specifies a four-step grep process: extract 2-3 distinctive nouns from the task, grep each individually, adjust based on hit count (0 hits → fall back to project-map critical constraints; 1–10 hits → read them; >10 hits on one keyword → narrow with a second term), then surface findings explicitly. Previously the skill gave a single generic grep command with no guidance on what to do with the results.
 
@@ -161,9 +161,9 @@ The `codex-hooks.json` now registers all four Codex hook events: `SessionStart`,
 
 **OpenCode system transform array handling corrected** — The `experimental.chat.system.transform` hook was using `output.system ||= []` before pushing content, which would incorrectly skip pushing when the array was already populated. Fixed to direct `.push()` since OpenCode always pre-populates the system array.
 
-Fixed the "Stop hook error: JSON validation failed: Hook JSON output validation failed" issue: https://github.com/REPOZY/superpowers-prepared/issues/9
+Fixed the "Stop hook error: JSON validation failed: Hook JSON output validation failed" issue: https://github.com/josuerf/superpowers-prepared/issues/9
 
-Fixed the minor issue found in the Security Audit posted by a user: https://github.com/REPOZY/superpowers-prepared/issues/12
+Fixed the minor issue found in the Security Audit posted by a user: https://github.com/josuerf/superpowers-prepared/issues/12
 
 ## v6.3.0 (2026-04-03)
 
@@ -1037,7 +1037,7 @@ Dramatically reduces token usage and speeds up spec and plan reviews by eliminat
 - Plans (writing-plans output) now save to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - User preferences for spec/plan locations override these defaults
 - All internal skill references, test files, and example paths updated to match
-- Migration: move existing files from `docs/plans/` to new locations if desired
+- Migration: move existing files from `docs/superpowers-prepared/plans/` to new locations if desired
 
 **Subagent-driven development mandatory on capable harnesses**
 
