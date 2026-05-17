@@ -9,6 +9,12 @@
     "harness:security": "npx ts-node tools/harness/cli.ts security",
     "harness:install": "npx ts-node tools/harness/install-tools.ts",
     "harness:scan": "npx ts-node tools/harness/scan-workspace.ts"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
   }
-}
 }
