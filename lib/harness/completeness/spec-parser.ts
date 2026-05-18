@@ -24,11 +24,11 @@ const parsers: SpecParser[] = [
     detect: (c) => /(?:AC[-\s]?\d+|^\d+\.\s+[A-Z])/.test(c),
     extract: (content) => {
       const criteria: AcceptanceCriterion[] = [];
-      const regex = /(?:AC[-\s]?(\d+)|^(\d+)\.\s+([A-Z][^\n]+))/gm;
+      const regex = /(?:AC[-\s]?(\d+)\s*[:.-]?\s*(.+)|^(\d+)\.\s+([A-Z][^\n]+))/gm;
       let match;
       while ((match = regex.exec(content)) !== null) {
-        const id = `AC-${match[1] || match[2]}`;
-        const desc = (match[3] || match[0]).trim();
+        const id = `AC-${match[1] || match[3]}`;
+        const desc = (match[2] || match[4] || match[0]).trim();
         criteria.push({ id, description: desc, keywords: extractKeywords(desc), type: 'functional' });
       }
       return criteria;

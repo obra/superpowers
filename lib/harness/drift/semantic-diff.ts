@@ -13,9 +13,10 @@ export interface ImplementationSummary {
   matchRatio: number;
 }
 
-function searchProject(projectRoot: string, keywords: string[], extensions: string[] = ['.ts', '.tsx', '.js']): { files: string[]; symbols: string[] } {
+function searchProject(projectRoot: string, keywords: string[], extensions: string[] = ['.ts', '.tsx', '.js']): { files: string[]; symbols: string[]; matchedKeywords: string[] } {
   const files: string[] = [];
   const symbols: string[] = [];
+  const matchedKeywordsSet = new Set<string>();
   const funcRegex = /(?:export\s+)?(?:async\s+)?function\s+(\w+)/g;
   const classRegex = /(?:export\s+)?class\s+(\w+)/g;
 
@@ -31,9 +32,10 @@ function searchProject(projectRoot: string, keywords: string[], extensions: stri
           try {
             const content = fs.readFileSync(fullPath, 'utf-8');
             const lowerContent = content.toLowerCase();
-            const matchedKeywords = keywords.filter(kw => lowerContent.includes(kw.toLowerCase()));
-            if (matchedKeywords.length > 0) {
+            const matchedKw = keywords.filter(kw => lowerContent.includes(kw.toLowerCase()));
+            if (matchedKw.length > 0) {
               files.push(fullPath);
+              matchedKw.forEach(kw => matchedKeywordsSet.add(kw));
               let match;
               while ((match = funcRegex.exec(content)) !== null) symbols.push(match[1]);
               funcRegex.lastIndex = 0;
@@ -47,21 +49,21 @@ function searchProject(projectRoot: string, keywords: string[], extensions: stri
   }
 
   scanDir(projectRoot);
-  return { files, symbols };
+  return { files, symbols, matchedKeywords: Array.from(matchedKeywordsSet) };
 }
 
 export function computeSemanticDiff(requirements: SpecRequirement[], projectRoot: string): ImplementationSummary[] {
   return requirements.map(req => {
-    const { files, symbols } = searchProject(projectRoot, req.keywords);
-    const matchRatio = req.keywords.length > 0 ? files.length / Math.max(req.keywords.length, 1) : 0;
+    const { files, symbols, matchedKeywords } = searchProject(projectRoot, req.keywords);
+    const keywordCoverage = req.keywords.length > 0 ? matchedKeywords.length / req.keywords.length : 0;
 
     return {
       requirement: req,
       matchingFiles: files.slice(0, 5),
       matchingSymbols: [...new Set(symbols)].slice(0, 10),
-      keywordMatchCount: files.length,
+      keywordMatchCount: matchedKeywords.length,
       totalKeywords: req.keywords.length,
-      matchRatio: Math.min(matchRatio, 1),
+      matchRatio: keywordCoverage,
     };
   });
 }

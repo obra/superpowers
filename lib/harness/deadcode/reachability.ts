@@ -4,10 +4,10 @@ import { SymbolInfo, ReachabilityResult } from './types';
 import { ImportEdge, getImporters } from './import-graph';
 
 const ENTRY_POINT_PATTERNS = [
-  /pages\/.*\.(ts|tsx|js)$/,
-  /app\/.*\/page\.(ts|tsx|js)$/,
-  /src\/main\.(ts|js)$/,
-  /src\/index\.(ts|js)$/,
+  /[\\/]pages[\\/].*\.(ts|tsx|js)$/,
+  /[\\/]app[\\/].*[\\/]page\.(ts|tsx|js)$/,
+  /[\\/]src[\\/]main\.(ts|js)$/,
+  /[\\/]src[\\/]index\.(ts|js)$/,
   /Program\.cs$/,
   /main\.go$/,
 ];
