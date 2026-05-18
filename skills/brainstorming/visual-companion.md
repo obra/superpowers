@@ -80,16 +80,9 @@ scripts/start-server.sh --project-dir /path/to/project --foreground
 
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
 
-If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
+If the URL is unreachable from your browser, keep the server bound to loopback and use an SSH tunnel or editor port-forward that exposes the port only on your workstation. The visual companion is unauthenticated and must not be exposed on a shared network interface.
 
-```bash
-scripts/start-server.sh \
-  --project-dir /path/to/project \
-  --host 0.0.0.0 \
-  --url-host localhost
-```
-
-Use `--url-host` to control what hostname is printed in the returned URL JSON.
+Do not use `--host 0.0.0.0` or another non-loopback host for this server.
 
 ## The Loop
 

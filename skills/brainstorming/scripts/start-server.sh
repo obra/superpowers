@@ -8,8 +8,8 @@
 # Options:
 #   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
 #                         instead of /tmp. Files persist after server stops.
-#   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
-#                         Use 0.0.0.0 in remote/containerized environments.
+#   --host <bind-host>    Loopback host/interface to bind (default: 127.0.0.1).
+#                         Only 127.0.0.1 and localhost are allowed.
 #   --url-host <host>     Hostname shown in returned URL JSON.
 #   --foreground          Run server in the current terminal (no backgrounding).
 #   --background          Force background mode (overrides Codex auto-foreground).
@@ -50,6 +50,15 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+case "$BIND_HOST" in
+  127.0.0.1|localhost)
+    ;;
+  *)
+    echo '{"error": "Refusing to bind visual companion to a non-loopback host. This server is unauthenticated."}'
+    exit 1
+    ;;
+esac
 
 if [[ -z "$URL_HOST" ]]; then
   if [[ "$BIND_HOST" == "127.0.0.1" || "$BIND_HOST" == "localhost" ]]; then

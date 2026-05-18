@@ -81,6 +81,11 @@ const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
+if (HOST !== '127.0.0.1' && HOST !== 'localhost') {
+  console.error(JSON.stringify({ error: 'Refusing to bind visual companion to a non-loopback host. This server is unauthenticated.' }));
+  process.exit(1);
+}
+
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',
