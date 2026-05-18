@@ -99,7 +99,7 @@ export class PatternCatalog {
     }
 
     results.sort((a, b) => {
-      const weight = categoryWeight(a.category) - categoryWeight(b.category);
+      const weight = categoryWeight(b.category) - categoryWeight(a.category);
       if (weight !== 0) return weight;
       return b.frequency - a.frequency;
     });
@@ -156,14 +156,12 @@ export class PatternCatalog {
    * - others    → category dir (errors/ practices/ constraints/)
    */
   private resolveWritePath(entry: PatternEntry): string {
-    let dir: string;
-    if (entry.status === "archived") {
-      dir = "archived";
-    } else if (entry.status === "pending") {
-      dir = "pending";
-    } else {
-      dir = CATEGORY_DIRS[entry.category] ?? "errors";
-    }
+    const dir =
+      entry.status === "pending"
+        ? "pending"
+        : entry.status === "archived"
+          ? "archived"
+          : CATEGORY_DIRS[entry.category] ?? "errors"; // "promoted" and "bootstrap" go in the category directory
     return path.join(this.globalPath, dir, `${entry.id}.md`);
   }
 
