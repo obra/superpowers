@@ -12,7 +12,7 @@
 #                         Only 127.0.0.1 and localhost are allowed.
 #   --url-host <host>     Hostname shown in returned URL JSON.
 #   --foreground          Run server in the current terminal (no backgrounding).
-#   --background          Force background mode (overrides Codex auto-foreground).
+#   --background          Force background mode.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -66,11 +66,6 @@ if [[ -z "$URL_HOST" ]]; then
   else
     URL_HOST="$BIND_HOST"
   fi
-fi
-
-# Some environments reap detached/background processes. Auto-foreground when detected.
-if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  FOREGROUND="true"
 fi
 
 # Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
