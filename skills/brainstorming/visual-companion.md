@@ -30,6 +30,8 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 **Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, selection indicator, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
 
+**Security boundary:** The browser renders generated HTML. Do not include secrets, access tokens, credentials, customer data, or production data in visual mockups. Keep content fragments markup-only; do not add `<script>` tags to fragments. Full HTML documents are trusted code execution and should only be used for content you would be comfortable opening directly in your browser.
+
 ## Starting a Session
 
 ```bash
@@ -146,7 +148,7 @@ Write just the content that goes inside the page. The server wraps it in the fra
 </div>
 ```
 
-That's it. No `<html>`, no CSS, no `<script>` tags needed. The server provides all of that.
+That's it. No `<html>`, no CSS, and no `<script>` tags. The server provides all of that.
 
 ## CSS Classes Available
 
