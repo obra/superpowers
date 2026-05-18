@@ -1,9 +1,6 @@
 import type { PatternsValidationResult } from "../../patterns/types";
 import { PatternCatalog } from "../../patterns/catalog";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
-
-const execAsync = promisify(exec);
+import { spawnSync } from "node:child_process";
 
 export async function validatePatterns(
   cwd: string,
@@ -25,7 +22,7 @@ export async function validatePatterns(
     let matchLine = 0;
 
     if (pattern.checkRegex) {
-      const result = await grepSourceFiles(pattern.checkRegex, cwd);
+      const result = grepSourceFiles(pattern.checkRegex, cwd);
       if (result.matches.length > 0) {
         matchFile = result.matches[0].file;
         matchLine = result.matches[0].line;
@@ -53,27 +50,26 @@ export async function validatePatterns(
   };
 }
 
-async function grepSourceFiles(regex: string, cwd: string): Promise<{
+function grepSourceFiles(regex: string, cwd: string): {
   matches: Array<{ file: string; line: number }>;
-}> {
+} {
   const matches: Array<{ file: string; line: number }> = [];
   const extensions = ["ts", "tsx", "js", "jsx", "py", "cs", "go"];
+  const includeArgs = extensions.flatMap(ext => ["--include", `*.${ext}`]);
 
   try {
-    const { stdout } = await execAsync(
-      `grep -rn "${regex}" --include="*.${extensions.join('" --include="*.')}" src/ lib/ app/ components/ 2>/dev/null || true`,
-      { cwd, timeout: 10000 },
+    const result = spawnSync(
+      "grep",
+      ["-rn", regex, ...includeArgs, "src/", "lib/", "app/", "components/"],
+      { cwd, timeout: 10000, encoding: "utf-8" },
     );
 
-    if (!stdout.trim()) return { matches };
+    if (result.status === null || !result.stdout?.trim()) return { matches };
 
-    for (const line of stdout.trim().split("\n")) {
+    for (const line of result.stdout.trim().split("\n")) {
       const match = line.match(/^(.+?):(\d+):/);
       if (match) {
-        matches.push({
-          file: match[1],
-          line: parseInt(match[2], 10),
-        });
+        matches.push({ file: match[1], line: parseInt(match[2], 10) });
       }
     }
   } catch {
