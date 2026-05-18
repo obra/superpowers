@@ -1,5 +1,7 @@
 # Superpowers Release Notes
 
+> **Archive notice:** These are upstream historical release notes. They are not internal installation or update instructions for this Claude-only fork.
+
 ## v5.1.0 (2026-04-30)
 
 ### Removals
