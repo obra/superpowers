@@ -42,6 +42,9 @@ import {
 	formatReviewerDecisionMarkdown,
 } from "./reviewers/parser";
 import * as path from "node:path";
+import { validatePatterns } from "./validators/patterns";
+import { PatternCatalog } from "../patterns/catalog";
+import { loadPatternsConfig, resolveWikiPaths } from "../patterns/config";
 
 export interface VerifyOptions {
 	mode: "verify-local" | "verify-all" | "verify-security";
@@ -156,6 +159,44 @@ export async function verify(
 			config.coverageMin,
 			config.timeout.verifyLocal,
 		);
+
+		// Patterns check (always runs in verify-local and verify-all)
+		const patternsConfig = loadPatternsConfig(cwd);
+		if (patternsConfig.enabled) {
+			const wikiPaths = resolveWikiPaths(patternsConfig, cwd);
+			const patternCatalog = new PatternCatalog(wikiPaths.global, wikiPaths.project);
+			const patternsResult = await validatePatterns(cwd, patternCatalog);
+
+			results.patterns = {
+				passed: patternsResult.passed,
+				errors: patternsResult.violations
+					.filter(v => v.severity === "high")
+					.map(v => ({
+						file: v.file || "",
+						line: v.line || 0,
+						column: 0,
+						message: `${v.message} — ${v.recurrence}`,
+						rule: v.pattern,
+						severity: "error" as const,
+					})),
+				warnings: patternsResult.violations
+					.filter(v => v.severity !== "high")
+					.map(v => `${v.pattern}: ${v.message}`),
+				duration: 0,
+			};
+
+			if (patternsResult.blocking && config.failOn.security === "error") {
+				const report = buildReport({
+					feature,
+					mode: options.mode,
+					results,
+					coverageTarget: config.coverageMin,
+					harnessAction,
+				});
+				saveReport(report, path.join(cwd, ".harness", "reports"));
+				return { ...report, secOpsDecision, harnessAction };
+			}
+		}
 
 		if (options.mode === "verify-all") {
 			const secResult = await validateSecurity(

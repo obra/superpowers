@@ -91,6 +91,7 @@ export interface VerifyReport {
 		typecheck: { passed: boolean; files: number };
 		tests: { passed: number; total: number; framework: string };
 		coverage: { percentage: number; target: number; filesBelow: number };
+		patterns?: { violations: number; blocked: number; warned: number };
 	};
 	issues: {
 		file: string;
