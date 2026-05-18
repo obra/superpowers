@@ -161,7 +161,7 @@ export class PatternCatalog {
         ? "pending"
         : entry.status === "archived"
           ? "archived"
-          : CATEGORY_DIRS[entry.category] ?? "errors"; // "promoted" and "bootstrap" go in the category directory
+          : CATEGORY_DIRS[entry.category] ?? "errors"; // "promoted" and "bootstrap" both use the category directory
     return path.join(this.globalPath, dir, `${entry.id}.md`);
   }
 
