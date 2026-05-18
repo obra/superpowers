@@ -9,13 +9,18 @@ const command = args[0] || "help";
 const projectRoot = process.cwd();
 
 function getCatalog(): PatternCatalog {
-  const config = loadPatternsConfig(projectRoot);
-  if (!config.enabled) {
-    console.error("Patterns feature is disabled in .harness.config.json");
+  try {
+    const config = loadPatternsConfig(projectRoot);
+    if (!config.enabled) {
+      console.error("Patterns feature is disabled in .harness.config.json");
+      process.exit(1);
+    }
+    const paths = resolveWikiPaths(config, projectRoot);
+    return new PatternCatalog(paths.global, paths.project);
+  } catch (e) {
+    console.error("Failed to initialize pattern catalog:", e instanceof Error ? e.message : e);
     process.exit(1);
   }
-  const paths = resolveWikiPaths(config, projectRoot);
-  return new PatternCatalog(paths.global, paths.project);
 }
 
 async function main() {
