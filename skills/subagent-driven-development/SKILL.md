@@ -92,6 +92,11 @@ Before dispatching any implementer subagent:
 1. Invoke `extract-boundary` to gather minimal context for the task's files.
 2. Include in the implementer prompt: "After each change, run `npx ts-node tools/harness/cli.ts local` to verify."
 
+### Pattern Injection
+Include learned patterns in implementer and reviewer prompts:
+- **Implementer**: Query patterns catalog for the task's module type, append `formatPatternsForContext(patterns)` output. Add: "⚠️ Known Patterns for this task: Apply these proactively."
+- **Reviewer**: Append `formatPatternsForReview(patterns)` output. Add: "Verify implementation does NOT trigger known error patterns."
+
 After each implementer completes:
 
 1. Main Agent spawns ReviewerAgent subagent with the diff and relevant stack modules.

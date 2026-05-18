@@ -22,14 +22,16 @@ Announce: `I'm running the harness-verify skill.`
 3. **typecheck** — Type safety
 4. **test** — Unit tests passing
 5. **coverage** — Coverage threshold met
+6. **patterns** — Check against known error patterns (BLOCK if high severity, WARN if medium/low)
 
 ### verify-all (full reconciliation)
 1-5. All of verify-local
-6. **security** — Security scan (Semgrep, gitleaks, npm audit)
-7. **integration** — Integration tests
-8. **domain-specific** — Framework-specific checks (Lighthouse, TFLint)
-9. **dead-code** — Detect unreachable symbols
-10. **drift-analysis** — Spec vs implementation semantic diff
+6. patterns — (from verify-local)
+7. **security** — Security scan (Semgrep, gitleaks, npm audit)
+8. **integration** — Integration tests
+9. **domain-specific** — Framework-specific checks (Lighthouse, TFLint)
+10. **dead-code** — Detect unreachable symbols
+11. **drift-analysis** — Spec vs implementation semantic diff
 
 ### verify-security
 Run only security scan.

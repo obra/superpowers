@@ -8,7 +8,11 @@
     "harness:all": "npx ts-node tools/harness/cli.ts all",
     "harness:security": "npx ts-node tools/harness/cli.ts security",
     "harness:install": "npx ts-node tools/harness/install-tools.ts",
-    "harness:scan": "npx ts-node tools/harness/scan-workspace.ts"
+    "harness:scan": "npx ts-node tools/harness/scan-workspace.ts",
+    "patterns:lint": "npx ts-node tools/patterns/cli.ts lint",
+    "patterns:query": "npx ts-node tools/patterns/cli.ts query",
+    "patterns:stats": "npx ts-node tools/patterns/cli.ts stats",
+    "patterns:export": "npx ts-node tools/patterns/cli.ts export"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

@@ -30,6 +30,11 @@ The subagent prompt must include a structured preamble with:
 - Exported types/interfaces (what it provides)
 - Function signatures it calls from other modules
 
+### Learned Patterns
+- Query patterns catalog for relevant entries based on detected module type
+- Include error patterns and good practices that apply to this module
+- Format using `lib/patterns/injector.ts` → `formatPatternsForContext()`
+
 ## Execution
 
 1. Identify the files the subagent will modify.
@@ -39,7 +44,9 @@ The subagent prompt must include a structured preamble with:
    - Direct imports (what it consumes)
    - Exported types/interfaces (what it provides)
    - Function signatures it calls from other modules
-5. Build the ContextEnvelope combining semantic + technical context.
+4. Query patterns catalog: `catalog.query({ module: moduleType, categories: ["error_pattern", "good_practice"], maxResults: 5 })`
+5. Format patterns using injector and append to ContextEnvelope
+6. Build the ContextEnvelope combining semantic + technical context.
 
 ## Subagent Prompt Template
 
@@ -70,6 +77,8 @@ As a [actor], I want [goal], so that [value].
 
 - Modify: [files]
 - Create: [files]
+
+{{learnedPatternsSection}}
 
 ## Technical Dependencies
 
