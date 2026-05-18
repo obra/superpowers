@@ -1,0 +1,12 @@
+{
+  "name": "superpowers-cs",
+  "displayName": "Superpowers",
+  "repository": "https://github.com/CreativeSoftware/superpowers-cs.git",
+  "homepage": "https://github.com/CreativeSoftware/superpowers-cs",
+  "issues": "https://github.com/CreativeSoftware/superpowers-cs/issues",
+  "supportEmail": "INT.Wansajee@CreativeSoftware.com",
+  "author": {
+    "name": "Creative Software",
+    "email": "INT.Wansajee@CreativeSoftware.com"
+  }
+}
