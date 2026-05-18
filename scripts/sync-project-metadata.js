@@ -15,6 +15,7 @@ function writeJson(filePath, value) {
 
 function syncPluginManifest() {
   const plugin = JSON.parse(fs.readFileSync(pluginPath, 'utf8'));
+  plugin.name = metadata.name;
   plugin.author = metadata.author;
   plugin.homepage = metadata.homepage;
   plugin.repository = metadata.repository;
