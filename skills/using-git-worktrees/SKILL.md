@@ -113,7 +113,7 @@ cd "$path"
 
 ## Step 3: Project Setup
 
-Auto-detect and run appropriate setup:
+Auto-detect setup. Dependency setup may fetch code and execute package scripts; proceed only with user approval or repo instructions naming an approved registry/proxy, otherwise ask:
 
 ```bash
 # Node.js
