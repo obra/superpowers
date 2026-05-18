@@ -101,4 +101,24 @@ describe('PatternCatalog', () => {
     catalog.create({ ...sampleEntry, id: 'archived', status: 'archived' as const });
     expect(catalog.countTotal()).toBe(2);
   });
+
+  it('regenerates index with correct counts', () => {
+    catalog.create(sampleEntry);
+    catalog.create({ ...sampleEntry, id: 'second-pattern' });
+    catalog.regenerateIndex();
+    const indexPath = path.join(tmpDir, 'index.md');
+    expect(fs.existsSync(indexPath)).toBe(true);
+    const indexContent = fs.readFileSync(indexPath, 'utf8');
+    expect(indexContent).toContain('test-error-pattern');
+    expect(indexContent).toContain('Total: 2');
+  });
+
+  it('supersedes old pattern with new one', () => {
+    catalog.create(sampleEntry);
+    catalog.create({ ...sampleEntry, id: 'new-pattern', title: 'New Pattern' });
+    catalog.supersede('test-error-pattern', 'new-pattern');
+    const old = catalog.getById('test-error-pattern');
+    expect(old!.status).toBe('archived');
+    expect(old!.supersededBy).toBe('new-pattern');
+  });
 });
