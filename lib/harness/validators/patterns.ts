@@ -6,10 +6,13 @@ export async function validatePatterns(
   cwd: string,
   catalog: PatternCatalog,
 ): Promise<PatternsValidationResult> {
-  const patterns = catalog.query({
+  const allPatterns = catalog.query({
     categories: ["error_pattern"],
     excludeArchived: true,
   });
+
+  // Only check promoted patterns — bootstrap/pending are not yet validated
+  const patterns = allPatterns.filter(p => p.status === "promoted");
 
   if (patterns.length === 0) {
     return { passed: true, violations: [], blocking: false };

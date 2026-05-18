@@ -7,7 +7,9 @@ export function defaultPatternsConfig(): PatternsConfig {
   return {
     enabled: true,
     globalWiki: true,
-    globalPath: path.join(os.homedir(), ".superpowers", "patterns-wiki"),
+    globalPath:
+      process.env.SUPERPOWERS_PATTERNS_WIKI ||
+      path.join(os.homedir(), ".superpowers", "patterns-wiki"),
     bootstrapThreshold: 10,
     recurrenceThreshold: { minFrequency: 3, minProjects: 2 },
     staleness: { reviewDays: 30, archiveDays: 90 },
