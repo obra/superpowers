@@ -1,0 +1,15 @@
+{
+  "correction_triggers": [
+    "não ficou bom", "precisa validar", "esqueceu", "falta",
+    "não está funcionando", "corrigir", "isso deveria",
+    "não deveria", "missing", "forgot to", "needs to",
+    "should have", "not working as expected", "não funciona",
+    "está quebrado", "bug", "error", "wrong", "incorrect",
+    "não é isso", "está errado", "precisa ser", "deveria ter"
+  ],
+  "positive_triggers": [
+    "isso sim", "agora ficou bom", "perfeito", "exatamente",
+    "great", "perfect", "this works", "now it's good",
+    "looks good", "approved", "LGTM"
+  ]
+}
