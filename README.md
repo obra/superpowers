@@ -31,7 +31,7 @@ This fork is for Claude Code only.
 ### Claude Code
 
 <!-- project-metadata:install:start -->
-Use the approved Claude plugin source: https://github.com/CreativeSoftware/superpowers-cs
+Use the approved Claude plugin source: https://github.com/Wansajee/superpowers-cs
 <!-- project-metadata:install:end -->
 
 ## The Basic Workflow
@@ -112,7 +112,7 @@ MIT License - see LICENSE file for details
 This fork is maintained for company use.
 
 <!-- project-metadata:support:start -->
-- **Repository**: https://github.com/CreativeSoftware/superpowers-cs
-- **Issues**: https://github.com/CreativeSoftware/superpowers-cs/issues
+- **Repository**: https://github.com/Wansajee/superpowers-cs
+- **Issues**: https://github.com/Wansajee/superpowers-cs/issues
 - **Support**: INT.Wansajee@CreativeSoftware.com
 <!-- project-metadata:support:end -->
