@@ -1,111 +1,113 @@
 # pi-superpowers
 
-> Superpowers 工作流技能库的 Pi 平台移植版，含中文触发支持
+[中文版](README_CN.md)
 
-**pi-superpowers** 将 [obra/superpowers](https://github.com/obra/superpowers) 的 14 个专业工作流技能移植到 [Pi](https://github.com/badlogic/pi) 编程助手平台，并添加了：
+> A Pi platform port of the Superpowers workflow skill library, with Chinese trigger support
 
-- 🇨🇳 **中文触发词**：每个技能均支持中英双语触发，中文提问自动匹配对应技能
-- 🔌 **Bootstrap 扩展**：每次会话启动时自动将技能使用规则注入上下文
-- 🔧 **工具映射**：自动将原 Claude Code 工具（`Skill`、`TodoWrite`、`Task`）映射到 Pi 等价操作
-- 🤖 **`dispatch_agent` 工具**：模拟 Claude Code 的 `Task` 子代理，通过 `pi --no-session --print` 子进程实现上下文隔离
-- ⚡ **提示模板**：3个斜杠命令（`/brainstorm`等）
+**pi-superpowers** ports 14 professional workflow skills from [obra/superpowers](https://github.com/obra/superpowers) to the [Pi](https://github.com/badlogic/pi) programming assistant platform, adding:
 
----
-
-## 目录
-
-- [技能一览](#技能一览)
-- [典型工作流](#典型工作流)
-- [提示模板命令](#提示模板命令)
-- [工具映射参考](#工具映射参考)
-- [dispatch_agent 工具](#dispatch_agent-工具)
-- [Bootstrap 注入机制](#bootstrap-注入机制)
-- [已知限制](#已知限制)
-- [安装](#安装)
+- 🇨🇳 **Chinese trigger words**: Every skill supports bilingual (Chinese/English) triggers — Chinese queries automatically match the corresponding skill
+- 🔌 **Bootstrap extension**: Skill usage rules are automatically injected into context at the start of every session
+- 🔧 **Tool mapping**: Automatically maps original Claude Code tools (`Skill`, `TodoWrite`, `Task`) to Pi equivalents
+- 🤖 **`dispatch_agent` tool**: Simulates Claude Code's `Task` sub-agent with context isolation via `pi --no-session --print` subprocess
+- ⚡ **Prompt templates**: 3 slash commands (`/brainstorm`, etc.)
 
 ---
 
-## 技能一览
+## Table of Contents
 
-安装后共提供 **14 个技能**，技能描述涵盖中英文关键词，Pi 在收到匹配请求时自动加载对应技能。
-
-也可通过 `/skill:<name>` 命令强制加载任意技能。
-
-### 开发流程类
-
-| 技能 | 触发场景 | 中文关键词示例 |
-|------|---------|--------------|
-| `brainstorming` | 实现新功能/组件前的需求分析与方案设计 | 头脑风暴、做一个新功能、从哪里开始、需求分析 |
-| `writing-plans` | 将需求拆解为细粒度实现步骤 | 写计划、制定开发计划、拆分任务、做规划 |
-| `subagent-driven-development` | 按实现计划执行多个独立任务 | 执行计划、开始实现、逐任务执行 |
-| `executing-plans` | 批次执行已有书面计划 | 按计划实现、批次执行任务 |
-| `test-driven-development` | 实现任何功能或修复 bug 前 | TDD、测试驱动开发、先写测试、测试优先 |
-| `using-git-worktrees` | 需要与当前工作区隔离时 | git worktree、隔离开发、新分支开发 |
-| `dispatching-parallel-agents` | 面临 2+ 个可并行的独立任务 | 并行处理、多任务并发、同时修复多个问题 |
-| `verification-before-completion` | 即将声明任务完成前 | 验证完成、声明完成前、提交前验证 |
-
-### 质量保障类
-
-| 技能 | 触发场景 | 中文关键词示例 |
-|------|---------|--------------|
-| `systematic-debugging` | 遇到 bug、测试失败或意外行为 | 调试、找 bug、修复问题、测试失败、根本原因分析 |
-| `requesting-code-review` | 完成任务或合并前的代码审查 | 代码审查、code review、审查代码、提交前审查 |
-| `receiving-code-review` | 收到审查意见后的处理流程 | 处理审查意见、回应评审、技术反驳 |
-| `finishing-a-development-branch` | 实现完成、测试通过，准备集成 | 完成分支、提 PR、合并代码、结束开发 |
-
-### 元技能类
-
-| 技能 | 触发场景 | 中文关键词示例 |
-|------|---------|--------------|
-| `using-superpowers` | 每次对话开始（由 Bootstrap 扩展自动注入） | 自动触发，无需手动 |
-| `writing-skills` | 创建或修改技能文件 | 写 skill、创建新技能、设计工作流技能 |
+- [Skill Overview](#skill-overview)
+- [Typical Workflows](#typical-workflows)
+- [Prompt Template Commands](#prompt-template-commands)
+- [Tool Mapping Reference](#tool-mapping-reference)
+- [dispatch_agent Tool](#dispatch_agent-tool)
+- [Bootstrap Injection Mechanism](#bootstrap-injection-mechanism)
+- [Known Limitations](#known-limitations)
+- [Installation](#installation)
 
 ---
 
-## 典型工作流
+## Skill Overview
 
-### 1. 完整功能开发流程
+After installation, **14 skills** are available. Skill descriptions include both Chinese and English keywords — Pi automatically loads the matching skill when a relevant request is received.
+
+You can also force-load any skill with the `/skill:<name>` command.
+
+### Development Workflow Skills
+
+| Skill | Trigger Scenario | Chinese Keyword Examples |
+|-------|-----------------|--------------------------|
+| `brainstorming` | Requirements analysis and design before implementing a new feature/component | 头脑风暴、做一个新功能、从哪里开始、需求分析 |
+| `writing-plans` | Breaking down requirements into fine-grained implementation steps | 写计划、制定开发计划、拆分任务、做规划 |
+| `subagent-driven-development` | Executing multiple independent tasks according to an implementation plan | 执行计划、开始实现、逐任务执行 |
+| `executing-plans` | Batch-executing an existing written plan | 按计划实现、批次执行任务 |
+| `test-driven-development` | Before implementing any feature or fixing a bug | TDD、测试驱动开发、先写测试、测试优先 |
+| `using-git-worktrees` | When isolation from the current workspace is needed | git worktree、隔离开发、新分支开发 |
+| `dispatching-parallel-agents` | Facing 2+ independent tasks that can run in parallel | 并行处理、多任务并发、同时修复多个问题 |
+| `verification-before-completion` | Just before declaring a task complete | 验证完成、声明完成前、提交前验证 |
+
+### Quality Assurance Skills
+
+| Skill | Trigger Scenario | Chinese Keyword Examples |
+|-------|-----------------|--------------------------|
+| `systematic-debugging` | Encountering a bug, test failure, or unexpected behavior | 调试、找 bug、修复问题、测试失败、根本原因分析 |
+| `requesting-code-review` | Code review before completing a task or merging | 代码审查、code review、审查代码、提交前审查 |
+| `receiving-code-review` | Handling review feedback after receiving it | 处理审查意见、回应评审、技术反驳 |
+| `finishing-a-development-branch` | Implementation complete, tests passing, ready to integrate | 完成分支、提 PR、合并代码、结束开发 |
+
+### Meta Skills
+
+| Skill | Trigger Scenario | Chinese Keyword Examples |
+|-------|-----------------|--------------------------|
+| `using-superpowers` | At the start of every conversation (auto-injected by the Bootstrap extension) | Auto-triggered, no manual action needed |
+| `writing-skills` | Creating or modifying skill files | 写 skill、创建新技能、设计工作流技能 |
+
+---
+
+## Typical Workflows
+
+### 1. Full Feature Development Flow
 
 ```
-你：帮我做一个用户权限管理模块
- └→ AI 自动加载 brainstorming 技能，开始需求分析
-    ↓ 探索需求、提出多种方案、获得确认
-你：好，按这个方案来
- └→ AI 自动加载 writing-plans 技能，拆解实现步骤
-    ↓ 生成每步 2-5 分钟颗粒度的计划
-你：开始实现
- └→ AI 自动加载 subagent-driven-development / executing-plans 技能
-    ↓ 按 TDD 循环逐任务实现（先写测试，再实现，审查通过后继续）
-你：全部完成了
- └→ AI 自动加载 verification-before-completion 技能，运行验证命令
-    ↓ 确认通过后加载 finishing-a-development-branch，决定合并方式
+You:  Help me build a user permissions management module
+       └→ AI auto-loads brainstorming skill, begins requirements analysis
+          ↓ Explores requirements, proposes multiple approaches, awaits confirmation
+You:  OK, let's go with that approach
+       └→ AI auto-loads writing-plans skill, breaks down implementation steps
+          ↓ Generates a plan with 2–5 minute granularity per step
+You:  Start implementing
+       └→ AI auto-loads subagent-driven-development / executing-plans skill
+          ↓ Implements task by task in TDD cycles (tests first, then implement, review, then continue)
+You:  Everything is done
+       └→ AI auto-loads verification-before-completion skill, runs verification commands
+          ↓ After confirmation, loads finishing-a-development-branch to decide merge strategy
 ```
 
-### 2. Bug 调试流程
+### 2. Bug Debugging Flow
 
 ```
-你：测试报错了，TypeError: Cannot read property 'id' of undefined
- └→ AI 自动加载 systematic-debugging 技能
-    ↓ 系统性根因分析：确认症状 → 隔离范围 → 找最小复现 → 修复
-    ↓ 修复前必须先写能复现 bug 的失败测试（TDD）
+You:  Tests are failing — TypeError: Cannot read property 'id' of undefined
+       └→ AI auto-loads systematic-debugging skill
+          ↓ Systematic root-cause analysis: confirm symptoms → isolate scope → find minimal repro → fix
+          ↓ Must write a failing test that reproduces the bug before applying the fix (TDD)
 ```
 
-### 3. 强制使用斜杠命令
+### 3. Force-Loading with Slash Commands
 
-当自动触发不可靠时，直接用 `/skill:` 命令强制加载：
+When auto-triggering is unreliable, use `/skill:` commands to force-load a skill:
 
 ```
-/skill:brainstorming          # 强制启动需求分析
-/skill:test-driven-development  # 强制进入 TDD 模式
-/skill:systematic-debugging     # 强制系统性调试
-/skill:verification-before-completion  # 强制验证完成
+/skill:brainstorming               # Force requirements analysis
+/skill:test-driven-development     # Force TDD mode
+/skill:systematic-debugging        # Force systematic debugging
+/skill:verification-before-completion  # Force completion verification
 ```
 
-### 4. 中文对话示例
+### 4. Chinese Conversation Examples
 
-| 你说的话 | 自动触发技能 |
-|---------|-----------|
-| "帮我做一个登录功能" | `brainstorming`（功能开发前分析） |
+| What you say | Skill auto-triggered |
+|-------------|---------------------|
+| "帮我做一个登录功能" | `brainstorming` (pre-feature analysis) |
 | "这个测试一直失败，帮我看看" | `systematic-debugging` |
 | "用测试驱动开发这个接口" | `test-driven-development` |
 | "代码写完了，帮我 review 一下" | `requesting-code-review` |
@@ -114,174 +116,174 @@
 
 ---
 
-## 提示模板命令
+## Prompt Template Commands
 
-提示模板用 `/` 前缀触发，强制执行对应技能的完整流程：
+Prompt templates are triggered with a `/` prefix and enforce the full workflow of the corresponding skill:
 
-| 命令 | 说明 |
-|------|-----|
-| `/brainstorm` | 启动需求分析和方案设计流程，禁止 AI 在确认前写代码 |
-| `/write-plan` | 将已确认的方案拆解为精细实现步骤 |
-| `/execute-plan` | 批次执行已有计划，每批次后汇报并等待反馈 |
+| Command | Description |
+|---------|-------------|
+| `/brainstorm` | Start requirements analysis and design; AI is blocked from writing code before confirmation |
+| `/write-plan` | Break a confirmed approach into fine-grained implementation steps |
+| `/execute-plan` | Batch-execute an existing plan, reporting after each batch and waiting for feedback |
 
-**用法示例：**
+**Usage example:**
 ```
-/brainstorm 我想做一个实时聊天室
+/brainstorm I want to build a real-time chat room
 /write-plan
 /execute-plan
 ```
 
 ---
 
-## 工具映射参考
+## Tool Mapping Reference
 
-Pi 的工具名称与原 Claude Code 存在差异，Bootstrap 扩展会将以下映射注入系统提示，AI 会自动换用 Pi 等价工具：
+Pi tool names differ from Claude Code's originals. The Bootstrap extension injects the following mapping into the system prompt, and the AI will automatically use Pi-equivalent tools:
 
-| 原 Claude Code 工具 | Pi 中的替代方案 |
-|--------------------|--------------|
-| `Skill` tool | `read` 工具读取 `skills/<name>/SKILL.md`，或使用 `/skill:<name>` 命令 |
-| `TodoWrite` | `write`/`edit` 工具操作项目根目录的 `TODO.md`（Markdown 复选框格式） |
-| `Task`（子代理派发）| **方案 A（降级）顺序执行模式**：在当前对话中逐任务实现，每任务后切换角色审查；**方案 B（推荐）`dispatch_agent` 工具**：通过 `pi --no-session --print` 子进程实现真正的上下文隔离（见下方说明） |
-| `Read` | `read`（同名，直接使用）|
-| `Write` | `write`（同名，直接使用）|
-| `Edit` | `edit`（同名，直接使用）|
-| `Bash` | `bash`（同名，直接使用）|
+| Original Claude Code Tool | Pi Equivalent |
+|--------------------------|---------------|
+| `Skill` tool | Use `read` to load `skills/<name>/SKILL.md`, or use the `/skill:<name>` command |
+| `TodoWrite` | Use `write`/`edit` to manage `TODO.md` at the project root (Markdown checkbox format) |
+| `Task` (sub-agent dispatch) | **Option A (fallback) Sequential mode**: implement tasks one by one in the current conversation with role-switching for review; **Option B (recommended) `dispatch_agent` tool**: true context isolation via `pi --no-session --print` subprocess (see below) |
+| `Read` | `read` (same name, use directly) |
+| `Write` | `write` (same name, use directly) |
+| `Edit` | `edit` (same name, use directly) |
+| `Bash` | `bash` (same name, use directly) |
 
-### 子代理执行模式
+### Sub-agent Execution Modes
 
-原 superpowers 的 `subagent-driven-development` 技能依赖 `Task` 工具派发独立子代理。pi-superpowers 提供两种替代方案：
+The original superpowers `subagent-driven-development` skill relies on the `Task` tool to dispatch independent sub-agents. pi-superpowers provides two alternatives:
 
-#### 方案 A：顺序执行降级模式（无需额外工具）
+#### Option A: Sequential Fallback Mode (no extra tooling required)
 
-在当前对话中按顺序逐任务执行，通过角色切换模拟多视角：
+Execute tasks sequentially in the current conversation, simulating multiple perspectives through role-switching:
 
 ```
-1. 实现角色（Implementer）：实现任务 → 写测试 → 自我审查 → 提交
-2. Spec 审查角色（Spec Reviewer）：用 read 工具独立验证，不信任实现报告
-3. 质量审查角色（Code Quality Reviewer）：审查代码质量（仅 Spec 通过后）
-4. 修复问题 → 重新审查 → 通过后处理下一任务
+1. Implementer role:       Implement task → write tests → self-review → commit
+2. Spec Reviewer role:     Independently verify with read tool, do not trust implementer's report
+3. Code Quality Reviewer:  Review code quality (only after Spec review passes)
+4. Fix issues → re-review → proceed to next task after passing
 ```
 
-任务状态用 `TODO.md` 文件追踪：
+Task status is tracked in a `TODO.md` file:
 ```markdown
-- [x] Task 1: 实现用户模型
-- [ ] Task 2: 实现认证中间件
-- [ ] Task 3: 实现登录接口
+- [x] Task 1: Implement user model
+- [ ] Task 2: Implement auth middleware
+- [ ] Task 3: Implement login endpoint
 ```
 
 ---
 
-## dispatch_agent 工具
+## dispatch_agent Tool
 
-#### 方案 B：`dispatch_agent` 工具（推荐，需要 `pi` 在 PATH 中）
+#### Option B: `dispatch_agent` Tool (recommended, requires `pi` in PATH)
 
-`dispatch_agent` 是 pi-superpowers 注册的自定义工具（`extensions/subagent.ts`），通过启动 `pi --no-session --print` 子进程实现真正的上下文隔离，与 Claude Code 的 `Task` 工具行为一致。
+`dispatch_agent` is a custom tool registered by pi-superpowers (`extensions/subagent.ts`). It achieves true context isolation by launching a `pi --no-session --print` subprocess, matching the behavior of Claude Code's `Task` tool.
 
-**LLM 调用示例：**
+**LLM call example:**
 ```
 dispatch_agent({
-  task: "实现用户认证中间件，要求：1) 验证 JWT 2) 处理过期 3) 写单元测试",
+  task: "Implement user auth middleware: 1) validate JWT 2) handle expiration 3) write unit tests",
   role: "implementer"
 })
 ```
 
-**支持的角色（`role` 参数）：**
+**Supported roles (`role` parameter):**
 
-| 角色 | 说明 |
-|------|------|
-| `implementer` | 实现任务、编写测试、自我审查 |
-| `spec-reviewer` | 独立验证实现是否符合规格（批判性视角） |
-| `code-quality-reviewer` | 审查代码质量，仅在 Spec 审查通过后运行 |
-| _(省略)_ | 无角色限制的通用子代理 |
+| Role | Description |
+|------|-------------|
+| `implementer` | Implements the task, writes tests, self-reviews |
+| `spec-reviewer` | Independently verifies the implementation against the spec (critical perspective) |
+| `code-quality-reviewer` | Reviews code quality; runs only after Spec review passes |
+| _(omitted)_ | General-purpose sub-agent with no role restriction |
 
-**底层实现：**
+**Underlying implementation:**
 ```bash
-# role = "implementer" 时等价于：
+# When role = "implementer", equivalent to:
 pi --no-session --print \
    --append-system-prompt "You are a implementer." \
-   "实现用户认证中间件，要求：..."
+   "Implement user auth middleware: ..."
 ```
 
-**先决条件**：`pi` 二进制需在 `$PATH` 中可访问。若未找到，工具返回清晰的错误信息而不会崩溃。
+**Prerequisite**: The `pi` binary must be accessible in `$PATH`. If not found, the tool returns a clear error message rather than crashing.
 
 ---
 
-## Bootstrap 注入机制
+## Bootstrap Injection Mechanism
 
-**问题**：原 superpowers 通过 Claude Code 的 `SessionStart` Hook 在每次会话开始时自动注入 `using-superpowers` 内容，Pi 没有此 Hook。
+**Problem**: The original superpowers uses Claude Code's `SessionStart` hook to auto-inject `using-superpowers` content at the beginning of every session. Pi does not have this hook.
 
-**解决方案**：pi-superpowers 提供两个 Pi 扩展：
+**Solution**: pi-superpowers provides two Pi extensions:
 
-| 扩展文件 | 作用 |
-|---------|------|
-| `extensions/bootstrap.ts` | 每次会话第一条消息前，将 `using-superpowers` 规则注入系统提示 |
-| `extensions/subagent.ts` | 注册 `dispatch_agent` 工具，替代 Claude Code 的 `Task` 子代理 |
+| Extension File | Purpose |
+|---------------|---------|
+| `extensions/bootstrap.ts` | Injects `using-superpowers` rules into the system prompt before the first message of each session |
+| `extensions/subagent.ts` | Registers the `dispatch_agent` tool as a replacement for Claude Code's `Task` sub-agent |
 
-`bootstrap.ts` 的注入流程：
+`bootstrap.ts` injection flow:
 
 ```
-用户发送第一条消息
+User sends first message
       ↓
-before_agent_start 触发
+before_agent_start fires
       ↓
-检测是否为本 session 的第一个用户 turn？
-  是 → 读取 using-superpowers/SKILL.md
-      → 组装 <EXTREMELY_IMPORTANT> 注入块
-      → 追加到 systemPrompt
-      → 标记本 session 已注入（避免后续 turn 重复注入）
-  否 → 不注入
+Is this the first user turn of this session?
+  YES → Read using-superpowers/SKILL.md
+      → Assemble <EXTREMELY_IMPORTANT> injection block
+      → Append to systemPrompt
+      → Mark session as injected (prevents re-injection on subsequent turns)
+  NO  → Skip injection
       ↓
-AI 在本次响应中遵循 using-superpowers 规则
+AI follows using-superpowers rules in this response
 ```
 
-注入内容包含：
-- `using-superpowers` 技能全文（技能使用规则、优先级、红旗清单）
-- Pi 平台工具映射表（替代 Skill/TodoWrite/Task 的方法）
+Injected content includes:
+- Full `using-superpowers` skill text (skill usage rules, priority, red flags checklist)
+- Pi platform tool mapping table (alternatives for Skill/TodoWrite/Task)
 
 ---
 
-## 已知限制
+## Known Limitations
 
-| 限制 | 影响 | 缓解措施 |
-|------|------|---------|
-| 无内置子代理（`Task` 工具不可用） | `subagent-driven-development` 无法真正并行执行 | **已通过 `dispatch_agent` 工具解决**：`extensions/subagent.ts` 通过 `pi --no-session --print` 子进程实现上下文隔离；降级方案：顺序执行模式 |
-| 无 `TodoWrite` 工具 | 任务进度无法用原生 UI 显示 | 用 `TODO.md` 文件追踪，功能等价 |
-| `before_agent_start` 每次都触发 | 需要检测是否已注入 | Bootstrap 扩展用 session ID + turn 计数双重检测 |
-| `using-superpowers` 中的流程图依赖 Graphviz | Dot 语法代码块无法在 Pi TUI 中渲染 | 图表仍可作为文字逻辑参考，不影响功能 |
+| Limitation | Impact | Mitigation |
+|-----------|--------|-----------|
+| No built-in sub-agents (`Task` tool unavailable) | `subagent-driven-development` cannot truly run in parallel | **Resolved via `dispatch_agent` tool**: `extensions/subagent.ts` achieves context isolation through `pi --no-session --print` subprocess; fallback: sequential execution mode |
+| No `TodoWrite` tool | Task progress cannot be shown in native UI | Track with `TODO.md` file — functionally equivalent |
+| `before_agent_start` fires on every turn | Need to detect whether injection has already occurred | Bootstrap extension uses session ID + turn count for double detection |
+| Flowcharts in `using-superpowers` require Graphviz | Dot syntax code blocks cannot render in Pi TUI | Diagrams still serve as text-based logic references; no functional impact |
 
 ---
 
-## 安装
+## Installation
 
-### 方式一：npm 安装（推荐）
+### Option 1: npm Install (Recommended)
 
 ```bash
-# 全局安装（所有项目可用）
+# Global install (available to all projects)
 pi install npm:@weiping/pi-superpowers
 
-# 项目级安装（仅当前项目，可提交给团队共享）
+# Project-level install (current project only, can be committed and shared with the team)
 pi install -l npm:@weiping/pi-superpowers
 ```
 
-安装后**重启 Pi** 使更改生效。
+**Restart Pi** after installation for changes to take effect.
 
 ---
 
-### 方式二：Git 安装
+### Option 2: Git Install
 
 ```bash
-# 从 GitHub 安装最新版
+# Install latest version from GitHub
 pi install https://github.com/weiping/pi-superpowers
 
-# 锁定到指定版本（pi update 不会自动升级）
+# Pin to a specific version (pi update won't auto-upgrade)
 pi install https://github.com/weiping/pi-superpowers@v1.0.0
 ```
 
 ---
 
-### 方式三：提示词自动安装
+### Option 3: Prompt-based Auto Install
 
-在 Pi 会话中粘贴以下提示词，Pi 将自动完成安装：
+Paste the following prompt in a Pi session and Pi will complete the installation automatically:
 
 ```
 Run: pi install npm:@weiping/pi-superpowers, then tell me the install is complete and I need to restart Pi.
@@ -289,23 +291,23 @@ Run: pi install npm:@weiping/pi-superpowers, then tell me the install is complet
 
 ---
 
-### 方式四：本地路径安装
+### Option 4: Local Path Install
 
 ```bash
-# 全局安装
+# Global install
 pi install /path/to/pi-superpowers
 
-# 项目级安装
+# Project-level install
 pi install -l /path/to/pi-superpowers
 ```
 
-详见 [INSTALL.md](INSTALL.md)。
+See [INSTALL.md](INSTALL.md) for details.
 
 ---
 
-### OpenClaw 安装
+### OpenClaw Installation
 
-如果你使用 [OpenClaw](https://openclaw.ai)：
+If you use [OpenClaw](https://openclaw.ai):
 
 ```bash
 openclaw plugins install @weiping/openclaw-superpowers
@@ -313,7 +315,7 @@ openclaw plugins install @weiping/openclaw-superpowers
 
 ---
 
-## 许可证
+## License
 
-MIT。  
-原始 superpowers 项目由 [Jesse Vincent](https://github.com/obra) 创作，同样采用 MIT 许可证。
+MIT.  
+Original superpowers project by [Jesse Vincent](https://github.com/obra), also licensed under MIT.
