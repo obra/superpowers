@@ -1,0 +1,21 @@
+{
+  "name": "superpowers",
+  "version": "5.1.0",
+  "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "tdd",
+    "debugging",
+    "collaboration",
+    "best-practices",
+    "workflows"
+  ],
+  "contextFileName": "ANTIGRAVITY.md"
+}
