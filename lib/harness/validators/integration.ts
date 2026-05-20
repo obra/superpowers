@@ -12,8 +12,13 @@ export async function validateIntegration(
 			"npx jest --testPathPattern=integration --passWithNoTests 2>&1 || true",
 		"node-express":
 			"npx jest --testPathPattern=integration --passWithNoTests 2>&1 || true",
+		"node-fastify":
+			"npx jest --testPathPattern=integration --passWithNoTests 2>&1 || true",
+		"node-elysia": "bun test --coverage 2>&1 || true",
+		"csharp-dotnet": 'dotnet test --filter "Category=Integration" 2>&1 || true',
 		"csharp-aspnet": 'dotnet test --filter "Category=Integration" 2>&1 || true',
 		"python-fastapi": "pytest -m integration --tb=short 2>&1 || true",
+		"java-springboot": "mvn verify 2>&1 || ./gradlew integrationTest 2>&1 || true",
 		"go-std": "go test -tags=integration ./... 2>&1 || true",
 		terraform: 'echo "No integration tests for Terraform"',
 	};
