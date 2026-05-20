@@ -9,14 +9,18 @@ import {
 
 const STACK_DETECTORS: Record<string, { files: string[]; deps?: string[] }> = {
 	"react-nextjs": { files: ["package.json"], deps: ["next", "react"] },
+	"csharp-dotnet": { files: ["*.csproj", "*.sln"] },
 	"csharp-aspnet": { files: ["*.csproj", "*.sln"] },
-	terraform: { files: ["*.tf", "terraform.tf"] },
+	"node-fastify": { files: ["package.json"], deps: ["fastify"] },
+	"node-elysia": { files: ["package.json"], deps: ["elysia"] },
+	"node-express": { files: ["package.json"], deps: ["express"] },
 	"python-fastapi": {
 		files: ["requirements.txt", "pyproject.toml"],
 		deps: ["fastapi"],
 	},
-	"node-express": { files: ["package.json"], deps: ["express"] },
+	"java-springboot": { files: ["pom.xml", "build.gradle", "build.gradle.kts"] },
 	"go-std": { files: ["go.mod"] },
+	terraform: { files: ["*.tf", "terraform.tf"] },
 };
 
 export function detectStack(projectRoot: string): string | null {
