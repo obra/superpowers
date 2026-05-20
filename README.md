@@ -29,14 +29,16 @@ Five research-backed principles run throughout: *less is more* (minimal always-o
 | Feature                  | Original Superpowers          | Superpowers Optimized                          | Real-world impact                  |
 |--------------------------|-------------------------------|------------------------------------------------|------------------------------------|
 | Workflow selection       | Manual                        | Automatic 3-tier (micro / lightweight / full)  | Zero overhead on simple tasks      |
-| Safety & hooks           | None                          | 10 proactive hooks overall, with platform-specific subsets on Codex/OpenCode | Strongest safety on Claude; partial hook parity on Codex/OpenCode |
-| Security review          | None                          | Built into code review with OWASP checklist    | Security catches before merge      |
+| Safety & hooks           | None                          | 12 proactive hooks overall, with platform-specific subsets on Codex/OpenCode | Strongest safety on Claude; partial hook parity on Codex/OpenCode |
+| Security review          | None                          | Built into code review with OWASP checklist + SecOps reviewer | Security catches before merge      |
 | Adversarial red team     | None                          | Red team agent + auto-fix pipeline             | Finds bugs checklists miss, fixes them with TDD |
 | Error recovery           | None                          | Project-specific known-issues.md               | No rediscovering the same bug      |
 | Token efficiency         | Standard                      | Always-on context hygiene + exploration tracking + automatic Bash output compression (76% savings on mixed sessions) | Less re-discovery, fewer wasted iterations    |
 | Discipline enforcement   | Instructional tone             | Rationalization tables, red flags, iron laws   | Fewer LLM shortcuts                |
 | Progress visibility      | None                          | Session stats (skills used, duration, actions)  | See what the plugin did for you    |
 | Cross-session memory     | None                          | Four-file memory stack: `project-map.md` (structure cache) + `session-log.md` (decision history) + `state.md` (task snapshot) + `known-issues.md` (error map) + automatic `context-snapshot.json` (git blast radius, written every session start) | The AI starts every session with full project context — no re-exploring, no re-explaining, no re-debugging |
+| Automated verification   | None                          | Learning Harness: stack detection, SecOps review, completeness/deadcode/drift analysis | Specs validated against code automatically |
+| Pattern learning         | None                          | Patterns System: auto-capture from feedback, wiki linter, catalog with CRUD and frequency tracking | Agent learns from corrections, never repeats mistakes |
 
 ### Try it in 30 seconds
 In any supported agent IDE, start a new chat and paste:
@@ -104,7 +106,7 @@ User sends a prompt
 ┌─ skill-activator.js (UserPromptSubmit hook) ──────────────┐
 │  Is this a micro-task? ("fix typo on line 42")            │
 │    YES → {} (no routing, zero overhead)                   │
-│    NO  → Score against 23 skill rules                     │
+│    NO  → Score against 26 skill rules                     │
 │          Score < 2? → {} (weak match, skip)               │
 │          Score ≥ 2? → Inject skill suggestions            │
 └───────────────────────────────────────────────────────────┘
@@ -128,6 +130,10 @@ User sends a prompt
 │    Bug/error  → systematic-debugging → TDD → verify       │
 │    Review     → requesting-code-review (w/ security)      │
 │                 + red-team → auto-fix pipeline            │
+│    Subagents  → extract-boundary → ContextEnvelope        │
+│    Verify     → harness-verify → lint/typecheck/test/     │
+│                 coverage/patterns (+ security/deadcode/   │
+│                 drift in verify-all mode)                  │
 │    Done?      → verification-before-completion            │
 │    Merge?     → finishing-a-development-branch            │
 └───────────────────────────────────────────────────────────┘
@@ -148,6 +154,16 @@ User sends a prompt
 ┌─ Tracking Hooks (PostToolUse) ────────────────────────────┐
 │  track-edits.js → logs file changes for TDD reminders     │
 │  track-session-stats.js → logs skill invocations          │
+│  post-task-validation.js → runs harness verify-local      │
+│    pipeline after edits; blocks agent on failure          │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼  (after user feedback / correction)
+┌─ Pattern Capture (PostUserFeedback) ──────────────────────┐
+│  capture-hook.js →                                        │
+│    Detects user corrections → classifies via LLM          │
+│    Checks for similar patterns in catalog                 │
+│    Prompts agent to catalog or update frequency           │
 └───────────────────────────────────────────────────────────┘
         │
         ▼  (when Claude stops responding)
@@ -255,12 +271,12 @@ Generate once with "map this project". After that, the session-start hook inject
 _Generated: 2026-03-20 14:32 | Git: a4b9c2d_
 
 ## Directory Structure
-skills/ — 25 skills, each in skills/<name>/SKILL.md
-hooks/ — 10 hooks (JS) + hooks.json registry + skill-rules.json
+skills/ — 28 skills, each in skills/<name>/SKILL.md
+hooks/ — 12 hooks (JS) + hooks.json registry + skill-rules.json
 
 ## Key Files
 hooks/skill-activator.js — UserPromptSubmit: context pressure gate (blocks plan execution at ≥60% context, reads session JSONL); skill hints via skill-rules.json; memory recall from session-log.md + known-issues.md. Micro-task detection skips all enrichment.
-hooks/skill-rules.json — 22 rules: skill name, keywords, intentPatterns, priority.
+hooks/skill-rules.json — 23 rules: skill name, keywords, intentPatterns, priority.
 
 ## Critical Constraints
 - hooks.json uses \" not ' around ${CLAUDE_PLUGIN_ROOT} (single quotes break Linux)
@@ -365,12 +381,14 @@ With this stack, sessions start with full context and zero re-discovery overhead
 ---
 
 
-## Skills Library (25 skills)
+## Skills Library (28 skills)
 
 ### Core Workflow
 - **using-superpowers** — Mandatory workflow router with 3-tier complexity classification (micro/lightweight/full) and instruction priority hierarchy
 - **token-efficiency** — Always-on: concise responses, parallel tool batching, exploration tracking, no redundant work
 - **context-management** — Four-file memory stack: `project-map.md` (structure + key files + critical constraints, git-hash staleness detection), `session-log.md` (decision history, manually written via `context-management` — [saved] entries only), `state.md` (ephemeral current-task snapshot), `known-issues.md` (error→solution map)
+- **extract-boundary** — Extracts boundary context and builds a semantic ContextEnvelope for subagents; maps technical dependencies AND semantic context (user story, acceptance criteria, flow context, constraints, learned patterns)
+- **harness-verify** — Runs the Automated Verification Harness validation pipeline; supports verify-local (fast), verify-all (full reconciliation), verify-security, verify-completeness, verify-deadcode, and explain-drift commands
 
 - **premise-check** — Validates whether proposed work should exist before investing in it; triggers reassessment when new evidence changes the original motivation
 
@@ -407,7 +425,7 @@ With this stack, sessions start with full context and zero re-discovery overhead
 - **frontend-design** — Design intelligence system with industry-aware style selection, 25 UI styles, 30 product-category mappings, page structure patterns, UI state management, and 10 priority quality standards (accessibility, touch, performance, animation, forms, navigation, charts)
 - **vercel-react-best-practices** — React and Next.js performance optimization guide from Vercel Engineering with 70+ rules across 8 categories: eliminating waterfalls, bundle size optimization, server-side performance, client-side data fetching, re-render optimization, rendering performance, JavaScript performance, and advanced patterns
 
-### Hooks (10 total)
+### Hooks (12 total)
 This is the full cross-platform hook inventory for the plugin. Claude Code gets the full set. Codex currently wires the smaller `SessionStart` / `UserPromptSubmit` / `PreToolUse(Bash)` / `PostToolUse(Bash)` / `Stop` subset through `hooks/codex/*`, subject to Codex platform limits.
 
 - **context-engine** (SessionStart) — Runs git commands on every session start and writes `context-snapshot.json`: changed files, blast radius (which other files reference each changed file, filtered to actual import/require references), recent commits, and change stats. Uses per-project watermarks (md5 of cwd) so multiple projects don't interfere, and cross-session diff base so "what changed" reflects changes since your last session, not just the last commit. Zero dependencies. Silent no-op on non-git projects
@@ -420,10 +438,77 @@ This is the full cross-platform hook inventory for the plugin. Claude Code gets 
 - **protect-secrets** (PreToolUse: Read/Edit/Write/Bash) — 50+ file patterns protecting sensitive files + 14 content patterns detecting hardcoded secrets (API keys, tokens, PEM blocks, connection strings) in source code with actionable env var guidance
 - **bash-compress-hook** (PreToolUse: Bash) — smart-compress: automatically removes noise from Bash output before it enters context. Covers 17 command types across two tiers: near-lossless summaries for install/push/pull commands (e.g. `npm install` → `ok, added 150 packages, in 12s`), and smart filtering for commands like `git status` (hint lines removed) and passing test runs (individual lines collapsed to summary). Hard safety rules: diffs, file reads, piped commands, `--verbose`/`--debug` output, and any failed command always pass through raw — no information loss on errors. Every filtered output gets a `[compressed: X->Y lines | type]` marker so Claude always knows compression occurred and can re-run if it needs more detail. If Claude does re-run the same command within 60 seconds, the hook automatically passes through the full uncompressed output on that second run. ~76% token savings on mixed sessions. Disable per-project with a `.sp-no-compress` file or globally with `SP_NO_COMPRESS=1`. See `docs/architecture/smart-compress.md` for full details
 - **subagent-guard** (SubagentStop) — Detects and blocks subagent skill leakage (12 action verbs + Skill tool invocation patterns) with automatic recovery
+- **capture-hook** (PostUserFeedback) — Detects user corrections and recurring patterns, classifies them via LLM, and catalogs them in the patterns wiki; prompts the agent to update frequency or add new patterns when similar issues recur
+- **post-task-validation** (PostToolUse: Edit/Write) — Automatically runs the harness verify-local pipeline after file edits; detects the affected project/stack and blocks the agent if validation fails, returning structured error context
 
 ### Agents
 - **code-reviewer** — Senior code review agent with social accountability framing (merge decision and downstream fixes depend on review accuracy) and ASI-guided fix prioritization (single most impactful finding surfaced first)
 - **red-team** — Adversarial analysis agent with social accountability framing: constructs concrete failure scenarios (logic bugs, race conditions, state corruption, resource exhaustion, assumption violations) — complements checklist-based security review; marks the single most critical finding as the ASI (auto-fix pipeline entry point)
+
+
+### Learning Harness
+
+The Agentic Development Harness is an automated verification and review system that validates code against specs, detects technology stacks, and runs security/completeness/dead-code/drift analysis.
+
+**Stack Detection & Handlers** — Automatically detects the technology stack from project files and applies stack-specific validation commands, reviewer prompts, and reviewer rules. Supported stacks:
+
+| Stack | Description |
+|-------|-------------|
+| `node-express` | Node.js + Express |
+| `node-fastify` | Node.js + Fastify |
+| `node-elysia` | Node.js/Bun + Elysia |
+| `node-nestjs` | Node.js + NestJS |
+| `react-nextjs` | React + Next.js |
+| `node-drizzle-typeorm` | Node.js + Drizzle/TypeORM |
+| `java-springboot` | Java + Spring Boot |
+| `csharp-dotnet` | C# + .NET 8/9 |
+| `csharp-aspnet` | C# + ASP.NET |
+| `python-fastapi` | Python + FastAPI |
+| `go-std` | Go (standard library) |
+| `terraform` | Terraform / IaC |
+
+**SecOps Reviewer** — Security operations review system with dedicated `secops-prompt.md` prompt and stack-specific reviewer rules. Evaluates security findings and determines harness action (APPROVE, BLOCK, HUMAN_REVIEW) based on severity and configurable fail-on thresholds.
+
+**Verification Pipeline** — Two modes with progressive validation depth:
+
+| Pipeline | Steps |
+|----------|-------|
+| `verify-local` (fast) | lint → typecheck → test → coverage → patterns |
+| `verify-all` (full) | verify-local + security → integration → domain-specific → migration |
+
+**Completeness Guarantees** — Verifies that all acceptance criteria from specs are implemented:
+- **Spec Parser** — Extracts acceptance criteria from multiple spec formats (markdown, JSON, structured text)
+- **Implementation Matcher** — Maps each AC to code evidence (function signatures, test coverage, implementation markers)
+- **Coverage Cross-Ref** — Cross-references test coverage data with AC-to-code mappings to verify tested implementation
+
+**Dead Code Detection** — Finds unreachable symbols and unused code:
+- **Symbol Extractor** — Parses TypeScript/JavaScript files to extract exported symbols (functions, classes, interfaces, types, variables)
+- **Import Graph** — Builds a directed graph of import relationships across the project
+- **Reachability Analysis** — Determines which symbols are reachable from entry points; flags unreachable exports
+
+**Drift Analysis** — Detects semantic divergence between spec and implementation:
+- **Spec Reader** — Extracts requirements from spec documents
+- **Semantic Diff** — Compares spec requirements against actual implementation, identifying missing, partial, divergent, and extra requirements
+- **Gap Classifier** — Categorizes drift by severity (critical-drift, warning, informational) and generates correction tasks
+
+**CLI** — `npx ts-node tools/harness/cli.ts <command>` with commands: `local`, `all`, `security`, `completeness`, `deadcode`, `explain-drift`, `scan`, `install-tools`
+
+
+### Patterns System
+
+The Patterns System captures, catalogs, and injects learned patterns from user feedback and code analysis — turning recurring corrections into persistent, project-specific knowledge.
+
+**Pattern Catalog** — File-based catalog with CRUD operations, organized by category (error_pattern, good_practice, project_constraint) and status (pending, archived). Supports global and project-level wikis with frequency tracking, cross-project occurrence tracking, and pattern supersession.
+
+**Wiki Linter** — Validates pattern wikis for quality: detects contradictions (conflicting patterns), stale entries (outdated patterns), orphans (uncategorized patterns), and duplicates (near-identical patterns).
+
+**Pattern Capture Hook** — Automatically detects user corrections in conversation, classifies them via LLM (one-off vs recurring pattern), checks for similar existing patterns, and prompts the agent to catalog or update frequency.
+
+**Pattern Injector** — Formats catalog entries for injection into subagent ContextEnvelopes, review checklists, and skill prompts. Queries patterns by module type, category, and severity.
+
+**Patterns Validator** — Checks code against known patterns in the catalog during harness verification. BLOCK severity violations halt the pipeline; WARN severity violations produce advisory findings.
+
+**CLI** — `npx ts-node tools/patterns/cli.ts <command>` with commands: `lint`, `query <term>`, `stats`, `promote <id>`, `archive <id>`, `create`, `update`, `supersede <old> <new>`
 
 
 ### Philosophy
