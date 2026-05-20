@@ -10,8 +10,12 @@ export async function validateLint(
 	const cmdMap: Record<string, string> = {
 		"react-nextjs": "npx eslint . --format stylish 2>&1 || true",
 		"node-express": "npx eslint . --format stylish 2>&1 || true",
+		"node-fastify": "npx eslint . --format stylish 2>&1 || true",
+		"node-elysia": "npx biome check . 2>&1 || npx eslint . --format stylish 2>&1 || true",
+		"csharp-dotnet": "dotnet format --verify-no-changes 2>&1 || true",
 		"csharp-aspnet": "dotnet format --verify-no-changes 2>&1 || true",
 		"python-fastapi": "black --check . 2>&1 || true",
+		"java-springboot": "mvn checkstyle:check 2>&1 || ./gradlew checkstyleMain 2>&1 || true",
 		terraform: "terraform fmt -check -recursive 2>&1 || true",
 		"go-std": "gofmt -l . 2>&1 || true",
 	};
