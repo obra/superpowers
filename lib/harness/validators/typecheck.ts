@@ -10,8 +10,12 @@ export async function validateTypeCheck(
 	const cmdMap: Record<string, string> = {
 		"react-nextjs": "npx tsc --noEmit 2>&1 || true",
 		"node-express": "npx tsc --noEmit 2>&1 || true",
+		"node-fastify": "npx tsc --noEmit 2>&1 || true",
+		"node-elysia": "npx tsc --noEmit 2>&1 || true",
+		"csharp-dotnet": "dotnet build --no-restore 2>&1 || true",
 		"csharp-aspnet": "dotnet build --no-restore 2>&1 || true",
 		"python-fastapi": "mypy . 2>&1 || true",
+		"java-springboot": "mvn compile -q 2>&1 || ./gradlew compileJava 2>&1 || true",
 		"go-std": "go build ./... 2>&1 || true",
 		terraform: "terraform validate 2>&1 || true",
 	};
