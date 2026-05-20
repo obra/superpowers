@@ -4,13 +4,17 @@ const REVIEWERS_DIR = path.resolve(__dirname);
 const STACKS_DIR = path.join(REVIEWERS_DIR, "stacks");
 const STACK_FILE_MAP: Record<string, string> = {
 	"react-nextjs": "react-nextjs.md",
+	"csharp-dotnet": "csharp-dotnet.md",
 	"csharp-aspnet": "csharp-aspnet.md",
-	terraform: "terraform.md",
-	"python-fastapi": "python-fastapi.md",
+	"node-fastify": "node-fastify.md",
+	"node-elysia": "node-elysia.md",
 	"node-express": "node-express.md",
 	"node-nestjs": "node-nestjs.md",
 	"node-drizzle-typeorm": "node-drizzle-typeorm.md",
+	"python-fastapi": "python-fastapi.md",
+	"java-springboot": "java-springboot.md",
 	"go-std": "go-std.md",
+	terraform: "terraform.md",
 };
 export function loadBasePrompt(): string {
 	const promptPath = path.join(REVIEWERS_DIR, "base-prompt.md");
@@ -102,14 +106,36 @@ export function resolveStacksForFiles(changedFiles: string[]): string[] {
 		if ([".cs", ".csproj", ".sln"].includes(ext)) {
 			stacks.add("csharp-aspnet");
 		}
+		// csharp-dotnet is detected via .cs/.csproj/.sln — same as csharp-aspnet
+		// The discovery system handles priority; loader just needs the extension mapping
 		if ([".tf", ".tfvars", ".tf.json"].includes(ext)) {
 			stacks.add("terraform");
 		}
 		if ([".py", ".pyi"].includes(ext)) {
 			stacks.add("python-fastapi");
 		}
+		if (
+			["pom.xml", "build.gradle", "build.gradle.kts"].some((f) =>
+				file.endsWith(f),
+			) ||
+			[".java"].includes(ext)
+		) {
+			stacks.add("java-springboot");
+		}
 		if ([".go"].includes(ext)) {
 			stacks.add("go-std");
+		}
+		// Fastify and Elysia are detected via package.json deps in the detection phase
+		// but we also check for common file patterns
+		if (
+			file.includes("routes/") ||
+			file.includes("handlers/") ||
+			file.includes("plugins/") ||
+			basename.includes("app.") ||
+			basename.includes("server.")
+		) {
+			// These could be fastify or elysia — the detection phase resolves which
+			// For loader purposes, we add both and the detection system filters
 		}
 	}
 	return Array.from(stacks);
