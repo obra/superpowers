@@ -11,8 +11,12 @@ export async function validateTests(
 	const cmdMap: Record<string, string> = {
 		"react-nextjs": `npx jest --passWithNoTests --json --outputFile=/dev/null 2>&1 || true`,
 		"node-express": `npx jest --passWithNoTests 2>&1 || true`,
+		"node-fastify": `npx jest --passWithNoTests 2>&1 || true`,
+		"node-elysia": `bun test --pass-with-no-tests 2>&1 || true`,
+		"csharp-dotnet": `dotnet test --no-build --logger "console;verbosity=normal" 2>&1 || true`,
 		"csharp-aspnet": `dotnet test --no-build --logger "console;verbosity=normal" 2>&1 || true`,
 		"python-fastapi": `pytest --tb=short 2>&1 || true`,
+		"java-springboot": `mvn test 2>&1 || ./gradlew test 2>&1 || true`,
 		"go-std": `go test ./... 2>&1 || true`,
 		terraform: 'echo "No test framework for Terraform"',
 	};
