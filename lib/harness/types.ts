@@ -52,7 +52,7 @@ export interface HarnessConfig {
 	failOn: {
 		lint: "error" | "warning";
 		coverage: "error" | "warning";
-		security: "error" | "warning";
+		security: "error" | "warning" | "human_review";
 	};
 }
 
@@ -92,6 +92,13 @@ export interface VerifyReport {
 		tests: { passed: number; total: number; framework: string };
 		coverage: { percentage: number; target: number; filesBelow: number };
 		patterns?: { violations: number; blocked: number; warned: number };
+		security?: {
+			decision: "APPROVE" | "BLOCK" | "NEEDS_HUMAN_REVIEW" | "NOT_ANALYZED";
+			totalFindings: number;
+			truePositives: number;
+			falsePositives: number;
+			needsInvestigation: number;
+		};
 	};
 	issues: {
 		file: string;
@@ -101,4 +108,71 @@ export interface VerifyReport {
 		suggestion: string;
 	}[];
 	recommendations: string[];
+	harnessAction?: "APPROVE" | "BLOCK" | "NEEDS_HUMAN_REVIEW";
+}
+
+export type HarnessAction = "APPROVE" | "BLOCK" | "NEEDS_HUMAN_REVIEW";
+export type SecOpsClassification = "TP" | "FP" | "Needs Investigation";
+export type SecOpsSeverity = "Critical" | "High" | "Medium" | "Low" | "Info";
+export interface SecOpsFinding {
+	tool: string;
+	id: string;
+	file?: string;
+	line?: number;
+	classification: SecOpsClassification;
+	real_severity: SecOpsSeverity;
+	suppression_applied: boolean;
+	justification?: string;
+	remediation?: string;
+	exception_rule?: string;
+}
+export interface SecOpsDecision {
+	harness_action: HarnessAction;
+	summary: {
+		total_findings: number;
+		true_positives: number;
+		false_positives: number;
+		needs_investigation: number;
+	};
+	findings: SecOpsFinding[];
+}
+export interface SecOpsReport {
+	decision: SecOpsDecision | null;
+	rawFindings: SecurityRawFinding[];
+	markdownReport: string;
+	passed: boolean;
+}
+export interface SecurityRawFinding {
+	tool: string;
+	id: string;
+	file?: string;
+	line?: number;
+	severity: string;
+	message: string;
+	raw: Record<string, unknown>;
+}
+
+export type ReviewerSeverity = "Critical" | "High" | "Medium" | "Low";
+export interface ReviewerFinding {
+	severity: ReviewerSeverity;
+	file: string;
+	line: number;
+	issue: string;
+	suggestion: string;
+}
+export interface AsiTarget {
+	file: string;
+	line: number;
+	issue_summary: string;
+	fix_instruction: string;
+}
+export interface ReviewerMetrics {
+	total_findings: number;
+	critical_high_count: number;
+}
+export interface ReviewerDecision {
+	harness_action: HarnessAction | "APPROVE";
+	metrics: ReviewerMetrics;
+	asi_target: AsiTarget | null;
+	findings: ReviewerFinding[];
 }

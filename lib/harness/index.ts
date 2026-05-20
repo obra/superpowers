@@ -55,7 +55,12 @@ export interface VerifyOptions {
 
 export async function verify(
 	options: VerifyOptions = { mode: "verify-local" },
-): Promise<VerifyReport & { secOpsDecision?: SecOpsDecision | null; harnessAction?: HarnessAction | "APPROVE" }> {
+): Promise<
+	VerifyReport & {
+		secOpsDecision?: SecOpsDecision | null;
+		harnessAction?: HarnessAction | "APPROVE";
+	}
+> {
 	const cwd = options.cwd || process.cwd();
 	const config = loadProjectConfig(cwd);
 	const stack = detectStack(cwd);
@@ -69,7 +74,8 @@ export async function verify(
 	}
 
 	const feature = options.feature || extractFeatureName(cwd);
-	const results: Record<string, ValidationResult & { rawFindings?: any[] }> = {};
+	const results: Record<string, ValidationResult & { rawFindings?: any[] }> =
+		{};
 	let secOpsDecision: SecOpsDecision | null = null;
 	let harnessAction: HarnessAction | "APPROVE" = "APPROVE";
 
@@ -106,11 +112,7 @@ export async function verify(
 			}
 		}
 	} else {
-		results.lint = await validateLint(
-			cwd,
-			stack,
-			config.timeout.verifyLocal,
-		);
+		results.lint = await validateLint(cwd, stack, config.timeout.verifyLocal);
 		if (!results.lint.passed && config.failOn.lint === "error") {
 			const report = buildReport({
 				feature,
@@ -164,14 +166,17 @@ export async function verify(
 		const patternsConfig = loadPatternsConfig(cwd);
 		if (patternsConfig.enabled) {
 			const wikiPaths = resolveWikiPaths(patternsConfig, cwd);
-			const patternCatalog = new PatternCatalog(wikiPaths.global, wikiPaths.project);
+			const patternCatalog = new PatternCatalog(
+				wikiPaths.global,
+				wikiPaths.project,
+			);
 			const patternsResult = await validatePatterns(cwd, patternCatalog);
 
 			results.patterns = {
 				passed: patternsResult.passed,
 				errors: patternsResult.violations
-					.filter(v => v.severity === "high")
-					.map(v => ({
+					.filter((v) => v.severity === "high")
+					.map((v) => ({
 						file: v.file || "",
 						line: v.line || 0,
 						column: 0,
@@ -180,8 +185,8 @@ export async function verify(
 						severity: "error" as const,
 					})),
 				warnings: patternsResult.violations
-					.filter(v => v.severity !== "high")
-					.map(v => `${v.pattern}: ${v.message}`),
+					.filter((v) => v.severity !== "high")
+					.map((v) => `${v.pattern}: ${v.message}`),
 				duration: 0,
 			};
 
@@ -286,7 +291,11 @@ export { validateTypeCheck } from "./validators/typecheck";
 export { validateTests } from "./validators/test";
 export { validateCoverage } from "./validators/coverage";
 export { validateSecurity } from "./validators/security";
-export { loadSecOpsPrompt, parseSecOpsResponse, determineHarnessAction } from "./validators/security";
+export {
+	loadSecOpsPrompt,
+	parseSecOpsResponse,
+	determineHarnessAction,
+} from "./validators/security";
 
 export interface ReviewCodeOptions {
 	changedFiles: string[];
@@ -295,16 +304,26 @@ export interface ReviewCodeOptions {
 }
 
 export function prepareReviewerPrompt(options: ReviewCodeOptions): string {
-	return buildReviewerPrompt(options.changedFiles, options.gitDiff, options.stacks);
+	return buildReviewerPrompt(
+		options.changedFiles,
+		options.gitDiff,
+		options.stacks,
+	);
 }
 
 export function evaluateReviewResponse(
 	response: string,
 	failOn: "error" | "warning" | "human_review" = "error",
-): { decision: ReviewerDecision | null; action: ReturnType<typeof determineReviewerAction>; markdown: string } {
+): {
+	decision: ReviewerDecision | null;
+	action: ReturnType<typeof determineReviewerAction>;
+	markdown: string;
+} {
 	const decision = parseReviewerResponse(response);
 	const action = determineReviewerAction(decision, failOn);
-	const markdown = decision ? formatReviewerDecisionMarkdown(decision) : "## Review: No parseable decision found in response.";
+	const markdown = decision
+		? formatReviewerDecisionMarkdown(decision)
+		: "## Review: No parseable decision found in response.";
 	return { decision, action, markdown };
 }
 
@@ -329,15 +348,26 @@ export {
 export { parseSpec, detectSpecFormat } from "./completeness/spec-parser";
 export { matchAC } from "./completeness/implementation-matcher";
 export type { CompletenessOptions } from "./completeness/verifier";
-export type { AcceptanceCriterion, ACEvidence, CompletenessReport } from "./completeness/types";
+export type {
+	AcceptanceCriterion,
+	ACEvidence,
+	CompletenessReport,
+} from "./completeness/types";
 
 // Dead code detection
 export { detectDeadCode, formatDeadCodeMarkdown } from "./deadcode/detector";
 export { buildImportGraph, getImporters } from "./deadcode/import-graph";
 export { analyzeReachability } from "./deadcode/reachability";
-export { extractSymbols, extractSymbolsFromFiles } from "./deadcode/symbol-extractor";
+export {
+	extractSymbols,
+	extractSymbolsFromFiles,
+} from "./deadcode/symbol-extractor";
 export type { DeadCodeOptions } from "./deadcode/detector";
-export type { SymbolInfo, ReachabilityResult, DeadCodeReport } from "./deadcode/types";
+export type {
+	SymbolInfo,
+	ReachabilityResult,
+	DeadCodeReport,
+} from "./deadcode/types";
 
 // Drift analysis
 export { analyzeDrift, formatDriftMarkdown } from "./drift/analyzer";

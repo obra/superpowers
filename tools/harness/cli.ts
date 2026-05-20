@@ -1,8 +1,17 @@
 #!/usr/bin/env node
 import { verify } from "../../lib/harness/index.js";
-import { verifyCompleteness, formatCompletenessMarkdown } from "../../lib/harness/completeness/verifier.js";
-import { detectDeadCode, formatDeadCodeMarkdown } from "../../lib/harness/deadcode/detector.js";
-import { analyzeDrift, formatDriftMarkdown } from "../../lib/harness/drift/analyzer.js";
+import {
+	verifyCompleteness,
+	formatCompletenessMarkdown,
+} from "../../lib/harness/completeness/verifier.js";
+import {
+	detectDeadCode,
+	formatDeadCodeMarkdown,
+} from "../../lib/harness/deadcode/detector.js";
+import {
+	analyzeDrift,
+	formatDriftMarkdown,
+} from "../../lib/harness/drift/analyzer.js";
 
 const args = process.argv.slice(2);
 const command = args[0] || "local";
@@ -17,7 +26,7 @@ const modeMap: Record<
 };
 
 function findSpecPath(): string | null {
-	const specFlag = args.findIndex((a) => a === "--spec");
+	const specFlag = args.indexOf("--spec");
 	if (specFlag !== -1 && args[specFlag + 1]) return args[specFlag + 1];
 
 	const candidates = [
@@ -28,15 +37,17 @@ function findSpecPath(): string | null {
 	];
 	for (const c of candidates) {
 		try {
-			require("fs").accessSync(c);
+			require("node:fs").accessSync(c);
 			return c;
-		} catch { /* skip */ }
+		} catch {
+			/* skip */
+		}
 	}
 	return null;
 }
 
 function getProjectRoot(): string {
-	const rootFlag = args.findIndex((a) => a === "--root");
+	const rootFlag = args.indexOf("--root");
 	if (rootFlag !== -1 && args[rootFlag + 1]) return args[rootFlag + 1];
 	return process.cwd();
 }
@@ -59,16 +70,20 @@ async function main() {
 			console.error("No spec found. Use --spec to specify path.");
 			process.exit(1);
 		}
-		const report = await verifyCompleteness({ specPath, projectRoot: getProjectRoot() });
+		const report = await verifyCompleteness({
+			specPath,
+			projectRoot: getProjectRoot(),
+		});
 		console.log(formatCompletenessMarkdown(report));
 		process.exit(report.overallStatus === "pass" ? 0 : 1);
 	}
 
 	if (command === "deadcode") {
-		const filesFlag = args.findIndex((a) => a === "--files");
-		const taskFiles = filesFlag !== -1 && args[filesFlag + 1]
-			? args[filesFlag + 1].split(",")
-			: [];
+		const filesFlag = args.indexOf("--files");
+		const taskFiles =
+			filesFlag !== -1 && args[filesFlag + 1]
+				? args[filesFlag + 1].split(",")
+				: [];
 		if (taskFiles.length === 0) {
 			console.error("No files specified. Use --files=file1.ts,file2.ts");
 			process.exit(1);
@@ -80,7 +95,7 @@ async function main() {
 
 	const verifyMode = modeMap[command] || "verify-local";
 
-	const secOpsResponseFlag = args.findIndex((a) => a === "--secops-response");
+	const secOpsResponseFlag = args.indexOf("--secops-response");
 	const secOpsResponse =
 		secOpsResponseFlag !== -1 ? args[secOpsResponseFlag + 1] : undefined;
 
@@ -91,9 +106,7 @@ async function main() {
 			secOpsResponse,
 		});
 
-		console.log(
-			`\nReport saved to: .harness/reports/${report.feature}/`,
-		);
+		console.log(`\nReport saved to: .harness/reports/${report.feature}/`);
 		console.log(`Duration: ${(report.duration / 1000).toFixed(1)}s`);
 
 		if (report.summary.security) {
@@ -105,9 +118,7 @@ async function main() {
 		}
 
 		if (report.harnessAction && report.harnessAction !== "APPROVE") {
-			console.log(
-				`\nHarness Action: ${report.harnessAction}`,
-			);
+			console.log(`\nHarness Action: ${report.harnessAction}`);
 			if (report.harnessAction === "BLOCK") {
 				console.log(
 					"Build blocked by SecOps — true positives require remediation",

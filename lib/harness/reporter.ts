@@ -1,6 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { ValidationResult, VerifyReport } from "./types";
+import type { ValidationResult, VerifyReport, SecOpsDecision } from "./types";
+export interface GenerateReportOptions {
+	feature: string;
+	mode: "verify-local" | "verify-all" | "verify-security";
+	results: Record<string, ValidationResult>;
+	coverageTarget: number;
+	secOpsDecision?: SecOpsDecision | null;
+}
 
 export function extractFeatureName(cwd: string): string {
 	try {
@@ -18,12 +25,8 @@ export function extractFeatureName(cwd: string): string {
 	return `session-${Date.now()}`;
 }
 
-export function generateReport(
-	feature: string,
-	mode: "verify-local" | "verify-all" | "verify-security",
-	results: Record<string, ValidationResult>,
-	coverageTarget: number,
-): VerifyReport {
+export function generateReport(options: GenerateReportOptions): VerifyReport {
+	const { feature, mode, results, coverageTarget, secOpsDecision } = options;
 	const lintResult = results.lint || {
 		passed: true,
 		errors: [],
@@ -89,6 +92,21 @@ export function generateReport(
 				target: coverageTarget,
 				filesBelow: coverageResult.errors.length,
 			},
+			security: secOpsDecision
+				? {
+						decision: secOpsDecision.harness_action,
+						totalFindings: secOpsDecision.summary.total_findings,
+						truePositives: secOpsDecision.summary.true_positives,
+						falsePositives: secOpsDecision.summary.false_positives,
+						needsInvestigation: secOpsDecision.summary.needs_investigation,
+					}
+				: {
+						decision: "NOT_ANALYZED" as const,
+						totalFindings: 0,
+						truePositives: 0,
+						falsePositives: 0,
+						needsInvestigation: 0,
+					},
 		},
 		issues: allErrors.map((e) => ({
 			file: e.file,
@@ -124,6 +142,20 @@ export function formatReportMarkdown(report: VerifyReport): string {
 	lines.push(
 		`${s.coverage.percentage >= s.coverage.target ? "✅" : "⚠️"} Coverage: ${s.coverage.percentage.toFixed(1)}% (target: ${s.coverage.target}%) — ${s.coverage.filesBelow} files below threshold`,
 	);
+
+	if (s.security) {
+		const secIcon =
+			s.security.decision === "APPROVE"
+				? "✅"
+				: s.security.decision === "BLOCK"
+					? "🚫"
+					: s.security.decision === "NEEDS_HUMAN_REVIEW"
+						? "⚠️"
+						: "➖";
+		lines.push(
+			`${secIcon} Security: ${s.security.decision} — ${s.security.totalFindings} total, ${s.security.truePositives} TP, ${s.security.falsePositives} FP, ${s.security.needsInvestigation} needs review`,
+		);
+	}
 
 	if (report.issues.length > 0) {
 		lines.push("");
