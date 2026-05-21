@@ -4,7 +4,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
+Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [DeepSeek TUI](#deepseek-tui), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
 
 ## How it works
 
@@ -149,6 +149,19 @@ already use it in another harness.
 
   ```bash
   copilot plugin install superpowers@superpowers-marketplace
+  ```
+
+### DeepSeek TUI
+
+DeepSeek TUI already auto-discovers superpowers skills from the workspace `skills/` directory. To enable automatic bootstrap at session start, the `AGENTS.md` file in the project root (or `DEEPSEEK.md` once deepseek-tui supports it) must include the superpowers bootstrap.
+
+- Ensure your workspace has a `skills/` directory (superpowers provides one, or copy it into your project).
+
+- The `AGENTS.md` file in the superpowers repository already includes the bootstrap. For other projects, add the [DEEPSEEK.md](DEEPSEEK.md) file to your project root. When DeepSeek TUI adds native `DEEPSEEK.md` support, it will be loaded automatically.
+
+- Verify by asking:
+  ```text
+  Tell me about your superpowers
   ```
 
 ## The Basic Workflow
