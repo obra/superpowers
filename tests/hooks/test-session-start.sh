@@ -31,6 +31,20 @@ make_home() {
     printf '%s\n' "$home"
 }
 
+make_plugin_fixture() {
+    local name="$1"
+    local hook_name="$2"
+    local skill_content="$3"
+    local source_hook="$REPO_ROOT/hooks/$hook_name"
+    local fixture_root="$TEST_ROOT/$name/plugin"
+
+    mkdir -p "$fixture_root/hooks" "$fixture_root/skills/using-superpowers"
+    cp "$source_hook" "$fixture_root/hooks/$hook_name"
+    chmod +x "$fixture_root/hooks/$hook_name"
+    printf '%s' "$skill_content" > "$fixture_root/skills/using-superpowers/SKILL.md"
+    printf '%s\n' "$fixture_root"
+}
+
 assert_command_output() {
     local description="$1"
     local shape="$2"
@@ -231,6 +245,35 @@ assert_command_output \
     PLUGIN_ROOT="$REPO_ROOT" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$CODEX_HOOK_UNDER_TEST"
+
+control_text="$(printf 'control chars: \001\002\003\004\005\006\007\010\011\012\013\014\015\016\017\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037 end')"
+
+control_fixture="$(make_plugin_fixture control-chars session-start "$control_text")"
+control_home="$(make_home control-chars)"
+assert_command_output \
+    "SessionStart escapes JSON control characters in skill content" \
+    "nested" \
+    "$control_text" \
+    "" \
+    "$control_home" \
+    CLAUDE_PLUGIN_ROOT="$control_fixture" \
+    bash "$control_fixture/hooks/session-start"
+
+codex_control_fixture="$(make_plugin_fixture codex-control-chars session-start-codex "$control_text")"
+codex_control_home="$(make_home codex-control-chars)"
+codex_control_data="$TEST_ROOT/codex-control-chars/data"
+mkdir -p "$codex_control_data"
+assert_command_output \
+    "Codex SessionStart escapes JSON control characters in skill content" \
+    "nested" \
+    "$control_text" \
+    "" \
+    "$codex_control_home" \
+    PLUGIN_DATA="$codex_control_data" \
+    CLAUDE_PLUGIN_DATA="$codex_control_data" \
+    PLUGIN_ROOT="$codex_control_fixture" \
+    CLAUDE_PLUGIN_ROOT="$codex_control_fixture" \
+    bash "$codex_control_fixture/hooks/session-start-codex"
 
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
