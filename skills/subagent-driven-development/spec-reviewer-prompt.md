@@ -18,6 +18,19 @@ Subagent (general-purpose):
 
     [From implementer's report]
 
+    ## Git Range to Review
+
+    **Base:** [BASE_SHA - commit before this task]
+    **Head:** [HEAD_SHA - current commit]
+
+    Start by running:
+    ```bash
+    git diff --stat [BASE_SHA]..[HEAD_SHA]
+    git diff [BASE_SHA]..[HEAD_SHA]
+    ```
+
+    Only read files that appear in this diff. Do not explore the broader codebase.
+
     ## CRITICAL: Do Not Trust the Report
 
     The implementer finished suspiciously quickly. Their report may be incomplete,
@@ -27,9 +40,10 @@ Subagent (general-purpose):
     - Take their word for what they implemented
     - Trust their claims about completeness
     - Accept their interpretation of requirements
+    - Read files outside the git diff range
 
     **DO:**
-    - Read the actual code they wrote
+    - Read the actual code they wrote (scoped to the diff)
     - Compare actual implementation to requirements line by line
     - Check for missing pieces they claimed to implement
     - Look for extra features they didn't mention
