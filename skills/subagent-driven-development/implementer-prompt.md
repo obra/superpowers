@@ -38,6 +38,13 @@ Subagent (general-purpose):
 
     Work from: [directory]
 
+    ## Workspace Boundary
+
+    Treat `Work from` as a hard boundary. Do not edit files outside this directory.
+    If any provided path points outside this directory, translate it to the same
+    relative path under this directory before reading or editing. If you cannot
+    translate it safely, stop and report NEEDS_CONTEXT.
+
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 

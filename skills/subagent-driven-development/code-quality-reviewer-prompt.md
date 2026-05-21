@@ -14,6 +14,7 @@ Subagent (general-purpose):
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
   BASE_SHA: [commit before task]
   HEAD_SHA: [current commit]
+  Review from: [directory]
 ```
 
 **In addition to standard code quality concerns, the reviewer should check:**

@@ -122,6 +122,12 @@ RED-GREEN-REFACTOR validation for the using-git-worktrees skill (~5 minutes):
 - PRESSURE: same as GREEN under urgency framing with pre-existing `.worktrees/`
 - Drill scenario `worktree-creation-under-pressure.yaml` covers the PRESSURE phase only
 
+#### test-worktree-write-boundary.sh
+Static regression check for the worktree write boundary:
+- Verifies `using-git-worktrees` records `WORKTREE_ROOT`
+- Verifies SDD passes the active workspace root to implementer and reviewer prompts
+- Verifies implementers are told to translate stale paths and avoid writes outside the active root
+
 ## Adding New Tests
 
 1. Create new test file: `test-<skill-name>.sh`

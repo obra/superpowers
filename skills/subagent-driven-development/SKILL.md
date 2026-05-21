@@ -101,6 +101,20 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+## Workspace Boundary
+
+Record the active workspace root before dispatching any subagent:
+
+```bash
+WORKTREE_ROOT=$(git rev-parse --show-toplevel)
+```
+
+Use this as the only writable project root for the whole SDD run. You must include the active workspace root in every implementer and reviewer prompt.
+
+If a plan, search result, explorer, or previous subagent report contains an absolute path outside the active workspace root, translate it into the active workspace root before passing it to a subagent. Preserve the same relative path. If the path cannot be translated safely, stop and ask before dispatching work.
+
+Reviewers must inspect files from the same active workspace root as implementers. Otherwise they may review stale files from the parent checkout or another worktree.
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:
@@ -242,6 +256,7 @@ Done!
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
+- Pass parent-checkout or sibling-worktree paths to subagents when an active workspace root exists
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)

@@ -10,6 +10,8 @@ Subagent (general-purpose):
   prompt: |
     You are reviewing whether an implementation matches its specification.
 
+    Review from: [directory]
+
     ## What Was Requested
 
     [FULL TEXT of task requirements]

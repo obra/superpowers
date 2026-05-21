@@ -30,7 +30,7 @@ BRANCH=$(git branch --show-current)
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
-**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 2 (Project Setup). Do NOT create another worktree.
+**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 2 (Workspace Boundary). Do NOT create another worktree.
 
 Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
@@ -99,7 +99,21 @@ cd "$path"
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
-## Step 2: Project Setup
+## Step 2: Workspace Boundary
+
+After detecting, creating, or declining a worktree, record the active workspace root:
+
+```bash
+WORKTREE_ROOT=$(git rev-parse --show-toplevel)
+```
+
+`WORKTREE_ROOT` is the active workspace root for all implementation work. All later file reads, file writes, git commands, verification commands, and subagent instructions must target this root unless your human partner explicitly asks you to operate elsewhere.
+
+If another agent, search result, plan, or tool output gives you an absolute path outside `$WORKTREE_ROOT`, but that path refers to the same repository layout, translate it to the same relative path under `$WORKTREE_ROOT` before reading or editing it.
+
+Never write to the parent checkout or a sibling worktree while implementing in this workspace. If a path cannot be safely translated into `$WORKTREE_ROOT`, stop and ask before writing.
+
+## Step 3: Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -118,7 +132,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-## Step 3: Verify Clean Baseline
+## Step 4: Verify Clean Baseline
 
 Run tests to ensure workspace starts clean:
 
@@ -151,6 +165,8 @@ Ready to implement <feature-name>
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
+| Worktree ready or declined | Record `WORKTREE_ROOT` before setup |
+| Path points outside active root | Translate relative path into `WORKTREE_ROOT` |
 | Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
@@ -183,6 +199,11 @@ Ready to implement <feature-name>
 - **Problem:** Can't distinguish new bugs from pre-existing issues
 - **Fix:** Report failures, get explicit permission to proceed
 
+### Writing to the wrong checkout
+
+- **Problem:** A plan, explorer, or subagent returns an absolute path from the parent checkout
+- **Fix:** Translate the path into the active workspace root before reading or editing
+
 ## Red Flags
 
 **Never:**
@@ -190,6 +211,7 @@ Ready to implement <feature-name>
 - Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
 - Skip Step 1a by jumping straight to Step 1b's git commands
 - Create worktree without verifying it's ignored (project-local)
+- Edit files outside the active workspace root
 - Skip baseline test verification
 - Proceed with failing tests without asking
 
@@ -198,5 +220,6 @@ Ready to implement <feature-name>
 - Prefer native tools over git fallback
 - Follow directory priority: explicit instructions > existing project-local directory > default
 - Verify directory is ignored for project-local
+- Treat `WORKTREE_ROOT` as the only writable project root
 - Auto-detect and run project setup
 - Verify clean test baseline
