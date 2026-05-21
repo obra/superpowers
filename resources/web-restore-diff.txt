@@ -1,0 +1,51 @@
+=== Web restore comparison ===
+original: /Users/isaaczhu/workspace/applifier/web-frontend
+restored: /Users/isaaczhu/Downloads/web
+time: 2026-05-21T12:15:08+08:00
+
+=== Top-level names only in original ===
+.
+..
+.cursor
+.env.example
+.git
+.gitignore
+.gitlab-ci.yml
+.husky
+.lintstagedrc.mjs
+.mcp.json
+.oxfmtrc.json
+.oxlintrc.json
+.vscode
+AGENTS.md
+Dockerfile
+PROTOBUF_SETUP.md
+README.md
+buf.gen.yaml
+buf.yaml
+next.config.ts
+package-lock.json
+package.json
+playwright.config.ts
+postcss.config.mjs
+proto
+public
+scripts
+skills-lock.json
+specs
+src
+tests
+tsconfig.json
+
+=== Top-level names only in restored ===
+
+=== File counts (same exclusions as seal) ===
+original: 412
+restored: 0
+
+=== diff -rq (content) ===
+
+=== Checksum sample (package.json, tsconfig) ===
+DIFF: package.json
+DIFF: tsconfig.json
+DIFF: next.config.ts

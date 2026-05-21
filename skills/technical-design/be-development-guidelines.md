@@ -14,7 +14,7 @@ Backend systems use Golang 1.24, Protobuf 3.24+, MySQL 8.0+, microservice / Serv
 - File naming: interface files `i_<name>.go`; implementation files `<name>.go`.
 - Type naming: interfaces `I<TheName>`; implementations `<TheName>[OptSuffix]`, e.g. `UserDaoMySQL`.
 - Variables/functions: camelCase / PascalCase as idiomatic Go; package names short and semantic.
-- Errors: use `develop.h2games.net/applifier/lib/common/error`; wrap original errors; every backend module defines its own error codes.
+- Errors: use `/lib/common/error`; wrap original errors; every backend module defines its own error codes.
 - Error code ranges: common `00000-09999`; Base Service `10000-19999`; Auth `20000-29999`; Platform `30000-39999`; Asset `50000-59999`; Campaign `70000-79999`; External Gateway `80000-89999`.
 - Concurrency: prefer `context` / `sync.Pool` over global shared state; manage goroutines with `context.WithCancel` or `errgroup`; avoid nested locks.
 - Dependencies: depend on interfaces, not concrete implementations; use `go mod` with locked versions; avoid unmaintained third-party libraries.
@@ -45,7 +45,7 @@ Principles:
 
 ## Protobuf
 
-- Contract repo: `https://develop.h2games.net/applifier/service-def`.
+- Contract repo: `https://<project-repo>/service-def`.
 - Field names: snake_case with comments.
 - Keep messages small; split large models into sub-messages.
 - Use `reserved` field numbers/names for removed fields.

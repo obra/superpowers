@@ -13,8 +13,19 @@ If the file does not exist or lacks required platform/default-location info, ask
 - default TD save location,
 - Edit Log location convention,
 - comment support expectations.
+- local TD workspace path,
+- remote sync policy,
+- change marking mode.
 
 Create the config from `local-config-template.md`. Prefer credential references over raw secrets.
+
+## Local-first authoring
+
+Use `remote-sync-strategy.md` for all remote writes.
+
+- Create/update local TD and Edit Log Markdown before changing remote docs.
+- Remote docs are synced only at session end, explicit developer instruction, or an approved milestone publish.
+- Keep local sync metadata for remote URL, remote version, section/block anchors, last synced time, and comment-sensitive sections.
 
 ## Preferred path: `lark-cli`
 
@@ -33,6 +44,7 @@ Rules adapted from Lark `lark-doc` skill:
 - For existing docs, fetch before editing. Prefer partial fetches (outline/section/keyword) for large docs, then fetch exact sections before updates.
 - For resource discovery, use `drive +search` when available, not deprecated `docs +search`.
 - For comments/reactions, use Lark drive/comment tooling if available. If comment APIs are unavailable, insert an inline `待定` callout block and log it in Edit Log.
+- For visible version marks, use DocxXML/rich-text color or background color when configured; avoid `overwrite` on existing TDs with comments.
 
 ## Fallback path: no Lark tooling
 
@@ -57,6 +69,8 @@ Use Confluence only when configured or explicitly requested. Required config:
 
 If Confluence tooling is unavailable, do not claim direct reads/writes. Ask for exported/pasted page content, or provide paste-ready Markdown/storage-format content with insertion anchors.
 
+For visible version marks, use Confluence storage-format spans or agreed macros. Preserve `ac:inline-comment-marker` tags when editing storage format; if unsure, insert new marked content adjacent to commented text rather than replacing it.
+
 ## Required session reads
 
 Before every edit/resume:
@@ -71,3 +85,4 @@ Before every edit/resume:
 - Update smallest stable section, then verify by re-fetching the changed block/section.
 - Never overwrite whole TD unless creating from local `td-template.md` or user explicitly asks.
 - Keep Edit Log append-only except for correcting obvious formatting mistakes.
+- Do not replace ranges with active comments unless comment markers/IDs can be preserved.

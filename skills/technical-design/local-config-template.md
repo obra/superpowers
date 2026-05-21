@@ -9,6 +9,11 @@ Agents should create this file on first use, or use `$TECHNICAL_DESIGN_CONFIG` i
 - Preferred doc platform: Lark / Confluence / other
 - Default TD save location:
 - Default Edit Log location convention: child page / sibling page / section in TD
+- Local TD workspace: `~/.config/technical-design/workspace`
+- Local copy naming: `<slug>/td.md`, `<slug>/edit-log.md`, `<slug>/sync-metadata.md`
+- Remote sync policy: session-end / explicit-only / milestone-approved
+- Change marking mode: none / color-by-session / callout-by-session / edit-log-only
+- Current session color:
 - Default language: Chinese / English / bilingual
 
 ## Lark / Feishu
@@ -34,3 +39,15 @@ Agents should create this file on first use, or use `$TECHNICAL_DESIGN_CONFIG` i
 - Last verified:
 - Known limitations:
 - Do not store:
+
+## Sync Metadata Per TD
+
+Create one metadata file per TD under the local TD workspace.
+
+- Remote TD URL:
+- Remote Edit Log URL:
+- Last synced at:
+- Last synced remote version:
+- Last synced local commit/hash:
+- Remote block/section anchors:
+- Active comment-sensitive sections:

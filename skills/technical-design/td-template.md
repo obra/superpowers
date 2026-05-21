@@ -7,12 +7,13 @@ Extracted from local `[TD]Sample.pdf`, with additional optional sections for imp
 - Title: `[TD] <Title>`
 - Task title/link:
 - Product/module:
+- PRD/TRD: 
 - PM:
 - RD:
 - BE:
 - FE:
 - QA:
-- Timeline: TD Review / Start Dev / Dev & Self Testing / Complete / QA Start
+- Timeline: PRD Review / TD Review / Dev & Self Testing Complete / QA Complete / Release
 
 ## Change Log
 
@@ -46,7 +47,7 @@ Overview for other services/modules that interact with this service.
 
 ### 4.1 External-Facing APIs / MQs
 
-| # | Priority | External API / MQ | APPlifier API / Topic | Remarks |
+| # | Priority | External API / MQ | API / Topic | Remarks |
 |---|----------|-------------------|------------------------|---------|
 
 ### 4.2 Error Codes / 错误码
@@ -84,9 +85,10 @@ Segment by sub-module/component for large systems, or by feature for specific mo
 
 | Description | Value |
 |-------------|-------|
-| Redis Key | `<tenant_id>:<module>:<entity>:<identifier>` |
+| Key | `<tenant_id>:<module>:<entity>:<identifier>` |
 | Data Type |  |
 | Value Schema |  |
+| Update |  |
 | TTL |  |
 | Invalidation |  |
 
@@ -106,31 +108,29 @@ Segment by sub-module/component for large systems, or by feature for specific mo
 | Key | Description | Structure | Default | Rollout / Compatibility |
 |-----|-------------|-----------|---------|-------------------------|
 
-### 5.y Metrics & Alerts / 监控告警
+## 6. Metrics & Alerts / 监控告警
 
 | Metric | Tags | Type | Description | Alerts |
 |--------|------|------|-------------|--------|
 
-## 6. Release Checklist / 发布清单
+## 7. Release Checklist / 发布清单
 
 | Step # | Services / Components | Operation | Verification | Rollback Operation |
 |--------|-----------------------|-----------|--------------|--------------------|
 
-## 7. References
+## 8. References
 
-- PRD:
-- TRD:
 - BE guidelines:
 - API schema:
 - Related TDs:
 
 ## Optional Completeness Sections
 
-Add these when not covered above:
+Add these when necessary & not covered above:
 
 - Security / permissions / privacy.
 - Multi-tenancy.
 - Migration / backfill.
 - Compatibility.
 - Test plan: unit, integration, E2E, performance, data verification.
-- Risks, open questions, and `待定` ledger.
+- Risks, open questions, and `TBD` ledger.
