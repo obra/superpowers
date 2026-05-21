@@ -185,6 +185,28 @@ The Pi package loads the Superpowers skills and a small extension that injects t
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+## Customizing Output Paths
+
+By default, Superpowers writes design specs to `docs/superpowers/specs/` and
+execution plans to `docs/superpowers/plans/`. If your project uses different
+locations, add an explicit `Output Paths` section to the agent instruction file
+your harness loads. For Claude Code, that is usually `CLAUDE.md`; for Codex,
+use `AGENTS.md`; for Gemini CLI, use `GEMINI.md`.
+
+Use both the table and the imperative sentence. The sentence makes the override
+harder for agents to miss when a skill also contains a concrete default path.
+
+```markdown
+## Output Paths
+
+| Artifact | Location |
+|---|---|
+| Design specs | `docs/design-docs/` |
+| Execution plans (active) | `docs/exec-plans/active/` |
+
+**IMPORTANT: Design specs MUST be saved to `docs/design-docs/`, NOT `docs/superpowers/specs/`. Execution plans MUST be saved to `docs/exec-plans/active/`, NOT `docs/superpowers/plans/`.**
+```
+
 ## What's Inside
 
 ### Skills Library
