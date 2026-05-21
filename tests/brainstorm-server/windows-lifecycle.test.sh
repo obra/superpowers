@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Windows lifecycle tests for the brainstorm server.
 #
-# Verifies that the brainstorm server survives the 60-second lifecycle
-# check on Windows, where OWNER_PID monitoring is disabled because the
-# MSYS2 PID namespace is invisible to Node.js.
+# Verifies brainstorm server lifecycle behavior, including Windows/MSYS2
+# foreground mode, invalid owner-PID startup validation, owner-exit shutdown,
+# and clean stop-server.sh integration.
 #
 # Requirements:
 #   - Node.js in PATH
@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SUPERPOWERS_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
-SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.js"
+SERVER_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/server.cjs"
 
 TEST_DIR="${TMPDIR:-/tmp}/brainstorm-win-test-$$"
 
@@ -32,7 +32,7 @@ skipped=0
 
 cleanup() {
   # Kill any server processes we started
-  for pidvar in SERVER_PID CONTROL_PID STOP_TEST_PID; do
+  for pidvar in SERVER_PID CONTROL_PID OWNER_EXIT_SERVER_PID STOP_TEST_PID OWNER_TEST_PID; do
     pid="${!pidvar:-}"
     if [[ -n "$pid" ]]; then
       kill "$pid" 2>/dev/null || true
@@ -64,7 +64,7 @@ skip() {
 wait_for_server_info() {
   local dir="$1"
   for _ in $(seq 1 50); do
-    if [[ -f "$dir/.server-info" ]]; then
+    if [[ -f "$dir/state/server-info" ]]; then
       return 0
     fi
     sleep 0.1
@@ -73,9 +73,9 @@ wait_for_server_info() {
 }
 
 get_port_from_info() {
-  # Read the port from .server-info. Use grep/sed instead of Node.js
+  # Read the port from state/server-info. Use grep/sed instead of Node.js
   # to avoid MSYS2-to-Windows path translation issues.
-  grep -o '"port":[0-9]*' "$1/.server-info" | head -1 | sed 's/"port"://'
+  grep -o '"port":[0-9]*' "$1/state/server-info" | head -1 | sed 's/"port"://'
 }
 
 http_check() {
@@ -115,34 +115,34 @@ mkdir -p "$TEST_DIR"
 
 SERVER_PID=""
 CONTROL_PID=""
+OWNER_EXIT_SERVER_PID=""
+OWNER_TEST_PID=""
 STOP_TEST_PID=""
 
-# ========== Test 1: OWNER_PID is empty on Windows ==========
+# ========== Test 1: OWNER_PID resolves on Windows ==========
 
 echo "--- Owner PID Resolution ---"
 
 if [[ "$is_windows" == "true" ]]; then
-  # Replicate the PID resolution logic from start-server.sh lines 104-112
+  # Replicate the PID resolution logic from start-server.sh.
+  # The server validates bad PIDs at startup, so start-server.sh should pass
+  # the best candidate it can resolve instead of clearing Windows PIDs here.
   TEST_OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ' || true)"
   if [[ -z "$TEST_OWNER_PID" || "$TEST_OWNER_PID" == "1" ]]; then
     TEST_OWNER_PID="$PPID"
   fi
-  # The fix: clear on Windows
-  case "${OSTYPE:-}" in
-    msys*|cygwin*|mingw*) TEST_OWNER_PID="" ;;
-  esac
 
-  if [[ -z "$TEST_OWNER_PID" ]]; then
-    pass "OWNER_PID is empty on Windows after fix"
+  if [[ -n "$TEST_OWNER_PID" ]]; then
+    pass "OWNER_PID resolves to a candidate for server validation"
   else
-    fail "OWNER_PID is empty on Windows after fix" \
-         "Expected empty, got '$TEST_OWNER_PID'"
+    fail "OWNER_PID resolves to a candidate for server validation" \
+         "Expected non-empty owner PID"
   fi
 else
-  skip "OWNER_PID is empty on Windows" "not on Windows"
+  skip "OWNER_PID resolution on Windows" "not on Windows"
 fi
 
-# ========== Test 2: start-server.sh passes empty BRAINSTORM_OWNER_PID ==========
+# ========== Test 2: start-server.sh passes BRAINSTORM_OWNER_PID ==========
 
 if [[ "$is_windows" == "true" ]]; then
   # Use a fake 'node' that captures the env var and exits
@@ -158,16 +158,16 @@ FAKENODE
   captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session" --foreground 2>/dev/null || true)
   owner_pid_value=$(echo "$captured" | grep "CAPTURED_OWNER_PID=" | head -1 | sed 's/CAPTURED_OWNER_PID=//')
 
-  if [[ "$owner_pid_value" == "" || "$owner_pid_value" == "__UNSET__" ]]; then
-    pass "start-server.sh passes empty BRAINSTORM_OWNER_PID on Windows"
+  if [[ -n "$owner_pid_value" && "$owner_pid_value" != "__UNSET__" ]]; then
+    pass "start-server.sh passes BRAINSTORM_OWNER_PID on Windows"
   else
-    fail "start-server.sh passes empty BRAINSTORM_OWNER_PID on Windows" \
-         "Expected empty or unset, got '$owner_pid_value'"
+    fail "start-server.sh passes BRAINSTORM_OWNER_PID on Windows" \
+         "Expected non-empty owner PID, got '$owner_pid_value'"
   fi
 
   rm -rf "$FAKE_NODE_DIR" "$TEST_DIR/session"
 else
-  skip "start-server.sh passes empty BRAINSTORM_OWNER_PID" "not on Windows"
+  skip "start-server.sh passes BRAINSTORM_OWNER_PID" "not on Windows"
 fi
 
 # ========== Test 3: Auto-foreground detection on Windows ==========
@@ -214,11 +214,11 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/survival/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" > "$TEST_DIR/survival/.server.log" 2>&1 &
 SERVER_PID=$!
 
 if ! wait_for_server_info "$TEST_DIR/survival"; then
-  fail "Server starts successfully" "Server did not write .server-info within 5 seconds"
+  fail "Server starts successfully" "Server did not write state/server-info within 5 seconds"
   kill "$SERVER_PID" 2>/dev/null || true
   SERVER_PID=""
 else
@@ -254,10 +254,10 @@ else
   SERVER_PID=""
 fi
 
-# ========== Test 5: Bad OWNER_PID causes shutdown (control) ==========
+# ========== Test 5: Invalid OWNER_PID at startup disables monitoring ==========
 
 echo ""
-echo "--- Control: Bad OWNER_PID causes shutdown ---"
+echo "--- Invalid OWNER_PID at startup ---"
 
 mkdir -p "$TEST_DIR/control"
 
@@ -272,39 +272,87 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="$BAD_PID" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/control/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" > "$TEST_DIR/control/.server.log" 2>&1 &
 CONTROL_PID=$!
 
 if ! wait_for_server_info "$TEST_DIR/control"; then
-  fail "Control server starts" "Server did not write .server-info within 5 seconds"
+  fail "Invalid-owner server starts" "Server did not write state/server-info within 5 seconds"
   kill "$CONTROL_PID" 2>/dev/null || true
   CONTROL_PID=""
 else
-  pass "Control server starts with bad OWNER_PID=$BAD_PID"
+  pass "Invalid-owner server starts with OWNER_PID=$BAD_PID"
 
-  echo "  Waiting ~75s for lifecycle check to kill server..."
-  sleep 75
-
-  if kill -0 "$CONTROL_PID" 2>/dev/null; then
-    fail "Control server self-terminates with bad OWNER_PID" \
-         "Server is still alive (expected it to die)"
-    kill "$CONTROL_PID" 2>/dev/null || true
+  if grep -q "owner-pid-invalid" "$TEST_DIR/control/.server.log" 2>/dev/null; then
+    pass "Invalid OWNER_PID is logged at startup"
   else
-    pass "Control server self-terminates with bad OWNER_PID"
-  fi
-
-  if grep -q "owner process exited" "$TEST_DIR/control/.server.log" 2>/dev/null; then
-    pass "Control server logs 'owner process exited'"
-  else
-    fail "Control server logs 'owner process exited'" \
+    fail "Invalid OWNER_PID is logged at startup" \
          "Log tail: $(tail -5 "$TEST_DIR/control/.server.log" 2>/dev/null)"
   fi
+
+  if kill -0 "$CONTROL_PID" 2>/dev/null; then
+    pass "Invalid OWNER_PID does not kill the server at startup"
+  else
+    fail "Invalid OWNER_PID does not kill the server at startup" \
+         "Server died immediately. Log tail: $(tail -5 "$TEST_DIR/control/.server.log" 2>/dev/null)"
+  fi
+
+  kill "$CONTROL_PID" 2>/dev/null || true
 fi
 
 wait "$CONTROL_PID" 2>/dev/null || true
 CONTROL_PID=""
 
-# ========== Test 6: stop-server.sh cleanly stops the server ==========
+# ========== Test 6: Valid owner exit causes shutdown ==========
+
+echo ""
+echo "--- Owner Exit Shutdown ---"
+
+mkdir -p "$TEST_DIR/owner-exit"
+
+sleep 2 &
+OWNER_TEST_PID=$!
+
+BRAINSTORM_DIR="$TEST_DIR/owner-exit" \
+BRAINSTORM_HOST="127.0.0.1" \
+BRAINSTORM_URL_HOST="localhost" \
+BRAINSTORM_OWNER_PID="$OWNER_TEST_PID" \
+BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
+  node "$SERVER_SCRIPT" > "$TEST_DIR/owner-exit/.server.log" 2>&1 &
+OWNER_EXIT_SERVER_PID=$!
+
+if ! wait_for_server_info "$TEST_DIR/owner-exit"; then
+  fail "Owner-exit server starts" "Server did not write state/server-info within 5 seconds"
+  kill "$OWNER_EXIT_SERVER_PID" 2>/dev/null || true
+  OWNER_EXIT_SERVER_PID=""
+else
+  pass "Owner-exit server starts with live OWNER_PID=$OWNER_TEST_PID"
+
+  wait "$OWNER_TEST_PID" 2>/dev/null || true
+  OWNER_TEST_PID=""
+
+  echo "  Waiting ~65s for lifecycle check to stop server after owner exits..."
+  sleep 65
+
+  if kill -0 "$OWNER_EXIT_SERVER_PID" 2>/dev/null; then
+    fail "Owner-exit server self-terminates" \
+         "Server is still alive after owner exited"
+    kill "$OWNER_EXIT_SERVER_PID" 2>/dev/null || true
+  else
+    pass "Owner-exit server self-terminates"
+  fi
+
+  if grep -q "owner process exited" "$TEST_DIR/owner-exit/.server.log" 2>/dev/null; then
+    pass "Owner-exit server logs 'owner process exited'"
+  else
+    fail "Owner-exit server logs 'owner process exited'" \
+         "Log tail: $(tail -5 "$TEST_DIR/owner-exit/.server.log" 2>/dev/null)"
+  fi
+fi
+
+wait "$OWNER_EXIT_SERVER_PID" 2>/dev/null || true
+OWNER_EXIT_SERVER_PID=""
+
+# ========== Test 7: stop-server.sh cleanly stops the server ==========
 
 echo ""
 echo "--- Clean Shutdown ---"
@@ -316,15 +364,15 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
 STOP_TEST_PID=$!
-echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/.server.pid"
 
 if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   fail "Stop-test server starts" "Server did not start"
   kill "$STOP_TEST_PID" 2>/dev/null || true
   STOP_TEST_PID=""
 else
+  echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/state/server.pid"
   bash "$STOP_SCRIPT" "$TEST_DIR/stop-test" >/dev/null 2>&1 || true
   sleep 1
 
