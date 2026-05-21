@@ -32,9 +32,15 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ## Starting a Session
 
+All script paths below are relative to the directory containing this guide, not
+the plugin root. Set `SKILL_DIR` to the directory containing this
+`visual-companion.md` file before running the examples.
+
 ```bash
+SKILL_DIR=<directory containing this visual-companion.md file>
+
 # Start server with persistence (mockups saved to project)
-scripts/start-server.sh --project-dir /path/to/project
+"$SKILL_DIR/scripts/start-server.sh" --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/content",
@@ -52,7 +58,7 @@ Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
 **Claude Code:**
 ```bash
 # Default mode works — the script backgrounds the server itself.
-scripts/start-server.sh --project-dir /path/to/project
+"$SKILL_DIR/scripts/start-server.sh" --project-dir /path/to/project
 ```
 
 On Windows, the script auto-detects and switches to foreground mode (which blocks the tool call). Use `run_in_background: true` on the Bash tool call so the server survives across conversation turns, then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
@@ -61,14 +67,14 @@ On Windows, the script auto-detects and switches to foreground mode (which block
 ```bash
 # Codex reaps background processes. The script auto-detects CODEX_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
-scripts/start-server.sh --project-dir /path/to/project
+"$SKILL_DIR/scripts/start-server.sh" --project-dir /path/to/project
 ```
 
 **Gemini CLI:**
 ```bash
 # Use --foreground and set is_background: true on your shell tool call
 # so the process survives across turns
-scripts/start-server.sh --project-dir /path/to/project --foreground
+"$SKILL_DIR/scripts/start-server.sh" --project-dir /path/to/project --foreground
 ```
 
 **Copilot CLI:**
@@ -76,7 +82,7 @@ scripts/start-server.sh --project-dir /path/to/project --foreground
 # Use --foreground and start the server via the bash tool with mode: "async"
 # so the process survives across turns. Capture the returned shellId for
 # read_bash / stop_bash if you need to interact with it later.
-scripts/start-server.sh --project-dir /path/to/project --foreground
+"$SKILL_DIR/scripts/start-server.sh" --project-dir /path/to/project --foreground
 ```
 
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
@@ -84,7 +90,7 @@ scripts/start-server.sh --project-dir /path/to/project --foreground
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
 ```bash
-scripts/start-server.sh \
+"$SKILL_DIR/scripts/start-server.sh" \
   --project-dir /path/to/project \
   --host 0.0.0.0 \
   --url-host localhost
@@ -95,7 +101,7 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
+   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `"$SKILL_DIR/scripts/start-server.sh"` before continuing. The server auto-exits after 30 minutes of inactivity.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use your file-creation tool — **never use cat/heredoc** (dumps noise into terminal)
@@ -277,12 +283,12 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 ## Cleaning Up
 
 ```bash
-scripts/stop-server.sh $SESSION_DIR
+"$SKILL_DIR/scripts/stop-server.sh" "$SESSION_DIR"
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
 
 ## Reference
 
-- Frame template (CSS reference): `scripts/frame-template.html`
-- Helper script (client-side): `scripts/helper.js`
+- Frame template (CSS reference): `$SKILL_DIR/scripts/frame-template.html`
+- Helper script (client-side): `$SKILL_DIR/scripts/helper.js`
