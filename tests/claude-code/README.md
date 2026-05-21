@@ -122,6 +122,13 @@ RED-GREEN-REFACTOR validation for the using-git-worktrees skill (~5 minutes):
 - PRESSURE: same as GREEN under urgency framing with pre-existing `.worktrees/`
 - Drill scenario `worktree-creation-under-pressure.yaml` covers the PRESSURE phase only
 
+#### test-enterworktree-core-bare-guard.sh
+Static regression test for the using-git-worktrees Step 1a Claude Code guard:
+- Records the parent checkout before native tool use
+- Checks the parent checkout's `core.bare` after native tool use
+- Repairs unexpected `core.bare=true` with `git -C "$PARENT_REPO_ROOT" config --unset core.bare`
+- Preserves native worktree preference and does not tell agents to avoid `EnterWorktree`
+
 ## Adding New Tests
 
 1. Create new test file: `test-<skill-name>.sh`

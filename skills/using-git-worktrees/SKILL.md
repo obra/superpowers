@@ -50,9 +50,24 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it, run any post-native sanity check below, and skip to Step 2.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+
+**Known issue (Claude Code):** `EnterWorktree` can trigger an upstream Claude Code bug that writes `core.bare=true` into the parent checkout's shared git config. This is not a Superpowers bug, and the native preference still applies. Record the parent checkout before calling the native tool:
+
+```bash
+PARENT_REPO_ROOT=$(git rev-parse --show-toplevel)
+```
+
+After the native tool returns, verify the parent checkout. If `core.bare` flipped to `true`, repair it immediately and tell the user what happened:
+
+```bash
+if [ "$(git -C "$PARENT_REPO_ROOT" config --get core.bare 2>/dev/null)" = "true" ]; then
+  git -C "$PARENT_REPO_ROOT" config --unset core.bare
+  echo "Repaired parent checkout: unset unexpected core.bare=true after native worktree creation."
+fi
+```
 
 Only proceed to Step 1b if you have no native worktree tool available.
 
