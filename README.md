@@ -228,7 +228,8 @@ The general contribution process for Superpowers is below. Keep in mind that we 
 2. Switch to the 'dev' branch
 3. Create a branch for your work
 4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
+5. Package your test and eval results using `docs/eval-evidence.md`
+6. Submit a PR, being sure to fill in the pull request template.
 
 Skill-behavior tests use the eval harness submodule at `evals/`. After cloning this repo, run `git submodule update --init evals`, then see `evals/README.md` for setup. Plugin-infrastructure tests live at `tests/` and run via the relevant `run-*.sh` or `npm test`.
 

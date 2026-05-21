@@ -32,3 +32,10 @@ uv run drill run triggering-test-driven-development -b claude
 ```
 
 Drill scenarios are slow (3-30+ minutes each) and run real LLM sessions. They are not part of CI today; the natural follow-up is a tiered model (fast subset on PR, full sweep nightly + on-demand).
+
+## Reporting Evidence in PRs
+
+After running tests or evals, package the results for reviewers using
+`docs/eval-evidence.md`. That guide explains how to summarize baseline
+behavior, after-change behavior, adversarial coverage, verification commands,
+and known limits in the pull request template.
