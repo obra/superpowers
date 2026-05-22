@@ -1,185 +1,127 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use when facing 2+ independent problems that share no state and could be worked on concurrently. Triggers include multiple failing test files, separate subsystem bugs, independent investigations, parallel research questions
 ---
 
 # Dispatching Parallel Agents
 
 ## Overview
 
-You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+Independent problems should be investigated concurrently, not sequentially. Each problem gets one Agent with focused scope and a cold context you construct deliberately. You stay the coordinator; the Agents do the work.
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+**Core principle:** One Agent per independent problem domain, dispatched in a single assistant turn so they run in parallel.
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
-
-## When to Use
+## When to use
 
 ```dot
-digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
-    "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
-    "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
+digraph when {
+    "2+ problems?" [shape=diamond];
+    "Independent?" [shape=diamond];
+    "Same files / shared state?" [shape=diamond];
+    "Investigate together" [shape=box];
+    "Use isolation: worktree" [shape=box];
     "Parallel dispatch" [shape=box];
 
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
-    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
-    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
+    "2+ problems?" -> "Independent?" [label="yes"];
+    "Independent?" -> "Investigate together" [label="no - shared root cause"];
+    "Independent?" -> "Same files / shared state?" [label="yes"];
+    "Same files / shared state?" -> "Use isolation: worktree" [label="yes"];
+    "Same files / shared state?" -> "Parallel dispatch" [label="no"];
+    "Use isolation: worktree" -> "Parallel dispatch";
 }
 ```
 
-**Use when:**
-- 3+ test files failing with different root causes
-- Multiple subsystems broken independently
-- Each problem can be understood without context from others
-- No shared state between investigations
+**Use when:** 2+ failing test files with different root causes, multiple broken subsystems, independent research questions, parallel code reads across unrelated modules.
 
-**Don't use when:**
-- Failures are related (fix one might fix others)
-- Need to understand full system state
-- Agents would interfere with each other
+**Don't use when:** failures might share a root cause (investigate together first), you're still exploring what's broken, or you only have one real problem dressed up as several.
 
-## The Pattern
+## The hard rule: one assistant message, multiple Agent calls
 
-### 1. Identify Independent Domains
+Parallelism comes from a SINGLE assistant turn containing MULTIPLE `Agent` tool calls. Two consecutive turns with one Agent call each run **sequentially**, even if you tell the user "I'm running them in parallel."
 
-Group failures by what's broken:
-- File A tests: Tool approval flow
-- File B tests: Batch completion behavior
-- File C tests: Abort functionality
+```
+✅ ONE assistant message with three tool_use blocks:
+   Agent(description="Fix abort tests", prompt="...", subagent_type="general-purpose")
+   Agent(description="Fix batch tests", prompt="...", subagent_type="general-purpose")
+   Agent(description="Fix race tests",  prompt="...", subagent_type="general-purpose")
 
-Each domain is independent - fixing tool approval doesn't affect abort tests.
-
-### 2. Create Focused Agent Tasks
-
-Each agent gets:
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
-
-### 3. Dispatch in Parallel
-
-Issue all three subagent dispatches in the same response — they run in parallel:
-
-```text
-Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
-Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
-Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
-# All three run concurrently.
+❌ Three messages, one Agent each → sequential
+❌ Task(...) or TaskCreate(...) → wrong tool. The tool is Agent.
 ```
 
-Multiple dispatch calls in one response = parallel execution. One per response = sequential.
+All Agent options are **top-level parameters** on the tool call, not nested. Full shape:
 
-### 4. Review and Integrate
-
-When agents return:
-- Read each summary
-- Verify fixes don't conflict
-- Run full test suite
-- Integrate all changes
-
-## Agent Prompt Structure
-
-Good agent prompts are:
-1. **Focused** - One clear problem domain
-2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
-
-```markdown
-Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
-
-1. "should abort tool with partial output capture" - expects 'interrupted at' in message
-2. "should handle mixed completed and aborted tools" - fast tool aborted instead of completed
-3. "should properly track pendingToolCount" - expects 3 results but gets 0
-
-These are timing/race condition issues. Your task:
-
-1. Read the test file and understand what each test verifies
-2. Identify root cause - timing issues or actual bugs?
-3. Fix by:
-   - Replacing arbitrary timeouts with event-based waiting
-   - Fixing bugs in abort implementation if found
-   - Adjusting test expectations if testing changed behavior
-
-Do NOT just increase timeouts - find the real issue.
-
-Return: Summary of what you found and what you fixed.
+```
+Agent({
+  description: "Short 3-5 word label",            // required
+  prompt:      "Self-contained briefing...",       // required
+  subagent_type:    "general-purpose",             // optional, defaults to general-purpose
+  isolation:        "worktree",                    // optional
+  run_in_background: false,                        // optional, default false
+  model:            "haiku" | "sonnet" | "opus",  // optional, inherits
+  name:             "auditor",                     // optional, enables SendMessage
+})
 ```
 
-## Common Mistakes
+## Choose the right `subagent_type`
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
+| Job | `subagent_type` |
+|---|---|
+| Find / grep / locate code | `Explore` |
+| Open-ended research, multi-step | `general-purpose` |
+| Design implementation strategy | `Plan` or `feature-dev:code-architect` |
+| Independent code review | `feature-dev:code-reviewer` |
+| Trace an existing feature's architecture | `feature-dev:code-explorer` |
+| PostHog error triage | `posthog:error-analyzer` |
 
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
+Default to `general-purpose` when none clearly fits. Picking deliberately matters more than prompt wording.
 
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
+## Useful Agent options
 
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
+- `isolation: "worktree"`. Runs the Agent in a temp git worktree. Default-on for any parallel dispatch that touches files (tests fixes, refactors, parallel code edits). Read-only Agents (`Explore`, research) don't need it. When in doubt, isolate.
+- `run_in_background: true`. Fire-and-forget; you'll be auto-notified on completion. Use only for genuinely independent work whose result you don't need before continuing. Foreground (default) blocks the turn until the Agent returns.
+- `model: "haiku"`. Cheaper model for mechanical work (mass renames, log scraping). Inherits from parent if omitted.
+- `name: "auditor"`. Name the Agent so you can continue it later with `SendMessage({to: "auditor", ...})` instead of starting a fresh one with no memory.
 
-## When NOT to Use
+## Prompt the Agent like a cold colleague
 
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+The Agent starts with no memory of your conversation. Brief it self-contained:
 
-## Real Example from Session
+1. **Goal.** What to accomplish and why it matters.
+2. **Context.** File paths with line numbers, what you've ruled out, what you've already tried.
+3. **Constraints.** "Tests only, don't touch production code", scope limits.
+4. **Output shape.** "Return a 200-word punch list", "report root cause + diff summary".
 
-**Scenario:** 6 test failures across 3 files after major refactoring
+**Never delegate understanding.** Don't write "based on your findings, fix the bug" or "decide the best approach and implement it." Those push synthesis onto the Agent. Make the decision yourself, then dispatch surgical work.
 
-**Failures:**
-- agent-tool-abort.test.ts: 3 failures (timing issues)
-- batch-completion-behavior.test.ts: 2 failures (tools not executing)
-- tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
+## Common mistakes
 
-**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
-
-**Dispatch:**
-```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
-```
-
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
-
-**Integration:** All fixes independent, no conflicts, full suite green
-
-**Time saved:** 3 problems solved in parallel vs sequentially
-
-## Key Benefits
-
-1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
-4. **Speed** - 3 problems solved in time of 1
+| Mistake | Fix |
+|---|---|
+| `Task(...)` / `TaskCreate(...)` | Use `Agent`. |
+| Agents in separate messages | Batch into ONE message with multiple tool_use blocks. |
+| No `subagent_type` chosen | Pick deliberately from the table. |
+| Vague scope ("fix the tests") | One file or subsystem per Agent. |
+| "Decide the best approach and implement" | You decide. Agent executes. |
+| Re-running greps the Agent already ran | If you delegated research, don't duplicate it. |
+| Reading the summary as truth | Read the diff. Summaries describe intent, not result. |
+| Two Agents editing the same file | Use `isolation: "worktree"`. |
 
 ## Verification
 
-After agents return:
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
+When Agents return:
 
-## Real-World Impact
+1. **Read the diff, not the summary.** The summary is what the Agent *intended*. The diff is what it *did*.
+2. **Check for cross-Agent collisions.** Overlapping file edits, duplicate fixes, contradictory changes.
+3. **Run the full suite, not just touched files.** Independent fixes can fail together.
+4. **Spot-check assertions.** Agents sometimes "fix" tests by weakening them.
 
-From debugging session (2025-10-03):
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
-- All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes
+## Red flags
+
+In-the-moment rationalizations that mean **stop**:
+
+- "Let me check Agent 1's result before dispatching Agent 2." That's sequential. Batch them.
+- "The Agent will figure out the right approach." You decide. Agent executes.
+- "The summary says it's fixed." Look at the diff first.
+- "I'll re-grep to confirm what the Agent found." Don't duplicate delegated work; verify against the diff.
+
