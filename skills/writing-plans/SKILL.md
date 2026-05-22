@@ -60,6 +60,11 @@ This structure informs the task decomposition. Each task should produce self-con
 ---
 ```
 
+Plans should keep task headings and checkbox steps compatible with the
+[plan status contract](../../docs/plan-status.md). That contract lets later
+sessions report progress and resume from the next unfinished task without a
+new slash command or separate state file.
+
 ## Task Structure
 
 ````markdown
