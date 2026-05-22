@@ -1,5 +1,20 @@
 # Release Notes
 
+## v1.6.0 (2026-05-22)
+
+### Added
+- **using-git-worktrees** now explicitly documents `CreateWorktree` as the Letta Code native tool (Step 1a)
+
+### Changed
+- **using-git-worktrees** default worktree directory is now `.letta/worktrees/` (aligned with Letta Code PR #1693 enforcement)
+- **using-git-worktrees** directory priority reordered: existing `.letta/worktrees/` → legacy `.worktrees/`/`worktrees/` → global → default `.letta/worktrees/`
+- **finishing-a-development-branch** provenance check reordered with `.letta/worktrees/` first
+- **using-superpowers** Git Worktrees overlap section updated to emphasize detection/consent/setup/verification gaps
+
+### Fixed
+- **releasing** pre-release checklist now includes "Review changes" step (was documented in process but missing from checklist)
+- Stale "changelog" references updated to "release notes" in using-superpowers and FUTURE-SKILLS.md
+
 ## v1.5.1 (2026-05-06)
 
 ### Changed
