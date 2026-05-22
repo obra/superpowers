@@ -27,7 +27,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save location depends on environment:
-   - If Advanced Planning is installed (`.claude/skills/phase-plan-creator/SKILL.md` exists): save to `.claude/plans/YYYY-MM-DD-<topic>-design.md`
+   - If Advanced Planning is installed (`.claude/skills/phase-plan-creator/SKILL.md` exists): save to `.advanced-plans/specs/YYYY-MM-DD-<topic>-design.md`
    - Otherwise: save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
@@ -120,7 +120,7 @@ Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. T
 **Documentation:**
 
 - Write the validated design (spec) to:
-  - `.claude/plans/YYYY-MM-DD-<topic>-design.md` if Advanced Planning is installed (`.claude/skills/phase-plan-creator/SKILL.md` exists) — this puts the design doc where phase-plan-creator expects it
+  - `.advanced-plans/specs/YYYY-MM-DD-<topic>-design.md` if Advanced Planning is installed (`.claude/skills/phase-plan-creator/SKILL.md` exists) — this puts the design doc where phase-plan-creator expects it
   - `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` otherwise (original default)
   - (User preferences for spec location override both defaults)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
