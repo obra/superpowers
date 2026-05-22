@@ -17,17 +17,27 @@ Load plan, review critically, execute all tasks, report when complete.
 
 ### Step 1: Load and Review Plan
 1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create todos for the plan items and proceed
+2. Apply the [plan status contract](../../docs/plan-status.md): scan task
+   headings, checkbox steps, and any `Status` / `Evidence` / `Next` metadata
+3. If continuing a partially executed plan, choose the resume target from the
+   first `in_progress` task, then the first `pending` task, then a `blocked`
+   task only if its blocker has been resolved
+4. Review critically - identify any questions or concerns about the plan or its
+   current status
+5. If concerns: Raise them with your human partner before starting
+6. If no concerns: Create todos for the remaining plan items and proceed
 
 ### Step 2: Execute Tasks
 
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+3. Update the plan checkbox after each completed step when editing the plan file
+   is possible
+4. Run verifications as specified
+5. If blocked or skipped, add a `Status`, `Evidence`, and `Next` note using the
+   plan status contract
+6. Mark as completed
 
 ### Step 3: Complete Development
 

@@ -60,12 +60,12 @@ digraph process {
         "Mark task complete in todo list" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create todos" [shape=box];
+    "Read plan, apply status contract, extract remaining tasks with full text, note context, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, apply status contract, extract remaining tasks with full text, note context, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -85,6 +85,33 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Plan Status
+
+Before dispatching subagents, the controller applies the
+[plan status contract](../../docs/plan-status.md):
+
+1. Scan task headings, checkbox steps, and any `Status` / `Evidence` / `Next`
+   metadata.
+2. If continuing a partially executed plan, resume from the first
+   `in_progress` task, then the first `pending` task, then a `blocked` task
+   only if its blocker has been resolved.
+3. Extract only the remaining task text needed for dispatch, while preserving
+   any earlier completed-task context that affects later work.
+4. Create todos for the remaining tasks, not for tasks that are already `done`
+   or `skipped`.
+
+The controller still provides full task text to each subagent. Do not make
+subagents read the full plan file.
+
+After each task is approved by both reviewers:
+
+1. Mark the task complete in the todo list.
+2. Update the plan checkboxes for that task when editing the plan file is
+   possible.
+3. If a task is blocked or skipped, add a `Status`, `Evidence`, and `Next` note
+   using the plan status contract before stopping or moving to the next valid
+   task.
 
 ## Model Selection
 
@@ -131,8 +158,9 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
-[Create todos for all tasks]
+[Apply the plan status contract]
+[Extract remaining tasks with full text and context]
+[Create todos for remaining tasks]
 
 Task 1: Hook installation script
 
