@@ -296,12 +296,12 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.worktrees/`, `worktrees/`, `.letta/worktrees/`, or `~/.config/letta-superpowers/worktrees/`:** Superpowers created this worktree — we own cleanup.
+**If worktree path is under `.letta/worktrees/`, `.worktrees/`, `worktrees/`, or `~/.config/letta-superpowers/worktrees/`:** Superpowers created this worktree — we own cleanup.
 
 ```bash
 # Check if worktree is under a superpowers-managed directory
 case "$WORKTREE_PATH" in
-  */.worktrees/*|*/worktrees/*|*/.letta/worktrees/*|*/.config/letta-superpowers/worktrees/*)
+  */.letta/worktrees/*|*/.worktrees/*|*/worktrees/*|*/.config/letta-superpowers/worktrees/*)
     echo "superpowers-owned"
     ;;
   *)
@@ -367,7 +367,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 **Cleaning up harness-owned worktrees**
 - **Problem:** Removing a worktree the harness created causes phantom state
-- **Fix:** Only clean up worktrees under `.worktrees/`, `worktrees/`, `.letta/worktrees/`, or `~/.config/letta-superpowers/worktrees/`
+- **Fix:** Only clean up worktrees under `.letta/worktrees/`, `.worktrees/`, `worktrees/`, or `~/.config/letta-superpowers/worktrees/`
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work

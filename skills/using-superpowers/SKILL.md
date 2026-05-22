@@ -256,7 +256,7 @@ WRONG path:
 | ✅ CORRECT | ❌ WRONG |
 |------------|----------|
 | `/using-git-worktrees` | Built-in `/working-in-parallel` |
-| **Why:** Canonical workflow step 2. Creates isolated worktrees with proper branch naming. | **Why NOT:** Built-in skill uses different directory convention, breaks superpowers workflow chain. |
+| **Why:** Canonical workflow step 2. Detects existing isolation, defers to native `CreateWorktree` tool, handles project setup and baseline verification. | **Why NOT:** Built-in skill lacks detection, consent, setup, and verification steps. Breaks integration with other superpowers skills (finishing-a-development-branch cleanup). |
 
 **Example:**
 ```
@@ -264,15 +264,17 @@ User: "I need to work on feature A and feature B at the same time"
 
 CORRECT path:
 1. Load /using-git-worktrees
-2. Create worktree for feature-a
-3. Create worktree for feature-b
-4. Work independently in each
-5. Merge/cleanup following canonical workflow
+2. Step 0: Detect existing isolation
+3. Step 1a: Use CreateWorktree (native tool) — worktree created at .letta/worktrees/<name>
+4. Step 2: Project setup (install deps)
+5. Step 3: Verify clean baseline
+6. Work independently
+7. Merge/cleanup following canonical workflow
 
 WRONG path:
 1. Load /working-in-parallel (built-in)
-2. Different conventions, different directory structure
-3. Breaks integration with other superpowers skills
+2. No detection, no consent, no setup, no verification
+3. Breaks integration with finishing-a-development-branch
 ```
 
 ---

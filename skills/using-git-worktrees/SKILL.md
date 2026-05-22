@@ -50,9 +50,11 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? On Letta Code, this is the `CreateWorktree` tool. On other platforms, it might be `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+
+**Letta Code note:** The `CreateWorktree` tool enforces `.letta/worktrees/` as the worktree directory. This is the canonical location for Letta Code agents.
 
 Only proceed to Step 1b if you have no native worktree tool available.
 
@@ -66,28 +68,34 @@ Follow this priority order. Explicit user preference always beats observed files
 
 1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, use it without asking.
 
-2. **Check for an existing project-local worktree directory:**
+2. **Check for an existing `.letta/worktrees/` directory:**
    ```bash
-   ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-   ls -d worktrees 2>/dev/null      # Alternative
+   ls -d .letta/worktrees 2>/dev/null
    ```
-   If found, use it. If both exist, `.worktrees` wins.
+   If found, use it. This is the canonical location for Letta Code agents.
 
-3. **Check for an existing global directory:**
+3. **Check for legacy project-local worktree directories:**
+   ```bash
+   ls -d .worktrees 2>/dev/null     # Legacy (pre-Letta Code)
+   ls -d worktrees 2>/dev/null      # Legacy alternative
+   ```
+   If found, use it (backward compatibility). If both exist, `.worktrees` wins.
+
+4. **Check for an existing global directory:**
    ```bash
    project=$(basename "$(git rev-parse --show-toplevel)")
    ls -d ~/.config/letta-superpowers/worktrees/$project 2>/dev/null
    ```
    If found, use it (backward compatibility with legacy global path).
 
-4. **If there is no other guidance available**, default to `.worktrees/` at the project root.
+5. **If there is no other guidance available**, default to `.letta/worktrees/` at the project root.
 
 #### Safety Verification (project-local directories only)
 
 **MUST verify directory is ignored before creating worktree:**
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q .letta/worktrees 2>/dev/null || git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
 **If NOT ignored:** Add to .gitignore, commit the change, then proceed.
@@ -102,7 +110,8 @@ Global directories (`~/.config/letta-superpowers/worktrees/`) need no verificati
 project=$(basename "$(git rev-parse --show-toplevel)")
 
 # Determine path based on chosen location
-# For project-local: path="$LOCATION/$BRANCH_NAME"
+# For .letta/worktrees/: path=".letta/worktrees/$BRANCH_NAME"
+# For legacy .worktrees/: path=".worktrees/$BRANCH_NAME"
 # For global: path="~/.config/letta-superpowers/worktrees/$project/$BRANCH_NAME"
 
 git worktree add "$path" -b "$BRANCH_NAME"
@@ -159,10 +168,11 @@ Ready to implement <feature-name>
 | In a submodule | Treat as normal repo (Step 0 guard) |
 | Native worktree tool available | Use it (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check instruction file, then default `.worktrees/` |
+| `.letta/worktrees/` exists | Use it (verify ignored) |
+| `.worktrees/` exists | Use it (legacy, verify ignored) |
+| `worktrees/` exists | Use it (legacy, verify ignored) |
+| Both `.letta/worktrees/` and `.worktrees/` exist | Use `.letta/worktrees/` |
+| Neither exists | Check instruction file, then default `.letta/worktrees/` |
 | Global path exists | Use it (backward compat) |
 | Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
@@ -189,7 +199,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > global legacy > instruction file > default
+- **Fix:** Follow priority: existing `.letta/worktrees/` > legacy `.worktrees/` > global legacy > instruction file > default `.letta/worktrees/`
 
 ### Proceeding with failing tests
 
@@ -202,13 +212,13 @@ Ready to implement <feature-name>
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
 [Step 0: GIT_DIR != GIT_COMMON — already in a worktree]
-Already in isolated workspace at /home/user/myproject/.worktrees/auth on branch feature/auth.
+Already in isolated workspace at /home/user/myproject/.letta/worktrees/auth on branch feature/auth.
 Skipping worktree creation.
 
 [Run npm install]
 [Run npm test - 47 passing]
 
-Worktree ready at /home/user/myproject/.worktrees/auth
+Worktree ready at /home/user/myproject/.letta/worktrees/auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
@@ -217,7 +227,7 @@ Ready to implement auth feature
 
 **Never:**
 - Create a worktree when Step 0 detects existing isolation
-- Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
+- Use `git worktree add` when you have a native worktree tool (e.g., `CreateWorktree`). This is the #1 mistake — if you have it, use it.
 - Skip Step 1a by jumping straight to Step 1b's git commands
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
@@ -227,7 +237,7 @@ Ready to implement auth feature
 **Always:**
 - Run Step 0 detection first
 - Prefer native tools over git fallback
-- Follow directory priority: existing > global legacy > instruction file > default
+- Follow directory priority: existing `.letta/worktrees/` > legacy `.worktrees/` > global legacy > instruction file > default `.letta/worktrees/`
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
