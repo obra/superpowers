@@ -92,6 +92,13 @@ Tests skill content and requirements (~2 minutes):
 - Review loops documented
 - Task context provision documented
 
+#### test-finishing-platform-pr-create.sh
+Static regression test for the finishing-a-development-branch PR/MR path:
+- Requires remote-platform detection before creating a PR/MR
+- Keeps GitHub PR creation documented with `gh`
+- Documents GitLab MR creation with `glab`
+- Requires a manual fallback for unknown hosting platforms
+
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh

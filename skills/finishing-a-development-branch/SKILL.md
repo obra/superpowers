@@ -124,7 +124,22 @@ git branch -d <feature-branch>
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
+# Detect hosting platform before creating the PR/MR
+REMOTE_URL=$(git remote get-url origin)
+```
+
+Use the remote host to choose the right creation tool:
+
+| Remote host | Action |
+|-------------|--------|
+| GitHub (`github.com` or GitHub Enterprise) | Use `gh pr create` |
+| GitLab (`gitlab.com` or self-hosted GitLab) | Use `glab mr create` |
+| Bitbucket (`bitbucket.org` or self-hosted Bitbucket) | Use `bb pr create` if available, otherwise print a manual PR/MR creation URL |
+| Unknown | Print a manual PR/MR creation URL and ask the user to open it |
+
+For GitHub:
+
+```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
@@ -134,6 +149,22 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 EOF
 )"
 ```
+
+For GitLab:
+
+```bash
+glab mr create --title "<title>" --description "$(cat <<'EOF'
+## Summary
+<2-3 bullets of what changed>
+
+## Test Plan
+- [ ] <verification steps>
+EOF
+)"
+```
+
+For Bitbucket or unknown hosts, if the appropriate CLI is unavailable, print the
+manual PR/MR creation URL and tell the user which branch was pushed.
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
@@ -225,6 +256,10 @@ git worktree prune  # Self-healing: clean up any stale registrations
 **Cleaning up harness-owned worktrees**
 - **Problem:** Removing a worktree the harness created causes phantom state
 - **Fix:** Only clean up worktrees under `.worktrees/` or `worktrees/`
+
+**Using GitHub CLI on non-GitHub remotes**
+- **Problem:** `gh pr create` fails on GitLab, Bitbucket, and self-hosted non-GitHub remotes
+- **Fix:** Check `git remote get-url origin` before creating a PR/MR. Use `gh pr create` for GitHub, `glab mr create` for GitLab, and a manual PR/MR creation URL when the platform or CLI is unknown
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
