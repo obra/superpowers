@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Windows lifecycle tests for the brainstorm server.
 #
-# Verifies that the brainstorm server survives the 60-second lifecycle
-# check on Windows, where OWNER_PID monitoring is disabled because the
-# MSYS2 PID namespace is invisible to Node.js.
+# Verifies brainstorm server lifecycle behavior, including:
+#  - Windows/MSYS2 foreground mode and empty OWNER_PID handling
+#  - Server survival past the 60-second lifecycle check window
+#  - Dead-at-startup OWNER_PID validation (logged, monitoring disabled)
+#  - Clean stop-server.sh shutdown
 #
 # Requirements:
 #   - Node.js in PATH
@@ -20,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SUPERPOWERS_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
-SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.js"
+SERVER_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/server.cjs"
 
 TEST_DIR="${TMPDIR:-/tmp}/brainstorm-win-test-$$"
 
@@ -64,7 +66,7 @@ skip() {
 wait_for_server_info() {
   local dir="$1"
   for _ in $(seq 1 50); do
-    if [[ -f "$dir/.server-info" ]]; then
+    if [[ -f "$dir/state/server-info" ]]; then
       return 0
     fi
     sleep 0.1
@@ -73,9 +75,9 @@ wait_for_server_info() {
 }
 
 get_port_from_info() {
-  # Read the port from .server-info. Use grep/sed instead of Node.js
+  # Read the port from state/server-info. Use grep/sed instead of Node.js
   # to avoid MSYS2-to-Windows path translation issues.
-  grep -o '"port":[0-9]*' "$1/.server-info" | head -1 | sed 's/"port"://'
+  grep -o '"port":[0-9]*' "$1/state/server-info" | head -1 | sed 's/"port"://'
 }
 
 http_check() {
@@ -214,11 +216,11 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/survival/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" > "$TEST_DIR/survival/.server.log" 2>&1 &
 SERVER_PID=$!
 
 if ! wait_for_server_info "$TEST_DIR/survival"; then
-  fail "Server starts successfully" "Server did not write .server-info within 5 seconds"
+  fail "Server starts successfully" "Server did not write state/server-info within 5 seconds"
   kill "$SERVER_PID" 2>/dev/null || true
   SERVER_PID=""
 else
@@ -254,10 +256,15 @@ else
   SERVER_PID=""
 fi
 
-# ========== Test 5: Bad OWNER_PID causes shutdown (control) ==========
+# ========== Test 5: Dead-at-startup OWNER_PID is logged but does not kill the server ==========
+#
+# The server validates BRAINSTORM_OWNER_PID at startup. If it's already dead,
+# the PID resolution was wrong (common on WSL, Tailscale SSH, cross-user
+# scenarios). The server logs 'owner-pid-invalid', disables owner monitoring,
+# and continues running. The idle timeout becomes the only shutdown trigger.
 
 echo ""
-echo "--- Control: Bad OWNER_PID causes shutdown ---"
+echo "--- Dead-at-startup OWNER_PID: server survives, logs owner-pid-invalid ---"
 
 mkdir -p "$TEST_DIR/control"
 
@@ -272,33 +279,41 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="$BAD_PID" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/control/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" > "$TEST_DIR/control/.server.log" 2>&1 &
 CONTROL_PID=$!
 
 if ! wait_for_server_info "$TEST_DIR/control"; then
-  fail "Control server starts" "Server did not write .server-info within 5 seconds"
+  fail "Control server starts" "Server did not write state/server-info within 5 seconds"
   kill "$CONTROL_PID" 2>/dev/null || true
   CONTROL_PID=""
 else
-  pass "Control server starts with bad OWNER_PID=$BAD_PID"
+  pass "Control server starts with dead-at-startup OWNER_PID=$BAD_PID"
 
-  echo "  Waiting ~75s for lifecycle check to kill server..."
+  echo "  Waiting ~75s to verify server survives past lifecycle check..."
   sleep 75
 
   if kill -0 "$CONTROL_PID" 2>/dev/null; then
-    fail "Control server self-terminates with bad OWNER_PID" \
-         "Server is still alive (expected it to die)"
-    kill "$CONTROL_PID" 2>/dev/null || true
+    pass "Server survives with dead-at-startup OWNER_PID (owner monitoring disabled)"
   else
-    pass "Control server self-terminates with bad OWNER_PID"
+    fail "Server survives with dead-at-startup OWNER_PID" \
+         "Server died unexpectedly. Log tail: $(tail -5 "$TEST_DIR/control/.server.log" 2>/dev/null)"
+  fi
+
+  if grep -q "owner-pid-invalid" "$TEST_DIR/control/.server.log" 2>/dev/null; then
+    pass "Server logs 'owner-pid-invalid' for dead-at-startup PID"
+  else
+    fail "Server logs 'owner-pid-invalid' for dead-at-startup PID" \
+         "Log tail: $(tail -5 "$TEST_DIR/control/.server.log" 2>/dev/null)"
   fi
 
   if grep -q "owner process exited" "$TEST_DIR/control/.server.log" 2>/dev/null; then
-    pass "Control server logs 'owner process exited'"
+    fail "No spurious 'owner process exited' log" \
+         "Found 'owner process exited' but owner monitoring should be disabled"
   else
-    fail "Control server logs 'owner process exited'" \
-         "Log tail: $(tail -5 "$TEST_DIR/control/.server.log" 2>/dev/null)"
+    pass "No spurious 'owner process exited' log"
   fi
+
+  kill "$CONTROL_PID" 2>/dev/null || true
 fi
 
 wait "$CONTROL_PID" 2>/dev/null || true
@@ -309,16 +324,16 @@ CONTROL_PID=""
 echo ""
 echo "--- Clean Shutdown ---"
 
-mkdir -p "$TEST_DIR/stop-test"
+mkdir -p "$TEST_DIR/stop-test/state"
 
 BRAINSTORM_DIR="$TEST_DIR/stop-test" \
 BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
 STOP_TEST_PID=$!
-echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/.server.pid"
+echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/state/server.pid"
 
 if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   fail "Stop-test server starts" "Server did not start"
