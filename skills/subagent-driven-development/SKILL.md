@@ -54,9 +54,11 @@ digraph process {
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
+        "Write review admission receipt for extra pass" [shape=box];
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
+        "Write quality re-review admission receipt" [shape=box];
         "Mark task complete in todo list" [shape=box];
     }
 
@@ -73,11 +75,13 @@ digraph process {
     "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes spec gaps" -> "Write review admission receipt for extra pass";
+    "Write review admission receipt for extra pass" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="admit spec re-review"];
     "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Write quality re-review admission receipt";
+    "Write quality re-review admission receipt" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="admit code quality re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in todo list" [label="yes"];
     "Mark task complete in todo list" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
@@ -118,6 +122,39 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 4. If the plan itself is wrong, escalate to the human
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
+
+## Review Admission Receipts
+
+The first spec compliance review for each task is mandatory. The first code quality review is mandatory after spec compliance passes. Do not use a Review Admission Receipt to skip the first spec compliance review or the first code quality review.
+
+Write this before dispatching any extra review pass after the initial mandatory reviews; it proves the extra pass is worth running:
+- spec re-review after the implementer fixes spec gaps
+- code quality re-review after the implementer fixes quality issues
+- repeated reviewer loops after the same failure class
+- group review or final branch review when deferring low-risk repeated concerns
+
+Use this template:
+
+```markdown
+### Review Admission Receipt
+
+- Task: <task id / task title>
+- Requested pass: <spec re-review | code quality re-review | group review | final branch review>
+- Base/head: <sha before pass> -> <sha after latest fixes>
+- What changed since the last review: <specific diff, test output, or result delta>
+- Remaining risk: <spec mismatch | code quality | integration | security | unknown>
+- Verifier state: <targeted tests/lint/build status, or why unavailable>
+- Admission decision: <admit | defer to group review | defer to final branch review | stop and ask>
+- Reason: <why this pass is expected to add value beyond token burn>
+```
+
+Admit an extra review pass only when at least one observable condition is true:
+- Code or docs changed since the last review in a way that directly addresses a reviewer finding
+- Verifier state changed, such as a failing targeted test becoming green
+- The prior review exposed a new failure class that has not yet been checked
+- The task crosses a high-risk boundary: public API, security, data loss, concurrency, or broad integration
+
+If no admission condition is met, do not spin another reviewer just to ask the same question again. Either send the implementer back to make a real fix, stop and ask if the issue blocks progress, or defer a non-blocking concern to group review or final branch review. Never mark a task complete while a blocking spec or code quality issue remains open.
 
 ## Prompt Templates
 
@@ -178,6 +215,7 @@ Spec reviewer: ❌ Issues:
 [Implementer fixes issues]
 Implementer: Removed --json flag, added progress reporting
 
+[Write Review Admission Receipt: code changed to remove the extra flag and add required progress reporting; admit spec re-review]
 [Spec reviewer reviews again]
 Spec reviewer: ✅ Spec compliant now
 
@@ -187,6 +225,7 @@ Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 [Implementer fixes]
 Implementer: Extracted PROGRESS_INTERVAL constant
 
+[Write Review Admission Receipt: code changed to address the magic number finding; admit code quality re-review]
 [Code reviewer reviews again]
 Code reviewer: ✅ Approved
 
@@ -256,9 +295,10 @@ Done!
 
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
-- Reviewer reviews again
+- Write a Review Admission Receipt before any re-review
+- Reviewer reviews again if the receipt admits the extra pass
 - Repeat until approved
-- Don't skip the re-review
+- Don't skip an admitted re-review
 
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions

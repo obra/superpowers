@@ -82,6 +82,13 @@ echo "=== All tests passed ==="
 
 ### Fast Tests (run by default)
 
+#### test-sdd-review-admission-receipts.sh
+Tests the review admission receipt contract without invoking Claude:
+- First spec compliance and code quality reviews remain mandatory
+- Receipts are required before extra review/re-review passes
+- Receipts capture changed diff/result, remaining risk, verifier state, and admission decision
+- Extra passes are admitted only for observable changes, verifier deltas, new failure classes, or high-risk boundaries
+
 #### test-subagent-driven-development.sh
 Tests skill content and requirements (~2 minutes):
 - Skill loading and accessibility
