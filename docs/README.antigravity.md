@@ -1,6 +1,6 @@
-# Superpowers for Antigravity IDE
+# Superpowers for Antigravity
 
-Complete guide for using Superpowers with Antigravity IDE.
+Complete guide for using Superpowers with the Antigravity platform — **Antigravity CLI**, **Antigravity 2.0**, and **Antigravity IDE**. Although each product has its own application directory under `~/.gemini/` (e.g., `antigravity-cli`, `antigravity`, `antigravity-ide`), they all share the same global `~/.gemini/config/` directory, so skills only need to be installed once.
 
 ## Quick Install
 
@@ -14,7 +14,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### Prerequisites
 
-- Antigravity IDE installed
+- Antigravity installed
 - Git installed
 
 ### Installation Steps
@@ -23,28 +23,26 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Linux/macOS:**
 ```bash
-git clone https://github.com/obra/superpowers.git ~/.gemini/antigravity/superpowers
+git clone https://github.com/obra/superpowers.git ~/.gemini/config/superpowers
 ```
 
 **Windows (PowerShell):**
 ```powershell
-git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.gemini\antigravity\superpowers"
+git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.gemini\config\superpowers"
 ```
 
-#### 2. Copy Skills
+#### 2. Copy Skills (Global — Recommended)
 
-Copy the skills folder to your workspace:
+Copy the skills folder to the shared global directory. This makes skills available across all Antigravity products and all projects.
 
 **Linux/macOS:**
 ```bash
-mkdir -p .agent
-cp -r ~/.gemini/antigravity/superpowers/skills .agent/skills
+cp -r ~/.gemini/config/superpowers/skills ~/.gemini/config/skills
 ```
 
 **Windows:**
 ```powershell
-New-Item -ItemType Directory -Force -Path ".agent"
-Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" ".agent\skills"
+Copy-Item -Recurse "$env:USERPROFILE\.gemini\config\superpowers\skills" "$env:USERPROFILE\.gemini\config\skills"
 ```
 
 #### 3. Configure Global Rules
@@ -76,31 +74,33 @@ Skills activate automatically based on context. For example:
 
 ---
 
-## Global Installation (Alternative)
+## Project-Level Installation (Alternative)
 
-If you prefer to install skills globally (available across all projects):
+If you prefer to install skills only for a specific project:
 
 **Linux/macOS:**
 ```bash
-cp -r ~/.gemini/antigravity/superpowers/skills ~/.gemini/antigravity/skills
+mkdir -p .agent
+cp -r ~/.gemini/config/superpowers/skills .agent/skills
 ```
 
 **Windows:**
 ```powershell
-Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" "$env:USERPROFILE\.gemini\antigravity\skills"
+New-Item -ItemType Directory -Force -Path ".agent"
+Copy-Item -Recurse "$env:USERPROFILE\.gemini\config\superpowers\skills" ".agent\skills"
 ```
 
 ---
 
 ## Personal Skills
 
-To add personal skills, create new skill folders in `.agent/skills/`:
+To add personal skills alongside superpowers, create new skill folders in `~/.gemini/config/skills/` (global) or `.agent/skills/` (project-level):
 
 ```bash
-mkdir -p .agent/skills/my-skill
+mkdir -p ~/.gemini/config/skills/my-skill
 ```
 
-Create `.agent/skills/my-skill/SKILL.md`:
+Create `~/.gemini/config/skills/my-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -116,11 +116,11 @@ description: Use when [condition] - [what it does]
 ## Updating
 
 ```bash
-cd ~/.gemini/antigravity/superpowers
+cd ~/.gemini/config/superpowers
 git pull
 ```
 
-Then re-copy the skills folder to your project.
+Then re-copy the skills folder to your global config or project.
 
 ## Getting Help
 

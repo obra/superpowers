@@ -151,7 +151,7 @@ already use it in another harness.
   copilot plugin install superpowers@superpowers-marketplace
   ```
 
-### Antigravity IDE
+### Antigravity
 
 Tell Antigravity:
 
