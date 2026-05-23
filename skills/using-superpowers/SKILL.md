@@ -49,6 +49,23 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") 
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
+## Task Triage Before Heavy Workflows
+
+Before launching heavyweight document workflows such as brainstorming/spec/plan
+artifacts, classify the user's task size. This determines workflow weight, not
+whether requested skills must be checked.
+
+- **Direct answer / command-only:** answer the question or run the requested
+  command after checking applicable skills.
+- **Small edit:** clear, localized work that appears to touch 1-3 files and has
+  no new architecture or product ambiguity. Use the relevant implementation,
+  debugging, or verification skills. Do not launch brainstorming/spec/plan artifacts for small edits unless the user asks for them.
+- **Debugging:** use systematic debugging before proposing or implementing a fix.
+- **Multi-step or ambiguous feature:** use brainstorming first, then planning
+  and execution skills when the design is approved.
+
+Do not use triage to skip a requested or clearly applicable skill. If the user explicitly asks for the full workflow, honor that.
+
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
