@@ -21,6 +21,14 @@ Load plan, review critically, execute all tasks, report when complete.
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create todos for the plan items and proceed
 
+## Context-Frugal Resume
+
+When resuming an existing plan, keep the initial reload small. Read the plan header first, then load the next pending task and only the surrounding context
+needed to execute it.
+
+Do not reload the entire plan just to find status or locate the next unchecked
+task. Expand to the full plan only when dependencies, unclear context, or cross-task coupling require it.
+
 ### Step 2: Execute Tasks
 
 For each task:

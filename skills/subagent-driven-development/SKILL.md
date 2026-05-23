@@ -119,6 +119,14 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+## Context-Frugal Resume
+
+When resuming an existing plan, keep the controller's reload small. Read the plan header first, then load the next pending task and only the surrounding
+context needed for dispatch.
+
+Do not make subagents reload the whole plan. The controller provides task text
+and curated context. Expand to the full plan only when dependencies, unclear context, or cross-task coupling require it.
+
 ## Prompt Templates
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
