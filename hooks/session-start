@@ -7,6 +7,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# Prompt Budget Guard:
+# Only inject `skills/using-superpowers/SKILL.md` from this hook. Do not read or
+# inject CLAUDE.md, AGENTS.md, GEMINI.md, or other repository instruction files
+# here; host harnesses own their own repo-instruction loading behavior.
+
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
