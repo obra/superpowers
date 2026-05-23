@@ -57,8 +57,37 @@ This structure informs the task decomposition. Each task should produce self-con
 
 **Tech Stack:** [Key technologies/libraries]
 
+**Context Pack:**
+- Relevant files: [Small set of source, test, docs, and config paths execution agents should inspect or touch]
+- Entrypoints: [Commands, modules, APIs, UI paths, or workflows that define the behavior under change]
+- Verification commands: [Smallest useful commands that prove the planned change]
+- Acceptance criteria: [Observable outcomes reviewers can check]
+- Constraints: [Architecture, compatibility, performance, UX, migration, or ownership boundaries]
+- Open questions / assumptions: [Known uncertainties, assumptions, and what should stop execution if contradicted]
+
 ---
 ```
+
+## Context Pack Contract
+
+Every plan carries a concise Context Pack so execution agents can start with the
+right repo slice instead of rediscovering it.
+
+Do not document the whole repository. Capture only the context needed to execute
+and review this feature slice.
+
+The Context Pack is not a memory system, multi-file documentation mode, or
+replacement for the task body. It is a handoff contract between planning and
+execution:
+
+- **Relevant files:** exact paths already discovered during planning
+- **Entrypoints:** behavior boundaries execution should use for orientation
+- **Verification commands:** commands worth running for this change, not a full
+  CI catalog
+- **Acceptance criteria:** externally visible outcomes the reviewer can verify
+- **Constraints:** boundaries that should keep implementation from drifting
+- **Open questions / assumptions:** uncertainties that should trigger a pause if
+  contradicted during execution
 
 ## Task Structure
 

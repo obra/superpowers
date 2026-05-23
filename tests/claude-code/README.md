@@ -92,6 +92,17 @@ Tests skill content and requirements (~2 minutes):
 - Review loops documented
 - Task context provision documented
 
+#### test-context-pack-contract.sh
+Tests the planning-to-execution context handoff contract:
+- `writing-plans` requires a concise Context Pack in the plan header
+- Context Pack fields cover relevant files, entrypoints, verification commands,
+  acceptance criteria, constraints, and assumptions
+- `subagent-driven-development` reads the Context Pack once and forwards the
+  relevant fields to subagents
+- Implementer prompts include a Context Pack section
+- The contract does not introduce a feature-doc-pack mode or handoff slash
+  command
+
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh

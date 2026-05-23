@@ -60,12 +60,12 @@ digraph process {
         "Mark task complete in todo list" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create todos" [shape=box];
+    "Read plan, extract Context Pack and all tasks with full text, note context, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract Context Pack and all tasks with full text, note context, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -119,6 +119,22 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+## Context Pack Handoff
+
+Plans created by `writing-plans` include a Context Pack near the top.
+
+Read the Context Pack once when you read the plan, preserve it in controller notes,
+and include the relevant Context Pack fields in each implementer and reviewer
+prompt.
+
+Use the Context Pack to keep dispatch efficient:
+- Do not make subagents rediscover repo structure, entrypoints, verification
+  commands, acceptance criteria, or constraints that planning already captured.
+- Forward only the parts that matter for the current task. The full task text
+  still owns the implementation details.
+- If execution discovers that a Context Pack assumption is wrong, stop that task
+  and resolve the mismatch before continuing.
+
 ## Prompt Templates
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
@@ -131,13 +147,13 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
+[Extract Context Pack and all 5 tasks with full text and context]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
 
 [Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch implementation subagent with full task text + relevant Context Pack fields]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 

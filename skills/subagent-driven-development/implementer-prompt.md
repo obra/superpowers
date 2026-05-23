@@ -16,6 +16,15 @@ Subagent (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Context Pack
+
+    [Relevant Context Pack fields from the plan: files, entrypoints,
+    verification commands, acceptance criteria, constraints, and assumptions]
+
+    Treat this as the handoff contract from planning to execution. Use it to
+    stay inside the intended repo slice. If it conflicts with what you find in
+    the code, report NEEDS_CONTEXT or BLOCKED instead of guessing.
+
     ## Before You Begin
 
     If you have questions about:
