@@ -49,6 +49,7 @@ Subagent (general-purpose):
     - Reasonable scalability and performance?
     - Security concerns?
     - Integrates cleanly with surrounding code?
+    - Target-system responsibility boundary: Does this change make target-system responsibilities explicit, or hide them inside hidden development-time inference or helper logic?
 
     **Testing:**
     - Tests verify real behavior, not mocks?

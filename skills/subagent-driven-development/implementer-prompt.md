@@ -54,6 +54,13 @@ Subagent (general-purpose):
     - In existing codebases, follow established patterns. Improve code you're touching
       the way a good developer would, but don't restructure things outside your task.
 
+    ## Target-System Responsibility Boundary
+
+    Do not silently substitute for capabilities that should be explicitly modeled
+    in the target product, subsystem, or agent. If behavior belongs in schema, state, policy, interface contracts, or the target agent's own responsibilities,
+    report NEEDS_CONTEXT or DONE_WITH_CONCERNS instead of hiding it inside
+    development-time inference or convenience helpers.
+
     ## When You're in Over Your Head
 
     It is always OK to stop and say "this is too hard for me." Bad work is worse than

@@ -33,6 +33,18 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## Target-System Responsibility Boundary
+
+You are the development agent, not the target product/system. During planning,
+check whether the plan explicitly models behavior that belongs in the target
+system instead of relying on the implementing agent to infer it at development
+time.
+
+If behavior belongs in schema, state, policy, interface contracts, or the target
+agent's own responsibilities, prefer explicit modeling over implementation-time inference.
+Do not hide target-system responsibilities inside convenience helpers that only
+make the current implementation pass.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**

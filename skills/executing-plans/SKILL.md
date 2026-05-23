@@ -60,6 +60,7 @@ After all tasks complete and verified:
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
+- Before adding inference, derivation, or helper logic, ask: am I implementing the target system, or compensating for missing target-system structure?
 - Never start implementation on main/master branch without explicit user consent
 
 ## Integration
