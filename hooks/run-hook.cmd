@@ -26,8 +26,21 @@ if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
     "C:\Program Files (x86)\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b %ERRORLEVEL%
 )
+REM Per-user Git for Windows installer ("Only for me" / winget user scope)
+if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" (
+    "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+REM Scoop user install (`scoop install git`)
+if exist "%USERPROFILE%\scoop\apps\git\current\usr\bin\bash.exe" (
+    "%USERPROFILE%\scoop\apps\git\current\usr\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
 
-REM Try bash on PATH (e.g. user-installed Git Bash, MSYS2, Cygwin)
+REM Try bash on PATH (e.g. user-installed Git Bash, MSYS2, Cygwin). Note that
+REM on stock Windows 10/11 `where bash` resolves to C:\Windows\System32\bash.exe
+REM (the WSL launcher), which fails on Windows-style script paths. The explicit
+REM probes above must therefore be exhausted first.
 where bash >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     bash "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
