@@ -124,8 +124,12 @@ git branch -d <feature-branch>
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+# Detect the hosting platform before creating the PR/MR
+REMOTE_URL=$(git remote get-url origin)
+
+# GitHub remotes: create PR with gh
+if [[ "$REMOTE_URL" == *github.com* ]]; then
+  gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 
@@ -133,7 +137,19 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 - [ ] <verification steps>
 EOF
 )"
+fi
 ```
+
+Use the right creation tool for the detected remote:
+
+| Remote host | Command |
+|-------------|---------|
+| `github.com` or GitHub Enterprise | `gh pr create` |
+| `gitlab.com` or self-hosted GitLab | `glab mr create` |
+| `bitbucket.org` | `bb pr create` or the web UI |
+| Unknown | Print the pushed branch and the repository URL so the user can open the PR/MR manually |
+
+If the matching CLI is unavailable, report that the branch was pushed and provide the remote URL instead of retrying with the wrong tool.
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
@@ -213,6 +229,10 @@ git worktree prune  # Self-healing: clean up any stale registrations
 **Cleaning up worktree for Option 2**
 - **Problem:** Remove worktree user needs for PR iteration
 - **Fix:** Only cleanup for Options 1 and 4
+
+**Using `gh` on non-GitHub repos**
+- **Problem:** `gh pr create` fails on GitLab, Bitbucket, or self-hosted remotes after the branch was already pushed
+- **Fix:** Check `git remote get-url origin` first. Use `gh` for GitHub, `glab` for GitLab, or provide the web URL when the platform or CLI is unavailable
 
 **Deleting branch before removing worktree**
 - **Problem:** `git branch -d` fails because worktree still references the branch
