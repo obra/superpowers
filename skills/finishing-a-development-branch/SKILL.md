@@ -124,7 +124,10 @@ git branch -d <feature-branch>
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
+# Create PR/MR with the tool that matches the remote host.
+REMOTE_URL=$(git remote get-url origin)
+# `gh pr create` below is the GitHub example. For non-GitHub remotes, do not
+# run it; use the matching PR/MR CLI or print the branch URL instead.
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
