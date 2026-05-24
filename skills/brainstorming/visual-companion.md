@@ -34,7 +34,7 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ```bash
 # Start server with persistence (mockups saved to project)
-skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/content",
@@ -52,7 +52,7 @@ Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
 **Claude Code:**
 ```bash
 # Default mode works — the script backgrounds the server itself.
-skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project
 ```
 
 On Windows, the script auto-detects and switches to foreground mode (which blocks the tool call). Use `run_in_background: true` on the Bash tool call so the server survives across conversation turns, then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
@@ -61,14 +61,14 @@ On Windows, the script auto-detects and switches to foreground mode (which block
 ```bash
 # Codex reaps background processes. The script auto-detects CODEX_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
-skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project
 ```
 
 **Gemini CLI:**
 ```bash
 # Use --foreground and set is_background: true on your shell tool call
 # so the process survives across turns
-skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project --foreground
+scripts/start-server.sh --project-dir /path/to/project --foreground
 ```
 
 **Copilot CLI:**
@@ -76,7 +76,7 @@ skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project --fo
 # Use --foreground and start the server via the bash tool with mode: "async"
 # so the process survives across turns. Capture the returned shellId for
 # read_bash / stop_bash if you need to interact with it later.
-skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project --foreground
+scripts/start-server.sh --project-dir /path/to/project --foreground
 ```
 
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
@@ -84,7 +84,7 @@ skills/brainstorming/scripts/start-server.sh --project-dir /path/to/project --fo
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
 ```bash
-skills/brainstorming/scripts/start-server.sh \
+scripts/start-server.sh \
   --project-dir /path/to/project \
   --host 0.0.0.0 \
   --url-host localhost
@@ -277,12 +277,12 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 ## Cleaning Up
 
 ```bash
-skills/brainstorming/scripts/stop-server.sh $SESSION_DIR
+scripts/stop-server.sh $SESSION_DIR
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
 
 ## Reference
 
-- Frame template (CSS reference): `skills/brainstorming/scripts/frame-template.html`
-- Helper script (client-side): `skills/brainstorming/scripts/helper.js`
+- Frame template (CSS reference): `scripts/frame-template.html`
+- Helper script (client-side): `scripts/helper.js`
