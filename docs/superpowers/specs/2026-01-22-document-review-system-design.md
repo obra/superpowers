@@ -98,7 +98,7 @@ brainstorming -> spec -> SPEC REVIEW LOOP -> writing-plans -> plan -> PLAN REVIE
 
 ## Markdown Task Syntax
 
-Tasks and steps use checkbox syntax:
+Tasks and steps use `- [ ]` checkbox syntax for structure and human scanability (not live agent tracking). During execution, agents track progress in TodoWrite or Codex `update_plan`; they do not edit checkboxes in the plan file.
 
 ```markdown
 - [ ] ### Task 1: Name

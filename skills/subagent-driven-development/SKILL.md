@@ -233,9 +233,16 @@ Done!
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
 
+## Plan progress
+
+- After reading the plan once, create TodoWrite entries for all tasks (full text + context).
+- Mark each task complete in **TodoWrite** after spec and code-quality review pass.
+- **Do not** edit plan checkboxes (`- [ ]` → `- [x]`) — they stay unchecked in git; session todos are ephemeral on Cursor/Claude Code. On Codex, use `update_plan` per `using-superpowers/references/codex-tools.md`.
+
 ## Red Flags
 
 **Never:**
+- Edit plan file checkboxes to record progress (use TodoWrite / `update_plan`)
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues

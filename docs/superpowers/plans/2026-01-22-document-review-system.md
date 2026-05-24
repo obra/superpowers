@@ -285,7 +285,7 @@ Run: `grep -A 20 "Plan Document Header" skills/writing-plans/SKILL.md`
 The plan header should note that tasks and steps use checkbox syntax. Update the header comment:
 
 ```markdown
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Tasks and steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Checkboxes (`- [ ]`) are for human scanability only — track progress in TodoWrite (Cursor/Claude Code) or `update_plan` (Codex); do not flip checkboxes in this file during execution.
 ```
 
 - [ ] **Step 3:** Verify the change

@@ -1,6 +1,6 @@
 # Zero-Dependency Brainstorm Server Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Checkboxes (`- [ ]`) are for human scanability only — track progress in TodoWrite (Cursor/Claude Code) or `update_plan` (Codex); do not flip checkboxes in this file during execution.
 
 **Goal:** Replace the brainstorm server's vendored node_modules with a single zero-dependency `server.js` using Node built-ins.
 

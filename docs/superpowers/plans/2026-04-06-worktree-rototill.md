@@ -1,6 +1,6 @@
 # Worktree Rototill Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Checkboxes (`- [ ]`) are for human scanability only — track progress in TodoWrite (Cursor/Claude Code) or `update_plan` (Codex); do not flip checkboxes in this file during execution.
 
 **Goal:** Make superpowers defer to native harness worktree systems when available, fall back to manual git worktrees when not, and fix three known finishing bugs.
 

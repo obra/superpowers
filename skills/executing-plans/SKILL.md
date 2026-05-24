@@ -23,11 +23,13 @@ Load plan, review critically, execute all tasks, report when complete.
 
 ### Step 2: Execute Tasks
 
+Track progress in **TodoWrite** (or Codex `update_plan` — see `using-superpowers/references/codex-tools.md`). Do **not** flip `- [ ]` → `- [x]` in the plan file; checkboxes are for human scanability only.
+
 For each task:
-1. Mark as in_progress
+1. Mark as in_progress in TodoWrite
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. Mark as completed in TodoWrite
 
 ### Step 3: Complete Development
 

@@ -1,6 +1,6 @@
 # Visual Brainstorming Refactor Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Checkboxes (`- [ ]`) are for human scanability only — track progress in TodoWrite (Cursor/Claude Code) or `update_plan` (Codex); do not flip checkboxes in this file during execution.
 
 **Goal:** Refactor visual brainstorming from blocking TUI feedback model to non-blocking "Browser Displays, Terminal Commands" architecture.
 

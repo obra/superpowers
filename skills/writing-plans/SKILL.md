@@ -49,7 +49,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Checkboxes (`- [ ]`) are for human scanability only — track progress in TodoWrite (Cursor/Claude Code) or `update_plan` (Codex); do not flip checkboxes in this file during execution.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -59,6 +59,10 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ---
 ```
+
+## Progress tracking (agents)
+
+Checkboxes in the plan are **not** a live progress log. Execution skills (`subagent-driven-development`, `executing-plans`) require TodoWrite (or Codex `update_plan`) and explicitly do not edit plan checkboxes. Humans may check boxes manually when reviewing a plan in git.
 
 ## Task Structure
 
