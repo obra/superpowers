@@ -119,6 +119,38 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
+## Evaluator
+
+Every plan declares an **Evaluator** — the deterministic check that gates moving the plan from in-progress to complete. Without one, "done" defaults to vibes: a maintainer reads the implementation, decides it looks right, and moves the plan to its completed location. Weeks later a regression surfaces and there's no record of what "passing" was supposed to mean.
+
+This is the **Planner → Generator → Evaluator** topology: the **Planner** (this skill) writes the spec, the **Generator** (`superpowers:executing-plans` / `superpowers:subagent-driven-development`) executes one task at a time, and the **Evaluator** returns pass/fail before lifecycle transition.
+
+**Acceptable Evaluator forms** (pick one or combine):
+
+- **Test command** — `pytest path::test_function`, `npx playwright test specs/<feature>.spec.ts`, `cargo test <name>`, `go test ./pkg/...` — that exits 0
+- **HTTP assertion** — `curl -fsS <url>` with expected status + body shape against a deployed endpoint
+- **Database query** — a SELECT (or equivalent) asserting expected state after the plan runs
+- **Skill invocation** — a project-local `verify-*` skill that returns success
+- **Rubric pass-list** — N/N criteria met by manual inspection, for AI-system or design plans where a deterministic check isn't possible
+
+**Placement:** add a top-level `## Evaluator` section AFTER the implementation/task breakdown and BEFORE any terminal `## Rollback` or sign-off block. Title MUST be exactly `## Evaluator` (or `## Evaluator spec`) so the gate is grep-discoverable across the plan corpus.
+
+**Example:**
+
+````markdown
+## Evaluator
+
+```bash
+pytest tests/auth/test_session_refresh.py::test_token_rotation -v
+```
+
+Expected: PASS. Verifies the refresh-token rotation flow returns a new access
+token, invalidates the old refresh token, and writes the rotation event to
+the audit log.
+````
+
+**Gate:** the executing session may NOT move a plan to its completed location until the Evaluator runs green. Paste the passing evidence into the commit message, CHANGELOG entry, or PR body that closes the plan — that's the durable record of what "done" meant for this plan.
+
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
@@ -128,6 +160,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Evaluator declared:** Does the plan include a top-level `## Evaluator` section with a concrete check (test command, curl assertion, database query, skill invocation, or rubric)? If not, add one — without it, the `partial` → `completed` transition defaults to vibes.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
