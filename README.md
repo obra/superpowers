@@ -185,6 +185,29 @@ The Pi package loads the Superpowers skills and a small extension that injects t
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+## Customizing Output Paths
+
+By default, brainstorming writes design specs to `docs/superpowers/specs/`
+and writing-plans writes implementation plans to `docs/superpowers/plans/`.
+
+If your project wants those artifacts somewhere else, add both a table and a
+direct instruction to the project instruction file your harness reads at
+session start, such as `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`:
+
+```markdown
+## Output Paths
+
+| Artifact | Location |
+|---|---|
+| Design specs | `docs/design-docs/` |
+| Implementation plans | `docs/exec-plans/` |
+
+**Design specs MUST be saved to `docs/design-docs/`, NOT `docs/superpowers/specs/`. Implementation plans MUST be saved to `docs/exec-plans/`, NOT `docs/superpowers/plans/`.**
+```
+
+The direct instruction matters: agents are more likely to follow the override
+when it appears next to the table instead of only as a table row.
+
 ## What's Inside
 
 ### Skills Library
