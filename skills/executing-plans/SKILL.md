@@ -19,15 +19,17 @@ Load plan, review critically, execute all tasks, report when complete.
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create TodoWrite and proceed
+4. If no concerns: Optionally create TodoWrite to mirror tasks, then proceed
 
 ### Step 2: Execute Tasks
 
+The plan file is the durable progress log. After each step passes verification, edit the plan and flip that step's `- [ ]` to `- [x]`.
+
 For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+1. Follow each step exactly (plan has bite-sized steps)
+2. Run verifications as specified
+3. Mark the step complete in the plan file (`- [ ]` → `- [x]`)
+4. Optionally mark in_progress / completed in TodoWrite for in-session UI
 
 ### Step 3: Complete Development
 

@@ -98,7 +98,7 @@ brainstorming -> spec -> SPEC REVIEW LOOP -> writing-plans -> plan -> PLAN REVIE
 
 ## Markdown Task Syntax
 
-Tasks and steps use checkbox syntax:
+Tasks and steps use checkbox syntax. During execution, agents flip `- [ ]` to `- [x]` in the plan file as steps are verified (durable progress in git).
 
 ```markdown
 - [ ] ### Task 1: Name
