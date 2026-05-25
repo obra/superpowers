@@ -121,9 +121,17 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
+- `./implementer-prompt.md` - Dispatch implementer subagent (uses two-commit strategy: checkpoint after impl, final after reviews)
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+
+## Commit Strategy
+
+Each task produces **two commits** to balance traceability with conflict avoidance:
+1. **Checkpoint commit** — immediately after implementation and self-test pass
+2. **Final commit** — after both spec and code quality reviews approve
+
+During review fix rounds, implementers use `git commit --amend` to squash fixes rather than creating separate commits. This avoids the ~25+ commits typical of large plans while preventing long-running uncommitted code that risks merge conflicts.
 
 ## Example Workflow
 
@@ -148,13 +156,16 @@ Implementer: "Got it. Implementing now..."
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
-  - Committed
+  - Committed (checkpoint commit #1)
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 
-[Get git SHAs, dispatch code quality reviewer]
+[Dispatch code quality reviewer]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+
+[Implementer creates final commit #2]
+Implementer: All reviews passed, final commit
 
 [Mark Task 1 complete]
 
@@ -168,15 +179,15 @@ Implementer:
   - Added verify/repair modes
   - 8/8 tests passing
   - Self-review: All good
-  - Committed
+  - Committed (checkpoint commit #1)
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ❌ Issues:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
 
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
+[Implementer fixes issues with --amend]
+Implementer: Removed --json flag, added progress reporting, amended checkpoint commit
 
 [Spec reviewer reviews again]
 Spec reviewer: ✅ Spec compliant now
@@ -184,11 +195,14 @@ Spec reviewer: ✅ Spec compliant now
 [Dispatch code quality reviewer]
 Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
+[Implementer fixes with --amend]
+Implementer: Extracted PROGRESS_INTERVAL constant, amended checkpoint commit
 
 [Code reviewer reviews again]
 Code reviewer: ✅ Approved
+
+[Implementer creates final commit #2]
+Implementer: All reviews passed, final commit
 
 [Mark Task 2 complete]
 
