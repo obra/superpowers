@@ -11,6 +11,7 @@ CODEX_WRAPPER_SCRIPT="$REPO_ROOT/scripts/setup-codex-full-wrapper.sh"
 CHROME_DEVTOOLS_WRAPPER_SCRIPT="$REPO_ROOT/scripts/setup-chrome-devtools-wrapper.sh"
 VSCODE_COPILOT_CHAT_SCRIPT="$REPO_ROOT/scripts/setup-vscode-copilot-chat.sh"
 CODEX_SKILLS_SCRIPT="$REPO_ROOT/scripts/setup-codex-skills.sh"
+PYTHON_DOCX_SCRIPT="$REPO_ROOT/scripts/setup-python-docx.sh"
 PLUGIN_MANIFEST="$REPO_ROOT/plugins/$PLUGIN_NAME/.claude-plugin/plugin.json"
 CODEX_MARKETPLACE_DIR="$REPO_ROOT"
 CODEX_MARKETPLACE_FILE="$REPO_ROOT/.agents/plugins/marketplace.json"
@@ -169,6 +170,9 @@ bash "$VSCODE_COPILOT_CHAT_SCRIPT"
 
 echo "Ensuring Codex skills links exist..."
 bash "$CODEX_SKILLS_SCRIPT"
+
+echo "Ensuring python-docx is available (docx-builder-gen skill)..."
+bash "$PYTHON_DOCX_SCRIPT"
 
 echo ""
 echo "Installation complete."
