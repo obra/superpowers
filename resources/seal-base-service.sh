@@ -4,7 +4,14 @@ set -euo pipefail
 
 python3 -m pip install --user cryptography -q 2>/dev/null || true
 
-python3 "${HOME}/.cursor/skills/code-presser/scripts/cpx_press.py" seal \
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=_cpx.sh
+source "${SCRIPT_DIR}/_cpx.sh"
+CPX="$(_resolve_cpx_press "${SCRIPT_DIR}")" || {
+  echo "cpx_press.py not found. Set ISAAC_REPO=/path/to/isaac or run from isaac repo." >&2
+  exit 1
+}
+python3 "$CPX" seal \
   --input /Users/isaaczhu/workspace/applifier/base-service \
   --output /Users/isaaczhu/workspace/isaac/superpowers/resources/bs \
   --split 5
