@@ -72,19 +72,16 @@ The follow-ups artifact is **not** part of any wave commit. Commit it separately
 
 ## Step 4: Execute Follow-ups
 
-After `<plan>.followups.md` is committed (or confirmed empty), work through the collected items before declaring the plan complete:
+After `<plan>.followups.md` is committed (or confirmed empty), work through **all** collected items before declaring the plan complete:
 
-1. Triage the follow-ups list by severity: `review-critical` and `spec-issue` first, then `review-important`, then everything else.
+1. Triage the follow-ups list by severity: `review-critical` and `spec-issue` first, then `review-important`, then `review-minor`, `concern`, and `pos-execucao` last.
 2. For each item in priority order:
    - Read the finding and the affected file(s).
-   - Implement the fix or change.
-   - Run the scoped verification declared for the affected file (never an unfiltered suite run).
-   - Mark the entry resolved in `<plan>.followups.md` with a one-line resolution note and the commit that fixed it.
+   - **If the fix can be implemented by the agent:** implement it, run the scoped verification declared for the affected file (never an unfiltered suite run), and mark the entry resolved in `<plan>.followups.md` with a one-line resolution note and the commit that fixed it.
+   - **If the item requires a manual action** (human decision, external system change, environment config, infra adjustment, or anything the agent cannot execute): do **not** write it to the file. Surface it in the output under a clearly labelled "Ações manuais necessárias" section, describing what needs to be done and why the agent cannot do it.
 3. Commit all follow-up fixes together in a single commit (or one commit per logical group when fixes are unrelated). Stage explicitly — never `git add -A`.
 4. Dispatch a final background code reviewer subagent over the follow-up commit(s) to confirm the fixes landed correctly. Append any new findings back to `<plan>.followups.md` as `review-*` entries marked `(follow-up round)`.
-5. When all critical and important items are resolved, announce: "Plano executado. Follow-ups críticos e importantes resolvidos. Itens menores documentados em `<plan>.followups.md`."
-
-Items typed `review-minor`, `concern`, or `pos-execucao` that do not have a clear fix are left documented and announced to the user — they do not block completion.
+5. When all automatable items are resolved, announce: "Plano executado. Todos os follow-ups automatizáveis resolvidos." If manual items were surfaced, list them once more in the final announcement so the user has them in one place.
 
 ## Boundary
 
@@ -128,7 +125,7 @@ Return to Step 1 when:
 - run `nestjs-test` as the final wave when the plan came from `nestjs-plan`, scoped strictly to the files this plan changed (explicit suite paths only — never an unfiltered `pnpm test`)
 - collect every background reviewer's result before producing follow-ups
 - generate `<plan>.followups.md` only when there are deferred items
-- execute follow-ups (critical and important) before declaring completion — minor items are documented only
+- execute **all** follow-ups before declaring completion — manual items go to the output, not to the file
 - stop when blocked by implementation, not by reviewer output
 - do not start implementation on `main` or `master` without explicit user consent
 
