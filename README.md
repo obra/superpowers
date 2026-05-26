@@ -72,6 +72,8 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
 
+**Note:** Codex support is skills-only. Superpowers does not install slash commands such as `/brainstorming` in Codex. Start workflows by asking Codex naturally, for example "use the brainstorming skill to design..."; Codex should also auto-load applicable Superpowers skills when relevant.
+
 - Open the plugin search interface:
 
   ```bash
