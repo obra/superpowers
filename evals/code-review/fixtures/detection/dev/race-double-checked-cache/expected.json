@@ -1,0 +1,31 @@
+{
+  "case_id": "race-double-checked-cache",
+  "mode": "standalone",
+  "mature": false,
+  "description": "Refactored async lazy cache. Stated motivation is 'hot path optimization' but the change does nothing for the hot path. The new shape `if (cached === undefined) { ... await readSettingsFromDisk(); cached = fresh; }` is a live race: two concurrent first-callers can both observe `cached === undefined`, both await the (expensive) load in parallel, and the second assignment wins. Reviewer should flag both the race AND the bogus motivation.",
+  "bugs": [
+    {
+      "id": "concurrent-first-access-race",
+      "category": "concurrency",
+      "expectation": "required",
+      "expected_severity": "warning",
+      "evidence_regions": [
+        { "file": "src/cache.ts", "lines": [15, 18] }
+      ],
+      "semantic_keywords": ["race", "concurrent", "lazy", "synchroniz", "atomic", "await", "parallel", "in-flight"],
+      "description": "Check-then-act under async: two callers may both pass the undefined check, both await readSettingsFromDisk, and the second assignment wins. Fix is typically to cache the in-flight Promise rather than the resolved value."
+    },
+    {
+      "id": "bogus-perf-motivation",
+      "category": "correctness",
+      "expectation": "optional",
+      "expected_severity": "suggestion",
+      "evidence_regions": [
+        { "file": "src/cache.ts", "lines": [13, 14] }
+      ],
+      "semantic_keywords": ["motivation", "evidence", "benchmark", "premature", "optimization", "justif"],
+      "description": "PR claims hot-path optimization with no benchmark; the change is shape-only and doesn't reduce work."
+    }
+  ]
+}
+

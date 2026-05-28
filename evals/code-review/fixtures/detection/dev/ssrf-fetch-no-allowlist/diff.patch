@@ -1,0 +1,35 @@
+diff --git a/src/proxy.ts b/src/proxy.ts
+--- a/src/proxy.ts
++++ b/src/proxy.ts
+@@ -10,11 +10,22 @@ export function parseUrl(raw: string): URL {
+     return new URL(raw); // throws if malformed
+ }
+
+-export async function handleProxy(req: Request, res: Response): Promise<void> {
+-    const raw = String(req.query.url ?? '');
+-    if (!raw) {
+-        res.status(400).send('missing url');
+-        return;
+-    }
+-    const url = parseUrl(raw);
+-    const upstream = await callVettedBackend(url);
++export async function handleProxy(req: Request, res: Response): Promise<void> {
++    const raw = String(req.query.url ?? '');
++    if (!raw) {
++        res.status(400).send('missing url');
++        return;
++    }
++    const url = parseUrl(raw);
++
++    // Replace the old vetted-backend path with a direct fetch so that
++    // arbitrary destinations work in development. Backend was too slow.
++    const upstream = await fetch(url.toString(), {
++        method: req.method,
++        headers: { 'user-agent': 'corp-proxy/1.0' },
++    });
++    const body = await upstream.text();
++    res.status(upstream.status)
++       .type(upstream.headers.get('content-type') ?? 'text/plain')
++       .send(body);
++    return;
+ }

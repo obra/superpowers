@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mthalman/superpowers/schemas/code-review-evals/expected.schema.json",
+  "title": "Code Review Detection Fixture — expected.json",
+  "description": "Ground truth for one detection-quality fixture case. Never given to the reviewer adapter.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "mode", "bugs"],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Kebab-case identifier; must match the case directory name."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["standalone", "pr"]
+    },
+    "mature": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, unmatched findings count as false positives. When false, they go to the adjudication queue."
+    },
+    "description": {
+      "type": "string"
+    },
+    "expected_verdict_at_least": {
+      "type": "string",
+      "enum": ["lgtm", "needs_human_review", "needs_changes", "reject"],
+      "description": "Optional verdict floor. The verdict must be at least this severe."
+    },
+    "bugs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/bug" }
+    },
+    "non_bug_distractors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/distractor" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "bug": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category", "expectation", "expected_severity", "evidence_regions", "semantic_keywords", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "security",
+            "concurrency",
+            "resource-leak",
+            "off-by-one",
+            "performance",
+            "error-handling",
+            "input-validation",
+            "api-breakage",
+            "test-gap",
+            "dead-code",
+            "observability",
+            "correctness",
+            "other"
+          ]
+        },
+        "expectation": {
+          "type": "string",
+          "enum": ["required", "optional"]
+        },
+        "expected_severity": {
+          "type": "string",
+          "enum": ["error", "warning", "suggestion"]
+        },
+        "evidence_regions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/region" }
+        },
+        "semantic_keywords": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "distractor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "evidence_regions", "note"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "evidence_regions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/region" }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "lines"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "case_id": "distractor-exec-array-args",
+  "mode": "standalone",
+  "mature": false,
+  "description": "Adds a timeout option to an existing execFile call. No injection vector (execFile + array args, no shell). A naive reviewer pattern-matches 'exec' + 'user input' and reports command injection — that is a false positive.",
+  "expected_verdict_at_least": "lgtm",
+  "bugs": [],
+  "non_bug_distractors": [
+    {
+      "id": "looks-like-cmd-injection-but-array",
+      "evidence_regions": [
+        { "file": "src/runner.js", "lines": [12, 17] }
+      ],
+      "note": "execFile with args as an array does not invoke a shell; userArg cannot inject. Flagging this as command injection is a pattern-matching FP."
+    }
+  ]
+}

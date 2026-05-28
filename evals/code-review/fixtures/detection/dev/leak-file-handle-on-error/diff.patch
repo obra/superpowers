@@ -1,0 +1,24 @@
+diff --git a/src/log_writer.go b/src/log_writer.go
+--- a/src/log_writer.go
++++ b/src/log_writer.go
+@@ -10,11 +10,12 @@ import (
+ // codebase; it is used by the per-request logger initialized in
+ // `cmd/server/main.go`.
+ func AppendLine(path string, line string) error {
+-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+-	if err != nil {
+-		return err
+-	}
+-	defer f.Close()
+-	_, err = f.WriteString(line + "\n")
+-	return err
++	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
++	if err != nil {
++		return err
++	}
++	if _, err := f.WriteString(line + "\n"); err != nil {
++		// Return the wrapped error directly. Close is called on success path.
++		return fmt.Errorf("write: %w", err)
++	}
++	return f.Close()
+ }

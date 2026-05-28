@@ -1,0 +1,43 @@
+diff --git a/src/events/RefundIssuedHandler.ts b/src/events/RefundIssuedHandler.ts
+new file mode 100644
+--- /dev/null
++++ b/src/events/RefundIssuedHandler.ts
+@@ -0,0 +1,22 @@
++import { EventHandler } from './EventHandler';
++import { EventContext } from './EventContext';
++import { RefundIssuedPayload } from './schema/events';
++import { refundService } from '../services/refundService';
++
++export class RefundIssuedHandler implements EventHandler<RefundIssuedPayload> {
++    readonly eventType = 'refund.issued';
++
++    async handle(ctx: EventContext, payload: RefundIssuedPayload): Promise<void> {
++        // Convert dollar amount to cents for the refund API.
++        const amountCents = Math.round(payload.amountMinor * 100);
++
++        await refundService.process({
++            refundId: payload.refundId,
++            paymentId: payload.paymentId,
++            orderId: payload.orderId,
++            amountCents,
++            currency: payload.currency,
++            reason: payload.reason,
++        });
++    }
++}
+diff --git a/src/events/registry.ts b/src/events/registry.ts
+--- a/src/events/registry.ts
++++ b/src/events/registry.ts
+@@ -1,6 +1,7 @@
+ import { EventHandler } from './EventHandler';
+ import { OrderCreatedHandler } from './OrderCreatedHandler';
+ import { PaymentReceivedHandler } from './PaymentReceivedHandler';
++import { RefundIssuedHandler } from './RefundIssuedHandler';
+ 
+ export const HANDLERS: Map<string, EventHandler<unknown>> = new Map();
+ 
+@@ -10,3 +11,4 @@ function register<T>(h: EventHandler<T>): void {
+ 
+ register(new OrderCreatedHandler());
+ register(new PaymentReceivedHandler());
++register(new RefundIssuedHandler());

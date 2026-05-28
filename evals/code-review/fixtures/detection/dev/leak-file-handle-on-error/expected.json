@@ -1,0 +1,20 @@
+{
+  "case_id": "leak-file-handle-on-error",
+  "mode": "standalone",
+  "mature": false,
+  "description": "Refactor removes the defer f.Close(). Now on write error, the function returns without closing the file handle, leaking it. Cumulative leaks under high error rate exhaust file descriptors.",
+  "expected_verdict_at_least": "needs_changes",
+  "bugs": [
+    {
+      "id": "missing-close-on-error",
+      "category": "resource-leak",
+      "expectation": "required",
+      "expected_severity": "error",
+      "evidence_regions": [
+        { "file": "src/log_writer.go", "lines": [13, 22] }
+      ],
+      "semantic_keywords": ["close", "leak", "defer", "handle", "descriptor", "resource"],
+      "description": "WriteString error path returns without f.Close(). Original defer was removed; nothing replaces it."
+    }
+  ]
+}

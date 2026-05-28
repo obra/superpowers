@@ -1,0 +1,32 @@
+{
+  "case_id": "ssrf-fetch-no-allowlist",
+  "mode": "pr",
+  "mature": false,
+  "description": "Diff replaces a vetted backend call with a direct fetch() on a user-supplied URL. No host allowlist, no private-IP block. Classic SSRF.",
+  "expected_verdict_at_least": "needs_changes",
+  "bugs": [
+    {
+      "id": "missing-host-allowlist",
+      "category": "security",
+      "expectation": "required",
+      "expected_severity": "error",
+      "evidence_regions": [
+        { "file": "src/proxy.ts", "lines": [18, 30] }
+      ],
+      "semantic_keywords": ["ssrf", "allowlist", "host", "private", "internal", "validate"],
+      "description": "User-controlled URL is passed to fetch() with no host validation, enabling SSRF to internal services."
+    },
+    {
+      "id": "weakened-justification",
+      "category": "correctness",
+      "expectation": "optional",
+      "expected_severity": "warning",
+      "evidence_regions": [
+        { "file": "src/proxy.ts", "lines": [17, 22] }
+      ],
+      "semantic_keywords": ["slow", "performance", "justification", "vetted", "backend"],
+      "description": "Removing the vetted backend because it was 'too slow' is a weak justification with no benchmarks; reviewer should question the motivation."
+    }
+  ]
+}
+

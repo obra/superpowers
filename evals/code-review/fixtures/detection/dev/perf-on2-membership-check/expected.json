@@ -1,0 +1,30 @@
+{
+  "case_id": "perf-on2-membership-check",
+  "mode": "standalone",
+  "mature": false,
+  "description": "HashSet replaced with List. Membership check goes from O(1) to O(n), overall O(n^2). Stated motivation ('simpler API; avoids a HashSet dependency') is bogus — both are in System.Collections.Generic.",
+  "bugs": [
+    {
+      "id": "on2-membership-check",
+      "category": "performance",
+      "expectation": "required",
+      "expected_severity": "warning",
+      "evidence_regions": [
+        { "file": "src/dedupe.cs", "lines": [16, 26] }
+      ],
+      "semantic_keywords": ["o(n", "quadratic", "hashset", "contains", "linear", "scan", "performance"],
+      "description": "List<string>.Contains is O(n); inside a foreach this is O(n^2). HashSet was correct."
+    },
+    {
+      "id": "false-justification-for-perf-regression",
+      "category": "correctness",
+      "expectation": "optional",
+      "expected_severity": "suggestion",
+      "evidence_regions": [
+        { "file": "src/dedupe.cs", "lines": [15, 18] }
+      ],
+      "semantic_keywords": ["motivation", "justification", "dependency", "no benefit", "regression"],
+      "description": "PR claims simpler API / avoids a dependency; HashSet is in the same namespace. The justification doesn't hold."
+    }
+  ]
+}

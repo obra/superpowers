@@ -1,0 +1,14 @@
+diff --git a/src/runner.js b/src/runner.js
+--- a/src/runner.js
++++ b/src/runner.js
+@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
+
+ const pExecFile = promisify(execFile);
+
+-export async function runMytool(userArg) {
++export async function runMytool(userArg, opts = { timeoutMs: 30_000 }) {
+     // execFile, args as array → safe from shell injection.
+-    const { stdout } = await pExecFile('mytool', ['analyze', '--input', userArg]);
++    const { stdout } = await pExecFile('mytool', ['analyze', '--input', userArg], { timeout: opts.timeoutMs });
+     return stdout;
+ }

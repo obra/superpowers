@@ -1,0 +1,8 @@
+{
+  "case_id": "clean-control-typo-fix",
+  "mode": "standalone",
+  "mature": false,
+  "description": "Clean control: a doc-comment whitespace fix. No bugs, no distractors. A well-calibrated reviewer should LGTM. Any finding here is an unmatched candidate FP — queued for adjudication, not auto-counted, until the case is marked mature.",
+  "expected_verdict_at_least": "lgtm",
+  "bugs": []
+}

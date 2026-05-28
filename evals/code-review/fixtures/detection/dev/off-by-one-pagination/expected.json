@@ -1,0 +1,31 @@
+{
+  "case_id": "off-by-one-pagination",
+  "mode": "standalone",
+  "mature": false,
+  "description": "PR 'clarifies' that end is the last index inclusive, but Python slicing is end-exclusive. Every page now silently drops its last item. Existing tests don't catch this.",
+  "expected_verdict_at_least": "needs_changes",
+  "bugs": [
+    {
+      "id": "slice-end-off-by-one",
+      "category": "off-by-one",
+      "expectation": "required",
+      "expected_severity": "error",
+      "evidence_regions": [
+        { "file": "src/pagination.py", "lines": [21, 25] }
+      ],
+      "semantic_keywords": ["slice", "off-by-one", "exclusive", "page_size", "end", "drops"],
+      "description": "items[start:end] with end = start + page_size - 1 returns page_size - 1 items, not page_size."
+    },
+    {
+      "id": "no-regression-test-for-page-contents",
+      "category": "test-gap",
+      "expectation": "required",
+      "expected_severity": "warning",
+      "evidence_regions": [
+        { "file": "tests/test_pagination.py", "lines": [1, 20] }
+      ],
+      "semantic_keywords": ["test", "regression", "coverage", "missing", "content"],
+      "description": "No test asserts the actual page contents; CI won't catch the change."
+    }
+  ]
+}

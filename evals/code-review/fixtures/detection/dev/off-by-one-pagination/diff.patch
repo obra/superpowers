@@ -1,0 +1,11 @@
+diff --git a/src/pagination.py b/src/pagination.py
+--- a/src/pagination.py
++++ b/src/pagination.py
+@@ -19,7 +19,8 @@ def paginate(items: List[T], page: int, page_size: int) -> Page:
+     if page_size < 1:
+         raise ValueError("page_size must be >= 1")
+     start = (page - 1) * page_size
+-    end = start + page_size
++    # Clarify intent: end is the index of the last item, inclusive.
++    end = start + page_size - 1
+     return Page(items=items[start:end], page=page, page_size=page_size, total=len(items))

@@ -1,0 +1,15 @@
+diff --git a/src/dedupe.cs b/src/dedupe.cs
+--- a/src/dedupe.cs
++++ b/src/dedupe.cs
+@@ -13,8 +13,8 @@ public static class Dedupe
+ {
+     public static List<Item> Unique(IEnumerable<Item> items)
+     {
+-        var seen = new HashSet<string>();
+-        var result = new List<Item>();
++        // Simpler API; avoids a HashSet dependency in this file.
++        var seen = new List<string>();
++        var result = new List<Item>();
+         foreach (var item in items)
+         {
+             if (!seen.Contains(item.Id))

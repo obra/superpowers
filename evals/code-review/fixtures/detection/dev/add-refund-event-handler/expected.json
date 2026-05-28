@@ -1,0 +1,42 @@
+{
+  "case_id": "add-refund-event-handler",
+  "mode": "pr",
+  "mature": false,
+  "description": "Adds a new RefundIssuedHandler that looks textbook-clean inside the diff but violates three pieces of context that only appear in surrounding files: (1) the EventHandler interface's hard ack/nack/deadLetter contract, (2) the events.ts schema documenting `amountMinor` as already-minor-units, and (3) the per-handler observability convention demonstrated by sibling handlers and required by handlerMetrics docs. The PR description confidently reinforces the wrong unit assumption. Designed to evaluate Step 0 (codebase understanding) and Step 1 (cross-file context gathering) — every bug is invisible from the diff alone and from a single-file read of the new handler.",
+  "expected_verdict_at_least": "reject",
+  "bugs": [
+    {
+      "id": "missing-ack-violates-contract",
+      "category": "correctness",
+      "expectation": "required",
+      "expected_severity": "error",
+      "evidence_regions": [
+        { "file": "src/events/RefundIssuedHandler.ts", "lines": [9, 21] }
+      ],
+      "semantic_keywords": ["ack", "acknowledge", "redeliver", "contract", "duplicate", "idempot", "nack", "broker"],
+      "description": "The new handler's handle() method never calls ctx.ack(), ctx.nack(), or ctx.deadLetter(). The EventHandler interface's docstring and both sibling handlers establish this as a mandatory contract: missing ack causes the broker to redeliver up to 24 times, which for a non-idempotent refund handler means the customer is refunded 24 times. The bug is invisible from the diff alone; the reviewer must read EventHandler.ts or a sibling handler to see the contract."
+    },
+    {
+      "id": "currency-unit-100x-error",
+      "category": "correctness",
+      "expectation": "required",
+      "expected_severity": "error",
+      "evidence_regions": [
+        { "file": "src/events/RefundIssuedHandler.ts", "lines": [10, 11] }
+      ],
+      "semantic_keywords": ["cents", "minor", "amount", "100", "scale", "currency", "unit", "dollar"],
+      "description": "The handler treats payload.amountMinor as dollars and multiplies by 100, refunding the customer 100x the intended amount. The events.ts schema file header documents `amountMinor` as ALREADY in minor units (cents) and forbids consumer-side rescaling; both sibling handlers pass amountMinor through unchanged. The PR description reinforces the wrong assumption (\"the refund API expects cents\") — the API does take cents, but the input is also already cents. Reviewer must verify the producer-side data shape, not trust the PR narrative."
+    },
+    {
+      "id": "missing-observability-metric",
+      "category": "observability",
+      "expectation": "optional",
+      "expected_severity": "warning",
+      "evidence_regions": [
+        { "file": "src/events/RefundIssuedHandler.ts", "lines": [9, 21] }
+      ],
+      "semantic_keywords": ["metric", "recordHandled", "observability", "monitoring", "convention", "SLO", "alert"],
+      "description": "The handler does not call metrics.recordHandled(eventType, latencyMs). Both sibling handlers do, and the handlerMetrics module's docstring states this is required so SLO alerts work per handler. The new refund.issued event type will have a silent gap in dashboards and alerting. Recognizable only by reading sibling handlers or the metrics module docs."
+    }
+  ]
+}
