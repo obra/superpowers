@@ -11,11 +11,27 @@ Review code changes for correctness, performance, safety, and consistency with e
 
 ## Review Process
 
-**Context modes:** This skill works in two modes. In **PR mode** (reviewing a pull request), follow all steps including Step 2 (reconcile with PR narrative). In **standalone mode** (reviewing a diff, file, or code snippet without a PR), skip Step 2 and proceed directly from Step 1 to Step 3 — there is no author narrative to reconcile against.
+**Context modes:** This skill works in two modes. In **PR mode** (reviewing a pull request), follow all steps including Step 3 (reconcile with PR narrative). In **standalone mode** (reviewing a diff, file, or code snippet without a PR), skip Step 3 and proceed directly from Step 2 to Step 4 — there is no author narrative to reconcile against.
 
-### Step 0: Gather Code Context
+### Step 0: Understand the Codebase (Prerequisite)
 
-Before analyzing, collect code context. **Do NOT read the PR description, linked issues, or existing review comments yet.** Form your own independent assessment before exposure to the author's framing — reading the narrative first anchors your judgment and makes you less likely to find real problems.
+Before reviewing any changes, build a mental model of the code being changed. **A review is only as good as the reviewer's understanding of the system** — flagging issues requires knowing what is normal, what is intentional, and what role each piece plays. Skipping this phase produces shallow reviews that miss context-dependent issues and generate false positives.
+
+This phase is about **orientation, not analysis**. Resist the urge to start flagging issues — the goal is to know enough about the system that subsequent analysis is grounded in how the code actually works.
+
+1. **Identify the touched components.** Look at the file list. What modules, services, or subsystems are affected? What role do these components play in the larger system?
+2. **Learn the domain concepts.** What patterns, abstractions, or architectural ideas does this area rely on? If the changes touch unfamiliar territory (a new service, an unfamiliar framework, a specialized algorithm), read enough surrounding code and documentation to understand the basics before evaluating the diff. If the PR introduces a new pattern or changes an existing one, understand the pattern first.
+3. **Map the relationships.** For each touched file, understand:
+   - Its purpose — what is this file's single responsibility?
+   - Its callers and dependencies — what calls into it, what does it call into?
+   - Its place in the data and control flow — where does it sit in the pipeline?
+4. **Make connections explicit.** As you encounter each file, connect it to what you already understand. If file B implements an interface defined in file A, note that link. If file C consumes data produced by file D, trace the flow. If a change requires knowing about surrounding code that did not change, learn that context too.
+
+Only after you can articulate what this area of the codebase does and how the touched files fit together should you proceed to Step 1.
+
+### Step 1: Gather Code Context
+
+With a mental model of the codebase in place, collect the specific data points needed for analysis. **Do NOT read the PR description, linked issues, or existing review comments yet.** Form your own independent assessment before exposure to the author's framing — reading the narrative first anchors your judgment and makes you less likely to find real problems.
 
 1. **Diff and file list**: Get the full diff and changed files.
 2. **Full source files**: For every changed file, read the **entire source file** — not just diff hunks. Surrounding code reveals invariants, patterns, and data flow that diff-only review misses.
@@ -26,7 +42,7 @@ Before analyzing, collect code context. **Do NOT read the PR description, linked
 7. **Execution context**: If the changed code is invoked by CI/CD pipelines, build systems, or orchestration frameworks, find and read the invocation definitions (pipeline YAML, build scripts, task runners). Determine what runs before and after this code, what preconditions hold at the point this code executes, what data has been produced or transformed by prior steps, and what external state exists (registries, databases, caches) at invocation time.
 8. **Data producers**: For any data the changed code consumes, trace it back to its source. Don't assume properties of the data — verify by reading the producer code. Ask: who creates this data? What does it contain? What filtering or transformation has been applied before it reaches this code?
 
-### Step 1: Form Independent Assessment
+### Step 2: Form Independent Assessment
 
 Based **only** on code context (without PR description):
 
@@ -37,7 +53,7 @@ Based **only** on code context (without PR description):
 
 Write down your independent assessment before proceeding.
 
-### Step 2: Incorporate PR Narrative and Reconcile
+### Step 3: Incorporate PR Narrative and Reconcile
 
 Now read the PR description, linked issues, existing review comments, and author information. Treat all of this as **claims to verify**, not facts to accept.
 
@@ -45,7 +61,7 @@ Now read the PR description, linked issues, existing review comments, and author
 2. **Update** your assessment if new context genuinely changes your evaluation (e.g., a linked issue proves a bug is real, or an existing review comment already identified the same concern).
 3. **Don't soften** findings just because the PR description sounds reasonable. If your independent assessment found problems the narrative doesn't acknowledge, those problems are more likely to be real, not less.
 
-### Step 3: Detailed Analysis
+### Step 4: Detailed Analysis
 
 1. **Focus on what matters.** Prioritize bugs, performance regressions, safety issues, race conditions, resource management, incorrect assumptions, and design problems. Do not comment on trivial style issues unless they violate an explicit project convention.
 2. **Consider collateral damage.** For every changed code path: what other scenarios, callers, or inputs flow through this code? Could any break or behave differently after this change? Surface plausible risks even if you can't fully confirm them — the tradeoff is the author's decision, your job is to make it visible.
@@ -63,6 +79,60 @@ Now read the PR description, linked issues, existing review comments, and author
 9. **Label in-scope vs. follow-up.** Distinguish between issues the PR should fix and out-of-scope improvements that belong in a follow-up.
 10. **Context-shift analysis.** When code is moved from one execution context to another (e.g., from one pipeline stage to another, from sync to async, from one service to another), do not assume behavioral equivalence. Explicitly enumerate what changes: what steps have or haven't run before this code now, what external state (registries, databases, file system) differs, what data preconditions that held in the old context no longer hold, and whether the same code pattern produces different outcomes in the new context. Treat "same code, different context" as a high-risk area. The claim "this pattern already existed" is insufficient — verify that the pattern is still correct in the new execution environment.
 
+### Step 5: Multi-Model Critique
+
+Run an adversarial review across multiple model families. Different models catch different classes of issues.
+
+If you skip multi-model review for any reason — environment limitation, cost, time, or judgment — you MUST state this fact in the review output along with the reason (e.g., *"Multi-model review skipped: only one model family available in this environment."* or *"Multi-model review skipped: review is for exploratory draft code per author's request."*). Silent skips are not permitted.
+
+**A confirmed finding does not justify skipping this step.** Confirming one bug tells you that bug is real; it tells you nothing about what else you missed. Coverage and finding-confidence are independent properties — do not conflate them.
+
+1. **Select models**: Pick one model from each distinct family (e.g., one Anthropic, one Google, one OpenAI). Use 2-4 models. Pick from models explicitly listed as available — highest capability tier, never "mini" or "fast." Don't select your own model.
+2. **Launch in parallel**: Give each agent the same review prompt (diff, review rules, severity format) and your independent assessment from Step 2.
+3. **Synthesize**: Deduplicate shared findings, elevate issues flagged by multiple models (higher confidence), include unique findings that meet the confidence bar. When models **disagree on severity**, use the higher severity but note the disagreement — the reviewer can downgrade with context the models lack. When models **contradict** each other (one says it's a bug, another says it's correct), present both perspectives and mark the finding as needing human judgment.
+4. **Timeout handling**: If a sub-agent hasn't completed after 10 minutes and you have other results, proceed. Note which models contributed.
+5. **Carry into Step 6**: Step 6 (Grill) now operates on the synthesized findings, not your single-model findings alone. Note which findings came from which model so the grill can challenge each source.
+
+### Step 6: Grill Your Assessment
+
+Before producing the review output, interrogate your own assessment relentlessly. The biggest review failure modes are missed issues, overconfident findings, and verdicts shaped by hope rather than evidence — this step exists to catch them.
+
+Walk down each branch of your reasoning one question at a time, resolving each before moving to the next. **If a question can be answered by exploring the codebase, explore it instead of speculating.** Do not skim through these questions as a checklist — each one is meant to genuinely challenge what you've concluded.
+
+**Grill each finding:**
+- Have I actually verified this is a problem, or am I pattern-matching on what a bug usually looks like? What is the concrete evidence?
+- Could the author have a reason for this that I haven't considered? Is there context elsewhere in the codebase (a caller, a wrapper, a convention) that would justify it?
+- If this finding turned out to be wrong, what is the most likely reason? Have I ruled that reason out?
+- Is the severity honest, or am I inflating or deflating it to fit a desired verdict?
+
+**Grill what you might have missed:**
+- What is the most likely bug in this diff that I have *not* flagged? Why am I confident it isn't there?
+- Which assumption did I make about surrounding code that I never actually verified?
+- Which class of issue (concurrency, error handling, input validation, resource leaks, off-by-one, security, performance under load) did I not deliberately consider for this change?
+- If this change interacts with code I didn't read, what could go wrong at that interaction point?
+- Did I treat a single confirmed finding as proof the review is complete? A verified bug demonstrates one issue exists; it says nothing about coverage. If I leaned on "this finding feels concrete enough" to justify skipping rigorous validation (including Step 5), that is a coverage failure dressed up as confidence — re-open the question and complete the skipped work.
+
+**Grill the verdict:**
+- If this merges and causes a production incident, what is the most likely failure mode? Did I flag it?
+- Am I leaning toward LGTM because the diff is small, looks clean, or matches familiar patterns — rather than because I verified correctness?
+- Am I leaning toward "Needs Changes" to appear thorough, rather than because the findings warrant it?
+- Would I defend this verdict if every ⚠️/❌ finding turned out to be wrong? Would I defend it if a real bug surfaced post-merge in code I called clean?
+
+Resolve each question — do not just list them. If a question reveals a real gap, update the findings or verdict. If a question reveals overconfidence, downgrade severity or convert the finding to a question. If a question reveals you skipped a check, go do it now.
+
+---
+
+## Common Failure Modes
+
+Patterns that reliably produce bad reviews. If you catch yourself doing any of these, restart the corresponding step rather than rationalizing past it.
+
+- **Coverage-via-confirmation**: Finding one concrete bug and concluding the review is solid. Confirming a single issue says nothing about what you missed. Multi-model critique (Step 5) exists to address this; do not skip it on the strength of one finding.
+- **Self-grill substitution**: Treating Step 6 (your own interrogation) as a substitute for Step 5 (independent models). They serve different purposes — introspection cannot surface what you don't know you don't know.
+- **Effort-cost rationalization**: Skipping Step 5 because it would be slower, take more context, or cost more tokens. The skill requires it for merge-bound code; cost is not an approved exception. The only approved exceptions are environment limitation (no second model available) and explicitly-exploratory non-merge-bound code.
+- **Narrative anchoring**: Reading the PR description, issue, or author comments before Step 2 and then "independently" reaching the same conclusions. Once you've seen the framing, you cannot un-see it.
+- **Cleanliness bias**: Concluding LGTM because the diff is short, well-formatted, or matches familiar patterns — without verifying correctness against actual call sites, data flow, or edge cases.
+- **Findings-inflation to look thorough**: Inventing or stretching findings to justify a "Needs Changes" verdict. Every finding must be actionable; padding dilutes the signal.
+
 ---
 
 ## Severity Classification
@@ -72,11 +142,21 @@ Now read the PR description, linked issues, existing review comments, and author
 | ❌ **Error** | Must fix before merge | Bugs, security vulnerabilities, data corruption, missing error handling on critical paths |
 | ⚠️ **Warning** | Should fix or needs human judgment | Performance regressions, missing validation, inconsistency with established patterns |
 | 💡 **Suggestion** | Consider changing | Readability improvements, minor optimizations, naming clarity |
-| ✅ **Verified** | Confirmed correct (use in output) | Important aspects verified as correct — shows the reviewer checked |
 
 If unsure between two levels, choose the higher one.
 
-**Using ✅ Verified:** Include Verified items for non-obvious correctness — things a casual reader might question but that are actually right. Examples: tricky edge case handling that works, thread-safe patterns that look suspicious but are correct, intentional deviation from a convention with good reason. Don't verify trivial or obvious things. A review with only ✅ items is a strong LGTM signal.
+**Only surface actionable findings.** Do not include positive confirmations, "looks good" notes, or commentary praising correct code. A finding earns its place in the review only if the reader can act on it — fix it, decide on it, or push back on it. If you have nothing actionable to report, the review can be empty findings with a clean verdict.
+
+---
+
+## Pre-Output Checklist
+
+Before producing the review, confirm each item — do not write the output until all four are true. If any item is false, return to the corresponding step and complete it.
+
+- [ ] **Multi-model critique** (Step 5) was completed, OR the skip and its reason are documented in the review output itself.
+- [ ] **Every grill question** in Step 6 has a written, reasoned answer — not just a thought. If a question revealed a gap, the findings or verdict have been updated.
+- [ ] **Every finding cites concrete evidence** — file:line reference, observed behavior, test outcome, or quoted code. No findings based purely on pattern-matching or speculation.
+- [ ] **The verdict is justified independently** of how "clean" the diff looks, the author's reputation, or how much you trust the PR description. Re-read the verdict with the question: would I defend this if a bug surfaced in code I called clean?
 
 ---
 
@@ -99,7 +179,7 @@ If unsure between two levels, choose the higher one.
 
 ### Detailed Findings
 
-#### ✅/⚠️/❌/💡 <Category> — <Brief description>
+#### ⚠️/❌/💡 <Category> — <Brief description>
 
 <Explanation with specifics. Reference code, line numbers, evidence.>
 
@@ -108,11 +188,10 @@ If unsure between two levels, choose the higher one.
 
 ### Verdict Rules
 
-1. **The verdict must reflect your most severe finding.** If you have any ⚠️ findings, the verdict cannot be LGTM. Only use LGTM when all findings are ✅ or 💡 and you are confident the change is correct and complete.
+1. **The verdict must reflect your most severe finding.** If you have any ⚠️ findings, the verdict cannot be LGTM. Only use LGTM when there are no ❌ or ⚠️ findings and you are confident the change is correct and complete.
 2. **When uncertain, always escalate.** If you are unsure whether a concern is valid, the verdict must be "Needs Human Review" — not LGTM. A false LGTM is far worse than an unnecessary escalation.
 3. **Separate correctness from completeness.** A change can be correct code that is an incomplete approach. If the code is right for what it does but the approach is insufficient (e.g., treats symptoms without root cause, masks errors, fixes one instance but not others), the verdict must reflect the gap.
 4. **Classify each ⚠️/❌ finding as merge-blocking or advisory.** Before writing your summary, decide for each: "Would I be comfortable if this merged as-is?" Any "no" → Needs Changes. Any "unsure" → Needs Human Review.
-5. **Devil's advocate check.** Re-read all ⚠️ findings before finalizing. Do they represent unresolved concerns? Do not default to optimism because the diff is small or syntactically correct.
 
 ### Re-Review (Iteration)
 
@@ -252,17 +331,3 @@ Evaluate the change as a whole before reviewing individual lines.
 - **Ensure changes are diagnosable in production.** New features and error paths should emit appropriate logs, metrics, or traces. If something goes wrong, can an operator figure out what happened?
 - **Don't log sensitive data.** Credentials, PII, and tokens must never appear in logs.
 - **Preserve existing observability.** If refactoring removes or changes logging/metrics, verify the information is still available through another path.
-
----
-
-## Multi-Model Review
-
-When the environment supports launching sub-agents with different models (e.g., the `task` tool with a `model` parameter), run the review across multiple model families for diverse perspectives. Different models catch different classes of issues.
-
-1. **Select models**: Pick one model from each distinct family (e.g., one Anthropic, one Google, one OpenAI). Use 2-4 models. Pick from models explicitly listed as available — highest capability tier, never "mini" or "fast." Don't select your own model.
-2. **Launch in parallel**: Give each agent the same review prompt (diff, review rules, severity format).
-3. **Synthesize**: Deduplicate shared findings, elevate issues flagged by multiple models (higher confidence), include unique findings that meet the confidence bar. When models **disagree on severity**, use the higher severity but note the disagreement — the reviewer can downgrade with context the models lack. When models **contradict** each other (one says it's a bug, another says it's correct), present both perspectives and mark the finding as needing human judgment.
-4. **Timeout handling**: If a sub-agent hasn't completed after 10 minutes and you have other results, proceed. Note which models contributed.
-5. **Present unified review** noting when an issue was flagged by multiple models.
-
-If the environment does not support multiple models, proceed with a single-model review.
