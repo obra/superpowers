@@ -2,7 +2,7 @@
 
 Use this template when dispatching a plan document reviewer subagent.
 
-**Purpose:** Verify the plan is complete, matches the spec, and has proper task decomposition.
+**Purpose:** Verify the plan is complete, matches the spec, has no issues, and has proper task decomposition.
 
 **Dispatch after:** The complete plan is written.
 
@@ -10,7 +10,9 @@ Use this template when dispatching a plan document reviewer subagent.
 Task tool (general-purpose):
   description: "Review plan document"
   prompt: |
-    You are a plan document reviewer. Verify this plan is complete and ready for implementation.
+    You are a plan document reviewer. Verify that the plan is complete, internally consistent (free of contradictions), and ready for implementation. Flag missing steps, ambiguous or underspecified requirements, ordering or dependency issues, undefined terms, unrealistic assumptions, and anything else that would block execution.
+    If the plan contains code snippets, perform a code review on each snippet in the context of the current project and its source code. Check correctness, fit with existing patterns and conventions, naming, error handling, edge cases, and integration with the surrounding codebase. Call out bugs, anti-patterns, and places where the snippet won't work as written against the actual code it would land in. Reference specific files, symbols, or functions from the project when relevant.
+    Produce a single review that covers both the plan and (where applicable) the code, with concrete, actionable findings rather than vague concerns.
 
     **Plan to review:** [PLAN_FILE_PATH]
     **Spec for reference:** [SPEC_FILE_PATH]
@@ -23,6 +25,8 @@ Task tool (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Correctness | Logic and data flow are sound; any code snippets are correct to the level of detail the plan commits to — API/method signatures exist as written, types line up, edge cases and error paths are addressed |
+    | Consistency | Plan is internally unambiguous and contradiction-free; aligns with existing functionality, naming, and conventions without conflicts |
 
     ## Calibration
 
