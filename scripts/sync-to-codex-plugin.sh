@@ -53,6 +53,7 @@ EXCLUDES=(
   "/.github/"
   "/.gitignore"
   "/.opencode/"
+  "/.pi/"
   "/.version-bump.json"
   "/.worktrees/"
   ".DS_Store"
