@@ -21,6 +21,12 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 - Before refactoring (baseline check)
 - After fixing complex bug
 
+## Keep the Review Unit Small
+
+Review reliability drops as the diff grows — AI reviewers and humans both lose accuracy on large, multi-concern changes. Before requesting:
+- If the diff is large or spans several unrelated concerns, split it (or review in focused chunks) so each review has a clear, checkable scope.
+- A clean review means the diff looks correct — not that the change was the right thing to build. Keep that product judgment separate.
+
 ## How to Request
 
 **1. Get git SHAs:**
