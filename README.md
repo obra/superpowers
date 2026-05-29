@@ -180,6 +180,9 @@ already use it in another harness.
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
+**Repo bootstrap**
+- **itradeaims-repo-bootstrap** - Bootstrap, audit, sync, and install workflow adapters for downstream repos
+
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans

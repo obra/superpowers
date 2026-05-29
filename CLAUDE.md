@@ -98,6 +98,13 @@ Skills are not prose — they are code that shapes agent behavior. If you modify
 
 Before proposing changes to skill design, workflow philosophy, or architecture, read existing skills and understand the project's design decisions. Superpowers has its own tested philosophy about skill design, agent behavior shaping, and terminology (e.g., "your human partner" is deliberate, not interchangeable with "the user"). Changes that rewrite the project's voice or restructure its approach without understanding why it exists will be rejected.
 
+## Agent Skills
+
+- Use [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) as the source of truth for where issues live in this repo.
+- Use [docs/agents/triage-labels.md](docs/agents/triage-labels.md) for label names and their meanings.
+- Use [docs/agents/domain.md](docs/agents/domain.md) and [docs/glossary.md](docs/glossary.md) for canonical repo terminology.
+- Add a new ADR under [docs/adr/](docs/adr/) when a repo-wide decision needs to be recorded and linked from the glossary.
+
 ## General
 
 - Read `.github/PULL_REQUEST_TEMPLATE.md` before submitting
