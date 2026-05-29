@@ -48,7 +48,9 @@ Task tool (general-purpose):
     1. Read the listed files to understand the current state
     2. Implement exactly the described fix — stay within the listed files unless unavoidable
     3. If you discover the fix requires touching files outside scope:
-       - **Commit any in-scope work you have already completed** (don't discard valid work)
+       - Stop expanding scope immediately
+       - If the in-scope work is complete, tests pass, and it stands on its own, commit only that in-scope work
+       - If the in-scope work is partial or tests fail, do not commit it; report the current worktree state instead
        - **Report NEEDS_CONTEXT** — describe exactly which out-of-scope files are affected and why
        - Do not expand scope on your own — the classifier may have missed blast radius, or
          those files may have other owners, callers, or tests that need separate consideration

@@ -16,7 +16,7 @@ Bridge the gap between "execution complete" and "truly done." When implementatio
 | Level | When to use | What happens |
 |-------|-------------|--------------|
 | **Patch** | Bug, typo, small behavioral tweak — isolated to 1–3 files, no design change | Mini-task → implementer subagent → 2-stage review |
-| **Plan Update** | Missing requirement, scope gap, requirement change — no architectural shift | Edit plan in-place → re-run affected tasks via SDD |
+| **Plan Update** | Missing requirement, scope gap, requirement change — no architectural shift | Create delta plan → run affected work via SDD |
 | **Design Update** | Architectural change, new major capability, contradiction in design | Scoped re-brainstorm → new plan → SDD |
 
 <HARD-GATE>
@@ -42,12 +42,21 @@ Before classifying anything, gather:
 - Locate the spec: `docs/superpowers/specs/` — find the corresponding design doc
 - If missing, note it (classifier will work without it but with reduced accuracy)
 
-**1c. Prior discoveries** *(optional — proceed without if absent)*
+**1c. Current implementation evidence**
+- Capture the worktree state: `git status --short`
+- Capture the implementation delta:
+  - Prefer the feature-branch diff against its base branch (`git diff --stat <base>...HEAD` and `git diff <base>...HEAD`)
+  - Also include uncommitted changes if present (`git diff --stat` and `git diff`)
+  - If the base branch is unclear, summarize recent implementation commits with `git log --oneline --stat`
+- Read the files named by the plan, design doc, or diff that are likely touched by the change request
+- If no useful code/diff evidence is available, state that explicitly — don't let the classifier infer blast radius from plan text alone
+
+**1d. Prior discoveries** *(optional — proceed without if absent)*
 - Check for an `## Accumulated Discoveries` section at the bottom of the plan file
 - Check for `docs/superpowers/discoveries/<plan-name>-discoveries.md`
 - If found, extract the full discoveries list — it will be injected into all subagents
 
-**1d. Change request**
+**1e. Change request**
 - This is what the user described: the bug, missing feature, or architectural concern
 - If the request is vague ("it doesn't feel right"), ask one clarifying question before classifying
 
@@ -61,14 +70,16 @@ Provide the subagent with:
 - The user's change request (verbatim)
 - The full plan text (with checkbox states)
 - The design doc (or note if absent)
+- Current implementation evidence (diffs, file excerpts, or note if absent)
 - Prior discoveries (or note if absent)
 
 The classifier returns:
 - `PATCH` | `PLAN_UPDATE` | `DESIGN_UPDATE`
 - Rationale (why this level, not another)
+- Implementation evidence used
 - Blast radius (which files / tasks / design sections are affected)
 - Change description (precise description of what needs to happen)
-- For `PLAN_UPDATE`: list of completed task IDs that need to be un-checked and re-executed
+- For `PLAN_UPDATE`: list of completed task IDs whose outputs are superseded by the delta plan
 
 ---
 
@@ -81,11 +92,13 @@ I've classified this as a [PATCH / PLAN UPDATE / DESIGN UPDATE].
 
 **Why:** [Rationale from classifier — 1–2 sentences]
 
+**Evidence checked:** [Implementation evidence used — diff/files inspected, or note if missing]
+
 **Blast radius:** [Files affected / Tasks affected / Design section affected]
 
 **What I'll do:**
 [For PATCH]: Dispatch an implementer subagent to fix [X] in [files]. Two-stage review follows.
-[For PLAN UPDATE]: Edit the plan in-place — mark tasks [N, M] incomplete, add [new tasks]. Re-execute via subagent-driven-development.
+[For PLAN UPDATE]: Create a delta plan for [new/changed tasks], add a short note to the original plan, then execute the delta plan via subagent-driven-development.
 [For DESIGN UPDATE]: Start a scoped re-brainstorm focused on [section], preserving [what stays the same]. Normal flow follows: brainstorming → writing-plans → subagent-driven-development.
 
 Shall I proceed?
@@ -97,11 +110,11 @@ Wait for the user's confirmation.
 - Do NOT silently accept the downgrade
 - Make the risk explicit: explain specifically which completed tasks will be wrong after the change and why
 - Give the user enough information to make an informed decision
-- Defer to the user once they confirm they understand the risk — but document their override in the plan as an `## Iteration Note`
+- Defer to the user once they confirm they understand the risk — but document their override in the active plan or delta plan as an `## Iteration Note`
 - Never pretend the risk doesn't exist to avoid friction
 
 Example response when user overrides:
-> "I hear you — the edit itself is one line. The reason I flagged PLAN_UPDATE is that Task 5 calls `User.save()` and compares against the stored value directly. After this change that comparison will break silently. If you've already accounted for that, treat this as a patch and I'll proceed immediately. If not, Tasks 5 and 7 need re-running. Which do you prefer?"
+> "I hear you — the edit itself is one line. The reason I flagged PLAN_UPDATE is that Task 5 calls `User.save()` and compares against the stored value directly. After this change that comparison will break silently. If you've already accounted for that, treat this as a patch and I'll proceed immediately. If not, Tasks 5 and 7 need delta-plan coverage. Which do you prefer?"
 
 ---
 
@@ -121,25 +134,36 @@ Example response when user overrides:
 
 ### Route B — Plan Update
 
-1. **Edit the plan file in-place:**
-   - Un-check (`- [ ]`) any completed tasks the classifier flagged as affected
-   - Add new tasks at the end (or inline if they depend on specific completed tasks)
-   - Add a `## Iteration Note` section at the top of the plan with:
+1. **Create a delta plan by default:**
+   - Preserve the original plan as historical truth; do not un-check completed tasks or rewrite their bodies
+   - Create `docs/superpowers/plans/<original-plan-stem>-iteration-YYYY-MM-DD.md`
+   - Include the affected completed tasks as "superseded" instead of making their old checkboxes ambiguous
+   - Append to the original plan only for immediate bookkeeping corrections or a tiny tail task where no completed work is superseded
+   - Put this header at the top of the delta plan:
      ```markdown
      ## Iteration Note — [date]
+     **Original plan:** [path]
      **Change:** [one-sentence description]
-     **Tasks modified:** [list]
-     **Tasks added:** [list]
+     **Superseded completed tasks:** [list, or "None"]
+     **New/changed tasks:** [list]
+     **Implementation evidence used:** [short summary of diff/files inspected]
      ```
-2. Commit the updated plan:
+2. **Add a short pointer to the original plan:**
+   - Add or update an `## Iterations` section with:
+     ```markdown
+     - [date]: [change summary]. Active delta plan: `docs/superpowers/plans/<delta-plan>.md`. Supersedes: [tasks or "None"].
+     ```
+   - Do not edit the original completed task text except for this pointer
+3. Commit the plan update:
    ```bash
-   git add docs/superpowers/plans/<plan-file>.md
+   git add docs/superpowers/plans/<original-plan>.md docs/superpowers/plans/<delta-plan>.md
    git commit -m "plan: [brief description of iteration change]"
    ```
-3. Announce: "Plan updated. Re-executing affected and new tasks."
-4. **REQUIRED SUB-SKILL:** Use `superpowers:subagent-driven-development` — execute only the un-checked tasks (skip already-complete ones)
-5. Inject prior discoveries into every implementer subagent dispatch (add them to the Context section of each implementer prompt)
-6. Offer next step (see Step 5)
+   If this is an append-only exception with no delta plan, stage only the edited original plan.
+4. Announce: "Delta plan created. Executing affected and new tasks."
+5. **REQUIRED SUB-SKILL:** Use `superpowers:subagent-driven-development` — execute the delta plan only, preserving already-complete original tasks unless the delta explicitly replaces them
+6. Inject prior discoveries and implementation evidence into every implementer subagent dispatch (add them to the Context section of each implementer prompt)
+7. Offer next step (see Step 5)
 
 ### Route C — Design Update
 
@@ -180,7 +204,7 @@ Do not automatically invoke `finishing-a-development-branch` — let the user de
 digraph iterating_on_plans {
     rankdir=TB;
 
-    "Load context\n(plan + spec + discoveries)" [shape=box];
+    "Load context\n(plan + spec + implementation evidence + discoveries)" [shape=box];
     "Change request clear?" [shape=diamond];
     "Ask one clarifying question" [shape=box];
     "Dispatch scope classifier" [shape=box];
@@ -196,16 +220,16 @@ digraph iterating_on_plans {
     "Spec compliance review\n(scoped: fix only, no regression)" [shape=box];
     "Code quality review" [shape=box];
 
-    "Edit plan in-place\n(un-check affected, add tasks, add iteration note)" [shape=box];
-    "Commit updated plan" [shape=box];
-    "subagent-driven-development\n(un-checked tasks only, discoveries injected)" [shape=doublecircle];
+    "Create delta plan\n(preserve original, add iteration note)" [shape=box];
+    "Commit delta plan" [shape=box];
+    "subagent-driven-development\n(delta plan only, discoveries injected)" [shape=doublecircle];
 
     "Summarize preserved work" [shape=box];
     "brainstorming\n(scoped, existing design as input)" [shape=doublecircle];
 
     "Offer: iterate again OR finish branch" [shape=box];
 
-    "Load context\n(plan + spec + discoveries)" -> "Change request clear?";
+    "Load context\n(plan + spec + implementation evidence + discoveries)" -> "Change request clear?";
     "Change request clear?" -> "Ask one clarifying question" [label="no"];
     "Ask one clarifying question" -> "Dispatch scope classifier";
     "Change request clear?" -> "Dispatch scope classifier" [label="yes"];
@@ -224,10 +248,10 @@ digraph iterating_on_plans {
     "Code quality review" -> "Offer: iterate again OR finish branch" [label="✅"];
     "Code quality review" -> "Dispatch patch implementer\n(with discoveries)" [label="❌ fix"];
 
-    "PLAN UPDATE" -> "Edit plan in-place\n(un-check affected, add tasks, add iteration note)";
-    "Edit plan in-place\n(un-check affected, add tasks, add iteration note)" -> "Commit updated plan";
-    "Commit updated plan" -> "subagent-driven-development\n(un-checked tasks only, discoveries injected)";
-    "subagent-driven-development\n(un-checked tasks only, discoveries injected)" -> "Offer: iterate again OR finish branch";
+    "PLAN UPDATE" -> "Create delta plan\n(preserve original, add iteration note)";
+    "Create delta plan\n(preserve original, add iteration note)" -> "Commit delta plan";
+    "Commit delta plan" -> "subagent-driven-development\n(delta plan only, discoveries injected)";
+    "subagent-driven-development\n(delta plan only, discoveries injected)" -> "Offer: iterate again OR finish branch";
 
     "DESIGN UPDATE" -> "Summarize preserved work";
     "Summarize preserved work" -> "brainstorming\n(scoped, existing design as input)";
@@ -240,11 +264,12 @@ digraph iterating_on_plans {
 ## Key Principles
 
 - **Classify before acting** — never skip the classifier, never skip confirmation
-- **In-place plan edits** — single source of truth; git preserves history
+- **Classify from evidence** — include the current implementation/diff, not just the plan
+- **Original plans are history** — use delta plans for plan-level iteration; only add a short pointer to the original
 - **Discoveries always travel** — inject prior discoveries into every subagent, at every level
 - **Full 2-stage review, scaled depth** — patch reviews are tighter in scope, not lighter in rigor
 - **One iteration at a time** — complete the current iteration fully before accepting the next request
-- **Never re-run completed tasks** — the plan's `[x]` state is the contract; only un-check what the classifier explicitly flags
+- **Never make completed checkboxes ambiguous** — the plan's `[x]` state is historical truth; supersede stale work explicitly in the delta plan
 
 ---
 
@@ -253,12 +278,14 @@ digraph iterating_on_plans {
 | Anti-pattern | Why it's wrong |
 |---|---|
 | Skipping classification and just fixing "obviously simple" bugs | Small fixes break cross-file contracts silently ("reference drift") |
+| Classifying from plan text without inspecting the current implementation | The plan describes intent; the code and diff show actual blast radius |
 | Re-running the entire plan because one task needs fixing | Wastes tokens, may re-introduce already-resolved issues |
+| Editing completed tasks in-place during iteration | History stops being trustworthy and checked boxes stop having a clear meaning |
 | Starting a design update without summarizing what's preserved | Brainstorming skill may re-question settled decisions |
 | Injecting all discoveries without filtering | Stale discoveries from prior architecture can mislead subagents |
 | Accepting user's classification without running the classifier | User's framing is often incorrect; the classifier reads the actual code |
 | Silently accepting user's override of classifier level | Make the risk explicit first — "just do what they say" leaves silent breakage |
-| Discarding in-scope completed work when out-of-scope files are found | Commit the valid in-scope work, then report NEEDS_CONTEXT for the rest |
+| Committing partial or failing in-scope work when out-of-scope files are found | Only commit work that is complete, tested, and independently useful; otherwise report NEEDS_CONTEXT without committing |
 
 ---
 
