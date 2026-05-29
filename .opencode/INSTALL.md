@@ -96,6 +96,14 @@ Then use the installed package path in `opencode.json`:
 1. Use `skill` tool to list what's discovered
 2. Check that the plugin is loading (see above)
 
+### Skill tool missing
+
+If OpenCode discovers Superpowers skills but the agent does not have a `skill`
+tool in its tool list, read the needed `SKILL.md` directly from the discovered
+skill location. For example, use `opencode debug skill` to find
+`brainstorming/SKILL.md`, ignore its YAML frontmatter, and follow the remaining
+instructions as the loaded skill.
+
 ### Tool mapping
 
 When skills reference Claude Code tools:

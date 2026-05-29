@@ -145,6 +145,15 @@ Then use the installed package path in `opencode.json`:
 2. Check that the plugin is loading (see above)
 3. Each skill needs a `SKILL.md` file with valid YAML frontmatter
 
+### Skill tool missing
+
+Some OpenCode agents may discover Superpowers skills but omit the native
+`skill` tool from the agent's available tools. In that case, read the relevant
+`SKILL.md` directly from the discovered skill location. For example, if
+`opencode debug skill` shows the bundled `brainstorming` skill under the
+Superpowers package, read that `brainstorming/SKILL.md`, ignore the YAML
+frontmatter, and follow the remaining instructions as the loaded skill.
+
 ### Bootstrap not appearing
 
 1. Check OpenCode version supports `experimental.chat.system.transform` hook

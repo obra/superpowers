@@ -44,6 +44,8 @@ const result = {
   scenario,
   firstBootstrapParts: countBootstrapParts(firstOutput),
   secondBootstrapParts: countBootstrapParts(secondOutput),
+  firstHasSkillFallback: hasSkillFallback(firstOutput),
+  firstHasDirectSkillPath: hasDirectSkillPath(firstOutput),
   firstReadCount: afterFirst.readCount,
   secondReadCount: afterSecond.readCount,
   firstExistsCount: afterFirst.existsCount,
@@ -83,6 +85,18 @@ function countBootstrapParts(output) {
   ).length;
 }
 
+function hasSkillFallback(output) {
+  return output.messages[0].parts.some(
+    (part) => part.type === 'text' && part.text.includes('Skill Loading Fallback for OpenCode')
+  );
+}
+
+function hasDirectSkillPath(output) {
+  return output.messages[0].parts.some(
+    (part) => part.type === 'text' && part.text.includes('/skills/brainstorming/SKILL.md')
+  );
+}
+
 function assertPresentBootstrap(result) {
   const failures = [];
   if (result.firstBootstrapParts !== 1) {
@@ -99,6 +113,12 @@ function assertPresentBootstrap(result) {
   }
   if (result.secondExistsCount !== result.firstExistsCount) {
     failures.push(`expected cached second transform to do no additional exists checks, got ${result.secondExistsCount - result.firstExistsCount}`);
+  }
+  if (!result.firstHasSkillFallback) {
+    failures.push('expected bootstrap to include OpenCode skill-loading fallback instructions');
+  }
+  if (!result.firstHasDirectSkillPath) {
+    failures.push('expected bootstrap to include a direct brainstorming SKILL.md path');
   }
   return failures;
 }
