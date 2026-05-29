@@ -1,0 +1,42 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/obra/superpowers.git 2>/dev/null || git remote set-url upstream https://github.com/obra/superpowers.git
+          git fetch upstream main
+
+      - name: Fast-forward fork main when possible
+        run: |
+          set -euo pipefail
+
+          current_branch="$(git branch --show-current)"
+          if [ "$current_branch" != "main" ]; then
+            git checkout main
+          fi
+
+          if git merge-base --is-ancestor HEAD upstream/main; then
+            git merge --ff-only upstream/main
+            git push origin HEAD:main
+            exit 0
+          fi
+
+          echo "Fork main has diverged from upstream/main; manual review needed."
+          git log --oneline --left-right --graph --decorate HEAD...upstream/main
+          exit 1
