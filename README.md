@@ -4,7 +4,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
+Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [Junie](#junie), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
 
 ## How it works
 
@@ -136,6 +136,22 @@ already use it in another harness.
   ```
 
 - Or search for "superpowers" in the plugin marketplace.
+
+### Junie
+
+- Clone the superpowers repo (skip if already cloned):
+
+  ```bash
+  git clone https://github.com/obra/superpowers ~/.superpowers
+  ```
+
+- Run the install script:
+
+  ```bash
+  ~/.superpowers/scripts/install-junie.sh
+  ```
+
+- Detailed docs: [docs/README.junie.md](docs/README.junie.md)
 
 ### GitHub Copilot CLI
 
