@@ -72,6 +72,8 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
 
     const fullContent = fs.readFileSync(skillPath, 'utf8');
     const { content } = extractAndStripFrontmatter(fullContent);
+    const displayedSkillsDir = superpowersSkillsDir.replaceAll(path.sep, '/');
+    const displayedBrainstormingPath = path.join(superpowersSkillsDir, 'brainstorming', 'SKILL.md').replaceAll(path.sep, '/');
 
     const toolMapping = `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
@@ -80,7 +82,14 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
-Use OpenCode's native \`skill\` tool to list and load skills.`;
+Use OpenCode's native \`skill\` tool to list and load skills.
+
+**Skill Loading Fallback for OpenCode:**
+If the native \`skill\` tool is missing from your tool list, load skills by reading their files directly:
+- Bundled Superpowers skills live in \`${displayedSkillsDir}/<skill-name>/SKILL.md\`
+- For example, read \`${displayedBrainstormingPath}\` when \`skill({ name: "brainstorming" })\` is unavailable
+
+When you read a skill file directly, ignore the YAML frontmatter and follow the remaining instructions exactly as if the skill tool had loaded it.`;
 
     _bootstrapCache = `<EXTREMELY_IMPORTANT>
 You have superpowers.
