@@ -12,14 +12,17 @@ add a comment or reaction to the existing one instead.
 
 - [ ] I searched existing issues and this is not a duplicate
 
-## Environment
+## Environment (required)
+<!-- Required. We assume an agent filed this report — tell us which one and
+     where it ran. We weigh reports by what produced them. -->
 
 | Field | Value |
 |-------|-------|
 | Superpowers version | |
 | Harness (Claude Code, Cursor, etc.) | |
 | Harness version | |
-| Model | |
+| Your model + version | |
+| All plugins installed | |
 | OS + shell | |
 
 ## Is this a Superpowers issue or a platform issue?
