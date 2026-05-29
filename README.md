@@ -1,58 +1,70 @@
-# Rinoedu Epic Workflow Skills
+# Rinoedu Epic Workflow Skills (rino-s9s)
 
-Bộ skill mở rộng cho **Superpowers framework** ([obra/superpowers](https://github.com/obra/superpowers)), phục vụ quy trình spec Epic → User Story → sub-task của Rinoedu.
+Bản fork nội bộ của **Superpowers framework** ([obra/superpowers](https://github.com/obra/superpowers)), bổ sung bộ skill chuẩn hoá quy trình spec Epic → User Story → sub-task của Rinoedu.
 
-Skill chạy được trên **Claude Code, Cursor, Codex, OpenCode** — bất kỳ platform nào hỗ trợ Superpowers.
+Tài liệu này dành cho các kỹ sư trong team. Đọc kỹ trước khi cài đặt.
 
 ---
 
-## Skill có gì
+## 1. Tổng quan
 
-Bộ 4 skill bao trùm Pass 1 (discovery) và đầu Pass 2 (sub-task) của workflow:
+`rino-s9s` giữ nguyên toàn bộ năng lực của Superpowers (brainstorming, writing-plans, subagent-driven-development, TDD…) và bổ sung 4 skill phục vụ quy trình nội bộ.
 
-| Skill | Pass | Khi nào chạy |
+| Skill | Pass | Vai trò |
 |---|---|---|
-| `creating-epic-context` | Pass 1 | Đầu Epic — pull Epic từ Jira, sinh Epic Context Document |
-| `mapping-us-dependencies` | Pass 1 | Sau Epic context — phân tích phụ thuộc giữa các US, ra thứ tự brainstorm |
-| `speccing-story` | Pass 1 | Lặp, từng US — brainstorm spec + T-shirt size + risk |
-| `creating-jira-subtasks` | Pass 2 | Sau `writing-plans` của Superpowers, trước khi code |
+| `creating-epic-context` | 1 | Pull Epic từ Jira, sinh Epic Context Document |
+| `mapping-us-dependencies` | 1 | Phân tích phụ thuộc giữa các US, xuất thứ tự brainstorm |
+| `speccing-story` | 1 | Brainstorm spec từng US, kèm T-shirt size và đánh giá rủi ro |
+| `creating-jira-subtasks` | 2 | Sinh sub-task trên Jira từ implementation plan |
 
-Chi tiết workflow xem [Workflow Overview](#workflow-overview) ở cuối README.
+Bộ skill chạy được trên **Claude Code, Cursor, Codex, OpenCode** — bất kỳ platform nào hỗ trợ Superpowers.
+
+Chi tiết workflow xem mục [Workflow Overview](#5-workflow-overview).
 
 ---
 
-## Cài đặt
+## 2. Yêu cầu trước khi cài
 
-### Yêu cầu trước
+- Một trong các coding agent: Claude Code, Cursor, Codex, OpenCode
+- Git đã cấu hình `user.name` và `user.email`
+- Quyền truy cập Atlassian (Jira và Confluence) của Rinoedu
 
-- Một trong các coding agent: **Claude Code**, **Cursor**, **Codex**, hoặc **OpenCode**
-- **Git** cấu hình sẵn (`user.name`, `user.email`)
-- **Quyền truy cập Atlassian** (Jira + Confluence) của Rinoedu
+---
 
-### Bước 1 — Cài Superpowers framework
+## 3. Cài đặt
 
-Chọn theo platform anh dùng:
+`rino-s9s` là fork đầy đủ của Superpowers, **cài trực tiếp từ repo này** thay vì cài Superpowers gốc rồi thả skill riêng. Không cần repo phụ.
 
-#### Claude Code
+### 3.1. Claude Code
 
-Trong session Claude Code đang mở:
+Cài qua git URL trực tiếp:
 
 ```
-/plugin marketplace add obra/superpowers-marketplace
-/plugin install superpowers@superpowers-marketplace
+/plugin install superpowers@git+https://github.com/huynq-blip/rino-s9s.git
 ```
 
-#### Cursor
+Nếu lệnh trên không nhận git URL, dùng cách thủ công:
 
-1. Mở Cursor → mục Plugins/Extensions
-2. Tìm "Superpowers" trong marketplace → Install
+```bash
+git clone https://github.com/huynq-blip/rino-s9s.git ~/.claude/plugins/rino-s9s
+```
 
-#### Codex
+Sau đó khởi động lại Claude Code.
+
+### 3.2. Cursor
+
+```bash
+git clone https://github.com/huynq-blip/rino-s9s.git ~/.cursor/plugins/rino-s9s
+```
+
+Cursor sẽ phát hiện plugin trong thư mục `.cursor-plugin/` của fork. Khởi động lại Cursor.
+
+### 3.3. Codex
 
 ```bash
 mkdir -p ~/.codex/superpowers
 cd ~/.codex/superpowers
-git clone https://github.com/obra/superpowers.git .
+git clone https://github.com/huynq-blip/rino-s9s.git .
 mkdir -p ~/.codex/skills
 ```
 
@@ -65,54 +77,26 @@ You have superpowers. RIGHT NOW run:
 and follow the instructions it returns.
 ```
 
-#### OpenCode
+### 3.4. OpenCode
 
 Thêm vào `opencode.json`:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugin": ["superpowers@git+https://github.com/huynq-blip/rino-s9s.git"]
 }
 ```
 
 Khởi động lại OpenCode.
 
-**Verify Superpowers đã cài đúng:** mở session mới, gõ "Help me plan a new feature". Nếu agent hỏi clarify requirement thay vì nhảy thẳng vào code → cài đúng.
+### 3.5. Kết nối Atlassian MCP
 
-### Bước 2 — Cài skill Rinoedu
+4 skill nội bộ gọi Jira và Confluence qua Atlassian MCP server.
 
-Skill Rinoedu được đặt vào `~/.claude/skills/` để Superpowers tự discover. Cơ chế này dùng được cho cả Claude Code, Cursor, Codex, OpenCode.
-
-```bash
-# Clone repo skill vào đúng vị trí Superpowers quét
-git clone https://github.com/<rinoedu-org>/claude-skills.git ~/.claude/skills
-
-# Nếu folder ~/.claude/skills đã tồn tại với skill khác:
-cd ~/.claude/skills
-git clone https://github.com/<rinoedu-org>/claude-skills.git rinoedu
-# Hoặc copy thủ công từng thư mục skill vào ~/.claude/skills/
-```
-
-**Cấu trúc sau khi cài:**
-
-```
-~/.claude/skills/
-├── creating-epic-context/
-│   └── SKILL.md
-├── mapping-us-dependencies/
-│   └── SKILL.md
-├── speccing-story/
-│   └── SKILL.md
-└── creating-jira-subtasks/
-    └── SKILL.md
-```
-
-### Bước 3 — Kết nối Atlassian MCP
-
-4 skill này gọi Jira/Confluence qua Atlassian MCP server. Anh cần Claude Code (hoặc platform tương ứng) nối được Atlassian MCP của Rinoedu.
-
-**Cloud ID:** `1b3f06bb-40bc-43b5-abb8-f0b0eb04c3db`
-**Jira project:** `IL` (Innovation Lab)
+| Thông số | Giá trị |
+|---|---|
+| Cloud ID | `1b3f06bb-40bc-43b5-abb8-f0b0eb04c3db` |
+| Jira project key | `IL` (Innovation Lab) |
 
 **Claude Code** — thêm vào `.mcp.json` của project hoặc cấu hình MCP cá nhân:
 
@@ -126,87 +110,103 @@ git clone https://github.com/<rinoedu-org>/claude-skills.git rinoedu
 }
 ```
 
-Lần đầu chạy skill, sẽ có prompt OAuth Atlassian — đăng nhập bằng tài khoản công ty.
+Lần đầu chạy skill sẽ kích hoạt OAuth Atlassian, đăng nhập bằng tài khoản công ty.
 
-**Cursor/Codex/OpenCode:** xem tài liệu MCP của từng platform để thêm Atlassian server tương đương.
+Cursor, Codex, OpenCode: tham khảo tài liệu MCP riêng của từng platform để thêm Atlassian server tương đương.
 
-### Bước 4 — Verify cài đặt
+### 3.6. Kiểm tra cài đặt
 
-Mở session mới trong agent, gõ:
+Mở session mới, gửi:
 
 ```
 Set up epic context for IL-XX
 ```
 
-(thay `IL-XX` bằng key của một Epic thật anh có quyền đọc)
+Thay `IL-XX` bằng key của một Epic thực tế có quyền đọc.
 
-Nếu agent:
-- Báo "I'm using the creating-epic-context skill..." → skill load đúng ✓
-- Pull được Epic từ Jira → MCP nối đúng ✓
-- Bắt đầu sinh Epic Context Document → workflow chạy ✓
+Kết quả mong đợi:
+1. Agent announce: `I'm using the creating-epic-context skill...`
+2. Agent pull được Epic từ Jira qua MCP
+3. Agent bắt đầu sinh Epic Context Document
 
 Nếu skill không trigger:
 
-1. Check file path: `ls ~/.claude/skills/creating-epic-context/SKILL.md` phải tồn tại
-2. Check frontmatter: file SKILL.md phải bắt đầu bằng `---` rồi tới `name:` và `description:`
-3. Restart session (Superpowers chỉ load skill khi session start)
-4. Thử gọi tường minh: "Use the creating-epic-context skill to set up epic IL-XX"
+- Kiểm tra skill tồn tại trong repo đã clone: `ls skills/creating-epic-context/SKILL.md`
+- Kiểm tra frontmatter: file `SKILL.md` phải bắt đầu bằng `---` rồi tới `name:` và `description:`
+- Khởi động lại session — skill chỉ được nạp khi bắt đầu session mới
+- Thử gọi tường minh: `Use the creating-epic-context skill to set up epic IL-XX`
 
 ---
 
-## Cập nhật skill
+## 4. Cập nhật
 
-Khi repo skill có update:
+Khi `rino-s9s` có phiên bản mới:
 
 ```bash
-cd ~/.claude/skills
+cd <thư mục đã clone>     # ví dụ ~/.claude/plugins/rino-s9s
 git pull
 ```
 
-Restart session để Superpowers load lại.
+Khởi động lại session để nạp lại skill và bản cập nhật core.
+
+### Đồng bộ với upstream `obra/superpowers`
+
+Maintainer của repo thực hiện định kỳ:
+
+```bash
+git remote add upstream https://github.com/obra/superpowers.git
+git fetch upstream
+git merge upstream/main
+# resolve conflict trong thư mục skills/ nếu có
+git push origin main
+```
+
+Người dùng cuối chỉ cần `git pull` trên fork.
 
 ---
 
-## Workflow Overview
+## 5. Workflow Overview
 
-3 Pass — quy ước nội bộ Rinoedu:
+Quy ước 3 Pass nội bộ:
 
 ```
-PASS 1: Discovery (đầu Epic, 1-2 ngày)
-  ├─ creating-epic-context        ← chạy 1 lần
-  ├─ mapping-us-dependencies      ← chạy 1 lần, ra thứ tự brainstorm
-  └─ speccing-story               ← lặp từng US theo thứ tự
-                                    output: spec + size + risk
-                                    KHÔNG viết Plan ở Pass này
+PASS 1 — Discovery (đầu Epic, 1-2 ngày)
+  ├─ creating-epic-context        chạy một lần
+  ├─ mapping-us-dependencies      chạy một lần, xuất thứ tự brainstorm
+  └─ speccing-story               lặp, từng US theo thứ tự
+                                  output: spec + T-shirt size + risk
+                                  KHÔNG viết Plan ở Pass này
 
-⏸ Stakeholder xem estimate → approve timeline (margin ±40-50%, là honest)
+⏸ Stakeholder review estimate → approve timeline
 
-PASS 2: Sprint preparation (trước mỗi sprint)
-  ├─ writing-plans (Superpowers)  ← plan cho US sắp code
-  └─ creating-jira-subtasks       ← tạo sub-task từ plan
-                                    → confirm → tạo trên Jira
+PASS 2 — Sprint preparation (trước mỗi sprint)
+  ├─ writing-plans (Superpowers)  plan cho US sắp code
+  └─ creating-jira-subtasks       sinh sub-task từ plan, confirm, ghi Jira
 
-PASS 3: Execution (trong sprint)
+PASS 3 — Execution (trong sprint)
   └─ TDD + subagent-driven-development (Superpowers)
-                                    code, review, merge
+                                  code, review, merge
 ```
 
-### Nguyên tắc xuyên suốt
+### Nguyên tắc thiết kế
 
-- **Pass 1 không viết Plan** — Plan bind vào codebase tại thời điểm viết, để Pass 2 sát sprint mới fresh.
-- **Pass 2 không viết Plan cả lượt cho Epic** — chỉ cho 4-5 US của sprint sắp tới, tránh Plan outdated.
-- **Sub-task tạo sau Plan, trước Code** — không trước Plan (chưa biết breakdown), không sau Code (đã tạo rồi).
-- **Mọi action ghi vào Jira (tạo sub-task, write Confluence) đều cần confirm tường minh** trong chat trước khi gọi MCP.
+- **Pass 1 không viết Plan.** Plan bind vào codebase tại thời điểm viết; chỉ tạo Plan ở Pass 2, sát sprint.
+- **Pass 2 không viết Plan cả lượt cho Epic.** Chỉ viết cho 4-5 US của sprint sắp tới.
+- **Sub-task tạo sau Plan, trước Code.** Không tạo ở Pass 1 (chưa biết breakdown), không tạo sau Code (đã chạy xong).
+- **Estimate Pass 1 là ước lượng thô.** Margin thực tế ±40-50% cho Epic đầu chưa có historical data; siết về ±25-30% sau 2-3 sprint calibrate.
+- **Mọi action ghi vào Jira hoặc Confluence cần xác nhận tường minh** trong chat trước khi skill gọi MCP.
 
 ---
 
-## Tài liệu liên quan
+## 6. Tham chiếu
 
-- Superpowers framework: https://github.com/obra/superpowers
-- Atlassian MCP: https://www.atlassian.com/platform/remote-mcp-server
-- Rinoedu Cloud ID: `1b3f06bb-40bc-43b5-abb8-f0b0eb04c3db`
-- Jira project IL: Innovation Lab — nơi PoC các initiative AI/workflow
+- Upstream Superpowers: https://github.com/obra/superpowers
+- Atlassian Remote MCP: https://www.atlassian.com/platform/remote-mcp-server
+- Rinoedu Atlassian Cloud ID: `1b3f06bb-40bc-43b5-abb8-f0b0eb04c3db`
+- Jira project IL (Innovation Lab): nơi PoC các initiative AI và workflow nội bộ
 
-## Hỗ trợ
+---
 
-Vướng mắc khi cài hoặc dùng skill: mở issue trong repo này hoặc liên hệ team AI nội bộ.
+## 7. Hỗ trợ
+
+Vấn đề về cài đặt hoặc sử dụng skill: mở issue trong repo này hoặc liên hệ team AI nội bộ.
