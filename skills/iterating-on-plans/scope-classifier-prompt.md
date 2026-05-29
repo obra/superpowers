@@ -4,6 +4,8 @@ Use this template when dispatching the scope classifier subagent.
 
 **Purpose:** Determine the correct rework level for a change request — PATCH, PLAN_UPDATE, or DESIGN_UPDATE — by reasoning about actual implementation blast radius, not just surface description.
 
+If the current harness cannot dispatch a subagent, apply this prompt manually. The fallback changes who runs the classifier, not the evidence requirements or confirmation gate.
+
 ```
 Task tool (general-purpose):
   description: "Classify iteration scope for: [one-line summary of change request]"

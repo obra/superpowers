@@ -66,6 +66,8 @@ Before classifying anything, gather:
 
 Dispatch a scope-classifier subagent using `./scope-classifier-prompt.md`.
 
+If no subagent mechanism is available in the current harness, apply `./scope-classifier-prompt.md` yourself with the same inputs. This fallback does not relax the hard gate: you still must gather implementation evidence, produce the structured classification, present it to the user, and get confirmation before acting.
+
 Provide the subagent with:
 - The user's change request (verbatim)
 - The full plan text (with checkbox states)
@@ -111,10 +113,11 @@ Wait for the user's confirmation.
 - Make the risk explicit: explain specifically which completed tasks will be wrong after the change and why
 - Give the user enough information to make an informed decision
 - Defer to the user once they confirm they understand the risk — but document their override in the active plan or delta plan as an `## Iteration Note`
+- Do not accept an override that rewrites completed task history in the original plan; user override can change the rework level, but stale completed work must be superseded explicitly
 - Never pretend the risk doesn't exist to avoid friction
 
 Example response when user overrides:
-> "I hear you — the edit itself is one line. The reason I flagged PLAN_UPDATE is that Task 5 calls `User.save()` and compares against the stored value directly. After this change that comparison will break silently. If you've already accounted for that, treat this as a patch and I'll proceed immediately. If not, Tasks 5 and 7 need delta-plan coverage. Which do you prefer?"
+> "I hear you — the edit itself is one line. The reason I flagged PLAN_UPDATE is that Task 5 calls `User.save()` and compares against the stored value directly. After this change that comparison will break silently. If you've already accounted for that, treat this as a patch and I'll proceed immediately. If not, Tasks 5 and 7 need delta-plan coverage. Either way, I won't rewrite completed task history in the original plan. Which do you prefer?"
 
 ---
 
