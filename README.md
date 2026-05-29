@@ -40,7 +40,8 @@ Chi tiết workflow xem mục [Workflow Overview](#5-workflow-overview).
 Cài qua git URL trực tiếp:
 
 ```
-/plugin install superpowers@git+https://github.com/huynq-blip/rino-s9s.git
+/plugin marketplace add huynq-blip/rino-s9s
+/plugin install rino-s9s@rino-s9s-dev
 ```
 
 Nếu lệnh trên không nhận git URL, dùng cách thủ công:

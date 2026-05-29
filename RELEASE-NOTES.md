@@ -1120,8 +1120,8 @@ This release includes:
 
 ```bash
 # In Claude Code
-/plugin marketplace add obra/superpowers-marketplace
-/plugin install superpowers@superpowers-marketplace
+/plugin marketplace add huynq-blip/rino-s9s
+/plugin install rino-s9s@rino-s9s-dev
 ```
 
 The plugin handles everything automatically.
