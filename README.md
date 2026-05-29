@@ -1,233 +1,212 @@
-# Superpowers
+# Rinoedu Epic Workflow Skills
 
-Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
+Bộ skill mở rộng cho **Superpowers framework** ([obra/superpowers](https://github.com/obra/superpowers)), phục vụ quy trình spec Epic → User Story → sub-task của Rinoedu.
 
-## Quickstart
+Skill chạy được trên **Claude Code, Cursor, Codex, OpenCode** — bất kỳ platform nào hỗ trợ Superpowers.
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
+---
 
-## How it works
+## Skill có gì
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+Bộ 4 skill bao trùm Pass 1 (discovery) và đầu Pass 2 (sub-task) của workflow:
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+| Skill | Pass | Khi nào chạy |
+|---|---|---|
+| `creating-epic-context` | Pass 1 | Đầu Epic — pull Epic từ Jira, sinh Epic Context Document |
+| `mapping-us-dependencies` | Pass 1 | Sau Epic context — phân tích phụ thuộc giữa các US, ra thứ tự brainstorm |
+| `speccing-story` | Pass 1 | Lặp, từng US — brainstorm spec + T-shirt size + risk |
+| `creating-jira-subtasks` | Pass 2 | Sau `writing-plans` của Superpowers, trước khi code |
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+Chi tiết workflow xem [Workflow Overview](#workflow-overview) ở cuối README.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+---
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+## Cài đặt
 
+### Yêu cầu trước
 
-## Sponsorship
+- Một trong các coding agent: **Claude Code**, **Cursor**, **Codex**, hoặc **OpenCode**
+- **Git** cấu hình sẵn (`user.name`, `user.email`)
+- **Quyền truy cập Atlassian** (Jira + Confluence) của Rinoedu
 
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
+### Bước 1 — Cài Superpowers framework
 
-Thanks! 
+Chọn theo platform anh dùng:
 
-- Jesse
+#### Claude Code
 
+Trong session Claude Code đang mở:
 
-## Installation
+```
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+```
 
-Installation differs by harness. If you use more than one, install Superpowers separately for each one.
+#### Cursor
 
-### Claude Code
+1. Mở Cursor → mục Plugins/Extensions
+2. Tìm "Superpowers" trong marketplace → Install
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
+#### Codex
 
-#### Official Marketplace
+```bash
+mkdir -p ~/.codex/superpowers
+cd ~/.codex/superpowers
+git clone https://github.com/obra/superpowers.git .
+mkdir -p ~/.codex/skills
+```
 
-- Install the plugin from Anthropic's official marketplace:
+Thêm vào `~/.codex/AGENTS.md`:
 
-  ```bash
-  /plugin install superpowers@claude-plugins-official
-  ```
+```markdown
+## Superpowers System
+You have superpowers. RIGHT NOW run:
+`~/.codex/superpowers/.codex/superpowers-codex bootstrap`
+and follow the instructions it returns.
+```
 
-#### Superpowers Marketplace
+#### OpenCode
 
-The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
+Thêm vào `opencode.json`:
 
-- Register the marketplace:
+```json
+{
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+}
+```
 
-  ```bash
-  /plugin marketplace add obra/superpowers-marketplace
-  ```
+Khởi động lại OpenCode.
 
-- Install the plugin from this marketplace:
+**Verify Superpowers đã cài đúng:** mở session mới, gõ "Help me plan a new feature". Nếu agent hỏi clarify requirement thay vì nhảy thẳng vào code → cài đúng.
 
-  ```bash
-  /plugin install superpowers@superpowers-marketplace
-  ```
+### Bước 2 — Cài skill Rinoedu
 
-### Codex CLI
+Skill Rinoedu được đặt vào `~/.claude/skills/` để Superpowers tự discover. Cơ chế này dùng được cho cả Claude Code, Cursor, Codex, OpenCode.
 
-Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
+```bash
+# Clone repo skill vào đúng vị trí Superpowers quét
+git clone https://github.com/<rinoedu-org>/claude-skills.git ~/.claude/skills
 
-- Open the plugin search interface:
+# Nếu folder ~/.claude/skills đã tồn tại với skill khác:
+cd ~/.claude/skills
+git clone https://github.com/<rinoedu-org>/claude-skills.git rinoedu
+# Hoặc copy thủ công từng thư mục skill vào ~/.claude/skills/
+```
 
-  ```bash
-  /plugins
-  ```
+**Cấu trúc sau khi cài:**
 
-- Search for Superpowers:
+```
+~/.claude/skills/
+├── creating-epic-context/
+│   └── SKILL.md
+├── mapping-us-dependencies/
+│   └── SKILL.md
+├── speccing-story/
+│   └── SKILL.md
+└── creating-jira-subtasks/
+    └── SKILL.md
+```
 
-  ```bash
-  superpowers
-  ```
+### Bước 3 — Kết nối Atlassian MCP
 
-- Select `Install Plugin`.
+4 skill này gọi Jira/Confluence qua Atlassian MCP server. Anh cần Claude Code (hoặc platform tương ứng) nối được Atlassian MCP của Rinoedu.
 
-### Codex App
+**Cloud ID:** `1b3f06bb-40bc-43b5-abb8-f0b0eb04c3db`
+**Jira project:** `IL` (Innovation Lab)
 
-Superpowers is available via the [official Codex plugin marketplace](https://github.com/openai/plugins).
+**Claude Code** — thêm vào `.mcp.json` của project hoặc cấu hình MCP cá nhân:
 
-- In the Codex app, click on Plugins in the sidebar.
-- You should see `Superpowers` in the Coding section.
-- Click the `+` next to Superpowers and follow the prompts.
+```json
+{
+  "mcpServers": {
+    "atlassian": {
+      "url": "https://mcp.atlassian.com/v1/mcp"
+    }
+  }
+}
+```
 
-### Factory Droid
+Lần đầu chạy skill, sẽ có prompt OAuth Atlassian — đăng nhập bằng tài khoản công ty.
 
-- Register the marketplace:
+**Cursor/Codex/OpenCode:** xem tài liệu MCP của từng platform để thêm Atlassian server tương đương.
 
-  ```bash
-  droid plugin marketplace add https://github.com/obra/superpowers
-  ```
+### Bước 4 — Verify cài đặt
 
-- Install the plugin:
+Mở session mới trong agent, gõ:
 
-  ```bash
-  droid plugin install superpowers@superpowers
-  ```
+```
+Set up epic context for IL-XX
+```
 
-### Gemini CLI
+(thay `IL-XX` bằng key của một Epic thật anh có quyền đọc)
 
-- Install the extension:
+Nếu agent:
+- Báo "I'm using the creating-epic-context skill..." → skill load đúng ✓
+- Pull được Epic từ Jira → MCP nối đúng ✓
+- Bắt đầu sinh Epic Context Document → workflow chạy ✓
 
-  ```bash
-  gemini extensions install https://github.com/obra/superpowers
-  ```
+Nếu skill không trigger:
 
-- Update later:
+1. Check file path: `ls ~/.claude/skills/creating-epic-context/SKILL.md` phải tồn tại
+2. Check frontmatter: file SKILL.md phải bắt đầu bằng `---` rồi tới `name:` và `description:`
+3. Restart session (Superpowers chỉ load skill khi session start)
+4. Thử gọi tường minh: "Use the creating-epic-context skill to set up epic IL-XX"
 
-  ```bash
-  gemini extensions update superpowers
-  ```
+---
 
-### OpenCode
+## Cập nhật skill
 
-OpenCode uses its own plugin install; install Superpowers separately even if you
-already use it in another harness.
+Khi repo skill có update:
 
-- Tell OpenCode:
+```bash
+cd ~/.claude/skills
+git pull
+```
 
-  ```
-  Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-  ```
+Restart session để Superpowers load lại.
 
-- Detailed docs: [docs/README.opencode.md](docs/README.opencode.md)
+---
 
-### Cursor
+## Workflow Overview
 
-- In Cursor Agent chat, install from marketplace:
+3 Pass — quy ước nội bộ Rinoedu:
 
-  ```text
-  /add-plugin superpowers
-  ```
+```
+PASS 1: Discovery (đầu Epic, 1-2 ngày)
+  ├─ creating-epic-context        ← chạy 1 lần
+  ├─ mapping-us-dependencies      ← chạy 1 lần, ra thứ tự brainstorm
+  └─ speccing-story               ← lặp từng US theo thứ tự
+                                    output: spec + size + risk
+                                    KHÔNG viết Plan ở Pass này
 
-- Or search for "superpowers" in the plugin marketplace.
+⏸ Stakeholder xem estimate → approve timeline (margin ±40-50%, là honest)
 
-### GitHub Copilot CLI
+PASS 2: Sprint preparation (trước mỗi sprint)
+  ├─ writing-plans (Superpowers)  ← plan cho US sắp code
+  └─ creating-jira-subtasks       ← tạo sub-task từ plan
+                                    → confirm → tạo trên Jira
 
-- Register the marketplace:
+PASS 3: Execution (trong sprint)
+  └─ TDD + subagent-driven-development (Superpowers)
+                                    code, review, merge
+```
 
-  ```bash
-  copilot plugin marketplace add obra/superpowers-marketplace
-  ```
+### Nguyên tắc xuyên suốt
 
-- Install the plugin:
+- **Pass 1 không viết Plan** — Plan bind vào codebase tại thời điểm viết, để Pass 2 sát sprint mới fresh.
+- **Pass 2 không viết Plan cả lượt cho Epic** — chỉ cho 4-5 US của sprint sắp tới, tránh Plan outdated.
+- **Sub-task tạo sau Plan, trước Code** — không trước Plan (chưa biết breakdown), không sau Code (đã tạo rồi).
+- **Mọi action ghi vào Jira (tạo sub-task, write Confluence) đều cần confirm tường minh** trong chat trước khi gọi MCP.
 
-  ```bash
-  copilot plugin install superpowers@superpowers-marketplace
-  ```
+---
 
-## The Basic Workflow
+## Tài liệu liên quan
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+- Superpowers framework: https://github.com/obra/superpowers
+- Atlassian MCP: https://www.atlassian.com/platform/remote-mcp-server
+- Rinoedu Cloud ID: `1b3f06bb-40bc-43b5-abb8-f0b0eb04c3db`
+- Jira project IL: Innovation Lab — nơi PoC các initiative AI/workflow
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+## Hỗ trợ
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
-
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
-
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
-
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-## What's Inside
-
-### Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
-
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
-
-## Philosophy
-
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
-
-Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
-
-## Contributing
-
-The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across all of the coding agents we support.
-
-1. Fork the repository
-2. Switch to the 'dev' branch
-3. Create a branch for your work
-4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Superpowers updates are somewhat coding-agent dependent, but are often automatic.
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
+Vướng mắc khi cài hoặc dùng skill: mở issue trong repo này hoặc liên hệ team AI nội bộ.
