@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
+  "name": "rino-s9s",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
   "version": "5.1.0",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/huynq-blip/rino-s9s",
+  "repository": "https://github.com/huynq-blip/rino-s9s",
   "license": "MIT",
   "keywords": [
     "skills",
