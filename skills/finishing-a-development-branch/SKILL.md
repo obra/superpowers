@@ -124,15 +124,11 @@ git branch -d <feature-branch>
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
-
-## Test Plan
-- [ ] <verification steps>
-EOF
-)"
+# Detect platform from remote URL, then create PR/MR with the matching tool:
+# github.com  → gh pr create --title "<title>" --body "<body>"
+# gitlab.*    → glab mr create --title "<title>" --description "<body>"
+# unknown     → open the compare URL printed by git push, or ask your human partner
+REMOTE_URL=$(git remote get-url origin)
 ```
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
@@ -240,6 +236,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Remove a worktree before confirming merge success
 - Clean up worktrees you didn't create (provenance check)
 - Run `git worktree remove` from inside the worktree
+- Use `gh pr create` without checking `git remote get-url origin` first — the repo may not be on GitHub
 
 **Always:**
 - Verify tests before offering options
