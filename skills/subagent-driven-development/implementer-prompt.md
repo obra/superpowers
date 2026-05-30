@@ -32,7 +32,7 @@ Task tool (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. **Commit your work** (`git add` + `git commit`) — this is the first checkpoint commit
     5. Self-review (see below)
     6. Report back
 
@@ -40,6 +40,28 @@ Task tool (general-purpose):
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
+
+    ## Commit Strategy (Two Commits Per Task)
+
+    Each task produces exactly **two commits** to balance traceability with conflict avoidance:
+
+    **Commit 1 — Implementation checkpoint** (after step 4 above):
+    - Commit immediately after implementation and self-test pass
+    - This ensures code doesn't sit uncommitted for long periods, reducing merge conflict risk
+
+    **During review fix rounds** (if reviewers request changes):
+    - Use `git add` + `git commit --amend --no-edit` to squash fixes into Commit 1
+    - Do NOT create separate commits for each review fix
+    - This keeps the task's WIP as a single evolving commit
+
+    **Commit 2 — Final** (after all reviews pass):
+    - When both spec compliance and code quality reviewers approve, create the final commit
+    - Use `git commit --amend` if only minor fixes were added, or a new `git commit` if
+      significant changes accumulated since the last amend
+    - Use a meaningful commit message summarizing the complete task
+
+    **Exception:** If the task touches 5+ files or spans multiple subsystems, you may create
+    additional intermediate commits at natural checkpoints. Report this in your status.
 
     ## Code Organization
 
