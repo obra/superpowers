@@ -57,7 +57,7 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
+        "Mark completed steps in plan file (- [ ] to - [x])" [shape=box];
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
@@ -78,8 +78,8 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
+    "Code quality reviewer subagent approves?" -> "Mark completed steps in plan file (- [ ] to - [x])" [label="yes"];
+    "Mark completed steps in plan file (- [ ] to - [x])" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
@@ -156,7 +156,7 @@ Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 [Get git SHAs, dispatch code quality reviewer]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
-[Mark Task 1 complete]
+[Mark Task 1 steps complete in plan file: - [ ] → - [x] for each finished step]
 
 Task 2: Recovery modes
 
@@ -190,7 +190,7 @@ Implementer: Extracted PROGRESS_INTERVAL constant
 [Code reviewer reviews again]
 Code reviewer: ✅ Approved
 
-[Mark Task 2 complete]
+[Mark Task 2 steps complete in plan file]
 
 ...
 
@@ -233,9 +233,20 @@ Done!
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
 
+## Plan progress
+
+The plan file is the **durable** progress log. Checkbox syntax (`- [ ]` / `- [x]`) exists for agent tracking, not human-only decoration.
+
+After each step passes its verification, edit the plan file and flip that step's checkbox to `- [x]`. After each task passes both reviews, ensure every step for that task is checked in the plan.
+
+**TodoWrite (optional):** You may mirror tasks in TodoWrite for in-session UI on Cursor/Claude Code. TodoWrite does not replace updating the plan file. On Codex, `update_plan` maps from TodoWrite per `using-superpowers/references/codex-tools.md` — still update plan checkboxes when you have a plan path.
+
+Commit plan updates with your implementation commits when practical so git shows real progress.
+
 ## Red Flags
 
 **Never:**
+- Leave plan checkboxes unchecked after completing and verifying a step
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues

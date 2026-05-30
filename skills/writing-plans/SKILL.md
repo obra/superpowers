@@ -60,6 +60,10 @@ This structure informs the task decomposition. Each task should produce self-con
 ---
 ```
 
+## Progress tracking (agents)
+
+During execution, agents update **this plan file** as they work: flip each verified step from `- [ ]` to `- [x]`. That is the durable progress record in git. Execution skills may also use TodoWrite (or Codex `update_plan`) for in-session tracking, but must not leave plan checkboxes stale.
+
 ## Task Structure
 
 ````markdown
