@@ -12,7 +12,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Fetch a URL | `shell` with `curl` / `wget` — Codex has no native fetch tool |
 | Search the web | `web_search` (enabled by default; configurable in `config.toml` via the top-level `web_search` setting — `live`, `cached`, or `disabled`) |
 | Invoke a skill | Skills load natively — just follow the instructions |
-| Dispatch a subagent (`Subagent (general-purpose):` template) | `spawn_agent` (see [Subagent dispatch requires multi-agent support](#subagent-dispatch-requires-multi-agent-support)) |
+| Dispatch a subagent (`Subagent (general-purpose):` template) | `spawn_agent` (see [Subagent dispatch](#subagent-dispatch)) |
 | Multiple parallel dispatches | Multiple `spawn_agent` calls in one response |
 | Wait for subagent result | `wait_agent` |
 | Free up subagent slot when done | `close_agent` |
@@ -26,18 +26,31 @@ When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`**
 
 User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
 
-## Subagent dispatch requires multi-agent support
+## Subagent dispatch
 
-Add to your Codex config (`~/.codex/config.toml`):
+Only spawn subagents when the human partner explicitly asks for subagents,
+delegation, or parallel agent work. If `spawn_agent` is not visible in the
+initial tool list, do **not** conclude that subagents are unavailable yet:
+some Codex surfaces expose multi-agent tools through deferred discovery.
+
+When explicit subagent authorization is present and `spawn_agent` is not
+already visible, use `tool_search` when available to search deferred tools for
+`multi-agent subagent spawn_agent`. If the multi-agent tools appear, use
+`spawn_agent`, `wait_agent`, and `close_agent` normally. Some Codex App
+sessions expose these as namespaced tools such as `multi_agent_v1.spawn_agent`.
+If discovery still does not expose them, then report that native subagent
+dispatch is unavailable in the current session and fall back to the sequential
+workflow.
+
+Legacy note: older Codex builds may require adding this to
+`~/.codex/config.toml`:
 
 ```toml
 [features]
 multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
-
-Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
+Historical note: Codex builds before `rust-v0.115.0` exposed spawned-agent
 waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The
 `wait` name now belongs to code-mode `exec/wait`, which resumes a yielded exec
 cell by `cell_id`; it is not the spawned-agent result tool.
