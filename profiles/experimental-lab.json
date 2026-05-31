@@ -1,0 +1,12 @@
+{
+  "profile_id": "experimental-lab",
+  "authority_class": "experimental",
+  "controlled_profile": false,
+  "version": "v1",
+  "skills": [],
+  "promotion_gate": {
+    "requires_registry_metadata": true,
+    "requires_evaluation_status": "experimental",
+    "requires_controller_import": false
+  }
+}

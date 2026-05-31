@@ -1,0 +1,12 @@
+{
+  "profile_id": "personal-utility",
+  "authority_class": "personal",
+  "controlled_profile": false,
+  "version": "v1",
+  "skills": [],
+  "promotion_gate": {
+    "requires_registry_metadata": true,
+    "requires_evaluation_status": "reviewed",
+    "requires_controller_import": false
+  }
+}

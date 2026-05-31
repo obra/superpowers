@@ -1,0 +1,12 @@
+{
+  "profile_id": "itradeaims-control",
+  "authority_class": "control",
+  "controlled_profile": true,
+  "version": "v1",
+  "skills": [],
+  "promotion_gate": {
+    "requires_registry_metadata": true,
+    "requires_evaluation_status": "accepted",
+    "requires_controller_import": true
+  }
+}

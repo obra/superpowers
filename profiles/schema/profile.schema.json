@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["profile_id", "authority_class", "controlled_profile", "version", "skills", "promotion_gate"],
+  "additionalProperties": false,
+  "properties": {
+    "profile_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "authority_class": { "type": "string", "enum": ["methodology", "control", "product-runtime", "personal", "experimental"] },
+    "controlled_profile": { "type": "boolean" },
+    "version": { "type": "string", "pattern": "^v[0-9]+$" },
+    "skills": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "uniqueItems": true
+    },
+    "promotion_gate": {
+      "type": "object",
+      "required": ["requires_registry_metadata", "requires_evaluation_status", "requires_controller_import"],
+      "additionalProperties": false,
+      "properties": {
+        "requires_registry_metadata": { "type": "boolean" },
+        "requires_evaluation_status": { "type": "string" },
+        "requires_controller_import": { "type": "boolean" }
+      }
+    }
+  }
+}
