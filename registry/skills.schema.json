@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/immy2good/itradeaims-skills/registry/skills.schema.json",
+  "title": "iTradeAIMS Skills Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_from", "skills"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "itradeaims-skills-registry-v1"
+    },
+    "generated_from": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["upstream_url", "upstream_ref", "fork_ref"],
+      "properties": {
+        "upstream_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "upstream_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fork_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skill"
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "skill_id",
+        "display_name",
+        "upstream_family",
+        "upstream_url",
+        "license",
+        "overlay_id",
+        "supported_runtimes",
+        "authority_class",
+        "skill_type",
+        "degree_of_freedom",
+        "evaluation_status",
+        "evidence_refs"
+      ],
+      "properties": {
+        "skill_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upstream_family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upstream_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overlay_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supported_runtimes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["codex", "claude"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "authority_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skill_type": {
+          "type": "string",
+          "enum": ["technique", "pattern", "reference", "discipline", "workflow"]
+        },
+        "degree_of_freedom": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "evaluation_status": {
+          "type": "string",
+          "enum": ["accepted", "reviewed", "experimental", "exempt-reference-only", "missing"]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

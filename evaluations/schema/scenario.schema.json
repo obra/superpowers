@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["scenario_id", "profile_id", "skill_id", "runtime", "prompt", "expected_behavior", "deterministic_checks"],
+  "additionalProperties": false,
+  "properties": {
+    "scenario_id": { "type": "string" },
+    "profile_id": { "type": "string" },
+    "skill_id": { "type": "string" },
+    "runtime": { "type": "string" },
+    "prompt": { "type": "string" },
+    "expected_behavior": { "type": "array", "items": { "type": "string" } },
+    "deterministic_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "assertion"],
+        "additionalProperties": false,
+        "properties": {
+          "check_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "assertion": { "type": "string" }
+        }
+      }
+    }
+  }
+}

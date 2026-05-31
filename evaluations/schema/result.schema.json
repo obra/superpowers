@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["scenario_id", "runtime", "status", "trace_ref", "checks"],
+  "additionalProperties": false,
+  "properties": {
+    "scenario_id": { "type": "string" },
+    "runtime": { "type": "string" },
+    "status": { "type": "string", "enum": ["pass", "fail", "blocked", "not-run"] },
+    "trace_ref": { "type": "string" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "status", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "check_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "status": { "type": "string", "enum": ["pass", "fail", "blocked", "not-run"] },
+          "evidence": { "type": "string" }
+        }
+      }
+    }
+  }
+}
