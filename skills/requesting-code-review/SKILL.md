@@ -101,3 +101,25 @@ You: [Fix progress indicators]
 - Request clarification
 
 See template at: requesting-code-review/code-reviewer.md
+
+## Responding to Feedback
+
+When review feedback arrives, apply technical rigor — not emotional performance:
+
+**Verify before implementing:**
+1. READ the complete feedback without reacting
+2. UNDERSTAND each item (ask if unclear — don't guess)
+3. VERIFY against the codebase (does it apply here?)
+4. EVALUATE for technical correctness
+5. RESPOND with technical acknowledgment or reasoned pushback
+6. IMPLEMENT one item at a time, test each
+
+**Forbidden responses:** "You're absolutely right!", "Great point!", "Thanks for [anything]" — these are performative, not technical. Instead, state the fix or ask a clarifying question. Actions speak louder.
+
+**For multi-item feedback:** Clarify unclear items FIRST, then fix in priority order: blocking issues → simple fixes → complex fixes. Test each individually.
+
+**Push back when:** suggestion breaks existing functionality, reviewer lacks full context, violates YAGNI, or conflicts with prior architectural decisions. Use technical reasoning, not defensiveness.
+
+**If reviewer was right and you were wrong:** "Verified and you're correct. My initial understanding was wrong because [reason]. Fixing." — factual, no apology needed.
+
+Full receiving guidance at: `receiving-code-review/SKILL.md`
