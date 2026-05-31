@@ -1,5 +1,11 @@
 # Superpowers — Contributor Guidelines
 
+## iTradeAIMS Runtime Adapter Boundary
+
+This file adapts repository guidance for Claude runtimes. It does not override `AGENTS.md` or `itradeaims-agent-workflows` controller policy.
+
+For controlled iTradeAIMS repo use, follow the controller-approved profile import and installed repo `AGENTS.md` chain. Do not sync product repos directly from this Skill Source Repo.
+
 ## If You Are an AI Agent
 
 Stop. Read this section before doing anything.
