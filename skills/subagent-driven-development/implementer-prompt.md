@@ -38,6 +38,9 @@ Task tool (general-purpose):
 
     Work from: [directory]
 
+    **If your work adds/upgrades a dependency or touches secrets/`.env` files:** invoke the
+    `dependency-and-security-guardrails` skill before installing or committing.
+
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
