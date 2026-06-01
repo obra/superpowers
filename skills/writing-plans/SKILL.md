@@ -114,6 +114,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
+- Calls to external libraries/SDKs/APIs written from memory instead of verified against the real source or current docs (a hallucinated API name poisons every task built on it)
 
 ## Remember
 - Exact file paths always

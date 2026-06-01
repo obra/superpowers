@@ -56,6 +56,8 @@ Task tool (general-purpose):
       and note it as a concern in your report
     - In existing codebases, follow established patterns. Improve code you're touching
       the way a good developer would, but don't restructure things outside your task.
+    - When coding against an external library/SDK/API, search its real source or current
+      docs for the actual signatures before writing — don't guess API names from memory.
 
     ## When You're in Over Your Head
 
