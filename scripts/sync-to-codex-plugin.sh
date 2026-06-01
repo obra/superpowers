@@ -52,6 +52,7 @@ EXCLUDES=(
   "/.gitattributes"
   "/.github/"
   "/.gitignore"
+  "/.kimi-plugin/"
   "/.opencode/"
   "/.pi/"
   "/.version-bump.json"

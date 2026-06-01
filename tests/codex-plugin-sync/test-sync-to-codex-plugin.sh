@@ -175,6 +175,7 @@ write_upstream_fixture() {
 
     mkdir -p \
         "$repo/.codex-plugin" \
+        "$repo/.kimi-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
         "$repo/evals/drill" \
@@ -206,6 +207,13 @@ EOF
     fi
 
     cat > "$repo/.codex-plugin/plugin.json" <<EOF
+{
+  "name": "superpowers",
+  "version": "$MANIFEST_VERSION"
+}
+EOF
+
+    cat > "$repo/.kimi-plugin/plugin.json" <<EOF
 {
   "name": "superpowers",
   "version": "$MANIFEST_VERSION"
@@ -267,6 +275,7 @@ EOF
 
     git -C "$repo" add \
         .codex-plugin/plugin.json \
+        .kimi-plugin/plugin.json \
         .gitignore \
         assets/app-icon.png \
         assets/superpowers-small.svg \
@@ -618,6 +627,7 @@ main() {
     assert_contains "$preview_output" "Version:  $MANIFEST_VERSION" "Preview uses manifest version"
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
+    assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
