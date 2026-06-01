@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill detail · Superpowers</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <p><a href="index.html">&larr; All skills</a></p>
+    <h1 id="skill-name">Loading…</h1>
+    <p id="skill-meta" class="tagline"></p>
+  </header>
+
+  <main>
+    <section id="error-panel" class="error-panel" hidden></section>
+
+    <section class="chart-section">
+      <h2>Headline score over time</h2>
+      <div class="chart-wrapper">
+        <canvas id="history-chart" aria-label="Headline score history"></canvas>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Latest run</h2>
+      <div id="latest-detail" class="detail"></div>
+    </section>
+
+    <section class="history-section">
+      <details>
+        <summary>Full run history</summary>
+        <table id="history-table" class="history-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Commit</th>
+              <th>Score</th>
+              <th>Δ</th>
+              <th>Status</th>
+              <th>Adapter</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="index.html">All skills</a>
+      &middot;
+      <a id="raw-history" href="#">history.jsonl</a>
+      &middot;
+      <a id="raw-run" href="#">latest run JSON</a>
+    </p>
+  </footer>
+
+  <script src="assets/chart.umd.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+    window.SuperpowersDashboard.initSkillPage();
+  </script>
+</body>
+</html>

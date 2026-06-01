@@ -473,6 +473,116 @@ Describe 'build-manifest.ps1' {
         $m.skills[0].latest.delta_from_previous | Should -BeNullOrEmpty
         $m.skills[0].pattern | Should -BeNullOrEmpty
     }
+
+    It 'emits the resolved repository identifier when provided explicitly' {
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages -Repository 'owner/repo' | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        $m.repository | Should -Be 'owner/repo'
+    }
+
+    It 'reads the repository from $env:GITHUB_REPOSITORY when not explicit' {
+        $prev = $env:GITHUB_REPOSITORY
+        $env:GITHUB_REPOSITORY = 'fromenv/repo'
+        try {
+            & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages | Out-Null
+        } finally {
+            if ($null -ne $prev) { $env:GITHUB_REPOSITORY = $prev } else { Remove-Item Env:\GITHUB_REPOSITORY -ErrorAction SilentlyContinue }
+        }
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        $m.repository | Should -Be 'fromenv/repo'
+    }
+
+    It 'emits sparkline with trailing scores and statuses' {
+        $lines = @()
+        for ($i = 1; $i -le 5; $i++) {
+            $score = 50 + $i
+            $lines += "{`"commit`":`"c$i`",`"short_sha`":`"c$i`",`"timestamp`":`"t$i`",`"pattern`":`"A`",`"headline_score`":$score.0,`"status`":`"ok`",`"adapter`":`"smoke`",`"detail_file`":`"runs/x$i.json`"}"
+        }
+        Write-Jsonl (Join-Path $Pages 'data/code-review/history.jsonl') $lines
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        @($m.skills[0].sparkline).Count | Should -Be 5
+        @($m.skills[0].sparkline)[0].headline_score | Should -Be 51.0
+        @($m.skills[0].sparkline)[4].headline_score | Should -Be 55.0
+        @($m.skills[0].sparkline)[4].status | Should -Be 'ok'
+        @($m.skills[0].sparkline)[4].short_sha | Should -Be 'c5'
+    }
+
+    It 'limits sparkline to SparklineLength trailing rows' {
+        $lines = @()
+        for ($i = 1; $i -le 25; $i++) {
+            $lines += "{`"commit`":`"c$i`",`"short_sha`":`"c$i`",`"timestamp`":`"t$i`",`"pattern`":`"A`",`"headline_score`":$i.0,`"status`":`"ok`",`"adapter`":`"smoke`",`"detail_file`":`"runs/x$i.json`"}"
+        }
+        Write-Jsonl (Join-Path $Pages 'data/code-review/history.jsonl') $lines
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages -SparklineLength 10 | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        @($m.skills[0].sparkline).Count | Should -Be 10
+        @($m.skills[0].sparkline)[0].headline_score | Should -Be 16.0
+        @($m.skills[0].sparkline)[9].headline_score | Should -Be 25.0
+        $m.sparkline_length | Should -Be 10
+    }
+
+    It 'computes biggest_drop_last_10 ignoring error rows' {
+        Write-Jsonl (Join-Path $Pages 'data/code-review/history.jsonl') @(
+            '{"commit":"a","short_sha":"a","timestamp":"t1","pattern":"A","headline_score":80.0,"status":"ok","adapter":"smoke","detail_file":"runs/a.json"}',
+            '{"commit":"b","short_sha":"b","timestamp":"t2","pattern":null,"headline_score":null,"status":"error","error":"boom","detail_file":null}',
+            '{"commit":"c","short_sha":"c","timestamp":"t3","pattern":"A","headline_score":60.0,"status":"ok","commit_message":"break it","adapter":"smoke","detail_file":"runs/c.json"}'
+        )
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        $drop = $m.skills[0].biggest_drop_last_10
+        $drop | Should -Not -BeNullOrEmpty
+        $drop.from | Should -Be 80.0
+        $drop.to | Should -Be 60.0
+        $drop.delta | Should -Be -20
+        $drop.short_sha | Should -Be 'c'
+        $drop.commit_message | Should -Be 'break it'
+    }
+
+    It 'returns null biggest_drop when no negative transitions exist' {
+        Write-Jsonl (Join-Path $Pages 'data/code-review/history.jsonl') @(
+            '{"commit":"a","short_sha":"a","timestamp":"t1","pattern":"A","headline_score":50.0,"status":"ok","adapter":"smoke","detail_file":"runs/a.json"}',
+            '{"commit":"b","short_sha":"b","timestamp":"t2","pattern":"A","headline_score":75.0,"status":"ok","adapter":"smoke","detail_file":"runs/b.json"}'
+        )
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        $m.skills[0].biggest_drop_last_10 | Should -BeNullOrEmpty
+        $m.worst_recent_drop | Should -BeNullOrEmpty
+    }
+
+    It 'surfaces the worst per-skill drop as worst_recent_drop globally' {
+        Write-Jsonl (Join-Path $Pages 'data/code-review/history.jsonl') @(
+            '{"commit":"a","short_sha":"a","timestamp":"t1","pattern":"A","headline_score":90.0,"status":"ok","adapter":"smoke","detail_file":"runs/a.json"}',
+            '{"commit":"b","short_sha":"b","timestamp":"t2","pattern":"A","headline_score":85.0,"status":"ok","adapter":"smoke","detail_file":"runs/b.json"}'
+        )
+        Write-Jsonl (Join-Path $Pages 'data/threat-modeling/history.jsonl') @(
+            '{"commit":"x","short_sha":"x","timestamp":"t1","pattern":"A","headline_score":70.0,"status":"ok","adapter":"smoke","detail_file":"runs/x.json"}',
+            '{"commit":"y","short_sha":"y","timestamp":"t2","pattern":"A","headline_score":40.0,"status":"ok","adapter":"smoke","detail_file":"runs/y.json"}'
+        )
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        $m.worst_recent_drop | Should -Not -BeNullOrEmpty
+        $m.worst_recent_drop.skill | Should -Be 'threat-modeling'
+        $m.worst_recent_drop.delta | Should -Be -30
+    }
+
+    It 'respects RegressionWindow when scanning trailing transitions' {
+        # Older very-large drop should be ignored when window=2 keeps only
+        # the most recent transition.
+        Write-Jsonl (Join-Path $Pages 'data/code-review/history.jsonl') @(
+            '{"commit":"a","short_sha":"a","timestamp":"t1","pattern":"A","headline_score":90.0,"status":"ok","adapter":"smoke","detail_file":"runs/a.json"}',
+            '{"commit":"b","short_sha":"b","timestamp":"t2","pattern":"A","headline_score":10.0,"status":"ok","adapter":"smoke","detail_file":"runs/b.json"}',
+            '{"commit":"c","short_sha":"c","timestamp":"t3","pattern":"A","headline_score":15.0,"status":"ok","adapter":"smoke","detail_file":"runs/c.json"}',
+            '{"commit":"d","short_sha":"d","timestamp":"t4","pattern":"A","headline_score":12.0,"status":"ok","adapter":"smoke","detail_file":"runs/d.json"}'
+        )
+        & pwsh -NoProfile -File $BuildPs1 -PagesDir $Pages -RegressionWindow 2 | Out-Null
+        $m = Get-Content (Join-Path $Pages 'data/manifest.json') -Raw | ConvertFrom-Json
+        $drop = $m.skills[0].biggest_drop_last_10
+        $drop | Should -Not -BeNullOrEmpty
+        # Only b→c (+5) and c→d (-3) are in window; only -3 is a drop.
+        $drop.delta | Should -Be -3
+        $drop.short_sha | Should -Be 'd'
+    }
 }
 
 # ============================================================================

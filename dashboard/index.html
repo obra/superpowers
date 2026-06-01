@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Superpowers Skill Scoreboard</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Superpowers Skill Scoreboard</h1>
+    <p class="tagline">Per-commit eval scores for each skill. Lower bars and red borders mean regressions.</p>
+  </header>
+
+  <main>
+    <section id="callout" class="callout" hidden></section>
+    <section id="error-panel" class="error-panel" hidden></section>
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>No skill scores yet</h2>
+      <p>Once the <code>skill-eval</code> workflow runs against a code change,
+         scores will appear here.</p>
+    </section>
+    <section id="grid" class="grid" aria-live="polite"></section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a id="how-link" href="#">How is the score computed?</a>
+      &middot;
+      <a id="raw-manifest" href="data/manifest.json">manifest.json</a>
+      &middot;
+      <span id="generated-at"></span>
+    </p>
+  </footer>
+
+  <script src="assets/app.js"></script>
+  <script>
+    window.SuperpowersDashboard.initLanding();
+  </script>
+</body>
+</html>

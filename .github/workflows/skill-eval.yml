@@ -27,6 +27,7 @@ jobs:
     outputs:
       skills: ${{ steps.detect.outputs.skills }}
       count: ${{ steps.detect.outputs.count }}
+      dashboard_changed: ${{ steps.dashboard.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,6 +53,36 @@ jobs:
           Write-Host "Count: $count"
           "skills=$json" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "count=$count"  | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Detect dashboard changes
+        id: dashboard
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          # Dashboard-only commits must still publish so changes reach
+          # gh-pages without an eval re-run. On the initial commit (no
+          # HEAD^) or any manual dispatch, assume true so the bootstrap
+          # publish step runs.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git rev-parse --verify --quiet "HEAD^{commit}" >/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git rev-parse --verify --quiet "HEAD^^{commit}" >/dev/null; then
+            # Repo has only one commit — sweep dashboard.
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed_paths=$(git diff --name-only HEAD^ HEAD || true)
+          if echo "$changed_paths" | grep -qE '^dashboard/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
   eval:
     needs: detect-changed-skills
@@ -169,7 +200,7 @@ jobs:
 
   publish:
     needs: [detect-changed-skills, eval]
-    if: ${{ always() && needs.detect-changed-skills.outputs.count != '0' }}
+    if: ${{ always() && (needs.detect-changed-skills.outputs.count != '0' || needs.detect-changed-skills.outputs.dashboard_changed == 'true') }}
     runs-on: ubuntu-latest
     concurrency:
       group: gh-pages-publish
@@ -180,6 +211,7 @@ jobs:
           path: source
 
       - name: Download all eval artifacts
+        if: ${{ needs.detect-changed-skills.outputs.count != '0' }}
         uses: actions/download-artifact@v4
         with:
           path: _artifacts
@@ -251,7 +283,20 @@ jobs:
               -CommitAuthor $author `
               -WorkflowRunUrl $runUrl
           }
-          & ./source/scripts/build-manifest.ps1 -PagesDir _pages
+          & ./source/scripts/build-manifest.ps1 -PagesDir _pages -Repository $env:GITHUB_REPOSITORY
+
+      - name: Sync dashboard files onto gh-pages
+        shell: pwsh
+        run: |
+          # Mirror source/dashboard/ onto the gh-pages root, but scope the
+          # mirror so we never delete data/, .nojekyll, or README.md.
+          # Implementation: copy each top-level dashboard file/dir into the
+          # pages checkout, and prune any stale files inside dashboard-owned
+          # subtrees (currently only assets/) that no longer exist in
+          # source/dashboard/.
+          & ./source/scripts/sync-dashboard.ps1 `
+              -SourceDir ./source/dashboard `
+              -PagesDir _pages
 
       - name: Commit + push gh-pages
         shell: pwsh

@@ -103,19 +103,39 @@ See `evals/_docs/run-eval-contract.md` for the full schema and
     `skills: foo,bar` uses `-FullSweep -OnlySkills foo,bar`.
 - `wrap-eval-output.ps1` — wraps a shard's contract files + git metadata
   into the publishable `history.jsonl` row and `runs/<ts>-<sha>.json`.
-- `build-manifest.ps1` — sweeps `data/<skill>/history.jsonl` last lines
-  into `data/manifest.json`.
+- `build-manifest.ps1` — sweeps `data/<skill>/history.jsonl` into
+  `data/manifest.json`. Emits per-skill `sparkline` (trailing N rows),
+  `biggest_drop_last_10` per skill, and a global `worst_recent_drop`.
+  Resolves the `repository` field from `-Repository` > `$env:GITHUB_REPOSITORY`
+  > parsing `git remote get-url origin` (used by the dashboard for
+  commit-link construction).
+- `sync-dashboard.ps1` — copies the dashboard sources from `dashboard/`
+  on `main` onto the `gh-pages` checkout. Mirrors `index.html`,
+  `skill.html`, and `assets/**`; prunes stale files inside `assets/`;
+  never touches `data/`, `.nojekyll`, the root `README.md`, or anything
+  outside dashboard-owned paths.
 - `init-gh-pages.ps1` — one-shot helper to create the empty `gh-pages`
   orphan branch (must be run once per fresh repo before the workflow can
-  publish anything).
+  publish anything). Dashboard files appear on the first workflow run
+  after that.
 
 **Workflow:** `.github/workflows/skill-eval.yml` (three jobs:
-detect-changed-skills → eval matrix → publish).
+detect-changed-skills → eval matrix → publish). The publish job also
+runs when only `dashboard/**` changes, so dashboard tweaks reach
+`gh-pages` without forcing an eval re-run.
 
 **Run the Pester tests for the workflow scripts:**
 
 ```powershell
-Invoke-Pester -Path tests/skill-eval/SkillEval.Tests.ps1 -Output Detailed
+Invoke-Pester -Path tests/skill-eval/ -Output Detailed
+```
+
+**Run the dashboard JS unit tests (node, no browser needed):**
+
+```powershell
+Invoke-Pester -Path tests/dashboard/ -Output Detailed
+# or directly:
+node tests/dashboard/app-tests.mjs
 ```
 
 **Locally exercise the code-review reference run-eval (smoke adapter):**
@@ -178,4 +198,37 @@ https://github.com/settings/personal-access-tokens/new and save it as
 
 When `EVAL_ADAPTER` does NOT contain `copilot`, the install steps are
 skipped to keep CI fast and free.
+
+## Eval dashboard (`dashboard/`)
+
+Issue #8 adds a static GitHub Pages dashboard at the `gh-pages` root
+that visualizes the JSON data the per-commit workflow publishes.
+
+- Source files live in `dashboard/` on `main`:
+  - `index.html` — landing page (skill grid + biggest-recent-regression callout)
+  - `skill.html` — drill-down (`?name=<skill>`), Chart.js line chart, pattern-A detail table, generic-fallback for other patterns
+  - `assets/{app.js,styles.css,chart.umd.js,LICENSE.chartjs.md}`
+  - `README.md` — vendoring + local-smoke instructions
+- Vendored Chart.js v4.5.1 (MIT) lives at `dashboard/assets/chart.umd.js`.
+  Source URL + SHA-256 are recorded in `dashboard/README.md`.
+- The workflow's `publish` job calls `scripts/sync-dashboard.ps1` to
+  mirror these onto `gh-pages` after writing `data/`. Scoped pruning
+  means stale `assets/*` files are removed but `data/`, `.nojekyll`, and
+  the root `README.md` are preserved.
+- All data is rendered via `textContent` / DOM APIs (no `innerHTML`
+  interpolation with user-supplied strings) and all paths are relative,
+  so the dashboard works at any Pages base path and is XSS-resistant.
+- Repo identity (for commit URLs) comes from `manifest.repository`,
+  never `window.location` — preventing brittleness on custom domains,
+  user-pages sites, and forks.
+
+**Run JS unit tests + dashboard sync tests:**
+
+```powershell
+Invoke-Pester -Path tests/dashboard/, tests/skill-eval/Dashboard.Tests.ps1 -Output Detailed
+```
+
+**Local smoke test the dashboard against fake data:** see the recipe in
+`dashboard/README.md`. Requires a real static server — `file://` won't
+work because browsers block local `fetch()`.
 
