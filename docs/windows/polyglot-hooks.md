@@ -174,7 +174,7 @@ CMD couldn't find bash in any of the three locations the dispatcher tries. The d
 
 ### Hook runs on Unix but does nothing on Windows
 
-Check that the script filename is **extensionless** in `hooks.json`. A command like `run-hook.cmd session-start.sh` will fail silently because Claude Code prepends `bash` to the whole dispatcher command when it sees `.sh`.
+Check that the script filename is **extensionless** in `hooks.json`. A command like `run-hook.cmd session-start.sh` can trigger Claude Code's `.sh` auto-detection and bypass the intended CMD dispatcher path, or just try to run a non-existent `session-start.sh` script.
 
 ### Hook doesn't fire at all
 
