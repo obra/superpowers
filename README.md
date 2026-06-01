@@ -159,19 +159,7 @@ Superpowers is available in Kimi Code's plugin marketplace.
   /plugins
   ```
 
-- Search for Superpowers and install it.
-
-- To install from this repository instead:
-
-  ```text
-  /plugins install https://github.com/obra/superpowers
-  ```
-
-- For unreleased validation against `dev`:
-
-  ```text
-  /plugins install https://github.com/obra/superpowers/tree/dev
-  ```
+- Go to `Marketplace` > `Superpowers` and install it.
 
 - Detailed docs: [docs/README.kimi.md](docs/README.kimi.md)
 
