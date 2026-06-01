@@ -23,7 +23,7 @@ if [[ -f "$PID_FILE" ]]; then
   kill "$pid" 2>/dev/null || true
 
   # Wait for graceful shutdown (up to ~2s)
-  for i in {1..20}; do
+  for _ in {1..20}; do
     if ! kill -0 "$pid" 2>/dev/null; then
       break
     fi

@@ -37,7 +37,10 @@ TEST_PROJECT=$(create_test_project)
 echo "Test project: $TEST_PROJECT"
 
 # Trap to cleanup
-trap "cleanup_test_project $TEST_PROJECT" EXIT
+cleanup_integration_test_project() {
+    cleanup_test_project "$TEST_PROJECT"
+}
+trap cleanup_integration_test_project EXIT
 
 # Set up minimal Node.js project
 cd "$TEST_PROJECT"
@@ -164,12 +167,19 @@ PLUGIN_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 # other concurrent claude sessions.
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
-cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+set +e
+(
+    cd "$TEST_PROJECT" &&
+        timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions
+) 2>&1 | tee "$OUTPUT_FILE"
+execution_status=$?
+set -e
+if [[ "$execution_status" -ne 0 ]]; then
     echo ""
     echo "================================================================================"
-    echo "EXECUTION FAILED (exit code: $?)"
+    echo "EXECUTION FAILED (exit code: $execution_status)"
     exit 1
-}
+fi
 echo "================================================================================"
 
 echo ""
