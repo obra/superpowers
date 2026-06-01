@@ -104,8 +104,8 @@ Task tool (general-purpose):
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
     - **TDD Evidence** (if TDD was required for this task):
-      - RED: paste the exact test failure output before you wrote the implementation
-      - GREEN: paste the test pass output after implementation
+      - RED: command run, relevant failing output before implementation, and why the failure was expected
+      - GREEN: command run and relevant passing output after implementation
     - Files changed
     - Self-review findings (if any)
     - Any issues or concerns
