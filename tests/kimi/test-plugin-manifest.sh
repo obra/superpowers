@@ -42,9 +42,28 @@ for token in [
     "Write",
     "Edit",
     "Bash",
+    "Grep",
+    "Glob",
+    "FetchURL",
     "WebSearch",
 ]:
     assert_present(instructions, token, "skillInstructions")
+
+version_config = json.loads(
+    (manifest_path.parents[1] / ".version-bump.json").read_text(encoding="utf-8")
+)
+version_entries = version_config.get("files")
+if not isinstance(version_entries, list):
+    raise AssertionError(".version-bump.json must contain files list")
+
+if not any(
+    entry.get("path") == ".kimi-plugin/plugin.json" and entry.get("field") == "version"
+    for entry in version_entries
+    if isinstance(entry, dict)
+):
+    raise AssertionError(
+        ".version-bump.json must update .kimi-plugin/plugin.json version"
+    )
 
 unsupported_fields = [
     "tools",
