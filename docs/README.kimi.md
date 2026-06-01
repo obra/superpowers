@@ -12,7 +12,7 @@ Open the plugin manager:
 /plugins
 ```
 
-Search for Superpowers and install it.
+Go to `Marketplace` > `Superpowers` and install it.
 
 You can also install from this repository:
 
@@ -50,6 +50,9 @@ Skills describe actions instead of hard-coding one runtime's tool names. On Kimi
 - "Invoke a skill" -> Kimi Code's native `Skill` tool
 - "Read a file" / "write a file" / "edit a file" -> `Read`, `Write`, `Edit`
 - "Run a shell command" -> `Bash`
+- "Search file contents" -> `Grep`
+- "Find files by path or pattern" -> `Glob`
+- "Fetch a URL" -> `FetchURL`
 - "Search the web" -> `WebSearch`
 
 ## Updating

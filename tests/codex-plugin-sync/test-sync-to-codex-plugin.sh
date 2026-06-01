@@ -424,10 +424,15 @@ EOF
 write_stale_ignored_destination_fixture() {
     local repo="$1"
 
-    mkdir -p "$repo/plugins/superpowers/.private-journal"
+    mkdir -p \
+        "$repo/plugins/superpowers/.kimi-plugin" \
+        "$repo/plugins/superpowers/.private-journal"
     printf 'fixture keep\n' > "$repo/plugins/superpowers/.fixture-keep"
+    printf '{"name":"stale-kimi"}\n' > "$repo/plugins/superpowers/.kimi-plugin/plugin.json"
     printf 'stale ignored leak\n' > "$repo/plugins/superpowers/.private-journal/leak.txt"
-    git -C "$repo" add plugins/superpowers/.fixture-keep
+    git -C "$repo" add \
+        plugins/superpowers/.fixture-keep \
+        plugins/superpowers/.kimi-plugin/plugin.json
 
     commit_fixture "$repo" "Initial stale ignored destination fixture"
 }
@@ -654,6 +659,7 @@ main() {
     echo ""
     echo "Convergence assertions..."
     assert_equals "$stale_preview_status" "0" "Stale ignored destination preview exits successfully"
+    assert_matches "$stale_preview_section" "\\*deleting +\\.kimi-plugin/plugin\\.json" "Preview deletes stale Kimi manifest from Codex plugin"
     assert_matches "$stale_preview_section" "\\*deleting +\\.private-journal/leak\\.txt" "Preview deletes stale ignored destination file"
 
     echo ""
