@@ -124,10 +124,19 @@ and reuse that fallback wording when it doesn't.
 ### You may not need a new directory at all
 
 Some "new harnesses" are really existing integrations under a different
-installer. Factory's Droid, for example, consumes the Claude Code plugin via its
-own `plugin install` command and needs no new files here. Before building,
-check whether the harness can simply load an existing manifest. A port that adds
-nothing to this repo but a paragraph in the README is a perfectly good outcome.
+installer. Factory's Droid consumes the Claude Code plugin via its own `plugin
+install` command and needs no new files here. Antigravity (`agy`) goes further:
+`agy plugin install <repo-url>` imports the Claude Code plugin's skills **and its
+`SessionStart` hook, which agy then runs** — so the bootstrap fires the Shape-A
+way (Part 4) with no new manifest, hook config, or installer. Its entire
+integration is a tool-mapping reference plus a README section.
+
+**So before building anything, install the existing Claude Code (or Gemini)
+plugin into the harness and run the acceptance test (Part 3).** If the harness
+already loads the skills and runs the hook, you are done — a port that adds
+nothing to this repo but a tool mapping and a README paragraph is a perfectly
+good outcome. Don't assume a derived harness needs its own bootstrap mechanism
+until you've watched the existing one fail.
 
 ---
 
@@ -203,6 +212,14 @@ had to do every one of these):
 (e.g. a Gemini-derived CLI) may expose the parent's manifest fields and
 `@`-include syntax and *still not honor them the same way*. Verify with a marker;
 never assume the parent's recipe transfers.
+
+**The inverse also bites: a derived harness may inherit *more* than you expect.**
+Antigravity runs the Claude Code plugin's `SessionStart` hook even though `agy`'s
+own plugin docs describe a different model — and we nearly built a whole
+context-file scaffold on the false premise that it had no session-start hook.
+Test the cheap path first: install the existing Claude Code (or Gemini) plugin
+and run the acceptance test (Part 3) *before* writing any harness-specific
+bootstrap.
 
 Then route to a shape:
 
@@ -290,10 +307,12 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Codex (`hooks/session-start-codex` + `hooks/hooks-codex.json` + `.codex-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
+| installs an existing harness's plugin directly, including its hook | none — no new files | Antigravity (`agy plugin install <repo-url>` imports the Claude Code `skills/` + `hooks/` and runs the `SessionStart` hook), Factory Droid |
 
-Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
-holds — the bootstrap rides the install mechanism, never a user-config edit).
+Most real harnesses fit one row cleanly. The last row is the cheapest outcome and
+the one to rule out first (Part 2): if the harness just runs the existing plugin,
+you write almost nothing. Rule 2 still holds in every row — the bootstrap rides
+the install mechanism, never a user-config edit.
 
 ---
 
@@ -480,8 +499,9 @@ path field is **ignored** — one real harness only scanned a `skills/` sitting 
 to `plugin.json`); an API/registration call (OpenCode, pi); or you stage an
 install dir that pairs the manifest with a **symlink to the repo's `skills/`** and
 point the installer at the staging dir (verify the installer *dereferences* the
-symlink and copies the real files — confirm with `agy plugin validate`/`install`
-or the equivalent before relying on it). A `skills` path field is *not* portable.
+symlink and copies the real files — confirm with the harness's own
+`validate`/`install` command before relying on it). A `skills` path field is *not*
+portable.
 
 Where the mapping lives depends on shape:
 
@@ -524,11 +544,14 @@ honors the rule rather than breaking it. Distinguish three cases:
    the file-read tool when the skill applies** — the sanctioned mechanism here,
    the way `references/pi-tools.md` states it.
 
-   **For the bootstrap itself, prefer a declared context file (Part 6).** If the
-   harness has a `contextFileName`-style manifest field — as Antigravity does —
-   ship a generated context file through the installer: it's guaranteed-loaded and
-   carries both the `using-superpowers` content and the tool mapping. That is the
-   strong, preferred path.
+   **For the bootstrap itself, first check for an inherited hook (Part 2).** If the
+   harness runs the existing Claude Code plugin's `SessionStart` hook — Antigravity
+   does; test it before assuming otherwise — the bootstrap is already delivered and
+   you ship nothing. Only if it doesn't, and the harness has a `contextFileName`-style
+   manifest field, point that field at the real `using-superpowers/SKILL.md` (or a
+   tiny committed `@`-include file like `GEMINI.md`). **Never generate a wrapped copy
+   of the bootstrap at install time:** a generated copy needs an installer and drifts
+   from source. You get to name the file, so name the real one.
 
    **Fallback — the surfaced skill index.** If there's no context-file field but
    the harness surfaces each installed skill's name + description at session start,
@@ -677,7 +700,7 @@ it. Distribution differs per harness ecosystem — find yours:
 | External marketplace fork, synced by script | Codex | `scripts/sync-to-codex-plugin.sh` rsyncs the tracked plugin files into a separate fork repo and opens a PR. Read its include/exclude list so you ship the right tree (it deliberately drops repo-internal dirs and other harnesses' dotdirs). |
 | Git-URL extension install | Gemini, OpenCode | Users install from a git URL (`gemini extensions install …`; an `opencode.json` `plugin` array entry). Document the exact command. |
 | Package-manifest fields | pi | Declared through fields in the repo-root `package.json`; users install via the harness's package command. |
-| Local installer (plugin install) | Antigravity (`agy`) | A small `install.sh` that runs the harness's own `agy plugin install` against a staging dir holding the manifest, the skills, and a generated `contextFileName` context file (the bootstrap). Everything arrives through the install mechanism — *not* by editing the user's config (see below). |
+| Existing plugin, installed directly | Antigravity (`agy`), Factory Droid | The harness installs another harness's committed plugin from a git URL — `agy plugin install <repo-url>` imports the Claude Code `skills/` + `hooks/` and runs the `SessionStart` hook. No installer script, no new manifest: document the one-line install command. |
 
 Then:
 
@@ -685,29 +708,33 @@ Then:
   bootstrap a file the installer *recognizes*, never a user-config edit.** A
   `plugin install` typically copies only the components it knows about
   (skills/agents/commands/mcp/hooks/context) and discards anything else, so a
-  context file the manifest doesn't declare just vanishes from the install. The
-  fix is **not** to give up and write into the user's config (**rule 2**) — it's
-  to declare the bootstrap as a recognized component. In escalation order:
-  - **Ship a context file the manifest declares.** If the harness has a
-    `contextFileName`-style field (an extension-declared file it loads every
-    session), that is the strongest clean bootstrap: declare it, and the installer
-    preserves it *and* the harness loads it. Generate it at install time from the
-    live `using-superpowers/SKILL.md` + the tool mapping (wrapped in
-    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts. This is what
-    `.antigravity-plugin/install.sh` does — `agy plugin install` reports
-    `✔ context : ANTIGRAVITY.md`, and a clean session reads `using-superpowers`'s
-    SKILL.md, loads `brainstorming`, and enters the brainstorming flow before any
-    code. **Verify with a marker** that the installer keeps the file and the
-    harness loads it: one porter wrongly concluded it couldn't, because they
-    shipped the file *without* declaring `contextFileName` and it was stripped as
-    unrecognized.
+  file the manifest doesn't declare just vanishes from the install. The fix is
+  **not** to give up and write into the user's config (**rule 2**) — it's to make
+  the bootstrap a recognized component. In escalation order:
+  - **Check for an inherited hook first.** If `plugin install` imports an existing
+    Claude Code plugin's `hooks/` and the harness runs the `SessionStart` hook,
+    the bootstrap is already delivered and you ship nothing. Antigravity does
+    exactly this — `agy plugin install <repo-url>` brings in the skills and the
+    hook, and a clean session loads `using-superpowers`, triggers `brainstorming`,
+    and enters the brainstorming flow before any code. Verify with the acceptance
+    test. This is the cheapest and most robust path; rule it out before the rest.
+  - **Otherwise, if the manifest declares a context file, point it at the real
+    skill.** A `contextFileName`-style field names a file the installer preserves
+    and the harness loads every session. Point it straight at
+    `using-superpowers/SKILL.md`, or at a tiny committed `@`-include file like
+    `GEMINI.md` if the harness expands includes (prove the expansion — Shape C
+    caveat). **Do not generate a wrapped copy of the bootstrap at install time:**
+    that needs an installer and can drift from source. You get to name the file,
+    so name the real one. **Verify with a marker** that the installer keeps the
+    file and the harness loads it — an undeclared file is stripped as unrecognized.
   - **Otherwise lean on the installed `using-superpowers` skill itself.** If the
     harness surfaces each installed skill's name + description at session start,
     the `using-superpowers` description ("Use when starting any conversation…")
     can prompt the model to load it — installing the skill *is* the bootstrap.
     Softer (no guaranteed wrapper; it carries triggering but not the tool mapping
-    — see Step 5), so prefer the declared context file when available.
-  - If neither works, the harness cannot be cleanly supported yet — **say so**
+    — see Step 5), so prefer an inherited hook or a declared context file when
+    available.
+  - If none works, the harness cannot be cleanly supported yet — **say so**
     and raise it, rather than hand-editing the user's config.
 
 - **Write install docs.** A `docs/README.<harness>.md` and/or a
@@ -785,6 +812,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
 | Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; `references/claude-code-tools.md` | `tests/hooks/` | marketplace |
+| Antigravity (`agy`) | none — installs the Claude Code plugin | `agy plugin install <repo-url>` imports `skills/` + `hooks/` and runs the Claude Code `SessionStart` hook | no `Skill` tool; load via `view_file` on `SKILL.md`; `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install <git-url>` (README) |
 | Codex | `.codex-plugin/plugin.json` + `hooks/hooks-codex.json` | shell hook → `hooks/session-start-codex` | `references/codex-tools.md` | `tests/codex-plugin-sync/`, `tests/hooks/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | `references/claude-code-tools.md` | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | `references/copilot-tools.md` | `tests/hooks/` | — |
@@ -796,6 +824,14 @@ Use this as the live index; when in doubt, read the files, not this table.
 
 - **Opt-in isn't a port.** If your human partner has to do anything per session
   to get Superpowers, the acceptance test fails. Re-read Part 2.
+- **Assuming a derived harness lacks the parent's hook.** Antigravity runs the
+  Claude Code `SessionStart` hook; we nearly shipped a whole context-file scaffold
+  on the false premise that it didn't. Install the existing plugin and run the
+  acceptance test before building any bootstrap mechanism (Part 2).
+- **Generating a wrapped bootstrap copy at install time.** If a manifest's
+  `contextFileName` lets you name the file, point it at the real
+  `using-superpowers/SKILL.md` (or a committed `@`-include file). A generated copy
+  needs an installer and drifts from source (Part 6).
 - **Wrong JSON field → silent failure or double injection.** Shape A only.
   Confirm the exact field/nesting; Claude Code reads two fields without dedup.
 - **Hook-config schema varies per harness.** Shape A. Cursor's `hooks-cursor.json`
