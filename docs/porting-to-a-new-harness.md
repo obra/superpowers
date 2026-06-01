@@ -755,10 +755,9 @@ Two rules this enforces, which you must respect:
 - Don't write per-OS variants of the hook script. One extensionless bash script
   plus the polyglot wrapper covers all three platforms.
 
-`hooks/run-hook.cmd` itself is the authoritative implementation — read it.
-(`docs/windows/polyglot-hooks.md` covers the background and rationale but
-describes an earlier per-script `.cmd`/`.sh` variant, so trust the code over that
-doc where they differ.)
+`hooks/run-hook.cmd` itself is the authoritative implementation — read it. See
+`docs/windows/polyglot-hooks.md` for the background and rationale behind the
+dispatcher pattern.
 
 ---
 
