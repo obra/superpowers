@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Start the brainstorm server and output connection info
-# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
+# Usage: start-server.sh [--state-dir <path>] [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
 #
 # Starts server on a random high port, outputs JSON with URL.
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
-#                         instead of /tmp. Files persist after server stops.
+#   --state-dir <path>    Store session files under <path>/<session-id>/.
+#                         This is the primary persistent storage option.
+#   --project-dir <path>  Compatibility alias. Stores session files under
+#                         <path>/.superpowers/brainstorm/<session-id>/.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -17,6 +19,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Parse arguments
+STATE_ROOT=""
 PROJECT_DIR=""
 FOREGROUND="false"
 FORCE_BACKGROUND="false"
@@ -24,6 +27,10 @@ BIND_HOST="127.0.0.1"
 URL_HOST=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --state-dir)
+      STATE_ROOT="$2"
+      shift 2
+      ;;
     --project-dir)
       PROJECT_DIR="$2"
       shift 2
@@ -77,11 +84,19 @@ fi
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
-if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+DEFAULT_STATE_ROOT="${XDG_DATA_HOME:-${HOME:-/tmp}/.local/share}/superpowers/brainstorm"
+
+if [[ -n "$STATE_ROOT" ]]; then
+  :
+elif [[ -n "${SUPERPOWERS_STATE_DIR:-}" ]]; then
+  STATE_ROOT="${SUPERPOWERS_STATE_DIR}"
+elif [[ -n "$PROJECT_DIR" ]]; then
+  STATE_ROOT="${PROJECT_DIR}/.superpowers/brainstorm"
 else
-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
+  STATE_ROOT="${DEFAULT_STATE_ROOT}"
 fi
+
+SESSION_DIR="${STATE_ROOT}/${SESSION_ID}"
 
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
