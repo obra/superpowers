@@ -28,6 +28,23 @@ For each task:
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+5. **Tick `[x]` in the plan file** — write this immediately after each task completes. This is the cross-session progress record; it is what allows a fresh context to resume without re-reading history.
+6. **Offer a context checkpoint** if the plan has more tasks remaining (see below)
+
+### Context Checkpoints
+
+Long plans accumulate tool output, file reads, and test results that consume context without helping future steps. After each task, offer a checkpoint when:
+
+- 5 or more tasks have completed, **or**
+- The session has produced heavy output (many file reads, large test runs, repeated diffs)
+
+**Checkpoint offer (copy verbatim):**
+
+> "Task N complete — `[x]` marked in the plan. Context is growing after N tasks. To keep subsequent tasks sharp: type `/clear`, then `execute <plan-file>` — the `[x]` marks track progress and the next session will skip completed tasks automatically."
+
+**Never offer a checkpoint** after the final task — proceed directly to Step 3.
+
+**If the user clears context and restarts:** Read the plan file, skip all `[x]`-marked tasks, announce which task you are resuming from, and continue.
 
 ### Step 3: Complete Development
 
@@ -61,6 +78,8 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- Tick `[x]` in the plan file immediately after each task — it is the only progress record that survives a context clear
+- Offer a context checkpoint after every 5 tasks or any heavy-output session; never after the last task
 
 ## Integration
 
