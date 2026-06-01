@@ -180,16 +180,27 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`:** Superpowers created this worktree — we own cleanup.
+**Provenance check — who owns this worktree?** Match the path *precisely*: a bare substring like `worktrees/` is NOT enough — it wrongly catches harness dirs such as `.claude/worktrees/`. Anchor to the repo root and the exact directory segment:
 
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
+case "$WORKTREE_PATH" in
+  "$MAIN_ROOT"/.worktrees/*|"$MAIN_ROOT"/worktrees/*|"$HOME"/.config/superpowers/worktrees/*)
+    OWNER=superpowers ;;   # we created it — we own cleanup
+  *)
+    OWNER=harness ;;       # agent/IDE-managed (e.g. .claude/worktrees/) — leave alone
+esac
+```
+
+**If `OWNER=superpowers`:** Superpowers created this worktree — clean it up.
+
+```bash
 cd "$MAIN_ROOT"
 git worktree remove "$WORKTREE_PATH"
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
 
-**Otherwise:** The host environment (harness) owns this workspace. Do NOT remove it. If your platform provides a workspace-exit tool, use it. Otherwise, leave the workspace in place.
+**If `OWNER=harness`** (anything else — including `.claude/worktrees/…` and other agent/IDE-managed worktree roots): the host environment owns this workspace. Do NOT `git worktree remove` it. If your platform provides a workspace-exit tool, use it. Otherwise, leave the workspace in place.
 
 ## Quick Reference
 
@@ -224,7 +235,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 **Cleaning up harness-owned worktrees**
 - **Problem:** Removing a worktree the harness created causes phantom state
-- **Fix:** Only clean up worktrees under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`
+- **Fix:** Only clean up worktrees matched by the Step 6 provenance check — an exact path prefix under the repo-root `.worktrees/`/`worktrees/` or `~/.config/superpowers/worktrees/`, NOT a bare `worktrees/` substring. Harness dirs like `.claude/worktrees/…` are not superpowers-owned — leave them in place.
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
