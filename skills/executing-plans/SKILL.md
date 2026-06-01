@@ -38,11 +38,14 @@ After all tasks complete and verified:
 
 ## When to Stop and Ask for Help
 
-**STOP executing immediately when:**
-- Hit a blocker (missing dependency, test fails, instruction unclear)
+**First: follow the step's own guidance.** Plan steps often include instructions for handling expected failures (e.g., "if test passes, fix the test" or "if other tests break, fix now"). Follow that guidance and iterate — this is normal execution, not a blocker.
+
+**STOP executing only when:**
+- Hit an external blocker (missing dependency, service down, environment issue)
+- Plan instruction is ambiguous or contradictory
+- A step fails for reasons unrelated to the current task
+- You've followed the step's failure guidance 3 times without progress
 - Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
 
 **Ask for clarification rather than guessing.**
 

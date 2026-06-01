@@ -36,10 +36,12 @@ This structure informs the task decomposition. Each task should produce self-con
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
+- "Write the failing test" - step (RED)
+- "Run it to make sure it fails" - step (verify RED)
+- "Implement the minimal code to make the test pass" - step (GREEN)
+- "Run all tests and make sure they pass" - step (verify GREEN)
+- "Refactor — clean up while tests stay green" - step (REFACTOR)
+- "Run all tests to confirm still green" - step (verify REFACTOR)
 - "Commit" - step
 
 ## Plan Document Header
@@ -70,7 +72,7 @@ This structure informs the task decomposition. Each task should produce self-con
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the failing test** (RED)
 
 ```python
 def test_specific_behavior():
@@ -78,24 +80,39 @@ def test_specific_behavior():
     assert result == expected
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test to verify it fails** (verify RED)
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
+If test passes → you're testing existing behavior, fix the test.
+If test errors (not fails) → fix the error, re-run until it fails correctly.
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 3: Write minimal implementation** (GREEN)
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run ALL tests to verify they pass** (verify GREEN)
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
+Run: `pytest -v` (or project test command)
+Expected: ALL tests PASS — not just the new one.
+If new test fails → fix implementation, not the test.
+If other tests fail → fix now before proceeding.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Refactor** (REFACTOR)
+
+Clean up while tests stay green: remove duplication, improve names, extract helpers.
+Don't add new behavior — only restructure.
+Skip this step if implementation is already clean.
+
+- [ ] **Step 6: Run ALL tests to confirm still green** (verify REFACTOR)
+
+Run: `pytest -v` (or project test command)
+Expected: ALL tests still PASS after refactoring.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add tests/path/test.py src/path/file.py
