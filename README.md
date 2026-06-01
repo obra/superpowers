@@ -4,7 +4,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
 
 ## How it works
 
@@ -148,6 +148,32 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```bash
   copilot plugin install superpowers@superpowers-marketplace
   ```
+
+### Kimi Code
+
+Superpowers is available in Kimi Code's plugin marketplace.
+
+- Open Kimi Code's plugin manager:
+
+  ```text
+  /plugins
+  ```
+
+- Search for Superpowers and install it.
+
+- To install from this repository instead:
+
+  ```text
+  /plugins install https://github.com/obra/superpowers
+  ```
+
+- For unreleased validation against `dev`:
+
+  ```text
+  /plugins install https://github.com/obra/superpowers/tree/dev
+  ```
+
+- Detailed docs: [docs/README.kimi.md](docs/README.kimi.md)
 
 ### OpenCode
 
