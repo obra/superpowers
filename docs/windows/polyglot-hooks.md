@@ -53,74 +53,36 @@ hooks/
 
 The path is quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces.
 
-## How `run-hook.cmd` Works
+## How `run-hook.cmd` Works at a High Level
 
-`run-hook.cmd` is a polyglot script — valid syntax in both CMD and bash:
+`run-hook.cmd` is a polyglot script: Windows treats the first block as batch
+commands, while Unix shells treat that block as a no-op heredoc and continue
+after it.
 
-```cmd
-: << 'CMDBLOCK'
-@echo off
-REM Cross-platform polyglot wrapper for hook scripts.
-REM On Windows: cmd.exe runs the batch portion, which finds and calls bash.
-REM On Unix: the shell interprets this as a script (: is a no-op in bash).
-REM
-REM Hook scripts use extensionless filenames (e.g. "session-start" not
-REM "session-start.sh") so Claude Code's Windows auto-detection -- which
-REM prepends "bash" to any command containing .sh -- doesn't interfere.
-REM
-REM Usage: run-hook.cmd <script-name> [args...]
-
-if "%~1"=="" (
-    echo run-hook.cmd: missing script name >&2
-    exit /b 1
-)
-
-set "HOOK_DIR=%~dp0"
-
-REM Try Git for Windows bash in standard locations
-if exist "C:\Program Files\Git\bin\bash.exe" (
-    "C:\Program Files\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
-)
-if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
-    "C:\Program Files (x86)\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
-)
-
-REM Try bash on PATH (e.g. user-installed Git Bash, MSYS2, Cygwin)
-where bash >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    bash "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
-)
-
-REM No bash found - exit silently rather than error
-REM (plugin still works, just without SessionStart context injection)
-exit /b 0
-CMDBLOCK
-
-# Unix: run the named script directly
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCRIPT_NAME="$1"
-shift
-exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
-```
+Do not copy an implementation from this document. Read `hooks/run-hook.cmd`
+directly when changing the dispatcher, and run `tests/hooks/test-session-start.sh`
+afterward.
 
 ### How it works on Windows (CMD.exe)
 
-1. `: << 'CMDBLOCK'` — CMD sees `:` as a label (no-op) and ignores `<< 'CMDBLOCK'`
-2. The batch section validates the script name, resolves `HOOK_DIR` from the dispatcher's own location, then tries bash in three places:
+1. The batch section validates the script name and resolves the hook directory
+   from the dispatcher's own location.
+2. It tries bash in three places:
    - `C:\Program Files\Git\bin\bash.exe`
    - `C:\Program Files (x86)\Git\bin\bash.exe`
    - `bash` on `PATH` (MSYS2, Cygwin, or a non-default Git install)
-3. If no bash is found, the dispatcher exits `0` silently — the plugin continues working, it just skips the hook
-4. `exit /b` stops CMD before it reaches the Unix section
+3. If bash is found, it runs the named extensionless hook script from the hooks
+   directory.
+4. If no bash is found, the dispatcher exits `0` silently — the plugin
+   continues working, it just skips the hook.
+5. `exit /b` stops CMD before it reaches the Unix section.
 
 ### How it works on Unix (bash/sh)
 
-1. `: << 'CMDBLOCK'` — `:` is a no-op; `<< 'CMDBLOCK'` opens a heredoc
-2. The entire CMD batch block is consumed by the heredoc (ignored)
-3. After `CMDBLOCK`, bash resolves the script directory and `exec`s the named extensionless script directly
+1. `: << 'CMDBLOCK'` opens a heredoc on a no-op command.
+2. The entire CMD batch block is consumed by the heredoc and ignored.
+3. After `CMDBLOCK`, bash resolves the script directory and `exec`s the named
+   extensionless script directly.
 
 ### Key design decisions
 
