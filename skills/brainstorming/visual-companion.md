@@ -32,6 +32,10 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ## Starting a Session
 
+**Choose your platform's script version.** Bash scripts (`.sh`) work on macOS/Linux/Git Bash. PowerShell scripts (`.ps1`) work natively on Windows PowerShell 5.1+.
+
+### Bash (macOS / Linux / Git Bash on Windows)
+
 ```bash
 # Start server with persistence (mockups saved to project)
 scripts/start-server.sh --project-dir /path/to/project
@@ -41,34 +45,61 @@ scripts/start-server.sh --project-dir /path/to/project
 #           "state_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/state"}
 ```
 
+### PowerShell (Windows native — PowerShell 5.1+)
+
+```powershell
+# Start server with persistence (mockups saved to project)
+& .\skills\brainstorming\scripts\start-server.ps1 -ProjectDir "D:\path\to\project"
+
+# Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
+#           "screen_dir":"D:\path\to\project\.superpowers\brainstorm\12345-1706000000\content",
+#           "state_dir":"D:\path\to\project\.superpowers\brainstorm\12345-1706000000\state"}
+```
+
 Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
 
-**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
+**Finding connection info:** The server writes its startup JSON to `<state_dir>/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir` (bash) or `-ProjectDir` (PowerShell), check `<project>/.superpowers/brainstorm/` for the session directory.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
+**Note:** Pass the project root as `--project-dir` / `-ProjectDir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` (bash) or `$env:TEMP` (PowerShell) and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
 **Launching the server by platform:**
 
-**Claude Code (macOS / Linux):**
+**Claude Code / OpenCode (macOS / Linux):**
 ```bash
 # Default mode works — the script backgrounds the server itself
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
-**Claude Code (Windows):**
-```bash
-# Windows auto-detects and uses foreground mode, which blocks the tool call.
-# Use run_in_background: true on the Bash tool call so the server survives
-# across conversation turns.
-scripts/start-server.sh --project-dir /path/to/project
+**Claude Code / OpenCode (Windows — Bash tool runs PowerShell):**
+```powershell
+# Windows PowerShell native script. Use run_in_background or just run directly:
+& .\skills\brainstorming\scripts\start-server.ps1 -ProjectDir "D:\path\to\project" -Foreground
 ```
-When calling this via the Bash tool, set `run_in_background: true`. Then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
+The `.ps1` script auto-detects Windows and defaults to foreground mode, which blocks the tool call. Run it as a background process or read `$STATE_DIR/server-info` on the next turn.
+
+**Windows — Git Bash (if you have Git Bash available as separate shell):**
+```bash
+# Standard bash script via Git Bash
+bash scripts/start-server.sh --project-dir /c/Users/me/project
+```
+
+*PowerShell alternative:*
+```powershell
+# PowerShell is preferred on Windows. Use start-server.ps1 directly:
+& .\skills\brainstorming\scripts\start-server.ps1 -ProjectDir "D:\path\to\project"
+```
 
 **Codex:**
 ```bash
 # Codex reaps background processes. The script auto-detects CODEX_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
 scripts/start-server.sh --project-dir /path/to/project
+```
+
+*PowerShell (if Codex runs PowerShell):*
+```powershell
+# Codex-specific. Use PS native script if Codex supports PowerShell:
+& .\skills\brainstorming\scripts\start-server.ps1 -ProjectDir "D:\path\to\project"
 ```
 
 **Gemini CLI:**
@@ -78,10 +109,17 @@ scripts/start-server.sh --project-dir /path/to/project
 scripts/start-server.sh --project-dir /path/to/project --foreground
 ```
 
-**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
+*PowerShell (if Gemini runs PowerShell):*
+```powershell
+# Gemini-specific. Use PS native script if available:
+& .\skills\brainstorming\scripts\start-server.ps1 -ProjectDir "D:\path\to\project" -Foreground
+```
+
+**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` (bash) / `-Foreground` (PowerShell) and launch the command with your platform's background execution mechanism.
 
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
+*Bash:*
 ```bash
 scripts/start-server.sh \
   --project-dir /path/to/project \
@@ -89,12 +127,20 @@ scripts/start-server.sh \
   --url-host localhost
 ```
 
-Use `--url-host` to control what hostname is printed in the returned URL JSON.
+*PowerShell:*
+```powershell
+& .\skills\brainstorming\scripts\start-server.ps1 `
+  -ProjectDir "D:\path\to\project" `
+  -Host "0.0.0.0" `
+  -UrlHost "localhost"
+```
+
+Use `--url-host` / `-UrlHost` to control what hostname is printed in the returned URL JSON.
 
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
+   - Before each write, check that `<state_dir>/server-info` exists (the path stored in `state_dir` from server startup). If it doesn't (or `<state_dir>/server-stopped` exists), the server has shut down — restart it with `start-server.sh` (bash) or `start-server.ps1` (PowerShell) before continuing. The server auto-exits after 30 minutes of inactivity.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
@@ -106,9 +152,9 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
    - Ask them to respond in the terminal: "Take a look and let me know what you think. Click to select an option if you'd like."
 
 3. **On your next turn** — after the user responds in the terminal:
-   - Read `$STATE_DIR/events` if it exists — this contains the user's browser interactions (clicks, selections) as JSON lines
+   - Read `<state_dir>/events` if it exists — this contains the user's browser interactions (clicks, selections) as JSON lines
    - Merge with the user's terminal text to get the full picture
-   - The terminal message is the primary feedback; `state_dir/events` provides structured interaction data
+   - The terminal message is the primary feedback; the events file provides structured interaction data
 
 4. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated.
 
@@ -245,7 +291,7 @@ The frame template provides these CSS classes for your content:
 
 ## Browser Events Format
 
-When the user clicks options in the browser, their interactions are recorded to `$STATE_DIR/events` (one JSON object per line). The file is cleared automatically when you push a new screen.
+When the user clicks options in the browser, their interactions are recorded to `<state_dir>/events` (one JSON object per line). The file is cleared automatically when you push a new screen.
 
 ```jsonl
 {"type":"click","choice":"a","text":"Option A - Simple Layout","timestamp":1706000101}
@@ -255,7 +301,7 @@ When the user clicks options in the browser, their interactions are recorded to 
 
 The full event stream shows the user's exploration path — they may click multiple options before settling. The last `choice` event is typically the final selection, but the pattern of clicks can reveal hesitation or preferences worth asking about.
 
-If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser — use only their terminal text.
+If `<state_dir>/events` doesn't exist, the user didn't interact with the browser — use only their terminal text.
 
 ## Design Tips
 
@@ -275,11 +321,17 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 
 ## Cleaning Up
 
+*Bash:*
 ```bash
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
+*PowerShell:*
+```powershell
+& .\skills\brainstorming\scripts\stop-server.ps1 $SESSION_DIR
+```
+
+If the session used `--project-dir` / `-ProjectDir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` (bash) or `$env:TEMP` (PowerShell) sessions get deleted on stop.
 
 ## Reference
 

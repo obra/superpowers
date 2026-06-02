@@ -211,6 +211,7 @@ ls -lt "$SESSION_DIR"/*.jsonl | head -5
 **Solutions**:
 1. Check the correct project directory in `~/.claude/projects/`
 2. Use `find ~/.claude/projects -name "*.jsonl" -mmin -60` to find recent sessions
+   *(PowerShell: `Get-ChildItem -Path "$env:USERPROFILE\.claude\projects" -Recurse -Filter "*.jsonl" \| Where-Object { $_.LastWriteTime -gt (Get-Date).AddMinutes(-60) }`)*
 3. Verify test actually ran (check for errors in test output)
 
 ## Writing New Integration Tests

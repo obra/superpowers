@@ -11,6 +11,8 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
+**Platform support:** This skill uses bash, git, and project tool commands. All code blocks are shown in both **bash** (macOS/Linux/Git Bash) and **PowerShell** (Windows native PowerShell 5.1+) formats. Use the format matching your execution environment.
+
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
@@ -22,6 +24,12 @@ Guide completion of development work by presenting clear options and handling ch
 ```bash
 # Run project's test suite
 npm test / cargo test / pytest / go test ./...
+```
+
+*PowerShell:*
+```powershell
+# Run project's test suite
+npm test       # or: cargo test, pytest, go test ./...
 ```
 
 **If tests fail:**
@@ -46,6 +54,12 @@ GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 ```
 
+*PowerShell:*
+```powershell
+$GIT_DIR = git rev-parse --git-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$GIT_COMMON = git rev-parse --git-common-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+```
+
 This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
@@ -60,6 +74,13 @@ This determines which menu to show and how cleanup works:
 # Try common base branches
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
+
+*PowerShell:*
+```powershell
+# Try common base branches
+$base = git merge-base HEAD main 2>$null
+if (-not $base) { $base = git merge-base HEAD master 2>$null }
+$base
 
 Or ask: "This branch split from main - is that correct?"
 
@@ -112,9 +133,31 @@ git merge <feature-branch>
 # Only after merge succeeds: cleanup worktree (Step 6), then delete branch
 ```
 
+*PowerShell:*
+```powershell
+# Get main repo root for CWD safety
+$MAIN_ROOT = git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel
+Set-Location -LiteralPath $MAIN_ROOT
+
+# Merge first — verify success before removing anything
+git checkout <base-branch>
+git pull
+git merge <feature-branch>
+
+# Verify tests on merged result
+<test command>
+
+# Only after merge succeeds: cleanup worktree (Step 6), then delete branch
+```
+
 Then: Cleanup worktree (Step 6), then delete branch:
 
 ```bash
+git branch -d <feature-branch>
+```
+
+*PowerShell:*
+```powershell
 git branch -d <feature-branch>
 ```
 
@@ -133,6 +176,22 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 - [ ] <verification steps>
 EOF
 )"
+```
+
+*PowerShell:*
+```powershell
+# Push branch
+git push -u origin <feature-branch>
+
+# Create PR
+$body = @'
+## Summary
+<2-3 bullets of what changed>
+
+## Test Plan
+- [ ] <verification steps>
+'@
+gh pr create --title "<title>" --body $body
 ```
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
@@ -163,8 +222,19 @@ MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-tople
 cd "$MAIN_ROOT"
 ```
 
+*PowerShell:*
+```powershell
+$MAIN_ROOT = git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel
+Set-Location -LiteralPath $MAIN_ROOT
+```
+
 Then: Cleanup worktree (Step 6), then force-delete branch:
 ```bash
+git branch -D <feature-branch>
+```
+
+*PowerShell:*
+```powershell
 git branch -D <feature-branch>
 ```
 
@@ -178,6 +248,13 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
 ```
 
+*PowerShell:*
+```powershell
+$GIT_DIR = git rev-parse --git-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$GIT_COMMON = git rev-parse --git-common-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$WORKTREE_PATH = git rev-parse --show-toplevel
+```
+
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
 **If worktree path is under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`:** Superpowers created this worktree — we own cleanup.
@@ -186,6 +263,14 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 git worktree remove "$WORKTREE_PATH"
+git worktree prune  # Self-healing: clean up any stale registrations
+```
+
+*PowerShell:*
+```powershell
+$MAIN_ROOT = git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel
+Set-Location -LiteralPath $MAIN_ROOT
+git worktree remove $WORKTREE_PATH
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
 

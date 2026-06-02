@@ -5,6 +5,8 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 # Systematic Debugging
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 ## Overview
 
 Random fixes waste time and create new bugs. Quick patches mask underlying issues.
@@ -103,6 +105,27 @@ You MUST complete each phase before proceeding to the next.
 
    # Layer 4: Actual signing
    codesign --sign "$IDENTITY" --verbose=4 "$APP"
+   ```
+
+   *PowerShell (macOS example — illustrative only):*
+   ```powershell
+   # Layer 1: Environment variables
+   Write-Host "IDENTITY: $(if ($env:IDENTITY) {'SET'} else {'UNSET'})"
+
+   # Layer 2: Build script
+   Write-Host "=== Env vars in build script: ==="
+   Get-ChildItem Env: | Where-Object { $_.Name -like '*IDENTITY*' }
+   if (-not (Get-ChildItem Env: | Where-Object { $_.Name -like '*IDENTITY*' })) {
+       Write-Host "IDENTITY not in environment"
+   }
+
+   # Layer 3: Signing script
+   Write-Host "=== Keychain state: ==="
+   & security list-keychains
+   & security find-identity -v
+
+   # Layer 4: Actual signing
+   & codesign --sign $env:IDENTITY --verbose=4 $APP
    ```
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)

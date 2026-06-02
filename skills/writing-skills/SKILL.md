@@ -5,6 +5,8 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 # Writing Skills
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 ## Overview
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
@@ -230,6 +232,15 @@ search-conversations supports --text, --both, --after DATE, --before DATE, --lim
 search-conversations supports multiple modes and filters. Run --help for details.
 ```
 
+*PowerShell:*
+```powershell
+# ❌ BAD: Document all flags in SKILL.md
+search-conversations supports --text, --both, --after DATE, --before DATE, --limit N
+
+# ✅ GOOD: Reference --help
+search-conversations supports multiple modes and filters. Run --help for details.
+```
+
 **Use cross-references:**
 ```markdown
 # ❌ BAD: Repeat workflow details
@@ -261,6 +272,13 @@ You: Searching...
 **Verification:**
 ```bash
 wc -w skills/path/SKILL.md
+# getting-started workflows: aim for <150 each
+# Other frequently-loaded: aim for <200 total
+```
+
+*PowerShell:*
+```powershell
+(Get-Content skills/path/SKILL.md | Out-String).Split(' ', [StringSplitOptions]::RemoveEmptyEntries).Count
 # getting-started workflows: aim for <150 each
 # Other frequently-loaded: aim for <200 total
 ```
@@ -319,6 +337,12 @@ See @graphviz-conventions.dot for graphviz style rules.
 ```bash
 ./render-graphs.js ../some-skill           # Each diagram separately
 ./render-graphs.js ../some-skill --combine # All diagrams in one SVG
+```
+
+*PowerShell:*
+```powershell
+node .\render-graphs.js ..\some-skill           # Each diagram separately
+node .\render-graphs.js ..\some-skill --combine # All diagrams in one SVG
 ```
 
 ## Code Examples

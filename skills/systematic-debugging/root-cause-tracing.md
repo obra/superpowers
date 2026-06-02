@@ -1,5 +1,7 @@
 # Root Cause Tracing
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 ## Overview
 
 Bugs often manifest deep in the call stack (git init in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
@@ -89,6 +91,11 @@ async function gitInit(directory: string) {
 npm test 2>&1 | grep 'DEBUG git init'
 ```
 
+*PowerShell:*
+```powershell
+npm test 2>&1 | Select-String 'DEBUG git init'
+```
+
 **Analyze stack traces:**
 - Look for test file names
 - Find the line number triggering the call
@@ -102,6 +109,11 @@ Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
 ./find-polluter.sh '.git' 'src/**/*.test.ts'
+```
+
+*PowerShell:*
+```powershell
+.\find-polluter.ps1 '.git' 'src/**/*.test.ts'
 ```
 
 Runs tests one-by-one, stops at first polluter. See script for usage.

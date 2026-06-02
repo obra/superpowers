@@ -22,12 +22,12 @@ A polyglot script is valid syntax in multiple languages simultaneously. Our wrap
 ```cmd
 : << 'CMDBLOCK'
 @echo off
-"C:\Program Files\Git\bin\bash.exe" -l -c "\"$(cygpath -u \"$CLAUDE_PLUGIN_ROOT\")/hooks/session-start.sh\""
+"C:\Program Files\Git\bin\bash.exe" -l -c "\"$(cygpath -u \"$CLAUDE_PLUGIN_ROOT\")/hooks/session-start\""
 exit /b
 CMDBLOCK
 
 # Unix shell runs from here
-"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
+"${CLAUDE_PLUGIN_ROOT}/hooks/session-start"
 ```
 
 ### How It Works
@@ -53,9 +53,9 @@ CMDBLOCK
 
 ```
 hooks/
-├── hooks.json           # Points to the .cmd wrapper
-├── session-start.cmd    # Polyglot wrapper (cross-platform entry point)
-└── session-start.sh     # Actual hook logic (bash script)
+├── hooks.json           # Points to the .cmd wrapper with script name
+├── run-hook.cmd         # Polyglot wrapper (cross-platform entry point)
+└── session-start        # Actual hook logic (extensionless bash script)
 ```
 
 ### hooks.json
@@ -65,11 +65,12 @@ hooks/
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
+        "matcher": "startup|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.cmd\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "async": false
           }
         ]
       }
@@ -164,7 +165,7 @@ shift
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start"
           }
         ]
       }
@@ -202,7 +203,7 @@ The hooks.json is pointing directly to the `.sh` file. Point to the `.cmd` wrapp
 Claude Code may run hooks differently. Test by simulating the hook environment:
 ```powershell
 $env:CLAUDE_PLUGIN_ROOT = "C:\path\to\plugin"
-cmd /c "C:\path\to\plugin\hooks\session-start.cmd"
+cmd /c "C:\path\to\plugin\hooks\run-hook.cmd" session-start
 ```
 
 ## Related Issues

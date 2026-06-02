@@ -1,5 +1,7 @@
 # Code Reviewer Prompt Template
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 Use this template when dispatching a code reviewer subagent.
 
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
@@ -26,6 +28,12 @@ Task tool (general-purpose):
     **Head:** {HEAD_SHA}
 
     ```bash
+    git diff --stat {BASE_SHA}..{HEAD_SHA}
+    git diff {BASE_SHA}..{HEAD_SHA}
+    ```
+
+    *PowerShell:*
+    ```powershell
     git diff --stat {BASE_SHA}..{HEAD_SHA}
     git diff {BASE_SHA}..{HEAD_SHA}
     ```

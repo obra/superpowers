@@ -1,5 +1,7 @@
 # Skill authoring best practices
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 > Learn how to write effective Skills that Claude can discover and use successfully.
 
 Good Skills are concise, well-structured, and tested with real usage. This guide provides practical authoring decisions to help you write Skills that Claude can discover and use effectively.
@@ -119,6 +121,11 @@ Run exactly this script:
 
 ```bash
 python scripts/migrate.py --verify --backup
+```
+
+*PowerShell:*
+```powershell
+python scripts\migrate.py --verify --backup
 ```
 
 Do not modify the command or add additional flags.
@@ -326,6 +333,13 @@ Find specific metrics using grep:
 grep -i "revenue" reference/finance.md
 grep -i "pipeline" reference/sales.md
 grep -i "api usage" reference/product.md
+```
+
+*PowerShell:*
+```powershell
+Select-String -CaseSensitive:$false "revenue" reference/finance.md
+Select-String -CaseSensitive:$false "pipeline" reference/sales.md
+Select-String -CaseSensitive:$false "api usage" reference/product.md
 ```
 ````
 
@@ -938,6 +952,11 @@ For most utility scripts, execution is preferred because it's more reliable and 
 python scripts/analyze_form.py input.pdf > fields.json
 ```
 
+*PowerShell:*
+```powershell
+python scripts\analyze_form.py input.pdf > fields.json
+```
+
 Output format:
 ```json
 {
@@ -953,10 +972,21 @@ python scripts/validate_boxes.py fields.json
 # Returns: "OK" or lists conflicts
 ```
 
+*PowerShell:*
+```powershell
+python scripts\validate_boxes.py fields.json
+# Returns: "OK" or lists conflicts
+```
+
 **fill_form.py**: Apply field values to PDF
 
 ```bash
 python scripts/fill_form.py input.pdf fields.json output.pdf
+```
+
+*PowerShell:*
+```powershell
+python scripts\fill_form.py input.pdf fields.json output.pdf
 ```
 ````
 
@@ -970,6 +1000,11 @@ When inputs can be rendered as images, have Claude analyze them:
 1. Convert PDF to images:
    ```bash
    python scripts/pdf_to_images.py form.pdf
+   ```
+
+   *PowerShell:*
+   ```powershell
+   python scripts\pdf_to_images.py form.pdf
    ```
 
 2. Analyze each page image to identify form fields

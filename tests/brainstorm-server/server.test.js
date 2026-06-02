@@ -13,11 +13,12 @@ const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const assert = require('assert');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 const TEST_PORT = 3334;
-const TEST_DIR = '/tmp/brainstorm-test';
+const TEST_DIR = path.join(os.tmpdir(), 'brainstorm-test');
 const CONTENT_DIR = path.join(TEST_DIR, 'content');
 const STATE_DIR = path.join(TEST_DIR, 'state');
 

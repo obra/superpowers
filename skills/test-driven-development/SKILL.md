@@ -5,6 +5,8 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 # Test-Driven Development (TDD)
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 ## Overview
 
 Write the test first. Watch it fail. Write minimal code to pass.
@@ -118,6 +120,11 @@ Vague name, tests mock not code
 npm test path/to/test.test.ts
 ```
 
+*PowerShell:*
+```powershell
+npm test path/to/test.test.ts
+```
+
 Confirm:
 - Test fails (not errors)
 - Failure message is expected
@@ -170,6 +177,11 @@ Don't add features, refactor other code, or "improve" beyond the test.
 **MANDATORY.**
 
 ```bash
+npm test path/to/test.test.ts
+```
+
+*PowerShell:*
+```powershell
 npm test path/to/test.test.ts
 ```
 
@@ -305,6 +317,12 @@ $ npm test
 FAIL: expected 'Email required', got undefined
 ```
 
+*PowerShell:*
+```powershell
+$ npm test
+FAIL: expected 'Email required', got undefined
+```
+
 **GREEN**
 ```typescript
 function submitForm(data: FormData) {
@@ -317,6 +335,12 @@ function submitForm(data: FormData) {
 
 **Verify GREEN**
 ```bash
+$ npm test
+PASS
+```
+
+*PowerShell:*
+```powershell
 $ npm test
 PASS
 ```

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // ========== WebSocket Protocol (RFC 6455) ==========
 
@@ -76,7 +77,7 @@ function decodeFrame(buffer) {
 const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 16383));
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
+const SESSION_DIR = process.env.BRAINSTORM_DIR || path.join(os.tmpdir(), 'brainstorm');
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
@@ -313,7 +314,10 @@ function startServer() {
 
   function ownerAlive() {
     if (!ownerPid) return true;
-    try { process.kill(ownerPid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+    // process.kill(pid, 0) works on all platforms in Node.js 14+.
+    // Error codes vary: ESRCH = not found, EPERM = exists but no permission.
+    try { process.kill(ownerPid, 0); return true; }
+    catch (e) { return e.code === 'EPERM'; }
   }
 
   // Check every 60s: exit if owner process died or idle for 30 minutes

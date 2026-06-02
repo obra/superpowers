@@ -5,6 +5,8 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
 
 **Core principle:** Review early, review often.
@@ -27,6 +29,12 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
+```
+
+*PowerShell:*
+```powershell
+$BASE_SHA = git rev-parse HEAD~1   # or origin/main
+$HEAD_SHA = git rev-parse HEAD
 ```
 
 **2. Dispatch code reviewer subagent:**
@@ -54,6 +62,13 @@ You: Let me request code review before proceeding.
 
 BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
+```
+
+*PowerShell equivalent for the above inline commands:*
+```powershell
+$BASE_SHA = (git log --oneline | Select-String "Task 1" | Select-Object -First 1).Line.Split(' ')[0]
+$HEAD_SHA = git rev-parse HEAD
+```
 
 [Dispatch code reviewer subagent]
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types

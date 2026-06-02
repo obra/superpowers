@@ -11,6 +11,8 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
 
+**Platform support:** All code blocks are shown in both **bash** (macOS/Linux/Git Bash) and **PowerShell** (Windows native PowerShell 5.1+) formats. Use the format matching your execution environment.
+
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
 ## Step 0: Detect Existing Isolation
@@ -23,11 +25,24 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 BRANCH=$(git branch --show-current)
 ```
 
+*PowerShell:*
+```powershell
+$GIT_DIR = git rev-parse --git-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$GIT_COMMON = git rev-parse --git-common-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$BRANCH = git branch --show-current
+```
+
 **Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules. Before concluding "already in a worktree," verify you are not in a submodule:
 
 ```bash
 # If this returns a path, you're in a submodule, not a worktree — treat as normal repo
 git rev-parse --show-superproject-working-tree 2>/dev/null
+```
+
+*PowerShell:*
+```powershell
+# If this returns a path, you're in a submodule — treat as normal repo
+git rev-parse --show-superproject-working-tree 2>$null
 ```
 
 **If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 3 (Project Setup). Do NOT create another worktree.
@@ -71,12 +86,24 @@ Follow this priority order. Explicit user preference always beats observed files
    ls -d .worktrees 2>/dev/null     # Preferred (hidden)
    ls -d worktrees 2>/dev/null      # Alternative
    ```
+
+   *PowerShell:*
+   ```powershell
+   Test-Path .worktrees     # Preferred (hidden)
+   Test-Path worktrees      # Alternative
+   ```
    If found, use it. If both exist, `.worktrees` wins.
 
 3. **Check for an existing global directory:**
    ```bash
    project=$(basename "$(git rev-parse --show-toplevel)")
    ls -d ~/.config/superpowers/worktrees/$project 2>/dev/null
+   ```
+
+   *PowerShell:*
+   ```powershell
+   $project = Split-Path -Leaf (git rev-parse --show-toplevel)
+   Test-Path "$env:USERPROFILE\.config\superpowers\worktrees\$project"
    ```
    If found, use it (backward compatibility with legacy global path).
 
@@ -88,6 +115,12 @@ Follow this priority order. Explicit user preference always beats observed files
 
 ```bash
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+```
+
+*PowerShell:*
+```powershell
+git check-ignore -q .worktrees 2>$null
+if ($LASTEXITCODE -ne 0) { git check-ignore -q worktrees 2>$null }
 ```
 
 **If NOT ignored:** Add to .gitignore, commit the change, then proceed.
@@ -107,6 +140,18 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
+```
+
+*PowerShell:*
+```powershell
+$project = Split-Path -Leaf (git rev-parse --show-toplevel)
+
+# Determine path based on chosen location
+# For project-local: $path = "$LOCATION\$BRANCH_NAME"
+# For global: $path = "$env:USERPROFILE\.config\superpowers\worktrees\$project\$BRANCH_NAME"
+
+git worktree add $path -b $BRANCH_NAME
+Set-Location -LiteralPath $path
 ```
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
@@ -130,6 +175,22 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
+*PowerShell:*
+```powershell
+# Node.js
+if (Test-Path package.json) { npm install }
+
+# Rust
+if (Test-Path Cargo.toml) { cargo build }
+
+# Python
+if (Test-Path requirements.txt) { pip install -r requirements.txt }
+if (Test-Path pyproject.toml) { poetry install }
+
+# Go
+if (Test-Path go.mod) { go mod download }
+```
+
 ## Step 4: Verify Clean Baseline
 
 Run tests to ensure workspace starts clean:
@@ -137,6 +198,12 @@ Run tests to ensure workspace starts clean:
 ```bash
 # Use project-appropriate command
 npm test / cargo test / pytest / go test ./...
+```
+
+*PowerShell:*
+```powershell
+# Use project-appropriate command
+npm test       # or: cargo test, pytest, go test ./...
 ```
 
 **If tests fail:** Report failures, ask whether to proceed or investigate.

@@ -40,6 +40,13 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 BRANCH=$(git branch --show-current)
 ```
 
+*PowerShell:*
+```powershell
+$GIT_DIR = git rev-parse --git-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$GIT_COMMON = git rev-parse --git-common-dir 2>$null | ForEach-Object { (Resolve-Path $_).Path }
+$BRANCH = git branch --show-current
+```
+
 - `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
 - `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
 

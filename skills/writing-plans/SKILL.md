@@ -5,6 +5,8 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 # Writing Plans
 
+**Platform support:** All code blocks are shown in both bash and PowerShell formats. Use the format matching your execution environment.
+
 ## Overview
 
 Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
@@ -98,6 +100,12 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
+git add tests/path/test.py src/path/file.py
+git commit -m "feat: add specific feature"
+```
+
+*PowerShell:*
+```powershell
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
