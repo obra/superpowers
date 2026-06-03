@@ -146,12 +146,22 @@ usage() {
   exit "${1:-0}"
 }
 
+require_value() {
+  local option="$1"
+  local value="${2:-}"
+
+  if [[ -z "$value" || "$value" == -* ]]; then
+    echo "Missing value for $option" >&2
+    usage 2
+  fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -n|--dry-run)  DRY_RUN=1; shift ;;
     -y|--yes)      YES=1; shift ;;
-    --local)       LOCAL_CHECKOUT="$2"; shift 2 ;;
-    --base)        BASE="$2"; shift 2 ;;
+    --local)       require_value "$1" "${2:-}"; LOCAL_CHECKOUT="$2"; shift 2 ;;
+    --base)        require_value "$1" "${2:-}"; BASE="$2"; shift 2 ;;
     --bootstrap)   BOOTSTRAP=1; shift ;;
     -h|--help)     usage 0 ;;
     *)             echo "Unknown arg: $1" >&2; usage 2 ;;

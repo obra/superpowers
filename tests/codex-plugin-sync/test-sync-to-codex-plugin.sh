@@ -505,6 +505,14 @@ run_help() {
     PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" --help 2>&1
 }
 
+run_missing_value() {
+    local upstream="$1"
+    local fake_bin="$2"
+    shift 2
+
+    PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" "$@" 2>&1
+}
+
 write_bootstrap_destination_fixture() {
     local repo="$1"
 
@@ -544,6 +552,14 @@ main() {
     local dirty_apply_output
     local noop_apply_status
     local noop_apply_output
+    local missing_local_status
+    local missing_local_output
+    local missing_base_status
+    local missing_base_output
+    local missing_local_option_status
+    local missing_local_option_output
+    local missing_base_option_status
+    local missing_base_option_output
     local help_output
     local script_source
     local dirty_skill_path
@@ -618,6 +634,14 @@ main() {
     noop_apply_status=$?
     missing_manifest_output="$(run_preview_without_manifest "$upstream" "$dest" "$fake_bin")"
     missing_manifest_status=$?
+    missing_local_output="$(run_missing_value "$upstream" "$fake_bin" "--local")"
+    missing_local_status=$?
+    missing_base_output="$(run_missing_value "$upstream" "$fake_bin" "--base")"
+    missing_base_status=$?
+    missing_local_option_output="$(run_missing_value "$upstream" "$fake_bin" "--local" "--base")"
+    missing_local_option_status=$?
+    missing_base_option_output="$(run_missing_value "$upstream" "$fake_bin" "--base" "--local")"
+    missing_base_option_status=$?
     set -e
     help_output="$(run_help "$upstream" "$fake_bin")"
     script_source="$(cat "$upstream/scripts/sync-to-codex-plugin.sh")"
@@ -693,6 +717,25 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     echo "Missing manifest assertions..."
     assert_equals "$missing_manifest_status" "1" "Missing manifest exits with failure"
     assert_contains "$missing_manifest_output" "ERROR: committed Codex manifest missing at" "Missing manifest reports committed manifest path"
+
+    echo ""
+    echo "Missing argument assertions..."
+    assert_equals "$missing_local_status" "2" "Missing --local value exits with usage status"
+    assert_contains "$missing_local_output" "Missing value for --local" "Missing --local value reports option"
+    assert_contains "$missing_local_output" "Usage:" "Missing --local value shows usage"
+    assert_not_contains "$missing_local_output" "unbound variable" "Missing --local value avoids shell internals"
+    assert_equals "$missing_base_status" "2" "Missing --base value exits with usage status"
+    assert_contains "$missing_base_output" "Missing value for --base" "Missing --base value reports option"
+    assert_contains "$missing_base_output" "Usage:" "Missing --base value shows usage"
+    assert_not_contains "$missing_base_output" "unbound variable" "Missing --base value avoids shell internals"
+    assert_equals "$missing_local_option_status" "2" "Missing --local value before another option exits with usage status"
+    assert_contains "$missing_local_option_output" "Missing value for --local" "Missing --local value before another option reports option"
+    assert_contains "$missing_local_option_output" "Usage:" "Missing --local value before another option shows usage"
+    assert_not_contains "$missing_local_option_output" "unbound variable" "Missing --local value before another option avoids shell internals"
+    assert_equals "$missing_base_option_status" "2" "Missing --base value before another option exits with usage status"
+    assert_contains "$missing_base_option_output" "Missing value for --base" "Missing --base value before another option reports option"
+    assert_contains "$missing_base_option_output" "Usage:" "Missing --base value before another option shows usage"
+    assert_not_contains "$missing_base_option_output" "unbound variable" "Missing --base value before another option avoids shell internals"
 
     echo ""
     echo "Help assertions..."
