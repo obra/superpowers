@@ -178,6 +178,7 @@ already use it in another harness.
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
+- **bsod-analyzer** - Complete Windows BSOD diagnosis pipeline (dump analysis -> audit -> cleanup -> prevention). 62 BugCheck codes + known-bad driver database. [Repo](https://github.com/sitabanubanu/bsod-analyzer)
 - **verification-before-completion** - Ensure it's actually fixed
 
 **Collaboration** 
