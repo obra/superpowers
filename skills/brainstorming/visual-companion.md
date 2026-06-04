@@ -204,6 +204,27 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
+### Contrast helpers
+
+The companion frame follows the user's OS light/dark mode. When a fragment includes
+mockup regions with custom backgrounds, mark them explicitly so foreground text stays
+readable:
+
+```html
+<div class="mockup-body light-surface">
+  <h3>White preview area</h3>
+  <p>Dark readable text inside a light mockup.</p>
+</div>
+
+<div class="mockup-body dark-surface">
+  <h3>Dark preview area</h3>
+  <p>Light readable text inside a dark mockup.</p>
+</div>
+```
+
+For complex screens with many custom colors, write a full HTML document instead of a
+fragment so the screen can own its complete palette.
+
 ### Split view (side-by-side)
 
 ```html

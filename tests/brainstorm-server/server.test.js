@@ -159,6 +159,17 @@ async function runTests() {
       assert(res.body.includes('data-choice="a"'), 'Fragment interactive elements intact');
     });
 
+    await test('frame template includes contrast helpers for custom mockup surfaces', async () => {
+      const fragment = '<div class="mockup-body light-surface"><h2>Light panel</h2><p>Readable copy</p></div>';
+      fs.writeFileSync(path.join(CONTENT_DIR, 'contrast-fragment.html'), fragment);
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert(res.body.includes('.light-surface'), 'Frame should include light surface helper CSS');
+      assert(res.body.includes('.dark-surface'), 'Frame should include dark surface helper CSS');
+      assert(res.body.includes('Light panel'), 'Fragment content should be present');
+    });
+
     await test('serves newest file by mtime', async () => {
       fs.writeFileSync(path.join(CONTENT_DIR, 'older.html'), '<h2>Older</h2>');
       await sleep(100);
