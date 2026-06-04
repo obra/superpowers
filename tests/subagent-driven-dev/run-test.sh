@@ -76,8 +76,8 @@ cd "$OUTPUT_DIR/project"
 claude -p "$PROMPT" \
   --plugin-dir "$PLUGIN_DIR" \
   --dangerously-skip-permissions \
-  --output-format stream-json \
   --verbose \
+  --output-format stream-json \
   > "$LOG_FILE" 2>&1 || true
 
 # Extract final stats

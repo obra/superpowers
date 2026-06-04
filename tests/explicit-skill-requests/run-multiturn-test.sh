@@ -50,6 +50,7 @@ claude -p "I need to implement an authentication system. Let's plan this out. Th
     --plugin-dir "$PLUGIN_DIR" \
     --dangerously-skip-permissions \
     --max-turns 2 \
+    --verbose \
     --output-format stream-json \
     > "$TURN1_LOG" 2>&1 || true
 
@@ -64,6 +65,7 @@ claude -p "Good analysis. I've already written the plan to docs/superpowers/plan
     --plugin-dir "$PLUGIN_DIR" \
     --dangerously-skip-permissions \
     --max-turns 2 \
+    --verbose \
     --output-format stream-json \
     > "$TURN2_LOG" 2>&1 || true
 
@@ -78,6 +80,7 @@ claude -p "subagent-driven-development, please" \
     --plugin-dir "$PLUGIN_DIR" \
     --dangerously-skip-permissions \
     --max-turns 2 \
+    --verbose \
     --output-format stream-json \
     > "$TURN3_LOG" 2>&1 || true
 
