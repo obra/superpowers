@@ -1,0 +1,12 @@
+{
+  "superpowers-bootstrap": {
+    "type": "chatStart",
+    "visible": false,
+    "actions": [
+      {
+        "type": "shell",
+        "file": "${plugin:root}/hooks/session-start"
+      }
+    ]
+  }
+}

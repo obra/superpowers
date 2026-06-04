@@ -42,7 +42,7 @@ elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
   # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" | cat
 else
-  # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
+  # Copilot CLI (sets COPILOT_CLI=1), ECA (no harness env vars), or unknown platform — SDK standard format
   printf '{\n  "additionalContext": "%s"\n}\n' "$session_context" | cat
 fi
 
