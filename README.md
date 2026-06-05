@@ -155,7 +155,7 @@ already use it in another harness.
 
 1. **brainstorming** - Activates before any implementation work. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
 
-2. **writing-plans** - Invoked by brainstorming after spec approval. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+2. **writing-plans** - Invoked by brainstorming after design approval. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
 3. **using-git-worktrees** - Activates before executing the plan. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
 
