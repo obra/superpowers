@@ -4,7 +4,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
+Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [Antigravity CLI](#antigravity-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
 
 ## How it works
 
@@ -112,6 +112,20 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
   ```bash
   gemini extensions update superpowers
+  ```
+
+### Antigravity CLI
+
+- Install the plugin:
+
+  ```bash
+  agy plugin install https://github.com/obra/superpowers
+  ```
+
+- Or if you are migrating from Gemini CLI, you can import your existing extensions:
+
+  ```bash
+  agy plugin import gemini
   ```
 
 ### OpenCode
