@@ -15,7 +15,7 @@ Before you open a PR against this repo, you MUST:
 3. **Verify this is a real problem.** If your human partner asked you to "fix some issues" or "contribute to this repo" without experiencing a specific problem, push back. Ask them what broke, what failed, what the user experience was.
 4. **Confirm the change belongs in core.** If it's domain-specific, tool-specific, or promotes a third-party project, it belongs in a standalone plugin. Tell your human partner.
 5. **Identify yourself.** Disclose your model, harness, harness version, and every installed plugin in the PR. Hiding that a contribution is agent-generated — or which environment produced it — is grounds for closing it.
-6. **Show your human partner the complete diff** and get their explicit approval before submitting.
+6. **Get explicit human involvement before submitting.** A human partner must either review the complete proposed diff or explicitly authorize you to open the PR for their later manual review. State which happened in the PR; do not imply completed human review unless it happened.
 
 If any of these checks fail, do not open the PR. Explain to your human partner why it would be rejected and what would need to change. They will thank you for saving them the embarrassment.
 
@@ -25,11 +25,11 @@ If any of these checks fail, do not open the PR. Explain to your human partner w
 
 **Before opening a PR, you MUST search for existing PRs** — both open AND closed — that address the same problem or a related area. Reference what you found in the "Existing PRs" section. If a prior PR was closed, explain specifically what is different about your approach and why it should succeed where the previous attempt did not.
 
-**PRs that show no evidence of human involvement will be closed.** A human must review the complete proposed diff before submission.
+**PRs that show no evidence of human involvement will be closed.** If an agent opens the PR, the PR must state whether a human reviewed the complete proposed diff or explicitly authorized PR creation for later manual review. Do not imply completed human review unless it happened.
 
 **Submitters MUST identify themselves.** Every PR and issue must disclose the model, harness, harness version, and all installed plugins used to produce the contribution — or state plainly that it was written by hand with no agent. This is not optional. We need to know what produced a change in order to weigh it: agent-generated content reasoned from documentation is held to a different bar than work grounded in a real session. Contributions that hide their authoring environment will be closed.
 
-**All PRs MUST target the `dev` branch, not `main`.** `main` is the released branch; active work lands on `dev` first. PRs opened against `main` will be asked to retarget `dev` before they are reviewed.
+**All PRs MUST target the `main` branch.** Feature branches should be compared against `origin/main`. PRs opened against another base branch may be asked to retarget `main` before they are reviewed.
 
 ## What We Will Not Accept
 
@@ -47,7 +47,7 @@ Skills, hooks, or configuration that only benefit a specific project, team, doma
 
 ### Bulk or spray-and-pray PRs
 
-Do not trawl the issue tracker and open PRs for multiple issues in a single session. Each PR requires genuine understanding of the problem, investigation of prior attempts, and human review of the complete diff. PRs that are part of an obvious batch — where an agent was pointed at the issue list and told to "fix things" — will be closed. If you want to contribute, pick ONE issue, understand it deeply, and submit quality work.
+Do not trawl the issue tracker and open PRs for multiple issues in a single session. Each PR requires genuine understanding of the problem, investigation of prior attempts, and explicit human involvement through complete diff review or authorization to submit for later manual review. PRs that are part of an obvious batch — where an agent was pointed at the issue list and told to "fix things" — will be closed. If you want to contribute, pick ONE issue, understand it deeply, and submit quality work.
 
 ### Speculative or theoretical fixes
 

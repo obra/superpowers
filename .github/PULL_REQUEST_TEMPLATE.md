@@ -4,9 +4,9 @@ sections blank, contain multiple unrelated changes, or show no evidence
 of human involvement will be closed without review.
 -->
 
-> **This PR MUST target the `dev` branch, not `main`.** `main` is the
-> released branch; active work lands on `dev` first. PRs opened against
-> `main` will be asked to retarget `dev` before review.
+> **This PR MUST target the `main` branch.** Feature branches should be
+> compared against `origin/main`. PRs opened against another base branch
+> may be asked to retarget `main` before review.
 
 ## Who is submitting this PR? (required)
 <!-- Required. PRs that omit this will be closed. We assume an agent wrote
@@ -127,11 +127,15 @@ paste the complete transcript here
 <!-- If you changed wording in skills that shape agent behavior, show your
      eval methodology and results. These are not prose — they are code. -->
 
-## Human review
+## Human review / authorization
 - [ ] A human has reviewed the COMPLETE proposed diff before submission
+- [ ] A human explicitly authorized this agent-created PR before submission
+- Notes:
 
 <!--
-STOP. If the checkbox above is not checked, do not submit this PR.
+STOP. If neither checkbox above is checked, do not submit this PR.
+If the PR was authorized but not fully reviewed yet, say that in Notes.
+Do not claim human review happened unless it happened.
 
 PRs will be closed without review if they:
 - Show no evidence of human involvement
