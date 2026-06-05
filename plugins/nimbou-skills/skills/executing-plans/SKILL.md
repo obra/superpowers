@@ -13,7 +13,7 @@ This skill is the direct executor. Parallelism only happens within a wave, exact
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-Prefer `nimbou-skills:subagent-driven-development` when execution should be delegated to per-task implementer subagents and you want a per-task spec gate plus a per-task code quality review that **block** progression. Use this skill when execution should remain in the controller agent and reviews should be advisory rather than gating.
+Use this skill when execution should remain in the controller agent and reviews should be advisory rather than gating.
 
 ## Step 1: Load and Review
 
@@ -88,8 +88,6 @@ After `<plan>.followups.md` is committed (or confirmed empty), work through **al
 Use this skill for full plan execution by the controller agent when reviews should be advisory.
 
 Do not use it just because parallel work exists. If the real need is "split N unrelated failures across N agents", use `nimbou-skills:dispatching-parallel-agents` instead.
-
-Do not use it when the desired workflow is "one subagent implements, then spec review, then code quality review for every task **and reviews must block progression**". That belongs to `nimbou-skills:subagent-driven-development`.
 
 Do not use it on a plan that lacks `## Ondas de Execução` — refuse and request a wave-structured plan.
 

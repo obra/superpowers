@@ -26,7 +26,6 @@ This fork consolidates:
 - `nestjs-plan`
 - `nestjs-refactor`
 - `executing-plans`
-- `subagent-driven-development`
 - `dispatching-parallel-agents`
 - `test-driven-development`
 - `e2e-test-quality`

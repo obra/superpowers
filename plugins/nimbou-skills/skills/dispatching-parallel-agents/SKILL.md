@@ -51,7 +51,7 @@ digraph when_to_use {
 
 Use this skill to break apart independent domains.
 
-Do not treat it as a substitute for `nimbou-skills:executing-plans`, which runs an approved plan directly, or `nimbou-skills:subagent-driven-development`, which executes a plan through one implementer subagent plus structured review gates per task.
+Do not treat it as a substitute for `nimbou-skills:executing-plans`, which runs an approved plan directly.
 
 ## The Pattern
 

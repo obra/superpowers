@@ -22,7 +22,7 @@ The `## Arquivos` table has columns `| Acao | Caminho | Onda | Role | Depende de
 | `nimbou-skills:nuxt-composable-author` | a composable under `composables/` or a util consumed by composables |
 | `nimbou-skills:nuxt-page-author` | a page under `pages/`, a layout under `layouts/`, or route wiring |
 
-A row without `Role` falls back to `general-purpose` in `subagent-driven-development` with a warning. Fix the plan instead.
+A row without `Role` falls back to `general-purpose` in `executing-plans` with a warning. Fix the plan instead.
 
 ## Naming
 

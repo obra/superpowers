@@ -81,7 +81,7 @@ This file map drives the waves.
 
 ## Role Mapping
 
-Every row in `## Arquivos` MUST set a `Role` slug so `subagent-driven-development` can route execution to the correct agent-author:
+Every row in `## Arquivos` MUST set a `Role` slug so `executing-plans` can route execution to the correct agent-author:
 
 | Role slug | When to use |
 |---|---|

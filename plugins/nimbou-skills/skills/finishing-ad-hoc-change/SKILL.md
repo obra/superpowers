@@ -25,7 +25,7 @@ Use this skill when:
 
 Do not use this skill when:
 
-- A wave-structured plan exists → use `nimbou-skills:executing-plans` or `nimbou-skills:subagent-driven-development`.
+- A wave-structured plan exists → use `nimbou-skills:executing-plans`.
 - The user only wants to merge / open a PR over already-reviewed work → call `nimbou-skills:finishing-a-development-branch` directly.
 - Work is mid-flight and incomplete → finish the implementation first.
 

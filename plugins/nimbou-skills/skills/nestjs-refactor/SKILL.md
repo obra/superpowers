@@ -165,6 +165,5 @@ After implementation, report:
 - `nimbou-skills:nestjs-debug`
 - `nimbou-skills:nestjs-test`
 - `nimbou-skills:dispatching-parallel-agents`
-- `nimbou-skills:subagent-driven-development`
 - `nimbou-skills:request-review`
 - `nimbou-skills:verification-before-completion`

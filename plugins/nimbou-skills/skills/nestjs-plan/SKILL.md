@@ -56,7 +56,7 @@ Every plan MUST start with this header:
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use nimbou-skills:subagent-driven-development (recommended) or nimbou-skills:executing-plans to implement this plan wave-by-wave. Steps use checkbox (`- [ ]`) syntax for tracking. Each wave ends with an automatic `nimbou-skills:request-review` checkpoint, and the final wave runs `nimbou-skills:nestjs-test` scoped strictly to the suites/files touched by this plan — never the full backend suite.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use nimbou-skills:executing-plans to implement this plan wave-by-wave. Steps use checkbox (`- [ ]`) syntax for tracking. Each wave ends with an automatic `nimbou-skills:request-review` checkpoint, and the final wave runs `nimbou-skills:nestjs-test` scoped strictly to the suites/files touched by this plan — never the full backend suite.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -132,7 +132,7 @@ Run: `git add <exact files> && git commit -m "feat: implement [task name]"`
 
 ## Role Mapping
 
-Every task MUST declare a `**Role:**` line that names the agent-author who will execute it under `nimbou-skills:subagent-driven-development`. The slug is one of:
+Every task MUST declare a `**Role:**` line that names the agent-author who will execute it under `nimbou-skills:executing-plans`. The slug is one of:
 
 | Role slug | When to use |
 |---|---|
@@ -208,13 +208,7 @@ After saving the plan, offer the execution choice using the `AskUserQuestion` to
 
 Question: "Plan saved to `docs/plans/<filename>.md`. Which execution mode?"
 
-Options (in this order):
-
-1. **Subagent-Driven (Recommended)** — dispatch a fresh subagent per task, review between tasks, fast iteration
-2. **Inline Execution** — execute tasks in this session via `executing-plans`, with checkpoints and dependency-aware group execution when the plan defines groups
-
-If Subagent-Driven is chosen, use `nimbou-skills:subagent-driven-development`.
-If Inline Execution is chosen, use `nimbou-skills:executing-plans`.
+Use `nimbou-skills:executing-plans` to implement this plan wave-by-wave.
 
 ## How To Ask The User
 

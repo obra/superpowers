@@ -6,8 +6,8 @@ Skeleton for the `<plan>.followups.md` artifact that `nimbou-skills:executing-pl
 
 **Allowed `<Tipo>` values:**
 
-- `spec-issue` — `❌ Issues found` items returned by the per-wave spec reviewer subagent in `executing-plans` (advisory, since reviews there are non-blocking). Use `spec-deferred` instead when the item came from `subagent-driven-development`'s gating spec reviewer or from a `⚠️ Deferred` bucket.
-- `spec-deferred` — `⚠️ Deferred` items returned by the per-wave spec reviewer (in `executing-plans`) or the per-task spec reviewer (in `subagent-driven-development`).
+- `spec-issue` — `❌ Issues found` items returned by the per-wave spec reviewer subagent in `executing-plans` (advisory, since reviews there are non-blocking).
+- `spec-deferred` — `⚠️ Deferred` items returned by the per-wave spec reviewer in `executing-plans`.
 - `review-critical` — Critical findings from the per-wave `nimbou-skills:code-reviewer` subagent in `executing-plans` (advisory). The user must triage these before merging.
 - `review-important` — Important findings from a per-wave `nimbou-skills:code-reviewer` / `nimbou-skills:request-review` that were not treated as blockers.
 - `review-minor` — Minor findings from a per-wave `nimbou-skills:code-reviewer` / `nimbou-skills:request-review`.

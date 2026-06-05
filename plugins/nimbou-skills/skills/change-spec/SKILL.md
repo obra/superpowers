@@ -70,4 +70,4 @@ Inside `## Arquivos/Areas`, list exact paths or bounded areas, the action, the w
 
 Inside `## Ondas de Execução`, mix frontend and backend work in the same wave whenever they are parallel-safe. Split waves only on real dependency.
 
-`## Pos-execucao` may recommend `executing-plans` or `subagent-driven-development` for implementation. Do not recommend `finishing-a-development-branch` here — the primary deliverable of this skill is the unified plan itself.
+`## Pos-execucao` may recommend `executing-plans` for implementation. Do not recommend `finishing-a-development-branch` here — the primary deliverable of this skill is the unified plan itself.
