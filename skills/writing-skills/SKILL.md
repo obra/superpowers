@@ -598,7 +598,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 **IMPORTANT: Create a todo for EACH checklist item below.**
 
 **RED Phase - Write Failing Test:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
+- [ ] Create pressure scenarios that reliably trigger the rationalizations you want to prevent (combine pressures that make the rationalization feel genuinely compelling — the test for "enough" is whether an agent without the skill consistently takes the rationalization path, not a count)
 - [ ] Run scenarios WITHOUT skill - document baseline behavior verbatim
 - [ ] Identify patterns in rationalizations/failures
 

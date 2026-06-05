@@ -48,7 +48,7 @@ This is identical to TDD's "write failing test first" - you MUST see what agents
 
 **Process:**
 
-- [ ] **Create pressure scenarios** (3+ combined pressures)
+- [ ] **Create pressure scenarios** that reliably trigger the rationalizations you want to prevent (combine pressures that make the rationalization feel genuinely compelling)
 - [ ] **Run WITHOUT skill** - give agents realistic task with pressures
 - [ ] **Document choices and rationalizations** word-for-word
 - [ ] **Identify patterns** - which excuses appear repeatedly?
@@ -137,7 +137,7 @@ Forces explicit choice.
 | **Social** | Looking dogmatic, seeming inflexible |
 | **Pragmatic** | "Being pragmatic vs dogmatic" |
 
-**Best tests combine 3+ pressures.**
+**Best tests combine pressures that make the rationalization feel genuinely compelling.** The diagnostic: does an agent without the skill, run on this scenario, consistently take the rationalization path you're trying to close? A scenario with two strong, well-aligned pressures can do this more reliably than four weak unaligned ones.
 
 **Why this works:** See persuasion-principles.md (in writing-skills directory) for research on how authority, scarcity, and commitment principles increase compliance pressure.
 
@@ -310,7 +310,7 @@ Meta-test: "Skill was clear, I should follow it"
 Before deploying skill, verify you followed RED-GREEN-REFACTOR:
 
 **RED Phase:**
-- [ ] Created pressure scenarios (3+ combined pressures)
+- [ ] Created pressure scenarios that reliably trigger the rationalizations you want to prevent
 - [ ] Ran scenarios WITHOUT skill (baseline)
 - [ ] Documented agent failures and rationalizations verbatim
 
@@ -340,8 +340,8 @@ Running only academic tests, not real pressure scenarios.
 ✅ Fix: Use pressure scenarios that make agent WANT to violate.
 
 **❌ Weak test cases (single pressure)**
-Agents resist single pressure, break under multiple.
-✅ Fix: Combine 3+ pressures (time + sunk cost + exhaustion).
+Agents resist single pressure, break under combined pressures.
+✅ Fix: Combine pressures that make the rationalization feel genuinely compelling — the standard is whether an agent without the skill consistently takes the rationalization path, not a count.
 
 **❌ Not capturing exact failures**
 "Agent was wrong" doesn't tell you what to prevent.
