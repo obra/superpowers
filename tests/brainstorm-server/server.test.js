@@ -45,9 +45,14 @@ async function fetch(url) {
   });
 }
 
-function startServer() {
+function startServer(envOverrides = {}) {
   return spawn('node', [SERVER_PATH], {
-    env: { ...process.env, BRAINSTORM_PORT: TEST_PORT, BRAINSTORM_DIR: TEST_DIR }
+    env: {
+      ...process.env,
+      BRAINSTORM_PORT: TEST_PORT,
+      BRAINSTORM_DIR: TEST_DIR,
+      ...envOverrides
+    }
   });
 }
 
@@ -67,6 +72,21 @@ async function waitForServer(server) {
 
     setTimeout(() => reject(new Error(`Server didn't start. stderr: ${stderr}`)), 5000);
   });
+}
+
+async function requireServerModule(envOverrides = {}) {
+  const child = spawn('node', ['-e', `require(${JSON.stringify(SERVER_PATH)})`], {
+    env: { ...process.env, ...envOverrides }
+  });
+  let stdout = '';
+  let stderr = '';
+  child.stdout.on('data', (data) => { stdout += data.toString(); });
+  child.stderr.on('data', (data) => { stderr += data.toString(); });
+  const code = await new Promise((resolve, reject) => {
+    child.on('error', reject);
+    child.on('exit', resolve);
+  });
+  return { code, stdout, stderr };
 }
 
 async function runTests() {
@@ -112,6 +132,7 @@ async function runTests() {
       assert.strictEqual(info.port, TEST_PORT);
       assert.strictEqual(info.screen_dir, CONTENT_DIR, 'screen_dir should point to content/');
       assert.strictEqual(info.state_dir, STATE_DIR, 'state_dir should point to state/');
+      assert.strictEqual(info.idle_timeout_ms, 2 * 60 * 60 * 1000, 'default idle timeout should be 2 hours');
       return Promise.resolve();
     });
 
@@ -408,6 +429,66 @@ async function runTests() {
       assert(template.includes('<!-- CONTENT -->'), 'Should have content placeholder');
       assert(template.includes('frame-content'), 'Should have content container');
       return Promise.resolve();
+    });
+
+    // ========== Lifecycle ==========
+    console.log('\n--- Lifecycle ---');
+
+    await test('exits and writes server-stopped after configurable idle timeout', async () => {
+      const idleDir = `${TEST_DIR}-idle`;
+      if (fs.existsSync(idleDir)) fs.rmSync(idleDir, { recursive: true });
+
+      const idleServer = spawn('node', [SERVER_PATH], {
+        env: {
+          ...process.env,
+          BRAINSTORM_PORT: TEST_PORT + 1,
+          BRAINSTORM_DIR: idleDir,
+          BRAINSTORM_IDLE_TIMEOUT_MS: '500',
+          BRAINSTORM_LIFECYCLE_INTERVAL_MS: '50'
+        }
+      });
+
+      try {
+        const { stdout } = await waitForServer(idleServer);
+        const infoLine = stdout.trim().split(/\r?\n/).find(line => line.includes('server-started'));
+        const info = JSON.parse(infoLine);
+        assert.strictEqual(info.idle_timeout_ms, 500, 'startup JSON should report configured idle timeout');
+
+        const ws = new WebSocket(`ws://localhost:${TEST_PORT + 1}`);
+        let wsClosed = false;
+        ws.on('close', () => { wsClosed = true; });
+        await new Promise((resolve, reject) => {
+          ws.on('open', resolve);
+          ws.on('error', reject);
+        });
+
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('server did not exit after idle timeout')), 3000);
+          idleServer.on('exit', (code) => {
+            clearTimeout(timer);
+            code === 0 ? resolve() : reject(new Error(`server exited with code ${code}`));
+          });
+        });
+
+        const stoppedPath = path.join(idleDir, 'state', 'server-stopped');
+        assert(fs.existsSync(stoppedPath), 'state/server-stopped should exist');
+        const stopped = JSON.parse(fs.readFileSync(stoppedPath, 'utf-8').trim());
+        assert.strictEqual(stopped.reason, 'idle timeout');
+        assert(!fs.existsSync(path.join(idleDir, 'state', 'server-info')), 'server-info should be removed on shutdown');
+        assert(wsClosed || ws.readyState === WebSocket.CLOSED, 'open WebSocket should be closed during shutdown');
+      } finally {
+        idleServer.kill();
+        if (fs.existsSync(idleDir)) fs.rmSync(idleDir, { recursive: true });
+      }
+    });
+
+    await test('rejects timer env vars above Node timer limit', async () => {
+      for (const envName of ['BRAINSTORM_IDLE_TIMEOUT_MS', 'BRAINSTORM_LIFECYCLE_INTERVAL_MS']) {
+        const result = await requireServerModule({ [envName]: '2147483648' });
+        assert.notStrictEqual(result.code, 0, `${envName} should fail before creating an overflowing timer`);
+        assert(result.stderr.includes(envName), 'error should name invalid env var');
+        assert(result.stderr.includes('2147483647'), 'error should describe the max timer delay');
+      }
     });
 
     // ========== Summary ==========

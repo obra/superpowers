@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start the brainstorm server and output connection info
-# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
+# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--idle-timeout-minutes <minutes>] [--foreground] [--background]
 #
 # Starts server on a random high port, outputs JSON with URL.
 # Each session gets its own directory to avoid conflicts.
@@ -11,10 +11,50 @@
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
+#   --idle-timeout-minutes <minutes>
+#                         Auto-stop after this many idle minutes (default: 120).
 #   --foreground          Run server in the current terminal (no backgrounding).
 #   --background          Force background mode (overrides Codex auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+MAX_TIMER_DELAY_MS=2147483647
+MAX_IDLE_TIMEOUT_MINUTES=$((MAX_TIMER_DELAY_MS / 60 / 1000))
+
+json_error() {
+  local message="$1"
+  message="${message//\\/\\\\}"
+  message="${message//\"/\\\"}"
+  echo "{\"error\": \"$message\"}"
+}
+
+require_value() {
+  local flag="$1"
+  local value="${2:-}"
+  if [[ -z "$value" || "$value" == --* ]]; then
+    json_error "Missing value for $flag"
+    exit 1
+  fi
+}
+
+require_positive_integer() {
+  local flag="$1"
+  local value="$2"
+  if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+    json_error "$flag must be a positive integer"
+    exit 1
+  fi
+}
+
+require_max_integer() {
+  local flag="$1"
+  local value="$2"
+  local max="$3"
+  local label="$4"
+  if [[ ${#value} -gt ${#max} || ( ${#value} -eq ${#max} && "$value" > "$max" ) ]]; then
+    json_error "$flag must be no more than $max $label"
+    exit 1
+  fi
+}
 
 # Parse arguments
 PROJECT_DIR=""
@@ -22,18 +62,29 @@ FOREGROUND="false"
 FORCE_BACKGROUND="false"
 BIND_HOST="127.0.0.1"
 URL_HOST=""
+IDLE_TIMEOUT_MS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
+      require_value "$1" "${2:-}"
       PROJECT_DIR="$2"
       shift 2
       ;;
     --host)
+      require_value "$1" "${2:-}"
       BIND_HOST="$2"
       shift 2
       ;;
     --url-host)
+      require_value "$1" "${2:-}"
       URL_HOST="$2"
+      shift 2
+      ;;
+    --idle-timeout-minutes)
+      require_value "$1" "${2:-}"
+      require_positive_integer "$1" "$2"
+      require_max_integer "$1" "$2" "$MAX_IDLE_TIMEOUT_MINUTES" "minutes"
+      IDLE_TIMEOUT_MS=$(($2 * 60 * 1000))
       shift 2
       ;;
     --foreground|--no-daemon)
@@ -45,7 +96,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     *)
-      echo "{\"error\": \"Unknown argument: $1\"}"
+      json_error "Unknown argument: $1"
       exit 1
       ;;
   esac
@@ -118,9 +169,19 @@ if [[ -n "${MSYSTEM:-}" ]]; then
   OWNER_PID=""
 fi
 
+SERVER_ENV=(
+  "BRAINSTORM_DIR=$SESSION_DIR"
+  "BRAINSTORM_HOST=$BIND_HOST"
+  "BRAINSTORM_URL_HOST=$URL_HOST"
+  "BRAINSTORM_OWNER_PID=$OWNER_PID"
+)
+if [[ -n "$IDLE_TIMEOUT_MS" ]]; then
+  SERVER_ENV+=("BRAINSTORM_IDLE_TIMEOUT_MS=$IDLE_TIMEOUT_MS")
+fi
+
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
-  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs &
+  env "${SERVER_ENV[@]}" node server.cjs &
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
   wait "$SERVER_PID"
@@ -129,7 +190,7 @@ fi
 
 # Start server, capturing output to log file
 # Use nohup to survive shell exit; disown to remove from job table
-nohup env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs > "$LOG_FILE" 2>&1 &
+nohup env "${SERVER_ENV[@]}" node server.cjs > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"

@@ -38,7 +38,8 @@ scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/content",
-#           "state_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/state"}
+#           "state_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/state",
+#           "idle_timeout_ms":7200000}
 ```
 
 Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
@@ -92,10 +93,16 @@ scripts/start-server.sh \
 
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
+By default the server auto-exits after 2 hours without HTTP, WebSocket, or file-watch activity. For long workshops, extend the idle window:
+
+```bash
+scripts/start-server.sh --project-dir /path/to/project --idle-timeout-minutes 240
+```
+
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
+   - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. `server-info` includes `idle_timeout_ms`; the default idle timeout is 2 hours.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use your file-creation tool — **never use cat/heredoc** (dumps noise into terminal)

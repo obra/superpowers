@@ -89,6 +89,9 @@ const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
+const DEFAULT_IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+const DEFAULT_LIFECYCLE_INTERVAL_MS = 60 * 1000;
+const MAX_TIMER_DELAY_MS = 2147483647;
 
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -131,6 +134,19 @@ function getNewestScreen() {
     })
     .sort((a, b) => b.mtime - a.mtime);
   return files.length > 0 ? files[0].path : null;
+}
+
+function parsePositiveIntegerEnv(name, defaultValue, maxValue = Number.MAX_SAFE_INTEGER) {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return defaultValue;
+  if (!/^[1-9][0-9]*$/.test(raw)) {
+    throw new Error(`${name} must be a positive integer, got: ${raw}`);
+  }
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value > maxValue) {
+    throw new Error(`${name} must be a positive integer <= ${maxValue}, got: ${raw}`);
+  }
+  return value;
 }
 
 // ========== HTTP Request Handler ==========
@@ -255,7 +271,8 @@ function broadcast(msg) {
 
 // ========== Activity Tracking ==========
 
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const IDLE_TIMEOUT_MS = parsePositiveIntegerEnv('BRAINSTORM_IDLE_TIMEOUT_MS', DEFAULT_IDLE_TIMEOUT_MS, MAX_TIMER_DELAY_MS);
+const LIFECYCLE_INTERVAL_MS = parsePositiveIntegerEnv('BRAINSTORM_LIFECYCLE_INTERVAL_MS', DEFAULT_LIFECYCLE_INTERVAL_MS, MAX_TIMER_DELAY_MS);
 let lastActivity = Date.now();
 
 function touchActivity() {
@@ -316,6 +333,11 @@ function startServer() {
       JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
     );
     watcher.close();
+    for (const socket of clients) {
+      try { socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0))); } catch (e) {}
+      socket.destroy();
+    }
+    clients.clear();
     clearInterval(lifecycleCheck);
     server.close(() => process.exit(0));
   }
@@ -325,11 +347,11 @@ function startServer() {
     try { process.kill(ownerPid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
   }
 
-  // Check every 60s: exit if owner process died or idle for 30 minutes
+  // Check periodically: exit if owner process died or the session is idle.
   const lifecycleCheck = setInterval(() => {
     if (!ownerAlive()) shutdown('owner process exited');
     else if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) shutdown('idle timeout');
-  }, 60 * 1000);
+  }, LIFECYCLE_INTERVAL_MS);
   lifecycleCheck.unref();
 
   // Validate owner PID at startup. If it's already dead, the PID resolution
@@ -349,7 +371,8 @@ function startServer() {
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
       url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
-      screen_dir: CONTENT_DIR, state_dir: STATE_DIR
+      screen_dir: CONTENT_DIR, state_dir: STATE_DIR,
+      idle_timeout_ms: IDLE_TIMEOUT_MS
     });
     console.log(info);
     fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n');
