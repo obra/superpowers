@@ -159,7 +159,7 @@ already use it in another harness.
 
 3. **using-git-worktrees** - Activates before executing the plan. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
 
-4. **subagent-driven-development** / **executing-plans** - Repeat per task:
+4. Implementation loop - Repeat per task:
     1. Choose your execution path:
         - **subagent-driven-development** *(preferred — requires subagent support)* — Dispatches a fresh subagent per task with two-stage review (spec compliance, then code quality).
         - **executing-plans** *(fallback)* — Executes tasks in a separate session, stopping only on blockers.
