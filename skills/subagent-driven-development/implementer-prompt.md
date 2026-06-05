@@ -99,15 +99,25 @@ Task tool (general-purpose):
 
     ## Report Format
 
-    When done, report:
-    - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - What you implemented (or what you attempted, if blocked)
-    - What you tested and test results
-    - Files changed
-    - Self-review findings (if any)
-    - Any issues or concerns
+    When done, report a structured tail with these required fields:
 
-    Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
-    Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
+    - **status:** `DONE` | `DONE_WITH_CONCERNS` | `BLOCKED` | `NEEDS_CONTEXT`
+    - **changed_files:** array of file paths you edited. Empty array `[]` ONLY if the task is genuinely zero-diff (review-only, TodoWrite-only, question-to-human).
+    - **commit_sha:** the commit you produced (or empty string if you intentionally left work uncommitted).
+    - **zero_diff_allowed:** `true` ONLY if the task legitimately produces no on-disk changes. `false` otherwise (the default). Setting this to `true` when you should have edited files is reporting fraud — the controller's gate will catch it and re-dispatch.
+    - **summary:** what you implemented (or attempted, if blocked).
+    - **test_cmd:** the command you ran to verify, if applicable.
+    - **test_result:** structured result (`{passed: N, failed: M}`) or short prose if no test framework applied.
+    - **concerns:** any self-review findings or issues to flag.
+
+    Use `DONE_WITH_CONCERNS` if you completed the work but have doubts about correctness.
+    Use `BLOCKED` if you cannot complete the task. Use `NEEDS_CONTEXT` if you need
     information that wasn't provided. Never silently produce work you're unsure about.
+
+    **Critical:** Do NOT report `DONE` with `changed_files: []` unless `zero_diff_allowed: true`.
+    The controller verifies your report against `git status --porcelain` and `git log` after
+    your dispatch window. If the tree shows no edits and you didn't declare zero-diff, you
+    will be re-dispatched with explicit feedback. Persistent empty-diff DONE will halt the
+    plan with an `sdd_fidelity_empty_diff` error. Self-reports are advisory; on-disk state
+    is authoritative.
 ```

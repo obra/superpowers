@@ -55,7 +55,25 @@ Task tool (general-purpose):
 
     **Verify by reading code, not by trusting report.**
 
-    Report:
-    - ✅ Spec compliant (if everything matches after code inspection)
-    - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    ## Report Format
+
+    Report a structured tail with these required fields:
+
+    - **verdict:** `concur` (everything matches after code inspection) | `concerns` (issues
+      found that should block proceeding) | `blocked` (cannot evaluate — explain why)
+    - **findings:** array. Empty array `[]` if you have no concerns. Each finding is
+      `{file, line, severity, message}` where severity is `info | warn | error`. A
+      MISSING findings field is the silent-no-op signal — the controller will treat it
+      as if you didn't actually review and will re-dispatch you. Always include this
+      field, even if empty.
+    - **evidence:** `{files_read: [...]}` — list the file paths you actually opened
+      during this review. Empty array is acceptable (some reviews evaluate without
+      reading specific files), but include the field.
+    - **low_confidence:** `true` if you could not gather enough evidence to evaluate
+      with confidence (e.g., reviewing a YAML config without an obvious primary file).
+      `false` otherwise (default).
+
+    **Critical:** Do NOT return `concur` without an explicit `findings: []` array. A
+    missing findings field is the silent-no-op signal and will trigger a re-dispatch.
+    Self-reports are advisory; the controller verifies your tail mechanically.
 ```
