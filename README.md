@@ -166,7 +166,7 @@ already use it in another harness.
     2. **test-driven-development** — Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit.
     3. **requesting-code-review** — Reviews against plan, reports issues by severity. Critical issues block progress.
 
-5. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree if it was created by Superpowers.
+5. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree if one was created.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
