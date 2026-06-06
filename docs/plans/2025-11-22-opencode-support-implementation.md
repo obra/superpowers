@@ -780,7 +780,7 @@ git commit -m "feat: implement session.started hook for opencode"
 ```bash
 # Clone superpowers skills to OpenCode config directory
 mkdir -p ~/.config/opencode/superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/leakdev0410/superpowers.git ~/.config/opencode/superpowers
 ```
 
 ### 2. Install the Plugin

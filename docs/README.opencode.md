@@ -8,7 +8,7 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugin": ["superpowers@git+https://github.com/leakdev0410/superpowers.git"]
 }
 ```
 
@@ -91,7 +91,7 @@ To pin a specific version, use a branch or tag:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+  "plugin": ["superpowers@git+https://github.com/leakdev0410/superpowers.git#v5.0.3"]
 }
 ```
 
@@ -128,7 +128,7 @@ the plugin, try installing with system npm and pointing OpenCode at the local
 package:
 
 ```powershell
-npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
+npm install superpowers@git+https://github.com/leakdev0410/superpowers.git --prefix "$HOME\.config\opencode"
 ```
 
 Then use the installed package path in `opencode.json`:

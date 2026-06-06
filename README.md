@@ -1,5 +1,7 @@
 # Superpowers
 
+> **Note:** This is a fork. Original project by obra: https://github.com/obra/superpowers
+
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
 ## Quickstart
@@ -91,7 +93,7 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 - Register the marketplace:
 
   ```bash
-  droid plugin marketplace add https://github.com/obra/superpowers
+  droid plugin marketplace add https://github.com/leakdev0410/superpowers
   ```
 
 - Install the plugin:
@@ -105,7 +107,7 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 - Install the extension:
 
   ```bash
-  gemini extensions install https://github.com/obra/superpowers
+  gemini extensions install https://github.com/leakdev0410/superpowers
   ```
 
 - Update later:
@@ -119,7 +121,7 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 - Install the plugin:
 
   ```bash
-  agy plugin install https://github.com/obra/superpowers
+  agy plugin install https://github.com/leakdev0410/superpowers
   ```
 
 - Or if you are migrating from Gemini CLI, you can import your existing extensions:
@@ -136,7 +138,7 @@ already use it in another harness.
 - Tell OpenCode:
 
   ```
-  Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+  Fetch and follow instructions from https://raw.githubusercontent.com/leakdev0410/superpowers/refs/heads/main/.opencode/INSTALL.md
   ```
 
 - Detailed docs: [docs/README.opencode.md](docs/README.opencode.md)
