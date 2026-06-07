@@ -18,6 +18,11 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+> **Documentation build warning:** If this project publishes docs generated from `docs/` (Sphinx, MkDocs, Docusaurus, Read the Docs, etc.), `docs/superpowers/plans/` may be rendered and published publicly. After saving the plan, check for a docs build config (`docs/conf.py`, `mkdocs.yml`, `.readthedocs.yaml`, `docusaurus.config.*`). If found, add an exclusion so plans stay in git but never reach the published output:
+>
+> **Sphinx** (`docs/conf.py`): `exclude_patterns = ["_build", "Thumbs.db", "superpowers"]`
+> **MkDocs** (`mkdocs.yml`): add `superpowers/` under `exclude_docs:`
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.

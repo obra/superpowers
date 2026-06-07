@@ -110,6 +110,7 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+  - **Documentation build warning:** If this project publishes docs from `docs/` (Sphinx, MkDocs, Docusaurus, Read the Docs), `docs/superpowers/specs/` may be rendered publicly. After committing, check for a docs build config (`docs/conf.py`, `mkdocs.yml`, `.readthedocs.yaml`, `docusaurus.config.*`) and add an exclusion if needed. Sphinx: add `"superpowers"` to `exclude_patterns`; MkDocs: add `superpowers/` under `exclude_docs:`.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
