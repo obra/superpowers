@@ -110,8 +110,12 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" (without actual test code)
 - "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
-- Steps that describe what to do without showing how (code blocks required for code steps)
+- Steps that describe what to do without showing how
 - References to types, functions, or methods not defined in any task
+
+Discovery steps are allowed only for genuinely unknown locations: a step that runs a concrete command (grep, find, read file) to locate an implementation site is not a placeholder when it shows the exact command, expected output shape, and decision rule for choosing the file or line. Later code steps may reference the discovered file or line, but they still need concrete code or concrete transformation rules; do not use discovery as permission for placeholder names, invented functions, or "fill in based on output."
+
+Note: Code blocks are required for code steps. Shell commands can be concrete steps when they include the exact command, expected output shape, and what to do with the output.
 
 ## Remember
 - Exact file paths always
