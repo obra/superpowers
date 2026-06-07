@@ -2,6 +2,8 @@
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
+![Demo: a coding agent with Superpowers steps back to tease out a spec, writes a junior-proof plan, then runs subagent-driven development with red/green TDD and code review — 14 composable skills that trigger automatically, across Claude Code, Codex, Gemini CLI, Cursor and more.](assets/hero.gif)
+
 ## Quickstart
 
 Give your agent Superpowers: [Claude Code](#claude-code), [Codex CLI](#codex-cli), [Codex App](#codex-app), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli).
