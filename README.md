@@ -137,6 +137,20 @@ already use it in another harness.
 
 - Or search for "superpowers" in the plugin marketplace.
 
+### goose
+
+- Install the plugin:
+
+  ```bash
+  goose plugin install https://github.com/obra/superpowers.git
+  ```
+
+- Update later:
+
+  ```bash
+  goose plugin update superpowers
+  ```
+
 ### GitHub Copilot CLI
 
 - Register the marketplace:
