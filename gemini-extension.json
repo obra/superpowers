@@ -1,6 +1,6 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
+  "name": "ultipowers",
+  "description": "Superpowers workflow discipline with mem0 and Serena MCP routing for code-aware agents",
   "version": "5.1.0",
   "contextFileName": "GEMINI.md"
 }

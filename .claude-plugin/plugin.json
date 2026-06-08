@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "name": "ultipowers",
+  "description": "Superpowers workflow discipline with mem0 and Serena MCP routing for code-aware agents",
   "version": "5.1.0",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/thaingocthienlong/superpowers",
+  "repository": "https://github.com/thaingocthienlong/superpowers",
   "license": "MIT",
   "keywords": [
     "skills",
@@ -15,6 +15,9 @@
     "debugging",
     "collaboration",
     "best-practices",
-    "workflows"
+    "workflows",
+    "mcp",
+    "mem0",
+    "serena"
   ]
 }
