@@ -39,6 +39,12 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
 
+## Ultipowers MCP Layer
+
+When mem0 or Serena MCP tools are available and the task involves code, load `mcp-session-sync` once near the start of the session, then use `mcp-routing` before code discovery, implementation, debugging, review, or delivery work.
+
+Superpowers controls the workflow: brainstorming, planning, TDD, debugging, review, and delivery. The MCP layer controls codebase operations: mem0 for architecture context, graph intelligence, and durable project learnings; Serena for symbol navigation, references, diagnostics, and symbol edits.
+
 # Using Skills
 
 ## The Rule

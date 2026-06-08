@@ -30,6 +30,12 @@ Task tool (general-purpose):
     git diff {BASE_SHA}..{HEAD_SHA}
     ```
 
+    If mem0 or Serena tools are available, use them according to
+    ultipowers:mcp-routing: mem0 for architecture context, graph intelligence,
+    prior decisions, and durable project learnings; Serena for symbol
+    references, diagnostics, and source navigation. Use shell reads only when
+    structured tools are unavailable or insufficient.
+
     ## What to Check
 
     **Plan alignment:**

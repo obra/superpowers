@@ -33,6 +33,7 @@ Task tool (general-purpose):
     - Compare actual implementation to requirements line by line
     - Check for missing pieces they claimed to implement
     - Look for extra features they didn't mention
+    - Use mem0 and Serena via ultipowers:mcp-routing when available before broad file reads
 
     ## Your Job
 

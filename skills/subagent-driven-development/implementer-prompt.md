@@ -36,6 +36,12 @@ Task tool (general-purpose):
     5. Self-review (see below)
     6. Report back
 
+    If mem0 or Serena tools are available, use them according to
+    ultipowers:mcp-routing: mem0 for architecture context, graph intelligence,
+    prior decisions, and durable project learnings; Serena for symbol
+    navigation, references, diagnostics, and symbol edits. Use shell file reads
+    only when structured tools are unavailable or insufficient.
+
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.

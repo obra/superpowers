@@ -113,6 +113,8 @@ You MUST complete each phase before proceeding to the next.
 
    See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
 
+   When mem0 or Serena MCP tools are available, use `mcp-trace` before reading broad source: mem0 for prior architecture and graph context, Serena for exact symbols and references.
+
    **Quick version:**
    - Where does bad value originate?
    - What called this with bad value?

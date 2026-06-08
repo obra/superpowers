@@ -25,9 +25,10 @@ Load plan, review critically, execute all tasks, report when complete.
 
 For each task:
 1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+2. If mem0 or Serena tools are available, use `mcp-routing` before code discovery or edits
+3. Follow each step exactly (plan has bite-sized steps)
+4. Run verifications as specified
+5. Mark as completed
 
 ### Step 3: Complete Development
 
@@ -68,3 +69,5 @@ After all tasks complete and verified:
 - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **mcp-session-sync** - Initializes mem0 and Serena context near session start when those tools are available
+- **mcp-routing** - Routes code discovery and edits through mem0 and Serena when available

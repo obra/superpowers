@@ -83,6 +83,10 @@ You: [Fix progress indicators]
 - Review after each task or at natural checkpoints
 - Get feedback, apply, continue
 
+**Ultipowers MCP Layer:**
+- If mem0 is available, include relevant architecture, graph, convention, and prior-decision context in the review prompt
+- If Serena is available, tell the reviewer to use symbol references and diagnostics before relying on broad file reads
+
 **Ad-Hoc Development:**
 - Review before merge
 - Review when stuck
