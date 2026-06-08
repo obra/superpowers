@@ -2,7 +2,8 @@
  * Superpowers plugin for OpenCode.ai
  *
  * Injects superpowers bootstrap context via system prompt transform.
- * Auto-registers skills directory via config hook (no symlinks needed).
+ * Skills are auto-discovered by OpenCode's plugin mechanism with the
+ * `superpowers:` prefix — no config.skills.paths injection needed.
  */
 
 import path from 'path';
@@ -96,18 +97,6 @@ ${toolMapping}
   };
 
   return {
-    // Inject skills path into live config so OpenCode discovers superpowers skills
-    // without requiring manual symlinks or config file edits.
-    // This works because Config.get() returns a cached singleton — modifications
-    // here are visible when skills are lazily discovered later.
-    config: async (config) => {
-      config.skills = config.skills || {};
-      config.skills.paths = config.skills.paths || [];
-      if (!config.skills.paths.includes(superpowersSkillsDir)) {
-        config.skills.paths.push(superpowersSkillsDir);
-      }
-    },
-
     // Inject bootstrap into the first user message of each session.
     // Using a user message instead of a system message avoids:
     //   1. Token bloat from system messages repeated every turn (#750)
