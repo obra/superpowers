@@ -21,6 +21,33 @@ Live in `tests/`. Currently:
 
 Run plugin tests via the relevant directory's `run-*.sh` or `npm test`.
 
+Fast local checks:
+
+```bash
+# Brainstorm server JS tests. Install the test-only ws dependency first.
+cd tests/brainstorm-server
+npm ci
+npm test
+
+# Shell lint wrapper tests. These use stubbed shellcheck/shfmt binaries.
+cd ../..
+bash tests/shell-lint/test-lint-shell.sh
+```
+
+The Windows brainstorm lifecycle test intentionally waits past the 60-second
+owner-process check twice. Give it at least 3 minutes:
+
+```bash
+bash tests/brainstorm-server/windows-lifecycle.test.sh
+```
+
+On Windows, run the shell tests from Git Bash or invoke Git Bash explicitly
+from PowerShell, for example:
+
+```powershell
+& 'C:\Program Files\Git\bin\bash.exe' tests/brainstorm-server/windows-lifecycle.test.sh
+```
+
 ## Skill behavior evals
 
 Live in `evals/`. Drill is the harness; scenarios live at `evals/scenarios/*.yaml`. See `evals/README.md` for setup. Quick start:
