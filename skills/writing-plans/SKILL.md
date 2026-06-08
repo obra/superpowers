@@ -131,9 +131,17 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+## Coverage Verification (MANDATORY — before any execution handoff)
+
+The self-review above is your own skim. It is NOT sufficient on its own. After saving the plan, you MUST run a rigorous coverage audit before offering execution.
+
+**REQUIRED SUB-SKILL:** Use superpowers:verifying-plan-coverage immediately, on the plan you just wrote against its spec.
+
+Do not offer the execution handoff until the plan is **VERIFIED** by that skill (100% atomic-requirement coverage, zero divergence/addition/nonsense). If it returns an Amendment Proposal, surface it to the user, apply their rulings (spec first, then plan), and re-verify. Only a VERIFIED plan proceeds.
+
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan AND passing coverage verification, offer execution choice:
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
