@@ -28,6 +28,7 @@
     const el = document.querySelector('.status');
     if (!el) return;
     const map = {
+      connecting:   ['Connecting…',   'var(--text-tertiary)'],
       connected:    ['Connected',     'var(--success)'],
       reconnecting: ['Reconnecting…', 'var(--warning)'],
       disconnected: ['Disconnected',  'var(--error)']
@@ -55,7 +56,7 @@
 
   function connect() {
     if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-    setStatus(everConnected ? 'reconnecting' : 'connected');
+    setStatus(everConnected ? 'reconnecting' : 'connecting');
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
