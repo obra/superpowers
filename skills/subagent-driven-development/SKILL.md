@@ -62,7 +62,7 @@ digraph process {
 
     "Read plan, extract all tasks with full text, note context, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -81,8 +81,8 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Mark task complete in todo list" [label="yes"];
     "Mark task complete in todo list" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
+    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -94,9 +94,13 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 **Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
 
-**Architecture, design, and review tasks**: use the most capable available model.
+**Architecture and design tasks**: use the most capable available model.
 
-**Task complexity signals:**
+**Review tasks**: choose the model with the same judgment, scaled to the
+diff's size, complexity, and risk. A small mechanical diff does not need the
+most capable model; a subtle concurrency change does.
+
+**Task complexity signals (implementation tasks):**
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
@@ -119,11 +123,31 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+## Handling Spec Reviewer ⚠️ Items
+
+The spec reviewer may report "⚠️ Cannot verify from diff" items — requirements
+that live in unchanged code or span tasks. These do not block dispatching the
+code quality reviewer, but you must resolve each one yourself before marking
+the task complete: you hold the plan and cross-task context the reviewer
+lacks. If you confirm an item is a real gap, treat it as a failed spec
+review — send it back to the implementer and re-review.
+
+## Constructing Reviewer Prompts
+
+Per-task reviews are task-scoped gates. The broad review happens once, at the
+final whole-branch review. When you fill a reviewer template:
+
+- Do not add open-ended directives like "check all uses" or "run race tests
+  if useful" without a concrete, task-specific reason
+- Do not ask a reviewer to re-run tests the implementer already ran on the
+  same code — the implementer's report carries the test evidence
+
 ## Prompt Templates
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
 - [spec-reviewer-prompt.md](spec-reviewer-prompt.md) - Dispatch spec compliance reviewer subagent
 - [code-quality-reviewer-prompt.md](code-quality-reviewer-prompt.md) - Dispatch code quality reviewer subagent
+- Final whole-branch review: use superpowers:requesting-code-review's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
 
 ## Example Workflow
 
@@ -154,7 +178,7 @@ Implementer: "Got it. Implementing now..."
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 
 [Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+Code reviewer: Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
 
 [Mark Task 1 complete]
 
@@ -188,7 +212,7 @@ Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 Implementer: Extracted PROGRESS_INTERVAL constant
 
 [Code reviewer reviews again]
-Code reviewer: ✅ Approved
+Code reviewer: ✅ Task quality: Approved
 
 [Mark Task 2 complete]
 
@@ -269,7 +293,7 @@ Done!
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for reviewer subagents
+- **superpowers:requesting-code-review** - Code review template for the final whole-branch review
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
