@@ -255,7 +255,18 @@ function broadcast(msg) {
 
 // ========== Activity Tracking ==========
 
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+// Idle timeout: shut down after this long with no activity. Default 4 hours;
+// override with BRAINSTORM_IDLE_TIMEOUT_MS (start-server.sh: --idle-timeout-minutes).
+const IDLE_TIMEOUT_MS = (() => {
+  const ms = Number(process.env.BRAINSTORM_IDLE_TIMEOUT_MS);
+  return Number.isFinite(ms) && ms > 0 ? ms : 4 * 60 * 60 * 1000;
+})();
+// How often the watchdog checks for owner-death / idleness. Configurable mainly
+// so tests can run fast; production default is 60s.
+const LIFECYCLE_CHECK_MS = (() => {
+  const ms = Number(process.env.BRAINSTORM_LIFECYCLE_CHECK_MS);
+  return Number.isFinite(ms) && ms > 0 ? ms : 60 * 1000;
+})();
 let lastActivity = Date.now();
 
 function touchActivity() {
@@ -317,6 +328,11 @@ function startServer() {
     );
     watcher.close();
     clearInterval(lifecycleCheck);
+    // Close any upgraded WebSocket sockets so server.close() can complete and
+    // the process actually exits instead of lingering on an open connection.
+    for (const socket of clients) {
+      try { socket.destroy(); } catch (e) { /* already gone */ }
+    }
     server.close(() => process.exit(0));
   }
 
@@ -325,11 +341,11 @@ function startServer() {
     try { process.kill(ownerPid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
   }
 
-  // Check every 60s: exit if owner process died or idle for 30 minutes
+  // Periodically exit if the owner process died or we've been idle too long.
   const lifecycleCheck = setInterval(() => {
     if (!ownerAlive()) shutdown('owner process exited');
     else if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) shutdown('idle timeout');
-  }, 60 * 1000);
+  }, LIFECYCLE_CHECK_MS);
   lifecycleCheck.unref();
 
   // Validate owner PID at startup. If it's already dead, the PID resolution
@@ -349,7 +365,7 @@ function startServer() {
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
       url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
-      screen_dir: CONTENT_DIR, state_dir: STATE_DIR
+      screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS
     });
     console.log(info);
     fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n');
