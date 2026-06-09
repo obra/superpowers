@@ -58,7 +58,7 @@ Subagent (general-purpose):
 
     ## Your Job
 
-    Read the implementation code and verify:
+    Read the diff and verify:
 
     **Missing requirements:**
     - Did they implement everything that was requested?
@@ -75,7 +75,7 @@ Subagent (general-purpose):
     - Did they solve the wrong problem?
     - Did they implement the right feature but wrong way?
 
-    **Verify by reading code, not by trusting report.**
+    **Verify by reading the diff, not by trusting the report.**
 
     Report:
     - ✅ Spec compliant (if everything matches after code inspection)
