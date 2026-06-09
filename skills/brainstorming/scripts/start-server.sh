@@ -93,6 +93,9 @@ SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
   SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  # Persist the bound port per project so a restart reuses it and an already-open
+  # browser tab reconnects to the same URL.
+  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-port"
 else
   SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
 fi
