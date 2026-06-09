@@ -16,8 +16,26 @@ fi
 STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 
+# Confirm a PID is actually our brainstorm server (node running server.cjs),
+# not a reused/unrelated process whose PID was recycled into a stale pid file.
+is_brainstorm_server() {
+  kill -0 "$1" 2>/dev/null || return 1
+  case "$(ps -p "$1" -o command= 2>/dev/null)" in
+    *node*server.cjs*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 if [[ -f "$PID_FILE" ]]; then
   pid=$(cat "$PID_FILE")
+
+  # Refuse to signal a PID we can't prove is our server. A stale pid file may
+  # point at an unrelated process after a reboot/PID wraparound.
+  if ! is_brainstorm_server "$pid"; then
+    rm -f "$PID_FILE"
+    echo '{"status": "stale_pid"}'
+    exit 0
+  fi
 
   # Try to stop gracefully, fallback to force if still alive
   kill "$pid" 2>/dev/null || true
