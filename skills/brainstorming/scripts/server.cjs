@@ -267,6 +267,27 @@ function broadcast(msg) {
   }
 }
 
+// Best-effort: open the user's browser the first time a screen is actually ready
+// to show. Skips when disabled, on a non-loopback (remote) bind, or when a
+// browser is already connected. Override the launcher with BRAINSTORM_OPEN_CMD.
+let browserOpened = false;
+function maybeOpenBrowser() {
+  if (browserOpened) return;
+  browserOpened = true;
+  if (!process.env.BRAINSTORM_OPEN) return; // opt-in: only after the user approves the companion
+  if (HOST !== '127.0.0.1' && HOST !== 'localhost') return;
+  if (clients.size > 0) return; // the user already opened it
+  const url = 'http://' + URL_HOST + ':' + PORT;
+  let cmd = process.env.BRAINSTORM_OPEN_CMD;
+  if (!cmd) {
+    if (process.platform === 'darwin') cmd = 'open';
+    else if (/microsoft/i.test(require('os').release())) cmd = 'cmd.exe /c start ""'; // WSL → Windows browser
+    else if (process.env.DISPLAY || process.env.WAYLAND_DISPLAY) cmd = 'xdg-open';
+    else return; // headless: nothing to open
+  }
+  try { require('child_process').exec(cmd + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
+}
+
 // ========== Activity Tracking ==========
 
 // Idle timeout: shut down after this long with no activity. Default 4 hours;
@@ -323,6 +344,7 @@ function startServer() {
         const eventsFile = path.join(STATE_DIR, 'events');
         if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
         console.log(JSON.stringify({ type: 'screen-added', file: filePath }));
+        maybeOpenBrowser();
       } else {
         console.log(JSON.stringify({ type: 'screen-updated', file: filePath }));
       }

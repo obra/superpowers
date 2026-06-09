@@ -12,6 +12,8 @@
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
 #   --idle-timeout-minutes <n>  Shut down after n minutes idle (default 240 = 4h).
+#   --open                Auto-open the browser on the first screen (use only
+#                         after the user approves the visual companion).
 #   --foreground          Run server in the current terminal (no backgrounding).
 #   --background          Force background mode (overrides Codex auto-foreground).
 
@@ -41,6 +43,10 @@ while [[ $# -gt 0 ]]; do
     --idle-timeout-minutes)
       IDLE_TIMEOUT_MINUTES="$2"
       shift 2
+      ;;
+    --open)
+      export BRAINSTORM_OPEN=1
+      shift
       ;;
     --foreground|--no-daemon)
       FOREGROUND="true"
