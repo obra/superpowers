@@ -117,11 +117,15 @@ async function runTests() {
     let outB = ''; b.stdout.on('data', d => outB += d.toString());
     for (let i = 0; i < 60 && !outB.includes('server-started'); i++) await sleep(50);
     const portB = firstServerStarted(outB).port;
+    const persisted = fs.readFileSync(portFile, 'utf8').trim();
 
     a.kill(); b.kill(); await sleep(100); fs.rmSync(dir, { recursive: true, force: true });
 
     assert.notStrictEqual(portB, 3415, 'must not bind the already-taken port');
     assert(portB >= 49152, 'should fall back to a random high port');
+    // The fallback must NOT clobber the shared port file — A still owns 3415 and
+    // its open tab must keep reconnecting there.
+    assert.strictEqual(persisted, '3415', 'fallback must not overwrite .last-port');
   });
 
   await test('auto-opens the browser once, on the first screen', async () => {

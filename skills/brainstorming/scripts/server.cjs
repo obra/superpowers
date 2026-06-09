@@ -278,14 +278,21 @@ function maybeOpenBrowser() {
   if (HOST !== '127.0.0.1' && HOST !== 'localhost') return;
   if (clients.size > 0) return; // the user already opened it
   const url = 'http://' + URL_HOST + ':' + PORT;
-  let cmd = process.env.BRAINSTORM_OPEN_CMD;
-  if (!cmd) {
-    if (process.platform === 'darwin') cmd = 'open';
-    else if (/microsoft/i.test(require('os').release())) cmd = 'cmd.exe /c start ""'; // WSL → Windows browser
-    else if (process.env.DISPLAY || process.env.WAYLAND_DISPLAY) cmd = 'xdg-open';
-    else return; // headless: nothing to open
+  const cp = require('child_process');
+  // Operator-provided launcher: run as given (this env var is trusted operator input).
+  if (process.env.BRAINSTORM_OPEN_CMD) {
+    try { cp.exec(process.env.BRAINSTORM_OPEN_CMD + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
+    return;
   }
-  try { require('child_process').exec(cmd + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
+  // Platform launchers: pass the URL as an argv element via execFile (no shell),
+  // so a url-host containing shell metacharacters can't inject a command.
+  const isWSL = process.platform === 'linux' && /microsoft/i.test(require('os').release());
+  let bin, args;
+  if (process.platform === 'darwin') { bin = 'open'; args = [url]; }
+  else if (process.platform === 'win32' || isWSL) { bin = 'cmd.exe'; args = ['/c', 'start', '', url]; }
+  else if (process.env.DISPLAY || process.env.WAYLAND_DISPLAY) { bin = 'xdg-open'; args = [url]; }
+  else return; // headless: nothing to open
+  try { cp.execFile(bin, args, () => {}); } catch (e) { /* best effort */ }
 }
 
 // ========== Activity Tracking ==========
@@ -397,9 +404,16 @@ function startServer() {
     }
   }
 
+  // If the preferred port is already taken (e.g. a previous server is still
+  // alive), fall back to a random port once instead of failing.
+  let triedFallback = false;
+
   function onListen() {
-    // Record the bound port so the next restart of this session can reuse it.
-    if (PORT_FILE) {
+    // Record the bound port so the next restart of this session reuses it — but
+    // ONLY when we got our preferred port. On a fallback we bound a *different*
+    // port because someone else holds the preferred one; persisting it would
+    // overwrite the shared .last-port and strand that other session's open tab.
+    if (PORT_FILE && !triedFallback) {
       try { fs.writeFileSync(PORT_FILE, String(PORT)); } catch (e) { /* best effort */ }
     }
     const info = JSON.stringify({
@@ -411,9 +425,6 @@ function startServer() {
     fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n');
   }
 
-  // If the preferred port is already taken (e.g. a previous server is still
-  // alive), fall back to a random port once instead of failing.
-  let triedFallback = false;
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE' && !triedFallback) {
       triedFallback = true;

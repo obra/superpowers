@@ -80,5 +80,84 @@ test('reloads on recovery and on reload messages', () => {
   assert(/location\.reload\(\)/.test(src), 'reloads to pick up restarted/updated content');
 });
 
+console.log('\n--- Reconnect state machine (mocked browser) ---');
+
+// Drive helper.js's browser code against mocked DOM/WebSocket/timers/clock so we
+// can exercise the actual reconnect/status/tombstone behaviour, not just grep it.
+function makeEnv() {
+  const state = { now: 1000, timers: [], reloads: 0, appended: [] };
+  const sockets = [];
+  const statusEl = { textContent: '', style: { setProperty() {} } };
+  class FakeWS {
+    constructor(url) { this.url = url; this.readyState = 0; this.onopen = this.onclose = this.onmessage = this.onerror = null; sockets.push(this); }
+    send() {}
+    close() { this.readyState = 3; if (this.onclose) this.onclose(); }
+    open() { this.readyState = 1; if (this.onopen) this.onopen(); }
+  }
+  FakeWS.OPEN = 1;
+  const env = {
+    module: { exports: {} },
+    window: { location: { host: 'localhost:7777', reload() { state.reloads++; } } },
+    document: {
+      querySelector: (s) => s === '.status' ? statusEl : null,
+      getElementById: () => null,
+      createElement: () => ({ style: {}, id: '' }),
+      addEventListener() {},
+      body: { appendChild: (el) => state.appended.push(el) }
+    },
+    WebSocket: FakeWS,
+    setTimeout: (fn, ms) => { state.timers.push({ fn, ms, fired: false, cleared: false }); return state.timers.length; },
+    clearTimeout: (id) => { if (state.timers[id - 1]) state.timers[id - 1].cleared = true; },
+    Date: { now: () => state.now },
+    console
+  };
+  return {
+    state, statusEl, sockets,
+    boot() { new Function(...Object.keys(env), src)(...Object.values(env)); },
+    advance(ms) { state.now += ms; },
+    last() { return sockets[sockets.length - 1]; },
+    fireReconnect() {
+      const t = [...state.timers].reverse().find(x => !x.fired && !x.cleared);
+      if (!t) throw new Error('no reconnect scheduled');
+      t.fired = true; t.fn();
+    }
+  };
+}
+
+test('on disconnect shows Reconnecting and schedules a 500ms reconnect', () => {
+  const e = makeEnv(); e.boot();
+  e.last().open();
+  assert.strictEqual(e.statusEl.textContent, 'Connected');
+  e.last().close();
+  assert.strictEqual(e.statusEl.textContent, 'Reconnecting…');
+  assert.strictEqual(e.state.timers[e.state.timers.length - 1].ms, 500);
+});
+
+test('reconnect delay backs off 500 -> 1000 -> 2000', () => {
+  const e = makeEnv(); e.boot();
+  e.last().open(); e.last().close();
+  e.fireReconnect(); e.last().close();
+  e.fireReconnect(); e.last().close();
+  assert.deepStrictEqual(e.state.timers.map(t => t.ms).slice(0, 3), [500, 1000, 2000]);
+});
+
+test('shows the tombstone and Disconnected after the grace period', () => {
+  const e = makeEnv(); e.boot();
+  e.last().open(); e.last().close();
+  e.advance(20000);          // past TOMBSTONE_AFTER_MS while still down
+  e.fireReconnect(); e.last().close();
+  assert.strictEqual(e.statusEl.textContent, 'Disconnected');
+  assert.strictEqual(e.state.appended.length, 1, 'tombstone appended exactly once');
+});
+
+test('reloads to recover when a tombstoned connection comes back', () => {
+  const e = makeEnv(); e.boot();
+  e.last().open(); e.last().close();
+  e.advance(20000); e.fireReconnect(); e.last().close(); // tombstone now shown
+  assert.strictEqual(e.state.reloads, 0);
+  e.fireReconnect(); e.last().open();                    // server back (e.g. same-port restart)
+  assert.strictEqual(e.state.reloads, 1, 'reloads once on recovery');
+});
+
 console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
 if (failed > 0) process.exit(1);
