@@ -97,6 +97,12 @@ Subagent (general-purpose):
 
     If you find issues during self-review, fix them now before reporting.
 
+    ## After Review Findings
+
+    If a reviewer finds issues and you fix them, re-run the tests that cover
+    the amended code and include the results in your fix report. Reviewers
+    will not re-run tests for you — your report is the test evidence.
+
     ## Report Format
 
     When done, report:
