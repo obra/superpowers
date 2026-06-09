@@ -11,6 +11,7 @@
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
+#   --idle-timeout-minutes <n>  Shut down after n minutes idle (default 240 = 4h).
 #   --foreground          Run server in the current terminal (no backgrounding).
 #   --background          Force background mode (overrides Codex auto-foreground).
 
@@ -22,6 +23,7 @@ FOREGROUND="false"
 FORCE_BACKGROUND="false"
 BIND_HOST="127.0.0.1"
 URL_HOST=""
+IDLE_TIMEOUT_MINUTES=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
@@ -34,6 +36,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --url-host)
       URL_HOST="$2"
+      shift 2
+      ;;
+    --idle-timeout-minutes)
+      IDLE_TIMEOUT_MINUTES="$2"
       shift 2
       ;;
     --foreground|--no-daemon)
@@ -57,6 +63,14 @@ if [[ -z "$URL_HOST" ]]; then
   else
     URL_HOST="$BIND_HOST"
   fi
+fi
+
+if [[ -n "$IDLE_TIMEOUT_MINUTES" ]]; then
+  if ! [[ "$IDLE_TIMEOUT_MINUTES" =~ ^[0-9]+$ ]] || [[ "$IDLE_TIMEOUT_MINUTES" -lt 1 ]]; then
+    echo "{\"error\": \"--idle-timeout-minutes must be a positive integer\"}"
+    exit 1
+  fi
+  export BRAINSTORM_IDLE_TIMEOUT_MS=$(( IDLE_TIMEOUT_MINUTES * 60 * 1000 ))
 fi
 
 # Some environments reap detached/background processes. Auto-foreground when detected.
