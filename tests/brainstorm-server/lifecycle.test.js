@@ -82,6 +82,48 @@ async function runTests() {
     }
   });
 
+  await test('persists the bound port and restores it on restart', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-port-');
+    const portFile = path.join(dir, '.last-port');
+    const env = { ...process.env, BRAINSTORM_PORT_FILE: portFile, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 };
+
+    const a = spawn('node', [SERVER], { env: { ...env, BRAINSTORM_DIR: path.join(dir, 's1') } });
+    let outA = ''; a.stdout.on('data', d => outA += d.toString());
+    for (let i = 0; i < 60 && !outA.includes('server-started'); i++) await sleep(50);
+    const portA = firstServerStarted(outA).port;
+    assert(fs.existsSync(portFile), 'should write the port file');
+    assert.strictEqual(Number(fs.readFileSync(portFile, 'utf8').trim()), portA, 'port file holds the bound port');
+    a.kill(); await sleep(400); // free the port
+
+    const b = spawn('node', [SERVER], { env: { ...env, BRAINSTORM_DIR: path.join(dir, 's2') } });
+    let outB = ''; b.stdout.on('data', d => outB += d.toString());
+    for (let i = 0; i < 60 && !outB.includes('server-started'); i++) await sleep(50);
+    const portB = firstServerStarted(outB).port;
+    b.kill(); await sleep(100); fs.rmSync(dir, { recursive: true, force: true });
+
+    assert.strictEqual(portB, portA, 'restart should reuse the same port');
+  });
+
+  await test('falls back to a random port when the preferred port is taken', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-port-');
+    const portFile = path.join(dir, '.last-port');
+
+    const a = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_DIR: path.join(dir, 'a'), BRAINSTORM_PORT: 3415, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 } });
+    let outA = ''; a.stdout.on('data', d => outA += d.toString());
+    for (let i = 0; i < 60 && !outA.includes('server-started'); i++) await sleep(50);
+
+    fs.writeFileSync(portFile, '3415'); // preferred port, but it's taken by A
+    const b = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_DIR: path.join(dir, 'b'), BRAINSTORM_PORT_FILE: portFile, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 } });
+    let outB = ''; b.stdout.on('data', d => outB += d.toString());
+    for (let i = 0; i < 60 && !outB.includes('server-started'); i++) await sleep(50);
+    const portB = firstServerStarted(outB).port;
+
+    a.kill(); b.kill(); await sleep(100); fs.rmSync(dir, { recursive: true, force: true });
+
+    assert.notStrictEqual(portB, 3415, 'must not bind the already-taken port');
+    assert(portB >= 49152, 'should fall back to a random high port');
+  });
+
   console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
   if (failed > 0) process.exit(1);
 }

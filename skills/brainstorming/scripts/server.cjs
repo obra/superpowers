@@ -82,7 +82,21 @@ function decodeFrame(buffer) {
 
 // ========== Configuration ==========
 
-const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 16383));
+const PORT_FILE = process.env.BRAINSTORM_PORT_FILE || null;
+const randomPort = () => 49152 + Math.floor(Math.random() * 16383);
+// Prefer an explicit port, else the port this session last bound (so a restart
+// reuses it and an already-open browser tab reconnects), else a random high port.
+function preferredPort() {
+  if (process.env.BRAINSTORM_PORT) return Number(process.env.BRAINSTORM_PORT);
+  if (PORT_FILE) {
+    try {
+      const p = Number(fs.readFileSync(PORT_FILE, 'utf-8').trim());
+      if (Number.isInteger(p) && p > 1023 && p < 65536) return p;
+    } catch (e) { /* no prior port recorded */ }
+  }
+  return randomPort();
+}
+let PORT = preferredPort();
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
@@ -361,7 +375,11 @@ function startServer() {
     }
   }
 
-  server.listen(PORT, HOST, () => {
+  function onListen() {
+    // Record the bound port so the next restart of this session can reuse it.
+    if (PORT_FILE) {
+      try { fs.writeFileSync(PORT_FILE, String(PORT)); } catch (e) { /* best effort */ }
+    }
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
       url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
@@ -369,7 +387,22 @@ function startServer() {
     });
     console.log(info);
     fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n');
+  }
+
+  // If the preferred port is already taken (e.g. a previous server is still
+  // alive), fall back to a random port once instead of failing.
+  let triedFallback = false;
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && !triedFallback) {
+      triedFallback = true;
+      PORT = randomPort();
+      server.listen(PORT, HOST, onListen);
+    } else {
+      console.error('Server failed to bind:', err.message);
+      process.exit(1);
+    }
   });
+  server.listen(PORT, HOST, onListen);
 }
 
 if (require.main === module) {
