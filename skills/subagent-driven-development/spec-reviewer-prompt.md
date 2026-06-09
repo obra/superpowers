@@ -30,14 +30,20 @@ Subagent (general-purpose):
 
     Only read files in this diff. Do not crawl the broader codebase.
 
+    Spec compliance is judged by reading the diff against the requirements.
+    The implementer already ran the tests and reported TDD evidence — do not
+    re-run them. If a requirement cannot be verified from this diff alone
+    (it lives in unchanged code or spans tasks), report it as a ⚠️ item
+    instead of broadening your search.
+
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history.
 
     ## CRITICAL: Do Not Trust the Report
 
-    The implementer finished suspiciously quickly. Their report may be incomplete,
-    inaccurate, or optimistic. You MUST verify everything independently.
+    Treat the implementer's report as unverified claims about the code. It may
+    be incomplete, inaccurate, or optimistic. Verify the claims against the diff.
 
     **DO NOT:**
     - Take their word for what they implemented
@@ -74,4 +80,7 @@ Subagent (general-purpose):
     Report:
     - ✅ Spec compliant (if everything matches after code inspection)
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    - ⚠️ Cannot verify from diff: [requirements you could not verify from the
+      diff alone, and what the controller should check — report alongside the
+      ✅/❌ verdict for everything you could verify]
 ```
