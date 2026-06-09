@@ -7,9 +7,11 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to execute: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+
+**Plans reference the spec; they never restate it.** The spec owns the WHAT and WHY — requirements, acceptance criteria, design decisions. The plan owns the HOW — tasks, files, code, commands. Cite the spec by path in the header and by section where a task needs context. Re-deriving spec content inline doubles the documents and lets them drift apart. "Zero context" means the engineer can execute each step mechanically; it does not mean the plan repeats what the spec already says — they can read the spec at the cited path.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -52,6 +54,8 @@ This structure informs the task decomposition. Each task should produce self-con
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
+
+**Spec:** [Path to the spec doc, e.g. `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` — requirements and design decisions live there; do not restate them here]
 
 **Architecture:** [2-3 sentences about approach]
 
