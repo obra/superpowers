@@ -179,6 +179,25 @@ async function runTests() {
       assert(!res.body.includes('"not"'), 'Should not serve JSON');
     });
 
+    await test('ignores macOS resource-fork dotfiles (._*.html) when serving', async () => {
+      // On macOS/ExFAT/SMB, the OS writes ._name.html sidecar files holding
+      // binary metadata. They end with .html but must never be served as a screen.
+      fs.writeFileSync(path.join(CONTENT_DIR, 'real-screen.html'), '<h2>Real Screen Content</h2>');
+      await sleep(100);
+      fs.writeFileSync(path.join(CONTENT_DIR, '._real-screen.html'), 'Mac OS X resource fork garbage');
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert(res.body.includes('Real Screen Content'), 'should serve the real screen, not the newer ._ sidecar');
+      assert(!res.body.includes('resource fork garbage'), 'must not serve ._*.html dotfile content');
+    });
+
+    await test('does not serve dotfiles via /files/', async () => {
+      fs.writeFileSync(path.join(CONTENT_DIR, '._secret.html'), 'dotfile body should not be served');
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/._secret.html`);
+      assert.strictEqual(res.status, 404, '/files/ must 404 on dotfiles');
+    });
+
     await test('returns 404 for non-root paths', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/other`);
       assert.strictEqual(res.status, 404);
@@ -347,6 +366,22 @@ async function runTests() {
       await sleep(500);
 
       assert(!gotReload, 'Should NOT reload for non-HTML files');
+      ws.close();
+    });
+
+    await test('does NOT send reload for ._*.html resource-fork dotfiles', async () => {
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      await new Promise(resolve => ws.on('open', resolve));
+
+      let gotReload = false;
+      ws.on('message', (data) => {
+        if (JSON.parse(data.toString()).type === 'reload') gotReload = true;
+      });
+
+      fs.writeFileSync(path.join(CONTENT_DIR, '._sidecar.html'), 'resource fork');
+      await sleep(500);
+
+      assert(!gotReload, 'a ._ dotfile appearing must not trigger a reload');
       ws.close();
     });
 
