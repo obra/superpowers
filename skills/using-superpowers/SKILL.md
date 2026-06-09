@@ -48,10 +48,15 @@ Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-too
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
+    "Assess Task Complexity" [shape=diamond];
+    "Ask User to Enable Hyper-Fragmented Reasoning" [shape=box];
+    "Execute Hyper-Fragmented Flow" [shape=box];
+
     "About to EnterPlanMode?" [shape=doublecircle];
     "Already brainstormed?" [shape=diamond];
     "Invoke brainstorming skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
+    "Synthesize Ephemeral Skill" [shape=box];
     "Invoke Skill tool" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
@@ -59,19 +64,27 @@ digraph skill_flow {
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
+    "User message received" -> "Assess Task Complexity";
+    "Assess Task Complexity" -> "Ask User to Enable Hyper-Fragmented Reasoning" [label="highly complex"];
+    "Assess Task Complexity" -> "Might any skill apply?" [label="normal"];
+    "Ask User to Enable Hyper-Fragmented Reasoning" -> "Execute Hyper-Fragmented Flow" [label="user approved"];
+    "Ask User to Enable Hyper-Fragmented Reasoning" -> "Might any skill apply?" [label="user denied"];
+    "Execute Hyper-Fragmented Flow" -> "Might any skill apply?";
+
     "About to EnterPlanMode?" -> "Already brainstormed?";
     "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
     "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
-    "User message received" -> "Might any skill apply?";
     "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
-    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Might any skill apply?" -> "Synthesize Ephemeral Skill" [label="no skill exists"];
+    "Synthesize Ephemeral Skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
     "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
     "Create TodoWrite todo per item" -> "Follow skill exactly";
+    "Follow skill exactly" -> "Respond (including clarifications)";
 }
 ```
 
@@ -104,13 +117,31 @@ When multiple skills could apply, use this order:
 "Let's build X" → brainstorming first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
 
+## The Superpower Extensions: Hyper-Fragmented Reasoning & Dynamic Skill Synthesis
+
+As the primary orchestration skill, you must intrinsically apply these two extensions during your task processing:
+
+### 1. Dynamic Skill Synthesis (Always Active)
+When no pre-existing skill fits the user's task, you MUST automatically synthesize a temporary skill:
+- **Ephemeral Skills:** Generate specialized logic bounds and micro-prompts tailored to the current task.
+- **Synthesize:** Do not fall back to generic responses. Craft a step-by-step procedure in your mind just as if you had invoked a loaded skill, including an Assertion Unit to verify the outcome.
+- **Execute & Assess:** Follow your Ephemeral Skill. If it consistently performs well, mentally promote it for the duration of the context.
+
+### 2. Hyper-Fragmented Reasoning (Conditional)
+Before processing any task, perform a complexity assessment:
+- **Complexity Check:** If the task is deeply complex, ambiguous, or error-prone, you MUST pause and ask the user: *"Task này phức tạp, bạn có muốn bật cơ chế Siêu phân mảnh suy luận (Hyper-Fragmented Reasoning) để tăng tối đa độ chính xác không?"*
+- **Execution (if approved):**
+  - **Atomic Decomposition:** Break the task down into dozens of atomic `FragmentTask` units.
+  - **Asynchronous Processing:** Mentally process these sub-tasks concurrently.
+  - **Referee Thread (Logic Arbitrator):** Implement cross-verification. Force the output of parallel processing through a Referee logic to catch and prune hallucinations, guaranteeing 100% logic alignment before delivering the final result.
+
 ## Skill Types
 
 **Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
 
 **Flexible** (patterns): Adapt principles to context.
 
-The skill itself tells you which.
+**Ephemeral** (synthesized): Created on-the-fly via Dynamic Skill Synthesis when no existing skill applies.
 
 ## User Instructions
 
