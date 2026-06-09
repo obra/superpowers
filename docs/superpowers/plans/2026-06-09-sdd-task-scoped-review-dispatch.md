@@ -42,17 +42,16 @@ Subagent (general-purpose):
 
     ## What Was Implemented
 
-    [DESCRIPTION — task summary, from implementer's report]
+    [DESCRIPTION]
 
     ## Task Requirements (context only)
 
-    [Task N text or plan reference. Context for judging the code, not for
-    re-checking compliance.]
+    [TASK_TEXT]
 
     ## Git Range to Review
 
-    **Base:** [BASE_SHA — commit before this task]
-    **Head:** [HEAD_SHA — current commit]
+    **Base:** [BASE_SHA]
+    **Head:** [HEAD_SHA]
 
     ```bash
     git diff --stat [BASE_SHA]..[HEAD_SHA]
@@ -145,7 +144,7 @@ Subagent (general-purpose):
 
 **Placeholders:**
 - `[DESCRIPTION]` — task summary, from implementer's report
-- `[Task N text or plan reference]` — the task's requirements, for context
+- `[TASK_TEXT]` — the task's requirements text or plan reference, for context
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
 
