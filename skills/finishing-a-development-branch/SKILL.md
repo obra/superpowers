@@ -130,10 +130,15 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 
+Closes #<issue-number>
+
 ## Test Plan
 - [ ] <verification steps>
 EOF
 )"
+```
+
+**Before creating the PR, check if this work resolves any GitHub issues.** If so, include the appropriate closing keyword (`Closes #123`, `Fixes #123`, `Resolves #123`) in the body. GitHub will auto-close the referenced issue when the PR is merged.
 ```
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
