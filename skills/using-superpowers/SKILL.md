@@ -49,6 +49,8 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") 
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
+**Documented exceptions in a skill's own description are authoritative.** When a description itself says the skill does not apply to a request (e.g. brainstorming's nothing-to-design exception), not invoking it is compliance, not rationalization — the description defines the skill's scope. Any doubt about whether the exception's conditions hold means invoke. Only the skill's description can define such an exception; you cannot infer one.
+
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
@@ -118,4 +120,4 @@ The skill itself tells you which.
 
 ## User Instructions
 
-Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows — unless a skill's own description exempts the request (see The Rule above).
