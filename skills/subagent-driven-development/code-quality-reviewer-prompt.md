@@ -61,6 +61,9 @@ Subagent (general-purpose):
     running it. If you cannot run commands in this environment, name the
     test you would run.
 
+    Warnings or other noise in the implementer's reported test output are
+    findings — test output should be pristine.
+
     ## What to Check
 
     **Code quality:**
@@ -80,6 +83,9 @@ Subagent (general-purpose):
     - Did this change create new files that are already large, or
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this change contributed.)
+
+    Answer each item above with file:line evidence, not a bare yes or no.
+    An unsupported "yes" is not a review.
 
     ## Calibration
 
