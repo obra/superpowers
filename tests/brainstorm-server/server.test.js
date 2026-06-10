@@ -202,6 +202,14 @@ async function runTests() {
       assert.strictEqual(res.status, 404, '/files/ must 404 on dotfiles');
     });
 
+    await test('GET /files/ (empty name) returns 404 and does not crash the server', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/`);
+      assert.strictEqual(res.status, 404, '/files/ (the content dir) must 404, not EISDIR-crash');
+      // The server must still be alive afterward.
+      const alive = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(alive.status, 200, 'server must survive a /files/ request');
+    });
+
     await test('returns 404 for non-root paths', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/other`);
       assert.strictEqual(res.status, 404);
