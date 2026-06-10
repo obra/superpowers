@@ -157,7 +157,7 @@ Run: `grep -c "requesting-code-review" skills/subagent-driven-development/code-q
 Expected: `ABSENT` (no more delegation)
 
 Run: `grep -n "Task quality:" skills/subagent-driven-development/code-quality-reviewer-prompt.md | head -2`
-Expected: two matches (output format + placeholder note)
+Expected: one match (the Output Format verdict line; the "Reviewer returns" footer says "Task quality verdict" without a colon)
 
 Run: `grep -n "worktree add\|Ready to merge" skills/subagent-driven-development/code-quality-reviewer-prompt.md || echo CLEAN`
 Expected: `CLEAN`
@@ -637,21 +637,21 @@ you are done.
 - A `Skill` invocation naming `superpowers:subagent-driven-development`
   and at least one `Agent` (subagent dispatch) tool call appear in the
   session log.
-- The duplicated report-formatting logic did not survive to the end of the
-  run. Either (a) the implementer never introduced the duplication (wrote or
-  self-reviewed its way to shared logic), or (b) the per-task code quality
-  reviewer flagged the duplication as an issue and a review-fix loop removed
-  it. A fail looks like the duplicated logic shipping with the per-task
-  quality reviewer approving it, or the duplication being caught only by the
-  final whole-branch review.
-- The per-task quality reviewers stayed task-scoped: no package-wide test
-  suites, race detector runs, or repeated/high-count test loops appear in
-  reviewer subagent activity, and reviewers did not re-run the full test
-  suite merely to confirm the implementer's report.
+- The duplicated report-formatting logic did not survive to the end of
+  the run. Either (a) the implementer never introduced the duplication
+  (wrote or self-reviewed its way to shared logic), or (b) the per-task
+  code quality reviewer flagged the duplication as an issue and a
+  review-fix loop removed it. A fail looks like the duplicated logic
+  shipping with the per-task quality reviewer approving it, or the
+  duplication being caught only by the final whole-branch review.
+- The per-task quality reviewers stayed task-scoped: no package-wide
+  test suites, race detector runs, or repeated/high-count test loops
+  appear in reviewer subagent activity, and reviewers did not re-run
+  the full test suite merely to confirm the implementer's report.
 - `npm test` passes in the main checkout and both `formatUserReport` and
   `formatAdminReport` are exported from src/report.js. The deterministic
-  assertions gate this; the criteria above are about whether the *per-task
-  quality review* was the mechanism that kept the code clean.
+  assertions gate this; the criteria above are about whether the
+  *per-task quality review* was the mechanism that kept the code clean.
 ```
 
 - [ ] **Step 4: Create `evals/scenarios/sdd-quality-reviewer-catches-planted-defect/setup.sh`:**
