@@ -11,7 +11,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-**Proportionality:** Review fanout scales with the change. When the entire plan is one trivial, fully-specified mechanical change — a one-line edit, a log statement, a constant bump — implement it directly (or with a single implementer subagent), verify it, and commit. Skip the review subagents and the final reviewer: a diff with no room for interpretation has nothing for a spec or quality review to catch, and three dispatches for one line cost more than the change itself. When in doubt whether a change is trivial, it is not — run the full pipeline. Within a multi-task plan, run the full pipeline for every task regardless of size; this exception applies only when the whole plan is one trivial change.
+**Proportionality:** Review fanout scales with the change. When the entire plan is one trivial, fully-specified mechanical change — a log statement, a constant bump, a typo fix — implement it directly (or with a single implementer subagent), verify it (run the relevant tests or command and confirm the output — superpowers:verification-before-completion applies), commit, and skip the review subagents and the final reviewer: three review dispatches for a one-line diff cost more than the change itself. Trivial is a property of the diff, not of the plan's description of itself: the diff changes no logic, control flow, or observable behavior beyond the literally stated value. When in doubt whether a change is trivial, it is not — run the full pipeline. Within a multi-task plan, run the full pipeline for every task regardless of size; this exception applies only when the whole plan is one trivial change.
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
@@ -63,16 +63,16 @@ digraph process {
     }
 
     "Read plan, extract all tasks with full text, note context, create todos" [shape=box];
-    "Entire plan = one trivial mechanical change?" [shape=diamond];
+    "Entire plan = one trivial, fully-specified mechanical change? (any doubt = no)" [shape=diamond];
     "Implement directly, verify, commit (no review fanout)" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create todos" -> "Entire plan = one trivial mechanical change?";
-    "Entire plan = one trivial mechanical change?" -> "Implement directly, verify, commit (no review fanout)" [label="yes — see Proportionality"];
+    "Read plan, extract all tasks with full text, note context, create todos" -> "Entire plan = one trivial, fully-specified mechanical change? (any doubt = no)";
+    "Entire plan = one trivial, fully-specified mechanical change? (any doubt = no)" -> "Implement directly, verify, commit (no review fanout)" [label="yes — see Proportionality"];
     "Implement directly, verify, commit (no review fanout)" -> "Use superpowers:finishing-a-development-branch";
-    "Entire plan = one trivial mechanical change?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="no"];
+    "Entire plan = one trivial, fully-specified mechanical change? (any doubt = no)" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="no"];
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -92,6 +92,10 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Spec Context
+
+If the plan's header cites a spec (`**Spec:** <path>`), read it once during plan extraction. Plans reference requirements rather than restating them — when a task cites a spec section, paste that section's text into the implementer and spec-reviewer prompts along with the task text. Subagents never read the spec file themselves.
 
 ## Model Selection
 
@@ -244,7 +248,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality) on a non-trivial task — the Proportionality exception covers only a plan that is one trivial mechanical change
+- Skip reviews — the only exception is a plan whose ENTIRE content is one trivial, fully-specified mechanical change (see Proportionality); within a multi-task plan, never skip reviews regardless of task size
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)

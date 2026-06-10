@@ -12,6 +12,8 @@ Subagent (general-purpose):
 
     [FULL TEXT of task from plan - paste it here, don't make subagent read file]
 
+    [If the task cites spec sections, paste the cited sections' text here too — the plan references requirements rather than restating them]
+
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
