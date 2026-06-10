@@ -28,7 +28,9 @@ Subagent (general-purpose):
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
 
-    [DIFF]
+    [DIFF — REQUIRED: the controller pastes `git diff BASE..HEAD` output
+    here before dispatching. Dispatching with this placeholder unfilled is
+    a dispatch error.]
 
     Review from the diff above — do not re-run git commands or re-read the
     files it already shows. If no diff was provided, fetch it yourself:
@@ -148,9 +150,9 @@ Subagent (general-purpose):
 - `[DESCRIPTION]` — what the implementer reports they built
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
-- `[DIFF]` — paste `git diff BASE..HEAD` output (use `--stat` plus the
-  relevant hunks if it exceeds a few hundred lines); a reviewer with the
-  diff in hand needs few or no tool calls
+- `[DIFF]` — REQUIRED: paste `git diff BASE..HEAD` output (use `--stat`
+  plus the relevant hunks if it exceeds a few hundred lines); a reviewer
+  with the diff in hand needs few or no tool calls
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict
