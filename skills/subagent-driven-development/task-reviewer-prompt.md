@@ -10,6 +10,8 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 ```
 Subagent (general-purpose):
   description: "Review Task N (spec + quality)"
+  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
+         model silently inherits the session's most expensive one]
   prompt: |
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
@@ -18,11 +20,14 @@ Subagent (general-purpose):
 
     ## What Was Requested
 
-    [TASK_REQUIREMENTS]
+    Read the task brief: [BRIEF_FILE]
+
+    Global constraints from the spec/design that bind this task:
+    [GLOBAL_CONSTRAINTS]
 
     ## What the Implementer Claims They Built
 
-    [DESCRIPTION]
+    Read the implementer's report: [REPORT_FILE]
 
     ## Diff Under Review
 
@@ -32,14 +37,17 @@ Subagent (general-purpose):
 
     Read the diff file once — it contains the commit list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
-    change. Do not re-run git commands or re-read the files it already
-    shows. If the diff file is missing, fetch the diff yourself:
+    change. The diff's context lines ARE the changed files: do not Read a
+    changed file separately unless a hunk you must judge is cut off
+    mid-function — and say so in your report. Do not re-run git commands.
+    If the diff file is missing, fetch the diff yourself:
     `git diff --stat [BASE_SHA]..[HEAD_SHA]` and `git diff [BASE_SHA]..[HEAD_SHA]`.
-    Only read files in this diff. Do not crawl the broader codebase. Inspect
-    code outside the diff only to evaluate a concrete risk you can name — and
-    name it in your report. Cross-cutting changes are legitimate named risks:
-    if the diff changes lock ordering, a function or API contract, or shared
-    mutable state, checking the call sites is the right method.
+    Do not crawl the broader codebase. Inspect code outside the diff only
+    to evaluate a concrete risk you can name — one focused check per named
+    risk, and name both the risk and what you checked in your report.
+    Cross-cutting changes are legitimate named risks: if the diff changes
+    lock ordering, a function or API contract, or shared mutable state,
+    checking the call sites is the right method.
 
     Your review is read-only on this checkout. Do not mutate the working
     tree, the index, HEAD, or branch state in any way.
@@ -147,10 +155,13 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[TASK_REQUIREMENTS]` — full task text plus the spec/design's global
-  constraints that bind it (version floors, naming and copy rules, platform
-  requirements)
-- `[DESCRIPTION]` — what the implementer reports they built
+- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
+- `[BRIEF_FILE]` — REQUIRED: the task brief file (`scripts/task-brief PLAN N`
+  prints the path; same file the implementer worked from)
+- `[GLOBAL_CONSTRAINTS]` — the spec/design's global constraints that bind
+  this task (version floors, naming and copy rules, platform requirements)
+- `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
+  report to
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
