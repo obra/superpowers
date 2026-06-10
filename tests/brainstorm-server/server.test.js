@@ -374,7 +374,7 @@ async function runTests() {
     });
 
     await test('does NOT send reload for ._*.html resource-fork dotfiles', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?key=${TOKEN}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       let gotReload = false;

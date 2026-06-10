@@ -46,12 +46,12 @@ async function runTests() {
 
   await test('idle shutdown closes an open WebSocket and the process exits', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-life-');
-    const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3402, BRAINSTORM_DIR: dir, BRAINSTORM_IDLE_TIMEOUT_MS: 200, BRAINSTORM_LIFECYCLE_CHECK_MS: 100 } });
+    const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3402, BRAINSTORM_DIR: dir, BRAINSTORM_TOKEN: 'lifetoken', BRAINSTORM_IDLE_TIMEOUT_MS: 200, BRAINSTORM_LIFECYCLE_CHECK_MS: 100 } });
     let out = ''; srv.stdout.on('data', d => out += d.toString());
     let exited = false, code = null; srv.on('exit', c => { exited = true; code = c; });
     for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
 
-    const ws = new WebSocket('ws://localhost:3402');
+    const ws = new WebSocket('ws://localhost:3402/?key=lifetoken');
     await new Promise((res, rej) => { ws.on('open', res); ws.on('error', rej); });
 
     // 200ms idle, checked every 100ms — should shut down and exit well within 4s,
