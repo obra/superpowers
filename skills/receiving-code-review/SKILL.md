@@ -56,6 +56,25 @@ You understand 1,2,3,6. Unclear on 4,5.
 ✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 ```
 
+## Fetching GitHub PR Feedback
+
+When receiving feedback via GitHub PR, you MUST fetch ALL THREE comment types before beginning evaluation. Missing any type risks overlooking significant feedback.
+
+```bash
+# 1. Inline review comments (line-specific annotations)
+gh api repos/{owner}/{repo}/pulls/{pr}/comments
+
+# 2. Review bodies (summary text + nitpick sections posted with each review)
+gh api repos/{owner}/{repo}/pulls/{pr}/reviews
+
+# 3. Direct PR comments (top-level conversation, often bots post here)
+gh api repos/{owner}/{repo}/issues/{pr}/comments
+```
+
+**Note:** The `issues/{pr}/comments` endpoint works because GitHub PRs are a superset of issues.
+
+**Do NOT rely solely on `gh pr view` or the inline comments endpoint** — they miss review bodies and top-level comments which often contain the most significant feedback (security reviews, architectural summaries, bot findings).
+
 ## Source-Specific Handling
 
 ### From your human partner
