@@ -48,7 +48,10 @@ Subagent (general-purpose):
 
     Treat the implementer's report as unverified claims about the code. It
     may be incomplete, inaccurate, or optimistic. Verify the claims against
-    the diff.
+    the diff. Design rationales in the report are claims too: "left it per
+    YAGNI," "kept it simple deliberately," or any other justification is the
+    implementer grading their own work. Judge the code on its merits — a
+    stated rationale never downgrades a finding's severity.
 
     ## Tests
 
