@@ -154,8 +154,8 @@ Subagent (general-purpose):
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package BASE HEAD /tmp/sdd-task-N.diff`,
-  redirected so it never enters the controller's context)
+  package to (`scripts/review-package BASE HEAD` prints the unique path it
+  wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict
