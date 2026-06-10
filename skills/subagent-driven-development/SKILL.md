@@ -153,10 +153,11 @@ final whole-branch review. When you fill a reviewer template:
 - Include the spec/design's global constraints that bind the task (version
   floors, naming and copy rules, platform requirements) in the requirements
   you paste — a reviewer can only enforce what you hand them.
-- Run `git diff BASE..HEAD` yourself and paste the output into the reviewer
-  prompt (`--stat` plus the relevant hunks if it exceeds a few hundred
-  lines). A reviewer with the diff in hand needs few or no tool calls; do
-  not make reviewers re-derive the diff.
+- Hand the reviewer its diff as a file: run
+  `git diff BASE..HEAD > /tmp/sdd-task-N.diff` (redirected, so the diff
+  never enters your own context) and put that path in the prompt. The
+  reviewer then sees the whole change in one Read call instead of
+  re-deriving it with git commands.
 - Dispatch fix subagents for Critical and Important findings. Record Minor
   findings and move on — then paste the accumulated Minor findings into the
   final whole-branch review dispatch so it can triage which must be fixed
@@ -282,9 +283,9 @@ Done!
 - Tell a reviewer what not to flag, or pre-rate a finding's severity in the
   dispatch prompt ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
-- Dispatch a task reviewer without pasting the diff into the prompt — run
-  `git diff BASE..HEAD` yourself first (`--stat` plus relevant hunks if it
-  exceeds a few hundred lines)
+- Dispatch a task reviewer without a diff file — run
+  `git diff BASE..HEAD > /tmp/sdd-task-N.diff` first and name that path in
+  the prompt
 - Move to next task while the review has open Critical/Important issues
 
 **If subagent asks questions:**
