@@ -143,6 +143,20 @@ before/after text, and the V2 relocation rationale.
   prohibition (test-reruns: 3/5 control failures vs 0/5 with either
   phrasing).
 
+## Result: writing-plans micro-test (run 2026-06-10, after this spec was written)
+
+**Resolved — no change needed.** Stage 1 (3-task spec, no pressure): 0
+placeholders in all 20 plans across all four variants including the
+no-guidance control. Stage 1b (10-task spec, five near-identical commands
+tempting "Similar to Task N", explicit ~2,500-word economy target): 40/40
+clean — the single regex hit was a V2 self-review *attesting* "no
+TBD/TODO ✓". Current-generation opus does not produce plan placeholders
+even under deliberate pressure, with or without the banned-patterns list.
+Disposition: leave the No Placeholders section exactly as it is (it costs
+little and the counterfactual is unmeasurable); do NOT open the follow-up
+PR. The V2 relocation design remains on file here should a future model
+generation regress.
+
 ## Also explicitly not-dropped (tested-and-declined, with data)
 
 Recorded so nobody re-proposes them without new evidence — full numbers in
