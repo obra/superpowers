@@ -28,10 +28,34 @@ A field report (`~/2026-06-09-code-quality-reviewer-scope-budget-issue.md`) firs
 ## Non-goals / explicitly preserved
 
 - **Full re-reviews stay.** When a reviewer re-reviews after a fix, it still reviews the whole task at full reading breadth. (It does not re-run tests the implementer just ran on the amended code.) This deliberately rejects the field report's "re-review budget" remedy: the cost of its worst cited example (a re-review running `-race` and `-count=100` loops) is curbed by the test budget below, not by narrowing what re-reviewers read.
-- **The two review stages stay separate.** Spec compliance and code quality remain independent subagents, serially gated. No merging.
+- ~~**The two review stages stay separate.** Spec compliance and code quality remain independent subagents, serially gated. No merging.~~ **Superseded by the cost iterations below**: live eval economics showed per-dispatch overhead dominating cost, and the maintainer put everything on the table. The per-task stages are now one task reviewer with two verdicts; the independent broad final review remains.
 - **The coordinator keeps model judgment.** No forced model tier for reviews, in either direction.
 - **`requesting-code-review/` is untouched.** It remains the broad template for final branch review and ad-hoc review.
-- Review ordering (spec before quality), the fix-and-re-review loops, and the requirement to fix Critical/Important findings are unchanged.
+- Verdict ordering (spec compliance reported before quality), the fix-and-re-review loops, and the requirement to fix Critical/Important findings are unchanged.
+
+## Cost iterations (post-launch eval economics)
+
+Live before/after runs surfaced a cost regression once the quality-hardening
+prose (evidence rule, constraint carrying, pristine output) landed: go-fractals
+went from 42.8 min / 14.5M tokens (first task-scoped version) to 69.9 min /
+32.2M (hardened version) while reaching baseline-parity quality (blind-judged
+8.5 vs 8.5). Per-subagent turn profiling attributed cost to, in order: cheap
+models taking 2-3× the turns on multi-step work (678 of 1197 subagent turns
+were haiku), per-dispatch overhead (3 subagent spin-ups per task, each
+re-deriving the diff; controller coordination was half the dollars), and
+evidence-rule narration.
+
+- **Iteration 1:** turn-count-beats-token-price model guidance (mid-tier floor
+  for multi-step work), optional inline diffs, cite-don't-narrate evidence,
+  Important = cannot-trust-until-fixed, fixes dispatched only for
+  Critical/Important. Result: 68.2 min / 22.9M — tokens down 29%, wall-clock
+  flat; controllers pasted the diff in only 2 of 22 review dispatches when
+  phrasing was optional.
+- **Iteration 2:** per-task spec and quality reviews merged into one
+  `task-reviewer-prompt.md` (one reviewer, one reading of a pasted diff, two
+  verdicts; one fix dispatch addresses both kinds of findings); diff-pasting
+  made imperative (controller runs `git diff` itself); implementers run the
+  focused test while iterating, full suite once before commit.
 
 ## Design
 
