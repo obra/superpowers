@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. The one exception: a request that leaves zero design decisions open (a fully specified trivial change, e.g. 'add a basic checkbox, nothing fancy') needs no design - implement it directly without invoking this skill."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -11,11 +11,13 @@ Start by understanding the current project context, then ask questions one at a 
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+
+Exception — nothing to design: if the request leaves no design decisions open — the user has fully specified the outcome and there is exactly one reasonable way to do it (e.g. "add a basic checkbox, nothing fancy", a literal config value change, a copy fix) — implement it directly. Brainstorming exists to surface decisions; when there are none, the user's request IS the design. Any of these put the gate back on: a new file or dependency, a schema/API/data question, more than one plausible interpretation, or the user framing it as a feature or project to think through.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Projects go through this process. A todo list, a single-function utility, a data migration — "simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but if anything remains to decide, you MUST present it and get approval. Do not confuse this with the nothing-to-design exception above: "this seems simple, I'll skip the design" is a rationalization whenever decisions exist — the exception applies only when the user's request already contains every decision.
 
 ## Checklist
 
