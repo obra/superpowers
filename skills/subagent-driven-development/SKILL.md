@@ -178,8 +178,9 @@ final whole-branch review. When you fill a reviewer template:
 - Every fix dispatch carries the implementer contract: the fix subagent
   re-runs the tests covering its change and reports the results. Name the
   covering test files in the dispatch — a one-line fix does not need the
-  whole suite. A fix report without test evidence is incomplete — do not
-  re-review on top of it.
+  whole suite. Before re-dispatching the reviewer, confirm the fix report
+  contains the covering tests, the command run, and the output; dispatch
+  the re-review once all three are present.
 - If the final whole-branch review returns findings, dispatch ONE fix
   subagent with the complete findings list — not one fixer per finding.
   Per-finding fixers each rebuild context and re-run suites; a real

@@ -110,9 +110,10 @@ Subagent (general-purpose):
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this change contributed.)
 
-    Cite file:line evidence for every finding and for any check you would
-    otherwise answer with a bare "yes." Cite, don't narrate — a tight report
-    that points at lines beats a long one that retells the diff.
+    Your report should point at evidence: file:line references for every
+    finding and for any check you would otherwise answer with a bare
+    "yes." A tight report that cites lines gives the controller everything
+    it needs.
 
     ## Calibration
 
