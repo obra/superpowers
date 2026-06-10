@@ -158,7 +158,9 @@ final whole-branch review. When you fill a reviewer template:
   lines). A reviewer with the diff in hand needs few or no tool calls; do
   not make reviewers re-derive the diff.
 - Dispatch fix subagents for Critical and Important findings. Record Minor
-  findings and move on — they roll up to the final whole-branch review.
+  findings and move on — then paste the accumulated Minor findings into the
+  final whole-branch review dispatch so it can triage which must be fixed
+  before merge. A roll-up nobody reads is a silent discard.
 
 ## Prompt Templates
 
