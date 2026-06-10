@@ -192,6 +192,16 @@ function getNewestScreen() {
   return files.length > 0 ? files[0].path : null;
 }
 
+function urlHostForHttp(host) {
+  const h = String(host);
+  if (h.startsWith('[') && h.endsWith(']')) return h;
+  return h.includes(':') ? '[' + h + ']' : h;
+}
+
+function companionUrl() {
+  return 'http://' + urlHostForHttp(URL_HOST) + ':' + PORT + '/?key=' + TOKEN;
+}
+
 function isRegularFileInsideContentDir(filePath) {
   let stat, realContentDir, realFilePath;
   try {
@@ -424,7 +434,7 @@ function maybeOpenBrowser() {
   if (!process.env.BRAINSTORM_OPEN) return; // opt-in: only after the user approves the companion
   if (HOST !== '127.0.0.1' && HOST !== 'localhost') return;
   if (clients.size > 0) return; // the user already opened it
-  const url = 'http://' + URL_HOST + ':' + PORT + '/?key=' + TOKEN; // must carry the key or the gate 403s it
+  const url = companionUrl(); // must carry the key or the gate 403s it
   const cp = require('child_process');
   // Operator-provided launcher: run as given (this env var is trusted operator input).
   if (process.env.BRAINSTORM_OPEN_CMD) {
@@ -572,7 +582,7 @@ function startServer() {
     }
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
-      url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT + '/?key=' + TOKEN,
+      url_host: URL_HOST, url: companionUrl(),
       screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS
     });
     console.log(info);

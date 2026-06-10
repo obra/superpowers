@@ -21,6 +21,7 @@ const STOP = path.join(__dirname, '../../skills/brainstorming/scripts/stop-serve
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function waitForExit(child, timeoutMs = 2000) {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve(true);
   return new Promise(resolve => {
     let settled = false;
     const finish = (exited) => {
@@ -33,8 +34,36 @@ function waitForExit(child, timeoutMs = 2000) {
   });
 }
 
+async function killAndWait(child, timeoutMs = 2000) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return true;
+  const exited = waitForExit(child, timeoutMs);
+  child.kill();
+  if (await exited) return true;
+
+  child.kill('SIGKILL');
+  return waitForExit(child, 500);
+}
+
+async function waitForFile(file, timeoutMs = 3000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (fs.existsSync(file)) return true;
+    await sleep(50);
+  }
+  return fs.existsSync(file);
+}
+
 function firstServerStarted(out) {
   return JSON.parse(out.trim().split('\n').find(l => l.includes('server-started')));
+}
+
+function openCaptureCommand(dir, marker) {
+  const scriptPath = path.resolve(dir, 'capture-open.cjs');
+  const markerPath = path.resolve(marker);
+  fs.writeFileSync(scriptPath,
+    "const fs = require('fs');\n" +
+    "fs.appendFileSync(process.argv[2], process.argv[3] + '\\n');\n");
+  return `node ${JSON.stringify(scriptPath)} ${JSON.stringify(markerPath)}`;
 }
 
 async function runTests() {
@@ -53,7 +82,8 @@ async function runTests() {
       const info = firstServerStarted(out);
       assert.strictEqual(info.idle_timeout_ms, 1234567, 'idle_timeout_ms should reflect the env override');
     } finally {
-      srv.kill(); await sleep(100); fs.rmSync(dir, { recursive: true, force: true });
+      await killAndWait(srv);
+      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 
@@ -77,7 +107,7 @@ async function runTests() {
       assert(fs.existsSync(path.join(dir, 'state', 'server-stopped')), 'should write server-stopped');
     } finally {
       try { ws.close(); } catch (e) {}
-      if (!exited) srv.kill();
+      if (!exited) await killAndWait(srv);
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -91,6 +121,30 @@ async function runTests() {
       assert.strictEqual(info.idle_timeout_ms, 5 * 60 * 1000, '5 minutes -> 300000 ms');
     } finally {
       execFileSync('bash', [STOP, path.dirname(info.state_dir)], { stdio: 'ignore' });
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  await test('server-started URL brackets IPv6 URL hosts', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-ipv6-url-');
+    const srv = spawn('node', [SERVER], {
+      env: {
+        ...process.env,
+        BRAINSTORM_PORT: 3421,
+        BRAINSTORM_HOST: '127.0.0.1',
+        BRAINSTORM_URL_HOST: '::1',
+        BRAINSTORM_TOKEN: 'ipv6token',
+        BRAINSTORM_DIR: dir,
+        BRAINSTORM_LIFECYCLE_CHECK_MS: 100000
+      }
+    });
+    let out = ''; srv.stdout.on('data', d => out += d.toString());
+    try {
+      for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
+      const info = firstServerStarted(out);
+      assert.strictEqual(info.url, 'http://[::1]:3421/?key=ipv6token');
+    } finally {
+      await killAndWait(srv);
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -116,7 +170,8 @@ async function runTests() {
     for (let i = 0; i < 60 && !outB.includes('server-started'); i++) await sleep(50);
     const infoB = firstServerStarted(outB);
     const keyB = new URL(infoB.url).searchParams.get('key');
-    b.kill(); await sleep(100); fs.rmSync(dir, { recursive: true, force: true });
+    await killAndWait(b);
+    fs.rmSync(dir, { recursive: true, force: true });
 
     assert.strictEqual(infoB.port, infoA.port, 'restart should reuse the same port');
     // Same key too — otherwise the open tab's cookie would 403 against the restart.
@@ -159,9 +214,8 @@ async function runTests() {
       assert(opened, 'stored key should authenticate WS after restart');
     } finally {
       try { if (ws) ws.close(); } catch (e) {}
-      try { if (a) a.kill(); } catch (e) {}
-      try { if (b) b.kill(); } catch (e) {}
-      await sleep(100);
+      await killAndWait(a);
+      await killAndWait(b);
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -181,7 +235,9 @@ async function runTests() {
     const portB = firstServerStarted(outB).port;
     const persisted = fs.readFileSync(portFile, 'utf8').trim();
 
-    a.kill(); b.kill(); await sleep(100); fs.rmSync(dir, { recursive: true, force: true });
+    await killAndWait(a);
+    await killAndWait(b);
+    fs.rmSync(dir, { recursive: true, force: true });
 
     assert.notStrictEqual(portB, 3415, 'must not bind the already-taken port');
     assert(portB >= 49152, 'should fall back to a random high port');
@@ -193,14 +249,14 @@ async function runTests() {
   await test('auto-opens the browser once, on the first screen', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-open-');
     const marker = path.join(dir, 'opened.log');
-    const openCmd = `sh -c 'echo "$0" >> ${marker}'`; // capture the launch instead of opening a browser
+    const openCmd = openCaptureCommand(dir, marker); // capture the launch instead of opening a browser
     const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3417, BRAINSTORM_DIR: dir, BRAINSTORM_OPEN: '1', BRAINSTORM_OPEN_CMD: openCmd, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 } });
     let out = ''; srv.stdout.on('data', d => out += d.toString());
     for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
 
     // First screen, with no browser connected -> should auto-open.
     fs.writeFileSync(path.join(dir, 'content', 'first.html'), '<h2>First</h2>');
-    await sleep(700);
+    await waitForFile(marker);
     // Second screen -> must NOT open again.
     fs.writeFileSync(path.join(dir, 'content', 'second.html'), '<h2>Second</h2>');
     await sleep(700);
@@ -211,7 +267,7 @@ async function runTests() {
     if (lines[0]) {
       status = await new Promise(r => require('http').get(lines[0], res => { res.resume(); r(res.statusCode); }).on('error', () => r(0)));
     }
-    srv.kill(); await sleep(100);
+    await killAndWait(srv);
     fs.rmSync(dir, { recursive: true, force: true });
 
     assert.strictEqual(lines.length, 1, 'should open exactly once');
@@ -223,14 +279,14 @@ async function runTests() {
   await test('does NOT auto-open unless approved (BRAINSTORM_OPEN unset)', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-open-');
     const marker = path.join(dir, 'opened.log');
-    const openCmd = `sh -c 'echo "$0" >> ${marker}'`;
+    const openCmd = openCaptureCommand(dir, marker);
     // BRAINSTORM_OPEN intentionally NOT set — auto-open must stay off.
     const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3418, BRAINSTORM_DIR: dir, BRAINSTORM_OPEN_CMD: openCmd, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 } });
     let out = ''; srv.stdout.on('data', d => out += d.toString());
     for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
     fs.writeFileSync(path.join(dir, 'content', 'first.html'), '<h2>First</h2>');
     await sleep(700);
-    srv.kill(); await sleep(100);
+    await killAndWait(srv);
     const opened = fs.existsSync(marker);
     fs.rmSync(dir, { recursive: true, force: true });
     assert(!opened, 'must not open the browser without explicit approval');
@@ -248,7 +304,7 @@ async function runTests() {
     const hammer = setInterval(() => { require('http').get('http://localhost:3419/', r => r.resume()).on('error', () => {}); }, 60);
     for (let i = 0; i < 40 && !exited; i++) await sleep(100);
     clearInterval(hammer);
-    if (!exited) srv.kill();
+    if (!exited) await killAndWait(srv);
     fs.rmSync(dir, { recursive: true, force: true });
 
     assert(exited, 'idle shutdown must still fire despite a flood of unauthenticated requests');

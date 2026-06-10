@@ -79,6 +79,21 @@ if [[ -n "$IDLE_TIMEOUT_MINUTES" ]]; then
   export BRAINSTORM_IDLE_TIMEOUT_MS=$(( IDLE_TIMEOUT_MINUTES * 60 * 1000 ))
 fi
 
+is_windows_like_shell() {
+  case "${OSTYPE:-}" in
+    msys*|cygwin*|mingw*) return 0 ;;
+  esac
+  if [[ -n "${MSYSTEM:-}" ]]; then
+    return 0
+  fi
+  local uname_s
+  uname_s="$(uname -s 2>/dev/null || true)"
+  case "$uname_s" in
+    MSYS*|MINGW*|CYGWIN*) return 0 ;;
+  esac
+  return 1
+}
+
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   FOREGROUND="true"
@@ -86,10 +101,7 @@ fi
 
 # Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  case "${OSTYPE:-}" in
-    msys*|cygwin*|mingw*) FOREGROUND="true" ;;
-  esac
-  if [[ -n "${MSYSTEM:-}" ]]; then
+  if is_windows_like_shell; then
     FOREGROUND="true"
   fi
 fi
@@ -139,10 +151,7 @@ fi
 # Passing a PID node cannot verify causes server to log owner-pid-invalid
 # and self-terminate at the 60-second lifecycle check. Clear it so the
 # watchdog is disabled and the idle timeout becomes the only shutdown trigger.
-case "${OSTYPE:-}" in
-  msys*|cygwin*|mingw*) OWNER_PID="" ;;
-esac
-if [[ -n "${MSYSTEM:-}" ]]; then
+if is_windows_like_shell; then
   OWNER_PID=""
 fi
 

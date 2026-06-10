@@ -20,7 +20,12 @@ PID_FILE="${STATE_DIR}/server.pid"
 # not a reused/unrelated process whose PID was recycled into a stale pid file.
 is_brainstorm_server() {
   kill -0 "$1" 2>/dev/null || return 1
-  case "$(ps -p "$1" -o command= 2>/dev/null)" in
+  local command_line
+  command_line="$(ps -p "$1" -o command= 2>/dev/null || true)"
+  if [[ -z "$command_line" ]]; then
+    command_line="$(ps -f -p "$1" 2>/dev/null | sed '1d' || true)"
+  fi
+  case "$command_line" in
     *node*server.cjs*) ;;
     *) return 1 ;;
   esac
