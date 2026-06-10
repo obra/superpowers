@@ -52,10 +52,27 @@ evidence-rule narration.
   flat; controllers pasted the diff in only 2 of 22 review dispatches when
   phrasing was optional.
 - **Iteration 2:** per-task spec and quality reviews merged into one
-  `task-reviewer-prompt.md` (one reviewer, one reading of a pasted diff, two
-  verdicts; one fix dispatch addresses both kinds of findings); diff-pasting
-  made imperative (controller runs `git diff` itself); implementers run the
-  focused test while iterating, full suite once before commit.
+  `task-reviewer-prompt.md` (one reviewer, one reading of the diff, two
+  verdicts; one fix dispatch addresses both kinds of findings); implementers
+  run the focused test while iterating, full suite once before commit.
+  Result (go-fractals): 47.5 min / 15.7M / $13.55 — beat baseline on every
+  axis, blind-judged 9/10 vs baseline 7/10.
+- **Iteration 3:** Calibration names merge-blocking maintainability damage
+  (verbatim duplication, swallowed errors, assertion-free tests) as
+  Important and Minor findings must be pasted into the final review for
+  triage; reviewer skepticism extended to the implementer's design
+  rationales ("left it per YAGNI" is a claim, not a verdict); diff handed
+  to reviewers as a file (`git diff > /tmp/sdd-task-N.diff`, redirected so
+  it never enters the controller's context; one Read call for the
+  reviewer) after paste-into-prompt guidance went unadopted (0-6 of 11-17
+  dispatches) for locally-rational context-economics reasons.
+- **Final frozen config (e355795), all five scenarios pass:** go-fractals
+  44.4 min / 13.4M / $11.67 (-32% time, -37% tokens, -27% dollars vs
+  baseline); svelte-todo 62.8 / 19.7M / $15.76 (-21% / -28% / -25%);
+  rejects-extra-features $1.31 (vs $1.88); spec-reviewer-flaws flat; the
+  planted-defect scenario (v3: open-flag transparency bar for judgment
+  calls, must-fix bar for a test whose name promises verification it
+  never performs) passes with the defect caught and fixed.
 
 ## Design
 
