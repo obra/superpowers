@@ -1,7 +1,8 @@
 # Task Reviewer Prompt Template
 
-Use this template when dispatching a task reviewer subagent. One reviewer, one
-reading of the diff, two verdicts: spec compliance and code quality.
+Use this template when dispatching a task reviewer subagent. The reviewer
+reads the task's diff once and returns two verdicts: spec compliance and
+code quality.
 
 **Purpose:** Verify one task's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
@@ -158,5 +159,5 @@ Subagent (general-purpose):
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict
 
-A single fix dispatch can then address spec gaps and quality findings
-together; re-review after fixes covers both verdicts again.
+A fix dispatch can address spec gaps and quality findings together;
+re-review after fixes covers both verdicts.
