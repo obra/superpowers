@@ -65,6 +65,14 @@ fewer, better-sized tasks, SDD still runs one fresh subagent per task.
 
 ### L1 — Plan-side crispness (writing-plans changes; est. −$1.5-3/run, plus variance reduction)
 
+**Status 2026-06-11: validated in effect.** A hand-crisped fractals plan
+(10 → 7 tasks, `## Global Constraints` header, per-task `Interfaces:`
+lines — scenario `sdd-go-fractals-crisp`) ran 3/3 green at $9.51-12.65
+(mean $11.60 vs combo band $11.67-14.84), 20-24 dispatches vs 28, fix
+waves flat. What remains is elicitation: getting writing-plans guidance
+to *produce* such plans (micro-test per the doctrine, then the follow-up
+PR). See the experiments log, Batch A-E.
+
 The plan is upstream of every cost: task count sets dispatch count; plan
 ambiguity sets review-loop count; plan completeness sets implementer
 exploration. Current writing-plans optimizes for implementer success, not
@@ -102,6 +110,17 @@ target economics and ambiguity, not placeholder hygiene.
 
 ### L2 — Controller tier (est. −$4-5/run; the biggest single lever, gated hardest)
 
+**Status 2026-06-11: recon positive, gates still owed.** Sonnet-controller
+run 1 (claude-sonnet coding-agent): all gates green at **$6.68** / 31 min
+(combo band $11.67-14.84), 26/26 dispatches model-explicit, review loops
+and omnibus-fixer rules followed, and the controller caught a fixer
+side-effect (`go mod tidy` removed cobra) before re-review — real
+adjudication, not silent absorption. But the run surfaced zero
+BLOCKED/⚠️ events (the escalation points were never stressed) and the
+final review ran on sonnet rather than the most capable tier. The N=5
+quality gates + full judgment audit below remain mandatory before any
+skill change.
+
 The controller is half the dollars solely because it inherits the session
 model. Its turn floor is prompt-immune, so the lever is the rate per turn —
 but the controller is also where most judgment points live, so this rung is
@@ -132,6 +151,16 @@ multi-step *work*, not dispatch loops; whether a mid-tier controller holds
 ~150 turns is part of what the experiment determines.
 
 ### L3 — Reviewer tier (est. −$0.7-1/run; most likely rung to die on the judgment guardrail)
+
+**Status 2026-06-11: DEAD, as pre-registered.** Planted-defect ×5 with
+forced-haiku task reviewers: 2 pass / 1 indeterminate / 2 fail (baseline
+5/5); per-task haiku cleanly flagged 0 of 10 planted defects at correct
+severity — 1 found-but-downgraded with the exact prohibited rationale,
+9 missed or rationalized (DRY praised as YAGNI; assert-nothing test
+called plan-compliant). Cheap reviewers fail by *advocating* for
+defects; passing runs survived only on controller redundancy or the
+final review. Recorded in the experiments log, Batch A-E. Do not
+re-propose without a structurally different design.
 
 The package reviewer is near-single-step mechanically (3 turns / 1 Read
 when calm), which invalidates the original turn-inflation rationale for the
