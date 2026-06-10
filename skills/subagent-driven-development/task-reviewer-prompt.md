@@ -104,8 +104,11 @@ Subagent (general-purpose):
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
-    Important means this task cannot be trusted until it is fixed;
-    "coverage could be broader" and polish suggestions are Minor.
+    Important means this task cannot be trusted until it is fixed: incorrect
+    or fragile behavior, a missed requirement, or maintainability damage you
+    would block a merge over — verbatim duplication of a logic block,
+    swallowed errors, tests that assert nothing. "Coverage could be broader"
+    and polish suggestions are Minor.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
