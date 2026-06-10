@@ -1,24 +1,34 @@
 #!/usr/bin/env bash
-# Generate a task review package: commit list, stat summary, and the net
+# Generate a review package: commit list, stat summary, and the net
 # diff with extended context, written to a file the reviewer reads in one
 # call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
 # tasks intact.
 #
-# Usage: review-package BASE HEAD OUTFILE
-# Example: review-package a1b2c3d HEAD /tmp/sdd-task-3.diff
+# Usage: review-package BASE HEAD [OUTFILE]
+# Default OUTFILE: <git-dir>/sdd/review-<base7>..<head7>.diff — unique per
+# repo instance and per range, so concurrent sessions cannot collide and a
+# re-review after fixes always gets a distinctly named fresh file.
 set -euo pipefail
 
-if [ $# -ne 3 ]; then
-  echo "usage: review-package BASE HEAD OUTFILE" >&2
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "usage: review-package BASE HEAD [OUTFILE]" >&2
   exit 2
 fi
 
 base=$1
 head=$2
-out=$3
 
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+
+if [ $# -eq 3 ]; then
+  out=$3
+else
+  dir=$(git rev-parse --git-path sdd)
+  mkdir -p "$dir"
+  dir=$(cd "$dir" && pwd)
+  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+fi
 
 {
   echo "# Review package: ${base}..${head}"
