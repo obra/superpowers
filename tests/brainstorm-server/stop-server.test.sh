@@ -13,11 +13,13 @@ SERVER="$SCRIPT_DIR/../../skills/brainstorming/scripts/server.cjs"
 PASS=0; FAIL=0
 ok() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
 bad() { echo "  FAIL: $1"; echo "    $2"; FAIL=$((FAIL + 1)); }
+reap_job() { wait "$1" 2>/dev/null || true; }
 
 # --- Test 1: an unrelated, reused PID must NOT be killed ---
 SESS="$(mktemp -d)"; mkdir -p "$SESS/state"
 sleep 600 &
 UNRELATED=$!
+disown "$UNRELATED" 2>/dev/null || true
 echo "$UNRELATED" > "$SESS/state/server.pid"
 OUT="$("$STOP" "$SESS")"
 if kill -0 "$UNRELATED" 2>/dev/null; then
@@ -29,12 +31,14 @@ else
   bad "unrelated reused PID was KILLED" "$OUT"
 fi
 kill -9 "$UNRELATED" 2>/dev/null
+reap_job "$UNRELATED"
 rm -rf "$SESS"
 
 # --- Test 2: a real brainstorm server IS stopped ---
 SESS="$(mktemp -d)"; mkdir -p "$SESS/content" "$SESS/state"
 BRAINSTORM_DIR="$SESS" BRAINSTORM_PORT=3399 node "$SERVER" > /dev/null 2>&1 &
 SRV=$!
+disown "$SRV" 2>/dev/null || true
 for _ in $(seq 1 40); do kill -0 "$SRV" 2>/dev/null && break; sleep 0.1; done
 sleep 0.4
 echo "$SRV" > "$SESS/state/server.pid"
@@ -43,7 +47,9 @@ sleep 0.3
 if kill -0 "$SRV" 2>/dev/null; then
   bad "real brainstorm server still running after stop" "$OUT"
   kill -9 "$SRV" 2>/dev/null
+  reap_job "$SRV"
 else
+  reap_job "$SRV"
   case "$OUT" in
     *stopped*) ok "real brainstorm server is stopped" ;;
     *) bad "server stopped but status was not 'stopped'" "$OUT" ;;
@@ -66,6 +72,7 @@ if command -v lsof > /dev/null 2>&1; then
   echo '{"type":"server-started","port":3499}' > "$SESS/state/server-info" # nothing listens on 3499
   ( exec -a "node server.cjs" sleep 600 ) &
   IMPOSTOR=$!
+  disown "$IMPOSTOR" 2>/dev/null || true
   echo "$IMPOSTOR" > "$SESS/state/server.pid"
   OUT="$("$STOP" "$SESS")"
   if kill -0 "$IMPOSTOR" 2>/dev/null; then
@@ -77,6 +84,7 @@ if command -v lsof > /dev/null 2>&1; then
     bad "killed a node server.cjs that was NOT on our recorded port" "$OUT"
   fi
   kill -9 "$IMPOSTOR" 2>/dev/null
+  reap_job "$IMPOSTOR"
   rm -rf "$SESS"
 else
   echo "  SKIP: lsof unavailable — port cross-check test"
