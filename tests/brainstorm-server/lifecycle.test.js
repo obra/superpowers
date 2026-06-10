@@ -20,6 +20,19 @@ const START = path.join(__dirname, '../../skills/brainstorming/scripts/start-ser
 const STOP = path.join(__dirname, '../../skills/brainstorming/scripts/stop-server.sh');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+function waitForExit(child, timeoutMs = 2000) {
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = (exited) => {
+      if (settled) return;
+      settled = true;
+      resolve(exited);
+    };
+    child.once('exit', () => finish(true));
+    setTimeout(() => finish(false), timeoutMs);
+  });
+}
+
 function firstServerStarted(out) {
   return JSON.parse(out.trim().split('\n').find(l => l.includes('server-started')));
 }
@@ -72,7 +85,7 @@ async function runTests() {
   await test('start-server.sh --idle-timeout-minutes sets the timeout', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-life-');
     let info;
-    const out = execFileSync('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5'], { encoding: 'utf8' });
+    const out = execFileSync('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5', '--background'], { encoding: 'utf8' });
     info = firstServerStarted(out);
     try {
       assert.strictEqual(info.idle_timeout_ms, 5 * 60 * 1000, '5 minutes -> 300000 ms');
@@ -94,7 +107,9 @@ async function runTests() {
     const infoA = firstServerStarted(outA);
     const keyA = new URL(infoA.url).searchParams.get('key');
     assert(fs.existsSync(portFile) && fs.existsSync(tokenFile), 'should write the port and token files');
-    a.kill(); await sleep(400); // free the port
+    const exitedA = waitForExit(a);
+    a.kill();
+    assert(await exitedA, 'first server should exit before restart binds its port');
 
     const b = spawn('node', [SERVER], { env: { ...env, BRAINSTORM_DIR: path.join(dir, 's2') } });
     let outB = ''; b.stdout.on('data', d => outB += d.toString());
@@ -106,6 +121,49 @@ async function runTests() {
     assert.strictEqual(infoB.port, infoA.port, 'restart should reuse the same port');
     // Same key too — otherwise the open tab's cookie would 403 against the restart.
     assert.strictEqual(keyB, keyA, 'restart should reuse the same session key');
+  });
+
+  await test('stored key can authenticate WebSocket after same-port restart', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-reconnect-');
+    const portFile = path.join(dir, '.last-port');
+    const tokenFile = path.join(dir, '.last-token');
+    const env = { ...process.env, BRAINSTORM_PORT_FILE: portFile, BRAINSTORM_TOKEN_FILE: tokenFile, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 };
+    let a = null, b = null, ws = null;
+
+    try {
+      a = spawn('node', [SERVER], { env: { ...env, BRAINSTORM_DIR: path.join(dir, 's1') } });
+      let outA = ''; a.stdout.on('data', d => outA += d.toString());
+      for (let i = 0; i < 60 && !outA.includes('server-started'); i++) await sleep(50);
+      const infoA = firstServerStarted(outA);
+      const keyA = new URL(infoA.url).searchParams.get('key');
+      const exitedA = waitForExit(a);
+      a.kill();
+      assert(await exitedA, 'first server should exit before restart binds its port');
+      a = null;
+
+      b = spawn('node', [SERVER], { env: { ...env, BRAINSTORM_DIR: path.join(dir, 's2') } });
+      let outB = ''; b.stdout.on('data', d => outB += d.toString());
+      for (let i = 0; i < 60 && !outB.includes('server-started'); i++) await sleep(50);
+      const infoB = firstServerStarted(outB);
+
+      ws = new WebSocket(`ws://localhost:${infoB.port}/?key=${keyA}`, {
+        headers: { Origin: `http://localhost:${infoB.port}` }
+      });
+      const opened = await new Promise(resolve => {
+        ws.on('open', () => resolve(true));
+        ws.on('error', () => resolve(false));
+        setTimeout(() => resolve(false), 1500);
+      });
+
+      assert.strictEqual(infoB.port, infoA.port, 'restart should reuse same port');
+      assert(opened, 'stored key should authenticate WS after restart');
+    } finally {
+      try { if (ws) ws.close(); } catch (e) {}
+      try { if (a) a.kill(); } catch (e) {}
+      try { if (b) b.kill(); } catch (e) {}
+      await sleep(100);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   await test('falls back to a random port when the preferred port is taken', async () => {
