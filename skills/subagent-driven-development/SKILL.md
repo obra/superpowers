@@ -112,7 +112,7 @@ single-file mechanical fixes.
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Write the task's diff to a file (`git diff BASE..HEAD > /tmp/sdd-task-N.diff`), then dispatch the task reviewer with that path.
+**DONE:** Generate the review package (`scripts/review-package BASE HEAD /tmp/sdd-task-N.diff`, from this skill's directory; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with that path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -153,15 +153,22 @@ final whole-branch review. When you fill a reviewer template:
 - Include the spec/design's global constraints that bind the task (version
   floors, naming and copy rules, platform requirements) in the requirements
   you paste — a reviewer can only enforce what you hand them.
-- Hand the reviewer its diff as a file: run
-  `git diff BASE..HEAD > /tmp/sdd-task-N.diff` (redirected, so the diff
-  never enters your own context) and put that path in the prompt. The
-  reviewer then sees the whole change in one Read call instead of
-  re-deriving it with git commands.
+- Hand the reviewer its diff as a file: run this skill's
+  `scripts/review-package BASE HEAD /tmp/sdd-task-N.diff` (or, without
+  bash: `git log --oneline`, `git diff --stat`, and `git diff -U10` for
+  the range, redirected to the file). The output never enters your own
+  context, and the reviewer sees the commit list, stat summary, and full
+  diff with context in one Read call. Use the BASE you recorded before
+  dispatching the implementer — never `HEAD~1`, which silently truncates
+  multi-commit tasks.
 - Dispatch fix subagents for Critical and Important findings. Record Minor
   findings and move on — then paste the accumulated Minor findings into the
   final whole-branch review dispatch so it can triage which must be fixed
   before merge. A roll-up nobody reads is a silent discard.
+- Every fix dispatch carries the implementer contract: the fix subagent
+  re-runs the tests covering its change and reports the results. A fix
+  report without test evidence is incomplete — do not re-review on top of
+  it.
 
 ## Prompt Templates
 
@@ -283,9 +290,9 @@ Done!
 - Tell a reviewer what not to flag, or pre-rate a finding's severity in the
   dispatch prompt ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
-- Dispatch a task reviewer without a diff file — run
-  `git diff BASE..HEAD > /tmp/sdd-task-N.diff` first and name that path in
-  the prompt
+- Dispatch a task reviewer without a diff file — generate it first
+  (`scripts/review-package BASE HEAD /tmp/sdd-task-N.diff`) and name that
+  path in the prompt
 - Move to next task while the review has open Critical/Important issues
 
 **If subagent asks questions:**
