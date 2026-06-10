@@ -30,6 +30,13 @@ Subagent (general-purpose):
 
     Only read files in this diff. Do not crawl the broader codebase.
 
+    ## Diff
+
+    [DIFF]
+
+    If the diff is provided above, review from it directly — do not re-run
+    the git commands or re-read the files it already shows.
+
     Spec compliance is judged by reading the diff against the requirements.
     The implementer already ran the tests and reported TDD evidence — do not
     re-run them. If a requirement cannot be verified from this diff alone

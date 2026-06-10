@@ -104,6 +104,12 @@ most capable model; a subtle concurrency change does.
 omitted model inherits your session's model — often the most capable and
 most expensive — which silently defeats this section.
 
+**Turn count beats token price.** Wall-clock and context cost scale with how
+many turns a subagent takes, and the cheapest models routinely take 2-3× the
+turns on multi-step work — costing more overall. Use a mid-tier model as the
+floor for implementers and reviewers; reserve the cheapest tier for
+single-file mechanical fixes.
+
 **Task complexity signals (implementation tasks):**
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
@@ -154,6 +160,11 @@ final whole-branch review. When you fill a reviewer template:
 - Include the spec/design's global constraints that bind the task (version
   floors, naming and copy rules, platform requirements) in the requirements
   you paste — a reviewer can only enforce what you hand them.
+- Paste the task's diff (`git diff BASE..HEAD` output) into the reviewer
+  prompt when it fits comfortably (up to a few hundred lines). A reviewer
+  with the diff in hand needs few or no tool calls.
+- Dispatch fix subagents for Critical and Important findings. Record Minor
+  findings and move on — they roll up to the final whole-branch review.
 
 ## Prompt Templates
 

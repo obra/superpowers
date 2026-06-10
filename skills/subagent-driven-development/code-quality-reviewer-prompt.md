@@ -32,6 +32,14 @@ Subagent (general-purpose):
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
 
+    ## Diff
+
+    [DIFF]
+
+    If the diff is provided above, review from it directly — do not re-run
+    the git commands or re-read the files it already shows. Fetch anything
+    further only for a named concrete risk.
+
     ## Read-Only Review
 
     Your review is read-only on this checkout. Do not mutate the working tree,
@@ -84,12 +92,15 @@ Subagent (general-purpose):
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this change contributed.)
 
-    Answer each item above with file:line evidence, not a bare yes or no.
-    An unsupported "yes" is not a review.
+    Cite file:line evidence for every finding and for any check you would
+    otherwise answer with a bare "yes." Cite, don't narrate — a tight report
+    that points at lines beats a long one that retells the diff.
 
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
+    Important means this task cannot be trusted until it is fixed;
+    "coverage could be broader" and polish suggestions are Minor.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
@@ -127,5 +138,8 @@ Subagent (general-purpose):
 - `[TASK_TEXT]` — the task's requirements text or plan reference, for context
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
+- `[DIFF]` — paste `git diff BASE..HEAD` output when it fits comfortably
+  (up to a few hundred lines); otherwise replace with "(not provided — run
+  the git commands above)"
 
 **Reviewer returns:** Strengths, Issues (Critical/Important/Minor), Task quality verdict
