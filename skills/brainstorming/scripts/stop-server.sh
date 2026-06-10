@@ -21,9 +21,22 @@ PID_FILE="${STATE_DIR}/server.pid"
 is_brainstorm_server() {
   kill -0 "$1" 2>/dev/null || return 1
   case "$(ps -p "$1" -o command= 2>/dev/null)" in
-    *node*server.cjs*) return 0 ;;
+    *node*server.cjs*) ;;
     *) return 1 ;;
   esac
+  # Stronger check: if we recorded the bound port and lsof is available, require
+  # the PID to be the process actually LISTENING on this session's port. This
+  # rules out an unrelated `node ... server.cjs` (another project, an editor task
+  # runner, a different session) that happened to recycle the stale PID.
+  local info="${STATE_DIR}/server-info"
+  if [[ -f "$info" ]] && command -v lsof >/dev/null 2>&1; then
+    local port
+    port=$(sed -n 's/.*"port":\([0-9][0-9]*\).*/\1/p' "$info" | head -1)
+    if [[ -n "$port" ]]; then
+      [[ "$(lsof -nP -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null | head -1)" == "$1" ]] || return 1
+    fi
+  fi
+  return 0
 }
 
 if [[ -f "$PID_FILE" ]]; then

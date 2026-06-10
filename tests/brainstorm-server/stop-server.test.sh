@@ -60,5 +60,27 @@ case "$OUT" in
 esac
 rm -rf "$SESS"
 
+# --- Test 4: a `node server.cjs` impostor NOT listening on our port is spared ---
+if command -v lsof > /dev/null 2>&1; then
+  SESS="$(mktemp -d)"; mkdir -p "$SESS/state"
+  echo '{"type":"server-started","port":3499}' > "$SESS/state/server-info" # nothing listens on 3499
+  ( exec -a "node server.cjs" sleep 600 ) &
+  IMPOSTOR=$!
+  echo "$IMPOSTOR" > "$SESS/state/server.pid"
+  OUT="$("$STOP" "$SESS")"
+  if kill -0 "$IMPOSTOR" 2>/dev/null; then
+    case "$OUT" in
+      *stale_pid*) ok "a node server.cjs not listening on our port is left alone" ;;
+      *) bad "impostor survived but status was not stale_pid" "$OUT" ;;
+    esac
+  else
+    bad "killed a node server.cjs that was NOT on our recorded port" "$OUT"
+  fi
+  kill -9 "$IMPOSTOR" 2>/dev/null
+  rm -rf "$SESS"
+else
+  echo "  SKIP: lsof unavailable — port cross-check test"
+fi
+
 echo "--- Results: $PASS passed, $FAIL failed ---"
 [ "$FAIL" -eq 0 ] || exit 1
