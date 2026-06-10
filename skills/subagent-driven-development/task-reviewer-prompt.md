@@ -27,13 +27,11 @@ Subagent (general-purpose):
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
+    **Diff file:** [DIFF_FILE]
 
-    [DIFF — REQUIRED: the controller pastes `git diff BASE..HEAD` output
-    here before dispatching. Dispatching with this placeholder unfilled is
-    a dispatch error.]
-
-    Review from the diff above — do not re-run git commands or re-read the
-    files it already shows. If no diff was provided, fetch it yourself:
+    Read the diff file once — that single Read is your view of the change.
+    Do not re-run git commands or re-read the files it already shows. If
+    the diff file is missing, fetch the diff yourself:
     `git diff --stat [BASE_SHA]..[HEAD_SHA]` and `git diff [BASE_SHA]..[HEAD_SHA]`.
     Only read files in this diff. Do not crawl the broader codebase. Inspect
     code outside the diff only to evaluate a concrete risk you can name — and
@@ -153,9 +151,9 @@ Subagent (general-purpose):
 - `[DESCRIPTION]` — what the implementer reports they built
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
-- `[DIFF]` — REQUIRED: paste `git diff BASE..HEAD` output (use `--stat`
-  plus the relevant hunks if it exceeds a few hundred lines); a reviewer
-  with the diff in hand needs few or no tool calls
+- `[DIFF_FILE]` — REQUIRED: the path the controller wrote the diff to
+  (`git diff BASE..HEAD > /tmp/sdd-task-N.diff`, redirected so it never
+  enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict
