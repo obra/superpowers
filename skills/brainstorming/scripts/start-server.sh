@@ -94,14 +94,19 @@ if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   fi
 fi
 
+# Session files (server.log, server-info, .last-token) embed the session key —
+# keep everything this script and the server create owner-only.
+umask 077
+
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
   SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
-  # Persist the bound port per project so a restart reuses it and an already-open
-  # browser tab reconnects to the same URL.
+  # Persist the bound port and key per project so a restart reuses them and an
+  # already-open browser tab reconnects to the same URL with a valid cookie.
   export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-token"
 else
   SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
 fi

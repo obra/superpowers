@@ -110,8 +110,20 @@ let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_
 // remote binds — and defeats DNS rebinding — where a Host/Origin allowlist
 // cannot. It rides the served URL as ?key= and is mirrored into a cookie on
 // first load so same-origin subresources and the WebSocket carry it for free.
-const TOKEN = process.env.BRAINSTORM_TOKEN || crypto.randomBytes(32).toString('hex');
-const COOKIE_NAME = 'brainstorm-key-' + PORT;
+// Persisted alongside the port (BRAINSTORM_TOKEN_FILE) so a restart keeps the
+// same key and an already-open tab's cookie still validates.
+const TOKEN_FILE = process.env.BRAINSTORM_TOKEN_FILE || null;
+const TOKEN = (() => {
+  if (process.env.BRAINSTORM_TOKEN) return process.env.BRAINSTORM_TOKEN;
+  if (TOKEN_FILE) {
+    try {
+      const t = fs.readFileSync(TOKEN_FILE, 'utf-8').trim();
+      if (/^[0-9a-f]{32,}$/i.test(t)) return t;
+    } catch (e) { /* no prior token recorded */ }
+  }
+  return crypto.randomBytes(32).toString('hex');
+})();
+let COOKIE_NAME = 'brainstorm-key-' + PORT; // refined to the actual bound port in onListen
 
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -207,13 +219,12 @@ function pathnameOf(url) {
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
-  touchActivity();
-
   if (!isAuthorized(req)) {
     res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(FORBIDDEN_PAGE);
     return;
   }
+  touchActivity(); // only authorized requests count as activity
 
   // Mirror the key into a cookie so same-origin subresources (/files/*) and the
   // WebSocket handshake carry it automatically, whatever URL style the agent
@@ -240,7 +251,9 @@ function handleRequest(req, res) {
   } else if (req.method === 'GET' && pathname.startsWith('/files/')) {
     const fileName = path.basename(pathname.slice(7));
     const filePath = path.join(CONTENT_DIR, fileName);
-    if (fileName.startsWith('.') || !fs.existsSync(filePath)) {
+    // Reject empty/dotfile names and anything that isn't a regular file —
+    // `/files/` would otherwise resolve to CONTENT_DIR and crash readFileSync (EISDIR).
+    if (!fileName || fileName.startsWith('.') || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
       res.writeHead(404);
       res.end('Not found');
       return;
@@ -351,7 +364,7 @@ function maybeOpenBrowser() {
   if (!process.env.BRAINSTORM_OPEN) return; // opt-in: only after the user approves the companion
   if (HOST !== '127.0.0.1' && HOST !== 'localhost') return;
   if (clients.size > 0) return; // the user already opened it
-  const url = 'http://' + URL_HOST + ':' + PORT;
+  const url = 'http://' + URL_HOST + ':' + PORT + '/?key=' + TOKEN; // must carry the key or the gate 403s it
   const cp = require('child_process');
   // Operator-provided launcher: run as given (this env var is trusted operator input).
   if (process.env.BRAINSTORM_OPEN_CMD) {
@@ -483,12 +496,19 @@ function startServer() {
   let triedFallback = false;
 
   function onListen() {
-    // Record the bound port so the next restart of this session reuses it — but
-    // ONLY when we got our preferred port. On a fallback we bound a *different*
-    // port because someone else holds the preferred one; persisting it would
-    // overwrite the shared .last-port and strand that other session's open tab.
+    // Cookie name keys on the ACTUAL bound port (may differ from the preferred
+    // one after an EADDRINUSE fallback) so it can't collide with another server's
+    // cookie in the shared localhost jar.
+    COOKIE_NAME = 'brainstorm-key-' + PORT;
+    // Record the bound port AND token so the next restart of this session reuses
+    // them — but ONLY when we got our preferred port. On a fallback we bound a
+    // *different* port because someone else holds the preferred one; persisting
+    // would overwrite the shared files and strand that other session's open tab.
     if (PORT_FILE && !triedFallback) {
       try { fs.writeFileSync(PORT_FILE, String(PORT)); } catch (e) { /* best effort */ }
+      if (TOKEN_FILE) {
+        try { fs.writeFileSync(TOKEN_FILE, TOKEN, { mode: 0o600 }); } catch (e) { /* best effort */ }
+      }
     }
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
@@ -496,7 +516,8 @@ function startServer() {
       screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS
     });
     console.log(info);
-    fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n');
+    // server-info embeds the key — keep it owner-only.
+    fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n', { mode: 0o600 });
   }
 
   server.on('error', (err) => {
