@@ -35,9 +35,9 @@ async function sleep(ms) {
 }
 
 async function fetch(url) {
-  const authed = url + (url.includes('?') ? '&' : '?') + 'key=' + TOKEN;
   return new Promise((resolve, reject) => {
-    http.get(authed, (res) => {
+    const headers = { Cookie: `brainstorm-key-${TEST_PORT}=${TOKEN}` };
+    http.get(url, { headers }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve({
@@ -208,6 +208,28 @@ async function runTests() {
       // The server must still be alive afterward.
       const alive = await fetch(`http://localhost:${TEST_PORT}/`);
       assert.strictEqual(alive.status, 200, 'server must survive a /files/ request');
+    });
+
+    await test('does not serve symlinks that escape content dir via /files/', async () => {
+      const target = path.join(STATE_DIR, 'server-info');
+      const link = path.join(CONTENT_DIR, 'linked-server-info.txt');
+      try { fs.unlinkSync(link); } catch (e) {}
+      fs.symlinkSync(target, link);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/linked-server-info.txt`);
+      assert.strictEqual(res.status, 404, 'symlink to state/server-info must not be served');
+      assert(!res.body.includes('server-started'), 'response must not include server-info body');
+    });
+
+    await test('does not serve hard links to files outside content dir via /files/', async () => {
+      const target = path.join(STATE_DIR, 'server-info');
+      const link = path.join(CONTENT_DIR, 'hard-linked-server-info.txt');
+      try { fs.unlinkSync(link); } catch (e) {}
+      fs.linkSync(target, link);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/hard-linked-server-info.txt`);
+      assert.strictEqual(res.status, 404, 'hard link to state/server-info must not be served');
+      assert(!res.body.includes('server-started'), 'response must not include server-info body');
     });
 
     await test('returns 404 for non-root paths', async () => {
