@@ -123,6 +123,35 @@ git branch -d <feature-branch>
 ```bash
 # Push branch
 git push -u origin <feature-branch>
+
+# Detect hosting platform and create PR/MR
+REMOTE_URL=$(git remote get-url origin)
+if echo "$REMOTE_URL" | grep -q "github.com"; then
+  gh pr create --title "<title>" --body "$(cat <<'EOF'
+## Summary
+<2-3 bullets of what changed>
+
+Closes #<issue-number>
+
+## Test Plan
+- [ ] <verification steps>
+EOF
+)"
+elif echo "$REMOTE_URL" | grep -qE "gitlab|gitlab.com"; then
+  glab mr create --title "<title>" --description "$(cat <<'EOF'
+## Summary
+<2-3 bullets of what changed>
+
+Closes #<issue-number>
+
+## Test Plan
+- [ ] <verification steps>
+EOF
+)"
+else
+  echo "Unknown platform — create PR/MR manually at your Git host"
+  echo "Pushed branch: <feature-branch>"
+fi
 ```
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
