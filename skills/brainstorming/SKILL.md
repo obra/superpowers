@@ -110,7 +110,7 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - The `docs/superpowers/` prefix is the convention; do not shorten it to `docs/specs/`
-  - (User preferences for spec location override this default)
+  - (An explicit user instruction overrides this default; an existing differently-named docs directory does not)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
