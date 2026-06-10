@@ -14,7 +14,6 @@
   // Everything below is browser-only; bail out when loaded in Node (tests).
   if (typeof window === 'undefined') return;
 
-  const WS_URL = 'ws://' + window.location.host;
   let ws = null;
   let eventQueue = [];
   let reconnectDelay = MIN_RECONNECT_MS;
@@ -22,6 +21,27 @@
   let disconnectedSince = null;
   let everConnected = false;
   let tombstoneShown = false;
+
+  function sessionKey() {
+    try {
+      return window.sessionStorage && window.sessionStorage.getItem('brainstorm-session-key');
+    } catch (e) {}
+    return null;
+  }
+
+  function websocketUrl() {
+    const key = sessionKey();
+    return 'ws://' + window.location.host + (key ? '/?key=' + encodeURIComponent(key) : '');
+  }
+
+  function reloadAfterRecovery() {
+    const key = sessionKey();
+    if (key) {
+      window.location.replace('/?key=' + encodeURIComponent(key));
+    } else {
+      window.location.reload();
+    }
+  }
 
   // Reflect connection state in the frame's status pill (absent on full-doc screens).
   function setStatus(state) {
@@ -57,7 +77,7 @@
   function connect() {
     if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
     setStatus(everConnected ? 'reconnecting' : 'connecting');
-    ws = new WebSocket(WS_URL);
+    ws = new WebSocket(websocketUrl());
 
     ws.onopen = () => {
       const recovered = tombstoneShown;
@@ -69,8 +89,9 @@
       eventQueue.forEach(e => ws.send(JSON.stringify(e)));
       eventQueue = [];
       // Recovered from a tombstoned outage (e.g. the server restarted on the same
-      // port) — reload to pick up the restarted server's current screen.
-      if (recovered) window.location.reload();
+      // port) — reload through the keyed bootstrap when possible so the cookie is
+      // refreshed before the visible URL returns to bare /.
+      if (recovered) reloadAfterRecovery();
     };
 
     ws.onmessage = (msg) => {

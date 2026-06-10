@@ -152,6 +152,20 @@ h1 { color: #333; } p { color: #666; } code { background: #f0f0f0; padding: 0.1e
 <p>This page needs the full URL your coding agent gave you, including the
 <code>?key=&hellip;</code> part. Copy the complete URL and open it again.</p></body></html>`;
 
+function bootstrapPage(key) {
+  const jsonKey = JSON.stringify(String(key));
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Opening Brainstorm Companion</title></head>
+<body>
+<script>
+try { sessionStorage.setItem('brainstorm-session-key', ${jsonKey}); } catch (e) {}
+location.replace('/');
+</script>
+</body>
+</html>`;
+}
+
 const frameTemplate = fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
 const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
@@ -176,6 +190,21 @@ function getNewestScreen() {
     })
     .sort((a, b) => b.mtime - a.mtime);
   return files.length > 0 ? files[0].path : null;
+}
+
+function isRegularFileInsideContentDir(filePath) {
+  let stat, realContentDir, realFilePath;
+  try {
+    stat = fs.lstatSync(filePath);
+    if (stat.isSymbolicLink()) return false;
+    if (!stat.isFile()) return false;
+    if (stat.nlink !== 1) return false;
+    realContentDir = fs.realpathSync(CONTENT_DIR);
+    realFilePath = fs.realpathSync(filePath);
+  } catch (e) {
+    return false;
+  }
+  return realFilePath.startsWith(realContentDir + path.sep);
 }
 
 // ========== Authentication ==========
@@ -203,8 +232,11 @@ function parseCookies(header) {
 function isAuthorized(req) {
   const q = req.url.indexOf('?');
   if (q >= 0) {
-    const key = new URLSearchParams(req.url.slice(q + 1)).get('key');
-    if (key && timingSafeEqualStr(key, TOKEN)) return true;
+    const params = new URLSearchParams(req.url.slice(q + 1));
+    if (params.has('key')) {
+      const key = params.get('key');
+      return Boolean(key && timingSafeEqualStr(key, TOKEN));
+    }
   }
   const cookie = parseCookies(req.headers['cookie'])[COOKIE_NAME];
   if (cookie && timingSafeEqualStr(cookie, TOKEN)) return true;
@@ -216,25 +248,53 @@ function pathnameOf(url) {
   return q >= 0 ? url.slice(0, q) : url;
 }
 
+function queryKey(url) {
+  const q = url.indexOf('?');
+  if (q < 0) return null;
+  return new URLSearchParams(url.slice(q + 1)).get('key');
+}
+
+function securityHeaders(headers = {}) {
+  return {
+    'Referrer-Policy': 'no-referrer',
+    'Cache-Control': 'no-store',
+    'X-Frame-Options': 'DENY',
+    'Content-Security-Policy': "frame-ancestors 'none'",
+    'Cross-Origin-Resource-Policy': 'same-origin',
+    ...headers
+  };
+}
+
+function isAllowedWebSocketOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  const host = req.headers.host;
+  if (!host) return false;
+  return origin === 'http://' + host;
+}
+
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
   if (!isAuthorized(req)) {
-    res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.writeHead(403, securityHeaders({ 'Content-Type': 'text/html; charset=utf-8' }));
     res.end(FORBIDDEN_PAGE);
     return;
   }
   touchActivity(); // only authorized requests count as activity
 
-  // Mirror the key into a cookie so same-origin subresources (/files/*) and the
-  // WebSocket handshake carry it automatically, whatever URL style the agent
-  // writes. SameSite=Strict: a cross-site page can neither read the key nor ride
-  // the cookie; HttpOnly: page scripts can't exfiltrate it.
+  // Mirror the key into a cookie so same-origin subresources (/files/*) can
+  // authenticate after bootstrap. HttpOnly keeps it away from page scripts; the
+  // WebSocket Origin check below is what blocks cross-origin localhost injection.
   res.setHeader('Set-Cookie',
     COOKIE_NAME + '=' + TOKEN + '; HttpOnly; SameSite=Strict; Path=/');
 
   const pathname = pathnameOf(req.url);
-  if (req.method === 'GET' && pathname === '/') {
+  const keyFromQuery = queryKey(req.url);
+  if (req.method === 'GET' && pathname === '/' && keyFromQuery && timingSafeEqualStr(keyFromQuery, TOKEN)) {
+    res.writeHead(200, securityHeaders({ 'Content-Type': 'text/html; charset=utf-8' }));
+    res.end(bootstrapPage(keyFromQuery));
+  } else if (req.method === 'GET' && pathname === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
       ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
@@ -246,24 +306,24 @@ function handleRequest(req, res) {
       html += helperInjection;
     }
 
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.writeHead(200, securityHeaders({ 'Content-Type': 'text/html; charset=utf-8' }));
     res.end(html);
   } else if (req.method === 'GET' && pathname.startsWith('/files/')) {
     const fileName = path.basename(pathname.slice(7));
     const filePath = path.join(CONTENT_DIR, fileName);
     // Reject empty/dotfile names and anything that isn't a regular file —
     // `/files/` would otherwise resolve to CONTENT_DIR and crash readFileSync (EISDIR).
-    if (!fileName || fileName.startsWith('.') || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-      res.writeHead(404);
+    if (!fileName || fileName.startsWith('.') || !isRegularFileInsideContentDir(filePath)) {
+      res.writeHead(404, securityHeaders());
       res.end('Not found');
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
+    res.writeHead(200, securityHeaders({ 'Content-Type': contentType }));
     res.end(fs.readFileSync(filePath));
   } else {
-    res.writeHead(404);
+    res.writeHead(404, securityHeaders());
     res.end('Not found');
   }
 }
@@ -273,7 +333,7 @@ function handleRequest(req, res) {
 const clients = new Set();
 
 function handleUpgrade(req, socket) {
-  if (!isAuthorized(req)) { socket.destroy(); return; }
+  if (!isAuthorized(req) || !isAllowedWebSocketOrigin(req)) { socket.destroy(); return; }
 
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
