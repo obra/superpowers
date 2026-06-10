@@ -100,6 +100,10 @@ Use the least powerful model that can handle each role to conserve cost and incr
 diff's size, complexity, and risk. A small mechanical diff does not need the
 most capable model; a subtle concurrency change does.
 
+**Always specify the model explicitly when dispatching a subagent.** An
+omitted model inherits your session's model — often the most capable and
+most expensive — which silently defeats this section.
+
 **Task complexity signals (implementation tasks):**
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
