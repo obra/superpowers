@@ -149,6 +149,9 @@ final whole-branch review. When you fill a reviewer template:
   ignore or not flag a specific issue. If you believe a finding would be a
   false positive, let the reviewer raise it and adjudicate it in the review
   loop.
+- Include the spec/design's global constraints that bind the task (version
+  floors, naming and copy rules, platform requirements) in the requirements
+  you paste — a reviewer can only enforce what you hand them.
 
 ## Prompt Templates
 
