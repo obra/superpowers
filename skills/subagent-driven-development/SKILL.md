@@ -282,6 +282,9 @@ Done!
 - Tell a reviewer what not to flag, or pre-rate a finding's severity in the
   dispatch prompt ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
+- Dispatch a task reviewer without pasting the diff into the prompt — run
+  `git diff BASE..HEAD` yourself first (`--stat` plus relevant hunks if it
+  exceeds a few hundred lines)
 - Move to next task while the review has open Critical/Important issues
 
 **If subagent asks questions:**
