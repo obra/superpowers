@@ -74,6 +74,42 @@ evidence-rule narration.
   calls, must-fix bar for a test whose name promises verification it
   never performs) passes with the defect caught and fixed.
 
+### Iterations 4-5 (2026-06-10): variance honesty, structural fixes, positive recipes
+
+A same-config re-run exposed run-to-run variance (44.4→57.1 min on
+identical prompts; reviewer escape-hatch appetite swung 1.0→6.3 tool
+calls/review), so all subsequent claims use ranges. Five parallel
+experiment variants on go-fractals plus transcript mining of real local
+sessions (full log with negative results:
+`evals/docs/experiments/2026-06-10-sdd-cost-experiments.md`) produced the
+final config:
+
+- **Adopted:** final-review package (final reviewer 33→6 turns at
+  controller-model prices); REQUIRED `model:` line in both templates
+  (prose guidance decayed mid-session once, inheriting opus for 17
+  dispatches, +$5); task-brief + report files (`scripts/task-brief`;
+  fidelity anchor, modest context savings); progress ledger in
+  `<git-dir>/sdd/progress.md` (real sessions re-dispatched entire
+  completed task sequences after compaction — 269 dispatches for ~22
+  tasks); omnibus final fixer (a real session's per-finding fix wave cost
+  more than all its tasks); scoped fix tests; unique SHA-range collateral
+  names (worktree/submodule-safe); dispatch-composition recipe and
+  reviewer named-risk budget (micro-tested: positive recipe 3.0
+  transcribed values vs prohibition 4.4 vs control 3.6 — prohibitions can
+  backfire; see `2026-06-10-positive-instruction-redesign-design.md`).
+- **Tested and declined:** controller turn batching and parallel-call
+  pipelining (controller emits exactly one tool call per message — 0
+  multi-tool messages in every run; 46% of its turns are
+  thinking/narration, a prompt-immune floor); background-dispatch
+  pipelining (mechanism adopted 7/28 but benefit below the ±6 min noise
+  floor on these scenarios).
+- **Final validated config (b81f35b family), all gates pass:** go-fractals
+  54.1-54.7 min / 14.4-16.6M / $12.81-14.31 (baseline 64.9 / 21.2M /
+  $16.07); svelte-todo 55.0 min / 19.3M / $14.99 (baseline 79.7 / 27.3M /
+  $20.98); planted-defect pass / $2.77. Across all 8 same-design fractals
+  runs: 44.4-57.1 min / 13.4-20.0M / $11.67-14.84 — the worst draw beats
+  baseline on every axis; typical mid-band savings ~20-25%.
+
 ## Design
 
 ### Shared principle: don't re-run tests on code that hasn't changed
