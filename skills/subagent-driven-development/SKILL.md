@@ -11,6 +11,8 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+**Proportionality:** Review fanout scales with the change. When the entire plan is one trivial, fully-specified mechanical change — a one-line edit, a log statement, a constant bump — implement it directly (or with a single implementer subagent), verify it, and commit. Skip the review subagents and the final reviewer: a diff with no room for interpretation has nothing for a spec or quality review to catch, and three dispatches for one line cost more than the change itself. When in doubt whether a change is trivial, it is not — run the full pipeline. Within a multi-task plan, run the full pipeline for every task regardless of size; this exception applies only when the whole plan is one trivial change.
+
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
 ## When to Use
@@ -61,11 +63,16 @@ digraph process {
     }
 
     "Read plan, extract all tasks with full text, note context, create todos" [shape=box];
+    "Entire plan = one trivial mechanical change?" [shape=diamond];
+    "Implement directly, verify, commit (no review fanout)" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create todos" -> "Entire plan = one trivial mechanical change?";
+    "Entire plan = one trivial mechanical change?" -> "Implement directly, verify, commit (no review fanout)" [label="yes — see Proportionality"];
+    "Implement directly, verify, commit (no review fanout)" -> "Use superpowers:finishing-a-development-branch";
+    "Entire plan = one trivial mechanical change?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="no"];
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -237,7 +244,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
+- Skip reviews (spec compliance OR code quality) on a non-trivial task — the Proportionality exception covers only a plan that is one trivial mechanical change
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
