@@ -64,7 +64,7 @@ prompt-template file (e.g. `superpowers:subagent-driven-development`'s
 | Skill dispatch form | Antigravity equivalent |
 |---------------------|----------------------|
 | An implementer-style `*-prompt.md` template (writes code, runs tests) | Fill the template, then `invoke_subagent` with `TypeName: "self"` and the filled prompt |
-| A read-only reviewer template (`spec-reviewer`, `code-quality-reviewer`, `code-reviewer`, `requesting-code-review`'s `./code-reviewer.md`) | `invoke_subagent` with `TypeName: "research"` and the filled review template |
+| A read-only reviewer template (`task-reviewer`, `code-reviewer`, `requesting-code-review`'s `./code-reviewer.md`) | `invoke_subagent` with `TypeName: "research"` and the filled review template |
 | Inline prompt (no template referenced) | `invoke_subagent` with `TypeName: "self"` (or `"research"` if the task only reads) and your inline prompt |
 
 ### Prompt filling
