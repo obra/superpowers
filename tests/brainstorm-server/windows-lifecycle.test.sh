@@ -80,14 +80,23 @@ get_port_from_info() {
   grep -o '"port":[0-9]*' "$1/state/server-info" | head -1 | sed 's/"port"://'
 }
 
+get_key_from_info() {
+  grep -o '"url":"[^"]*key=[^"]*' "$1/state/server-info" | head -1 | sed 's/.*key=//'
+}
+
 http_check() {
   local port="$1"
-  node -e "
+  local key="${2:-}"
+  node - "$port" "$key" <<'NODE'
     const http = require('http');
-    http.get('http://localhost:$port/', (res) => {
+    const port = Number(process.argv[2]);
+    const key = process.argv[3] || '';
+    const path = key ? '/?key=' + encodeURIComponent(key) : '/';
+    http.get({ hostname: '127.0.0.1', port, path }, (res) => {
+      res.resume();
       process.exit(res.statusCode === 200 ? 0 : 1);
     }).on('error', () => process.exit(1));
-  " 2>/dev/null
+NODE
 }
 
 # ========== Platform Detection ==========
@@ -227,6 +236,7 @@ else
   pass "Server starts successfully with empty OWNER_PID"
 
   SERVER_PORT=$(get_port_from_info "$TEST_DIR/survival")
+  SERVER_KEY=$(get_key_from_info "$TEST_DIR/survival")
 
   sleep 75
 
@@ -237,11 +247,11 @@ else
          "Server died. Log tail: $(tail -5 "$TEST_DIR/survival/.server.log" 2>/dev/null)"
   fi
 
-  if http_check "$SERVER_PORT"; then
+  if http_check "$SERVER_PORT" "$SERVER_KEY"; then
     pass "Server responds to HTTP after lifecycle check window"
   else
     fail "Server responds to HTTP after lifecycle check window" \
-         "HTTP request to port $SERVER_PORT failed"
+         "Authenticated HTTP request to port $SERVER_PORT failed"
   fi
 
   if grep -q "owner process exited" "$TEST_DIR/survival/.server.log" 2>/dev/null; then
