@@ -9,13 +9,18 @@
  */
 
 const { spawn } = require('child_process');
+const crypto = require('crypto');
 const http = require('http');
+const net = require('net');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
+const ALPINE_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/vendor/alpine.js');
+const ALPINE_PROVENANCE_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/vendor/alpine.provenance.json');
+const ALPINE_NOTICES_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md');
 const TEST_PORT = 3334;
 const TEST_DIR = '/tmp/brainstorm-test';
 const CONTENT_DIR = path.join(TEST_DIR, 'content');
@@ -42,6 +47,29 @@ async function fetch(url) {
         body: data
       }));
     }).on('error', reject);
+  });
+}
+
+function sha256File(filePath) {
+  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+function rawHttpRequest(requestTarget) {
+  return new Promise((resolve, reject) => {
+    const socket = net.createConnection({ host: 'localhost', port: TEST_PORT }, () => {
+      socket.write(`GET ${requestTarget} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n`);
+    });
+
+    let data = '';
+    socket.on('data', chunk => data += chunk.toString());
+    socket.on('end', () => {
+      const statusLine = data.split('\r\n')[0];
+      const match = statusLine.match(/^HTTP\/1\.1 (\d{3})/);
+      resolve({
+        status: match ? Number(match[1]) : 0
+      });
+    });
+    socket.on('error', reject);
   });
 }
 
@@ -92,6 +120,32 @@ async function runTests() {
   }
 
   try {
+    // ========== Vendored Alpine ==========
+    console.log('\n--- Vendored Alpine ---');
+
+    await test('vendored Alpine provenance is complete and matches artifact hash', () => {
+      assert(fs.existsSync(ALPINE_PATH), 'alpine.js should exist');
+      assert(fs.existsSync(ALPINE_PROVENANCE_PATH), 'alpine.provenance.json should exist');
+      assert(fs.existsSync(ALPINE_NOTICES_PATH), 'THIRD_PARTY_NOTICES.md should exist');
+
+      const provenance = JSON.parse(fs.readFileSync(ALPINE_PROVENANCE_PATH, 'utf-8'));
+      assert.strictEqual(provenance.name, 'alpinejs');
+      assert.strictEqual(provenance.version, '3.15.12');
+      assert.strictEqual(provenance.license, 'MIT');
+      assert.strictEqual(provenance.sourceUrl, 'https://registry.npmjs.org/alpinejs/-/alpinejs-3.15.12.tgz');
+      assert.strictEqual(provenance.sourcePackagePath, 'package/dist/cdn.min.js');
+      assert.strictEqual(provenance.localPath, 'skills/brainstorming/scripts/vendor/alpine.js');
+      assert.strictEqual(provenance.sha256, '57b37d7cae9a27d965fdae4adcc844245dfdc407e655aee85dcfff3a08036a3f');
+      assert.strictEqual(provenance.approvalArtifact, 'SUP-215');
+      assert.strictEqual(sha256File(ALPINE_PATH), provenance.sha256);
+
+      const notices = fs.readFileSync(ALPINE_NOTICES_PATH, 'utf-8');
+      assert(notices.includes('Alpine.js'), 'Notice should name Alpine.js');
+      assert(notices.includes('MIT License'), 'Notice should include MIT license text');
+      assert(notices.includes('curl -fsSL https://registry.npmjs.org/alpinejs/-/alpinejs-3.15.12.tgz'), 'Notice should include refresh command');
+      return Promise.resolve();
+    });
+
     // ========== Server Startup ==========
     console.log('\n--- Server Startup ---');
 
@@ -136,6 +190,17 @@ async function runTests() {
       assert(res.headers['content-type'].includes('text/html'), 'Should be text/html');
     });
 
+    await test('waiting page does not inject Alpine', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert(!res.body.includes('/vendor/alpine.js'), 'Waiting page should not inject Alpine');
+    });
+
+    await test('serves root path when query string is present', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/?from=browser`);
+      assert.strictEqual(res.status, 200);
+      assert(res.body.includes('Brainstorm Companion'), 'Should serve the root page by pathname');
+    });
+
     await test('serves full HTML documents as-is (not wrapped)', async () => {
       const fullDoc = '<!DOCTYPE html>\n<html><head><title>Custom</title></head><body><h1>Custom Page</h1></body></html>';
       fs.writeFileSync(path.join(CONTENT_DIR, 'full-doc.html'), fullDoc);
@@ -144,6 +209,7 @@ async function runTests() {
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
       assert(res.body.includes('<h1>Custom Page</h1>'), 'Should contain original content');
       assert(res.body.includes('WebSocket'), 'Should still inject helper.js');
+      assert(!res.body.includes('/vendor/alpine.js'), 'Should NOT inject Alpine into full documents');
       assert(!res.body.includes('indicator-bar'), 'Should NOT wrap in frame template');
     });
 
@@ -157,6 +223,20 @@ async function runTests() {
       assert(!res.body.includes('<!-- CONTENT -->'), 'Placeholder should be replaced');
       assert(res.body.includes('Pick a layout'), 'Fragment content should be present');
       assert(res.body.includes('data-choice="a"'), 'Fragment interactive elements intact');
+      assert(res.body.includes('<script defer src="/vendor/alpine.js"></script>'), 'Fragment should load Alpine');
+      assert(res.body.includes('Interact with the mockup, then return to the terminal'), 'Frame copy should be neutral');
+    });
+
+    await test('preserves Alpine attributes in frame-wrapped fragments', async () => {
+      const fragment = '<div x-data="{ open: false }"><button @click="open = !open">Toggle</button><div x-show="open">Details</div></div>';
+      fs.writeFileSync(path.join(CONTENT_DIR, 'alpine-fragment.html'), fragment);
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert(res.body.includes('x-data="{ open: false }"'), 'Should preserve x-data');
+      assert(res.body.includes('@click="open = !open"'), 'Should preserve @click');
+      assert(res.body.includes('x-show="open"'), 'Should preserve x-show');
+      assert(res.body.includes('/vendor/alpine.js'), 'Should include Alpine script');
     });
 
     await test('serves newest file by mtime', async () => {
@@ -182,6 +262,48 @@ async function runTests() {
     await test('returns 404 for non-root paths', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/other`);
       assert.strictEqual(res.status, 404);
+    });
+
+    await test('serves files by pathname when query string is present', async () => {
+      fs.writeFileSync(path.join(CONTENT_DIR, 'asset.png'), 'image-bytes');
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/asset.png?v=1`);
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body, 'image-bytes');
+    });
+
+    await test('serves vendored Alpine from exact vendor route', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/vendor/alpine.js`);
+      const provenance = JSON.parse(fs.readFileSync(ALPINE_PROVENANCE_PATH, 'utf-8'));
+      assert.strictEqual(res.status, 200);
+      assert(res.headers['content-type'].includes('application/javascript'), 'Should be JavaScript');
+      assert.strictEqual(
+        crypto.createHash('sha256').update(res.body).digest('hex'),
+        provenance.sha256,
+        'Should serve the pinned Alpine artifact'
+      );
+    });
+
+    await test('serves vendored Alpine when query string is present', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/vendor/alpine.js?v=3.15.12`);
+      assert.strictEqual(res.status, 200);
+      assert(res.body.includes('Alpine'), 'Should ignore query string for exact vendor pathname');
+    });
+
+    await test('exact-match vendor route rejects non-allowlisted pathnames', async () => {
+      const paths = [
+        '/vendor/unknown.js',
+        '/vendor/alpine.js/extra',
+        '/vendor/%2e%2e/alpine.js',
+        '/vendor/%2E%2E/alpine.js'
+      ];
+
+      for (const requestPath of paths) {
+        const res = await fetch(`http://localhost:${TEST_PORT}${requestPath}`);
+        assert.strictEqual(res.status, 404, `${requestPath} should 404`);
+      }
+
+      const dotSegmentRes = await rawHttpRequest('/vendor/../alpine.js');
+      assert.strictEqual(dotSegmentRes.status, 404, 'raw dot-segment vendor path should 404');
     });
 
     // ========== WebSocket Communication ==========
@@ -393,6 +515,15 @@ async function runTests() {
       assert(helperContent.includes('sendEvent'), 'Should define sendEvent');
       assert(helperContent.includes('selectedChoice'), 'Should track selectedChoice');
       assert(helperContent.includes('brainstorm'), 'Should expose brainstorm API');
+      return Promise.resolve();
+    });
+
+    await test('helper.js keeps indicator fallback copy neutral', () => {
+      const helperContent = fs.readFileSync(
+        path.join(__dirname, '../../skills/brainstorming/scripts/helper.js'), 'utf-8'
+      );
+      assert(helperContent.includes('Interact with the mockup, then return to the terminal'), 'Should use neutral fallback copy');
+      assert(!helperContent.includes('Click an option above, then return to the terminal'), 'Should not reset to selection-first copy');
       return Promise.resolve();
     });
 

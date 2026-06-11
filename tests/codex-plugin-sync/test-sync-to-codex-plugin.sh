@@ -181,6 +181,7 @@ write_upstream_fixture() {
         "$repo/evals/drill" \
         "$repo/hooks" \
         "$repo/scripts" \
+        "$repo/skills/brainstorming/scripts/vendor" \
         "$repo/skills/example"
 
     if [[ "$with_pure_ignored" == "1" ]]; then
@@ -267,6 +268,30 @@ EOF
 Fixture content.
 EOF
 
+    cat > "$repo/skills/brainstorming/scripts/server.cjs" <<'EOF'
+console.log('fixture server')
+EOF
+
+    cat > "$repo/skills/brainstorming/scripts/helper.js" <<'EOF'
+window.fixtureHelper = true
+EOF
+
+    cat > "$repo/skills/brainstorming/scripts/frame-template.html" <<'EOF'
+<html><body><!-- CONTENT --></body></html>
+EOF
+
+    printf 'fixture alpine\n' > "$repo/skills/brainstorming/scripts/vendor/alpine.js"
+
+    cat > "$repo/skills/brainstorming/scripts/vendor/alpine.provenance.json" <<'EOF'
+{"name":"alpinejs","version":"3.15.12","localPath":"skills/brainstorming/scripts/vendor/alpine.js","sha256":"fixture","approvalArtifact":"SUP-215"}
+EOF
+
+    cat > "$repo/skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md" <<'EOF'
+# Third-Party Notices
+
+Alpine.js fixture notice.
+EOF
+
     printf 'tracked keep\n' > "$repo/.private-journal/keep.txt"
     printf 'ignored leak\n' > "$repo/.private-journal/leak.txt"
     if [[ "$with_pure_ignored" == "1" ]]; then
@@ -286,6 +311,12 @@ EOF
         hooks/session-start-codex \
         package.json \
         scripts/sync-to-codex-plugin.sh \
+        skills/brainstorming/scripts/server.cjs \
+        skills/brainstorming/scripts/helper.js \
+        skills/brainstorming/scripts/frame-template.html \
+        skills/brainstorming/scripts/vendor/alpine.js \
+        skills/brainstorming/scripts/vendor/alpine.provenance.json \
+        skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md \
         skills/example/SKILL.md
     git -C "$repo" add -f .private-journal/keep.txt
 
@@ -342,6 +373,7 @@ write_synced_destination_fixture() {
         "$repo/plugins/superpowers/.private-journal" \
         "$repo/plugins/superpowers/assets" \
         "$repo/plugins/superpowers/hooks" \
+        "$repo/plugins/superpowers/skills/brainstorming/scripts/vendor" \
         "$repo/plugins/superpowers/skills/example/agents" \
         "$repo/plugins/superpowers/skills/example"
 
@@ -398,6 +430,30 @@ EOF
 Fixture content.
 EOF
 
+    cat > "$repo/plugins/superpowers/skills/brainstorming/scripts/server.cjs" <<'EOF'
+console.log('fixture server')
+EOF
+
+    cat > "$repo/plugins/superpowers/skills/brainstorming/scripts/helper.js" <<'EOF'
+window.fixtureHelper = true
+EOF
+
+    cat > "$repo/plugins/superpowers/skills/brainstorming/scripts/frame-template.html" <<'EOF'
+<html><body><!-- CONTENT --></body></html>
+EOF
+
+    printf 'fixture alpine\n' > "$repo/plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.js"
+
+    cat > "$repo/plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.provenance.json" <<'EOF'
+{"name":"alpinejs","version":"3.15.12","localPath":"skills/brainstorming/scripts/vendor/alpine.js","sha256":"fixture","approvalArtifact":"SUP-215"}
+EOF
+
+    cat > "$repo/plugins/superpowers/skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md" <<'EOF'
+# Third-Party Notices
+
+Alpine.js fixture notice.
+EOF
+
     cat > "$repo/plugins/superpowers/skills/example/agents/openai.yaml" <<'EOF'
 interface:
   display_name: "Example"
@@ -414,6 +470,12 @@ EOF
         plugins/superpowers/hooks/run-hook.cmd \
         plugins/superpowers/hooks/session-start \
         plugins/superpowers/hooks/session-start-codex \
+        plugins/superpowers/skills/brainstorming/scripts/server.cjs \
+        plugins/superpowers/skills/brainstorming/scripts/helper.js \
+        plugins/superpowers/skills/brainstorming/scripts/frame-template.html \
+        plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.js \
+        plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.provenance.json \
+        plugins/superpowers/skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md \
         plugins/superpowers/skills/example/agents/openai.yaml \
         plugins/superpowers/skills/example/SKILL.md \
         plugins/superpowers/.private-journal/keep.txt
@@ -437,6 +499,46 @@ write_stale_ignored_destination_fixture() {
     commit_fixture "$repo" "Initial stale ignored destination fixture"
 }
 
+write_outdated_destination_fixture() {
+    local repo="$1"
+
+    mkdir -p \
+        "$repo/plugins/superpowers/.codex-plugin" \
+        "$repo/plugins/superpowers/assets" \
+        "$repo/plugins/superpowers/skills/example"
+
+    cat > "$repo/plugins/superpowers/.codex-plugin/plugin.json" <<'EOF'
+{
+  "name": "superpowers",
+  "version": "0.0.1"
+}
+EOF
+
+    printf 'old png fixture\n' > "$repo/plugins/superpowers/assets/app-icon.png"
+
+    cat > "$repo/plugins/superpowers/skills/example/SKILL.md" <<'EOF'
+# Example Skill
+
+Old destination content.
+EOF
+
+    git -C "$repo" add \
+        plugins/superpowers/.codex-plugin/plugin.json \
+        plugins/superpowers/assets/app-icon.png \
+        plugins/superpowers/skills/example/SKILL.md
+
+    commit_fixture "$repo" "Initial outdated destination fixture"
+}
+
+attach_origin_remote() {
+    local repo="$1"
+    local remote="$2"
+
+    git init -q --bare "$remote"
+    git -C "$repo" remote add origin "$remote"
+    git -C "$repo" push -u origin main --quiet
+}
+
 write_fake_gh() {
     local bin_dir="$1"
 
@@ -447,6 +549,29 @@ write_fake_gh() {
 set -euo pipefail
 
 if [[ "${1:-}" == "auth" && "${2:-}" == "status" ]]; then
+    exit 0
+fi
+
+if [[ "${1:-}" == "pr" && "${2:-}" == "create" ]]; then
+    shift 2
+    body=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --body)
+                body="${2:-}"
+                shift 2
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    if [[ -n "${FAKE_GH_PR_BODY_FILE:-}" ]]; then
+        printf '%s' "$body" > "$FAKE_GH_PR_BODY_FILE"
+    fi
+
+    echo "https://github.com/prime-radiant-inc/openai-codex-plugins/pull/123"
     exit 0
 fi
 
@@ -498,6 +623,24 @@ run_apply() {
     PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" -y --local "$dest" 2>&1
 }
 
+run_apply_with_pr_capture() {
+    local upstream="$1"
+    local dest="$2"
+    local fake_bin="$3"
+    local body_file="$4"
+
+    FAKE_GH_PR_BODY_FILE="$body_file" PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" -y --local "$dest" 2>&1
+}
+
+run_bootstrap_apply_with_pr_capture() {
+    local upstream="$1"
+    local dest="$2"
+    local fake_bin="$3"
+    local body_file="$4"
+
+    FAKE_GH_PR_BODY_FILE="$body_file" PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" -y --bootstrap --local "$dest" 2>&1
+}
+
 run_help() {
     local upstream="$1"
     local fake_bin="$2"
@@ -523,11 +666,15 @@ main() {
     local stale_dest
     local dirty_apply_dest
     local dirty_apply_dest_branch
+    local changed_apply_dest
+    local changed_apply_remote
     local noop_apply_dest
     local noop_apply_dest_branch
     local fake_bin
     local bootstrap_dest
     local bootstrap_dest_branch
+    local bootstrap_apply_dest
+    local bootstrap_apply_remote
     local preview_status
     local preview_output
     local preview_section
@@ -542,12 +689,26 @@ main() {
     local stale_preview_section
     local dirty_apply_status
     local dirty_apply_output
+    local changed_apply_status
+    local changed_apply_output
+    local changed_apply_pr_body_path
+    local changed_apply_pr_body
+    local bootstrap_apply_status
+    local bootstrap_apply_output
+    local bootstrap_apply_pr_body_path
+    local bootstrap_apply_pr_body
     local noop_apply_status
     local noop_apply_output
     local help_output
     local script_source
     local dirty_skill_path
+    local changed_apply_alpine_path
+    local changed_apply_alpine_provenance_path
+    local changed_apply_alpine_notice_path
     local noop_openai_metadata_path
+    local noop_alpine_path
+    local noop_alpine_provenance_path
+    local noop_alpine_notice_path
 
     echo "=== Test: sync-to-codex-plugin dry-run regression ==="
 
@@ -561,9 +722,13 @@ main() {
     stale_dest="$TEST_ROOT/stale-destination"
     dirty_apply_dest="$TEST_ROOT/dirty-apply-destination"
     dirty_apply_dest_branch="fixture/dirty-apply-target"
+    changed_apply_dest="$TEST_ROOT/changed-apply-destination"
+    changed_apply_remote="$TEST_ROOT/changed-apply-remote.git"
     noop_apply_dest="$TEST_ROOT/noop-apply-destination"
     noop_apply_dest_branch="fixture/noop-apply-target"
     bootstrap_dest="$TEST_ROOT/bootstrap-destination"
+    bootstrap_apply_dest="$TEST_ROOT/bootstrap-apply-destination"
+    bootstrap_apply_remote="$TEST_ROOT/bootstrap-apply-remote.git"
     dest_branch="fixture/preview-target"
     bootstrap_dest_branch="fixture/bootstrap-preview-target"
     fake_bin="$TEST_ROOT/bin"
@@ -591,6 +756,10 @@ main() {
     checkout_fixture_branch "$dirty_apply_dest" "$dirty_apply_dest_branch"
     dirty_tracked_destination_skill "$dirty_apply_dest"
 
+    init_repo "$changed_apply_dest"
+    write_outdated_destination_fixture "$changed_apply_dest"
+    attach_origin_remote "$changed_apply_dest" "$changed_apply_remote"
+
     init_repo "$noop_apply_dest"
     write_synced_destination_fixture "$noop_apply_dest"
     checkout_fixture_branch "$noop_apply_dest" "$noop_apply_dest_branch"
@@ -598,6 +767,10 @@ main() {
     init_repo "$bootstrap_dest"
     write_bootstrap_destination_fixture "$bootstrap_dest"
     checkout_fixture_branch "$bootstrap_dest" "$bootstrap_dest_branch"
+
+    init_repo "$bootstrap_apply_dest"
+    write_bootstrap_destination_fixture "$bootstrap_apply_dest"
+    attach_origin_remote "$bootstrap_apply_dest" "$bootstrap_apply_remote"
 
     write_fake_gh "$fake_bin"
 
@@ -614,6 +787,12 @@ main() {
     stale_preview_status=$?
     dirty_apply_output="$(run_apply "$upstream" "$dirty_apply_dest" "$fake_bin")"
     dirty_apply_status=$?
+    changed_apply_pr_body_path="$TEST_ROOT/changed-apply-pr-body.md"
+    changed_apply_output="$(run_apply_with_pr_capture "$upstream" "$changed_apply_dest" "$fake_bin" "$changed_apply_pr_body_path")"
+    changed_apply_status=$?
+    bootstrap_apply_pr_body_path="$TEST_ROOT/bootstrap-apply-pr-body.md"
+    bootstrap_apply_output="$(run_bootstrap_apply_with_pr_capture "$upstream" "$bootstrap_apply_dest" "$fake_bin" "$bootstrap_apply_pr_body_path")"
+    bootstrap_apply_status=$?
     noop_apply_output="$(run_apply "$upstream" "$noop_apply_dest" "$fake_bin")"
     noop_apply_status=$?
     missing_manifest_output="$(run_preview_without_manifest "$upstream" "$dest" "$fake_bin")"
@@ -624,7 +803,15 @@ main() {
     preview_section="$(printf '%s\n' "$preview_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
     stale_preview_section="$(printf '%s\n' "$stale_preview_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
     dirty_skill_path="$dirty_apply_dest/plugins/superpowers/skills/example/SKILL.md"
+    changed_apply_alpine_path="$changed_apply_dest/plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.js"
+    changed_apply_alpine_provenance_path="$changed_apply_dest/plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.provenance.json"
+    changed_apply_alpine_notice_path="$changed_apply_dest/plugins/superpowers/skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md"
+    changed_apply_pr_body="$(cat "$changed_apply_pr_body_path" 2>/dev/null || true)"
+    bootstrap_apply_pr_body="$(cat "$bootstrap_apply_pr_body_path" 2>/dev/null || true)"
     noop_openai_metadata_path="$noop_apply_dest/plugins/superpowers/skills/example/agents/openai.yaml"
+    noop_alpine_path="$noop_apply_dest/plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.js"
+    noop_alpine_provenance_path="$noop_apply_dest/plugins/superpowers/skills/brainstorming/scripts/vendor/alpine.provenance.json"
+    noop_alpine_notice_path="$noop_apply_dest/plugins/superpowers/skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md"
 
     echo ""
     echo "Preview assertions..."
@@ -646,6 +833,12 @@ main() {
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
+    assert_contains "$preview_section" "skills/brainstorming/scripts/server.cjs" "Preview includes skill-local server runtime"
+    assert_contains "$preview_section" "skills/brainstorming/scripts/helper.js" "Preview includes skill-local helper runtime"
+    assert_contains "$preview_section" "skills/brainstorming/scripts/frame-template.html" "Preview includes skill-local frame template"
+    assert_contains "$preview_section" "skills/brainstorming/scripts/vendor/alpine.js" "Preview includes vendored Alpine"
+    assert_contains "$preview_section" "skills/brainstorming/scripts/vendor/alpine.provenance.json" "Preview includes Alpine provenance"
+    assert_contains "$preview_section" "skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md" "Preview includes Alpine notice"
     assert_not_matches "$preview_section" "\\*deleting +skills/example/agents/openai\\.yaml" "Preview preserves destination-owned OpenAI agent metadata"
     assert_current_branch "$dest" "$dest_branch" "Preview leaves destination checkout on its original branch"
     assert_branch_absent "$dest" "sync/superpowers-*" "Preview does not create sync branch in destination checkout"
@@ -681,6 +874,23 @@ main() {
     assert_file_equals "$dirty_skill_path" "# Example Skill
 
 Locally modified fixture content." "Dirty local apply preserves tracked working-tree file content"
+    assert_equals "$changed_apply_status" "0" "Changed local apply exits successfully"
+    assert_contains "$changed_apply_output" "PR opened: https://github.com/prime-radiant-inc/openai-codex-plugins/pull/123" "Changed local apply opens PR through fake gh"
+    assert_contains "$changed_apply_pr_body" $'tool is behaving.\n\nVendored third-party code included in this sync' "Changed local apply PR body separates vendored section"
+    assert_contains "$changed_apply_pr_body" "Vendored third-party code included in this sync" "Changed local apply PR body includes vendored section"
+    assert_contains "$changed_apply_pr_body" "skills/brainstorming/scripts/vendor/alpine.js" "Changed local apply PR body includes vendored Alpine path"
+    assert_contains "$changed_apply_pr_body" "alpinejs 3.15.12" "Changed local apply PR body includes Alpine package/version"
+    assert_contains "$changed_apply_pr_body" "Approval artifact: SUP-215" "Changed local apply PR body includes approval artifact"
+    assert_contains "$changed_apply_pr_body" 'License notice: `skills/brainstorming/scripts/vendor/THIRD_PARTY_NOTICES.md`' "Changed local apply PR body includes license notice path"
+    assert_contains "$changed_apply_pr_body" 'Provenance: `skills/brainstorming/scripts/vendor/alpine.provenance.json`' "Changed local apply PR body includes provenance path"
+    assert_contains "$changed_apply_pr_body" 'SHA256: `fixture`' "Changed local apply PR body includes SHA256"
+    assert_file_equals "$changed_apply_alpine_path" "fixture alpine" "Changed local apply writes vendored Alpine"
+    assert_file_equals "$changed_apply_alpine_provenance_path" "{\"name\":\"alpinejs\",\"version\":\"3.15.12\",\"localPath\":\"skills/brainstorming/scripts/vendor/alpine.js\",\"sha256\":\"fixture\",\"approvalArtifact\":\"SUP-215\"}" "Changed local apply writes Alpine provenance"
+    assert_contains "$(cat "$changed_apply_alpine_notice_path")" "Alpine.js fixture notice." "Changed local apply writes Alpine notice"
+    assert_equals "$bootstrap_apply_status" "0" "Bootstrap local apply exits successfully"
+    assert_contains "$bootstrap_apply_output" "PR opened: https://github.com/prime-radiant-inc/openai-codex-plugins/pull/123" "Bootstrap local apply opens PR through fake gh"
+    assert_contains "$bootstrap_apply_pr_body" "Vendored third-party code included in this sync" "Bootstrap local apply PR body includes vendored section"
+    assert_contains "$bootstrap_apply_pr_body" "Approval artifact: SUP-215" "Bootstrap local apply PR body includes approval artifact"
     assert_equals "$noop_apply_status" "0" "Clean no-op local apply exits successfully"
     assert_contains "$noop_apply_output" "No changes — embedded plugin was already in sync with upstream" "Clean no-op local apply reports no changes"
     assert_current_branch "$noop_apply_dest" "$noop_apply_dest_branch" "Clean no-op local apply leaves destination checkout on its original branch"
@@ -688,6 +898,9 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     assert_file_equals "$noop_openai_metadata_path" "interface:
   display_name: \"Example\"
   short_description: \"Destination-owned OpenAI metadata\"" "Clean no-op local apply preserves OpenAI agent metadata"
+    assert_file_equals "$noop_alpine_path" "fixture alpine" "Clean no-op local apply preserves vendored Alpine"
+    assert_file_equals "$noop_alpine_provenance_path" "{\"name\":\"alpinejs\",\"version\":\"3.15.12\",\"localPath\":\"skills/brainstorming/scripts/vendor/alpine.js\",\"sha256\":\"fixture\",\"approvalArtifact\":\"SUP-215\"}" "Clean no-op local apply preserves Alpine provenance"
+    assert_contains "$(cat "$noop_alpine_notice_path")" "Alpine.js fixture notice." "Clean no-op local apply preserves Alpine notice"
 
     echo ""
     echo "Missing manifest assertions..."
@@ -703,6 +916,7 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     assert_not_contains "$script_source" "regenerated inline" "Source drops regenerated inline phrasing"
     assert_not_contains "$script_source" "Brand Assets directory" "Source drops Brand Assets directory phrasing"
     assert_not_contains "$script_source" "--assets-src" "Source drops --assets-src"
+    assert_contains "$script_source" "Vendored third-party code included in this sync" "Source calls out vendored third-party code in sync PR body"
 
     if [[ $FAILURES -ne 0 ]]; then
         echo ""
