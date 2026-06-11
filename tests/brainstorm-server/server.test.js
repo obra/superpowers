@@ -117,8 +117,7 @@ async function runTests() {
   let stdoutAccum = '';
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 
-  const { stdout: initialStdout } = await waitForServer(server);
-  assertStartedOnExpectedPort(initialStdout);
+  let initialStdout = '';
   let passed = 0;
   let failed = 0;
   let skipped = 0;
@@ -141,6 +140,10 @@ async function runTests() {
   }
 
   try {
+    const { stdout } = await waitForServer(server);
+    initialStdout = stdout;
+    assertStartedOnExpectedPort(initialStdout);
+
     // ========== Server Startup ==========
     console.log('\n--- Server Startup ---');
 
