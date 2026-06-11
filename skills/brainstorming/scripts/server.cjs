@@ -214,6 +214,20 @@ function companionUrl() {
   return 'http://' + urlHostForHttp(URL_HOST) + ':' + PORT + '/?key=' + TOKEN;
 }
 
+function browserLauncherForPlatform(url, {
+  platform = process.platform,
+  osRelease = require('os').release(),
+  env = process.env
+} = {}) {
+  const isWSL = platform === 'linux' && /microsoft/i.test(osRelease);
+  if (platform === 'darwin') return { bin: 'open', args: [url] };
+  if (platform === 'win32' || isWSL) {
+    return { bin: 'rundll32.exe', args: ['url.dll,FileProtocolHandler', url] };
+  }
+  if (env.DISPLAY || env.WAYLAND_DISPLAY) return { bin: 'xdg-open', args: [url] };
+  return null;
+}
+
 function isRegularFileInsideContentDir(filePath) {
   let stat, realContentDir, realFilePath;
   try {
@@ -455,13 +469,9 @@ function maybeOpenBrowser() {
   }
   // Platform launchers: pass the URL as an argv element via execFile (no shell),
   // so a url-host containing shell metacharacters can't inject a command.
-  const isWSL = process.platform === 'linux' && /microsoft/i.test(require('os').release());
-  let bin, args;
-  if (process.platform === 'darwin') { bin = 'open'; args = [url]; }
-  else if (process.platform === 'win32' || isWSL) { bin = 'cmd.exe'; args = ['/c', 'start', '', url]; }
-  else if (process.env.DISPLAY || process.env.WAYLAND_DISPLAY) { bin = 'xdg-open'; args = [url]; }
-  else return; // headless: nothing to open
-  try { cp.execFile(bin, args, () => {}); } catch (e) { /* best effort */ }
+  const launcher = browserLauncherForPlatform(url);
+  if (!launcher) return; // headless: nothing to open
+  try { cp.execFile(launcher.bin, launcher.args, () => {}); } catch (e) { /* best effort */ }
 }
 
 // ========== Activity Tracking ==========
@@ -627,4 +637,11 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES, MAX_FRAME_PAYLOAD_BYTES };
+module.exports = {
+  computeAcceptKey,
+  encodeFrame,
+  decodeFrame,
+  browserLauncherForPlatform,
+  OPCODES,
+  MAX_FRAME_PAYLOAD_BYTES
+};
