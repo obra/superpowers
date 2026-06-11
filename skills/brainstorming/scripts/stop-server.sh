@@ -40,7 +40,7 @@ command_has_server_id() {
   local expected_arg="--brainstorm-server-id=$expected"
   if [[ -r "/proc/$pid/cmdline" ]]; then
     local arg
-    while IFS= read -r -d '' arg; do
+    while IFS= read -r -d '' arg || [[ -n "$arg" ]]; do
       [[ "$arg" == "$expected_arg" ]] && return 0
     done < "/proc/$pid/cmdline"
     return 1
