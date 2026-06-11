@@ -110,16 +110,19 @@ target economics and ambiguity, not placeholder hygiene.
 
 ### L2 — Controller tier (est. −$4-5/run; the biggest single lever, gated hardest)
 
-**Status 2026-06-11: recon positive, gates still owed.** Sonnet-controller
-run 1 (claude-sonnet coding-agent): all gates green at **$6.68** / 31 min
-(combo band $11.67-14.84), 26/26 dispatches model-explicit, review loops
-and omnibus-fixer rules followed, and the controller caught a fixer
-side-effect (`go mod tidy` removed cobra) before re-review — real
-adjudication, not silent absorption. But the run surfaced zero
-BLOCKED/⚠️ events (the escalation points were never stressed) and the
-final review ran on sonnet rather than the most capable tier. The N=5
-quality gates + full judgment audit below remain mandatory before any
-skill change.
+**Status 2026-06-11: recon positive (n=2), gates still owed.**
+Sonnet-controller runs (claude-sonnet coding-agent): all gates green at
+**$6.68 and $8.05** / 31-41 min (combo band $11.67-14.84), tokens inside
+the combo band — no cheap-controller turn inflation. 26/26 and 31/31
+dispatches model-explicit, with heavier (and sane) haiku tiering than
+opus controllers showed; review loops, per-task Important→fix→re-review,
+and omnibus-fixer rules followed in both runs; the run-1 controller
+caught a fixer side-effect (`go mod tidy` removed cobra) before
+re-review — real adjudication, not silent absorption. But neither run
+surfaced a BLOCKED/⚠️ event (the escalation points were never stressed)
+and final reviews ran on sonnet rather than the most capable tier. The
+N=5 quality gates + full judgment audit below remain mandatory before
+any skill change.
 
 The controller is half the dollars solely because it inherits the session
 model. Its turn floor is prompt-immune, so the lever is the rate per turn —
