@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. The one exception: a request that leaves zero design decisions open needs no design - implement it directly without invoking this skill (e.g. 'add a basic checkbox, nothing fancy' where the context leaves nothing to choose). Decisions ARE open - so invoke - if the change adds a file or dependency, touches a schema, API contract, or persisted data (even when the user stated the outcome), deletes or disables anything, touches security posture at all (auth, sessions, permissions, CORS, crypto - even with the exact value stated), alters user-visible behavior beyond the stated change, has more than one plausible reading, or the user frames it as a feature or project to think through."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. The one exception: a request that leaves zero design decisions open needs no design - implement it directly without invoking this skill (e.g. 'add a basic checkbox, nothing fancy' where the context leaves nothing to choose). Decisions ARE open - so invoke - if the change adds a file or dependency, touches a schema, API contract, or persisted data (even when the user stated the outcome), deletes or disables working functionality (even when the deletion is exactly what was asked), touches security posture at all (auth, sessions, permissions, CORS, crypto - even with the exact value stated), alters user-visible behavior beyond the stated change, has more than one plausible reading, or the user frames it as a feature or project to think through."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -25,6 +25,7 @@ Anything with open decisions goes through this process. A todo list, a single-fu
 | "I can infer the obvious choice" | If there is a choice to infer, a decision is open. Invoke. |
 | "The user said keep it simple / nothing fancy" | A hedge describes the solution's size, not the request's completeness. Check what remains undecided, not the tone. |
 | "Asking would waste the user's time" | One design question costs seconds; an unexamined assumption costs a rewrite. |
+| "The user already made that decision — they told me to delete it" | A requested deletion still has consequences the user may not have weighed (working feature, no usage data, alternatives). Surface them first; the tripwire applies to requested deletions. |
 
 ## Checklist
 
