@@ -12,7 +12,7 @@ If you think there is even a 1% chance a skill might apply to what you are doing
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+This is not negotiable. This is not optional. You cannot rationalize your way out of this. (The single carve-out: a skill whose own description says it does not apply — see The Rule.)
 </EXTREMELY-IMPORTANT>
 
 ## Instruction Priority
@@ -49,6 +49,10 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") 
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
+**Documented exceptions in a skill's own description are authoritative.** When a description itself says the skill does not apply to a request (e.g. brainstorming's nothing-to-design exception), not invoking it is compliance, not rationalization. Any doubt about whether the exception's conditions hold means invoke. Only the skill's description can define such an exception; you cannot infer one.
+
+**An exception skip must be stated, never silent.** Before your first action, write one line naming the exception and the tripwire scan that came up empty — e.g. "Skipping brainstorming per its exception: no security/deletion/schema/new-file tripwires; outcome fully specified." If you did not write the scan line, you did not scan — invoke the skill instead.
+
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
@@ -69,7 +73,12 @@ digraph skill_flow {
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke the skill" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Skill's own description exempts this request?" [label="yes, even 1%"];
+    "Skill's own description exempts this request?" [shape=diamond];
+    "Skill's own description exempts this request?" -> "Invoke the skill" [label="no / any doubt"];
+    "Skill's own description exempts this request?" -> "State the one-line tripwire scan, then proceed" [label="yes, clearly"];
+    "State the one-line tripwire scan, then proceed" [shape=box];
+    "State the one-line tripwire scan, then proceed" -> "Respond (including clarifications)";
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
     "Invoke the skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
@@ -94,6 +103,7 @@ These thoughts mean STOP—you're rationalizing:
 | "I remember this skill" | Skills evolve. Read current version. |
 | "This doesn't count as a task" | Action = task. Check for skills. |
 | "The skill is overkill" | Simple things become complex. Use it. |
+| "Too trivial to scan the tripwire list" | The scan is one sentence. Write it or invoke the skill. |
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
@@ -118,4 +128,6 @@ The skill itself tells you which.
 
 ## User Instructions
 
-Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows — unless a skill's own description exempts the request (see The Rule above).
+
+Pressure phrasing — "don't ask questions", "make assumptions", "just build it" — changes how you interact (state assumptions instead of asking), not which skills you invoke. Only an instruction that names what to skip ("don't write a plan", "skip TDD") or a description exception skips a workflow step. "Your instruction wins per the priority rules" applied to an unnamed workflow step is a rationalization.

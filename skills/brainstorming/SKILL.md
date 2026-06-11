@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. The one exception (nothing-to-design) must be EARNED by a tripwire scan first - invoke this skill if the change: adds a file or dependency; touches a schema, API contract, or persisted data (even when the user stated the outcome); deletes or disables working functionality (even when asked); touches security posture at all (auth, sessions, timeouts, permissions, CORS, crypto - even with the exact value stated); alters user-visible behavior beyond the stated change; has more than one plausible reading; or is framed as a feature or project. Only when NO tripwire hits and the outcome is fully specified (e.g. 'add a basic checkbox, nothing fancy' where context leaves nothing to choose): state your scan in one line, then implement directly without invoking this skill."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -10,12 +10,22 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity, with exactly one exception.
+
+Exception — nothing to design: when the exception in this skill's description applies (zero open design decisions; its tripwire list puts the gate back on), implement directly. TDD and verification-before-completion still apply. Brainstorming exists to surface decisions; when there are none, the user's request IS the design. Any doubt: the gate holds.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Anything with open decisions goes through this process. A todo list, a single-function utility, a data migration — "simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but if anything remains to decide, you MUST present it and get approval. Do not confuse this with the nothing-to-design exception above: "this seems simple, I'll skip the design" is a rationalization whenever decisions exist.
+
+| Excuse | Reality |
+|--------|---------|
+| "The codebase has an established pattern, so nothing is open" | A pattern answers HOW, not WHETHER or WHAT. Those decisions are still open unless the user made them. |
+| "I can infer the obvious choice" | If there is a choice to infer, a decision is open. Invoke. |
+| "The user said keep it simple / nothing fancy" | A hedge describes the solution's size, not the request's completeness. Check what remains undecided, not the tone. |
+| "Asking would waste the user's time" | One design question costs seconds; an unexamined assumption costs a rewrite. |
+| "The user already made that decision — they told me to delete it" | A requested deletion still has consequences the user may not have weighed (working feature, no usage data, alternatives). Surface them first; the tripwire applies to requested deletions. |
 
 ## Checklist
 
