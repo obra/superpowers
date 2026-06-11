@@ -162,7 +162,7 @@ if [[ "$is_windows" == "true" ]]; then
   cat > "$FAKE_NODE_DIR/node" <<'FAKENODE'
 #!/usr/bin/env bash
 echo "CAPTURED_OWNER_PID=${BRAINSTORM_OWNER_PID:-__UNSET__}"
-echo "CAPTURED_ARGV=$*"
+printf 'CAPTURED_ARGV=%s\n' "$@"
 exit 0
 FAKENODE
   chmod +x "$FAKE_NODE_DIR/node"
@@ -177,8 +177,7 @@ FAKENODE
          "Expected empty or unset, got '$owner_pid_value'"
   fi
 
-  captured_argv=$(echo "$captured" | grep "CAPTURED_ARGV=" | head -1 | sed 's/CAPTURED_ARGV=//')
-  if echo "$captured_argv" | grep -Eq -- '--brainstorm-server-id=[A-Za-z0-9_-]{32,64}'; then
+  if echo "$captured" | grep -Eq '^CAPTURED_ARGV=--brainstorm-server-id=[A-Za-z0-9_-]{32,64}$'; then
     pass "start-server.sh passes server instance id argv on Windows"
   else
     fail "start-server.sh passes server instance id argv on Windows" \
@@ -360,6 +359,7 @@ echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/state/server.pid"
 if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   fail "Stop-test server starts" "Server did not start"
   kill "$STOP_TEST_PID" 2>/dev/null || true
+  wait "$STOP_TEST_PID" 2>/dev/null || true
   STOP_TEST_PID=""
 else
   bash "$STOP_SCRIPT" "$TEST_DIR/stop-test" >/dev/null 2>&1 || true
