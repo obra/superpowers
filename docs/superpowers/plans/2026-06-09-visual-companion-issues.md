@@ -21,7 +21,7 @@ grounded against the current code, not the PR author's description.
 - **Remote serving is a first-class scenario.** Superpowers is general-purpose;
   users connect from remote (SSH tunnel, Tailscale, `--host 0.0.0.0`). The
   security fix MUST protect those users, not just loopback. **Decision: a
-  per-session secret key**, not a Host/Origin allowlist. The allowlist only
+  per-session secret key**, not a Host allowlist. A Host allowlist only
   defends the loopback browser-confused-deputy; a direct remote client just
   sends the expected `Host`, so the allowlist is theater for remote exposure. A
   secret key is the only thing that authenticates a client uniformly across
@@ -43,8 +43,8 @@ grounded against the current code, not the PR author's description.
 
 | ID | Item | Source | Disposition |
 |----|------|--------|-------------|
-| A1 | Per-session secret key on `/`, `/files/*`, and WS (supersedes Host/Origin) | issues #1014, PRs #1110/#1553 | **Do** — chosen approach |
-| A2 | ~~Host/Origin allowlist~~ | PRs #1110/#1553 | Dropped — subsumed by A1 |
+| A1 | Per-session secret key on `/`, `/files/*`, and WS (supersedes Host allowlist) | issues #1014, PRs #1110/#1553 | **Do** — chosen approach |
+| A2 | Host allowlist; browser WS Origin check | PRs #1110/#1553 | Host allowlist dropped; WS Origin check retained after auth for browser confused-deputy defense |
 | A3 | Crash on `null` / non-object WS payload | PR #1504 | Do |
 | A4 | Frame-length bound in `decodeFrame` | issue #1446 | Already fixed — verify/close |
 | B1 | Dotfile screens served as content (`._*.html`) | PR #950 | Do |
@@ -52,10 +52,10 @@ grounded against the current code, not the PR author's description.
 | B3 | WS client reconnect backoff + status indicator | PR #856 | Do |
 | C1 | Idle timeout too short / not configurable; WS not closed on shutdown | issue #1237 (PR #1689) | Do |
 | C2 | Server death is invisible to user/agent | issue #1237 (residual) | Do |
-| D1 | Permanent opt-out of the companion | issue #892 | Do — design choice open |
-| D2 | Free-text feedback from the browser | issue #957 | Do — needs server change too |
-| D3 | Auto-open the companion URL | PR #759 (#755) | Do |
-| D4 | Light/dark contrast helpers in the frame | PR #1683 | Do |
+| D1 | Permanent opt-out of the companion | issue #892 | Deferred - not in PR #1720 |
+| D2 | Free-text feedback from the browser | issue #957 | Deferred - not in PR #1720 |
+| D3 | Auto-open the companion URL | PR #759 (#755) | Done in PR #1720 via `--open` |
+| D4 | Light/dark contrast helpers in the frame | PR #1683 | Deferred - not in PR #1720 |
 | E1 | Hard-gate terminal-vs-HTML per question | PR #1037 | **Workshop** |
 | E2 | Move session state out of the working tree | issue #975 (PR #977) | **Deferred** |
 | E3 | Vendor Alpine.js for interactive mockups | PR #1639 | **Dropped** |
@@ -78,13 +78,13 @@ route to the port, directly, with no same-origin policy in the way. Today
 `handleUpgrade` (`server.cjs:176`) checks only `Sec-WebSocket-Key`, and
 `handleRequest` (`server.cjs:138`) checks nothing — both are wide open.
 
-**Why a key, not an allowlist.** A Host/Origin allowlist only defends the
+**Why a key, not a Host allowlist.** A Host allowlist only defends the
 loopback browser-deputy. A direct remote client just sends the expected `Host`
 and forges/omits `Origin`, so the allowlist is theater for exactly the remote
 case we must protect. A per-session secret authenticates the client uniformly
 across loopback, SSH tunnel, and direct-remote, and it also kills DNS rebinding
 (the rebound page neither knows the key nor receives the host-scoped cookie).
-So the key **supersedes** A1/A2's allowlist entirely — no `BRAINSTORM_ALLOWED_HOSTS`.
+So the key **supersedes** A1/A2's Host allowlist entirely — no `BRAINSTORM_ALLOWED_HOSTS`.
 
 **Design.** Random token (`crypto.randomBytes(32)` hex), generated in
 `server.cjs` at startup (overridable via `BRAINSTORM_TOKEN` for deterministic
@@ -117,12 +117,14 @@ bears initial-auth load.
 fallback). `start-server.sh` none. `visual-companion.md` doc note (URL now has
 `?key=`; don't strip it). Tests updated to pass the token.
 
-### A2 — Host/Origin allowlist — DROPPED
+### A2 — Host allowlist dropped; browser WS Origin retained
 
 Subsumed by A1. The secret key closes the WS-injection vector (#1014), the
 HTTP/WS DNS-rebinding read vector (PR #1553), and the cross-origin WS vector
 (PR #1110) in one mechanism, and unlike an allowlist it actually protects the
-remote-bind case. No `Host`/`Origin` validation, no `BRAINSTORM_ALLOWED_HOSTS`.
+remote-bind case. No `BRAINSTORM_ALLOWED_HOSTS` and no Host allowlist. The final
+implementation still checks browser WebSocket `Origin` after session auth so a
+cross-origin localhost tab cannot ride the companion cookie.
 
 ### A3 — Server crashes on `null` / primitive WS payload
 
@@ -208,7 +210,7 @@ server dies mid-session. Separately, `shutdown()` (`server.cjs:310-321`) calls
 alive past shutdown.
 
 **Change.**
-- Raise the default (≈2h) and make it configurable:
+- Raise the default to 4 hours and make it configurable:
   `--idle-timeout-minutes` in `start-server.sh` → an env var → `IDLE_TIMEOUT_MS`,
   with validation against Node timer overflow.
 - Expose the effective timeout in the startup JSON / `state/server-info`.
@@ -219,7 +221,7 @@ alive past shutdown.
 
 **Problem.** When the server exits it writes `state/server-stopped` and removes
 `state/server-info` (`server.cjs:312-317`), and the skill is *told* to check
-those files (`visual-companion.md:98`) — but it's soft guidance the model skips,
+those files (`visual-companion.md:108`) — but it's soft guidance the model skips,
 and the browser just shows a generic "can't be reached." The user diagnoses it
 manually; the agent keeps referring to a dead URL.
 
@@ -315,7 +317,7 @@ this is behavior-shaping skill content and not specced here.
 
 Today `--project-dir` writes session state to `<project>/.superpowers/brainstorm/`
 (`start-server.sh:80-84`) and the skill tells the user to gitignore it
-(`visual-companion.md:48`). The ask is a `--state-dir` / `SUPERPOWERS_STATE_DIR`
+(`visual-companion.md:58`). The ask is a `--state-dir` / `SUPERPOWERS_STATE_DIR`
 default outside the repo (XDG), keeping `--project-dir` as an alias.
 **Deferred by Jesse for now.** Captured so it isn't lost.
 
@@ -344,7 +346,7 @@ These cluster into a few coherent passes (each independently testable against
 2. **Lifecycle pass** — C1 + C2 together (both touch `shutdown()` and the
    server-death story).
 3. **Robustness pass** — B1, B2, B3 (independent, small).
-4. **Feature pass** — D1, D2, D3, D4 (D2 needs the server persistence tweak;
-   D1's config mechanism is shared with D3's opt-out).
+4. **Deferred feature pass** - D1, D2, D4 are not part of PR #1720. D3 is
+   shipped through the `--open` flow.
 
 E1 is a separate workshop session. E2/E3 are out of scope for this round.
