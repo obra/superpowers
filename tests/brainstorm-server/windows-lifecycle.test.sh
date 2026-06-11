@@ -162,6 +162,7 @@ if [[ "$is_windows" == "true" ]]; then
   cat > "$FAKE_NODE_DIR/node" <<'FAKENODE'
 #!/usr/bin/env bash
 echo "CAPTURED_OWNER_PID=${BRAINSTORM_OWNER_PID:-__UNSET__}"
+echo "CAPTURED_ARGV=$*"
 exit 0
 FAKENODE
   chmod +x "$FAKE_NODE_DIR/node"
@@ -174,6 +175,14 @@ FAKENODE
   else
     fail "start-server.sh passes empty BRAINSTORM_OWNER_PID on Windows" \
          "Expected empty or unset, got '$owner_pid_value'"
+  fi
+
+  captured_argv=$(echo "$captured" | grep "CAPTURED_ARGV=" | head -1 | sed 's/CAPTURED_ARGV=//')
+  if echo "$captured_argv" | grep -Eq -- '--brainstorm-server-id=[A-Za-z0-9_-]{32,64}'; then
+    pass "start-server.sh passes server instance id argv on Windows"
+  else
+    fail "start-server.sh passes server instance id argv on Windows" \
+         "Expected --brainstorm-server-id=<safe id>, output: $captured"
   fi
 
   rm -rf "$FAKE_NODE_DIR" "$TEST_DIR/session"
