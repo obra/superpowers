@@ -113,16 +113,26 @@ let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_
 // Persisted alongside the port (BRAINSTORM_TOKEN_FILE) so a restart keeps the
 // same key and an already-open tab's cookie still validates.
 const TOKEN_FILE = process.env.BRAINSTORM_TOKEN_FILE || null;
-const TOKEN = (() => {
-  if (process.env.BRAINSTORM_TOKEN) return process.env.BRAINSTORM_TOKEN;
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function initialToken() {
+  if (process.env.BRAINSTORM_TOKEN) {
+    return { value: process.env.BRAINSTORM_TOKEN, source: 'env' };
+  }
   if (TOKEN_FILE) {
     try {
       const t = fs.readFileSync(TOKEN_FILE, 'utf-8').trim();
-      if (/^[0-9a-f]{32,}$/i.test(t)) return t;
+      if (/^[0-9a-f]{32,}$/i.test(t)) return { value: t, source: 'file' };
     } catch (e) { /* no prior token recorded */ }
   }
-  return crypto.randomBytes(32).toString('hex');
-})();
+  return { value: generateToken(), source: 'generated' };
+}
+
+const tokenInfo = initialToken();
+let TOKEN = tokenInfo.value;
+let tokenSource = tokenInfo.source;
 let COOKIE_NAME = 'brainstorm-key-' + PORT; // refined to the actual bound port in onListen
 
 const MIME_TYPES = {
@@ -594,8 +604,16 @@ function startServer() {
 
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE' && !triedFallback) {
+      if (tokenSource === 'env') {
+        console.error('Server failed to bind: preferred port is in use and BRAINSTORM_TOKEN is set; refusing fallback with explicit token');
+        process.exit(1);
+      }
       triedFallback = true;
       PORT = randomPort();
+      if (tokenSource === 'file') {
+        TOKEN = generateToken();
+        tokenSource = 'generated-fallback';
+      }
       server.listen(PORT, HOST, onListen);
     } else {
       console.error('Server failed to bind:', err.message);

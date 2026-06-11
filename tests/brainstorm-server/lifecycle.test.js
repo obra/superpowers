@@ -66,6 +66,18 @@ function openCaptureCommand(dir, marker) {
   return `node ${JSON.stringify(scriptPath)} ${JSON.stringify(markerPath)}`;
 }
 
+function httpStatus(port, key) {
+  return new Promise(resolve => {
+    const pathWithKey = key ? '/?key=' + encodeURIComponent(key) : '/';
+    require('http')
+      .get({ hostname: '127.0.0.1', port, path: pathWithKey }, res => {
+        res.resume();
+        resolve(res.statusCode);
+      })
+      .on('error', () => resolve(0));
+  });
+}
+
 async function runTests() {
   let passed = 0, failed = 0;
   async function test(name, fn) {
@@ -244,6 +256,104 @@ async function runTests() {
     // The fallback must NOT clobber the shared port file — A still owns 3415 and
     // its open tab must keep reconnecting there.
     assert.strictEqual(persisted, '3415', 'fallback must not overwrite .last-port');
+  });
+
+  await test('fallback with persisted token generates a fresh unpersisted key', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-port-');
+    const portFile = path.join(dir, '.last-port');
+    const tokenFile = path.join(dir, '.last-token');
+    const preferredToken = 'abababababababababababababababab';
+    let a = null, b = null;
+
+    try {
+      a = spawn('node', [SERVER], {
+        env: {
+          ...process.env,
+          BRAINSTORM_DIR: path.join(dir, 'a'),
+          BRAINSTORM_PORT: 3422,
+          BRAINSTORM_TOKEN: preferredToken,
+          BRAINSTORM_LIFECYCLE_CHECK_MS: 100000
+        }
+      });
+      let outA = ''; a.stdout.on('data', d => outA += d.toString());
+      for (let i = 0; i < 60 && !outA.includes('server-started'); i++) await sleep(50);
+      assert(outA.includes('server-started'), 'preferred-port server should start');
+
+      fs.writeFileSync(portFile, '3422');
+      fs.writeFileSync(tokenFile, preferredToken, { mode: 0o600 });
+
+      b = spawn('node', [SERVER], {
+        env: {
+          ...process.env,
+          BRAINSTORM_DIR: path.join(dir, 'b'),
+          BRAINSTORM_PORT_FILE: portFile,
+          BRAINSTORM_TOKEN_FILE: tokenFile,
+          BRAINSTORM_LIFECYCLE_CHECK_MS: 100000
+        }
+      });
+      let outB = ''; b.stdout.on('data', d => outB += d.toString());
+      for (let i = 0; i < 60 && !outB.includes('server-started'); i++) await sleep(50);
+      const infoB = firstServerStarted(outB);
+      const fallbackKey = new URL(infoB.url).searchParams.get('key');
+      const persistedAfter = fs.readFileSync(tokenFile, 'utf8').trim();
+      const originalStatus = await httpStatus(3422, fallbackKey);
+
+      assert.notStrictEqual(infoB.port, 3422, 'fallback should use a different port');
+      assert.notStrictEqual(fallbackKey, preferredToken, 'fallback must not reuse persisted key');
+      assert.strictEqual(persistedAfter, preferredToken, 'fallback must not overwrite .last-token');
+      assert.strictEqual(originalStatus, 403, 'fallback key must not authenticate to original server');
+    } finally {
+      await killAndWait(a);
+      await killAndWait(b);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  await test('fallback with explicit BRAINSTORM_TOKEN fails closed', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-port-');
+    const portFile = path.join(dir, '.last-port');
+    const explicitToken = 'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd';
+    let a = null, b = null;
+
+    try {
+      a = spawn('node', [SERVER], {
+        env: {
+          ...process.env,
+          BRAINSTORM_DIR: path.join(dir, 'a'),
+          BRAINSTORM_PORT: 3423,
+          BRAINSTORM_TOKEN: explicitToken,
+          BRAINSTORM_LIFECYCLE_CHECK_MS: 100000
+        }
+      });
+      let outA = ''; a.stdout.on('data', d => outA += d.toString());
+      for (let i = 0; i < 60 && !outA.includes('server-started'); i++) await sleep(50);
+      assert(outA.includes('server-started'), 'preferred-port server should start');
+
+      fs.writeFileSync(portFile, '3423');
+      b = spawn('node', [SERVER], {
+        env: {
+          ...process.env,
+          BRAINSTORM_DIR: path.join(dir, 'b'),
+          BRAINSTORM_PORT_FILE: portFile,
+          BRAINSTORM_TOKEN: explicitToken,
+          BRAINSTORM_LIFECYCLE_CHECK_MS: 100000
+        }
+      });
+      let outB = ''; let errB = '';
+      b.stdout.on('data', d => outB += d.toString());
+      b.stderr.on('data', d => errB += d.toString());
+      for (let i = 0; i < 60 && !outB.includes('server-started') && b.exitCode === null; i++) await sleep(50);
+      const exited = await waitForExit(b, 1500);
+
+      assert(exited, 'explicit-token fallback process should exit');
+      assert.notStrictEqual(b.exitCode, 0, 'explicit-token fallback should fail non-zero');
+      assert(!outB.includes('server-started'), 'explicit-token fallback must not start on a random port');
+      assert(/BRAINSTORM_TOKEN/.test(errB), `stderr should explain explicit token fallback refusal, got: ${errB}`);
+    } finally {
+      await killAndWait(a);
+      await killAndWait(b);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   await test('auto-opens the browser once, on the first screen', async () => {
