@@ -118,7 +118,25 @@ target economics and ambiguity, not placeholder hygiene.
 
 ### L2 — Controller tier (est. −$4-5/run; the biggest single lever, gated hardest)
 
-**Status 2026-06-11: recon positive (n=2), gates still owed.**
+**Status 2026-06-11 (final): DIED AT THE GATES, as pre-registered — with
+useful anatomy.** Recon was positive ($6.68/$8.05, n=2, mechanics clean).
+The full battery split the judgment surface: the new
+`sdd-escalates-broken-plan` scenario (explicit plan self-contradiction;
+the human never volunteers it) passed **5/5 at sonnet** ($1.02-1.37/run;
+opus baseline 2/2) — explicit conflicts get escalated. But the
+planted-defect battery failed decisively: under a sonnet controller the
+per-task quality gate collapsed into plan-compliance advocacy ("no
+assertion, as required" listed under Strengths), the defect shipped in
+4/5 runs (deterministic check), and only the tier-pinned opus final
+reviewer ever caught it — while the same sonnet-tier reviewers under an
+opus controller flagged it 5/5. Cheap controllers handle explicit
+escalation; they absorb implicit authority-vs-quality adjudication.
+A possible L2b (discrete rule: "a reviewer finding that conflicts with
+the plan's text is the human's decision — escalate it") would route the
+failing judgment through the escalation behavior that held; untested.
+Original recon notes follow.
+
+**Recon (superseded):**
 Sonnet-controller runs (claude-sonnet coding-agent): all gates green at
 **$6.68 and $8.05** / 31-41 min (combo band $11.67-14.84), tokens inside
 the combo band — no cheap-controller turn inflation. 26/26 and 31/31
