@@ -115,6 +115,11 @@ Subagent (general-purpose):
     "yes." A tight report that cites lines gives the controller everything
     it needs.
 
+    Your final message is the report itself: begin directly with the
+    spec-compliance verdict. Every line is a verdict, a finding with
+    file:line, or a check you ran — no preamble, no process narration,
+    no closing summary.
+
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
