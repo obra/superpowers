@@ -96,6 +96,8 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 **Architecture, design, and review tasks**: use the most capable available model.
 
+**Don't pick "most capable" from memory — inherit instead.** Your knowledge of the model lineup goes stale the moment a newer frontier model ships, so a model name recalled from training data silently downgrades the dispatch. When your dispatch tool takes an optional model parameter, omit it for these tasks: the subagent inherits the session's model — the one your human partner already chose — and inheritance can never resolve to a stale name. Pass an explicit model only to route mechanical or integration tasks to a cheaper tier, and take the name from what the harness offers, not from recall.
+
 **Task complexity signals:**
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
