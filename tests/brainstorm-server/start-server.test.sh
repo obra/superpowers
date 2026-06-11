@@ -48,6 +48,7 @@ make_fake_uname "$TEST_DIR/fake-bin"
 cat > "$TEST_DIR/fake-bin/node" <<'EOF'
 #!/usr/bin/env bash
 echo "CAPTURED_OWNER_PID=${BRAINSTORM_OWNER_PID:-__UNSET__}"
+echo "CAPTURED_ARGV=$*"
 exit 0
 EOF
 chmod +x "$TEST_DIR/fake-bin/node"
@@ -64,6 +65,26 @@ if [[ "$owner_pid_value" == "" || "$owner_pid_value" == "__UNSET__" ]]; then
 else
   fail "clears BRAINSTORM_OWNER_PID when uname reports a Windows-like shell" \
        "expected empty or unset, got '$owner_pid_value'"
+fi
+
+captured_argv=$(echo "$captured" | grep "CAPTURED_ARGV=" | head -1 | sed 's/CAPTURED_ARGV=//')
+if echo "$captured_argv" | grep -Eq -- '--brainstorm-server-id=[A-Za-z0-9_-]{32,64}'; then
+  pass "passes shell-safe server instance id argv"
+else
+  fail "passes shell-safe server instance id argv" \
+       "expected --brainstorm-server-id=<safe id>, got: $captured_argv"
+fi
+
+server_id_file=$(find "$TEST_DIR/project/.superpowers/brainstorm" -name server-instance-id -print 2>/dev/null | head -1)
+server_id_value=""
+if [[ -n "$server_id_file" ]]; then
+  server_id_value="$(tr -d '\r\n' < "$server_id_file")"
+fi
+if [[ "$server_id_value" =~ ^[A-Za-z0-9_-]{32,64}$ ]]; then
+  pass "writes shell-safe server-instance-id state file"
+else
+  fail "writes shell-safe server-instance-id state file" \
+       "expected valid id in state, got '$server_id_value'"
 fi
 
 rm -rf "$TEST_DIR/project"/*
