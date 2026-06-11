@@ -107,6 +107,22 @@ async function waitForServer(server) {
   });
 }
 
+function serverStartedMessage(out) {
+  const line = out.trim().split('\n').find(l => l.includes('server-started'));
+  assert(line, 'server-started JSON should be present');
+  return JSON.parse(line);
+}
+
+function assertStartedOnExpectedPort(out) {
+  const msg = serverStartedMessage(out);
+  assert.strictEqual(
+    msg.port,
+    TEST_PORT,
+    `auth.test.js expected fixed port ${TEST_PORT}, got ${msg.port}; fixed-port tests must not run through fallback`
+  );
+  return msg;
+}
+
 async function runTests() {
   cleanup();
   fs.mkdirSync(CONTENT_DIR, { recursive: true });
@@ -116,7 +132,6 @@ async function runTests() {
   const server = startServer();
   let stdoutAccum = '';
   server.stdout.on('data', (d) => { stdoutAccum += d.toString(); });
-  const { stdout: initialStdout } = await waitForServer(server);
 
   let passed = 0, failed = 0;
   async function test(name, fn) {
@@ -125,10 +140,13 @@ async function runTests() {
   }
 
   try {
+    const { stdout: initialStdout } = await waitForServer(server);
+    assertStartedOnExpectedPort(initialStdout);
+
     console.log('\n--- Startup URL ---');
 
     await test('server-started url includes the session key', () => {
-      const msg = JSON.parse(initialStdout.trim());
+      const msg = serverStartedMessage(initialStdout);
       assert(msg.url.includes(`key=${TOKEN}`), `url should carry the key, got: ${msg.url}`);
     });
 
