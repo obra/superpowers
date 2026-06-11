@@ -335,14 +335,17 @@ echo ""
 echo "--- Clean Shutdown ---"
 
 mkdir -p "$TEST_DIR/stop-test/state"
+STOP_TEST_ID="$(printf 'windowsstop%021d\n' "$RANDOM")"
+printf '%s\n' "$STOP_TEST_ID" > "$TEST_DIR/stop-test/state/server-instance-id"
 
 BRAINSTORM_DIR="$TEST_DIR/stop-test" \
 BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_SCRIPT" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" "--brainstorm-server-id=$STOP_TEST_ID" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
 STOP_TEST_PID=$!
+disown "$STOP_TEST_PID" 2>/dev/null || true
 echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/state/server.pid"
 
 if ! wait_for_server_info "$TEST_DIR/stop-test"; then
@@ -351,7 +354,13 @@ if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   STOP_TEST_PID=""
 else
   bash "$STOP_SCRIPT" "$TEST_DIR/stop-test" >/dev/null 2>&1 || true
-  sleep 1
+  for _ in $(seq 1 10); do
+    if ! kill -0 "$STOP_TEST_PID" 2>/dev/null; then
+      wait "$STOP_TEST_PID" 2>/dev/null || true
+      break
+    fi
+    sleep 0.1
+  done
 
   if ! kill -0 "$STOP_TEST_PID" 2>/dev/null; then
     pass "stop-server.sh cleanly stops the server"
