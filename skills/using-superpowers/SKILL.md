@@ -12,7 +12,7 @@ If you think there is even a 1% chance a skill might apply to what you are doing
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+This is not negotiable. This is not optional. You cannot rationalize your way out of this. (The single carve-out: a skill whose own description says it does not apply — see The Rule.)
 </EXTREMELY-IMPORTANT>
 
 ## Instruction Priority
@@ -49,7 +49,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") 
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
-**Documented exceptions in a skill's own description are authoritative.** When a description itself says the skill does not apply to a request (e.g. brainstorming's nothing-to-design exception), not invoking it is compliance, not rationalization — the description defines the skill's scope. Any doubt about whether the exception's conditions hold means invoke. Only the skill's description can define such an exception; you cannot infer one.
+**Documented exceptions in a skill's own description are authoritative.** When a description itself says the skill does not apply to a request (e.g. brainstorming's nothing-to-design exception), not invoking it is compliance, not rationalization. Any doubt about whether the exception's conditions hold means invoke. Only the skill's description can define such an exception; you cannot infer one.
 
 ```dot
 digraph skill_flow {
@@ -71,7 +71,10 @@ digraph skill_flow {
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke the skill" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Skill's own description exempts this request?" [label="yes, even 1%"];
+    "Skill's own description exempts this request?" [shape=diamond];
+    "Skill's own description exempts this request?" -> "Invoke the skill" [label="no / any doubt"];
+    "Skill's own description exempts this request?" -> "Respond (including clarifications)" [label="yes, clearly"];
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
     "Invoke the skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
