@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. The one exception: a request that leaves zero design decisions open needs no design - implement it directly without invoking this skill (e.g. 'add a basic checkbox, nothing fancy' where the context leaves nothing to choose). Decisions ARE open - so invoke - if the change adds a file or dependency, touches a schema, API contract, or persisted data, deletes or disables anything, alters behavior or security posture beyond the literally stated value, or has more than one plausible reading."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. The one exception: a request that leaves zero design decisions open needs no design - implement it directly without invoking this skill (e.g. 'add a basic checkbox, nothing fancy' where the context leaves nothing to choose). Decisions ARE open - so invoke - if the change adds a file or dependency, touches a schema, API contract, or persisted data (even when the user stated the outcome), deletes or disables anything, touches security posture at all (auth, sessions, permissions, CORS, crypto - even with the exact value stated), alters user-visible behavior beyond the stated change, has more than one plausible reading, or the user frames it as a feature or project to think through."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -10,14 +10,14 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity, with exactly one exception below.
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity, with exactly one exception.
 
-Exception — nothing to design: if the request leaves no design decisions open — the user has fully specified the outcome and there is exactly one reasonable way to do it (e.g. "add a basic checkbox, nothing fancy" where the context leaves nothing to choose, a literal config value change with no security or behavioral consequences, a typo fix) — implement it directly. TDD and verification-before-completion still apply. Brainstorming exists to surface decisions; when there are none, the user's request IS the design. Any of these put the gate back on: a new file or dependency; the change touches a schema, API contract, or persisted data (even if the user stated the desired outcome); it deletes or disables existing functionality; it alters user-visible behavior or security posture beyond the literally stated value; more than one plausible interpretation; or the user framing it as a feature or project to think through.
+Exception — nothing to design: when the exception in this skill's description applies (zero open design decisions; its tripwire list puts the gate back on), implement directly. TDD and verification-before-completion still apply. Brainstorming exists to surface decisions; when there are none, the user's request IS the design. Any doubt: the gate holds.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Anything with open decisions goes through this process. A todo list, a single-function utility, a data migration — "simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but if anything remains to decide, you MUST present it and get approval. Do not confuse this with the nothing-to-design exception above: "this seems simple, I'll skip the design" is a rationalization whenever decisions exist — the exception applies only when the user's request already contains every decision.
+Anything with open decisions goes through this process. A todo list, a single-function utility, a data migration — "simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but if anything remains to decide, you MUST present it and get approval. Do not confuse this with the nothing-to-design exception above: "this seems simple, I'll skip the design" is a rationalization whenever decisions exist.
 
 | Excuse | Reality |
 |--------|---------|
