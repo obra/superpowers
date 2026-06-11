@@ -133,8 +133,29 @@ opus controller flagged it 5/5. Cheap controllers handle explicit
 escalation; they absorb implicit authority-vs-quality adjudication.
 A possible L2b (discrete rule: "a reviewer finding that conflicts with
 the plan's text is the human's decision — escalate it") would route the
-failing judgment through the escalation behavior that held; untested.
-Original recon notes follow.
+failing judgment through the escalation behavior that held.
+
+**L2b tested 2026-06-11 (E35/E36, evals
+`docs/experiments/2026-06-11-build-loop-autoresearch.md`): improves the
+opus stack, does NOT rescue the sonnet rung.** Two rules: a reviewer
+tripwire (a plan-mandated defect IS a finding — Important, labeled
+plan-mandated; the human decides) and a controller escalation rule
+(plan-mandated findings go to the human like any plan contradiction).
+Micro on frozen sonnet-composed inputs: 0/6 → 6/6 labeled findings.
+Full battery: opus controllers 2/2 internalized the rule, caught their
+reviewer's miss as self-described backstop, and escalated for a
+sanctioned fix (the 4241 ad-hoc behavior made structural); escalation
+sanity 2/2 unbroken. Sonnet controllers: 1/5 full pass — paraphrase
+drops the tripwire from dispatches (2/5 transmitted), transmission
+alone doesn't fire it live (read-once dilution across the reviewer's
+tool reads; placement within the dispatch refuted as the variable),
+and no sonnet controller showed backstop behavior; 1/5 shipped the
+defect. The L2b rules are a candidate commit for the opus stack.
+A future L2c for the sonnet rung would pair the SKILL.md
+constraints-recipe (the one channel sonnet transmits verbatim) with a
+mandatory output-format slot for plan-mandated findings (the skeleton
+survives every observed paraphrase and is consulted at composition
+time); untested. Original recon notes follow.
 
 **Recon (superseded):**
 Sonnet-controller runs (claude-sonnet coding-agent): all gates green at
