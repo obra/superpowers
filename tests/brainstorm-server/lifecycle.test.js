@@ -78,6 +78,48 @@ function httpStatus(port, key) {
   });
 }
 
+function isWindowsLikeShell() {
+  return process.platform === 'win32' ||
+    /^msys|^cygwin|^mingw/i.test(process.env.OSTYPE || '') ||
+    !!process.env.MSYSTEM;
+}
+
+async function waitForStartedOutput(child, timeoutMs = 5000) {
+  let stdout = '';
+  let stderr = '';
+  child.stdout.on('data', d => { stdout += d.toString(); });
+  child.stderr.on('data', d => { stderr += d.toString(); });
+
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline && !stdout.includes('server-started') && child.exitCode === null) {
+    await sleep(50);
+  }
+
+  if (!stdout.includes('server-started')) {
+    throw new Error(`start-server.sh did not report server-started. exit=${child.exitCode} stdout=${stdout} stderr=${stderr}`);
+  }
+  return stdout;
+}
+
+function makeShellTempDir(prefix) {
+  return execFileSync('bash', ['-lc', `mktemp -d "\${TMPDIR:-/tmp}/${prefix}-XXXXXX"`], { encoding: 'utf8' }).trim();
+}
+
+function removeShellPath(p) {
+  execFileSync('bash', ['-lc', 'rm -rf "$1"', 'bash', p], { stdio: 'ignore' });
+}
+
+function newestSessionDir(projectDir) {
+  const sessionDir = execFileSync('bash', [
+    '-lc',
+    'find "$1/.superpowers/brainstorm" -mindepth 1 -maxdepth 1 -type d -print | sort | tail -1',
+    'bash',
+    projectDir
+  ], { encoding: 'utf8' }).trim();
+  assert(sessionDir, `expected at least one session dir under ${projectDir}/.superpowers/brainstorm`);
+  return sessionDir;
+}
+
 async function runTests() {
   let passed = 0, failed = 0;
   async function test(name, fn) {
@@ -125,15 +167,26 @@ async function runTests() {
   });
 
   await test('start-server.sh --idle-timeout-minutes sets the timeout', async () => {
-    const dir = fs.mkdtempSync('/tmp/bs-life-');
-    let info;
-    const out = execFileSync('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5', '--background'], { encoding: 'utf8' });
-    info = firstServerStarted(out);
+    const dir = makeShellTempDir('bs-life');
+    let info = null;
+    let startProcess = null;
+    let sessionDir = null;
     try {
+      if (isWindowsLikeShell()) {
+        startProcess = spawn('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5']);
+        info = firstServerStarted(await waitForStartedOutput(startProcess));
+      } else {
+        const out = execFileSync('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5', '--background'], { encoding: 'utf8' });
+        info = firstServerStarted(out);
+      }
+      sessionDir = newestSessionDir(dir);
       assert.strictEqual(info.idle_timeout_ms, 5 * 60 * 1000, '5 minutes -> 300000 ms');
     } finally {
-      execFileSync('bash', [STOP, path.dirname(info.state_dir)], { stdio: 'ignore' });
-      fs.rmSync(dir, { recursive: true, force: true });
+      if (sessionDir) execFileSync('bash', [STOP, sessionDir], { stdio: 'ignore' });
+      if (startProcess && !await waitForExit(startProcess, 3000)) {
+        await killAndWait(startProcess);
+      }
+      removeShellPath(dir);
     }
   });
 
