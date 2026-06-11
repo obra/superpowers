@@ -11,7 +11,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-**Proportionality:** Review fanout scales with the change. When the entire plan is one trivial, fully-specified mechanical change — a log statement, a constant bump, a typo fix — implement it directly (or with a single implementer subagent), verify it (run the relevant tests or command and confirm the output — superpowers:verification-before-completion applies), commit, and skip the review subagents and the final reviewer: three review dispatches for a one-line diff cost more than the change itself. Trivial is a property of the diff, not of the plan's description of itself: the diff changes no logic, control flow, or observable behavior beyond the literally stated value. When in doubt whether a change is trivial, it is not — run the full pipeline. Within a multi-task plan, run the full pipeline for every task regardless of size; this exception applies only when the whole plan is one trivial change.
+**Proportionality:** Review fanout scales with the change. When the entire plan is one trivial, fully-specified mechanical change — a log statement, a typo fix, a constant bump with no security or behavioral consequences — implement it directly (or with a single implementer subagent), verify per superpowers:verification-before-completion (run the relevant command, confirm output), commit, and skip all review subagents, including the final reviewer: three review dispatches cost more than a one-line diff. Trivial is a property of the diff — it changes no logic, no control flow, and nothing security-relevant — not of the plan's self-description. Any doubt means not trivial: run the full pipeline. Within a multi-task plan, never skip reviews, regardless of task size.
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
@@ -95,7 +95,7 @@ digraph process {
 
 ## Spec Context
 
-If the plan's header cites a spec (`**Spec:** <path>`), read it once during plan extraction. Plans reference requirements rather than restating them — when a task cites a spec section, paste that section's text into the implementer and spec-reviewer prompts along with the task text. Subagents never read the spec file themselves.
+If the plan's header cites a spec (`**Spec:** <path>`), read it once during plan extraction. Plans reference requirements rather than restating them — when a task cites a spec section, paste that section's text into the implementer and spec-reviewer prompts along with the task text. Implementer subagents never read the spec file themselves; the spec reviewer may additionally read it at the cited path (its prompt says so).
 
 ## Model Selection
 
@@ -248,7 +248,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews — the only exception is a plan whose ENTIRE content is one trivial, fully-specified mechanical change (see Proportionality); within a multi-task plan, never skip reviews regardless of task size
+- Skip reviews — sole exception: a plan that is entirely one trivial change (see Proportionality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)

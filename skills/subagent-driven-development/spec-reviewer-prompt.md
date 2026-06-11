@@ -12,7 +12,7 @@ Subagent (general-purpose):
 
     ## What Was Requested
 
-    [FULL TEXT of task requirements, including the text of any spec sections the task cites — the plan references requirements rather than restating them]
+    [FULL TEXT of task requirements, including the text of any spec sections the task cites]
 
     ## What Implementer Claims They Built
 
