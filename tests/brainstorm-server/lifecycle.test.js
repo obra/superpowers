@@ -243,6 +243,41 @@ async function runTests() {
     assert.strictEqual(keyB, keyA, 'restart should reuse the same session key');
   });
 
+  await test('hardens existing persisted token file permissions', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-token-mode-');
+    const portFile = path.join(dir, '.last-port');
+    const tokenFile = path.join(dir, '.last-token');
+    const token = 'efefefefefefefefefefefefefefefef';
+    let srv = null;
+
+    try {
+      fs.writeFileSync(tokenFile, token, { mode: 0o644 });
+      fs.chmodSync(tokenFile, 0o644);
+      srv = spawn('node', [SERVER], {
+        env: {
+          ...process.env,
+          BRAINSTORM_DIR: path.join(dir, 's1'),
+          BRAINSTORM_PORT_FILE: portFile,
+          BRAINSTORM_TOKEN_FILE: tokenFile,
+          BRAINSTORM_LIFECYCLE_CHECK_MS: 100000
+        }
+      });
+      let out = ''; srv.stdout.on('data', d => out += d.toString());
+      for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
+      assert(out.includes('server-started'), 'server should start with persisted token');
+
+      if (process.platform !== 'win32') {
+        const mode = fs.statSync(tokenFile).mode & 0o777;
+        assert.strictEqual(mode, 0o600, `.last-token mode should be 0600, got ${mode.toString(8)}`);
+      } else {
+        assert(fs.existsSync(tokenFile), 'token file should remain present on Windows');
+      }
+    } finally {
+      await killAndWait(srv);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   await test('stored key can authenticate WebSocket after same-port restart', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-reconnect-');
     const portFile = path.join(dir, '.last-port');
