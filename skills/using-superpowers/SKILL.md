@@ -51,6 +51,8 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") 
 
 **Documented exceptions in a skill's own description are authoritative.** When a description itself says the skill does not apply to a request (e.g. brainstorming's nothing-to-design exception), not invoking it is compliance, not rationalization. Any doubt about whether the exception's conditions hold means invoke. Only the skill's description can define such an exception; you cannot infer one.
 
+**An exception skip must be stated, never silent.** Before your first action, write one line naming the exception and the tripwire scan that came up empty — e.g. "Skipping brainstorming per its exception: no security/deletion/schema/new-file tripwires; outcome fully specified." If you did not write the scan line, you did not scan — invoke the skill instead.
+
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
@@ -74,7 +76,9 @@ digraph skill_flow {
     "Might any skill apply?" -> "Skill's own description exempts this request?" [label="yes, even 1%"];
     "Skill's own description exempts this request?" [shape=diamond];
     "Skill's own description exempts this request?" -> "Invoke the skill" [label="no / any doubt"];
-    "Skill's own description exempts this request?" -> "Respond (including clarifications)" [label="yes, clearly"];
+    "Skill's own description exempts this request?" -> "State the one-line tripwire scan, then proceed" [label="yes, clearly"];
+    "State the one-line tripwire scan, then proceed" [shape=box];
+    "State the one-line tripwire scan, then proceed" -> "Respond (including clarifications)";
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
     "Invoke the skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
@@ -99,6 +103,7 @@ These thoughts mean STOP—you're rationalizing:
 | "I remember this skill" | Skills evolve. Read current version. |
 | "This doesn't count as a task" | Action = task. Check for skills. |
 | "The skill is overkill" | Simple things become complex. Use it. |
+| "Too trivial to scan the tripwire list" | The scan is one sentence. Write it or invoke the skill. |
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
