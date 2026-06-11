@@ -62,7 +62,7 @@ without repeating it.
 **Claude Code:**
 ```bash
 # Default mode works — the script backgrounds the server itself.
-scripts/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
 On Windows, the script auto-detects and switches to foreground mode (which blocks the tool call). Use `run_in_background: true` on the Bash tool call so the server survives across conversation turns, then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
@@ -71,14 +71,14 @@ On Windows, the script auto-detects and switches to foreground mode (which block
 ```bash
 # Codex reaps background processes. The script auto-detects CODEX_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
-scripts/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
 **Gemini CLI:**
 ```bash
 # Use --foreground and set is_background: true on your shell tool call
 # so the process survives across turns
-scripts/start-server.sh --project-dir /path/to/project --foreground
+scripts/start-server.sh --project-dir /path/to/project --open --foreground
 ```
 
 **Copilot CLI:**
@@ -86,7 +86,7 @@ scripts/start-server.sh --project-dir /path/to/project --foreground
 # Use --foreground and start the server via the bash tool with mode: "async"
 # so the process survives across turns. Capture the returned shellId for
 # read_bash / stop_bash if you need to interact with it later.
-scripts/start-server.sh --project-dir /path/to/project --foreground
+scripts/start-server.sh --project-dir /path/to/project --open --foreground
 ```
 
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
