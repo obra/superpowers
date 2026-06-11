@@ -84,6 +84,37 @@ else
   esac
 fi
 
+# --- Test 2b: persistent sessions stop with explicit stopped metadata ---
+SESS="$(mktemp -d "$SCRIPT_DIR/.stop-persistent.XXXXXX")"; track_dir "$SESS"; mkdir -p "$SESS/content" "$SESS/state"
+SERVER_ID="$(new_server_id)"
+printf '%s\n' "$SERVER_ID" > "$SESS/state/server-instance-id"
+BRAINSTORM_DIR="$SESS" BRAINSTORM_PORT=0 node "$SERVER" "--brainstorm-server-id=$SERVER_ID" > /dev/null 2>&1 &
+SRV=$!
+track_pid "$SRV"
+disown "$SRV" 2>/dev/null || true
+for _ in $(seq 1 40); do
+  [[ -f "$SESS/state/server-info" ]] && break
+  sleep 0.1
+done
+echo "$SRV" > "$SESS/state/server.pid"
+OUT="$("$STOP" "$SESS")"
+sleep 0.3
+if kill -0 "$SRV" 2>/dev/null; then
+  bad "persistent brainstorm server still running after stop" "$OUT"
+else
+  wait "$SRV" 2>/dev/null || true
+  untrack_pid "$SRV"
+  if [[ -f "$SESS/state/server-info" ]]; then
+    bad "persistent stop clears server-info" "server-info still exists after: $OUT"
+  elif [[ ! -f "$SESS/state/server-stopped" ]]; then
+    bad "persistent stop writes server-stopped" "server-stopped missing after: $OUT"
+  elif grep -q '"reason":"stop-server.sh"' "$SESS/state/server-stopped"; then
+    ok "persistent stop clears alive metadata and writes server-stopped"
+  else
+    bad "persistent stop writes stop reason" "$(cat "$SESS/state/server-stopped" 2>/dev/null || true)"
+  fi
+fi
+
 # --- Test 3: no pid file ---
 SESS="$(mktemp -d)"; track_dir "$SESS"; mkdir -p "$SESS/state"
 OUT="$("$STOP" "$SESS")"

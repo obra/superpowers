@@ -117,6 +117,10 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+function chmodOwnerOnly(file) {
+  try { fs.chmodSync(file, 0o600); } catch (e) { /* best effort */ }
+}
+
 function initialToken() {
   if (process.env.BRAINSTORM_TOKEN) {
     return { value: process.env.BRAINSTORM_TOKEN, source: 'env' };
@@ -124,7 +128,10 @@ function initialToken() {
   if (TOKEN_FILE) {
     try {
       const t = fs.readFileSync(TOKEN_FILE, 'utf-8').trim();
-      if (/^[0-9a-f]{32,}$/i.test(t)) return { value: t, source: 'file' };
+      if (/^[0-9a-f]{32,}$/i.test(t)) {
+        chmodOwnerOnly(TOKEN_FILE);
+        return { value: t, source: 'file' };
+      }
     } catch (e) { /* no prior token recorded */ }
   }
   return { value: generateToken(), source: 'generated' };
@@ -599,7 +606,10 @@ function startServer() {
     if (PORT_FILE && !triedFallback) {
       try { fs.writeFileSync(PORT_FILE, String(PORT)); } catch (e) { /* best effort */ }
       if (TOKEN_FILE) {
-        try { fs.writeFileSync(TOKEN_FILE, TOKEN, { mode: 0o600 }); } catch (e) { /* best effort */ }
+        try {
+          fs.writeFileSync(TOKEN_FILE, TOKEN, { mode: 0o600 });
+          chmodOwnerOnly(TOKEN_FILE);
+        } catch (e) { /* best effort */ }
       }
     }
     const info = JSON.stringify({

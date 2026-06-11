@@ -283,11 +283,11 @@ vs both) and where the textarea renders (frame-level vs opt-in per screen).
 In WSL2 especially, people expect the browser to open.
 
 **Change.** Best-effort opener after the `server-started` JSON is parsed:
-WSL → `cmd.exe /c start`, macOS → `open`, Linux → `xdg-open` only when
-`DISPLAY`/`WAYLAND_DISPLAY` is set. Swallow failures, never block startup, keep
-echoing the URL. Document in `visual-companion.md`. (Consider an opt-out for
-headless/remote runs where popping a browser is wrong — ties into D1's config
-mechanism.)
+Windows/WSL → `rundll32.exe url.dll,FileProtocolHandler <url>`, macOS → `open`,
+Linux → `xdg-open` only when `DISPLAY`/`WAYLAND_DISPLAY` is set. Swallow
+failures, never block startup, keep echoing the URL. Document in
+`visual-companion.md`. (Consider an opt-out for headless/remote runs where
+popping a browser is wrong — ties into D1's config mechanism.)
 
 ### D4 — Light/dark contrast helpers (PR #1683)
 

@@ -17,6 +17,12 @@ STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
+mark_stopped() {
+  local reason="$1"
+  rm -f "${STATE_DIR}/server-info"
+  printf '{"reason":"%s","timestamp":%s}\n' "$reason" "$(date +%s)" > "${STATE_DIR}/server-stopped"
+}
+
 read_expected_server_id() {
   [[ -f "$SERVER_ID_FILE" ]] || return 1
   local id
@@ -71,6 +77,7 @@ if [[ -f "$PID_FILE" ]]; then
   # point at an unrelated process after a reboot/PID wraparound.
   if ! is_brainstorm_server "$pid"; then
     rm -f "$PID_FILE" "$SERVER_ID_FILE"
+    mark_stopped "stale_pid"
     echo '{"status": "stale_pid"}'
     exit 0
   fi
@@ -100,6 +107,7 @@ if [[ -f "$PID_FILE" ]]; then
   fi
 
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
+  mark_stopped "stop-server.sh"
 
   # Only delete ephemeral /tmp directories
   if [[ "$SESSION_DIR" == /tmp/* ]]; then
