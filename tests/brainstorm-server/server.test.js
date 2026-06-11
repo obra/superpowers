@@ -73,6 +73,43 @@ async function waitForServer(server) {
   });
 }
 
+class SkipTest extends Error {
+  constructor(message) {
+    super(message);
+    this.skip = true;
+  }
+}
+
+function skip(message) {
+  throw new SkipTest(message);
+}
+
+function serverStartedMessage(out) {
+  const line = out.trim().split('\n').find(l => l.includes('server-started'));
+  assert(line, 'server-started JSON should be present');
+  return JSON.parse(line);
+}
+
+function assertStartedOnExpectedPort(out) {
+  const msg = serverStartedMessage(out);
+  assert.strictEqual(
+    msg.port,
+    TEST_PORT,
+    `server.test.js expected fixed port ${TEST_PORT}, got ${msg.port}; fixed-port tests must not run through fallback`
+  );
+  return msg;
+}
+
+function ensureSymlinkWorks(target, link) {
+  try {
+    fs.symlinkSync(target, link);
+    fs.unlinkSync(link);
+  } catch (e) {
+    try { fs.unlinkSync(link); } catch (ignore) {}
+    skip(`symlink creation unavailable on this host: ${e.message}`);
+  }
+}
+
 async function runTests() {
   cleanup();
 
@@ -81,14 +118,22 @@ async function runTests() {
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 
   const { stdout: initialStdout } = await waitForServer(server);
+  assertStartedOnExpectedPort(initialStdout);
   let passed = 0;
   let failed = 0;
+  let skipped = 0;
 
   function test(name, fn) {
     return fn().then(() => {
       console.log(`  PASS: ${name}`);
       passed++;
     }).catch(e => {
+      if (e.skip) {
+        console.log(`  SKIP: ${name}`);
+        console.log(`    ${e.message}`);
+        skipped++;
+        return;
+      }
       console.log(`  FAIL: ${name}`);
       console.log(`    ${e.message}`);
       failed++;
@@ -100,7 +145,7 @@ async function runTests() {
     console.log('\n--- Server Startup ---');
 
     await test('outputs server-started JSON on startup', () => {
-      const msg = JSON.parse(initialStdout.trim());
+      const msg = serverStartedMessage(initialStdout);
       assert.strictEqual(msg.type, 'server-started');
       assert.strictEqual(msg.port, TEST_PORT);
       assert(msg.url, 'Should include URL');
@@ -214,6 +259,7 @@ async function runTests() {
       const target = path.join(STATE_DIR, 'server-info');
       const link = path.join(CONTENT_DIR, 'linked-server-info.txt');
       try { fs.unlinkSync(link); } catch (e) {}
+      ensureSymlinkWorks(target, link);
       fs.symlinkSync(target, link);
 
       const res = await fetch(`http://localhost:${TEST_PORT}/files/linked-server-info.txt`);
@@ -230,6 +276,45 @@ async function runTests() {
       const res = await fetch(`http://localhost:${TEST_PORT}/files/hard-linked-server-info.txt`);
       assert.strictEqual(res.status, 404, 'hard link to state/server-info must not be served');
       assert(!res.body.includes('server-started'), 'response must not include server-info body');
+    });
+
+    await test('does not serve symlinks that escape content dir via root screen selection', async () => {
+      const target = path.join(STATE_DIR, 'server-info');
+      const link = path.join(CONTENT_DIR, 'root-linked-server-info.html');
+      try { fs.unlinkSync(link); } catch (e) {}
+      ensureSymlinkWorks(target, link);
+      fs.symlinkSync(target, link);
+      const future = new Date(Date.now() + 2000);
+      fs.utimesSync(target, future, future);
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200);
+      assert(!res.body.includes('"type":"server-started"'), 'root screen must not serve state/server-info through a symlink');
+      assert(!res.body.includes('"state_dir"'), 'root screen must not include server-info body');
+    });
+
+    await test('does not serve hard links that escape content dir via root screen selection', async () => {
+      const target = path.join(STATE_DIR, 'server-info');
+      const link = path.join(CONTENT_DIR, 'root-hard-linked-server-info.html');
+      try { fs.unlinkSync(link); } catch (e) {}
+      try {
+        fs.linkSync(target, link);
+      } catch (e) {
+        skip(`hardlink creation unavailable on this host: ${e.message}`);
+      }
+      const linkStat = fs.lstatSync(link);
+      if (linkStat.nlink <= 1) {
+        skip(`hardlink nlink did not expose multiple links: ${linkStat.nlink}`);
+      }
+      const future = new Date(Date.now() + 3000);
+      fs.utimesSync(target, future, future);
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200);
+      assert(!res.body.includes('"type":"server-started"'), 'root screen must not serve state/server-info through a hardlink');
+      assert(!res.body.includes('"state_dir"'), 'root screen must not include server-info body');
     });
 
     await test('returns 404 for non-root paths', async () => {
@@ -480,7 +565,7 @@ async function runTests() {
     });
 
     // ========== Summary ==========
-    console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
+    console.log(`\n--- Results: ${passed} passed, ${failed} failed, ${skipped} skipped ---`);
     if (failed > 0) process.exit(1);
 
   } finally {

@@ -186,8 +186,10 @@ function getNewestScreen() {
     .filter(f => !f.startsWith('.') && f.endsWith('.html'))
     .map(f => {
       const fp = path.join(CONTENT_DIR, f);
+      if (!isRegularFileInsideContentDir(fp)) return null;
       return { path: fp, mtime: fs.statSync(fp).mtime.getTime() };
     })
+    .filter(Boolean)
     .sort((a, b) => b.mtime - a.mtime);
   return files.length > 0 ? files[0].path : null;
 }
