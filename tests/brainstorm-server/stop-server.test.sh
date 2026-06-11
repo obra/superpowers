@@ -27,6 +27,15 @@ trap cleanup EXIT
 
 track_dir() { DIRS+=("$1"); }
 track_pid() { PIDS+=("$1"); }
+untrack_pid() {
+  local remove="$1"
+  local kept=()
+  local pid
+  for pid in "${PIDS[@]}"; do
+    [[ "$pid" == "$remove" ]] || kept+=("$pid")
+  done
+  PIDS=("${kept[@]}")
+}
 new_server_id() {
   printf 'testid%026d\n' "$RANDOM"
 }
@@ -67,6 +76,8 @@ sleep 0.3
 if kill -0 "$SRV" 2>/dev/null; then
   bad "real brainstorm server still running after stop" "$OUT"
 else
+  wait "$SRV" 2>/dev/null || true
+  untrack_pid "$SRV"
   case "$OUT" in
     *stopped*) ok "real brainstorm server with matching instance id is stopped" ;;
     *) bad "server stopped but status was not 'stopped'" "$OUT" ;;
