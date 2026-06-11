@@ -11,14 +11,14 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
-**Plans reference the spec; they never restate, paraphrase, or summarize it.** Reference discipline means the plan points at the spec — never that you skip writing the spec: if the workflow produced one (brainstorming did), it exists and the plan cites it. The spec owns the WHAT and WHY — requirements, acceptance criteria, design decisions. The plan owns the HOW — tasks, files, code, commands. Cite the spec by path in the header and by section where a task needs context. Repetition WITHIN the plan (code, commands — see No Placeholders) is required; copying FROM the spec is not: if a step seems to need a requirement's prose to be executable, the step is under-specified — turn the requirement into a concrete action. The spec at the cited path is the single source of truth; snapshotting its content into the plan does not prevent drift, it hides drift. "Zero context" means the engineer can execute each step mechanically; it does not mean the plan repeats what the spec already says.
+**Plans reference the spec; they never restate, paraphrase, or summarize it.** The spec owns the WHAT and WHY — requirements, acceptance criteria, design decisions; the plan owns the HOW — tasks, files, code, commands. Cite it by path in the header and by section where a task needs context. Reference discipline never means skipping the spec: if brainstorming produced one, it exists and the plan cites it. No Placeholders still requires repeating code and commands WITHIN the plan; copying FROM the spec is different: a step that needs a requirement's prose is under-specified — turn it into a concrete action. Snapshotting spec text into the plan hides drift, not prevents it. "Zero context" means each step is mechanically executable, not that the plan repeats the spec.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+- (An explicit user instruction overrides this default; an existing differently-named docs directory does not)
 
 ## Scope Check
 
@@ -55,7 +55,7 @@ This structure informs the task decomposition. Each task should produce self-con
 
 **Goal:** [One sentence describing what this builds]
 
-**Spec:** [Path to the spec doc, e.g. `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` — requirements and design decisions live there; do not restate them here. If brainstorming happened, the spec doc exists and this line cites it — never skip writing the spec to avoid duplication; reference it instead. Only when requirements arrived conversationally and no spec doc was ever produced: write "none — requirements:" and state them once here, not per task]
+**Spec:** [Path to the spec doc, e.g. `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` — requirements and design decisions live there; do not restate them here. Only if no spec doc exists (requirements arrived conversationally; brainstorming never ran): write "none — requirements:" and state them once here, not per task]
 
 **Architecture:** [2-3 sentences about approach]
 
