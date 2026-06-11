@@ -12,7 +12,7 @@ Subagent (general-purpose):
 
     ## What Was Requested
 
-    [FULL TEXT of task requirements]
+    [FULL TEXT of task requirements, including the text of any spec sections the task cites]
 
     ## What Implementer Claims They Built
 
@@ -28,7 +28,7 @@ Subagent (general-purpose):
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
 
-    Only read files in this diff. Do not crawl the broader codebase.
+    Only read files in this diff. Do not crawl the broader codebase. (One exception: if the requirements cite a spec document, you may read that spec at its cited path.)
 
     ## Read-Only Review
 

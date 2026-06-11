@@ -86,6 +86,10 @@ digraph process {
 }
 ```
 
+## Spec Context
+
+If the plan's header cites a spec (`**Spec:** <path>`), read it once during plan extraction. Plans reference requirements rather than restating them — when a task cites a spec section, paste that section's text into the implementer and spec-reviewer prompts along with the task text. Implementer subagents never read the spec file themselves; the spec reviewer may additionally read it at the cited path (its prompt says so).
+
 ## Model Selection
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.

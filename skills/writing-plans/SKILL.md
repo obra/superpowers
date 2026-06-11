@@ -7,16 +7,18 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to execute: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+
+**Plans reference the spec; they never restate, paraphrase, or summarize it.** The spec owns the WHAT and WHY — requirements, acceptance criteria, design decisions; the plan owns the HOW — tasks, files, code, commands. Cite it by path in the header and by section where a task needs context. Reference discipline never means skipping the spec: if brainstorming produced one, it exists and the plan cites it. No Placeholders still requires repeating code and commands WITHIN the plan; copying FROM the spec is different: a step that needs a requirement's prose is under-specified — turn it into a concrete action. Snapshotting spec text into the plan hides drift, not prevents it. "Zero context" means each step is mechanically executable, not that the plan repeats the spec.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+- (An explicit user instruction overrides this default; an existing differently-named docs directory does not)
 
 ## Scope Check
 
@@ -52,6 +54,8 @@ This structure informs the task decomposition. Each task should produce self-con
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
+
+**Spec:** [Path to the spec doc, e.g. `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` — requirements and design decisions live there; do not restate them here. Only if no spec doc exists (requirements arrived conversationally; brainstorming never ran): write "none — requirements:" and state them once here, not per task]
 
 **Architecture:** [2-3 sentences about approach]
 

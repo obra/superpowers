@@ -16,7 +16,7 @@ Load plan, review critically, execute all tasks, report when complete.
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Read plan file
+1. Read plan file, and the spec it cites in its `**Spec:**` header (plans reference requirements rather than restating them)
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create todos for the plan items and proceed
