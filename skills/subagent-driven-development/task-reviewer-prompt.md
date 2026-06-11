@@ -128,6 +128,11 @@ Subagent (general-purpose):
     would block a merge over — verbatim duplication of a logic block,
     swallowed errors, tests that assert nothing. "Coverage could be broader"
     and polish suggestions are Minor.
+    If the plan or brief explicitly mandates something this rubric calls a
+    defect (a test that asserts nothing, verbatim duplication of a logic
+    block), that IS a finding — report it as Important, labeled
+    plan-mandated. The plan's authorship does not grade its own work; the
+    human decides.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
