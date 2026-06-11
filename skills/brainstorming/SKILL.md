@@ -11,6 +11,8 @@ Start by understanding the current project context, then ask questions one at a 
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+
+**Todo status at approval gates:** When you are waiting for user approval (design review, spec review, or any user decision), mark the corresponding todo as `blocked` — not `in_progress`. This prevents automated todo-continuation systems from injecting messages that bypass the user approval gate. Switch back to `in_progress` only after the user responds.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
@@ -124,11 +126,11 @@ After writing the spec document, look at it with fresh eyes:
 Fix any issues inline. No need to re-review — just fix and move on.
 
 **User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+After the spec review loop passes, ask the user to review the written spec before proceeding. Mark the "User reviews written spec" todo as `blocked` while waiting:
 
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves. Switch the todo back to `in_progress` upon user response.
 
 **Implementation:**
 
