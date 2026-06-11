@@ -467,10 +467,10 @@ Before writing guidance, classify the baseline failure. The form that bulletproo
 | Omits a required element from something they already produce | Structural: REQUIRED field or slot in the template they fill in | Prose reminders near the template |
 | Behavior should depend on a condition | Conditional keyed to an observable predicate ("if the brief exists, reference it") | Unconditional rule + exemption clauses |
 
-**Why prohibitions backfire on shaping problems:** under a competing incentive ("make the prompt self-contained"), agents negotiate with "don't X" and produce MORE of the unwanted content than with no guidance at all — measured head-to-head, prohibition wording scored worse than the no-guidance control while recipe wording scored best. A recipe leaves nothing to negotiate: the output matches the stated shape or it doesn't.
+**Why prohibitions backfire on shaping problems:** under a competing incentive ("make the prompt self-contained"), agents negotiate with "don't X" and produce MORE of the unwanted content than with no guidance at all. In head-to-head wording tests on dispatch-prompt guidance, the prohibition arm scored worse than the no-guidance control while the recipe arm scored best — micro-test your own case rather than assuming, but never reach for the prohibition by default. A recipe leaves nothing to negotiate: the output matches the stated shape or it doesn't.
 
 **Rules for whichever form you pick:**
-- **No nuance clauses.** "Don't X unless it matters" reopens the negotiation and measurably dilutes compliance. Express a real exception as its own conditional on an observable predicate.
+- **No nuance clauses.** "Don't X unless it matters" reopens the negotiation — appending a single nuance clause to a winning recipe degraded it from consistent to noisy in the same wording tests. Express a real exception as its own conditional on an observable predicate.
 - **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses code blocks. If part of the output must be exempt, restructure so the rule can't reach it.
 
 ## Bulletproofing Skills Against Rationalization
@@ -576,7 +576,7 @@ Agent found new rationalization? Add explicit counter. Re-test until bulletproof
 
 Full pressure-scenario runs are the final gate, but they are slow and expensive per iteration. Verify the wording itself first with micro-tests:
 
-1. **One API call per sample.** System prompt = the realistic context the guidance will live in (the full skill or prompt template, not the guidance in isolation); user message = a task that tempts the failure.
+1. **One fresh-context sample per call** — a raw API call, or a single-shot subagent if you don't have API access. System prompt = the realistic context the guidance will live in (the full skill or prompt template, not the guidance in isolation); user message = a task that tempts the failure.
 2. **Always include a no-guidance control.** If the control doesn't exhibit the failure, there is nothing to fix — stop, don't author the guidance.
 3. **5+ reps per variant.** Single samples lie.
 4. **Manually read every flagged match.** Score programmatically if you like, but template echoes and quoted counter-examples masquerade as hits; automated counts alone overstate both failure and success.
@@ -642,7 +642,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Clear overview with core principle
 - [ ] Address specific baseline failures identified in RED
 - [ ] Guidance form matches the failure type (see Match the Form to the Failure)
-- [ ] Wording micro-tested against a no-guidance control (5+ reps, every flagged match read manually)
+- [ ] For behavior-shaping guidance: wording micro-tested against a no-guidance control (5+ reps, every flagged match read manually) — N/A for pure reference skills
 - [ ] Code inline OR link to separate file
 - [ ] One excellent example (not multi-language)
 - [ ] Run scenarios WITH skill - verify agents now comply
