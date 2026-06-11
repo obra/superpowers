@@ -159,8 +159,10 @@ Subagent (general-purpose):
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
 - `[BRIEF_FILE]` — REQUIRED: the task brief file (`scripts/task-brief PLAN N`
   prints the path; same file the implementer worked from)
-- `[GLOBAL_CONSTRAINTS]` — the spec/design's global constraints that bind
-  this task (version floors, naming and copy rules, platform requirements)
+- `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
+  the plan's Global Constraints section or the spec: exact values, formats,
+  and stated relationships between components (not process rules — those
+  are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this task
