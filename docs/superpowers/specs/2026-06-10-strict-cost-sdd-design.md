@@ -65,13 +65,21 @@ fewer, better-sized tasks, SDD still runs one fresh subagent per task.
 
 ### L1 — Plan-side crispness (writing-plans changes; est. −$1.5-3/run, plus variance reduction)
 
-**Status 2026-06-11: validated in effect.** A hand-crisped fractals plan
-(10 → 7 tasks, `## Global Constraints` header, per-task `Interfaces:`
-lines — scenario `sdd-go-fractals-crisp`) ran 3/3 green at $9.51-12.65
-(mean $11.60 vs combo band $11.67-14.84), 20-24 dispatches vs 28, fix
-waves flat. What remains is elicitation: getting writing-plans guidance
-to *produce* such plans (micro-test per the doctrine, then the follow-up
-PR). See the experiments log, Batch A-E.
+**Status 2026-06-11 (final): elicitation tested end-to-end; claims
+re-attributed.** Micro-tests: constraints header and Interfaces blocks
+elicit deterministically (0→5/5, 0→100% of tasks, exact values);
+right-sizing is modest and scale-dependent (9.4→8.4 tasks at svelte
+scale, nothing to move at fractals scale). Full runs: an elicited plan
+executed at $6.34/$8.49 — but the no-guidance control (opus plan,
+complete code) hit $7.59/$7.73, inside that range. **The cost win
+belongs to opus-written complete-code plans; the hand-written prose
+fixture plans all prior numbers used are unrepresentative and ~2×
+costlier to execute.** The guidance owns fidelity and variance instead:
+deterministic constraints propagation (the one elicited-run fix was a
+version-floor catch), exact cross-task interfaces, fix waves 1 vs 2-4
+(the control plan shipped a real Sierpinski bug both runs had to fix).
+The writing-plans PR claims those grounds, not dollars. Draft at
+/tmp/sdd-exp/writing-plans-l1 (branch writing-plans-crisp).
 
 The plan is upstream of every cost: task count sets dispatch count; plan
 ambiguity sets review-loop count; plan completeness sets implementer
