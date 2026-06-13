@@ -81,6 +81,22 @@ When agents return:
 - Run full test suite
 - Integrate all changes
 
+## Model Selection
+
+When dispatching agents to **implement plan tasks** (e.g. the "Parallel Run" option from superpowers:writing-plans), assign models by role — the same policy as superpowers:subagent-driven-development. Pass the model explicitly via the Task/Agent tool's `model` parameter. Do NOT rely on the agent type's default: a dispatch with no `model` silently inherits the session model (often Opus), which is too expensive for mechanical implementation work, while some agent types (e.g. `Explore`) are pinned to a cheap model regardless of your session. Being explicit is the only way the run uses the intended model.
+
+**Before dispatching, ask the user which models to use, offering these defaults:**
+
+- **Implementation agents → Haiku** (`model: "haiku"`). Plan tasks are well-specified, so implementation is mechanical — Haiku is fast and cheap.
+- **Review agents → Sonnet** (`model: "sonnet"`). Reviewing implemented work against the spec and for code quality.
+- **Orchestration (you) stays on the session model.** You coordinate, split work, and integrate.
+
+Present the defaults and let the user accept them or override any role (e.g. "implement with Sonnet"). If the user gives no preference, use the defaults above. Apply the same assignment to every agent in the run unless the user says otherwise.
+
+**Escalation:** If a Haiku implementation agent reports it's stuck because the task needs more reasoning (not missing context), re-dispatch that task with a more capable model (Sonnet, then Opus).
+
+**Investigation vs implementation:** The Haiku default is for *implementing* well-specified tasks. For parallel *investigation/debugging* dispatches (the original use case above), match the model to the difficulty of the analysis rather than defaulting to Haiku.
+
 ## Agent Prompt Structure
 
 Good agent prompts are:
