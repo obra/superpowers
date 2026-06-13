@@ -99,7 +99,7 @@ Expected: PASS
 
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git commit -m "✨ feat: add specific feature"
 ```
 ````
 
@@ -113,11 +113,41 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
+## Commit Messages
+
+Every commit step in the plan MUST use a conventional commit message with a leading emoji: `<emoji> <type>(<scope>): <description>`. Scope is optional; include it when it clarifies what area changed (e.g. `🐛 fix(auth): reject expired tokens`).
+
+**Types:**
+
+| Emoji | Type | Use for |
+|-------|------|---------|
+| ✨ | feat | New features |
+| 🐛 | fix | Bug fixes |
+| 📝 | docs | Documentation changes |
+| ♻️ | refactor | Code restructuring without changing behavior |
+| 🎨 | style | Formatting, whitespace, semicolons |
+| ⚡️ | perf | Performance improvements |
+| ✅ | test | Adding or correcting tests |
+| 🧑‍💻 | chore | Tooling, configuration, maintenance |
+| 🚧 | wip | Work in progress |
+| 🔥 | remove | Removing code or files |
+| 🚑 | hotfix | Critical fixes |
+| 🔒 | security | Security improvements |
+
+**Best practices:**
+- Keep commits atomic and focused — one concern per commit. Split unrelated changes.
+- Write the description in imperative mood ("add feature", not "added feature").
+- Explain *why*, not just *what*. Add a body for non-trivial changes.
+- Reference issues/PRs when relevant.
+
+Write the exact commit message into each commit step — never leave it as "commit the changes".
+
 ## Remember
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
+- Conventional commit messages with emojis (see Commit Messages above)
 
 ## Self-Review
 
