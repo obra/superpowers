@@ -85,13 +85,24 @@ When agents return:
 
 When dispatching agents to **implement plan tasks** (e.g. the "Parallel Run" option from superpowers:writing-plans), assign models by role — the same policy as superpowers:subagent-driven-development. Pass the model explicitly via the Task/Agent tool's `model` parameter. Do NOT rely on the agent type's default: a dispatch with no `model` silently inherits the session model (often Opus), which is too expensive for mechanical implementation work, while some agent types (e.g. `Explore`) are pinned to a cheap model regardless of your session. Being explicit is the only way the run uses the intended model.
 
-**Before dispatching, ask the user which models to use, offering these defaults:**
+**STOP before dispatching. You MUST ask the user which models to use and get an explicit answer back before any agent is dispatched.** Present these defaults and wait for their reply:
 
 - **Implementation agents → Haiku** (`model: "haiku"`). Plan tasks are well-specified, so implementation is mechanical — Haiku is fast and cheap.
 - **Review agents → Sonnet** (`model: "sonnet"`). Reviewing implemented work against the spec and for code quality.
 - **Orchestration (you) stays on the session model.** You coordinate, split work, and integrate.
 
-Present the defaults and let the user accept them or override any role (e.g. "implement with Sonnet"). If the user gives no preference, use the defaults above. Apply the same assignment to every agent in the run unless the user says otherwise.
+The user accepts the defaults ("yes/go") or overrides any role (e.g. "implement with Sonnet"). Apply the chosen models to every agent in the run.
+
+**Asking is a hard gate, not a formality. No exceptions:**
+- "Go ahead / move fast / do it now" is a preference about *speed and action*, NOT about model selection. It does not waive the question — ask anyway; the user can accept in one word.
+- Do NOT "announce the choice as you dispatch" as a substitute for asking. Announcing is not asking. The user must get the chance to override *before* agents run.
+- "If the user gives no preference" applies only when they replied and deferred to you ("you pick") — it does NOT cover the case where you simply skipped asking. No answer yet = do not dispatch.
+- Defaults are what you OFFER, never what you apply silently.
+
+**Red flags — STOP and ask first:**
+- About to call Task/Agent for implementation tasks but haven't received a model answer this run
+- Telling yourself "re-asking is theater" or "the defaults are obviously fine"
+- Treating a go-ahead on the *work* as a go-ahead on the *model*
 
 **Escalation:** If a Haiku implementation agent reports it's stuck because the task needs more reasoning (not missing context), re-dispatch that task with a more capable model (Sonnet, then Opus).
 
