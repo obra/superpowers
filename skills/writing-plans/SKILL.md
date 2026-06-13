@@ -15,7 +15,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/plans/YYYY-MM-DD-HHMMSS-<feature-name>-plan.md` (get the timestamp via `date +%Y-%m-%d-%H%M%S`)
 - (User preferences for plan location override this default)
 
 ## Scope Check
@@ -133,13 +133,15 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, ALWAYS offer the execution choice below — present all three options every time:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Choose approaches to implement this plan:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
 **2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+
+**3. Parallel Run** - Dispatch independent tasks concurrently across multiple agents (fastest when tasks don't share state)
 
 **Which approach?"**
 
@@ -150,3 +152,7 @@ After saving the plan, offer execution choice:
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
 - Batch execution with checkpoints for review
+
+**If Parallel Run chosen:**
+- **REQUIRED SUB-SKILL:** Use superpowers:dispatching-parallel-agents
+- Run independent tasks concurrently; tasks with shared state or sequential dependencies still run in order

@@ -88,18 +88,18 @@ digraph process {
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Assign models by role. Pass the model explicitly when dispatching each subagent (the Task/Agent tool's `model` parameter).
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+**Before executing, ask the user which models to use, offering these defaults:**
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+- **Implementer subagent → Haiku.** Executes the task. Plans are well-specified, so implementation is mechanical — Haiku is fast and cheap.
+- **Spec reviewer subagent → Sonnet.** Reviews the work against the spec.
+- **Code quality reviewer subagent → Sonnet.** Reviews code quality.
+- **Final whole-implementation code reviewer → Sonnet.** Last quality gate at the end of the run.
 
-**Architecture, design, and review tasks**: use the most capable available model.
+Present the defaults and let the user accept them or override any role (e.g. "implement with Sonnet", "review with Opus"). If the user gives no preference, use the defaults above. Once chosen, apply the same assignment for every task in the run unless the user says otherwise.
 
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+**Escalation:** If the Haiku implementer reports `BLOCKED` because the task needs more reasoning (not missing context), re-dispatch it with a more capable model (Sonnet, then Opus). See "Handling Implementer Status" below.
 
 ## Handling Implementer Status
 
@@ -130,7 +130,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/superpowers/plans/feature-plan.md]
+[Read plan file once: docs/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create TodoWrite with all tasks]
 
