@@ -96,6 +96,8 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 **Architecture, design, and review tasks**: use the most capable available model.
 
+**Don't resolve "most capable" from memory.** Your knowledge of the model lineup lags behind releases, so you will default to an older flagship (e.g., Opus) when a newer, more capable model is available — as of this writing, Claude Fable (`claude-fable-5`) sits above Opus 4.x. Check which models your harness actually offers before dispatching, and prefer the newest frontier model for architecture, design, and review.
+
 **Task complexity signals:**
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
