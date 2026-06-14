@@ -4,8 +4,8 @@ Claude Code plugins need hooks that work on Windows, macOS, and Linux. This docu
 
 ## The Problem
 
-Claude Code runs hook commands through the system's default shell:
-- **Windows**: CMD.exe
+Claude Code runs hook commands through the host shell:
+- **Windows**: `.cmd` hooks are designed to run through CMD.exe; some host paths or manual simulations may evaluate the command through PowerShell first.
 - **macOS/Linux**: bash or sh
 
 This creates several challenges:
@@ -22,12 +22,12 @@ A polyglot script is valid syntax in multiple languages simultaneously. Our wrap
 ```cmd
 : << 'CMDBLOCK'
 @echo off
-"C:\Program Files\Git\bin\bash.exe" -l -c "\"$(cygpath -u \"$CLAUDE_PLUGIN_ROOT\")/hooks/session-start.sh\""
+"C:\Program Files\Git\bin\bash.exe" -l -c "\"$(cygpath -u \"$CLAUDE_PLUGIN_ROOT\")/hooks/session-start\""
 exit /b
 CMDBLOCK
 
 # Unix shell runs from here
-"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
+"${CLAUDE_PLUGIN_ROOT}/hooks/session-start"
 ```
 
 ### How It Works
@@ -53,9 +53,9 @@ CMDBLOCK
 
 ```
 hooks/
-├── hooks.json           # Points to the .cmd wrapper
-├── session-start.cmd    # Polyglot wrapper (cross-platform entry point)
-└── session-start.sh     # Actual hook logic (bash script)
+├── hooks.json           # Points to the reusable .cmd wrapper
+├── run-hook.cmd         # Polyglot wrapper (cross-platform entry point)
+└── session-start        # Actual hook logic (extensionless bash script)
 ```
 
 ### hooks.json
@@ -65,11 +65,12 @@ hooks/
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
+        "matcher": "startup|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.cmd\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "async": false
           }
         ]
       }
@@ -93,7 +94,7 @@ Note: The path must be quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces
 
 ## Writing Cross-Platform Hook Scripts
 
-Your actual hook logic goes in the `.sh` file. To ensure it works on Windows (via Git Bash):
+Your actual hook logic goes in an extensionless bash file, such as `session-start`. Keeping hook scripts extensionless avoids Claude Code's Windows `.sh` auto-detection path while the `.cmd` wrapper still dispatches to bash.
 
 ### Do:
 - Use pure bash builtins when possible
@@ -164,7 +165,7 @@ shift
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start"
           }
         ]
       }
@@ -175,7 +176,7 @@ shift
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" validate-bash.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" validate-bash"
           }
         ]
       }
@@ -196,13 +197,23 @@ Bash isn't running as a login shell. Ensure `-l` flag is used.
 `${CLAUDE_PLUGIN_ROOT}` expanded to a Windows path ending with backslash, then `/hooks/...` was appended. Use `cygpath` to convert the entire path.
 
 ### Script opens in text editor instead of running
-The hooks.json is pointing directly to the `.sh` file. Point to the `.cmd` wrapper instead.
+The hooks.json is pointing directly to a `.sh` file. Point to the `.cmd` wrapper and pass the extensionless hook script name instead.
+
+### PowerShell reports `Unexpected token 'session-start'`
+PowerShell treats a leading quoted string as a string expression unless it is invoked with the call operator. If you are manually simulating the hook in PowerShell, use:
+
+```powershell
+$env:CLAUDE_PLUGIN_ROOT = "C:\path\to\plugin"
+& "$env:CLAUDE_PLUGIN_ROOT\hooks\run-hook.cmd" session-start
+```
+
+Do not add the PowerShell call operator to the shared `hooks.json` command unless the hook host specifically evaluates that command only through PowerShell; the same manifest is also used on Unix-like shells.
 
 ### Works in terminal but not as hook
 Claude Code may run hooks differently. Test by simulating the hook environment:
 ```powershell
 $env:CLAUDE_PLUGIN_ROOT = "C:\path\to\plugin"
-cmd /c "C:\path\to\plugin\hooks\session-start.cmd"
+cmd /c "C:\path\to\plugin\hooks\run-hook.cmd session-start"
 ```
 
 ## Related Issues
