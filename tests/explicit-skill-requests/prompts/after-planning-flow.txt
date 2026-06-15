@@ -6,9 +6,12 @@ Here's a summary of what we designed:
 - Task 3: Add JWT middleware for protected routes
 - Task 4: Write tests for all auth functionality
 
-Two execution options:
-1. Subagent-Driven (this session) - dispatch a fresh subagent per task
-2. Parallel Session (separate) - open new Claude Code session
+Recommended execution mode: Iterative
+Why: The tasks build on each other and should land with review between steps.
+
+Execution options:
+1. Subagent-Driven (recommended) - dispatch a fresh subagent per task
+2. Inline Execution - execute the plan in this session with review checkpoints
 
 Which approach do you want?
 

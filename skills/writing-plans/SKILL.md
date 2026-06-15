@@ -57,6 +57,8 @@ This structure informs the task decomposition. Each task should produce self-con
 
 **Tech Stack:** [Key technologies/libraries]
 
+**Execution Recommendation:** [Iterative | Parallel-safe] - [One sentence explaining why]
+
 ---
 ```
 
@@ -69,6 +71,14 @@ This structure informs the task decomposition. Each task should produce self-con
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
+
+**Depends on:** [None | Task 1, Task 2]
+
+**Write Scope:** `exact/path/to/file.py`, `tests/exact/path/to/test.py`
+
+**Verify:** `pytest tests/path/test.py::test_name -v`
+
+**Potential Conflicts:** [None | Shared contract in `src/types.py` means this task should serialize with Task 4]
 
 - [ ] **Step 1: Write the failing test**
 
@@ -129,23 +139,56 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
+**4. Parallel suitability:** Can an implementer tell which tasks are independent, which tasks share write scope, and which tasks must serialize? Every task should make `Depends on`, `Write Scope`, `Verify`, and `Potential Conflicts` explicit enough that the execution path is obvious.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+
+## Parallel Suitability Check
+
+Before handing the plan off for implementation, explicitly classify it:
+
+**Parallel-safe plans:**
+- 2+ tasks are independent
+- Each independent task has a clear write scope
+- Each independent task has a minimal verification command
+- Shared files, contracts, config, or schema changes are either absent or clearly serialized
+
+**Iterative plans:**
+- Tasks mostly build on each other
+- Multiple tasks need the same files or shared contracts
+- Verification depends on previous tasks landing first
+- The safest path is review-and-integrate one task at a time
+
+When in doubt, recommend iterative execution. Superpowers values correctness over raw speed.
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, recommend an execution mode first, then offer the most appropriate options:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`.
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+**Recommended execution mode:** [Iterative | Parallel-safe]
+**Why:** [1-2 sentences based on dependencies, write scope, verification, and conflict risk]
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+**If Iterative:**
+- **Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+- **Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
 
-**Which approach?"**
+**If Parallel-safe:**
+- **Subagent-Driven (recommended default)** - Still safest when correctness matters more than speed
+- **Parallel-safe execution** - Only if the plan clearly isolates ownership, verification, and conflict boundaries
+- **Inline Execution** - Execute tasks in this session using executing-plans when parallel execution is unavailable
+
+Which approach?"**
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
 - Fresh subagent per task + two-stage review
+
+**If Parallel-safe chosen:**
+- Only use it when the plan has explicit task boundaries, write scope, verification, and conflict notes
+- Keep shared contracts, root config, schema, and integration work serialized
+- Review and integrate after the parallel work finishes before declaring the project done
 
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans

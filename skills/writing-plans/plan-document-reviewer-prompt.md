@@ -23,6 +23,7 @@ Task tool (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Execution Readiness | Dependencies, write scope, verification, and conflict risks are clear enough to choose iterative vs parallel-safe execution |
 
     ## Calibration
 
