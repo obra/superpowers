@@ -196,7 +196,7 @@ async function runTests() {
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
       assert(res.body.includes('<h1>Custom Page</h1>'), 'Should contain original content');
       assert(res.body.includes('WebSocket'), 'Should still inject helper.js');
-      assert(!res.body.includes('indicator-bar'), 'Should NOT wrap in frame template');
+      assert(!res.body.includes('<div class="header">'), 'Should NOT wrap in frame template');
     });
 
     await test('wraps content fragments in frame template', async () => {
@@ -205,7 +205,7 @@ async function runTests() {
       await sleep(300);
 
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
-      assert(res.body.includes('indicator-bar'), 'Fragment should get indicator bar');
+      assert(res.body.includes('<div class="header">'), 'Fragment should get header chrome');
       assert(!res.body.includes('<!-- CONTENT -->'), 'Placeholder should be replaced');
       assert(res.body.includes('Pick a layout'), 'Fragment content should be present');
       assert(res.body.includes('data-choice="a"'), 'Fragment interactive elements intact');
@@ -560,8 +560,16 @@ async function runTests() {
       const template = fs.readFileSync(
         path.join(__dirname, '../../skills/brainstorming/scripts/frame-template.html'), 'utf-8'
       );
-      assert(template.includes('indicator-bar'), 'Should have indicator bar');
-      assert(template.includes('indicator-text'), 'Should have indicator text');
+      assert(template.includes('<div class="header">'), 'Should have top header markup');
+      assert(!template.includes('indicator-bar'), 'Should not have footer chrome');
+      assert(!template.includes('indicator-text'), 'Header should not render selection indicator text');
+      assert(template.includes('<!-- BRANDING -->'), 'Should have branding placeholder');
+      assert(template.includes('<div class="status">Connecting…</div>'), 'Header should include connection status');
+      assert(template.includes('grid-template-columns: minmax(0, 1fr) auto;'), 'Header should let brand text shrink before the status column');
+      assert(template.includes('padding: 0.5rem 1.5rem;'), 'Header should keep equal left and right edge padding');
+      assert(template.includes('.header .brand { justify-self: start; width: 100%; font-size: 0.75rem; line-height: 1; }'), 'Header brand should align left, fill its grid track, and match header text size');
+      assert(template.includes('.header .status { grid-column: 2; line-height: 1; }'), 'Header status should sit in the right column');
+      assert(!template.includes('<div></div>'), 'Header should not use an empty spacer before branding');
       assert(template.includes('<!-- CONTENT -->'), 'Should have content placeholder');
       assert(template.includes('frame-content'), 'Should have content container');
       return Promise.resolve();
