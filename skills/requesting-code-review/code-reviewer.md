@@ -56,6 +56,12 @@ Task tool (general-purpose):
     - Integration tests where they matter?
     - All tests passing?
 
+    **Impact & Regression:**
+    - What existing flows/consumers does this change touch? (impact analysis)
+    - Are those impacted flows still working correctly? (regression check)
+    - Are there callers that assume the old behavior or interface?
+    - Do adjacent features have sufficient test coverage to catch regressions?
+
     **Production readiness:**
     - Migration strategy if schema changed?
     - Backward compatibility considered?
