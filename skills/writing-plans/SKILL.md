@@ -137,16 +137,16 @@ After saving the plan, offer execution choice:
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+**1. Subagent-Driven (recommended)** - I coordinate from this session, dispatch a fresh subagent per task, review between tasks, fast iteration
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+**2. Single-Agent Execution** - Execute tasks directly using executing-plans, batch execution with checkpoints
 
 **Which approach?"**
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
+- Fresh subagent per task + two-stage review; this session acts as coordinator
 
-**If Inline Execution chosen:**
+**If Single-Agent Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+- Batch execution with checkpoints for review; no subagent dispatch
