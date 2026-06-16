@@ -290,7 +290,7 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Codex (`hooks/session-start-codex` + `hooks/hooks-codex.json` + `.codex-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
+| installs this repository as a plugin and runs its session-start hook | A via the plugin installer | Antigravity (`agy plugin install https://github.com/obra/superpowers` installs the existing plugin; no harness-specific scaffold is needed) |
 
 Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
 holds — the bootstrap rides the install mechanism, never a user-config edit).
@@ -677,7 +677,7 @@ it. Distribution differs per harness ecosystem — find yours:
 | External marketplace fork, synced by script | Codex | `scripts/sync-to-codex-plugin.sh` rsyncs the tracked plugin files into a separate fork repo and opens a PR. Read its include/exclude list so you ship the right tree (it deliberately drops repo-internal dirs and other harnesses' dotdirs). |
 | Git-URL extension install | Gemini, Kimi Code, OpenCode | Users install from a git URL (`gemini extensions install …`; Kimi Code `/plugins install …`; an `opencode.json` `plugin` array entry). Document the exact command. |
 | Package-manifest fields | pi | Declared through fields in the repo-root `package.json`; users install via the harness's package command. |
-| Local installer (plugin install) | Antigravity (`agy`) | A small `install.sh` that runs the harness's own `agy plugin install` against a staging dir holding the manifest, the skills, and a generated `contextFileName` context file (the bootstrap). Everything arrives through the install mechanism — *not* by editing the user's config (see below). |
+| Direct plugin install | Antigravity (`agy`) | Users run `agy plugin install https://github.com/obra/superpowers`. agy installs this repository's existing plugin files, imports the bundled skills, and runs the session-start hook; no staging scaffold or generated context file is needed. |
 
 Then:
 
@@ -693,14 +693,10 @@ Then:
     session), that is the strongest clean bootstrap: declare it, and the installer
     preserves it *and* the harness loads it. Generate it at install time from the
     live `using-superpowers/SKILL.md` + the tool mapping (wrapped in
-    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts. This is what
-    `.antigravity-plugin/install.sh` does — `agy plugin install` reports
-    `✔ context : ANTIGRAVITY.md`, and a clean session reads `using-superpowers`'s
-    SKILL.md, loads `brainstorming`, and enters the brainstorming flow before any
-    code. **Verify with a marker** that the installer keeps the file and the
-    harness loads it: one porter wrongly concluded it couldn't, because they
-    shipped the file *without* declaring `contextFileName` and it was stripped as
-    unrecognized.
+    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts. **Verify
+    with a marker** that the installer keeps the file and the harness loads it:
+    one porter wrongly concluded it couldn't, because they shipped the file
+    *without* declaring `contextFileName` and it was stripped as unrecognized.
   - **Otherwise lean on the installed `using-superpowers` skill itself.** If the
     harness surfaces each installed skill's name + description at session start,
     the `using-superpowers` description ("Use when starting any conversation…")
