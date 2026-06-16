@@ -200,6 +200,23 @@ EOF
 .private-journal/
 EOF
 
+    cat > "$repo/.gitmodules" <<'EOF'
+[submodule "evals"]
+	path = evals
+	url = git@example.com:example/evals.git
+EOF
+
+    cat > "$repo/.pre-commit-config.yaml" <<'EOF'
+repos:
+  - repo: local
+    hooks:
+      - id: evals-check
+        name: evals check
+        entry: echo evals
+        language: system
+        files: ^evals/
+EOF
+
     if [[ "$with_pure_ignored" == "1" ]]; then
         cat >> "$repo/.gitignore" <<'EOF'
 ignored-cache/
@@ -277,6 +294,8 @@ EOF
         .codex-plugin/plugin.json \
         .kimi-plugin/plugin.json \
         .gitignore \
+        .gitmodules \
+        .pre-commit-config.yaml \
         assets/app-icon.png \
         assets/superpowers-small.svg \
         evals/drill/README.md \
@@ -643,6 +662,8 @@ main() {
     assert_not_contains "$preview_section" ".private-journal/leak.txt" "Preview excludes ignored untracked file"
     assert_not_contains "$preview_section" "ignored-cache/" "Preview excludes pure ignored directories"
     assert_not_contains "$preview_section" "evals/" "Preview excludes eval harness"
+    assert_not_contains "$preview_section" ".gitmodules" "Preview excludes repo submodule metadata"
+    assert_not_contains "$preview_section" ".pre-commit-config.yaml" "Preview excludes repo pre-commit config"
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
