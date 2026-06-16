@@ -30,6 +30,8 @@ BEFORE claiming any status or expressing satisfaction:
 2. RUN: Execute the FULL command (fresh, complete)
 3. READ: Full output, check exit code, count failures
 4. VERIFY: Does output confirm the claim?
+   - For configuration, provider, feature flag, or environment changes:
+     confirm the output shows the intended new state, not just success
    - If NO: State actual status with evidence
    - If YES: State claim WITH evidence
 5. ONLY THEN: Make the claim
@@ -48,6 +50,7 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
+| Provider/config changed | Observable new state in response, logs, runtime config, or behavior | Request succeeded, app started, deploy passed |
 
 ## Red Flags - STOP
 
@@ -97,6 +100,12 @@ Skip any step = lying, not verifying
 ```
 ✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
 ❌ "Tests pass, phase complete"
+```
+
+**Configuration/provider changes:**
+```
+OK "Switched to OpenAI" -> response/logs show OpenAI provider or model
+NO HTTP 200 while response still shows old provider/model
 ```
 
 **Agent delegation:**
