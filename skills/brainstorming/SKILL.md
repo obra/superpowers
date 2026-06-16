@@ -24,7 +24,7 @@ You MUST create a task for each of these items and complete them in order:
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+4. **Propose 2-3 approaches** — compare in detail, recommend with reasoning tied to the comparison
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
@@ -74,9 +74,18 @@ digraph brainstorming {
 
 **Exploring approaches:**
 
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+Propose 2-3 different approaches. If your recommendation would flip
+under deeper questioning, the comparison wasn't deep enough — that's
+the bug. For each option, address:
+
+- **What it assumes**
+- **Where it breaks down**
+- **What would rule it out**
+- **What evidence supports it**
+
+Compare across those, then lead with your recommendation and tie it
+to the comparison, not to gut feel. Skip a dimension only if it
+doesn't apply — not to save effort.
 
 **Presenting the design:**
 
@@ -135,7 +144,7 @@ Wait for the user's response. If they request changes, make them and re-run the 
 - **One question at a time** - Don't overwhelm with multiple questions
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
+- **Explore alternatives** — Always compare 2-3 approaches in detail before recommending
 - **Incremental validation** - Present design, get approval before moving on
 - **Be flexible** - Go back and clarify when something doesn't make sense
 
