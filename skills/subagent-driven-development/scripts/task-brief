@@ -4,8 +4,7 @@
 # through the controller's context.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
-# Default OUTFILE: <git-dir>/sdd/task-<N>-brief.md — unique per repo
-# instance, so concurrent sessions cannot collide.
+# Default OUTFILE: <git-dir>/sdd/task-<N>.<unique>/task-<N>-brief.md.
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -23,7 +22,8 @@ else
   dir=$(git rev-parse --git-path sdd)
   mkdir -p "$dir"
   dir=$(cd "$dir" && pwd)
-  out="$dir/task-${n}-brief.md"
+  brief_dir=$(mktemp -d "$dir/task-${n}.XXXXXX")
+  out="$brief_dir/task-${n}-brief.md"
 fi
 
 awk -v n="$n" '
