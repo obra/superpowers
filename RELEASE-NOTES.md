@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## v6.0.0 (date TBD)
+## v6.0.0 (2026-06-16)
 
 Superpowers 6.0 is a big release. The headline is a rewrite of how `subagent-driven-development` reviews each task — cheaper, stricter, and harder to game. 
 
