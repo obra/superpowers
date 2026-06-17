@@ -101,7 +101,7 @@ Skills are not prose — they are code that shapes agent behavior. If you modify
 
 ## Eval harness
 
-Skill-behavior evals live in the `evals/` submodule — after cloning, run `git submodule update --init evals`, then see `evals/README.md`. Drill (the harness) drives real tmux sessions of Claude Code / Codex / Gemini CLI and judges skill compliance with an LLM verifier. Plugin-infrastructure tests still live at `tests/`.
+Skill-behavior evals live in [superpowers-evals](https://github.com/prime-radiant-inc/superpowers-evals/), cloned into `evals/` — see `evals/README.md` for setup. Drill (the harness) drives real tmux sessions of Claude Code / Codex / Gemini CLI and judges skill compliance with an LLM verifier. Plugin-infrastructure tests still live at `tests/`.
 
 ## Understand the Project Before Contributing
 

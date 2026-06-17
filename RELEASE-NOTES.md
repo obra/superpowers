@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v6.0.2 (2026-06-16)
+
+### Install Fixes
+
+- **We no longer ship the `evals` submodule.** It broke plugin installs for some users, so the eval harness now lives in its own repo, separate from the published plugin. (#1778, #1774)
+
 ## v6.0.1 (2026-06-16)
 
 ### Codex Fixes
