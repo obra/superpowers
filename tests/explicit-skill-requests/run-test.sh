@@ -68,11 +68,21 @@ echo "Running claude -p with explicit skill request..."
 echo "Prompt: $PROMPT"
 echo ""
 
-timeout 300 claude -p "$PROMPT" \
+TIMEOUT_CMD=()
+if command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD=(timeout 300)
+elif command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD=(gtimeout 300)
+else
+    echo "WARNING: timeout/gtimeout not found; running without a timeout"
+fi
+
+"${TIMEOUT_CMD[@]}" claude -p "$PROMPT" \
     --plugin-dir "$PLUGIN_DIR" \
     --dangerously-skip-permissions \
     --max-turns "$MAX_TURNS" \
     --output-format stream-json \
+    --verbose \
     > "$LOG_FILE" 2>&1 || true
 
 echo ""
