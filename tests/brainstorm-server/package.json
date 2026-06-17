@@ -2,7 +2,7 @@
   "name": "brainstorm-server-tests",
   "version": "1.0.0",
   "scripts": {
-    "test": "node server.test.js"
+    "test": "node ws-protocol.test.js && node helper.test.js && node browser-launcher.test.js && node auth.test.js && node branding.test.js && node server.test.js && node lifecycle.test.js && bash start-server.test.sh && bash stop-server.test.sh"
   },
   "dependencies": {
     "ws": "^8.19.0"

@@ -1,31 +1,38 @@
 # Copilot CLI Tool Mapping
 
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
+Skills speak in actions ("dispatch a subagent", "create a todo", "read a file"). On Copilot CLI these resolve to the tools below.
 
-| Skill references | Copilot CLI equivalent |
-|-----------------|----------------------|
-| `Read` (file reading) | `view` |
-| `Write` (file creation) | `create` |
-| `Edit` (file editing) | `edit` |
-| `Bash` (run commands) | `bash` |
-| `Grep` (search file content) | `grep` |
-| `Glob` (search files by name) | `glob` |
-| `Skill` tool (invoke a skill) | `skill` |
-| `WebFetch` | `web_fetch` |
-| `Task` tool (dispatch subagent) | `task` with `agent_type: "general-purpose"` or `"explore"` |
-| Multiple `Task` calls (parallel) | Multiple `task` calls |
-| Task status/output | `read_agent`, `list_agents` |
-| `TodoWrite` (task tracking) | `sql` with built-in `todos` table |
-| `WebSearch` | No equivalent — use `web_fetch` with a search engine URL |
-| `EnterPlanMode` / `ExitPlanMode` | No equivalent — stay in the main session |
+| Action skills request | Copilot CLI equivalent |
+|----------------------|----------------------|
+| Read a file | `view` |
+| Create / edit / delete a file | `apply_patch` (Copilot CLI has no separate create/edit/write tools) |
+| Run a shell command | `bash` |
+| Search file contents | `rg` (ripgrep; Copilot CLI does not expose a `grep` tool) |
+| Find files by name | `glob` |
+| Fetch a URL | `web_fetch` |
+| Search the web | `web_search` |
+| Invoke a skill | `skill` |
+| Dispatch a subagent (`Subagent (general-purpose):` template) | `task` with `agent_type: "general-purpose"` (other accepted types: `explore`, `task`, `code-review`, `research`, `configure-copilot`) |
+| Multiple parallel dispatches | Multiple `task` calls in one response |
+| Subagent status/output/control | `read_agent`, `list_agents`, `write_agent` |
+| Task tracking ("create a todo", "mark complete") | `update_todo` |
+| Enter / exit plan mode | No equivalent — stay in the main session |
+
+## Instructions file
+
+When a skill mentions "your instructions file", on Copilot CLI this is **`AGENTS.md`** at the repository root. If both `AGENTS.md` and `.github/copilot-instructions.md` are present, Copilot reads both.
+
+## Personal skills directory
+
+User-level skills live at **`~/.copilot/skills/`**. Copilot CLI also recognizes the cross-runtime alias **`~/.agents/skills/`**, which is shared with Codex and Gemini CLI. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
 
 ## Async shell sessions
 
-Copilot CLI supports persistent async shell sessions, which have no direct Claude Code equivalent:
+Copilot CLI supports persistent async shell sessions:
 
 | Tool | Purpose |
 |------|---------|
-| `bash` with `async: true` | Start a long-running command in the background |
+| `bash` with `mode: "async"` (and optionally `detach: true`) | Start a long-running command in the background; returns a `shellId` |
 | `write_bash` | Send input to a running async session |
 | `read_bash` | Read output from an async session |
 | `stop_bash` | Terminate an async session |

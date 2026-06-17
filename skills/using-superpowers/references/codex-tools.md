@@ -1,17 +1,30 @@
 # Codex Tool Mapping
 
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
+Skills speak in actions ("dispatch a subagent", "create a todo", "read a file"). On Codex these resolve to the tools below.
 
-| Skill references | Codex equivalent |
-|-----------------|------------------|
-| `Task` tool (dispatch subagent) | `spawn_agent` (see [Subagent dispatch requires multi-agent support](#subagent-dispatch-requires-multi-agent-support)) |
-| Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
-| Task returns result | `wait_agent` |
-| Task completes automatically | `close_agent` to free slot |
-| `TodoWrite` (task tracking) | `update_plan` |
-| `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
-| `Read`, `Write`, `Edit` (files) | Use your native file tools |
-| `Bash` (run commands) | Use your native shell tools |
+| Action skills request | Codex equivalent |
+|----------------------|------------------|
+| Read a file | `shell` (e.g., `cat`, `head`, `tail`) — Codex reads files via shell |
+| Create / edit / delete a file | `apply_patch` (structured diff for create, update, delete) |
+| Run a shell command | `shell` |
+| Search file contents | `shell` (e.g., `grep`, `rg`) |
+| Find files by name | `shell` (e.g., `find`, `ls`) |
+| Fetch a URL | `shell` with `curl` / `wget` — Codex has no native fetch tool |
+| Search the web | `web_search` (enabled by default; configurable in `config.toml` via the top-level `web_search` setting — `live`, `cached`, or `disabled`) |
+| Invoke a skill | Skills load natively — just follow the instructions |
+| Dispatch a subagent (`Subagent (general-purpose):` template) | `spawn_agent` (see [Subagent dispatch requires multi-agent support](#subagent-dispatch-requires-multi-agent-support)) |
+| Multiple parallel dispatches | Multiple `spawn_agent` calls in one response |
+| Wait for subagent result | `wait_agent` |
+| Free up subagent slot when done | `close_agent` |
+| Task tracking ("create a todo", "mark complete") | `update_plan` |
+
+## Instructions file
+
+When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`** at the project root. Codex also reads `~/.codex/AGENTS.md` for global context, and an `AGENTS.override.md` (in the project tree or `~/.codex/`) takes precedence when present. Codex walks from the project root down to the current working directory, concatenating `AGENTS.md` files it finds along the way, up to `project_doc_max_bytes` (32 KiB by default).
+
+## Personal skills directory
+
+User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
 
 ## Subagent dispatch requires multi-agent support
 
