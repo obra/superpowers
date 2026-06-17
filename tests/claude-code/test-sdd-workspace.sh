@@ -71,6 +71,42 @@ main() {
         echo "    staged: $staged"
     fi
 
+    cat > "$repo/plan.md" <<'PLAN'
+# Plan
+
+## Task 1: First thing
+
+Do the first thing.
+PLAN
+
+    local brief_out brief_path
+    brief_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan.md 1)"
+    brief_path="$(printf '%s\n' "$brief_out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
+    case "$brief_path" in
+        "$repo/.superpowers/sdd/"*) pass "task-brief writes its brief under the workspace" ;;
+        *)
+            fail "task-brief writes its brief under the workspace"
+            echo "    got: $brief_path"
+            ;;
+    esac
+
+    local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
+    ( cd "$repo" \
+        && git add plan.md \
+        && git "${git_id[@]}" commit -qm c1 \
+        && printf 'y\n' > f && git add f \
+        && git "${git_id[@]}" commit -qm c2 )
+    local rp_out rp_path
+    rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" HEAD~1 HEAD)"
+    rp_path="$(printf '%s\n' "$rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    case "$rp_path" in
+        "$repo/.superpowers/sdd/"*) pass "review-package writes its diff under the workspace" ;;
+        *)
+            fail "review-package writes its diff under the workspace"
+            echo "    got: $rp_path"
+            ;;
+    esac
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
