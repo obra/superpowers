@@ -106,15 +106,22 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 **Architecture and design tasks**: use the most capable available model.
 The final whole-branch review is one of these — dispatch it on the most
-capable available model, not the session default.
+capable available model; if the parent session is already on that exact
+model/version, intentional inheritance is acceptable.
 
 **Review tasks**: choose the model with the same judgment, scaled to the
 diff's size, complexity, and risk. A small mechanical diff does not need the
 most capable model; a subtle concurrency change does.
 
-**Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
+**Make the model decision explicit at the dispatch site.** When your
+harness exposes a per-dispatch model parameter, pass a harness-supported
+model name to route a subagent to a cheaper or different tier. On harnesses
+where omission inherits the parent model/version, omit the model only when
+that inheritance is the intended choice; record that intention in the
+dispatch description or a nearby note. If your harness has no per-dispatch
+model field, choose the configured worker/profile whose model matches the
+intended tier, or set the session/worker default before dispatch; don't invent
+unsupported payload fields.
 
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the

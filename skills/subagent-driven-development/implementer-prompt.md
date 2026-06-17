@@ -5,8 +5,9 @@ Use this template when dispatching an implementer subagent.
 ```
 Subagent (general-purpose):
   description: "Implement Task N: [task name]"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — choose per SKILL.md Model Selection. If unsupported by
+         the harness, omit this line and choose a worker/profile/default
+         that encodes the intended model tier.]
   prompt: |
     You are implementing Task N: [task name]
 
