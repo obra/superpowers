@@ -251,7 +251,7 @@ sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
 - At skill start, check for a ledger:
-  `cat "$(git rev-parse --git-path sdd)/progress.md"`. Tasks listed there
+  `cat "$(git rev-parse --show-toplevel)/.superpowers/sdd/progress.md"`. Tasks listed there
   as complete are DONE — do not re-dispatch them; resume at the first task
   not marked complete.
 - When a task's review comes back clean, append one line to the ledger in
