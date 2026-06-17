@@ -1,7 +1,7 @@
 /**
  * Superpowers plugin for OpenCode.ai
  *
- * Injects superpowers bootstrap context via system prompt transform.
+ * Injects superpowers bootstrap context via message transform.
  * Skills are discovered via OpenCode's native skill tool from symlinked directory.
  */
 
@@ -83,13 +83,49 @@ ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
   };
 
+  const findMessages = (input, output) => {
+    if (Array.isArray(output)) return output;
+    if (Array.isArray(output?.messages)) return output.messages;
+    if (Array.isArray(input)) return input;
+    if (Array.isArray(input?.messages)) return input.messages;
+    return null;
+  };
+
+  const hasBootstrap = (parts) => {
+    return parts.some((part) => {
+      return part?.type === 'text' &&
+        typeof part.text === 'string' &&
+        part.text.includes('<EXTREMELY_IMPORTANT>');
+    });
+  };
+
   return {
-    // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
-    'experimental.chat.system.transform': async (_input, output) => {
+    // Use a fresh parts array so shared history references stay unmodified.
+    'experimental.chat.messages.transform': async (input, output) => {
       const bootstrap = getBootstrapContent();
-      if (bootstrap) {
-        (output.system ||= []).push(bootstrap);
-      }
+      if (!bootstrap) return;
+
+      const messages = findMessages(input, output);
+      if (!messages?.length) return;
+
+      const firstUserIndex = messages.findIndex((message) => {
+        return message?.role === 'user' &&
+          Array.isArray(message.parts) &&
+          message.parts.length > 0;
+      });
+      if (firstUserIndex === -1) return;
+
+      const firstUser = messages[firstUserIndex];
+      if (hasBootstrap(firstUser.parts)) return;
+
+      const referencePart = firstUser.parts.find((part) => part?.type === 'text') || {};
+      messages[firstUserIndex] = {
+        ...firstUser,
+        parts: [
+          { ...referencePart, type: 'text', text: bootstrap },
+          ...firstUser.parts
+        ]
+      };
     }
   };
 };
