@@ -10,6 +10,7 @@ Superpowers has two distinct kinds of tests, each in its own directory:
 Live in `tests/`. Currently:
 
 - `tests/brainstorm-server/` — node test suite for the brainstorm server JS code.
+- `tests/skill-lint/` — temp-fixture tests for the zero-dependency skill doctor.
 - `tests/opencode/` — bash tests for OpenCode plugin loading, bootstrap caching, and tool registration.
 - `tests/codex-plugin-sync/` — bash sync verification.
 - `tests/kimi/` — bash/Python checks for Kimi plugin manifest wiring.
@@ -20,6 +21,27 @@ Live in `tests/`. Currently:
 - `tests/explicit-skill-requests/` — Haiku-specific, multi-turn, and skill-name-prompted tests not covered by drill.
 
 Run plugin tests via the relevant directory's `run-*.sh` or `npm test`.
+
+### Skill Doctor
+
+Run the skill linter from the repository root:
+
+```bash
+node scripts/lint-skills.js
+```
+
+For each `SKILL.md`, it checks required frontmatter, frontmatter size,
+skill-name format, skill-name/directory consistency, relative links, practical
+Markdown anchors, and non-portable user-home paths. It also scans Markdown
+files under those skill directories for stale tool-name patterns, with
+allowlisted compatibility references. It prints file/line diagnostics and exits
+non-zero when it finds failures.
+
+Run its fixture tests with:
+
+```bash
+node tests/skill-lint/lint-skills.test.js
+```
 
 ## Skill behavior evals
 
