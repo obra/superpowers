@@ -88,6 +88,21 @@ digraph process {
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Model Selection
+
+**Portable principle:** Use the least-powerful model that can reliably handle the subagent's role.
+
+| Role tier | Use for |
+|-----------|---------|
+| Cheap / fast | Mechanical implementation tasks, small docs edits, rote formatting, simple spec checks |
+| Standard | Most implementation tasks and ordinary reviewer passes |
+| Capable | Architecture or design tasks, ambiguous plans, high-risk reviews, final whole-branch review |
+
+**Harness behavior:**
+- If the harness exposes a per-dispatch model parameter (for example, Claude Code's Task tool), specify the model explicitly when dispatching each subagent.
+- If the harness uses pre-configured named subagents with fixed models (OpenCode, Kilo Code, and similar forks), choose the named subagent whose configured model matches the role tier. Do not attempt a per-dispatch model override if the harness does not support one.
+- If model controls are unavailable, describe the role and expected effort clearly so the harness or user can route it appropriately.
+
 ## Example Workflow
 
 ```
