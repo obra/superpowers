@@ -107,6 +107,30 @@ PLAN
             ;;
     esac
 
+    # --- Worktree isolation: a linked worktree resolves its own workspace ---
+    local wt="$TEST_ROOT/wt"
+    ( cd "$repo" && git worktree add -q "$wt" -b wt-feature )
+    local wt_root wt_dir
+    wt_root="$(cd "$wt" && git rev-parse --show-toplevel)"
+    wt_dir="$(cd "$wt" && "$SDD_SCRIPTS/sdd-workspace")"
+    if [[ "$wt_dir" == "$wt_root/.superpowers/sdd" && "$wt_dir" != "$dir" ]]; then
+        pass "linked worktree resolves its own distinct workspace"
+    else
+        fail "linked worktree resolves its own distinct workspace"
+        echo "    main: $dir"
+        echo "    wt:   $wt_dir"
+    fi
+
+    printf 'y\n' > "$wt/.superpowers/sdd/artifact.md"
+    local wt_status
+    wt_status="$(cd "$wt" && git status --porcelain)"
+    if [[ -z "$wt_status" ]]; then
+        pass "worktree workspace invisible to git status"
+    else
+        fail "worktree workspace invisible to git status"
+        echo "    status: $wt_status"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
