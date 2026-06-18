@@ -60,11 +60,13 @@ digraph process {
         "Mark task complete in todo list and progress ledger" [shape=box];
     }
 
+    "Ensure isolated workspace (superpowers:using-git-worktrees)" [shape=box style=filled fillcolor=lightgreen];
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
+    "Ensure isolated workspace (superpowers:using-git-worktrees)" -> "Read plan, note context and global constraints, create todos";
     "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
@@ -81,6 +83,25 @@ digraph process {
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Step 0: Isolated Workspace (do this first)
+
+**REQUIRED SUB-SKILL — before reading the plan or creating todos:** Use
+superpowers:using-git-worktrees to ensure an isolated workspace exists
+(create one, or verify you are already in one). This is the first node in
+the flowchart above, not an optional footnote.
+
+Why this is a hard gate, not a suggestion: this skill dispatches many
+subagents that edit and commit in the current working directory. If that
+directory is the main checkout, a second agent (or the human) working in
+parallel collides with your commits, branch state, and uncommitted changes.
+The isolation has to exist *before* the first edit — creating a worktree
+after work has begun does not retroactively isolate it.
+
+Do not proceed to the Pre-Flight review until you have confirmed (e.g. with
+`git rev-parse --git-dir` vs `--git-common-dir`, or your platform's
+worktree tool) that you are working in an isolated workspace, or your human
+partner has explicitly told you to run in the current checkout.
 
 ## Pre-Flight Plan Review
 
@@ -368,6 +389,9 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
+- Begin dispatching subagents before an isolated workspace exists — Step 0
+  (superpowers:using-git-worktrees) runs before the plan is read, not as an
+  afterthought. Working in the main checkout lets parallel agents collide.
 - Skip task review, or accept a report missing either verdict (spec compliance AND task quality are both required)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
