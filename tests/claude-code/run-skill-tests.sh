@@ -73,6 +73,7 @@ done
 
 # List of skill tests to run (fast unit tests)
 tests=(
+    "test-conversational-questions-policy.sh"
     "test-worktree-path-policy.sh"
     "test-subagent-driven-development.sh"
 )
@@ -155,7 +156,9 @@ for test in "${tests[@]}"; do
             fi
             echo ""
             echo "  Output:"
-            echo "$output" | sed 's/^/    /'
+            while IFS= read -r line; do
+                printf '    %s\n' "$line"
+            done <<< "$output"
             failed=$((failed + 1))
         fi
     fi
