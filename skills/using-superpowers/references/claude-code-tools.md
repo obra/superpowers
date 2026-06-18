@@ -20,6 +20,17 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Task tracking ("create a todo", "mark complete") | `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet`; `TodoWrite` in `claude -p` / Agent SDK unless `CLAUDE_CODE_ENABLE_TASKS=1` is set |
 | Background-process / subagent lifecycle (read output, cancel) | `TaskOutput`, `TaskStop` — these are distinct from the todo tools above and apply to running shells, agents, and remote sessions |
 
+## User Questions
+
+Ordinary skill instructions to "ask the user", "ask a clarifying question",
+"present options", or "wait for the user's response" are conversation flow,
+not tool actions. Ask them as plain conversational text unless the loaded
+skill explicitly names a structured question tool.
+
+This is especially important for `brainstorming`: its Socratic dialogue and
+text option sets should stay conversational, inviting the user to type or
+elaborate. Do not map those questions to `AskUserQuestion` by default.
+
 ## Instructions file
 
 When a skill mentions "your instructions file", on Claude Code this is **`CLAUDE.md`**. Claude Code walks up the directory tree from the current working directory and concatenates every `CLAUDE.md` and `CLAUDE.local.md` it finds along the way. Standard locations:
