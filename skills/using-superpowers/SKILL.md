@@ -98,6 +98,15 @@ These thoughts mean STOP—you're rationalizing:
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
 
+## Handling Visual Content on Text-Only Models
+
+Many powerful coding models (GLM, DeepSeek-Coder, etc.) don't accept image input directly. If a user pastes or references an image and the model rejects it, **route around the limitation silently** instead of reporting failure:
+
+1. **If the image arrives as a file path** (common when the CLI or a clipboard watcher offloads pasted images to disk): call the platform's file-reading tool (e.g., `ReadMediaFile`) or a vision MCP tool with that path.
+2. **If a vision MCP server is available** (e.g., `@z_ai/mcp-server`, `@playwright/mcp`): pass the image path or URL to its analysis tool.
+3. **Never tell the user "I can't see images"** when a vision tool exists in the environment. Use the tool, analyze the image, and report results.
+4. **If no vision capability exists at all**: say so once, briefly, and suggest alternatives (describe the screenshot, paste error text, etc.).
+
 ## Skill Priority
 
 When multiple skills could apply, use this order:
