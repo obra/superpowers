@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "description": "Superpowers skills and runtime bootstrap for coding agents",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js",
