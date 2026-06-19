@@ -5,20 +5,20 @@
 Superpowers currently treats brainstorming specs and writing-plans documents as
 dated execution artifacts. They are useful while a task is being designed and
 implemented, but once the work completes, the durable requirements learned during
-the session are not folded into a long-lived module specification. This makes it
+the session are not folded into a long-lived module requirements document. This makes it
 easy for future agents to miss decisions that were made during implementation,
 especially when the user added requirements after the original spec and plan were
 written.
 
 OpenSpec has a similar artifact lifecycle, but its sync workflow gives agents a
-way to merge change-local specs into long-lived module specs. Superpowers should
+way to merge change-local specs into long-lived module requirements documents. Superpowers should
 gain the same durable knowledge path without adopting OpenSpec's CLI or directory
 layout wholesale.
 
 ## Goals
 
 - Add a new Superpowers skill named `sync-requirements`.
-- Store long-lived module requirements in `docs/specs/<module>/spec.md`.
+- Store long-lived module requirements in `docs/req/<module>/req.md`.
 - Keep existing brainstorming specs in `docs/superpowers/specs/` and writing
   plans in `docs/superpowers/plans/` as dated historical artifacts.
 - Prompt users to sync requirements after implementation tasks complete, before
@@ -32,7 +32,7 @@ layout wholesale.
 
 - Do not replace or rewrite dated design specs and implementation plans.
 - Do not require the OpenSpec CLI or create an `openspec/` directory.
-- Do not silently edit main specs without user confirmation in the finishing
+- Do not silently edit main requirements documents without user confirmation in the finishing
   workflow.
 - Do not archive old design specs or plans as part of this feature.
 - Do not add third-party dependencies.
@@ -54,18 +54,18 @@ algorithm; it only detects whether this work likely has syncable artifacts and
 presents the choice. If the user chooses to sync, the agent invokes or follows
 `sync-requirements`, then returns to the normal branch-finishing menu.
 
-## Main Spec Format
+## Main Requirements Document Format
 
-Main specs live under module directories:
+Main requirements documents live under module directories:
 
 ```text
-docs/specs/<module>/spec.md
+docs/req/<module>/req.md
 ```
 
-Each spec uses an OpenSpec-like requirement format:
+Each req document uses a PRD-style requirements format, closer to a traditional software requirements specification than an implementation design artifact:
 
 ```markdown
-# requirements-sync Specification
+# requirements-sync Requirements
 
 ## Purpose
 Captures how completed Superpowers work updates durable module requirements.
@@ -117,12 +117,9 @@ superseded the older artifact.
 
 ### 3. Select Target Modules
 
-The skill maps each durable requirement to one or more module specs under
-`docs/specs/<module>/spec.md`.
+The skill maps each durable requirement to one or more module requirements documents under `docs/req/<module>/req.md`.
 
-If the target spec does not exist, the skill creates it with a clear Purpose and
-Requirements section. If a requirement belongs in an existing module, the skill
-reads that module spec before editing it.
+If the target req document does not exist, the skill creates it with a clear Purpose and Requirements section. If a requirement belongs in an existing module requirements document, the skill reads that document before editing it.
 
 If the module boundary is unclear, the skill asks a single multiple-choice
 question showing the plausible module names and their rationale.
@@ -140,7 +137,7 @@ The skill applies requirements by intent rather than copying artifact text.
   it.
 - Renames update headings while preserving existing scenarios that still apply.
 
-The merge must be idempotent. If the target spec already states the same
+The merge must be idempotent. If the target req document already states the same
 requirement or scenario, the skill reports that it was already synchronized
 instead of duplicating it.
 
@@ -148,7 +145,7 @@ instead of duplicating it.
 
 After syncing, the skill reports:
 
-- Which module specs were created or modified.
+- Which module requirements documents were created or modified.
 - Which requirements or scenarios were added, modified, removed, or already in
   sync.
 - Which session-only user requirements were captured.
@@ -161,7 +158,7 @@ environment/base-branch detection:
 
 ```text
 Requirements may have changed during this session. Would you like to sync the
-durable requirements into docs/specs/<module>/spec.md before finishing?
+durable requirements into docs/req/<module>/req.md before finishing?
 
 1. Sync requirements now (recommended)
 2. Skip sync and continue finishing
@@ -178,8 +175,7 @@ unchanged. If the user cancels, no merge/PR/cleanup option is presented.
 
 - If no design spec, plan, commits, or session requirements can be identified,
   report that there is nothing reliable to sync and return to the caller.
-- If a target module spec contains ambiguous or contradictory existing
-  requirements, ask the user before editing.
+- If a target module requirements document contains ambiguous or contradictory existing requirements, ask the user before editing.
 - If file writes fail, stop and report the exact path and failure.
 - If the user declines sync, do not treat it as an error.
 
@@ -190,7 +186,7 @@ and workflow-level verification:
 
 - Verify `skills/sync-requirements/SKILL.md` exists with the expected name and
   trigger description.
-- Verify the skill documents `docs/specs/<module>/spec.md` as the main spec path.
+- Verify the skill documents `docs/req/<module>/req.md` as the main requirements document path.
 - Verify the skill requires session-added user requirements to be considered.
 - Verify `finishing-a-development-branch` prompts for requirement sync before its
   existing branch completion options.
@@ -200,11 +196,8 @@ No runtime OpenSpec dependency is required.
 
 ## Open Questions Resolved
 
-- Main spec directory: `docs/specs/<module>/spec.md`.
+- Main requirements document path: `docs/req/<module>/req.md`.
 - New skill name: `sync-requirements`.
 - Dated brainstorming specs and writing plans remain in their current locations.
 - Session-only requirements are part of the sync input and should be summarized
   explicitly.
-
-
-
