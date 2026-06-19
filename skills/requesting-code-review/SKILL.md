@@ -34,22 +34,19 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code review subagent:**
 
-Use Task tool with `subagent_type: "general-purpose"` and the filled template content as the prompt:
-```typescript
-Task({
-  subagent_type: "general-purpose",
-  description: "Review {DESCRIPTION}",
-  prompt: <filled template from code-reviewer.md>
-})
+Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md):
+
+```
+Subagent (general-purpose): <filled template from code-reviewer.md>
 ```
 
 **Placeholders:**
 
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
+- `[WHAT_WAS_IMPLEMENTED]` - What you just built
+- `[PLAN_OR_REQUIREMENTS]` - What it should do
+- `[BASE_SHA]` - Starting commit
+- `[HEAD_SHA]` - Ending commit
+- `[DESCRIPTION]` - Brief summary
 
 **3. Act on feedback:**
 
@@ -123,4 +120,4 @@ You: [Fix progress indicators]
 - Show code/tests that prove it works
 - Request clarification
 
-See template at: requesting-code-review/code-reviewer.md
+See template at: [code-reviewer.md](code-reviewer.md)

@@ -1,5 +1,40 @@
 # Release Notes
 
+## v1.7.0 (2026-06-19)
+
+### Added
+- **subagent-driven-development** rewritten review system — single task reviewer (spec + quality), file-based artifacts, progress ledger, pre-flight plan review
+- **subagent-driven-development** new scripts: `sdd-workspace`, `task-brief`, `review-package` for file-based diff/brief handling
+- **writing-plans** Global Constraints block and per-task Interfaces block
+- **writing-plans** Task Right-Sizing guidance
+- **brainstorming** per-session key authentication for visual companion
+- **brainstorming** auto-reconnect with exponential backoff and tombstone overlay
+- **brainstorming** just-in-time companion offering (not upfront)
+- **brainstorming** `--open` flag for auto-opening browser after consent
+- **brainstorming** `--idle-timeout-minutes` flag (default 4h, was 30min)
+- **brainstorming** server instance ID for safe stop-server.sh PID verification
+- **skill-authoring-tdd** "Match the Form to the Failure" decision table from upstream writing-skills
+- **skill-authoring-tdd** "Micro-Test Wording Before Full Scenarios" methodology
+
+### Changed
+- **subagent-driven-development** merged spec-reviewer + code-quality-reviewer into single task-reviewer-prompt.md
+- **subagent-driven-development** model selection now requires explicit model per dispatch
+- **subagent-driven-development** controller cannot pre-judge or suppress reviewer findings
+- **finishing-a-development-branch** forge-neutral PR creation (no hardcoded `gh pr create`)
+- **using-git-worktrees** removed legacy global worktree directory (`~/.config/superpowers/worktrees/`)
+- **using-git-worktrees** renumbered steps (Step 3→2, Step 4→3)
+- **skill-authoring-tdd** CSO renamed to SDO (Skill Discovery Optimization)
+- Vendor-neutral language across all skills, adapted for Letta Code conventions
+
+### Fixed
+- **brainstorming** file server sandboxing (symlinks, dotfiles, path traversal)
+- **systematic-debugging** "Ultrathink" → "Ultra-think" hyphenation
+- **test-driven-development** `@testing-anti-patterns.md` → proper markdown link (Letta Code doesn't support `@` syntax)
+
+### Removed
+- **subagent-driven-development** `spec-reviewer-prompt.md` and `code-quality-reviewer-prompt.md` (merged into `task-reviewer-prompt.md`)
+- **using-git-worktrees** legacy `~/.config/superpowers/worktrees/` global directory support
+
 ## v1.6.0 (2026-05-22)
 
 ### Added

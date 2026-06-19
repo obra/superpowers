@@ -157,15 +157,8 @@ git branch -d <feature-branch>
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR (add --milestone if a milestone exists for this work)
-gh pr create --title "<title>" --milestone "<milestone-name>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
-
-## Test Plan
-- [ ] <verification steps>
-EOF
-)"
+# Create PR using your forge tooling (e.g., `gh pr create`, `glab mr create`, or your harness's PR tool)
+# Add --milestone if a milestone exists for this work
 ```
 
 **If no milestone exists** for this work, omit the `--milestone` flag.
@@ -252,14 +245,8 @@ git checkout -b <new-branch-name>
 
 # Then follow standard Option 2 flow
 git push -u origin <new-branch-name>
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
 
-## Test Plan
-- [ ] <verification steps>
-EOF
-)"
+# Create PR using your forge tooling (e.g., `gh pr create`, `glab mr create`, or your harness's PR tool)
 ```
 
 **Do NOT clean up worktree** — same as standard Option 2.
@@ -296,12 +283,12 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.letta/worktrees/`, `.worktrees/`, `worktrees/`, or `~/.config/letta-superpowers/worktrees/`:** Superpowers created this worktree — we own cleanup.
+**If worktree path is under `.worktrees/`, `worktrees/`, or `.letta/worktrees/`:** Superpowers created this worktree — we own cleanup.
 
 ```bash
 # Check if worktree is under a superpowers-managed directory
 case "$WORKTREE_PATH" in
-  */.letta/worktrees/*|*/.worktrees/*|*/worktrees/*|*/.config/letta-superpowers/worktrees/*)
+  */.worktrees/*|*/worktrees/*|*/.letta/worktrees/*)
     echo "superpowers-owned"
     ;;
   *)
@@ -367,7 +354,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 **Cleaning up harness-owned worktrees**
 - **Problem:** Removing a worktree the harness created causes phantom state
-- **Fix:** Only clean up worktrees under `.letta/worktrees/`, `.worktrees/`, `worktrees/`, or `~/.config/letta-superpowers/worktrees/`
+- **Fix:** Only clean up worktrees under `.worktrees/`, `worktrees/`, or `.letta/worktrees/`
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work

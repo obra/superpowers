@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions
 ---
 
 <SUBAGENT-STOP>
@@ -49,9 +49,17 @@ The `--no-verify` flag bypasses the hook. Use deliberately, not habitually.
 
 ## How to Access Skills
 
-**In Letta Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+Never read skill files manually with file tools — always use your platform's skill-loading mechanism so the skill is properly activated.
 
-**Tool mapping reference:** See `references/letta-code-tools.md` for Letta Code-specific tool names and syntax.
+**In Letta Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly.
+
+**In Copilot:** Use the `@skills` command to load a skill.
+
+**In Gemini CLI:** Use the `/skill` command to load a skill.
+
+**In Codex:** Skills load natively. Follow the instructions presented when a skill activates.
+
+Skills speak in actions rather than naming any one runtime's tools. For per-platform tool equivalents, see the references in `../using-superpowers/references/`.
 
 # Using Skills
 
@@ -62,30 +70,30 @@ The `--no-verify` flag bypasses the hook. Use deliberately, not habitually.
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
-    "About to EnterPlanMode?" [shape=doublecircle];
+    "About to enter plan mode?" [shape=doublecircle];
     "Already brainstormed?" [shape=diamond];
     "Invoke brainstorming skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
+    "Invoke the skill" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
+    "Create a todo per item" [shape=box];
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
-    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "About to enter plan mode?" -> "Already brainstormed?";
     "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
     "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Invoke the skill" [label="yes, even 1%"];
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Invoke the skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Create a todo per item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
+    "Create a todo per item" -> "Follow skill exactly";
 }
 ```
 
@@ -112,12 +120,12 @@ These thoughts mean STOP—you're rationalizing:
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+1. **Process skills first** (brainstorming, systematic-debugging) - these determine HOW to approach the task
 2. **Implementation skills second** (test-driven-development (TDD), systematic-debugging) - these guide execution
 3. **Completion skills last** (finishing-a-development-branch, releasing) - these finalize work
 
 "Let's build X" → brainstorming first, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+"Fix this bug" → systematic-debugging first, then domain-specific skills.
 "Done with feature" → finishing-a-development-branch, optionally releasing.
 
 ## Skill Decision Ladder
@@ -293,7 +301,7 @@ WRONG path:
 ```
 Scenario A: Parallel Letta subagents
 User: "Run two explore subagents to search codebase"
-→ Use /dispatching-parallel-agents (Task tool with subagent_type)
+→ Use /dispatching-parallel-agents (subagent dispatch)
 
 Scenario B: External coding tools
 User: "Get a second opinion from Claude CLI"
@@ -314,7 +322,7 @@ User: "Get a second opinion from Claude CLI"
 
 ## Skill Types
 
-**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+**Rigid** (TDD, systematic-debugging): Follow exactly. Don't adapt away discipline.
 
 **Flexible** (patterns): Adapt principles to context.
 

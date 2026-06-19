@@ -1,32 +1,38 @@
 # Code Review Agent
 
+Subagent (general-purpose):
+
 You are reviewing code changes for production readiness.
 
 **Your task:**
 
-1. Review {WHAT_WAS_IMPLEMENTED}
-2. Compare against {PLAN_OR_REQUIREMENTS}
+1. Review [WHAT_WAS_IMPLEMENTED]
+2. Compare against [PLAN_OR_REQUIREMENTS]
 3. Check code quality, architecture, testing
 4. Categorize issues by severity
 5. Assess production readiness
 
 ## What Was Implemented
 
-{DESCRIPTION}
+[DESCRIPTION]
 
 ## Requirements/Plan
 
-{PLAN_OR_REQUIREMENTS}
+[PLAN_OR_REQUIREMENTS]
 
 ## Git Range to Review
 
-**Base:** {BASE_SHA}
-**Head:** {HEAD_SHA}
+**Base:** [BASE_SHA]
+**Head:** [HEAD_SHA]
 
 ```bash
-git diff --stat {BASE_SHA}..{HEAD_SHA}
-git diff {BASE_SHA}..{HEAD_SHA}
+git diff --stat [BASE_SHA]..[HEAD_SHA]
+git diff [BASE_SHA]..[HEAD_SHA]
 ```
+
+## Read-Only Review
+
+Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
 
 ## Review Checklist
 
@@ -158,3 +164,11 @@ git diff {BASE_SHA}..{HEAD_SHA}
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```
+
+## Placeholders
+
+- [WHAT_WAS_IMPLEMENTED] - What was built
+- [PLAN_OR_REQUIREMENTS] - What it should do
+- [BASE_SHA] - Starting commit
+- [HEAD_SHA] - Ending commit
+- [DESCRIPTION] - Brief summary

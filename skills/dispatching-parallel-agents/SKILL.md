@@ -69,25 +69,13 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Letta Code (use Task tool with structured params)
-Task({
-  subagent_type: "general-purpose",
-  description: "Fix abort test failures",
-  prompt: "Fix the 3 failing tests in agent-tool-abort.test.ts..."
-});
-Task({
-  subagent_type: "general-purpose",
-  description: "Fix batch completion tests",
-  prompt: "Fix the 2 failing tests in batch-completion-behavior.test.ts..."
-});
-Task({
-  subagent_type: "general-purpose",
-  description: "Fix race condition tests",
-  prompt: "Fix the failing test in tool-approval-race-conditions.test.ts..."
-});
-// All three run concurrently
 ```
+Subagent (general-purpose): "Fix the 3 failing tests in agent-tool-abort.test.ts..."
+Subagent (general-purpose): "Fix the 2 failing tests in batch-completion-behavior.test.ts..."
+Subagent (general-purpose): "Fix the failing test in tool-approval-race-conditions.test.ts..."
+```
+
+Multiple dispatch calls in one response = parallel execution. One per response = sequential.
 
 ### 4. Review and Integrate
 

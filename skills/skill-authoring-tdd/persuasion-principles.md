@@ -39,7 +39,7 @@ LLMs respond to the same persuasion principles as humans. Understanding this psy
 
 - Require announcements: "Announce skill usage"
 - Force explicit choices: "Choose A, B, or C"
-- Use tracking: TodoWrite for checklists
+- Use tracking: task tracking for checklists
 
 **When to use:**
 
@@ -96,8 +96,8 @@ LLMs respond to the same persuasion principles as humans. Understanding this psy
 **Example:**
 
 ```markdown
-✅ Checklists without TodoWrite tracking = steps get skipped. Every time.
-❌ Some people find TodoWrite helpful for checklists.
+✅ Checklists without task tracking = steps get skipped. Every time.
+❌ Some people find task tracking helpful for checklists.
 ```
 
 ### 5. Unity

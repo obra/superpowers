@@ -81,14 +81,7 @@ Follow this priority order. Explicit user preference always beats observed files
    ```
    If found, use it (backward compatibility). If both exist, `.worktrees` wins.
 
-4. **Check for an existing global directory:**
-   ```bash
-   project=$(basename "$(git rev-parse --show-toplevel)")
-   ls -d ~/.config/letta-superpowers/worktrees/$project 2>/dev/null
-   ```
-   If found, use it (backward compatibility with legacy global path).
-
-5. **If there is no other guidance available**, default to `.letta/worktrees/` at the project root.
+4. **If there is no other guidance available**, default to `.letta/worktrees/` at the project root.
 
 #### Safety Verification (project-local directories only)
 
@@ -102,17 +95,13 @@ git check-ignore -q .letta/worktrees 2>/dev/null || git check-ignore -q .worktre
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
-Global directories (`~/.config/letta-superpowers/worktrees/`) need no verification.
 
 #### Create the Worktree
 
 ```bash
-project=$(basename "$(git rev-parse --show-toplevel)")
-
 # Determine path based on chosen location
 # For .letta/worktrees/: path=".letta/worktrees/$BRANCH_NAME"
 # For legacy .worktrees/: path=".worktrees/$BRANCH_NAME"
-# For global: path="~/.config/letta-superpowers/worktrees/$project/$BRANCH_NAME"
 
 git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
@@ -173,7 +162,6 @@ Ready to implement <feature-name>
 | `worktrees/` exists | Use it (legacy, verify ignored) |
 | Both `.letta/worktrees/` and `.worktrees/` exist | Use `.letta/worktrees/` |
 | Neither exists | Check instruction file, then default `.letta/worktrees/` |
-| Global path exists | Use it (backward compat) |
 | Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
@@ -199,7 +187,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing `.letta/worktrees/` > legacy `.worktrees/` > global legacy > instruction file > default `.letta/worktrees/`
+- **Fix:** Follow priority: explicit instructions > existing project-local directory > default `.letta/worktrees/`
 
 ### Proceeding with failing tests
 
@@ -237,7 +225,7 @@ Ready to implement auth feature
 **Always:**
 - Run Step 0 detection first
 - Prefer native tools over git fallback
-- Follow directory priority: existing `.letta/worktrees/` > legacy `.worktrees/` > global legacy > instruction file > default `.letta/worktrees/`
+- Follow directory priority: explicit instructions > existing project-local directory > default `.letta/worktrees/`
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
