@@ -3,13 +3,17 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to implement a plan, skip this skill — your job is to execute, not to write plans.
+</SUBAGENT-STOP>
+
 # Writing Plans
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer is skilled but unfamiliar with this codebase's conventions and patterns. Spell out conventions explicitly. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Include the test code in full — don't just say "write tests." Show the assertion, the setup, and the expected result.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -213,3 +217,15 @@ After saving the plan, offer execution choice:
 
 - **REQUIRED SUB-SKILL:** Use executing-plans
 - Batch execution with checkpoints for review
+
+## Integration
+
+**Called by:**
+- brainstorming - terminal state
+- using-superpowers - decision ladder step 4
+
+**Requires:**
+- using-git-worktrees - should be run in a worktree — set up before writing plans
+
+**Followed by:**
+- subagent-driven-development or executing-plans - implement the plan

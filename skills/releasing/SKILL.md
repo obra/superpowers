@@ -64,7 +64,7 @@ Commit or stash changes before releasing.
 
 Stop. Don't proceed.
 
-### 2. Tests Pass (if applicable)
+### 2. Tests Pass (skip this check only if the project has no test suite — no test runner configured, no test directory)
 
 ```bash
 # Project-specific

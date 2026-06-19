@@ -3,6 +3,10 @@ name: merge-conflict-resolution
 description: Use when git merge produces conflict markers — classifies conflicts by type, applies per-type resolution strategies, and verifies the result
 ---
 
+<SUBAGENT-STOP>
+If you were dispatched as a subagent and encounter merge conflicts, report BLOCKED status to your controller — do not attempt to resolve merge conflicts independently.
+</SUBAGENT-STOP>
+
 # Merge Conflict Resolution
 
 ## Overview
@@ -85,7 +89,7 @@ git diff --name-only --diff-filter=U
 
 If conflicts remain, continue resolving them before proceeding.
 
-Run the relevant tests after staging the resolved file(s). If tests fail, return to **Step 2** and re-check whether the issue is actually a **semantic conflict**.
+Run the relevant tests after staging the resolved file(s). If tests fail, return to **Step 2** and re-check whether the issue is actually a **semantic conflict**. A semantic conflict = the merge is textually clean but behaviorally wrong (e.g., a renamed function call that the merge didn't catch).
 
 ### Step 4: Complete the Merge
 

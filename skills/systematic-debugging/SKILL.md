@@ -3,6 +3,10 @@ name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
 ---
 
+<SUBAGENT-STOP>
+If you were dispatched as a subagent and encounter a bug, report BLOCKED status with the error details — your controller will decide whether to debug or reassign.
+</SUBAGENT-STOP>
+
 # Systematic Debugging
 
 ## Overview
@@ -116,7 +120,7 @@ You MUST complete each phase before proceeding to the next.
 
    **WHEN error is deep in call stack:**
 
-   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
+   See `root-cause-tracing.md` in this directory (a step-by-step technique for tracing bad values backward through the call stack) for the complete backward tracing technique.
 
    **Quick version:**
    - Where does bad value originate?

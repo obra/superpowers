@@ -3,6 +3,10 @@ name: skill-authoring-tdd
 description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
 ---
 
+<SUBAGENT-STOP>
+If you were dispatched as a subagent, skip this skill — skill authoring is a meta-task done by the controller.
+</SUBAGENT-STOP>
+
 # Skill Authoring TDD
 
 ## Overview
@@ -174,14 +178,8 @@ When the description was changed to just "Use when executing implementation plan
 # ❌ BAD: Summarizes workflow - agents may follow this instead of reading skill
 description: Use when executing plans - dispatches subagent per task with code review between tasks
 
-# ❌ BAD: Too much process detail
-description: Use for TDD - write test first, watch it fail, write minimal code, refactor
-
 # ✅ GOOD: Just triggering conditions, no workflow summary
 description: Use when executing implementation plans with independent tasks in the current session
-
-# ✅ GOOD: Triggering conditions only
-description: Use when implementing any feature or bugfix, before writing implementation code
 ```
 
 **Content:**
@@ -192,23 +190,6 @@ description: Use when implementing any feature or bugfix, before writing impleme
 - If skill is technology-specific, make that explicit in the trigger
 - Write in third person (injected into system prompt)
 - **NEVER summarize the skill's process or workflow**
-
-```yaml
-# ❌ BAD: Too abstract, vague, doesn't include when to use
-description: For async testing
-
-# ❌ BAD: First person
-description: I can help you with async tests when they're flaky
-
-# ❌ BAD: Mentions technology but skill isn't specific to it
-description: Use when tests use setTimeout/sleep and are flaky
-
-# ✅ GOOD: Starts with "Use when", describes problem, no workflow
-description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
-
-# ✅ GOOD: Technology-specific skill with explicit trigger
-description: Use when using React Router and handling authentication redirects
-```
 
 ### 2. Keyword Coverage
 

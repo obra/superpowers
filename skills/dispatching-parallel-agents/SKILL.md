@@ -191,3 +191,15 @@ From debugging session (2025-10-03):
 - All investigations completed concurrently
 - All fixes integrated successfully
 - Zero conflicts between agent changes
+
+## Integration
+
+**Called by:**
+- systematic-debugging - parallel investigation of independent failures
+- using-superpowers - decision ladder step 6
+
+**Pairs with:**
+- systematic-debugging - investigation results feed back
+
+**Followed by:**
+- Return to calling skill with results

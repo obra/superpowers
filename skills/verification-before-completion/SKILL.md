@@ -19,7 +19,7 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 ```
 
-If you haven't run the verification command in this message, you cannot claim it passes.
+If you haven't run the verification command in the current response you're composing (if you ran it 3 messages ago, that's stale — run it again), you cannot claim it passes.
 
 ## The Gate Function
 
@@ -145,3 +145,10 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Integration
+
+**Called by:**
+- Every skill that makes a completion claim — TDD, systematic-debugging, executing-plans, subagent-driven-development, finishing-a-development-branch, releasing, merge-conflict-resolution
+
+This is a cross-cutting discipline, not a workflow step — apply it whenever you're about to claim something is done.

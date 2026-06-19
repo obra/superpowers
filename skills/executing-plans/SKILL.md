@@ -3,6 +3,10 @@ name: executing-plans
 description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 ---
 
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to implement a specific task, skip this skill — follow your dispatch instructions instead.
+</SUBAGENT-STOP>
+
 # Executing Plans
 
 ## Overview

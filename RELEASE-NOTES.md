@@ -1,5 +1,34 @@
 # Release Notes
 
+## v1.7.1 (2026-06-19)
+
+### Changed
+- **using-superpowers** consolidated 5 navigation systems (Skill Priority, Decision Ladder, Canonical Sequence, Which Skill table, Built-in Overlap examples) into a single Decision Ladder with disambiguations and a compact overlap table — 130 lines removed
+- **using-superpowers** removed EXTREMELY-IMPORTANT block; replaced with clear Skill Invocation Rule
+- **using-superpowers** defined "your human partner" = the user in the current conversation
+- **using-superpowers** fixed systematic-debugging appearing in both Process and Implementation skill lists
+- **using-superpowers** added verification-before-completion, receiving-code-review, and skill-authoring-tdd to Decision Ladder
+- **subagent-driven-development** reconciled continuous execution vs. pre-flight review contradiction — exceptions now explicitly listed
+- **subagent-driven-development** clarified "changes" definition for re-dispatch (different model, context, instructions, or broken-down task)
+- **subagent-driven-development** clarified DONE_WITH_CONCERNS boundary (correctness/scope vs. observations)
+- **writing-plans** replaced "questionable taste" language with "unfamiliar with this codebase's conventions and patterns"
+- **test-driven-development** removed "Why Order Matters" section (redundant with Common Rationalizations table) — 52 lines removed
+- **test-driven-development** closed exceptions loophole — skipping TDD now requires EXPLICIT user approval
+- **test-driven-development** defined when mocks are unavoidable (external services, side effects, slow dependencies)
+- **skill-authoring-tdd** reduced SDO examples from 6 to 2 — same principles, less bloat
+
+### Added
+- **SUBAGENT-STOP tags** added to 8 skills that lacked them: executing-plans, systematic-debugging, merge-conflict-resolution, writing-plans, brainstorming, using-git-worktrees, skill-authoring-tdd, finishing-a-development-branch
+- **Integration sections** added to 6 skills: dispatching-parallel-agents, brainstorming, verification-before-completion, receiving-code-review, test-driven-development, writing-plans
+
+### Fixed
+- **releasing** clarified "Tests Pass (if applicable)" — only skip if project has no test suite
+- **requesting-code-review** clarified BASE_SHA comment (HEAD~1 vs origin/main)
+- **merge-conflict-resolution** defined semantic conflict (textually clean but behaviorally wrong)
+- **verification-before-completion** clarified "in this message" — stale if run 3 messages ago
+- **systematic-debugging** added context for root-cause-tracing.md reference
+- **receiving-code-review** clarified gratitude vs. factual acknowledgment boundary
+
 ## v1.7.0 (2026-06-19)
 
 ### Added

@@ -148,7 +148,7 @@ When feedback IS correct:
 ❌ "Great point!"
 ❌ "Thanks for catching that!"
 ❌ "Thanks for [anything]"
-❌ ANY gratitude expression
+❌ ANY gratitude expression (Gratitude = expressions of thanks, appreciation, or praise ('Thanks', 'Great point', 'Appreciate it'). Factual acknowledgments ('Noted', 'OK', 'Understood') are fine.)
 ```
 
 **Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
@@ -224,3 +224,12 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## Integration
+
+**Called by:**
+- requesting-code-review - step 4: when receiving external review feedback
+
+**Followed by:**
+- verification-before-completion - verify fixes work
+- finishing-a-development-branch - if all feedback addressed

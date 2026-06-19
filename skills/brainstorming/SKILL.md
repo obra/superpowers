@@ -3,6 +3,10 @@ name: brainstorming
 description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
 ---
 
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill — brainstorming is done by the controller before dispatch.
+</SUBAGENT-STOP>
+
 # Brainstorming Ideas Into Designs
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
@@ -156,3 +160,14 @@ A question about a UI topic is not automatically a visual question. "What does p
 
 If they agree to the companion, read the detailed guide before proceeding:
 `skills/brainstorming/visual-companion.md`
+
+## Integration
+
+**Called by:**
+- using-superpowers - decision ladder step 2
+
+**Followed by:**
+- using-git-worktrees - set up isolated workspace
+- writing-plans - create implementation plan
+
+**Hard gate:** Must complete before any implementation skill
