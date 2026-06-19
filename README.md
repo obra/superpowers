@@ -35,7 +35,7 @@ cp -r /tmp/superpowers-letta/skills/* .skills/
 
 3. **writing-plans** - Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Dispatches fresh subagent per task with two-stage review, or executes in batches with human checkpoints.
+4. **subagent-driven-development** or **executing-plans** - Dispatches fresh subagent per task with single reviewer and file-based artifacts, or executes in batches with human checkpoints.
 
 5. **test-driven-development** - Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit.
 
@@ -61,7 +61,7 @@ cp -r /tmp/superpowers-letta/skills/* .skills/
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review
+- **subagent-driven-development** - Per-task dispatch with single reviewer, file-based artifacts, and progress ledger
 - **releasing** - Create releases with pre-flight checklist and version management
 
 ### Meta
@@ -82,8 +82,11 @@ This Letta Code adaptation includes:
 - Task tool syntax updated for Letta Code's `Task({ subagent_type, description, prompt })` format
 - Removed platform-specific files (hooks, plugin configs)
 - Updated tool mapping references (see `skills/using-superpowers/references/letta-code-tools.md`)
-- Visual Companion adapted for Letta Code
+- Visual Companion adapted for Letta Code with per-session key auth, auto-reconnect, and just-in-time offering
 - Code review skill uses general-purpose subagent type (no custom agent definition needed)
+- SDD review system uses single reviewer with file-based artifacts and progress ledger
+- Writing-plans includes Global Constraints, per-task Interfaces, and Task Right-Sizing
+- Forge-neutral language across all skills (adapted for Letta Code conventions)
 
 ## Contributing
 
