@@ -4,13 +4,23 @@
 # call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
 # tasks intact.
 #
-# Usage: review-package BASE HEAD [OUTFILE]
+# Usage: review-package [-C DIR] BASE HEAD [OUTFILE]
 # Default OUTFILE: <repo-root>/.superpowers/sdd/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail
 
+# Optional leading "-C DIR": run as if invoked from DIR, so callers whose
+# cwd isn't the repo don't need a `cd DIR ; review-package ...` compound.
+# (That compound can't be allowlisted by harnesses because BASE and the
+#  worktree path vary on every run.)
+if [ "${1:-}" = "-C" ]; then
+  [ -d "${2:-}" ] || { echo "bad -C dir: ${2:-}" >&2; exit 2; }
+  cd "$2"
+  shift 2
+fi
+
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-  echo "usage: review-package BASE HEAD [OUTFILE]" >&2
+  echo "usage: review-package [-C DIR] BASE HEAD [OUTFILE]" >&2
   exit 2
 fi
 
