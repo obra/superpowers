@@ -5,15 +5,15 @@
 Superpowers currently treats brainstorming specs and writing-plans documents as
 dated execution artifacts. They are useful while a task is being designed and
 implemented, but once the work completes, the durable requirements learned during
-the session are not folded into a long-lived module requirements document. This makes it
-easy for future agents to miss decisions that were made during implementation,
-especially when the user added requirements after the original spec and plan were
-written.
+the session are not folded into a long-lived module requirements document. This
+makes it easy for future agents to miss decisions that were made during
+implementation, especially when the user added requirements after the original
+spec and plan were written.
 
 OpenSpec has a similar artifact lifecycle, but its sync workflow gives agents a
-way to merge change-local specs into long-lived module requirements documents. Superpowers should
-gain the same durable knowledge path without adopting OpenSpec's CLI or directory
-layout wholesale.
+way to merge change-local specs into long-lived module requirements documents.
+Superpowers should gain the same durable knowledge path without adopting
+OpenSpec's CLI or directory layout wholesale.
 
 ## Goals
 
@@ -32,8 +32,8 @@ layout wholesale.
 
 - Do not replace or rewrite dated design specs and implementation plans.
 - Do not require the OpenSpec CLI or create an `openspec/` directory.
-- Do not silently edit main requirements documents without user confirmation in the finishing
-  workflow.
+- Do not silently edit main requirements documents without user confirmation in
+  the finishing workflow.
 - Do not archive old design specs or plans as part of this feature.
 - Do not add third-party dependencies.
 
@@ -62,7 +62,8 @@ Main requirements documents live under module directories:
 docs/req/<module>/req.md
 ```
 
-Each req document uses a PRD-style requirements format, closer to a traditional software requirements specification than an implementation design artifact:
+Each req document uses a PRD-style requirements format, closer to a traditional
+software requirements specification than an implementation design artifact:
 
 ```markdown
 # requirements-sync Requirements
@@ -73,7 +74,8 @@ Captures how completed Superpowers work updates durable module requirements.
 ## Requirements
 
 ### Requirement: Requirement Sync Prompt
-The system SHALL ask whether to sync durable requirements before finishing a completed branch.
+The system SHALL ask whether to sync durable requirements before finishing a
+completed branch.
 
 #### Scenario: Completed implementation has syncable requirements
 - **WHEN** implementation tasks are complete and verification has passed
@@ -83,6 +85,32 @@ The system SHALL ask whether to sync durable requirements before finishing a com
 Module names should be stable, lowercase, and hyphen-separated. The sync skill
 may infer a module from the work, but if multiple modules are plausible or the
 work spans more than one module, it must ask the user rather than guessing.
+
+## Requirements Control Model
+
+OpenSpec does not rely on templates alone to control final spec output. Its
+templates provide a starting shape, while schema instructions, conventions,
+parsers, validators, and workflow skills together define what good output means.
+Superpowers should copy that layered control model for requirements documents.
+
+The `sync-requirements` feature should therefore include:
+
+- A reusable authoring convention for `docs/req/<module>/req.md`, covering
+  Purpose, Requirements, SHALL/MUST language, `### Requirement:` headings,
+  `#### Scenario:` headings, and scenario bullets using **GIVEN** when useful,
+  **WHEN**, **THEN**, and **AND** for additional conditions or outcomes.
+- A skill workflow that tells the agent how to extract, classify, merge, and
+  report requirements. The example req skeleton is not enough.
+- Static validation or tests that check structural invariants in the skill and
+  docs: the canonical path, requirement/scenario heading formats, normative
+  SHALL/MUST language, and the instruction to consider session-only user
+  requirements.
+- Finishing-flow integration that prompts for sync but delegates the actual
+  convention-aware merge to `sync-requirements`.
+
+This keeps the implementation from becoming a template-only generator. The
+template-like example is documentation; the behavior is controlled by the skill
+instructions and testable conventions.
 
 ## `sync-requirements` Workflow
 
@@ -117,9 +145,12 @@ superseded the older artifact.
 
 ### 3. Select Target Modules
 
-The skill maps each durable requirement to one or more module requirements documents under `docs/req/<module>/req.md`.
+The skill maps each durable requirement to one or more module requirements
+documents under `docs/req/<module>/req.md`.
 
-If the target req document does not exist, the skill creates it with a clear Purpose and Requirements section. If a requirement belongs in an existing module requirements document, the skill reads that document before editing it.
+If the target req document does not exist, the skill creates it with a clear
+Purpose and Requirements section. If a requirement belongs in an existing module
+requirements document, the skill reads that document before editing it.
 
 If the module boundary is unclear, the skill asks a single multiple-choice
 question showing the plausible module names and their rationale.
@@ -136,6 +167,8 @@ The skill applies requirements by intent rather than copying artifact text.
 - Removed behavior is deleted only when the current work explicitly deprecated
   it.
 - Renames update headings while preserving existing scenarios that still apply.
+- Scenario steps use **WHEN** and **THEN** at minimum, **GIVEN** only when an
+  initial state matters, and **AND** for extra conditions or outcomes.
 
 The merge must be idempotent. If the target req document already states the same
 requirement or scenario, the skill reports that it was already synchronized
@@ -175,7 +208,8 @@ unchanged. If the user cancels, no merge/PR/cleanup option is presented.
 
 - If no design spec, plan, commits, or session requirements can be identified,
   report that there is nothing reliable to sync and return to the caller.
-- If a target module requirements document contains ambiguous or contradictory existing requirements, ask the user before editing.
+- If a target module requirements document contains ambiguous or contradictory
+  existing requirements, ask the user before editing.
 - If file writes fail, stop and report the exact path and failure.
 - If the user declines sync, do not treat it as an error.
 
@@ -186,8 +220,12 @@ and workflow-level verification:
 
 - Verify `skills/sync-requirements/SKILL.md` exists with the expected name and
   trigger description.
-- Verify the skill documents `docs/req/<module>/req.md` as the main requirements document path.
+- Verify the skill documents `docs/req/<module>/req.md` as the main requirements
+  document path.
 - Verify the skill requires session-added user requirements to be considered.
+- Verify the skill defines requirement authoring conventions beyond a file
+  template, including SHALL/MUST, requirement headings, scenario headings, and
+  GIVEN/WHEN/THEN/AND usage.
 - Verify `finishing-a-development-branch` prompts for requirement sync before its
   existing branch completion options.
 - Verify README workflow documentation includes the new requirement sync step.
