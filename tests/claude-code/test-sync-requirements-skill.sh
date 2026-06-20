@@ -86,6 +86,15 @@ if [ -f "$SYNC_SKILL" ]; then
     assert_order "$SYNC_SKILL" 'Select Target Modules' 'Merge Intelligently' "skill selects modules before merge"
 fi
 
+assert_contains "$FINISHING_SKILL" '### Step 1.5: Requirement Sync Prompt' "finishing skill has requirement sync step"
+assert_contains "$FINISHING_SKILL" 'Sync requirements now (recommended)' "finishing prompt includes recommended sync option"
+assert_contains "$FINISHING_SKILL" 'Skip sync and continue finishing' "finishing prompt includes skip option"
+assert_contains "$FINISHING_SKILL" 'Cancel finishing' "finishing prompt includes cancel option"
+assert_contains "$FINISHING_SKILL" 'sync-requirements' "finishing skill delegates to sync-requirements"
+assert_contains "$FINISHING_SKILL" 'docs/req/<module>/req.md' "finishing prompt names req path"
+assert_order "$FINISHING_SKILL" '**If tests pass:** Continue to Step 1.5.' '### Step 1.5: Requirement Sync Prompt' "finishing enters sync prompt after tests pass"
+assert_order "$FINISHING_SKILL" '### Step 1.5: Requirement Sync Prompt' '### Step 2: Detect Environment' "sync prompt happens before environment detection"
+
 echo ""
 
 if [ "$failures" -gt 0 ]; then

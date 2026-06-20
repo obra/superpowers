@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Offer requirements sync → Detect environment → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -35,7 +35,33 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 1.5.
+
+### Step 1.5: Requirement Sync Prompt
+
+Before finishing the branch, offer to sync durable requirements learned during
+the session into `docs/req/<module>/req.md`.
+
+Present exactly these 3 options:
+
+```
+Requirements may have changed during this session. Would you like to sync the
+durable requirements into docs/req/<module>/req.md before finishing?
+
+1. Sync requirements now (recommended)
+2. Skip sync and continue finishing
+3. Cancel finishing
+
+Which option?
+```
+
+**If user chooses 1:** Announce: "I'm using the sync-requirements skill to update durable requirements." Use `sync-requirements`, then return to Step 2.
+
+**If user chooses 2:** Continue to Step 2.
+
+**If user chooses 3:** Stop. Do not present merge, PR, keep, or discard options.
+
+**Do not inline the merge algorithm here.** This skill only prompts; `sync-requirements` owns context resolution, durable requirement extraction, module selection, merging, and reporting.
 
 ### Step 2: Detect Environment
 
@@ -196,6 +222,10 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
+**Skipping requirement sync prompt**
+- **Problem:** Durable requirements learned during implementation disappear after branch completion
+- **Fix:** Always offer Step 1.5 after tests pass and before branch finishing choices
+
 **Open-ended questions**
 - **Problem:** "What should I do next?" is ambiguous
 - **Fix:** Present exactly 4 structured options (or 3 for detached HEAD)
@@ -233,6 +263,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 **Always:**
 - Verify tests before offering options
+- Offer requirements sync after tests pass
 - Detect environment before presenting menu
 - Present exactly 4 options (or 3 for detached HEAD)
 - Get typed confirmation for Option 4
