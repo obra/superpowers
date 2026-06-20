@@ -141,6 +141,14 @@ After syncing, report:
 - Which session-only user requirements were captured.
 - Which candidate details were skipped as temporary or non-durable.
 
+## Error Handling
+
+- If no design spec, plan, commits, or session requirements can be identified,
+  report that there is nothing reliable to sync and return to the caller.
+- If a target module requirements document contains ambiguous or contradictory
+  existing requirements, ask the user before editing.
+- If file writes fail, stop and report the exact path and failure.
+
 ## Guardrails
 
 - Do not require the OpenSpec CLI.
