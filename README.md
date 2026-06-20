@@ -122,6 +122,16 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   droid plugin install superpowers@superpowers
   ```
 
+### GitHub Copilot chat in Visual Studio Code (vscode)
+
+* In the copilot chat pane, click the settings icon top-right
+* Click on Plugins and next to "Browse Marketplace" button, click the "+" to add a marketplace
+* Enter `https://github.com/obra/superpowers.git` for the marketplace URL
+* Ensure the `superpowers` plugin is enabled in the plugin list
+* Now you can use the agents and skills in your chat sessions! For example to use the brainstorming skill: `/brainstorming Help me brainstorm how CQRS can fit into my codebase`.
+
+**Detailed docs:** [Configure plugin marketplaces](https://code.visualstudio.com/docs/copilot/customization/agent-plugins#_configure-plugin-marketplaces)
+
 ### Gemini CLI
 
 - Install the extension:
