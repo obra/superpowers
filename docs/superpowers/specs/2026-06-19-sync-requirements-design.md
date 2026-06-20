@@ -80,6 +80,7 @@ completed branch.
 #### Scenario: Completed implementation has syncable requirements
 - **WHEN** implementation tasks are complete and verification has passed
 - **THEN** the agent offers to sync requirements before presenting branch completion choices
+- **BUT** the agent MUST NOT add transient command output to the requirements document
 ```
 
 Module names should be stable, lowercase, and hyphen-separated. The sync skill
@@ -96,15 +97,17 @@ Superpowers should copy that layered control model for requirements documents.
 The `sync-requirements` feature should therefore include:
 
 - A reusable authoring convention for `docs/req/<module>/req.md`, covering
-  Purpose, Requirements, SHALL/MUST language, `### Requirement:` headings,
-  `#### Scenario:` headings, and scenario bullets using **GIVEN** when useful,
-  **WHEN**, **THEN**, and **AND** for additional conditions or outcomes.
+  Purpose, Requirements, SHALL/MUST and SHALL NOT/MUST NOT language,
+  `### Requirement:` headings, `#### Scenario:` headings, and scenario bullets
+  using **GIVEN** when useful, **WHEN**, **THEN**, **AND** for additional
+  conditions or outcomes, and **BUT** for prohibited behavior or negative
+  expectations.
 - A skill workflow that tells the agent how to extract, classify, merge, and
   report requirements. The example req skeleton is not enough.
 - Static validation or tests that check structural invariants in the skill and
   docs: the canonical path, requirement/scenario heading formats, normative
-  SHALL/MUST language, and the instruction to consider session-only user
-  requirements.
+  SHALL/MUST/SHALL NOT/MUST NOT language, and the instruction to consider
+  session-only user requirements.
 - Finishing-flow integration that prompts for sync but delegates the actual
   convention-aware merge to `sync-requirements`.
 
@@ -168,7 +171,11 @@ The skill applies requirements by intent rather than copying artifact text.
   it.
 - Renames update headings while preserving existing scenarios that still apply.
 - Scenario steps use **WHEN** and **THEN** at minimum, **GIVEN** only when an
-  initial state matters, and **AND** for extra conditions or outcomes.
+  initial state matters, **AND** for extra conditions or outcomes, and **BUT**
+  only for prohibited behavior, exceptions, or negative expectations.
+- Normative requirement language includes **SHALL**, **MUST**, **SHALL NOT**, and
+  **MUST NOT**. Negative requirements should use SHALL NOT/MUST NOT rather than
+  weaker prose such as "should avoid" or "does not usually".
 
 The merge must be idempotent. If the target req document already states the same
 requirement or scenario, the skill reports that it was already synchronized
@@ -224,8 +231,8 @@ and workflow-level verification:
   document path.
 - Verify the skill requires session-added user requirements to be considered.
 - Verify the skill defines requirement authoring conventions beyond a file
-  template, including SHALL/MUST, requirement headings, scenario headings, and
-  GIVEN/WHEN/THEN/AND usage.
+  template, including SHALL/MUST/SHALL NOT/MUST NOT, requirement headings,
+  scenario headings, and GIVEN/WHEN/THEN/AND/BUT usage.
 - Verify `finishing-a-development-branch` prompts for requirement sync before its
   existing branch completion options.
 - Verify README workflow documentation includes the new requirement sync step.
