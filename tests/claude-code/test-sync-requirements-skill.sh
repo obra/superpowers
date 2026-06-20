@@ -95,6 +95,11 @@ assert_contains "$FINISHING_SKILL" 'docs/req/<module>/req.md' "finishing prompt 
 assert_order "$FINISHING_SKILL" '**If tests pass:** Continue to Step 1.5.' '### Step 1.5: Requirement Sync Prompt' "finishing enters sync prompt after tests pass"
 assert_order "$FINISHING_SKILL" '### Step 1.5: Requirement Sync Prompt' '### Step 2: Detect Environment' "sync prompt happens before environment detection"
 
+assert_contains "$README_FILE" '**sync-requirements**' "README lists sync-requirements"
+assert_contains "$README_FILE" 'docs/req/<module>/req.md' "README documents req path"
+assert_order "$README_FILE" '**requesting-code-review**' '**sync-requirements**' "README places sync before finishing in workflow"
+assert_order "$README_FILE" '**sync-requirements**' '**finishing-a-development-branch**' "README places finishing after sync"
+
 echo ""
 
 if [ "$failures" -gt 0 ]; then

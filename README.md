@@ -213,7 +213,9 @@ The Pi package loads the Superpowers skills and a small extension that injects t
 
 6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+7. **sync-requirements** - Activates when tasks complete and durable requirements should be preserved. Merges specs, plans, commits, reports, and session-only user requirements into `docs/req/<module>/req.md`.
+
+8. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, offers requirement sync, presents options (merge/PR/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -237,6 +239,7 @@ The Pi package loads the Superpowers skills and a small extension that injects t
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
+- **sync-requirements** - Durable requirements sync into `docs/req/<module>/req.md`
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Meta**
