@@ -135,6 +135,26 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
+**Exception — discovery sub-steps are not placeholders.** When the architectural decision is already closed in the spec but the exact codebase location wasn't explored during brainstorming, a step may consist of a concrete command plus an explicit output that feeds the next step. This is allowed because nothing is deferred — the *what* and *how* are decided; only the *where* remains to be found at execution time.
+
+A valid discovery sub-step must have:
+1. A concrete, runnable command (`grep`, `ls`, a bounded file read with a line range, etc.)
+2. An explicit output description that names exactly what the next step consumes
+
+Example of an **allowed** discovery sub-step:
+```
+Step 1 — Discovery: locate the 401/403 catch site in the notifier
+  Run: grep -n -E "401|403|UNAUTHORIZED|FORBIDDEN" src/notifier/notifier.service.ts
+  Output: line number of the catch block, passed to Step 2.
+Step 2 — Inject SecurityEventsService at the identified catch site.
+  ...
+```
+
+Example of a **forbidden** placeholder (no command, defers the decision):
+```
+Step 1 — Figure out where to handle 401 errors.   ← no command, no output spec
+```
+
 ## Remember
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
