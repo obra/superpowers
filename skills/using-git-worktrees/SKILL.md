@@ -90,6 +90,11 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 #### Create the Worktree
 
 ```bash
+# Set from the directory you selected above (e.g. ".worktrees" or "worktrees")
+LOCATION="<chosen-location>"
+# Set to the branch name for this task (e.g. "feat-add-login")
+BRANCH_NAME="<chosen-branch-name>"
+
 # Determine path based on chosen location
 path="$LOCATION/$BRANCH_NAME"
 
