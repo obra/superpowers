@@ -1,17 +1,30 @@
 # Codex Tool Mapping
 
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
+Skills speak in actions ("dispatch a subagent", "create a todo", "read a file"). On Codex these resolve to the tools below.
 
-| Skill references | Codex equivalent |
-|-----------------|------------------|
-| `Task` tool (dispatch subagent) | `spawn_agent` (see [Named agent dispatch](#named-agent-dispatch)) |
-| Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
-| Task returns result | `wait` |
-| Task completes automatically | `close_agent` to free slot |
-| `TodoWrite` (task tracking) | `update_plan` |
-| `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
-| `Read`, `Write`, `Edit` (files) | Use your native file tools |
-| `Bash` (run commands) | Use your native shell tools |
+| Action skills request | Codex equivalent |
+|----------------------|------------------|
+| Read a file | `shell` (e.g., `cat`, `head`, `tail`) — Codex reads files via shell |
+| Create / edit / delete a file | `apply_patch` (structured diff for create, update, delete) |
+| Run a shell command | `shell` |
+| Search file contents | `shell` (e.g., `grep`, `rg`) |
+| Find files by name | `shell` (e.g., `find`, `ls`) |
+| Fetch a URL | `shell` with `curl` / `wget` — Codex has no native fetch tool |
+| Search the web | `web_search` (enabled by default; configurable in `config.toml` via the top-level `web_search` setting — `live`, `cached`, or `disabled`) |
+| Invoke a skill | Skills load natively — just follow the instructions |
+| Dispatch a subagent (`Subagent (general-purpose):` template) | `spawn_agent` (see [Subagent dispatch requires multi-agent support](#subagent-dispatch-requires-multi-agent-support)) |
+| Multiple parallel dispatches | Multiple `spawn_agent` calls in one response |
+| Wait for subagent result | `wait_agent` |
+| Free up subagent slot when done | `close_agent` |
+| Task tracking ("create a todo", "mark complete") | `update_plan` |
+
+## Instructions file
+
+When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`** at the project root. Codex also reads `~/.codex/AGENTS.md` for global context, and an `AGENTS.override.md` (in the project tree or `~/.codex/`) takes precedence when present. Codex walks from the project root down to the current working directory, concatenating `AGENTS.md` files it finds along the way, up to `project_doc_max_bytes` (32 KiB by default).
+
+## Personal skills directory
+
+User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
 
 ## Subagent dispatch requires multi-agent support
 
@@ -22,53 +35,12 @@ Add to your Codex config (`~/.codex/config.toml`):
 multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
 
-## Named agent dispatch
-
-Claude Code skills reference named agent types like `superpowers:code-reviewer`.
-Codex does not have a named agent registry — `spawn_agent` creates generic agents
-from built-in roles (`default`, `explorer`, `worker`).
-
-When a skill says to dispatch a named agent type:
-
-1. Find the agent's prompt file (e.g., `agents/code-reviewer.md` or the skill's
-   local prompt template like `code-quality-reviewer-prompt.md`)
-2. Read the prompt content
-3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
-4. Spawn a `worker` agent with the filled content as the `message`
-
-| Skill instruction | Codex equivalent |
-|-------------------|------------------|
-| `Task tool (superpowers:code-reviewer)` | `spawn_agent(agent_type="worker", message=...)` with `code-reviewer.md` content |
-| `Task tool (general-purpose)` with inline prompt | `spawn_agent(message=...)` with the same prompt |
-
-### Message framing
-
-The `message` parameter is user-level input, not a system prompt. Structure it
-for maximum instruction adherence:
-
-```
-Your task is to perform the following. Follow the instructions below exactly.
-
-<agent-instructions>
-[filled prompt content from the agent's .md file]
-</agent-instructions>
-
-Execute this now. Output ONLY the structured response following the format
-specified in the instructions above.
-```
-
-- Use task-delegation framing ("Your task is...") rather than persona framing ("You are...")
-- Wrap instructions in XML tags — the model treats tagged blocks as authoritative
-- End with an explicit execution directive to prevent summarization of the instructions
-
-### When this workaround can be removed
-
-This approach compensates for Codex's plugin system not yet supporting an `agents`
-field in `plugin.json`. When `RawPluginManifest` gains an `agents` field, the
-plugin can symlink to `agents/` (mirroring the existing `skills/` symlink) and
-skills can dispatch named agent types directly.
+Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
+waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The
+`wait` name now belongs to code-mode `exec/wait`, which resumes a yielded exec
+cell by `cell_id`; it is not the spawned-agent result tool.
 
 ## Environment Detection
 
