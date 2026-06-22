@@ -38,13 +38,21 @@ After all tasks complete and verified:
 
 ## When to Stop and Ask for Help
 
-**STOP executing immediately when:**
-- Hit a blocker (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
+**STOP executing only when:**
+- A real blocker exists: missing credential/file/permission, OR ambiguity where the
+  wrong choice would cause real harm (data loss, breaking production, etc.)
+- ALL plan tasks are complete
 
-**Ask for clarification rather than guessing.**
+**NOT a real blocker — keep going, surface in text:**
+- A single failed test: investigate or re-run
+- A subagent returning DONE_WITH_CONCERNS: read the concerns and proceed
+- A minor interpretation ambiguity: pick the most reasonable interpretation,
+  note the assumption in your output, continue
+- Hedging language in your own output: state the uncertainty in prose; keep working
+
+**When you do stop:**
+- Your last line of output MUST be a one-sentence question
+- A bullet inside a summary is not a question
 
 ## When to Revisit Earlier Steps
 
