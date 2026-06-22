@@ -51,16 +51,11 @@ if not plugin_manifest.exists():
 
 manifest = json.loads(plugin_manifest.read_text(encoding="utf-8"))
 assert_equal(manifest.get("name"), plugin.get("name"), "plugin manifest name")
-
-unsupported_manifest_fields = ["hooks"]
-present_unsupported = sorted(
-    field for field in unsupported_manifest_fields if field in manifest
+assert_equal(
+    manifest.get("hooks"),
+    "./hooks/hooks-codex.json",
+    "Codex hooks manifest",
 )
-if present_unsupported:
-    raise AssertionError(
-        "unsupported Codex manifest fields present: "
-        + ", ".join(present_unsupported)
-    )
 
 print("Codex marketplace manifest looks good")
 PY
