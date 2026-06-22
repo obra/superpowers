@@ -12,6 +12,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Fetch a URL | `shell` with `curl` / `wget` — Codex has no native fetch tool |
 | Search the web | `web_search` (enabled by default; configurable in `config.toml` via the top-level `web_search` setting — `live`, `cached`, or `disabled`) |
 | Invoke a skill | Skills load natively — just follow the instructions |
+| Long-running autonomous execution / "take the wheel" | Native goal mode (`/goal` in the Codex UI, or the `create_goal`/`update_goal` tools when exposed). Prefer this for executing saved implementation plans end-to-end. |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `spawn_agent` (see [Subagent dispatch requires multi-agent support](#subagent-dispatch-requires-multi-agent-support)) |
 | Multiple parallel dispatches | Multiple `spawn_agent` calls in one response |
 | Wait for subagent result | `wait_agent` |
@@ -36,6 +37,8 @@ multi_agent = true
 ```
 
 This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+
+If native goal mode is available but spawned-agent tools are not, do not simulate subagents with ad-hoc shell sessions. Use goal mode for the plan and reserve `subagent-driven-development` for Codex sessions that expose `spawn_agent`/`wait_agent`/`close_agent`.
 
 Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
 waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The

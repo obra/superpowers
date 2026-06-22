@@ -58,7 +58,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Execute this plan through the runtime's native goal/autonomous execution mode when available. If no native goal mode is available, use superpowers:subagent-driven-development when subagents are available, otherwise use superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -155,20 +155,14 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, do not force a subagent-vs-inline fork. Pick the best available execution primitive for the current runtime:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+1. **Native goal/autonomous execution:** Prefer this when available. Create a concrete goal from the plan and continue until complete or genuinely blocked.
+2. **Subagent-Driven Development:** Use superpowers:subagent-driven-development when native goal execution is unavailable and subagents are available.
+3. **Inline Execution:** Use superpowers:executing-plans only when neither native goal execution nor subagents are available.
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+Use this handoff when the user has not already asked you to proceed:
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Recommended next step: start native goal execution for this plan. I can create the goal and begin now, or fall back to Superpowers task-by-task execution if this runtime does not expose a goal mode."**
 
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
-
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+If the user already said to proceed, start the best available execution path directly. Do not ask them to choose between subagent-driven and inline execution unless the native goal path is unavailable and the choice materially changes how their environment will run the work.
