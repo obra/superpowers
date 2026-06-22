@@ -188,6 +188,7 @@ You MUST complete each phase before proceeding to the next.
    - Test passes now?
    - No other tests broken?
    - Issue actually resolved?
+   - **If yes — name the class:** Ask "what *category* of bug was this?" Write the smallest named test that would catch a recurrence of that category — not just this instance. Name the test after the root cause (`test_null_session_crashes_auth`, not `test_bug_from_today`). This converts the one-shot fix into a permanent regression net.
 
 4. **If Fix Doesn't Work**
    - STOP
