@@ -7,6 +7,7 @@
           {
             "type": "command",
             "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
+            "commandWindows": "& \"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
             "async": false
           }
         ]
