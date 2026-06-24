@@ -4,7 +4,7 @@ description: Use when starting any conversation - establishes how to find and us
 ---
 
 <SUBAGENT-STOP>
-If you were dispatched as a subagent to execute a specific task, skip this skill.
+If you were dispatched as a subagent to execute a specific task, ignore this skill.
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
@@ -17,7 +17,7 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 ## The Rule
 
-**Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. Even a 1% chance a skill applies means you invoke it to check. If it turns out wrong for the situation, you don't have to use it.
+**Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
 **Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
 
@@ -25,10 +25,10 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 ## Skill Priority
 
-When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are the most common process skills, but the rule holds for any of them.
+When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
 
-- "Let's build X" → brainstorming first, then implementation skills.
-- "Fix this bug" → systematic-debugging first, then domain skills.
+- "Let's build X" → superpowers:brainstorming first, then implementation skills.
+- "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
 
 ## Red Flags
 
@@ -62,4 +62,4 @@ Skills name actions ("dispatch a subagent", "create a todo", "read a file"), not
 
 ## User Instructions
 
-User instructions (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) take precedence over skills, which in turn override default system behavior. But they set WHAT to do, not HOW — "Add X" or "Fix Y" is not permission to skip the workflow a skill prescribes.
+User instructions (CLAUDE.md, AGENTS.md, GEMINI.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
