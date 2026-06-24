@@ -70,6 +70,7 @@ digraph brainstorming {
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
+- **Present questions as plain conversational text — do not use structured-choice tools (e.g. `AskUserQuestion`).** Ask in the chat/terminal interface directly.
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**

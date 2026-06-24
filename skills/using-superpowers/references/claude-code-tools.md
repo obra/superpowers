@@ -19,6 +19,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Multiple parallel dispatches | Multiple `Agent` calls in one response |
 | Task tracking ("create a todo", "mark complete") | `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet`; `TodoWrite` in `claude -p` / Agent SDK unless `CLAUDE_CODE_ENABLE_TASKS=1` is set |
 | Background-process / subagent lifecycle (read output, cancel) | `TaskOutput`, `TaskStop` — these are distinct from the todo tools above and apply to running shells, agents, and remote sessions |
+| **Ask the user a question / present multiple-choice options** | **Plain conversational text in the terminal — do NOT use `AskUserQuestion`.** Skills that say "ask one question at a time" or "prefer multiple choice" mean to type the question/options directly into the chat, not invoke a structured-choice tool. |
 
 ## Instructions file
 
