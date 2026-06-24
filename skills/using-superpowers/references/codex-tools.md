@@ -18,14 +18,6 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Free up subagent slot when done | `close_agent` |
 | Task tracking ("create a todo", "mark complete") | `update_plan` |
 
-## Instructions file
-
-When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`** at the project root. Codex also reads `~/.codex/AGENTS.md` for global context, and an `AGENTS.override.md` (in the project tree or `~/.codex/`) takes precedence when present. Codex walks from the project root down to the current working directory, concatenating `AGENTS.md` files it finds along the way, up to `project_doc_max_bytes` (32 KiB by default).
-
-## Personal skills directory
-
-User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
-
 ## Subagent dispatch requires multi-agent support
 
 Add to your Codex config (`~/.codex/config.toml`):
@@ -36,11 +28,6 @@ multi_agent = true
 ```
 
 This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
-
-Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
-waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The
-`wait` name now belongs to code-mode `exec/wait`, which resumes a yielded exec
-cell by `cell_id`; it is not the spawned-agent result tool.
 
 ## Environment Detection
 
