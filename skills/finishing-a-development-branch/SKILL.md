@@ -125,6 +125,24 @@ git branch -d <feature-branch>
 git push -u origin <feature-branch>
 ```
 
+**Before opening the PR, check for a repository PR template:**
+
+Look for GitHub-supported PR template files (case-insensitive):
+
+```
+pull_request_template.md / pull_request_template.txt
+docs/pull_request_template.md / docs/pull_request_template.txt
+.github/pull_request_template.md / .github/pull_request_template.txt
+PULL_REQUEST_TEMPLATE/*.md / PULL_REQUEST_TEMPLATE/*.txt
+docs/PULL_REQUEST_TEMPLATE/*.md / docs/PULL_REQUEST_TEMPLATE/*.txt
+.github/PULL_REQUEST_TEMPLATE/*.md / .github/PULL_REQUEST_TEMPLATE/*.txt
+```
+
+- **Template found (single):** Read it and use it as the PR body. Fill every required section with real information — no placeholders.
+- **Multiple templates found:** Stop and ask the user which one applies before proceeding.
+- **Required information missing:** Stop and ask the user before opening the PR.
+- **No template found:** Fall back to a generic PR body.
+
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
 #### Option 3: Keep As-Is
@@ -200,6 +218,10 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - **Problem:** "What should I do next?" is ambiguous
 - **Fix:** Present exactly 4 structured options (or 3 for detached HEAD)
 
+**Skipping the PR template check**
+- **Problem:** PR body ignores required fields defined by repository process
+- **Fix:** Always check GitHub PR template locations before drafting the PR body
+
 **Cleaning up worktree for Option 2**
 - **Problem:** Remove worktree user needs for PR iteration
 - **Fix:** Only cleanup for Options 1 and 4
@@ -235,6 +257,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Verify tests before offering options
 - Detect environment before presenting menu
 - Present exactly 4 options (or 3 for detached HEAD)
+- Check for repository PR templates before creating a PR (Option 2)
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 - `cd` to main repo root before worktree removal
