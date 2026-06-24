@@ -51,12 +51,9 @@ These thoughts mean STOP—you're rationalizing:
 
 ## Platform Adaptation
 
-Skills name actions ("dispatch a subagent", "create a todo", "read a file"), not any one runtime's tools. For your harness's tool equivalents and instructions-file conventions, read the matching file:
+If your harness appears here, read its reference file for special instructions:
 
-- Claude Code: `references/claude-code-tools.md`
 - Codex: `references/codex-tools.md`
-- Copilot CLI: `references/copilot-tools.md`
-- Gemini CLI: `references/gemini-tools.md` (also auto-loaded via GEMINI.md)
 - Pi: `references/pi-tools.md`
 - Antigravity: `references/antigravity-tools.md`
 
