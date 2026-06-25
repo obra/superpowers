@@ -1,0 +1,125 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/obra/superpowers.git
+          git fetch --prune origin main
+          git fetch --prune upstream main
+
+          origin_sha="$(git rev-parse origin/main)"
+          upstream_sha="$(git rev-parse upstream/main)"
+
+          {
+            echo "### Upstream sync"
+            echo "- Fork before sync: \`$origin_sha\`"
+            echo "- Upstream: \`$upstream_sha\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if git merge-base --is-ancestor "$upstream_sha" "$origin_sha"; then
+            echo "- Result: already up to date" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git checkout -B upstream-sync origin/main
+
+          if git merge --no-edit upstream/main; then
+            if git push origin HEAD:main; then
+              result_sha="$(git rev-parse HEAD)"
+              echo "- Result: pushed \`$result_sha\` to \`origin/main\`" >> "$GITHUB_STEP_SUMMARY"
+
+              issue_number="$(
+                gh issue list \
+                  --repo "$REPOSITORY" \
+                  --state open \
+                  --search '"Upstream sync requires attention" in:title' \
+                  --json number \
+                  --jq '.[0].number // empty'
+              )"
+              if [[ -n "$issue_number" ]]; then
+                gh issue comment "$issue_number" \
+                  --repo "$REPOSITORY" \
+                  --body "Upstream sync succeeded at commit \`$result_sha\`. Closing this alert."
+                gh issue close "$issue_number" --repo "$REPOSITORY"
+              fi
+              exit 0
+            fi
+
+            issue_body="$(
+              printf '%s\n' \
+                "The scheduled upstream sync merged cleanly but GitHub rejected the push to \`main\`." \
+                "" \
+                "- Fork commit checked: \`$origin_sha\`" \
+                "- Upstream commit checked: \`$upstream_sha\`" \
+                "" \
+                "This usually means \`main\` changed while the workflow was running. Re-run the workflow; do not force-push."
+            )"
+          else
+            conflicts="$(git diff --name-only --diff-filter=U)"
+            git merge --abort
+
+            issue_body="$(
+              printf '%s\n' \
+                "The scheduled sync could not merge \`obra/superpowers:main\` into this fork's \`main\`." \
+                "" \
+                "- Fork commit: \`$origin_sha\`" \
+                "- Upstream commit: \`$upstream_sha\`" \
+                "" \
+                "Conflicting files:" \
+                "\`\`\`" \
+                "$conflicts" \
+                "\`\`\`" \
+                "" \
+                "No changes were pushed. Resolve the merge manually, then re-run this workflow."
+            )"
+          fi
+
+          issue_number="$(
+            gh issue list \
+              --repo "$REPOSITORY" \
+              --state open \
+              --search '"Upstream sync requires attention" in:title' \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+
+          if [[ -n "$issue_number" ]]; then
+            gh issue comment "$issue_number" --repo "$REPOSITORY" --body "$issue_body"
+          else
+            gh issue create \
+              --repo "$REPOSITORY" \
+              --title "Upstream sync requires attention" \
+              --body "$issue_body"
+          fi
+
+          echo "- Result: action required; no changes pushed" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
