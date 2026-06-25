@@ -4,20 +4,8 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 
 | Action skills request | Pi equivalent |
 | --- | --- |
-| Invoke a skill | Pi native skills: load the relevant `SKILL.md` with `read`, or let the human use `/skill:name` |
-| Read a file | `read` |
-| Create a file | `write` |
-| Edit a file | `edit` |
-| Run a shell command | `bash` |
-| Search file contents | `grep` when active; otherwise `bash` with `rg`/`grep` |
-| Find files by name | `find` or `bash` with shell globs |
-| List files and subdirectories | `ls` when active; otherwise `bash` with `ls` |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | Use an installed subagent tool such as `subagent` from `pi-subagents` if available |
 | Task tracking ("create a todo", "mark complete") | Use an installed todo/task tool if available, otherwise track tasks in the plan or `TODO.md` |
-
-## Skills
-
-Pi discovers skills from configured skill directories and installed Pi packages. A Superpowers Pi package should expose `skills/` through its `pi.skills` manifest entry. Pi does not expose Claude Code's `Skill` tool, but the agent should still follow the Superpowers rule: when a skill applies, load and follow it before responding.
 
 ## Subagents
 
