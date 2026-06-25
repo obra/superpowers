@@ -119,9 +119,13 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
+Match the repository's commit message style. Check project instructions and
+recent commits first; only use a Conventional Commit prefix when the project
+already uses that style.
+
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git commit -m "add specific feature"
 ```
 ````
 
@@ -139,6 +143,8 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
 - Exact commands with expected output
+- Commit commands must match the project's existing commit style, not this
+  skill's examples
 - DRY, YAGNI, TDD, frequent commits
 
 ## Self-Review
