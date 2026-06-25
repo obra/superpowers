@@ -74,13 +74,6 @@ On Windows, the script auto-detects and switches to foreground mode (which block
 scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
-**Gemini CLI:**
-```bash
-# Use --foreground and set is_background: true on your shell tool call
-# so the process survives across turns
-scripts/start-server.sh --project-dir /path/to/project --open --foreground
-```
-
 **Copilot CLI:**
 ```bash
 # Use --foreground and start the server via the bash tool with mode: "async"
