@@ -98,36 +98,33 @@ conflicts that only emerge from implementation.
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Use the least powerful model that can handle each role to conserve cost and increase speed. The roster below is concrete to the **opencode-go** gateway (`https://opencode.ai/zen/go/v1`, key in `~/.pi/agent/auth.json`); coding-strength scores are higher-is-better, `req/5h` is the gateway's usage-budget proxy (more = cheaper/more abundant). Effort is controlled by the `thinking` level on the dispatch or the agent's `thinking` field; `deepseek-v4-flash`, `glm-5.2`, `deepseek-v4-pro`, and `kimi-k2.7-code` are all `reasoning: true` with `thinkingFormat: deepseek` and honor `thinking: high` (max effort). Projects may declare additional providers/models in their AGENTS.md — match the model's strength to the task's difficulty.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+| Tier | Role | Model | Strength | req/5h | When |
+|------|------|-------|----------|--------|------|
+| Mechanical | Implementer (transcription + testing, complete code in plan, 1-2 files) | `opencode-go/deepseek-v4-flash` + `thinking: high` | 56 (max eff) | 31,650 | ~10× cheaper than the rest; max-effort is nearly free at this price, always use it here |
+| Integration/judgment | Implementer (multi-file, prose spec) | `opencode-go/mimo-v2.5-pro` → fallback `opencode-go/kimi-k2.7-code` (or `deepseek-v4-pro` if MiMo quota pressed) | 60 / 61 | 3,250 / 1,350 | the floor for prose-spec work — cheaper models take 2-3× turns on multi-step reasoning |
+| Architecture/hard | Implementer (design judgment, broad codebase) | `opencode-go/glm-5.2` + `thinking: high` | 69 (max eff) | 880 | reserve for genuine design judgment; this is the scarcest model |
+| Per-task review | Task reviewer (spec + quality gate, every task) | `opencode-go/mimo-v2.5-pro` | 60 | 3,250 | strong enough for spec/quality judgment; ~4× GLM's quota so per-task review doesn't burn the top model |
+| Final whole-branch review | Final reviewer (one per branch) | `opencode-go/glm-5.2` + `thinking: high` | 69 (max eff) | 880 | scarcest+strongest — spend it here, where the whole diff earns it |
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
-
-**Architecture and design tasks**: use the most capable available model.
-The final whole-branch review is one of these — dispatch it on the most
-capable available model, not the session default.
-
-**Review tasks**: choose the model with the same judgment, scaled to the
-diff's size, complexity, and risk. A small mechanical diff does not need the
-most capable model; a subtle concurrency change does.
-
-**Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
+**Always specify `model` explicitly when dispatching a subagent.** An omitted
+model inherits your session's model — often the most expensive — which
+silently defeats this section. **Always set `thinking: high`** for implementers
+and reviewers (the project default already does); the effort gain is real on
+multi-step work and free at Flash prices.
 
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the
-turns on multi-step work — costing more overall. Use a mid-tier model as the
-floor for reviewers and for implementers working from prose descriptions.
-When the task's plan text contains the complete code to write, the
-implementation is transcription plus testing: use the cheapest tier for
-that implementer. Single-file mechanical fixes also take the cheapest tier.
+turns on multi-step work — costing more overall. That is why the floor for
+prose-spec implementers and for reviewers is the mid tier (MiMo Pro), not
+Flash: Flash only wins when the work is genuinely transcription-plus-testing
+(plan contains the exact code) or a single-file mechanical fix.
 
 **Task complexity signals (implementation tasks):**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+- Touches 1-2 files with a complete spec → `deepseek-v4-flash` (mechanical)
+- Touches multiple files with integration concerns → `mimo-v2.5-pro` (integration/judgment)
+- Requires design judgment or broad codebase understanding → `glm-5.2` (architecture/hard)
 
 ## Handling Implementer Status
 
