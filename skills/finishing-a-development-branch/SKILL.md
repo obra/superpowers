@@ -158,6 +158,24 @@ Then: Cleanup worktree (Step 6), then force-delete branch:
 git branch -D <feature-branch>
 ```
 
+<!-- created by riso-tech -->
+### Step 5b: Update Product Roadmap
+
+**Runs for Options 1 (merge) and 2 (PR) only** — the work is being integrated, so
+the feature is done. Skip for Option 3 (keep as-is) and Option 4 (discard).
+
+- Identify the feature's `slug` from the spec/plan filename used for this work
+  (`YYYY-MM-DD-<slug>-design.md`). If no spec/plan is in context and the slug is
+  ambiguous, ask the user which feature this work corresponds to.
+- Set that entry's `status` to `done` and `completed` to today's date in
+  `docs/superpowers/roadmap.json`, then regenerate `ROADMAP.html`. If the entry
+  doesn't exist yet, create it as done.
+- See [../brainstorming/roadmap.md](../brainstorming/roadmap.md) for the schema,
+  idempotent update rules, and the `ROADMAP.html` template.
+- For Option 1, commit the roadmap update with (or right after) the merge. For
+  Option 2, commit it on the branch before pushing.
+<!-- end created by riso-tech -->
+
 ### Step 6: Cleanup Workspace
 
 **Only runs for Options 1 and 4.** Options 2 and 3 always preserve the worktree.

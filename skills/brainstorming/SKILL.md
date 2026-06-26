@@ -26,7 +26,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, generate the HTML companion, add the feature to the product roadmap (see Documentation), and commit all
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -107,6 +107,20 @@ digraph brainstorming {
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
+
+<!-- created by riso-tech -->
+**Human-readable HTML companion:**
+
+- After writing and committing the markdown spec, also generate a standalone HTML version for human readers at the same path with a `.html` extension (e.g. `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.html`).
+- The markdown is the source of truth (for LLMs); the HTML is a rendered view for people — self-contained (inline CSS, no external assets) so it opens directly in a browser.
+- Regenerate the HTML whenever the spec changes, and commit it alongside the `.md`.
+
+**Add the feature to the product roadmap:**
+
+- After writing the spec, add (or update) this feature's entry in the project roadmap so stakeholders get a comprehensive view of the product.
+- `slug` = `<topic>` from the spec filename; status = `planned`; `spec` = the spec path; `created` = today.
+- Follow [roadmap.md](roadmap.md) for the schema, idempotent update rules, and the `ROADMAP.html` template. Commit `roadmap.json` and `ROADMAP.html` with the spec.
+<!-- end created by riso-tech -->
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

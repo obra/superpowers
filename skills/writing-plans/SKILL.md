@@ -18,6 +18,14 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+<!-- created by riso-tech -->
+**Human-readable HTML companion:**
+
+- After saving the markdown plan, also generate a standalone HTML version for human readers at the same path with a `.html` extension (e.g. `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.html`).
+- The markdown is the source of truth (for LLMs); the HTML is a rendered view for people — self-contained (inline CSS, no external assets) so it opens directly in a browser. Render task checkboxes as a readable checklist.
+- Regenerate the HTML whenever the plan changes, and save it alongside the `.md`.
+<!-- end created by riso-tech -->
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
