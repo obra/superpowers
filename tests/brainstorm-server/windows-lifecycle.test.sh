@@ -80,14 +80,23 @@ get_port_from_info() {
   grep -o '"port":[0-9]*' "$1/state/server-info" | head -1 | sed 's/"port"://'
 }
 
+get_key_from_info() {
+  grep -o '"url":"[^"]*key=[^"]*' "$1/state/server-info" | head -1 | sed 's/.*key=//'
+}
+
 http_check() {
   local port="$1"
-  node -e "
+  local key="${2:-}"
+  node - "$port" "$key" <<'NODE'
     const http = require('http');
-    http.get('http://localhost:$port/', (res) => {
+    const port = Number(process.argv[2]);
+    const key = process.argv[3] || '';
+    const path = key ? '/?key=' + encodeURIComponent(key) : '/';
+    http.get({ hostname: '127.0.0.1', port, path }, (res) => {
+      res.resume();
       process.exit(res.statusCode === 200 ? 0 : 1);
     }).on('error', () => process.exit(1));
-  " 2>/dev/null
+NODE
 }
 
 # ========== Platform Detection ==========
@@ -153,6 +162,7 @@ if [[ "$is_windows" == "true" ]]; then
   cat > "$FAKE_NODE_DIR/node" <<'FAKENODE'
 #!/usr/bin/env bash
 echo "CAPTURED_OWNER_PID=${BRAINSTORM_OWNER_PID:-__UNSET__}"
+printf 'CAPTURED_ARGV=%s\n' "$@"
 exit 0
 FAKENODE
   chmod +x "$FAKE_NODE_DIR/node"
@@ -165,6 +175,13 @@ FAKENODE
   else
     fail "start-server.sh passes empty BRAINSTORM_OWNER_PID on Windows" \
          "Expected empty or unset, got '$owner_pid_value'"
+  fi
+
+  if echo "$captured" | grep -Eq '^CAPTURED_ARGV=--brainstorm-server-id=[A-Za-z0-9_-]{32,64}$'; then
+    pass "start-server.sh passes server instance id argv on Windows"
+  else
+    fail "start-server.sh passes server instance id argv on Windows" \
+         "Expected --brainstorm-server-id=<safe id>, output: $captured"
   fi
 
   rm -rf "$FAKE_NODE_DIR" "$TEST_DIR/session"
@@ -227,6 +244,7 @@ else
   pass "Server starts successfully with empty OWNER_PID"
 
   SERVER_PORT=$(get_port_from_info "$TEST_DIR/survival")
+  SERVER_KEY=$(get_key_from_info "$TEST_DIR/survival")
 
   sleep 75
 
@@ -237,11 +255,11 @@ else
          "Server died. Log tail: $(tail -5 "$TEST_DIR/survival/.server.log" 2>/dev/null)"
   fi
 
-  if http_check "$SERVER_PORT"; then
+  if http_check "$SERVER_PORT" "$SERVER_KEY"; then
     pass "Server responds to HTTP after lifecycle check window"
   else
     fail "Server responds to HTTP after lifecycle check window" \
-         "HTTP request to port $SERVER_PORT failed"
+         "Authenticated HTTP request to port $SERVER_PORT failed"
   fi
 
   if grep -q "owner process exited" "$TEST_DIR/survival/.server.log" 2>/dev/null; then
@@ -325,23 +343,33 @@ echo ""
 echo "--- Clean Shutdown ---"
 
 mkdir -p "$TEST_DIR/stop-test/state"
+STOP_TEST_ID="$(printf 'windowsstop%021d\n' "$RANDOM")"
+printf '%s\n' "$STOP_TEST_ID" > "$TEST_DIR/stop-test/state/server-instance-id"
 
 BRAINSTORM_DIR="$TEST_DIR/stop-test" \
 BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_SCRIPT" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
+  node "$SERVER_SCRIPT" "--brainstorm-server-id=$STOP_TEST_ID" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
 STOP_TEST_PID=$!
+disown "$STOP_TEST_PID" 2>/dev/null || true
 echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/state/server.pid"
 
 if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   fail "Stop-test server starts" "Server did not start"
   kill "$STOP_TEST_PID" 2>/dev/null || true
+  wait "$STOP_TEST_PID" 2>/dev/null || true
   STOP_TEST_PID=""
 else
   bash "$STOP_SCRIPT" "$TEST_DIR/stop-test" >/dev/null 2>&1 || true
-  sleep 1
+  for _ in $(seq 1 10); do
+    if ! kill -0 "$STOP_TEST_PID" 2>/dev/null; then
+      wait "$STOP_TEST_PID" 2>/dev/null || true
+      break
+    fi
+    sleep 0.1
+  done
 
   if ! kill -0 "$STOP_TEST_PID" 2>/dev/null; then
     pass "stop-server.sh cleanly stops the server"

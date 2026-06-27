@@ -123,16 +123,6 @@ git branch -d <feature-branch>
 ```bash
 # Push branch
 git push -u origin <feature-branch>
-
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
-
-## Test Plan
-- [ ] <verification steps>
-EOF
-)"
 ```
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.

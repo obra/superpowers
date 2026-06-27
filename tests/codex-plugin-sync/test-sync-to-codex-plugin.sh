@@ -175,6 +175,7 @@ write_upstream_fixture() {
 
     mkdir -p \
         "$repo/.codex-plugin" \
+        "$repo/.kimi-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
         "$repo/evals/drill" \
@@ -199,6 +200,23 @@ EOF
 .private-journal/
 EOF
 
+    cat > "$repo/.gitmodules" <<'EOF'
+[submodule "evals"]
+	path = evals
+	url = git@example.com:example/evals.git
+EOF
+
+    cat > "$repo/.pre-commit-config.yaml" <<'EOF'
+repos:
+  - repo: local
+    hooks:
+      - id: evals-check
+        name: evals check
+        entry: echo evals
+        language: system
+        files: ^evals/
+EOF
+
     if [[ "$with_pure_ignored" == "1" ]]; then
         cat >> "$repo/.gitignore" <<'EOF'
 ignored-cache/
@@ -206,6 +224,13 @@ EOF
     fi
 
     cat > "$repo/.codex-plugin/plugin.json" <<EOF
+{
+  "name": "superpowers",
+  "version": "$MANIFEST_VERSION"
+}
+EOF
+
+    cat > "$repo/.kimi-plugin/plugin.json" <<EOF
 {
   "name": "superpowers",
   "version": "$MANIFEST_VERSION"
@@ -267,7 +292,10 @@ EOF
 
     git -C "$repo" add \
         .codex-plugin/plugin.json \
+        .kimi-plugin/plugin.json \
         .gitignore \
+        .gitmodules \
+        .pre-commit-config.yaml \
         assets/app-icon.png \
         assets/superpowers-small.svg \
         evals/drill/README.md \
@@ -415,10 +443,15 @@ EOF
 write_stale_ignored_destination_fixture() {
     local repo="$1"
 
-    mkdir -p "$repo/plugins/superpowers/.private-journal"
+    mkdir -p \
+        "$repo/plugins/superpowers/.kimi-plugin" \
+        "$repo/plugins/superpowers/.private-journal"
     printf 'fixture keep\n' > "$repo/plugins/superpowers/.fixture-keep"
+    printf '{"name":"stale-kimi"}\n' > "$repo/plugins/superpowers/.kimi-plugin/plugin.json"
     printf 'stale ignored leak\n' > "$repo/plugins/superpowers/.private-journal/leak.txt"
-    git -C "$repo" add plugins/superpowers/.fixture-keep
+    git -C "$repo" add \
+        plugins/superpowers/.fixture-keep \
+        plugins/superpowers/.kimi-plugin/plugin.json
 
     commit_fixture "$repo" "Initial stale ignored destination fixture"
 }
@@ -618,6 +651,7 @@ main() {
     assert_contains "$preview_output" "Version:  $MANIFEST_VERSION" "Preview uses manifest version"
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
+    assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
@@ -628,6 +662,8 @@ main() {
     assert_not_contains "$preview_section" ".private-journal/leak.txt" "Preview excludes ignored untracked file"
     assert_not_contains "$preview_section" "ignored-cache/" "Preview excludes pure ignored directories"
     assert_not_contains "$preview_section" "evals/" "Preview excludes eval harness"
+    assert_not_contains "$preview_section" ".gitmodules" "Preview excludes repo submodule metadata"
+    assert_not_contains "$preview_section" ".pre-commit-config.yaml" "Preview excludes repo pre-commit config"
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
@@ -644,6 +680,7 @@ main() {
     echo ""
     echo "Convergence assertions..."
     assert_equals "$stale_preview_status" "0" "Stale ignored destination preview exits successfully"
+    assert_matches "$stale_preview_section" "\\*deleting +\\.kimi-plugin/plugin\\.json" "Preview deletes stale Kimi manifest from Codex plugin"
     assert_matches "$stale_preview_section" "\\*deleting +\\.private-journal/leak\\.txt" "Preview deletes stale ignored destination file"
 
     echo ""
