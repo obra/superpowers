@@ -185,6 +185,25 @@ pi -e /path/to/superpowers
 
 The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
 
+### Qwen Code
+
+Superpowers supports Qwen Code natively. Install the extension using Qwen Code's native extension manager commands:
+
+```bash
+# Install the extension
+qwen extensions install https://github.com/obra/superpowers
+```
+
+For local development, you can link the extension directly from your checkout:
+
+```bash
+# Link the extension locally
+qwen extensions link /path/to/superpowers
+```
+
+*(Note: Qwen Code will automatically discover the skills and bootstrap context via the `qwen-extension.json` and `QWEN.md` files).*
+
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
