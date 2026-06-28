@@ -56,12 +56,26 @@ This determines which menu to show and how cleanup works:
 
 ### Step 3: Determine Base Branch
 
+If project instructions or PR/MR templates name a required target branch, use
+that branch as the base. Verify it exists locally or remotely before presenting
+options:
+
+```bash
+git show-ref --verify --quiet refs/heads/<base-branch> ||
+  git show-ref --verify --quiet refs/remotes/origin/<base-branch>
+```
+
+If the required branch does not exist, stop and report the mismatch. Do not
+silently substitute `main`, `master`, or the default branch.
+
+If no project-required base branch is named, detect the likely base:
+
 ```bash
 # Try common base branches
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from main - is that correct?"
+Or ask: "This branch split from <base-branch> - is that correct?"
 
 ### Step 4: Present Options
 
