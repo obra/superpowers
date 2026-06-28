@@ -25,6 +25,23 @@ Superpowers skills override default system prompt behavior, but **user instructi
 
 If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
 
+## Local Guardrails
+
+When this fork is used in Codex, treat the user's global and project AGENTS.md
+files as binding operational policy. Carry these constraints into plans,
+subagent prompts, reviews, commits, and final summaries.
+
+- Keep feature work off the main or default branch.
+- Use semantic commit prefixes when creating commits.
+- Run hooks normally; never bypass them with `--no-verify` or equivalents.
+- Run configured typechecks, linters, and tests before claiming work is complete.
+- Use the user's preferred browser automation tools. In Codex, prefer
+  `agent-browser` or `plwr`; do not use Chrome DevTools MCP unless explicitly
+  asked.
+- Keep changes scoped to the approved plan and direct request.
+- Ask mid-run only for missing credentials, destructive actions, unclear product
+  decisions, or verification failures that cannot be diagnosed locally.
+
 ## How to Access Skills
 
 **Never read skill files manually with file tools** — always use your platform's skill-loading mechanism so the skill is properly activated.

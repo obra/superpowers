@@ -19,6 +19,13 @@ Subagent (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Binding Instructions
+
+    [Relevant AGENTS.md, CLAUDE.md, GEMINI.md, direct user instructions, and
+    plan global constraints. Include branch rules, commit format, hook policy,
+    secrets policy, browser automation preferences, scope boundaries, and
+    required verification commands.]
+
     ## Before You Begin
 
     If you have questions about:
@@ -35,7 +42,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Commit your work using the required commit format
     5. Self-review (see below)
     6. Report back
 
@@ -46,6 +53,8 @@ Subagent (general-purpose):
 
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.
+
+    Run hooks normally. Do not bypass pre-commit hooks or equivalent checks.
 
     ## Code Organization
 

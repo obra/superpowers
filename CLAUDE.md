@@ -113,3 +113,5 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 - One problem per PR
 - Test on at least one harness and report results in the environment table
 - Describe the problem you solved, not just what you changed
+- Update this AGENTS.md when project scripts, workflow rules, or contributor
+  gotchas change in ways future agents need to know.
