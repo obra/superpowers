@@ -65,6 +65,9 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 4: Present Options
 
+If the user's instruction files prohibit any listed option, remove that option
+from the menu before presenting it.
+
 **Normal repo and named-branch worktree — present exactly these 4 options:**
 
 ```

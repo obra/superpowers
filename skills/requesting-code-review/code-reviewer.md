@@ -20,6 +20,10 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
+    ## Binding Instructions
+
+    [BINDING_INSTRUCTIONS]
+
     ## Git Range to Review
 
     **Base:** [BASE_SHA]
@@ -128,6 +132,7 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
+- `[BINDING_INSTRUCTIONS]` — applicable user and project instruction constraints
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 

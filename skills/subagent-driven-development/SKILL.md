@@ -60,12 +60,12 @@ digraph process {
         "Mark task complete in todo list and progress ledger" [shape=box];
     }
 
-    "Read plan, note context and global constraints, create todos" [shape=box];
+    "Read plan, note AGENTS.md and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, note AGENTS.md and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -82,10 +82,20 @@ digraph process {
 }
 ```
 
+## Binding Instructions
+
+Before dispatching Task 1, read the applicable AGENTS.md, CLAUDE.md, GEMINI.md,
+or equivalent instruction files and record the binding constraints in the
+progress ledger. Include the relevant constraints in every implementer, fixer,
+and reviewer prompt. At minimum, preserve constraints covering branch safety,
+commit format, hooks, secrets, browser automation, scope boundaries, and
+required verification commands.
+
 ## Pre-Flight Plan Review
 
 Before dispatching Task 1, scan the plan once for conflicts:
 
+- the plan or task text contradicts the user's instruction files
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a
   defect (a test that asserts nothing, verbatim duplication of a logic block)

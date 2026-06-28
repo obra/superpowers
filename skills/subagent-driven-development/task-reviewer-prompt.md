@@ -25,6 +25,10 @@ Subagent (general-purpose):
     Global constraints from the spec/design that bind this task:
     [GLOBAL_CONSTRAINTS]
 
+    Binding instructions from AGENTS.md, CLAUDE.md, GEMINI.md, direct user
+    instructions, and local workflow policy:
+    [BINDING_INSTRUCTIONS]
+
     ## What the Implementer Claims They Built
 
     Read the implementer's report: [REPORT_FILE]
@@ -173,6 +177,9 @@ Subagent (general-purpose):
   the plan's Global Constraints section or the spec: exact values, formats,
   and stated relationships between components (not process rules — those
   are already in this template)
+- `[BINDING_INSTRUCTIONS]` — REQUIRED: applicable user and project instruction
+  constraints for branch safety, commit format, hooks, secrets, browser
+  automation, scope, and verification
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this task
