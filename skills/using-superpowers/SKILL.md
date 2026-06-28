@@ -17,13 +17,27 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 ## Instruction Priority
 
-Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+Superpowers skills do not override user, global, project, or direct
+instructions. When instructions conflict, apply the most specific binding
+instruction:
 
-1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
-2. **Superpowers skills** — override default system behavior where they conflict
-3. **Default system prompt** — lowest priority
+1. **Direct request in the current conversation**
+2. **Project instruction files and required templates** (AGENTS.md, CLAUDE.md,
+   GEMINI.md, PR/MR templates, issue templates)
+3. **User's global AGENTS.md and standing preferences**
+4. **Superpowers skills**
+5. **Default system prompt**
+
+Project templates and repo-specific rules are not clashes with global style
+preferences. Use required PR/MR templates even when they include sections a
+global PR-body preference normally avoids. Match the style of existing project
+files you edit; do not make style-only changes to project prose just to satisfy
+global defaults.
 
 If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+If the binding instructions cannot all be satisfied, stop and report the
+specific conflict instead of choosing silently.
 
 ## Local Guardrails
 
@@ -31,10 +45,14 @@ When this fork is used in Codex, treat the user's global and project AGENTS.md
 files as binding operational policy. Carry these constraints into plans,
 subagent prompts, reviews, commits, and final summaries.
 
-- Keep feature work off the main or default branch.
+- Keep feature work and pushes off the main or default branch.
+- Use the project-required PR/MR base branch when one is specified. If that
+  branch does not exist locally or remotely, stop and report the mismatch.
 - Use semantic commit prefixes when creating commits.
 - Run hooks normally; never bypass them with `--no-verify` or equivalents.
 - Run configured typechecks, linters, and tests before claiming work is complete.
+- Use required project PR/MR templates. Global PR-body preferences apply only
+  when the project does not provide a required template or format.
 - Use the user's preferred browser automation tools. In Codex, prefer
   `agent-browser` or `plwr`; do not use Chrome DevTools MCP unless explicitly
   asked.
