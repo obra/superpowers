@@ -88,6 +88,39 @@ digraph process {
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## File Handoffs
+
+Use the scripts in `./scripts/` for short-lived task artifacts. `./scripts/sdd-workspace` is the single source of truth for where SDD artifacts live.
+
+When a plan file is available, resolve paths through the plan-scoped workspace:
+
+```
+workspace=$(./scripts/sdd-workspace "$PLAN_FILE")
+```
+
+This writes artifacts under `.superpowers/sdd/<plan-slug>/`, where `<plan-slug>` is a safe single path segment derived from the plan identity. If no plan identity is supplied, `sdd-workspace` intentionally falls back to the legacy `.superpowers/sdd/` directory.
+
+For each task, create the brief with:
+
+```
+./scripts/task-brief "$PLAN_FILE" "$TASK_NUMBER"
+```
+
+The default task brief path is `.superpowers/sdd/<plan-slug>/task-N-brief.md`. The implementer report for the same task must replace `-brief.md` with `-report.md`, for example `.superpowers/sdd/<plan-slug>/task-N-report.md`.
+
+For review packages, pass the same plan identity through the environment so reviewers read from the same plan-scoped workspace instead of the legacy flat directory:
+
+```
+SDD_PLAN_ID="$PLAN_FILE" ./scripts/review-package "$BASE_REF" "$HEAD_REF"
+```
+
+For the progress ledger, read from the resolved workspace rather than hard-coding the flat path:
+
+```
+workspace=$(./scripts/sdd-workspace "$PLAN_FILE")
+cat "$workspace/progress.md" 2>/dev/null || true
+```
+
 ## Example Workflow
 
 ```

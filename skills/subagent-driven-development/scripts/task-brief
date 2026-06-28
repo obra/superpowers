@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Extract the brief for a single task from an implementation plan.
+#
+# Usage:
+#   task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
+#
+# If OUTFILE is omitted, the brief is written into the plan-scoped SDD workspace:
+#   <repo-root>/.superpowers/sdd/<plan-slug>/task-N-brief.md
+set -euo pipefail
+
+usage() {
+    echo "usage: $0 PLAN_FILE TASK_NUMBER [OUTFILE]" >&2
+}
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+    usage
+    exit 2
+fi
+
+plan_file=$1
+task_number=$2
+
+if [ ! -f "$plan_file" ]; then
+    echo "task-brief: plan file not found: $plan_file" >&2
+    exit 1
+fi
+
+case "$task_number" in
+    '' | *[!0-9]*)
+        echo "task-brief: task number must be numeric: $task_number" >&2
+        exit 2
+        ;;
+esac
+
+if [ "$#" -eq 3 ]; then
+    outfile=$3
+else
+    script_dir=$(cd "$(dirname "$0")" && pwd)
+    plan_dir=$(cd "$(dirname "$plan_file")" && pwd)
+    plan_id="$plan_dir/$(basename "$plan_file")"
+    workspace=$("$script_dir/sdd-workspace" "$plan_id")
+    outfile="$workspace/task-$task_number-brief.md"
+fi
+
+mkdir -p "$(dirname "$outfile")"
+
+awk -v n="$task_number" '
+    BEGIN {
+        in_task = 0
+        in_fence = 0
+        lines = 0
+    }
+
+    /^```/ {
+        if (in_task) {
+            print
+            lines++
+        }
+        in_fence = !in_fence
+        next
+    }
+
+    !in_fence && $0 ~ "Task " n "([^0-9]|$)" {
+        in_task = 1
+    }
+
+    !in_fence && in_task && $0 ~ /^#{1,6}[[:space:]]+Task [0-9]+/ && $0 !~ "Task " n "([^0-9]|$)" {
+        exit
+    }
+
+    in_task {
+        print
+        lines++
+    }
+
+    END {
+        if (lines == 0) {
+            exit 1
+        }
+    }
+' "$plan_file" > "$outfile" || {
+    rm -f "$outfile"
+    echo "task-brief: task $task_number not found in $plan_file" >&2
+    exit 1
+}
+
+line_count=$(wc -l < "$outfile" | tr -d ' ')
+echo "wrote $outfile: $line_count lines"

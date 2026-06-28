@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Build a compact review package for the current SDD task.
+#
+# Usage:
+#   review-package BASE_REF HEAD_REF [OUTFILE]
+#
+# If OUTFILE is omitted, the package is written into the SDD workspace. Set
+# SDD_PLAN_ID to the same plan identity used for task-brief to keep review
+# artifacts next to the implementer's report.
+set -euo pipefail
+
+usage() {
+    echo "usage: $0 BASE_REF HEAD_REF [OUTFILE]" >&2
+}
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+    usage
+    exit 2
+fi
+
+base_ref=$1
+head_ref=$2
+
+git rev-parse --verify "$base_ref^{commit}" >/dev/null
+git rev-parse --verify "$head_ref^{commit}" >/dev/null
+
+if [ "$#" -eq 3 ]; then
+    outfile=$3
+else
+    script_dir=$(cd "$(dirname "$0")" && pwd)
+    workspace=$("$script_dir/sdd-workspace")
+    safe_base=$(printf '%s' "$base_ref" | sed 's/[^A-Za-z0-9._-]/-/g')
+    safe_head=$(printf '%s' "$head_ref" | sed 's/[^A-Za-z0-9._-]/-/g')
+    outfile="$workspace/review-$safe_base..$safe_head.md"
+fi
+
+mkdir -p "$(dirname "$outfile")"
+
+{
+    echo "# Review Package: $base_ref..$head_ref"
+    echo
+    echo "## Commit Summary"
+    echo
+    git log --oneline "$base_ref..$head_ref" || true
+    echo
+    echo "## Changed Files"
+    echo
+    git diff --name-status "$base_ref..$head_ref"
+    echo
+    echo "## Diff"
+    echo
+    echo '```diff'
+    git diff -U10 "$base_ref..$head_ref"
+    echo '```'
+} > "$outfile"
+
+line_count=$(wc -l < "$outfile" | tr -d ' ')
+echo "wrote $outfile: $line_count lines"

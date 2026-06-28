@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Resolve and ensure the short-lived workspace for subagent-driven-development.
+#
+# This is the single source of truth for SDD artifact paths. Keep task-brief and
+# review-package pointed here so brief, report, review, and progress files stay
+# in the same directory.
+#
+# Usage:
+#   sdd-workspace [PLAN_ID]
+#
+# With no PLAN_ID, this preserves the legacy workspace:
+#   <repo-root>/.superpowers/sdd
+#
+# With PLAN_ID (or SDD_PLAN_ID / SDD_PLAN_SLUG), artifacts are namespaced:
+#   <repo-root>/.superpowers/sdd/<safe-plan-slug>-<checksum>
+set -euo pipefail
+
+if [ "$#" -gt 1 ]; then
+    echo "usage: $0 [PLAN_ID]" >&2
+    exit 2
+fi
+
+root=$(git rev-parse --show-toplevel)
+plan_id="${1:-${SDD_PLAN_ID:-${SDD_PLAN_SLUG:-}}}"
+dir="$root/.superpowers/sdd"
+
+if [ -n "$plan_id" ]; then
+    base=$(basename "$plan_id")
+
+    case "$base" in
+        .* | *.*.*)
+            stem="${base%.*}"
+            ;;
+        *.*)
+            stem="${base%.*}"
+            ;;
+        *)
+            stem="$base"
+            ;;
+    esac
+
+    slug=$(
+        printf '%s' "$stem" |
+            LC_ALL=C tr '[:upper:]' '[:lower:]' |
+            sed 's/[^a-z0-9][^a-z0-9]*/-/g; s/^-//; s/-$//' |
+            cut -c 1-80
+    )
+    if [ -z "$slug" ]; then
+        slug="plan"
+    fi
+
+    checksum=$(printf '%s' "$plan_id" | cksum | awk '{print $1}')
+    dir="$dir/$slug-$checksum"
+fi
+
+mkdir -p "$dir"
+printf '*\n' > "$dir/.gitignore"
+cd "$dir"
+pwd
