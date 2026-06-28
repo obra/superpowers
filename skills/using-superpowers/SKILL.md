@@ -39,6 +39,11 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 If the binding instructions cannot all be satisfied, stop and report the
 specific conflict instead of choosing silently.
 
+When a Superpowers skill says "MUST", "always", or "exactly" and a
+higher-priority instruction narrows or changes that behavior, follow the
+higher-priority instruction. Treat the skill text as the default workflow, not
+permission to override the user, project, or direct request.
+
 ## Local Guardrails
 
 When this fork is used in Codex, treat the user's global and project AGENTS.md
@@ -51,8 +56,12 @@ subagent prompts, reviews, commits, and final summaries.
 - Use semantic commit prefixes when creating commits.
 - Run hooks normally; never bypass them with `--no-verify` or equivalents.
 - Run configured typechecks, linters, and tests before claiming work is complete.
+- Prefer project scripts for verification. If `script/` or `scripts/` exists,
+  inspect it before choosing package-manager defaults.
 - Use required project PR/MR templates. Global PR-body preferences apply only
   when the project does not provide a required template or format.
+- For generated prose, plans, specs, commits, PRs, and final summaries, follow
+  the user's global style rules unless a project template requires otherwise.
 - Use the user's preferred browser automation tools. In Codex, prefer
   `agent-browser` or `plwr`; do not use Chrome DevTools MCP unless explicitly
   asked.
@@ -145,7 +154,8 @@ When multiple skills could apply, use this order:
 
 ## Skill Types
 
-**Rigid** (TDD, systematic-debugging): Follow exactly. Don't adapt away discipline.
+**Rigid** (TDD, systematic-debugging): Follow exactly unless a higher-priority
+instruction conflicts. Don't adapt away discipline just because it feels heavy.
 
 **Flexible** (patterns): Adapt principles to context.
 

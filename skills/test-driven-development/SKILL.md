@@ -25,6 +25,8 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Throwaway prototypes
 - Generated code
 - Configuration files
+- Higher-priority user or project instructions that explicitly choose a
+  different validation workflow
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
@@ -115,7 +117,7 @@ Vague name, tests mock not code
 **MANDATORY. Never skip.**
 
 ```bash
-npm test path/to/test.test.ts
+<project-focused test command>
 ```
 
 Confirm:
@@ -170,7 +172,7 @@ Don't add features, refactor other code, or "improve" beyond the test.
 **MANDATORY.**
 
 ```bash
-npm test path/to/test.test.ts
+<project-focused test command>
 ```
 
 Confirm:

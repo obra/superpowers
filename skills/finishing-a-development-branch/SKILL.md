@@ -19,10 +19,13 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Before presenting options, verify tests pass:**
 
-```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
-```
+Use the verification commands required by the plan, AGENTS.md, README, PR/MR
+template, or project scripts. If the repository has `script/` or `scripts/`,
+inspect those before choosing package-manager defaults such as `npm test`,
+`cargo test`, `pytest`, or `go test ./...`.
+
+If no tests, typechecks, or linters are configured, state that explicitly
+instead of claiming they passed.
 
 **If tests fail:**
 ```

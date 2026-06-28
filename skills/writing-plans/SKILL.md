@@ -53,23 +53,28 @@ independently testable deliverable.
 
 ## Plan Document Header
 
+Match higher-priority markdown style rules when writing the plan. Keep the
+required fields and task structure, but translate formatting when user or
+project instructions prohibit bold text, heading depths, em dashes, or other
+template details.
+
 **Every plan MUST start with this header:**
 
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** [One sentence describing what this builds]
+Goal: [One sentence describing what this builds]
 
-**Architecture:** [2-3 sentences about approach]
+Architecture: [2-3 sentences about approach]
 
-**Tech Stack:** [Key technologies/libraries]
+Tech Stack: [Key technologies/libraries]
 
 ## Global Constraints
 
-[The spec's project-wide requirements — version floors, dependency limits,
-naming and copy rules, platform requirements — one line each, with exact
+[The spec's project-wide requirements: version floors, dependency limits,
+naming and copy rules, platform requirements, one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
 
@@ -79,20 +84,20 @@ include this section.]
 ## Task Structure
 
 ````markdown
-### Task N: [Component Name]
+## Task N: [Component Name]
 
-**Files:**
+Files:
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
-**Interfaces:**
-- Consumes: [what this task uses from earlier tasks — exact signatures]
-- Produces: [what later tasks rely on — exact function names, parameter
+Interfaces:
+- Consumes: [what this task uses from earlier tasks, exact signatures]
+- Produces: [what later tasks rely on, exact function names, parameter
   and return types. A task's implementer sees only their own task; this
   block is how they learn the names and types neighboring tasks use.]
 
-- [ ] **Step 1: Write the failing test**
+- [ ] Step 1: Write the failing test
 
 ```python
 def test_specific_behavior():
@@ -100,24 +105,24 @@ def test_specific_behavior():
     assert result == expected
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] Step 3: Write minimal implementation
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] Step 4: Run test to verify it passes
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] Step 5: Commit
 
 ```bash
 git add tests/path/test.py src/path/file.py
@@ -127,23 +132,23 @@ git commit -m "feat: add specific feature"
 
 ## No Placeholders
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+Every step must contain the actual content an engineer needs. These are **plan failures** - never write them:
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
+- "Similar to Task N" (repeat the code because the engineer may be reading tasks out of order)
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
 ## Remember
 - Exact file paths always
-- Complete code in every step — if a step changes code, show the code
+- Complete code in every step. If a step changes code, show the code.
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
 ## Self-Review
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself, not a subagent dispatch.
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
@@ -157,13 +162,13 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+1. Subagent-Driven (recommended) - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+2. Inline Execution - Execute tasks in this session using executing-plans, batch execution with checkpoints
 
-**Which approach?"**
+Which approach?"
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development

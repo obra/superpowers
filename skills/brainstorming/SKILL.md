@@ -13,6 +13,12 @@ Start by understanding the current project context, then ask questions one at a 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
+Higher-priority instructions can narrow this workflow. If the direct request or
+instruction files ask for a small mechanical change, conflict-resolution edit,
+or no formal planning, satisfy the design gate with a short assumptions note and
+targeted approach. Do not force a spec file, plan file, or commit when that
+would violate the user's or project's instructions.
+
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
 Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
@@ -26,7 +32,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc when appropriate** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`; commit only when the user or project workflow calls for a commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -106,7 +112,9 @@ digraph brainstorming {
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- Commit the design document to git only when the user requested commits or the
+  project workflow requires it. Otherwise leave it uncommitted and report the
+  file path.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
