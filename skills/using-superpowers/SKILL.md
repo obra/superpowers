@@ -17,6 +17,12 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
+## Platform Adaptation
+
+Skills speak in actions rather than naming any one runtime's tools. Map mechanism verbs to the local tool that performs them, such as dispatching a subagent, creating a todo, or reading a file.
+
+Interaction modality is part of the instruction. When a skill explicitly says to ask conversationally, present multiple-choice or other text options, or use the terminal, do that directly in the conversation. Do not remap those instructions to a native interactive-prompt or picker tool such as Claude Code's `AskUserQuestion`.
+
 # Using Skills
 
 ## The Rule

@@ -59,13 +59,13 @@ digraph brainstorming {
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - Ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
+- Prefer multiple choice questions when possible, but render choices as plain A/B/C/D terminal text, not a native picker widget. Open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
 - Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
+- Present options conversationally in terminal text with your recommendation and reasoning
 - Lead with your recommended option and explain why
 
 **Presenting the design:**
@@ -89,7 +89,7 @@ digraph brainstorming {
 ## Key Principles
 
 - **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
+- **Multiple choice preferred** - Easier to answer than open-ended when possible; write the choices as A/B/C/D text in the terminal
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, get approval before moving on
