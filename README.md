@@ -11,7 +11,7 @@ If this sounds like someone you know, definitely send them our way.
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
 
 ## How it works
 
@@ -149,6 +149,21 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```bash
   copilot plugin install superpowers@superpowers-marketplace
   ```
+
+### Hermes Agent
+
+Install Superpowers as a Hermes plugin from this repository:
+
+```bash
+hermes plugins install obra/superpowers --enable
+```
+
+Restart Hermes or start a fresh session after installing. The plugin registers
+the Superpowers skills and injects the `using-superpowers` bootstrap on the
+first model call of each session, so the workflow starts automatically without
+mentioning Superpowers in your prompt.
+
+- Detailed docs: [docs/README.hermes.md](docs/README.hermes.md)
 
 ### Kimi Code
 

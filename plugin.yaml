@@ -1,0 +1,7 @@
+name: superpowers
+version: 6.0.3
+description: Superpowers bootstrap and skills for Hermes Agent
+author: Prime Radiant
+kind: standalone
+provides_hooks:
+  - pre_llm_call
