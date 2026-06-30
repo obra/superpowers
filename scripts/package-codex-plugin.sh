@@ -137,7 +137,7 @@ metadata_root_from_dir() {
     return 0
   fi
 
-  nested="$(find "$candidate" -mindepth 2 -maxdepth 2 -type d -name skills -print | head -n 1)"
+  nested="$(find "$candidate" -mindepth 2 -maxdepth 2 -type d -name skills -print -quit)"
   if [[ -n "$nested" ]]; then
     dirname "$nested"
     return 0
@@ -229,7 +229,7 @@ TZ=UTC find "$STAGE" -exec touch -t 197001010000 {} +
   } >"$TAR_LIST"
 
   rm -f "$OUTPUT"
-  COPYFILE_DISABLE=1 tar -cnf - --format ustar --uid 0 --gid 0 --uname '' --gname '' -T "$TAR_LIST" |
+  COPYFILE_DISABLE=1 tar -cf - --no-recursion --format ustar --uid 0 --gid 0 --uname '' --gname '' -T "$TAR_LIST" |
     gzip -9n >"$OUTPUT"
 )
 

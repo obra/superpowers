@@ -125,6 +125,61 @@ assert_equals "$task_brief_mode" "-rwxr-xr-x" "archive preserves executable scri
 metadata_times="$(tar -tzvf "$archive" | awk '{print $6, $7, $8}' | sort -u)"
 assert_equals "$metadata_times" "Dec 31 1969" "archive normalizes entry timestamps"
 
+metadata_archive="$TEST_ROOT/metadata-source.tar.gz"
+archive_from_tar_source="$TEST_ROOT/superpowers-from-tar-source.tar.gz"
+(
+  cd "$metadata_source"
+  tar -czf "$metadata_archive" .
+)
+
+if output="$("$SCRIPT_UNDER_TEST" --allow-dirty --metadata-source "$metadata_archive" --output "$archive_from_tar_source" 2>&1)"; then
+  pass "package script accepts tarball metadata source"
+else
+  fail "package script accepts tarball metadata source"
+  printf '%s\n' "$output" | sed 's/^/      /'
+fi
+
+if cmp -s "$archive" "$archive_from_tar_source"; then
+  pass "tarball metadata source produces identical archive"
+else
+  fail "tarball metadata source produces identical archive"
+fi
+
+incomplete_metadata="$TEST_ROOT/incomplete-metadata"
+mkdir -p "$incomplete_metadata/skills/brainstorming/agents"
+cp "$metadata_source/skills/brainstorming/agents/openai.yaml" \
+  "$incomplete_metadata/skills/brainstorming/agents/openai.yaml"
+
+set +e
+missing_output="$("$SCRIPT_UNDER_TEST" --allow-dirty --metadata-source "$incomplete_metadata" --output "$TEST_ROOT/missing.tar.gz" 2>&1)"
+missing_status=$?
+set -e
+if [[ "$missing_status" -ne 0 ]]; then
+  pass "package script rejects incomplete metadata source"
+else
+  fail "package script rejects incomplete metadata source"
+fi
+assert_contains "$missing_output" "ERROR: metadata source is incomplete" "incomplete metadata reports clear error"
+
+dirty_repo="$TEST_ROOT/dirty-repo"
+git clone -q --no-local "$REPO_ROOT" "$dirty_repo"
+printf '\n# dirty fixture\n' >>"$dirty_repo/README.md"
+set +e
+dirty_output="$(
+  cd "$dirty_repo"
+  scripts/package-codex-plugin.sh \
+    --metadata-source "$metadata_source" \
+    --output "$TEST_ROOT/dirty.tar.gz" 2>&1
+)"
+dirty_status=$?
+set -e
+if [[ "$dirty_status" -ne 0 ]]; then
+  pass "package script rejects dirty worktree by default"
+else
+  fail "package script rejects dirty worktree by default"
+fi
+assert_contains "$dirty_output" "Working tree has uncommitted changes:" "dirty worktree reports changed files"
+
 if [[ "$FAILURES" -eq 0 ]]; then
   echo "All Codex package archive tests passed"
 else
