@@ -6,7 +6,8 @@
     { "path": ".codex-plugin/plugin.json", "field": "version" },
     { "path": ".kimi-plugin/plugin.json", "field": "version" },
     { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" },
-    { "path": "gemini-extension.json", "field": "version" }
+    { "path": "gemini-extension.json", "field": "version" },
+    { "path": "qwen-extension.json", "field": "version" }
   ],
   "audit": {
     "exclude": [
