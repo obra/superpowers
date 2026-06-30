@@ -141,6 +141,14 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
+## Writing Strategy
+
+Write the plan file incrementally — do not generate the full document in a single Write call:
+1. Write the header block (goal, architecture, tech stack, global constraints) first.
+2. Append each task section one at a time with separate Edit calls.
+
+This caps the pre-task thinking time for each generation step. A single large Write triggers an extended-thinking phase whose duration scales with the total document size; on high-effort sessions that phase can exceed the 5-minute stream-stall watchdog, killing the response mid-plan.
+
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
