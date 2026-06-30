@@ -43,6 +43,15 @@ Dùng đúng cấu trúc trong `test_case_template.md` — schema 14 cột lấy
 1. **Draft trong chat trước, dạng Markdown** — gom theo sheet/section, bỏ 4 cột tracking khi hiển thị (để gọn), kèm tóm tắt số lượng theo `Loại TC` + số case cần làm rõ. User review/sửa nhanh ở bước này, giống cách làm với `po-spec-review`.
 2. **Sau khi user xác nhận, xuất `.xlsx` thật** bằng `python build_test_case_xlsx.py <input.json> <output.xlsx>` — script tự thêm lại 4 cột tracking (luôn trống), tự xử giới hạn 31 ký tự tên sheet của Excel. Build input JSON từ đúng nội dung đã được user duyệt ở bước 1, đừng suy ra lại từ đầu.
 
+## Fan-out (Claude Code, tuỳ chọn)
+
+*Gia tốc* khi nhiều US — KHÔNG phải xương sống. Nơi không có sub-agent hoặc < 3 US → làm **tuần tự, logic y hệt**.
+
+- **Cổng fan-out:** chỉ bung khi (a) harness có Task/sub-agent **và** (b) ≥ 3 US (độc lập theo nghĩa sinh-case: leaf chỉ cần section doc + lát contract, không cần US khác — KHÔNG phải độc lập nghiệp vụ). Cơ chế dispatch: xem `dispatching-parallel-agents`.
+- **Leaf = sinh case 1 US.** NHẬN: section doc đã review của US + figma refs · **lát US-00 contract** (enum/DTO/permission/endpoint) · `test-design-patterns.md` + `test_case_template.md`. TRẢ: draft Markdown (schema 14 cột) + cờ `[CẦN LÀM RÕ]` + **Impact NỘI-BỘ-US** + câu hỏi PO. Leaf KHÔNG tự xuất `.xlsx`.
+- **KHÔNG** đưa leaf chỉ bảng US của breakdown để sinh case — thiếu AC/state.
+- **Orchestrator giữ (không giao):** gộp + dedup cross-US · **Impact CROSS-US** (action US-A đụng dữ liệu US-B) · cross-check số liệu toàn doc · xuất `.xlsx` sau khi user duyệt **draft ĐÃ GỘP** (không phải từng leaf).
+
 ## Nguyên tắc
 
 - 1 AC/1 state rõ ràng = 1 test case riêng. Đừng gộp nhiều điều kiện vào một case khiến Expected Result mơ hồ, không assert được.

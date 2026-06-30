@@ -66,6 +66,16 @@ Doc nằm trên **Confluence, KHÔNG có connector ghi** → skill chỉ **xuấ
 3. **Re-review = DIFF, không làm lại từ đầu.** Nạp report vòng trước; mỗi ID cũ gán trạng thái ✅ RESOLVED / 🔴 OPEN / ✏️ CHANGED (PO sửa chưa đủ); phát hiện mới gắn 🆕. §0 mở đầu bằng **bảng diff**: đã xử / còn treo / mới.
 4. **Cổng bàn giao.** Đếm phát hiện **CHƯA ĐÓNG** (mọi trạng thái trừ ✅ RESOLVED — gồm 🔴 OPEN + ✏️ CHANGED + 🆕) **ở mức `[BLOCKER]` + `[HIGH]`** trên TẤT CẢ doc. Còn > 0 → **chưa chuyển**, tiếp vòng với PO. = 0 → spec đủ sạch để bóc tách US → bàn giao sang **`slicing-stories-model-b`** (nó đọc chính bộ report đã chốt + doc đã sửa). `[MED]/[LOW]` treo KHÔNG chặn bàn giao — ghi nhận để xử sau.
 
+## Fan-out (Claude Code, tuỳ chọn)
+
+*Gia tốc* khi bộ doc lớn — KHÔNG phải xương sống. Nơi không có sub-agent (Cursor/Codex) hoặc < 3 doc → làm **tuần tự, logic y hệt**.
+
+- **Cổng fan-out:** chỉ bung khi (a) harness có Task/sub-agent **và** (b) ≥ 3 doc in-scope (đếm cả tổng + con; "độc lập" = review-nội-doc được, không cần đọc doc khác — cross-doc để pass riêng).
+- **Cơ chế dispatch** (batch, song song, leaf fail → orchestrator đọc bù): xem `dispatching-parallel-agents`.
+- **CHỈ ở review vòng 1.** Re-review (vòng 2+) stateful (cần report cũ) → orchestrator tự làm, **không** fan-out.
+- **Leaf = đọc sâu 1 doc.** NHẬN: 1 doc (hoặc `sections/` đã prep) · `DOCKEY` · `probe-bank.md` · figma refs của doc đó. TRẢ: findings cấu trúc (`{ID <DOCKEY>-n, severity, nhóm 1–5, trích, impact}` + câu hỏi PO) + **summary nén để đối soát chéo** (enum/status/field/số đếm gặp trong doc). Leaf KHÔNG claim cross-doc (chỉ thấy 1 doc).
+- **Orchestrator giữ (không giao):** chốt scope in-scope · cấp DOCKEY + path · **pass review chéo** (chạy trên summary nén) · **cổng bàn giao** (đếm toàn cục) · ghi file `review-*.md` + §0 · quyết định handoff.
+
 ## Thang severity
 
 - `[BLOCKER]` — chặn việc dựng DB hoặc một quyết định kiến trúc. Phải chốt trước khi đụng schema.

@@ -24,7 +24,7 @@ Sau khi **`po-spec-review` đã chốt spec** (0 `[BLOCKER]/[HIGH]` OPEN trên t
 
 1. Đọc **bộ doc PO đã review-sạch** (output của `po-spec-review`: report đã chốt + doc đã sửa) → liệt kê **capability** (không phải màn/tab).
 2. Cắt **DỌC theo capability**; mỗi US giao được giá trị độc lập. **Nếu doc con đã ≈ US** (PO tách sẵn) → đừng cắt lại, chuyển **chế độ thẩm định** (xem dưới) rồi đi tiếp từ bước 3.
-3. **Recon BE legacy** (đọc code 5 service): endpoint/model đã có chưa — *đã có (đọc)* / *sửa nhẹ* / *tạo mới*. Recon có thể lộ **câu hỏi PO đợt 2** (endpoint ghi chưa có / permission catalog thiếu) → đưa vào §6 breakdown + gửi PO; `[BLOCKER]` thì chốt **trước** khi đóng US-00 contract.
+3. **Recon BE legacy** (đọc code 5 service): endpoint/model đã có chưa — *đã có (đọc)* / *sửa nhẹ* / *tạo mới*. Recon có thể lộ **câu hỏi PO đợt 2** (endpoint ghi chưa có / permission catalog thiếu) → đưa vào §6 breakdown + gửi PO; `[BLOCKER]` thì chốt **trước** khi đóng US-00 contract. *(Claude Code, tuỳ chọn: đọc song song mỗi service 1 sub-agent → trả "endpoint có chưa"; orchestrator gộp để phân loại + đóng contract. Phân loại & contract KHÔNG fan-out — phụ thuộc nhau.)*
 4. **Phân loại** từng US (xem dưới).
 5. Lập **US-00 nền & contract**; **verify ngay** các endpoint GHI rủi ro tại đây.
 6. Sắp thứ tự: US-00 trước → theo phụ thuộc → **đẩy phần GHI/BE-legacy rủi ro lên sớm**.
