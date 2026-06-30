@@ -25,6 +25,10 @@ Next up, once you say "go", it launches a *subagent-driven-development* process,
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
 
+## Model Training
+
+For training, fine-tuning, or deploying ML models with the Trisol platform, the `training-models` skill triggers automatically. It provides a CLI-based playbook that works inside and outside the intranet, covering model/dataset import, LoRA/QLoRA/full SFT submission, quota selection, polling, and deployment. For true multi-node distributed training, it directs you to the Trisol model training center web UI.
+
 ## Commercial Services
 
 If you're using Superpowers in enterprise and could benefit from commercial support, additional tooling, or managed spending, please don't hesitate to drop us a line at sales@primeradiant.com.
