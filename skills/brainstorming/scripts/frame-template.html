@@ -9,11 +9,11 @@
      *
      * This template provides a consistent frame with:
      * - OS-aware light/dark theming
-     * - Fixed header and selection indicator bar
+     * - Header branding and connection status
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
-     * Content is injected via placeholder comment in #claude-content.
+     * Content is injected via placeholder comment in #frame-content.
      */
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,34 +63,37 @@
     }
 
     /* ===== FRAME STRUCTURE ===== */
-    .header {
-      background: var(--bg-secondary);
-      padding: 0.5rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+    .brand { display: flex; align-items: center; min-width: 0; overflow: hidden; color: var(--text-secondary); line-height: 1; }
+    .brand a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; line-height: 1; }
+    .brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; transform: translateY(-1px); }
+    .brand-logo { display: block; height: 1em; width: auto; max-width: 180px; flex-shrink: 0; filter: invert(1); }
+    @media (prefers-color-scheme: dark) {
+      .brand-logo { filter: none; }
     }
-    .header h1 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
-    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; }
-    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+    .status { font-size: 0.7rem; color: var(--status-color, var(--success)); display: flex; align-items: center; gap: 0.4rem; justify-self: end; white-space: nowrap; line-height: 1; }
+    .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color, var(--success)); border-radius: 50%; }
 
     .main { flex: 1; overflow-y: auto; }
-    #claude-content { padding: 2rem; min-height: 100%; }
+    #frame-content { padding: 2rem; min-height: 100%; }
 
-    .indicator-bar {
+    .header {
       background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       padding: 0.5rem 1.5rem;
       flex-shrink: 0;
-      text-align: center;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      min-height: 42px;
     }
-    .indicator-bar span {
+    .header .brand { justify-self: start; width: 100%; font-size: 0.75rem; line-height: 1; }
+    .header .status { grid-column: 2; line-height: 1; }
+    .header span {
       font-size: 0.75rem;
       color: var(--text-secondary);
     }
-    .indicator-bar .selected-text {
+    .header .selected-text {
       color: var(--accent);
       font-weight: 500;
     }
@@ -196,18 +199,14 @@
 </head>
 <body>
   <div class="header">
-    <h1><a href="https://github.com/obra/superpowers" style="color: inherit; text-decoration: none;">Superpowers Brainstorming</a></h1>
-    <div class="status">Connected</div>
+    <!-- BRANDING -->
+    <div class="status">Connecting…</div>
   </div>
 
   <div class="main">
-    <div id="claude-content">
+    <div id="frame-content">
       <!-- CONTENT -->
     </div>
-  </div>
-
-  <div class="indicator-bar">
-    <span id="indicator-text">Click an option above, then return to the terminal</span>
   </div>
 
 </body>
