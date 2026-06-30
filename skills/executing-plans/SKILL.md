@@ -15,6 +15,23 @@ Load plan, review critically, execute all tasks, report when complete.
 
 ## The Process
 
+### Step 0: Ensure an Isolated Workspace
+
+**REQUIRED SUB-SKILL — before loading the plan:** Use
+superpowers:using-git-worktrees to create or verify an isolated workspace.
+
+This mirrors the required sub-skill at the *end* of this process
+(finishing-a-development-branch): isolation is a hard gate at the start, not
+an optional footnote. Executing a plan means many edits and commits in the
+current directory — if that is the main checkout, a parallel agent or your
+human partner collides with your branch and uncommitted state. Create the
+worktree *before* the first edit; doing it afterward does not isolate work
+already in progress.
+
+Do not proceed to Step 1 until you have confirmed you are in an isolated
+workspace, or your human partner has explicitly told you to run in the
+current checkout.
+
 ### Step 1: Load and Review Plan
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
@@ -61,6 +78,7 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- Never start executing before Step 0 — create/verify the worktree first
 
 ## Integration
 
