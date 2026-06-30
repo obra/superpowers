@@ -227,18 +227,20 @@ you may **not** do is bridge a gap by editing the user's global config.
 The harness has a hook system that runs a shell command at session start and
 reads JSON from its stdout. The configured command runs `run-hook.cmd`, a
 polyglot wrapper that just locates bash and dispatches the named script; the
-script (`hooks/session-start`, or a harness-specific variant like
-`hooks/session-start-codex`) is what reads `using-superpowers/SKILL.md` and
-prints a JSON object whose **field name and nesting differ per harness**.
+script (`hooks/session-start`, or a harness-specific variant) is what reads
+`using-superpowers/SKILL.md` and prints a JSON object whose **field name and
+nesting differ per harness**.
 
-- Reference: `hooks/session-start` (and `hooks/session-start-codex`),
-  `hooks/run-hook.cmd`, and the per-harness hook config `hooks/hooks.json`
-  (Claude Code), `hooks/hooks-codex.json` (Codex), `hooks/hooks-cursor.json`
+- Reference: `hooks/session-start`, `hooks/run-hook.cmd`, and the per-harness
+  hook config `hooks/hooks.json` (Claude Code) and `hooks/hooks-cursor.json`
   (Cursor).
-- Manifests: `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json` point the
-  harness at `./skills/` and the right `hooks-*.json`. (Claude Code's
-  `.claude-plugin/plugin.json` sets neither field — it auto-discovers `skills/`
-  and `hooks/hooks.json` by convention.)
+- Manifests: `.cursor-plugin/plugin.json` points the harness at `./skills/` and
+  the right `hooks-*.json`. (Claude Code's `.claude-plugin/plugin.json` sets
+  neither field — it auto-discovers `skills/` and `hooks/hooks.json` by
+  convention. Codex's `.codex-plugin/plugin.json` ships skills but declares an
+  empty `hooks` object: Codex auto-discovers `hooks/hooks.json` when the field
+  is absent, so the empty object suppresses that — Codex surfaces skills
+  natively and runs no session-start hook.)
 
 > **A hook *system* is not a session-start *event*.** A harness can have a
 > `hooks.json` mechanism — and even contain the literal string `SessionStart` in
@@ -287,7 +289,7 @@ part of the installed extension** — never substitute "edit the user's global
 
 | If the harness… | Use shape | Copy from |
 |---|---|---|
-| runs a shell command at session start and reads its stdout | A (shell-hook) | Codex (`hooks/session-start-codex` + `hooks/hooks-codex.json` + `.codex-plugin/`) |
+| runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
 | has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
@@ -375,25 +377,24 @@ both double-injects). Find the
 exact field, nesting, and event-matcher values your harness expects. Then
 decide: add a fourth branch to `hooks/session-start`, or — if the harness needs
 a different bootstrap message or env contract — add a dedicated
-`hooks/session-start-<harness>` script, the way Codex did. If you add a branch
+`hooks/session-start-<harness>` script. If you add a branch
 and your harness *also* sets an env var an earlier branch keys on (some harnesses
 set `CLAUDE_PLUGIN_ROOT` too), order your branch before the one that would
 otherwise shadow it. Match the harness's
-own event-matcher strings (Claude Code uses `startup|clear|compact`, Codex
-`startup|resume|clear`, Cursor `sessionStart`); wrong matchers mean the hook
-silently never fires.
+own event-matcher strings (Claude Code uses `startup|clear|compact`, Cursor
+`sessionStart`); wrong matchers mean the hook silently never fires.
 
 The **hook-config schema itself varies per harness** — don't assume the
-Claude/Codex shape is universal. Compare `hooks/hooks.json`,
-`hooks/hooks-codex.json`, and `hooks/hooks-cursor.json`: Cursor's uses
+Claude Code shape is universal. Compare `hooks/hooks.json` and
+`hooks/hooks-cursor.json`: Cursor's uses
 `"version": 1`, a lowercase `sessionStart` key, a relative
-`./hooks/run-hook.cmd` command, and omits the `matcher`/`type`/`async` fields the
-others use. Match your `hooks-<harness>.json` to whichever existing file is
+`./hooks/run-hook.cmd` command, and omits the `matcher`/`type`/`async` fields
+Claude Code uses. Match your `hooks-<harness>.json` to whichever existing file is
 closest, not to a single canonical template.
 
 The hook **command string references a harness-provided plugin-root variable**,
 and its name differs per harness: `hooks.json` uses `${CLAUDE_PLUGIN_ROOT}`,
-`hooks-codex.json` uses `${PLUGIN_ROOT}`, Cursor uses a relative path. Use
+`hooks-cursor.json` uses a relative path. Use
 whatever your harness exports. (The `session-start` script re-derives the root
 itself via `dirname`, so the script body doesn't depend on this — but the
 command in the manifest does.)
@@ -784,7 +785,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
 | Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; `references/claude-code-tools.md` | `tests/hooks/` | marketplace |
-| Codex | `.codex-plugin/plugin.json` + `hooks/hooks-codex.json` | shell hook → `hooks/session-start-codex` | `references/codex-tools.md` | `tests/codex-plugin-sync/`, `tests/hooks/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
+| Codex | `.codex-plugin/plugin.json` (declares empty `hooks`) | native skill discovery (no session-start hook) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | `references/claude-code-tools.md` | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | `references/copilot-tools.md` | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
@@ -799,10 +800,10 @@ Use this as the live index; when in doubt, read the files, not this table.
 - **Wrong JSON field → silent failure or double injection.** Shape A only.
   Confirm the exact field/nesting; Claude Code reads two fields without dedup.
 - **Hook-config schema varies per harness.** Shape A. Cursor's `hooks-cursor.json`
-  looks nothing like the Claude/Codex one (`version`, lowercase `sessionStart`,
+  looks nothing like the Claude Code one (`version`, lowercase `sessionStart`,
   relative command, no `matcher`/`type`/`async`). Match the closest existing file.
 - **Plugin-root env var differs per harness.** Shape A. The hook command uses
-  `${CLAUDE_PLUGIN_ROOT}` (Claude), `${PLUGIN_ROOT}` (Codex), or a relative path
+  `${CLAUDE_PLUGIN_ROOT}` (Claude) or a relative path
   (Cursor). Use what your harness exports; the script re-derives the root itself.
 - **System-message injection.** Shape B injects a *user* message on purpose
   (#750, #894). Don't "fix" it to a system message.
