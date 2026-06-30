@@ -58,7 +58,7 @@ spec:
 ### 2. No privilege escalation → prevents privilege-escalation findings
 
 ```yaml
-      securityContext:
+      securityContext:                 # container level
         allowPrivilegeEscalation: false
         privileged: false
 ```
@@ -69,7 +69,7 @@ Drop everything, add back only the specific capabilities the workload proves it
 needs (rare — most don't).
 
 ```yaml
-      securityContext:
+      securityContext:                 # container level
         capabilities:
           drop: ["ALL"]
 ```
@@ -77,12 +77,12 @@ needs (rare — most don't).
 ### 4. Read-only root filesystem → prevents "writable container filesystem"
 
 ```yaml
-      securityContext:
+      securityContext:                 # container level
         readOnlyRootFilesystem: true
-      volumeMounts:
+      volumeMounts:                    # container level
         - name: tmp
           mountPath: /tmp
-  volumes:
+  volumes:                             # pod level
     - name: tmp
       emptyDir: {}
 ```
