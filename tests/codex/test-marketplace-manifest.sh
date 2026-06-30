@@ -53,8 +53,8 @@ manifest = json.loads(plugin_manifest.read_text(encoding="utf-8"))
 assert_equal(manifest.get("name"), plugin.get("name"), "plugin manifest name")
 assert_equal(
     manifest.get("hooks"),
-    "./hooks/hooks-codex.json",
-    "Codex hooks manifest",
+    None,
+    "Codex manifest ships no hooks",
 )
 
 print("Codex marketplace manifest looks good")
