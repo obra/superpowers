@@ -1,0 +1,92 @@
+name: Sync upstream
+
+# Daily merge of obra/superpowers main into this fork's main.
+# Also runnable on demand from the Actions tab.
+on:
+  schedule:
+    - cron: "17 5 * * *" # every day at 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # default GITHUB_TOKEN is persisted so the later push works
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Register the 'ours' merge driver
+        # .gitattributes marks the plugin manifests merge=ours so upstream
+        # version bumps never conflict with our version-less (SHA-driven) copies.
+        run: git config merge.ours.driver true
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/obra/superpowers.git
+          git fetch upstream main
+
+      - name: Merge upstream/main
+        id: merge
+        run: |
+          if git merge --no-edit upstream/main; then
+            echo "Merge succeeded."
+          else
+            echo "::error::Merge conflict with upstream/main. Resolve manually."
+            git merge --abort
+            exit 1
+          fi
+
+      - name: Push to fork main
+        run: git push origin main
+
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Upstream sync failed (manual merge needed)";
+            const body = [
+              "The daily `sync-upstream` workflow could not merge `obra/superpowers@main` into this fork's `main`.",
+              "",
+              "Likely a merge conflict with local commits on `main`.",
+              "",
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              "",
+              "Resolve locally:",
+              "```sh",
+              "git fetch upstream main",
+              "git merge upstream/main   # fix conflicts",
+              "git push origin main",
+              "```",
+            ].join("\n");
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "sync-upstream",
+            });
+            if (existing.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["sync-upstream"],
+              });
+            }

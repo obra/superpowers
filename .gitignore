@@ -2,6 +2,7 @@
 .private-journal/
 .claude/
 .superpowers/
+.idea/
 .DS_Store
 node_modules/
 inspo

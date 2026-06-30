@@ -16,3 +16,8 @@ hooks/session-start text eol=lf
 *.png binary
 *.jpg binary
 *.gif binary
+
+# Keep our (version-less, SHA-driven) plugin manifests on upstream merges.
+# Requires `git config merge.ours.driver true` (set in the sync-upstream workflow).
+.claude-plugin/marketplace.json merge=ours
+.claude-plugin/plugin.json merge=ours
