@@ -22,7 +22,7 @@ If the repo defines repo-local verification tiers, review contracts, PR template
 2. Check for repo-local review, verification, and lifecycle docs that constrain how the plan should run
 3. Review critically - identify any questions or concerns about the plan
 4. If concerns: Raise them with your human partner before starting
-5. If no concerns: Create TodoWrite and proceed
+5. If no concerns: Create a todo list and proceed
 
 ### Step 2: Execute Tasks
 
