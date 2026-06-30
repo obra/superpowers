@@ -121,6 +121,7 @@ Subagent (general-purpose):
     - Files changed
     - Self-review findings (if any)
     - Any issues or concerns
+    - **Project Discoveries** (optional): codebase quirks, gotchas, or patterns worth passing to the next subagent
 
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):

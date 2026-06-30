@@ -16,6 +16,21 @@ ledger and the tool results carry the record.
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
+## Accumulated Discoveries
+
+The controller maintains a running list of project discoveries reported by implementer subagents. After each completed task, extract any **Project Discoveries** from the implementer's report and append them to the list.
+
+When dispatching subsequent subagents (Task 2+), include the accumulated discoveries in the prompt:
+
+```
+    ## Accumulated Discoveries
+
+    Previous tasks surfaced these codebase patterns and gotchas:
+    [paste accumulated discoveries here]
+```
+
+This prevents later subagents from re-discovering issues that earlier subagents already found. The controller curates this list - remove duplicates and keep it concise.
+
 ## When to Use
 
 ```dot
