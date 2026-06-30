@@ -92,6 +92,10 @@ include this section.]
   and return types. A task's implementer sees only their own task; this
   block is how they learn the names and types neighboring tasks use.]
 
+**Invariants:** (1-3 conditions this task must guarantee, each bound to a named test)
+- `condition the task must hold` → `test_function_name` in the test file
+- (omit this block when no non-obvious invariants exist)
+
 - [ ] **Step 1: Write the failing test**
 
 ```python
