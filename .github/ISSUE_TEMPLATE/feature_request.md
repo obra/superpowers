@@ -30,5 +30,18 @@ progress, and some were intentionally declined.
      of project? If this is specific to your domain, workflow, or a
      third-party tool, it may belong as its own plugin instead. -->
 
+## Environment (required)
+<!-- Required. We assume an agent wrote this request — tell us which one and
+     where it ran. We weigh proposals reasoned from documentation differently
+     than ones grounded in a real session where the problem actually came up. -->
+
+| Field | Value |
+|-------|-------|
+| Superpowers version | |
+| Harness (Claude Code, Cursor, etc.) | |
+| Harness version | |
+| Your model + version | |
+| All plugins installed | |
+
 ## Context
-<!-- Optional: version info, harness, model, workflow where you hit this. -->
+<!-- Optional: the workflow where you hit this, links, transcripts. -->

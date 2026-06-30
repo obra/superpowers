@@ -21,3 +21,14 @@ requested or discussed.
 ## Have you tried manual installation?
 <!-- Many tools work with Superpowers through manual setup even without
      official support. Did you try? What happened? -->
+
+## Environment (required)
+<!-- Required. We assume an agent wrote this request — tell us which one and
+     where it ran. -->
+
+| Field | Value |
+|-------|-------|
+| Harness you currently use (Claude Code, Cursor, etc.) | |
+| Harness version | |
+| Your model + version | |
+| All plugins installed | |

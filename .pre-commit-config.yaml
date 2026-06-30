@@ -1,0 +1,21 @@
+repos:
+  - repo: local
+    hooks:
+      - id: evals-ruff-check
+        name: evals ruff check
+        entry: uv --project evals run ruff check
+        language: system
+        files: ^evals/.*\.py$
+
+      - id: evals-ruff-format-check
+        name: evals ruff format --check
+        entry: uv --project evals run ruff format --check
+        language: system
+        files: ^evals/.*\.py$
+
+      - id: evals-ty-check
+        name: evals ty check
+        entry: uv --directory evals run ty check
+        language: system
+        pass_filenames: false
+        files: ^evals/.*\.py$
