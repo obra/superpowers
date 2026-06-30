@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# Warm worktree pool for parallel, recycled task execution.
+#
+# A pool of persistent git worktrees under .worktrees/pool/. Slots survive
+# ACROSS development flows, so their resolved dependencies and incremental
+# build output stay warm: a leased slot does an incremental build, not the
+# cold from-scratch build (and full dependency re-resolve) a freshly created
+# worktree would. The first flow to use a slot pays the cold cost once; every
+# flow after recycles the warm slot.
+#
+# Slots are LEASED for the duration of one task and RELEASED (not removed)
+# afterward. Release keeps the slot's build artifacts (no clean), so the next
+# lease reuses them.
+#
+# Subcommands:
+#   provision N [BASE_REF]   Ensure at least N slots exist (created at BASE_REF
+#                            or HEAD). Pre-creates placeholder slots to warm
+#                            later. Idempotent.
+#   lease BASE_REF BRANCH    Claim a free slot, reset it to BASE_REF on a fresh
+#                            BRANCH (keeping warm build artifacts), print the
+#                            slot path on stdout. Creates a slot on demand up to
+#                            the cap.
+#   release SLOT_PATH        Free a leased slot for reuse (detaches HEAD, keeps
+#                            build output, leaves the slot registered).
+#   status                   List slots and their lease state.
+#   gc [MAX_AGE_HOURS]       Prune removed worktrees and clear stale leases
+#                            (default 6h) left behind by a crashed flow.
+#
+# Pool size cap: SDD_POOL_MAX (default 8). lease creates a new slot on demand
+# up to the cap; at the cap with every slot busy it exits 3 (pool exhausted) so
+# the controller schedules the overflow task in a later sub-wave or raises the
+# cap.
+set -euo pipefail
+
+POOL_MAX="${SDD_POOL_MAX:-8}"
+
+main_root() { git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel; }
+
+pool_dir() {
+  local root
+  root=$(main_root)
+  local dir="$root/.worktrees/pool"
+  mkdir -p "$dir"
+  printf '%s' "$dir"
+}
+
+slot_count() { find "$1" -maxdepth 1 -type d -name 'slot-*' 2>/dev/null | wc -l | tr -d ' '; }
+
+next_index() {
+  local pd=$1 max=0 n s
+  for s in "$pd"/slot-*; do
+    [ -d "$s" ] || continue
+    n=${s##*/slot-}
+    if [[ $n =~ ^[0-9]+$ ]] && [ "$n" -gt "$max" ]; then max=$n; fi
+  done
+  echo $((max + 1))
+}
+
+create_slot() {
+  local pd=$1 base=$2 idx slot
+  idx=$(next_index "$pd")
+  slot="$pd/slot-$idx"
+  git worktree add --detach "$slot" "$base" >/dev/null
+  printf '%s' "$slot"
+}
+
+cmd_provision() {
+  local n=${1:?usage: provision N [BASE_REF]} base=${2:-HEAD} pd have
+  git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE_REF: $base" >&2; exit 2; }
+  pd=$(pool_dir)
+  have=$(slot_count "$pd")
+  while [ "$have" -lt "$n" ]; do
+    if [ "$have" -ge "$POOL_MAX" ]; then
+      echo "cap reached (SDD_POOL_MAX=$POOL_MAX); raise it to add more" >&2
+      break
+    fi
+    create_slot "$pd" "$base" >/dev/null
+    have=$((have + 1))
+  done
+  cmd_status
+}
+
+cmd_lease() {
+  local base=${1:?usage: lease BASE_REF BRANCH} branch=${2:?usage: lease BASE_REF BRANCH} pd slot="" s
+  git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE_REF: $base" >&2; exit 2; }
+  pd=$(pool_dir)
+  # Atomically claim a free slot: mkdir of the lease marker is the lock.
+  for s in "$pd"/slot-*; do
+    [ -d "$s" ] || continue
+    if mkdir "$s/.lease" 2>/dev/null; then slot=$s; break; fi
+  done
+  if [ -z "$slot" ]; then
+    if [ "$(slot_count "$pd")" -ge "$POOL_MAX" ]; then
+      echo "pool exhausted (SDD_POOL_MAX=$POOL_MAX, all slots busy)" >&2
+      exit 3
+    fi
+    slot=$(create_slot "$pd" "$base")
+    mkdir "$slot/.lease"
+  fi
+  # Reset to base on a fresh branch. --hard keeps git-ignored build artifacts
+  # (target/, build/, node_modules), so the build stays warm. Never clean here.
+  git -C "$slot" reset -q --hard "$base"
+  git -C "$slot" checkout -q -B "$branch" "$base"
+  date -u +%Y-%m-%dT%H:%M:%SZ > "$slot/.lease/since" 2>/dev/null || true
+  printf '%s\n' "$slot"
+}
+
+cmd_release() {
+  local slot=${1:?usage: release SLOT_PATH} br
+  [ -d "$slot/.lease" ] || { echo "not leased: $slot" >&2; exit 2; }
+  # Detach so the task branch is free for the controller to merge/delete and
+  # for the next lease to reuse the slot. Keep build artifacts (no clean).
+  br=$(git -C "$slot" symbolic-ref -q --short HEAD || true)
+  git -C "$slot" checkout -q --detach 2>/dev/null || true
+  rm -rf "$slot/.lease"
+  printf 'released %s (was on %s)\n' "$slot" "${br:-detached}"
+}
+
+cmd_status() {
+  local pd s state any=0
+  pd=$(pool_dir)
+  for s in "$pd"/slot-*; do
+    [ -d "$s" ] || continue
+    any=1
+    if [ -d "$s/.lease" ]; then state="LEASED"; else state="free  "; fi
+    printf '%s\t%s\n' "$state" "$s"
+  done
+  [ "$any" -eq 1 ] || echo "(pool empty)"
+}
+
+cmd_gc() {
+  local max_age_h=${1:-6} pd now s since_f t age
+  pd=$(pool_dir)
+  git -C "$(main_root)" worktree prune
+  now=$(date -u +%s)
+  for s in "$pd"/slot-*; do
+    [ -d "$s/.lease" ] || continue
+    since_f="$s/.lease/since"
+    if [ -f "$since_f" ]; then
+      t=$(date -u -d "$(cat "$since_f")" +%s 2>/dev/null || echo 0)
+    else
+      t=0
+    fi
+    age=$(((now - t) / 3600))
+    if [ "$t" -eq 0 ] || [ "$age" -ge "$max_age_h" ]; then
+      rm -rf "$s/.lease"
+      echo "cleared stale lease: $s (age ${age}h)"
+    fi
+  done
+}
+
+cmd=${1:-}
+[ $# -gt 0 ] && shift || true
+case "$cmd" in
+  provision) cmd_provision "$@" ;;
+  lease)     cmd_lease "$@" ;;
+  release)   cmd_release "$@" ;;
+  status)    cmd_status "$@" ;;
+  gc)        cmd_gc "$@" ;;
+  *) echo "usage: worktree-pool {provision N [BASE]|lease BASE BRANCH|release SLOT|status|gc [HOURS]}" >&2; exit 2 ;;
+esac

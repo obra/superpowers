@@ -39,13 +39,23 @@ Subagent (general-purpose):
     5. Self-review (see below)
     6. Report back
 
-    Work from: [directory]
+    Work from: [WORKTREE_DIR] — your own isolated worktree for this task.
+    Commit there; do not touch other worktrees or the main checkout.
+
+    Build/test environment: [BUILD_ENV] — use the shared dependency cache given
+    here (e.g. Maven `-Dmaven.repo.local=<shared>`, a shared Gradle/pnpm home)
+    so you resolve from the already-populated cache instead of re-downloading.
+    Your build OUTPUT (target/, build/) stays local to this worktree. Omit this
+    block when running in-place in the main checkout.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    While iterating, run only the focused tests covering the code you change.
+    Do NOT run the full suite, the linter, or the formatter — those run once
+    at the end of the whole flow, not per task. Running them per task multiplies
+    wall-clock across every task for no extra signal. Your gate is: the focused
+    tests for your change pass and their output is pristine.
 
     ## Code Organization
 

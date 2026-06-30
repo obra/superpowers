@@ -5,11 +5,13 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute plan by dispatching fresh implementer subagents — independent tasks run in parallel, each in its own worktree — with a task review (spec compliance + code quality) per task and a broad whole-branch review at the end. Formatting, linting, and the full test suite run ONCE at the end of the flow, never per task.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
+**Core principle:** Fresh subagent per task + parallel independent tasks + task review (spec + quality) + broad final review + one consolidated verification gate = high quality, fast iteration
+
+**Speed model:** Wall-clock, not token count, is the cost that matters here. Spend tokens freely to save wall-clock: fan out independent tasks concurrently, generate all task briefs up front in one parallel batch, and overlap reviews with the next wave's implementation. The only work that is strictly serial is work with a real dependency.
 
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
@@ -95,6 +97,137 @@ each finding beside the plan text that mandates it, asking which governs —
 before execution begins, not one interrupt per discovery mid-plan. If the
 scan is clean, proceed without comment. The review loop remains the net for
 conflicts that only emerge from implementation.
+
+During this scan, also build the **dependency graph**: which tasks read or
+write files another task creates or modifies. Tasks with no edge between them
+are independent and run concurrently. This graph drives the waves below.
+
+## Parallel Waves
+
+The per-task loop in the process diagram is the dependency-ordered shape, not a
+mandate to run one task at a time. Independent tasks run concurrently.
+
+- Group tasks into **waves**: a wave is a set of tasks with no dependency on
+  each other. Wave 1 is every task with no unmet dependency; wave 2 is every
+  task whose dependencies are all in wave 1; and so on.
+- **Generate all task briefs for a wave in one parallel batch** before
+  dispatching (`scripts/task-brief PLAN_FILE N` per task — these are
+  independent and need no ordering).
+- Dispatch every implementer in a wave **concurrently**, each in **its own
+  worktree leased from the warm pool** so parallel writes never collide AND the
+  build stays warm across flows (see The Warm Worktree Pool). Lease one per
+  task: `scripts/worktree-pool lease <feature-branch> <task-branch>` prints the
+  slot path — pass it as the implementer's `[WORKTREE_DIR]`. Pass the shared
+  dependency cache (see Sharing the Dependency Cache) in `[BUILD_ENV]`.
+- When a wave's implementers all report DONE, **merge each task branch back to
+  the feature branch** in task order, then **release each slot**
+  (`scripts/worktree-pool release <slot>`) so the next wave or the next flow
+  recycles it warm. Independent tasks touch disjoint files, so merges are clean.
+  A real merge conflict means two tasks were not actually independent — fix the
+  graph and re-run the affected task.
+- Then start the next wave. Reviews from the finished wave run in parallel with
+  the next wave's implementers (see Pipelined Review).
+
+A single chain of dependent tasks degrades gracefully to the original
+one-at-a-time loop — that is just a graph where every task depends on the last.
+
+## The Warm Worktree Pool
+
+A freshly created worktree starts cold: no resolved dependencies, no build
+cache, no compiled output. For heavy-build ecosystems (Maven, Gradle, Rust,
+large C++) that cold warm-up can cost more wall-clock than parallelism saves.
+Creating a worktree per task and destroying it afterward pays that cost every
+single time.
+
+Don't. Use a **persistent pool of recyclable worktrees** instead — managed by
+`scripts/worktree-pool`. Slots live under `.worktrees/pool/` and survive across
+flows. The first flow to use a slot pays the cold cost once; every flow after
+**recycles the same warm slot**, so its build is incremental, not from scratch.
+
+- **Lease / release, never create / destroy.** `lease` claims a free slot,
+  resets it to the base on a fresh task branch, and keeps the slot's build
+  artifacts (it never runs `git clean`). `release` frees the slot and leaves the
+  artifacts in place for the next lease. The slot is never removed.
+- **Pre-provision placeholders.** `scripts/worktree-pool provision N` creates N
+  empty slots up front so a wave of N tasks leases instantly. Warm them once
+  (build in each) and every later flow inherits the warm cache.
+- **Pool cap.** `SDD_POOL_MAX` (default 8) caps slot count. If a wave is wider
+  than free slots, `lease` exits 3 (pool exhausted); run the overflow tasks in a
+  later sub-wave or raise the cap.
+- **Crash recovery.** A flow that dies mid-task leaves a slot leased.
+  `scripts/worktree-pool gc` clears leases older than 6h and prunes removed
+  worktrees. Run it if `status` shows a slot stuck LEASED with no flow using it.
+
+The pool is the parallelism enabler: because slots stay warm, fanning out costs
+little beyond each task's own incremental compile, even in a big monorepo.
+
+### Sharing the Dependency Cache
+
+Slots already keep their own warm build output. The *dependency* cache is
+read-mostly and content-addressed, so all slots can additionally point at the
+one the main checkout populated — no re-download. Pass this in `[BUILD_ENV]`:
+
+- Maven: `-Dmaven.repo.local=<shared-repo>` (or the shared `~/.m2`). If the
+  project pins a per-clone repo via `.mvn/maven.config`, a leased slot lacks
+  that file and silently falls back to `~/.m2` — point it at the clone's repo
+  explicitly so it resolves the right artifacts.
+- Gradle: shared `~/.gradle` (the default) or `--gradle-user-home`.
+- Node: a shared pnpm/yarn store, or a read-only `node_modules` symlink.
+
+**Do NOT share build OUTPUT across slots.** `target/`, `build/`, and similar
+output dirs are written during the build; sharing them while two slots build at
+once corrupts both. Each slot owns its output — that is exactly what the pool
+keeps warm per slot.
+
+### When to Skip the Pool
+
+Parallelism is a wall-clock optimization; if it makes wall-clock worse, don't
+use it. Run the wave **in-place, serially, in the main checkout** when tasks are
+tiny relative to even an incremental build, or the pool isn't warm yet and the
+wave is a one-off — sequential tasks then reuse the main checkout's single warm
+cache. State which mode you chose and why before the first dispatch.
+
+## Pipelined Review
+
+Do not block the next wave on the previous wave's reviews. After merging a
+wave, dispatch its task reviewers AND the next wave's implementers in the same
+turn. Reviews are read-only on a committed diff, so they never race the new
+implementers. Collect review verdicts as they return and act on them per Batch
+Fixes below.
+
+## Deferred Verification
+
+Formatting, linting, and the full test suite run **once, at the end of the
+flow**, never per task.
+
+- Implementers run only the focused tests covering their change (the
+  implementer prompt enforces this).
+- The single consolidated gate — format, then lint, then full suite — runs in
+  superpowers:finishing-a-development-branch Step 1, after the final
+  whole-branch review.
+- Rationale: per-task full-suite and lint runs multiply wall-clock across every
+  task and every fix iteration for no signal a focused test plus the final gate
+  doesn't already provide. The cost of catching a cross-task test break at the
+  end is one fix wave; the cost of running the full suite N times is paid every
+  run.
+
+## Batch Fixes
+
+Per-task reviews produce findings continuously while later waves run. Do not
+fix-then-re-review after every task. Instead:
+
+- **Redesign-scale findings** (the reviewer marks `Redesign-scale: yes` — a
+  Critical finding whose fix changes an interface, data model, or approach that
+  other tasks build on) are handled **immediately**: dispatch the fix now, and
+  **alert every in-flight implementer** whose task depends on the changed
+  surface so they incorporate the new shape instead of building on the old one.
+  A redesign caught late and batched would invalidate work done in the meantime.
+- **All other findings** (Critical that are local, Important, Minor) accumulate
+  in the progress ledger. After the last wave, dispatch **one fix wave** with
+  the complete findings list — independent fixes parallelize across worktrees
+  the same way implementers do — then run the final whole-branch review.
+- The final whole-branch review reads the accumulated Minor list and triages
+  what must be fixed before merge.
 
 ## Model Selection
 
@@ -191,10 +324,12 @@ final whole-branch review. When you fill a reviewer template:
   later dispatches — a real session's dispatch hit 42k chars of which 99%
   was pasted history. A fresh subagent needs its task, the interfaces it
   touches, and the global constraints. Nothing else.
-- Dispatch fix subagents for Critical and Important findings. Record Minor
-  findings in the progress ledger as you go, and point the final
-  whole-branch review at that list so it can triage which must be fixed
-  before merge. A roll-up nobody reads is a silent discard.
+- Record findings in the progress ledger as you go (see Batch Fixes):
+  redesign-scale findings are fixed immediately with an alert to in-flight
+  dependent implementers; all other findings — Critical-but-local, Important,
+  and Minor — accumulate for the single post-wave fix wave. Point the final
+  whole-branch review at the ledger so it can triage what must be fixed before
+  merge. A roll-up nobody reads is a silent discard.
 - A finding labeled plan-mandated — or any finding that conflicts with
   what the plan's text requires — is the human's decision, like any plan
   contradiction: present the finding and the plan text, ask which governs.
@@ -270,6 +405,13 @@ a ledger file, not only in todos.
 - Final whole-branch review: use superpowers:requesting-code-review's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
 
 ## Example Workflow
+
+This example shows a fully dependent chain (Task 2 builds on Task 1), so tasks
+run one at a time and the fix is shown inline for clarity. When tasks are
+independent, you instead dispatch the wave's implementers concurrently in
+separate worktrees, pipeline the reviews against the next wave, and batch
+non-redesign findings into one fix wave after the last wave (see Parallel
+Waves, Pipelined Review, and Batch Fixes).
 
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
@@ -369,8 +511,11 @@ Done!
 **Never:**
 - Start implementation on main/master branch without explicit user consent
 - Skip task review, or accept a report missing either verdict (spec compliance AND task quality are both required)
-- Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Proceed past the final whole-branch review with unfixed Critical/Important issues
+- Dispatch parallel implementers into the SAME worktree (conflicts) — each parallel implementer leases its own slot from the warm pool
+- Destroy a pool slot instead of releasing it (`git worktree remove` on a `.worktrees/pool/` slot throws away the warm build cache the pool exists to preserve) — always `scripts/worktree-pool release`
+- `git clean` a leased slot (wipes the warm artifacts) — lease/release keep them deliberately
+- Run the full suite, linter, or formatter per task — those run once at the finish gate
 - Make a subagent read the whole plan file (hand it its task brief —
   `scripts/task-brief` — instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
@@ -384,7 +529,7 @@ Done!
 - Dispatch a task reviewer without a diff file — generate it first
   (`scripts/review-package BASE HEAD`) and name the printed path in the
   prompt
-- Move to next task while the review has open Critical/Important issues
+- Batch a redesign-scale finding instead of fixing it now and alerting in-flight dependent implementers
 - Re-dispatch a task the progress ledger already marks complete — check
   the ledger (and `git log`) after any compaction or resume
 
@@ -394,8 +539,10 @@ Done!
 - Don't rush them into implementation
 
 **If reviewer finds issues:**
-- Implementer (same subagent) fixes them
-- Reviewer reviews again
+- Redesign-scale findings: fix now (alert in-flight dependent implementers); all
+  other findings batch into the post-wave fix wave (see Batch Fixes)
+- Whichever fix path runs, a fixer addresses the findings and the reviewer
+  reviews again
 - Repeat until approved
 - Don't skip the re-review
 

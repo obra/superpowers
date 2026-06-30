@@ -9,33 +9,45 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Verify (format + lint + full suite) → Detect environment → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
 
-### Step 1: Verify Tests
+### Step 1: Consolidated Verification Gate
 
-**Before presenting options, verify tests pass:**
+This is the single place format, lint, and the full suite run. When the work
+came through superpowers:subagent-driven-development or
+superpowers:executing-plans, per-task implementers ran only focused tests and
+skipped format/lint/full-suite by design — this gate is where the deferred,
+whole-branch verification happens. Run the three checks **in order**, because
+a failing earlier check can change files the later check sees:
 
 ```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
+# 1. Format the whole tree (auto-fixable), then
+# 2. Lint the whole tree, then
+# 3. Run the project's full test suite
+<format command>   # e.g. prettier --write . / cargo fmt / ruff format / gofmt -w .
+<lint command>     # e.g. eslint . / cargo clippy / ruff check / golangci-lint run
+<test command>     # e.g. npm test / cargo test / pytest / go test ./...
 ```
 
-**If tests fail:**
+If a step has no command for this project, skip it and say so. If formatting
+changed files, commit them before continuing.
+
+**If format, lint, or the full suite fails:**
 ```
-Tests failing (<N> failures). Must fix before completing:
+<Format | Lint | Tests> failing. Must fix before completing:
 
 [Show failures]
 
-Cannot proceed with merge/PR until tests pass.
+Cannot proceed with merge/PR until format, lint, and the full suite pass.
 ```
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If all three pass:** Continue to Step 2.
 
 ### Step 2: Detect Environment
 
@@ -170,7 +182,13 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.worktrees/` or `worktrees/`:** Superpowers created this worktree — we own cleanup.
+**If worktree path is under `.worktrees/pool/`:** This is a recyclable warm-pool
+slot (see superpowers:subagent-driven-development). Do NOT remove it — slots are
+released and reused across flows, never destroyed. Release it instead:
+`scripts/worktree-pool release "$WORKTREE_PATH"`, then leave it in place. Skip
+the removal below.
+
+**If worktree path is under `.worktrees/` or `worktrees/` (but not the pool):** Superpowers created this worktree — we own cleanup.
 
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)

@@ -26,7 +26,9 @@ Load plan, review critically, execute all tasks, report when complete.
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
+3. Run only the focused tests for the code you changed. Defer formatting,
+   linting, and the full test suite to the finish gate (Step 3) — running them
+   per task multiplies wall-clock for no added signal.
 4. Mark as completed
 
 ### Step 3: Complete Development
@@ -34,7 +36,8 @@ For each task:
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+- Follow that skill's consolidated gate (format + lint + full suite), then
+  present options and execute the choice
 
 ## When to Stop and Ask for Help
 

@@ -128,6 +128,14 @@ Subagent (general-purpose):
     would block a merge over — verbatim duplication of a logic block,
     swallowed errors, tests that assert nothing. "Coverage could be broader"
     and polish suggestions are Minor.
+    Separately, judge whether any Critical finding is **redesign-scale**: its
+    fix would change an interface, data model, schema, or approach that OTHER
+    tasks build on, so fixing it later would invalidate work done in the
+    meantime. A local Critical (wrong logic inside this task's own code, no
+    ripple beyond it) is NOT redesign-scale. The controller fixes
+    redesign-scale findings immediately and alerts in-flight dependent work;
+    every other finding is batched into one later fix wave, so this flag must
+    be accurate.
     If the plan or brief explicitly mandates something this rubric calls a
     defect (a test that asserts nothing, verbatim duplication of a logic
     block), that IS a finding — report it as Important, labeled
@@ -162,6 +170,9 @@ Subagent (general-purpose):
 
     **Task quality:** [Approved | Needs fixes]
 
+    **Redesign-scale:** [yes | no] — yes only if a Critical finding's fix would
+    change a surface other tasks build on (name it). Default no.
+
     **Reasoning:** [1-2 sentence technical assessment]
 ```
 
@@ -182,7 +193,8 @@ Subagent (general-purpose):
   wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+(Critical/Important/Minor), Task quality verdict, Redesign-scale flag (drives
+fix-now vs batch)
 
 A fix dispatch can address spec gaps and quality findings together;
 re-review after fixes covers both verdicts.
