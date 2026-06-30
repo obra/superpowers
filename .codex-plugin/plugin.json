@@ -21,6 +21,7 @@
     "workflow"
   ],
   "skills": "./skills/",
+  "hooks": {},
   "interface": {
     "displayName": "Superpowers",
     "shortDescription": "Planning, TDD, debugging, and delivery workflows for coding agents",
