@@ -62,30 +62,44 @@ Only proceed to Step 1b if you have no native worktree tool available.
 
 #### Directory Selection
 
-Follow this priority order. Explicit user preference always beats observed filesystem state.
+Follow this priority order. Explicit user preference always beats observed filesystem state. Bind the chosen directory to `LOCATION` so later steps verify and create against the same path.
 
-1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, use it without asking.
-
-2. **Check for an existing project-local worktree directory:**
+1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, use it without asking:
    ```bash
-   ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-   ls -d worktrees 2>/dev/null      # Alternative
+   LOCATION="<user-specified-directory>"
    ```
-   If found, use it. If both exist, `.worktrees` wins.
 
-3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
+2. **Otherwise, check for an existing project-local worktree directory:**
+   ```bash
+   if [ -d .worktrees ]; then       # Preferred (hidden)
+     LOCATION=".worktrees"
+   elif [ -d worktrees ]; then      # Alternative
+     LOCATION="worktrees"
+   fi
+   ```
+   If both exist, `.worktrees` wins.
+
+3. **If there is no other guidance available**, default to `.worktrees/` at the project root:
+   ```bash
+   LOCATION=".worktrees"
+   ```
 
 #### Safety Verification (project-local directories only)
 
-**MUST verify directory is ignored before creating worktree:**
+**MUST verify the chosen directory is ignored before creating worktree:**
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q "$LOCATION"
 ```
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+**If NOT ignored:** Add `$LOCATION/` to .gitignore, commit the change, then proceed:
 
-**Why critical:** Prevents accidentally committing worktree contents to repository.
+```bash
+echo "$LOCATION/" >> .gitignore
+git add .gitignore && git commit -m "chore: ignore worktree directory"
+```
+
+**Why critical:** Prevents accidentally committing worktree contents to repository. Verifying the specific chosen location matters: a repo may ignore `.worktrees/` but not `worktrees/` (or vice versa). An `||` across both candidates can pass on the unchosen one and silently skip adding the ignore rule for the directory actually about to be created.
 
 #### Create the Worktree
 
