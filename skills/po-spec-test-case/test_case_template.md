@@ -66,3 +66,5 @@ Cột 11-14 (tracking) để trống cho cả 4 dòng trên, không hiển thị
 ```
 
 Sau khi user xác nhận nội dung đúng, dùng `build_test_case_xlsx.py` để xuất file `.xlsx` đa-sheet đúng schema 14 cột, sẵn sàng nộp vào quy trình QA hiện có.
+
+> **Phase 1+:** bảng 14 cột này là ĐÍCH dẫn xuất, KHÔNG phải nguồn. Test case sống ở nguồn canonical (`testcase-source-schema.md`) → `derive_source_to_xlsx_input.py` → `build_test_case_xlsx.py`. Cấm dẫn Excel từ text Gherkin.
