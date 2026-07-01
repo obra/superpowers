@@ -72,8 +72,8 @@ You MUST complete each phase before proceeding to the next.
    - If your human partner asks you to skip search, state that skipping it would turn a likely shared failure into local guesswork
    - A request to skip search does not make web access unavailable; if web access exists, search the exact signature anyway before deep local debugging
    - In your first response, name the exact upstream searches you will run or state that web access is technically unavailable
-   - Do not write "upstream search is intentionally unverified" merely because the request discouraged internet searches; say that only when search tooling is absent or fails
-   - If web access is technically unavailable, state that upstream search is unverified and continue with local evidence only
+   - Do not treat a request to skip search as “web access unavailable”; only skip upstream search when web/search tooling is technically unavailable or fails
+   - If you must skip, say explicitly: “Upstream/public exact-signature search not performed (no working web access)” and continue with local evidence only
 
 3. **Reproduce Consistently**
    - Can you trigger it reliably?
@@ -274,7 +274,7 @@ If you catch yourself thinking:
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
-| "Human partner said not to waste time searching" | For external failures, exact-signature upstream search prevents local thrashing. Ask only if web access is technically unavailable. |
+| "Human partner said not to waste time searching" | For external failures, exact-signature upstream search prevents local thrashing. Only skip upstream search if web access is technically unavailable. |
 | "Internet search is forbidden, so I'll mark it unverified" | Human pressure is not technical unavailability. If web access works, search first and explain why. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
 
