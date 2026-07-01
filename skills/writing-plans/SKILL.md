@@ -7,7 +7,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Start each plan with two very brief bullets: WHAT changes and WHY current data justifies it. Then document everything needed to execute: which files to touch for each task, code, testing, docs they might need to check, and how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
@@ -21,6 +21,10 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+
+## Evidence Basis
+
+Before choosing architecture or tasks, inspect current repo/code/test/live evidence. For bugs, failed checks, unexpected behavior, or regressions, use `superpowers:systematic-debugging` first and base the plan on its root-cause evidence. If evidence is missing, say what could not be confirmed instead of inventing it.
 
 ## File Structure
 
@@ -53,9 +57,12 @@ independently testable deliverable.
 
 ## Plan Document Header
 
-**Every plan MUST start with this header:**
+**Every plan MUST start with this header. Keep the first two bullets to one line each, with no sub-bullets or implementation detail:**
 
 ```markdown
+- **WHAT changed:** [One brief line naming the user-visible or system behavior this plan changes]
+- **WHY:** [One brief line naming the current evidence/root cause/data that makes the change necessary]
+
 # [Feature Name] Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -63,6 +70,8 @@ independently testable deliverable.
 **Goal:** [One sentence describing what this builds]
 
 **Architecture:** [2-3 sentences about approach]
+
+**Evidence:** [Current repo/code/test/live data inspected. For bugs/failures, summarize the `superpowers:systematic-debugging` root cause.]
 
 **Tech Stack:** [Key technologies/libraries]
 
@@ -145,11 +154,13 @@ Every step must contain the actual content an engineer needs. These are **plan f
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
 
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+**1. Opening summary:** Confirm the plan starts with exactly two brief bullets: `WHAT changed` and `WHY`. If either is longer than one line, includes implementation detail, or lacks evidence/root-cause data, fix it.
 
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+**2. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+**3. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+
+**4. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
