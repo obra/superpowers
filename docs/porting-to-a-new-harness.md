@@ -90,7 +90,7 @@ every session, with no per-session opt-in by your human partner.** This is the
 one non-negotiable capability. It can take any form:
 
 - a **hook/event system** that runs a shell command at session start and reads
-  its stdout (Claude Code, Codex, Cursor, Copilot CLI), or
+  its stdout (Claude Code, Cursor, Copilot CLI), or
 - an **in-process plugin/extension** with a session-start or message lifecycle
   callback that can mutate the message array (OpenCode, pi), or
 - an **instructions-file** convention where the harness loads a context file that
@@ -234,13 +234,13 @@ nesting differ per harness**.
 - Reference: `hooks/session-start`, `hooks/run-hook.cmd`, and the per-harness
   hook config `hooks/hooks.json` (Claude Code) and `hooks/hooks-cursor.json`
   (Cursor).
-- Manifests: `.cursor-plugin/plugin.json` points the harness at `./skills/` and
-  the right `hooks-*.json`. (Claude Code's `.claude-plugin/plugin.json` sets
-  neither field — it auto-discovers `skills/` and `hooks/hooks.json` by
-  convention. Codex's `.codex-plugin/plugin.json` ships skills but declares an
-  empty `hooks` object: Codex auto-discovers `hooks/hooks.json` when the field
-  is absent, so the empty object suppresses that — Codex surfaces skills
-  natively and runs no session-start hook.)
+- Manifests: `.cursor-plugin/plugin.json` is the Shape A manifest example that
+  points the harness at `./skills/` and the right `hooks-*.json`. Claude Code's
+  `.claude-plugin/plugin.json` sets neither field — it auto-discovers `skills/`
+  and `hooks/hooks.json` by convention. Do **not** copy Codex's
+  `.codex-plugin/plugin.json` for Shape A: it declares an empty `hooks` object
+  specifically to suppress Codex's `hooks/hooks.json` auto-discovery, because
+  Codex surfaces skills natively and runs no session-start hook.
 
 > **A hook *system* is not a session-start *event*.** A harness can have a
 > `hooks.json` mechanism — and even contain the literal string `SessionStart` in
@@ -311,7 +311,7 @@ patterns below are summaries; the code is the spec.
 Create whatever the harness uses to recognize the plugin. Match the existing
 ones in spirit:
 
-- **Shape A:** a `*-plugin/plugin.json` (see `.codex-plugin/plugin.json`) with
+- **Shape A:** a `*-plugin/plugin.json` (see `.cursor-plugin/plugin.json`) with
   `name`, `version`, `description`, author/license/keywords, `"skills":
   "./skills/"`, and `"hooks": "./hooks/hooks-<harness>.json"`. Plus the
   `hooks-<harness>.json` itself, registering a session-start hook whose command
