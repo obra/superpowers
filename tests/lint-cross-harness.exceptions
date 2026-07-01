@@ -1,0 +1,74 @@
+# tests/lint-cross-harness.exceptions
+#
+# Internal exception list for tests/lint-cross-harness.sh.
+#
+# Format: path:line[:reason]
+#  - path is the file path relative to the repo root
+#  - line is the line number where the lint flags a violation
+#  - reason is optional free-form text (everything after the second colon)
+#
+# Add an entry here when a single-agent reference is intentional and the
+# 2-agents-on-a-line rule does not naturally apply. Reason fields are for
+# humans reading the file; the lint does not enforce them.
+
+# Frontmatter discovery description: Skill tool naming is load-bearing for
+# Claude Code's skill discovery; other harnesses map via using-superpowers.
+skills/using-superpowers/SKILL.md:3:frontmatter description references Skill tool by name for discovery
+
+# using-superpowers and subagent-driven-development workflow diagrams are
+# graphviz nodes that depict the Claude Code subagent dispatch flow. The
+# graphviz format does not host multi-runtime annotations naturally; other
+# harnesses translate via references/<runtime>-tools.md.
+skills/using-superpowers/SKILL.md:55:graphviz node label in Claude Code workflow diagram
+skills/using-superpowers/SKILL.md:58:graphviz node label in Claude Code workflow diagram
+skills/using-superpowers/SKILL.md:68:graphviz node label in Claude Code workflow diagram
+skills/using-superpowers/SKILL.md:70:graphviz node label in Claude Code workflow diagram
+skills/using-superpowers/SKILL.md:72:graphviz node label in Claude Code workflow diagram
+skills/using-superpowers/SKILL.md:74:graphviz node label in Claude Code workflow diagram
+skills/subagent-driven-development/SKILL.md:60:graphviz node label in subagent flow diagram
+skills/subagent-driven-development/SKILL.md:63:graphviz node label in subagent flow diagram
+skills/subagent-driven-development/SKILL.md:68:graphviz node label in subagent flow diagram
+skills/subagent-driven-development/SKILL.md:81:graphviz node label in subagent flow diagram
+skills/subagent-driven-development/SKILL.md:82:graphviz node label in subagent flow diagram
+skills/subagent-driven-development/SKILL.md:135:flowchart task-creation reference
+
+# Subagent dispatch prompt headers. The "Task tool (general-purpose):" line
+# is the literal header agents render when dispatching a subagent on Claude
+# Code. Non-CC platforms wire this through references/.
+skills/brainstorming/spec-document-reviewer-prompt.md:10:subagent dispatch prompt header
+skills/writing-plans/plan-document-reviewer-prompt.md:10:subagent dispatch prompt header
+skills/requesting-code-review/code-reviewer.md:8:subagent dispatch prompt header
+skills/requesting-code-review/SKILL.md:34:references the Task tool dispatch by name
+skills/subagent-driven-development/spec-reviewer-prompt.md:8:subagent dispatch prompt header
+skills/subagent-driven-development/implementer-prompt.md:6:subagent dispatch prompt header
+skills/subagent-driven-development/code-quality-reviewer-prompt.md:10:subagent dispatch prompt header
+
+# executing-plans workflow uses TodoWrite as the canonical task ledger.
+skills/executing-plans/SKILL.md:22:workflow step references TodoWrite as the canonical ledger
+
+# brainstorming visual companion ships a setup section per OS, scoped to
+# Claude Code at this time. Other harnesses can land in adjacent sections
+# when their visual companion equivalent ships.
+skills/brainstorming/visual-companion.md:52:setup header for Claude Code on macOS/Linux
+skills/brainstorming/visual-companion.md:58:setup header for Claude Code on Windows
+
+# dispatching-parallel-agents has a TypeScript example showing how Task() is
+# dispatched from Claude Code's environment. The code comment is part of the
+# example's framing.
+skills/dispatching-parallel-agents/SKILL.md:69:TypeScript example block depicting Claude Code Task() dispatch
+
+# anthropic-best-practices.md is a quoted excerpt from Anthropic's
+# documentation. The text is reproduced verbatim and is source-attributed.
+skills/writing-skills/anthropic-best-practices.md:1143:source-attributed Anthropic documentation excerpt
+skills/writing-skills/anthropic-best-practices.md:1144:source-attributed Anthropic documentation excerpt
+
+# persuasion-principles.md uses TodoWrite in example prose to illustrate
+# persuasion patterns. The examples are intentional and translate naturally
+# to other harnesses with equivalent todo mechanisms.
+skills/writing-skills/persuasion-principles.md:36:example illustrating persuasion via TodoWrite
+skills/writing-skills/persuasion-principles.md:83:positive-example illustrating TodoWrite usage
+skills/writing-skills/persuasion-principles.md:84:negative-example illustrating TodoWrite usage
+
+# writing-skills creation checklist uses TodoWrite as the canonical todo
+# mechanism for the skill-creation flow on Claude Code.
+skills/writing-skills/SKILL.md:598:writing-skills checklist references TodoWrite as the ledger
