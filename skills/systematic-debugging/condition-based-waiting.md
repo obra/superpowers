@@ -61,7 +61,7 @@ Generic polling function:
 ```typescript
 async function waitFor<T>(
   condition: () => T | undefined | null | false,
-  description: string,
+  description = 'condition',
   timeoutMs = 5000
 ): Promise<T> {
   const startTime = Date.now();
