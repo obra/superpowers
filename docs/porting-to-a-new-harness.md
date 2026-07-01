@@ -703,8 +703,10 @@ Then:
     unrecognized.
   - **Otherwise lean on the installed `using-superpowers` skill itself.** If the
     harness surfaces each installed skill's name + description at session start,
-    the `using-superpowers` description ("Use when starting any conversation…")
-    can prompt the model to load it — installing the skill *is* the bootstrap.
+    the `using-superpowers` description ("Use when a user asks to implement,
+    debug, review, plan, research, automate, or modify files and a specialized
+    skill may apply") can prompt the model to load it — installing the skill *is*
+    the bootstrap.
     Softer (no guaranteed wrapper; it carries triggering but not the tool mapping
     — see Step 5), so prefer the declared context file when available.
   - If neither works, the harness cannot be cleanly supported yet — **say so**
