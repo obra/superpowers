@@ -48,6 +48,24 @@ use skill tool to list skills
 use skill tool to load brainstorming
 ```
 
+### Enabling todowrite for subagents
+
+Superpowers subagent-driven development requires subagents to use `todowrite` for TDD checklists. OpenCode disables `todowrite` for subagents by default. Enable it in `opencode.json`:
+
+```json
+{
+  "agent": {
+    "build": {
+      "permission": {
+        "todowrite": "allow"
+      }
+    }
+  }
+}
+```
+
+If you create custom agents for Superpowers, enable `todowrite` on each one that acts as an implementer.
+
 ## Updating
 
 OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
