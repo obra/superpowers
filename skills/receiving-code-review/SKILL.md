@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: Use when receiving review feedback from humans, GitHub comments, or subagent/spec-review passes before implementing suggestions; verify first, acknowledge concretely, and avoid performative agreement or blind implementation
 ---
 
 # Code Review Reception
@@ -84,6 +84,25 @@ IF conflicts with your human partner's prior decisions:
 ```
 
 **your human partner's rule:** "External feedback - be skeptical, but check carefully"
+
+### From Subagent Reviews (especially subagent-driven-development)
+Treat subagent feedback as first-class technical input, not casual chatter.
+
+```
+FOR each subagent finding:
+  1. Quote the exact finding in your own words
+  2. Classify it: spec mismatch / code-quality / test gap / false positive
+  3. Verify against plan + code before changing anything
+  4. Respond with concrete disposition:
+     - FIXED: what changed + where
+     - DISAGREE: technical reason + evidence
+     - NEEDS CLARIFICATION: exact question
+
+NEVER dismiss findings with vague language like:
+  "not a big problem" / "looks fine" / "excellent discovery" (without action)
+```
+
+When feedback came from a specialized review pass, keep the response in the same frame (spec-compliance or code-quality) and explicitly tie your action to that frame.
 
 ## YAGNI Check for "Professional" Features
 
