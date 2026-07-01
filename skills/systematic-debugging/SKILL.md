@@ -21,6 +21,11 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
 If you haven't completed Phase 1, you cannot propose fixes.
 
+For failures involving third-party runtimes, containers, frameworks, APIs,
+drivers, package dependencies, model servers, or platform integrations, Phase 1
+is not complete until you have searched upstream/public sources for the exact
+failure signature or explicitly stated that web access is unavailable.
+
 ## When to Use
 
 Use for ANY technical issue:
@@ -57,19 +62,32 @@ You MUST complete each phase before proceeding to the next.
    - Read stack traces completely
    - Note line numbers, file paths, error codes
 
-2. **Reproduce Consistently**
+2. **Search Upstream for Shared Failure Signatures**
+   - This is a Phase 1 completion gate for external/runtime/dependency failures, not an optional research task
+   - For third-party runtimes, containers, frameworks, APIs, drivers, package dependencies, model servers, and platform integrations, search public upstream sources before deep local debugging or patching
+   - If the exact third-party failure signature is already available, this search is the next action after reading the error
+   - Use exact quoted error strings, exception classes, package/image versions, endpoint names, stack-frame symbols, model/provider names, and driver/runtime versions
+   - Prefer upstream issues, pull requests, changelogs, release notes, and primary docs over generic posts
+   - Classify the problem precisely: local config, resource exhaustion, dependency compatibility regression, upstream bug, image/package mismatch, API or observability middleware failure, network/auth failure, or model/runtime limitation
+   - If your human partner asks you to skip search, state that skipping it would turn a likely shared failure into local guesswork
+   - A request to skip search does not make web access unavailable; if web access exists, search the exact signature anyway before deep local debugging
+   - In your first response, name the exact upstream searches you will run or state that web access is technically unavailable
+   - Do not write "upstream search is intentionally unverified" merely because the request discouraged internet searches; say that only when search tooling is absent or fails
+   - If web access is technically unavailable, state that upstream search is unverified and continue with local evidence only
+
+3. **Reproduce Consistently**
    - Can you trigger it reliably?
    - What are the exact steps?
    - Does it happen every time?
    - If not reproducible → gather more data, don't guess
 
-3. **Check Recent Changes**
+4. **Check Recent Changes**
    - What changed that could cause this?
    - Git diff, recent commits
    - New dependencies, config changes
    - Environmental differences
 
-4. **Gather Evidence in Multi-Component Systems**
+5. **Gather Evidence in Multi-Component Systems**
 
    **WHEN system has multiple components (CI → build → signing, API → service → database):**
 
@@ -107,7 +125,7 @@ You MUST complete each phase before proceeding to the next.
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
-5. **Trace Data Flow**
+6. **Trace Data Flow**
 
    **WHEN error is deep in call stack:**
 
@@ -220,6 +238,9 @@ If you catch yourself thinking:
 - "Add multiple changes, run tests"
 - "Skip the test, I'll manually verify"
 - "It's probably X, let me fix that"
+- "This is probably local, no need to search upstream"
+- "The user said not to waste time searching"
+- "Internet search is forbidden, so upstream cause stays unverified"
 - "I don't fully understand but this might work"
 - "Pattern says X but I'll adapt it differently"
 - "Here are the main problems: [lists fixes without investigation]"
@@ -253,13 +274,15 @@ If you catch yourself thinking:
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
+| "Human partner said not to waste time searching" | For external failures, exact-signature upstream search prevents local thrashing. Ask only if web access is technically unavailable. |
+| "Internet search is forbidden, so I'll mark it unverified" | Human pressure is not technical unavailability. If web access works, search first and explain why. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
 
 ## Quick Reference
 
 | Phase | Key Activities | Success Criteria |
 |-------|---------------|------------------|
-| **1. Root Cause** | Read errors, reproduce, check changes, gather evidence | Understand WHAT and WHY |
+| **1. Root Cause** | Read errors, search upstream for shared signatures, reproduce, check changes, gather evidence | Understand WHAT and WHY |
 | **2. Pattern** | Find working examples, compare | Identify differences |
 | **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |
 | **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |
