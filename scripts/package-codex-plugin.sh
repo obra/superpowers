@@ -243,7 +243,9 @@ VERSION="$(jq -r '.version // empty' "$STAGE/.codex-plugin/plugin.json")"
 [[ -n "$VERSION" ]] || die "could not read version from .codex-plugin/plugin.json"
 
 if jq -e 'has("hooks")' "$STAGE/.codex-plugin/plugin.json" >/dev/null; then
-  die "Codex manifest must not declare hooks for the portal package"
+  manifest_tmp="$WORK_DIR/plugin-manifest.json"
+  jq 'del(.hooks)' "$STAGE/.codex-plugin/plugin.json" >"$manifest_tmp"
+  mv "$manifest_tmp" "$STAGE/.codex-plugin/plugin.json"
 fi
 
 if [[ -z "$OUTPUT" ]]; then
