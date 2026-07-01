@@ -46,7 +46,7 @@ Test case sống ở **một nguồn canonical JSON / US** (schema + mapping rul
 2. **Dev-view (Markdown Gherkin)** render từ nguồn — `flow`/`impact`→scenario (tags trace + `automation_level`), `ui`/`responsive`/`smoke`→checklist, cần-làm-rõ→`@needs-clarification` không Then. Đây là bản **dev duyệt/phản biện**; cũng là draft **user review** như cũ.
 3. **Tester-view (Excel 14-cột)** sau khi user duyệt: `python derive_source_to_xlsx_input.py <US>.json xlsx_input.json` → `python build_test_case_xlsx.py xlsx_input.json <out>.xlsx`. Giữ đúng 14 cột (`test_case_template.md` là ĐÍCH); `examples`→N dòng có TC ID riêng; impact→sheet riêng; 4 cột tracking trống.
 
-(Phase 1: chưa merge-by-TC-ID giữ cột 11-14, chưa trace matrix — xem spec dual-audience.)
+**Regenerate an toàn:** `build_test_case_xlsx.py` **merge theo TC ID** — giữ cột 11-14 (kết quả tester đã điền) + case tester tự thêm; case bỏ ở nguồn → đánh dấu OBSOLETE (không xoá). **Kiểm độ phủ:** `python trace_matrix.py <US>.json` (cảnh báo AC 0 case / ref AC sai) — chạy ở cổng ATDD. (Phase 3: xuất `.feature` — chưa.)
 
 ## Fan-out (Claude Code, tuỳ chọn)
 

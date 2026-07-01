@@ -68,5 +68,5 @@
 - `automation_level` **KHÔNG** thành cột (giữ đúng 14 cột thật).
 - Validation: số dòng Excel = scenario thường + tổng phần tử `examples` + checklist + impact.
 
-## Phạm vi Phase 1
-CÓ: schema này · derive → Excel · dev-view render · `[CẦN LÀM RÕ]` field. CHƯA (Phase 2): merge-by-TC-ID (giữ cột 11-14), traceability matrix, xuất `.feature`.
+## Phạm vi
+CÓ (Phase 1+2): schema · `derive_source_to_xlsx_input.py` → Excel · dev-view render · `[CẦN LÀM RÕ]` field · **merge-by-TC-ID** (`build_test_case_xlsx.py` giữ cột 11-14 + đánh dấu OBSOLETE) · **traceability matrix** (`trace_matrix.py`, gate độ phủ). CHƯA (Phase 3): xuất `.feature` chạy được + step glossary.
