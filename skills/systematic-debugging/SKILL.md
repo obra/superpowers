@@ -21,10 +21,10 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
 If you haven't completed Phase 1, you cannot propose fixes.
 
-For failures involving third-party runtimes, containers, frameworks, APIs,
-drivers, package dependencies, model servers, or platform integrations, Phase 1
-is not complete until you have searched upstream/public sources for the exact
-failure signature or explicitly stated that web access is unavailable.
+When initial evidence points to a shared external/runtime/dependency failure,
+Phase 1 is not complete until you have searched upstream/public sources for the
+sanitized failure signature or explicitly stated that web/network use is
+unavailable or prohibited.
 
 ## When to Use
 
@@ -63,17 +63,19 @@ You MUST complete each phase before proceeding to the next.
    - Note line numbers, file paths, error codes
 
 2. **Search Upstream for Shared Failure Signatures**
-   - This is a Phase 1 completion gate for external/runtime/dependency failures, not an optional research task
-   - For third-party runtimes, containers, frameworks, APIs, drivers, package dependencies, model servers, and platform integrations, search public upstream sources before deep local debugging or patching
-   - If the exact third-party failure signature is already available, this search is the next action after reading the error
-   - Use exact quoted error strings, exception classes, package/image versions, endpoint names, stack-frame symbols, model/provider names, and driver/runtime versions
+   - This is a Phase 1 completion gate when initial evidence points to a shared external/runtime/dependency failure, not an optional research task
+   - Trigger examples: stack frames in third-party code, implicated container/image/package versions, exact public error signatures, driver/runtime failures, model server errors, or platform integration failures
+   - If the exact third-party failure signature is already available, this search is the next action after reading the error, before reproduction-heavy local investigation
+   - Use stable public fragments: exception classes, sanitized error strings, package/image versions, third-party stack-frame symbols, model/provider names, and driver/runtime versions
+   - Strip secrets, tokens, tenant/customer data, hostnames, private paths, and private endpoint names before searching public sources
    - Prefer upstream issues, pull requests, changelogs, release notes, and primary docs over generic posts
    - Classify the problem precisely: local config, resource exhaustion, dependency compatibility regression, upstream bug, image/package mismatch, API or observability middleware failure, network/auth failure, or model/runtime limitation
-   - If your human partner asks you to skip search, state that skipping it would turn a likely shared failure into local guesswork
-   - A request to skip search does not make web access unavailable; if web access exists, search the exact signature anyway before deep local debugging
-   - In your first response, name the exact upstream searches you will run or state that web access is technically unavailable
-   - Do not treat a request to skip search as “web access unavailable”; only skip upstream search when web/search tooling is technically unavailable or fails
-   - If you must skip, say explicitly: “Upstream/public exact-signature search not performed (no working web access)” and continue with local evidence only
+   - If your human partner asks you to skip search for speed or convenience, state that skipping it would turn a likely shared failure into local guesswork
+   - "Debug locally" and "do not waste time searching" are not hard no-web constraints; if web access is allowed, search the sanitized signature before local reproduction or inspection
+   - If your human partner explicitly forbids web, network, or public-source use, treat that as a hard constraint: state upstream search is unverified and continue with local evidence; ask permission only if the constraint is ambiguous
+   - In your first response, name the exact sanitized upstream searches you will run or state that web/network use is unavailable or prohibited
+   - Do not write "upstream search is intentionally unverified" merely because the request discouraged internet searches; say that only when search tooling is absent, fails, or web/network use is prohibited
+   - If upstream search is skipped, say explicitly why: no working search tooling, failed search tooling, or explicit no-web/network/public-source constraint
 
 3. **Reproduce Consistently**
    - Can you trigger it reliably?
@@ -239,8 +241,8 @@ If you catch yourself thinking:
 - "Skip the test, I'll manually verify"
 - "It's probably X, let me fix that"
 - "This is probably local, no need to search upstream"
-- "The user said not to waste time searching"
-- "Internet search is forbidden, so upstream cause stays unverified"
+- "The user said not to waste time searching, so web is unavailable"
+- "I'll search the raw failure text without sanitizing it"
 - "I don't fully understand but this might work"
 - "Pattern says X but I'll adapt it differently"
 - "Here are the main problems: [lists fixes without investigation]"
@@ -274,15 +276,16 @@ If you catch yourself thinking:
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
-| "Human partner said not to waste time searching" | For external failures, exact-signature upstream search prevents local thrashing. Only skip upstream search if web access is technically unavailable. |
-| "Internet search is forbidden, so I'll mark it unverified" | Human pressure is not technical unavailability. If web access works, search first and explain why. |
+| "Human partner said not to waste time searching" | For shared external failures, sanitized exact-signature upstream search prevents local thrashing. Distinguish speed pressure from a hard no-web/security constraint. |
+| "The human forbade web/network use, but the skill says search anyway" | No. Hard no-web, security, and privacy constraints override search. State upstream search is unverified and continue locally. |
+| "I'll search the full error/log text" | Search sanitized public fragments. Strip secrets, private identifiers, hostnames, paths, and tenant/customer data first. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
 
 ## Quick Reference
 
 | Phase | Key Activities | Success Criteria |
 |-------|---------------|------------------|
-| **1. Root Cause** | Read errors, search upstream for shared signatures, reproduce, check changes, gather evidence | Understand WHAT and WHY |
+| **1. Root Cause** | Read errors, search sanitized upstream signatures for likely shared external failures, reproduce, check changes, gather evidence | Understand WHAT and WHY |
 | **2. Pattern** | Find working examples, compare | Identify differences |
 | **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |
 | **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |
