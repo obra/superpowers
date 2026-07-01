@@ -10,6 +10,9 @@ PROMPTS_DIR="$SCRIPT_DIR/prompts"
 echo "=== Running All Explicit Skill Request Tests ==="
 echo ""
 
+"$SCRIPT_DIR/test-stream-json-verbose.sh"
+echo ""
+
 PASSED=0
 FAILED=0
 RESULTS=""
