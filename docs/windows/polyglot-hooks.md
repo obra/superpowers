@@ -6,8 +6,8 @@ Claude Code plugins need hooks that work on Windows, macOS, and Linux. This docu
 
 ## The Problem
 
-Claude Code runs hook commands through the system's default shell:
-- **Windows**: CMD.exe
+Claude Code runs hook commands through the host shell:
+- **Windows**: `.cmd` hooks are designed to run through CMD.exe; some host paths or manual simulations may evaluate the command through PowerShell first.
 - **macOS/Linux**: bash or sh
 
 This creates several challenges:
@@ -137,6 +137,15 @@ CMD couldn't find bash in any of the three locations the dispatcher tries. The d
 ### Hook runs on Unix but does nothing on Windows
 
 Check that the script filename is **extensionless** in `hooks.json`. A command like `run-hook.cmd session-start.sh` can trigger Claude Code's `.sh` auto-detection and bypass the intended CMD dispatcher path, or just try to run a non-existent `session-start.sh` script.
+
+If you are manually simulating the hook in PowerShell, use the call operator:
+
+```powershell
+$env:CLAUDE_PLUGIN_ROOT = "C:\path\to\plugin"
+& "$env:CLAUDE_PLUGIN_ROOT\hooks\run-hook.cmd" session-start
+```
+
+Do not add the PowerShell call operator to the shared `hooks.json` command unless the hook host specifically evaluates that command only through PowerShell; the same manifest is also used on Unix-like shells.
 
 ### Hook doesn't fire at all
 
