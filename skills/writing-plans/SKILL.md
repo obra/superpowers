@@ -22,6 +22,31 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Track Structure (parallel execution)
+
+If the spec includes a **Parallel Execution Plan** section (it should, for any 2+ story spec), organize tasks into tracks that mirror it. Tasks within a track run sequentially in one session; different tracks are dispatched to parallel sessions.
+
+```markdown
+## Track A: [Backend module] (independent)
+### Task A1: ...
+### Task A2: ...
+
+## Track B: [Frontend additions] (depends on Track A's `/api/foo`)
+### Task B1: ...
+
+## Merge: [Final stitch session]
+### Task M1: Wire Track B's button to Track A's `/api/foo`
+```
+
+Per-track requirements:
+
+- **Header dependency tag.** State `(independent)` or `(depends on Track X's <thing>)` next to each track name. The merge track runs after the tracks it integrates.
+- **Handoff stub on the last task of any parallel-safe track.** Name exactly what is and isn't done so a session in another track can read it and know the boundary. Example final-task note:
+  > *"Track A complete: `POST /api/items` shipped, returns 201 with `{id, created_at}`. Track B may now wire its `Create` button to this endpoint. No template files touched in this track."*
+- **No cross-track file edits.** If Task A3 and Task B2 both modify the same file, the tracks aren't actually parallel — collapse them into one track or move the shared edit into the merge track.
+
+Skip track structure only if the spec is genuinely single-story (one file, one bug, one tight feature) — those usually shouldn't need a multi-task plan in the first place.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
