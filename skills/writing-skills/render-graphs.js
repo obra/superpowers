@@ -13,9 +13,9 @@
  * Requires: graphviz (dot) installed on system
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execFileSync } = require('child_process');
+import * as fs from 'fs';
+import * as path from 'path';
+import { execFileSync } from 'child_process';
 
 function extractDotBlocks(markdown) {
   const blocks = [];
