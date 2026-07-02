@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "Use when starting creative work — new features, components, added functionality, or behavior changes — that lacks an approved design or spec. Explores user intent, requirements and design before implementation. Not for bug fixes (use systematic-debugging), executing an existing plan (use executing-plans), or pure research questions."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -16,6 +16,14 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
 Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+
+## When NOT to Use
+
+Brainstorming is for creative work that lacks an approved design. Skip it when:
+
+- **Fixing a bug or investigating a failure** — use the systematic-debugging skill instead
+- **Executing an already-approved plan or spec** — use the executing-plans skill instead
+- **Answering a pure research or explanation question** — no design is being produced, so just answer it
 
 ## Checklist
 
@@ -118,6 +126,8 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
+For high-stakes or complex specs, you can optionally dispatch a fresh-eyes subagent review instead, using the prompt template in `{baseDir}/spec-document-reviewer-prompt.md`.
+
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
@@ -156,4 +166,4 @@ A browser-based companion for showing mockups, diagrams, and visual options duri
 A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
 
 If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`
+`{baseDir}/visual-companion.md`
