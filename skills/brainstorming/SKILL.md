@@ -27,7 +27,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope, evidence (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
@@ -99,6 +99,21 @@ digraph brainstorming {
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
 
+**Ground every claim in evidence:**
+
+A design doc makes claims about the current system ("the API validates X", "clients send the full record on save", "the existing setup pattern covers this"). Every such claim must be one of:
+
+1. **Verified** — you read the relevant code this session. Cite the file (and symbol) in the doc.
+2. **A labeled assumption** — written as "Assumed — confirm during implementation", not stated as fact.
+
+Unverified claims cluster in predictable places. Check these deliberately before writing:
+
+- **Negative space** — claims about what the system does NOT do or already prevents ("existing validation rejects malformed input"). Plausibility tells you nothing here; only reading the code does.
+- **Integration seams** — when extending a resource, schema, or API, enumerate every existing reader and writer of it and walk each one against the change. Partial writers are the classic trap: a client that sends only some fields will silently clobber new ones unless replace-vs-merge semantics are designed explicitly.
+- **Runtime wiring** — file and directory names are not evidence of routes, entry points, or execution paths. Read the actual wiring (router, build, and test-runner configuration) before naming a URL, command, or path in the doc.
+- **"Follows the existing pattern"** — valid only after confirming the pattern covers the new case (e.g., create-if-missing setup logic cannot modify artifacts that already exist).
+- **Helpers reused in a new context** — code built to be forgiving (best-effort lookup, silent fallback) cannot back a strict guarantee (validation, verification). Check the helper's actual semantics against the new context's correctness requirements.
+
 ## After the Design
 
 **Documentation:**
@@ -115,6 +130,7 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+5. **Evidence check:** Every claim about current-system behavior is either verified against code read this session (cited) or explicitly labeled as an assumption. Scrutinize negative-space claims ("the system already validates/handles/rejects…") hardest.
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
