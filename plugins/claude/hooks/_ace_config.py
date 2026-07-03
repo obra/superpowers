@@ -15,9 +15,23 @@ from typing import Any
 
 ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
 
+
+def _ace_home() -> Path | None:
+    """Return the ACE user directory used by core path helpers.
+
+    Hooks are no-ops when there is no project context, but when they do run
+    their trace paths must match ``ace.core.config.paths.ace_traces_dir`` so
+    the evolution engine can consume the same records.
+    """
+    if not ACE_ROOT:
+        return None
+    raw = os.environ.get("ACE_USER_DIR", "").strip()
+    return Path(os.path.expanduser(raw)) if raw else Path.home() / ".ace"
+
+
 # All paths are None when ACE_ROOT is unset (hooks become no-ops)
-ACE_DIR: Path | None = Path(ACE_ROOT) / ".ace" if ACE_ROOT else None
-TRACE_DIR: Path | None = ACE_DIR / "traces" if ACE_DIR else None
+ACE_DIR: Path | None = _ace_home()
+TRACE_DIR: Path | None = ACE_DIR / "store" / "traces" if ACE_DIR else None
 INSIGHT_DIR: Path | None = ACE_DIR / "insights" if ACE_DIR else None
 CHECKPOINT_DIR: Path | None = ACE_DIR / "checkpoints" if ACE_DIR else None
 SESSION_FAILURES_FILE: Path | None = ACE_DIR / ".session_failures.json" if ACE_DIR else None
@@ -47,6 +61,8 @@ _DEFAULT_MEANINGFUL_PATTERNS = [
     r"python.*workflow.*execute",
     r"python.*node.*run",
     r"python.*simulate",
+    r"ace\s+workflow\s+run",
+    r"ace\s+node\s+run",
     r"ace\s+(run|execute|simulate)",
 ]
 
@@ -80,10 +96,16 @@ CAUSE_PATTERNS: list[tuple[str, str]] = _USER_CONFIG.get(
 )
 
 # ── Evolution Thresholds (configurable via config) ───────────────────
+#
+# Defaults are tuned so evolution actually runs on real sessions. Empirically
+# typical Claude Code sessions produce 3–8 traces; the previous default of
+# `min_traces=15` meant evolution never fired and all the pattern-extraction
+# code was dead. Override via ~/.ace/config.json {"evolution": {...}} for
+# heavier batch sessions where you want fewer, higher-confidence runs.
 
 _evolution_config = _USER_CONFIG.get("evolution", {})
-MIN_TRACES_FOR_EVOLUTION: int = _evolution_config.get("min_traces", 15)
-MIN_HOURS_BETWEEN_EVOLUTIONS: int = _evolution_config.get("min_hours_between", 2)
+MIN_TRACES_FOR_EVOLUTION: int = _evolution_config.get("min_traces", 3)
+MIN_HOURS_BETWEEN_EVOLUTIONS: float = _evolution_config.get("min_hours_between", 0.0)
 CONFIDENCE_THRESHOLD: float = _evolution_config.get("confidence_threshold", 0.3)
 
 
@@ -141,3 +163,18 @@ def safe_json_write(filepath: Path, data: dict[str, Any]) -> bool:
 def log_hook_error(hook_name: str, error: Exception) -> None:
     """Log a non-blocking hook error to stderr (visible in Claude Code output)."""
     print(f"[ACE] {hook_name} error (non-blocking): {error}", file=sys.stderr)
+
+
+def ensure_ace_importable() -> bool:
+    """Prepend project venv site-packages so hooks can ``import ace``."""
+    if not ACE_ROOT:
+        return False
+    lib = Path(ACE_ROOT) / ".venv" / "lib"
+    if not lib.is_dir():
+        return False
+    for site in sorted(lib.glob("python*/site-packages")):
+        sp = str(site)
+        if sp not in sys.path:
+            sys.path.insert(0, sp)
+        return True
+    return False

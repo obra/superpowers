@@ -24,26 +24,43 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
-_ACE_HOME = Path.home() / ".ace"
-TRACE_DIR = _ACE_HOME / "traces"
-INSIGHT_DIR = _ACE_HOME / "insights"
-SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
 
-# Commands worth tracing (same for failures and eurekas)
-MEANINGFUL_PATTERNS = [
-    r"python.*-m\s+pytest",
-    r"python.*ace.*run",
-    r"python.*workflow.*execute",
-    r"python.*node.*run",
-    r"python.*simulate",
-    r"ace\s+(run|execute|simulate)",
-    # Environment setup — can block the entire main flow
-    r"git\s+(clone|submodule)",
-    r"(pip|uv)\s+(pip\s+)?install",
-    r"pip\s+install",
-    r"python.*-m\s+pip",
-    r"cp\s+.*site-packages",
-]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _ace_config import (  # noqa: E402
+    TRACE_DIR,
+    INSIGHT_DIR,
+    SESSION_FAILURES_FILE,
+    MEANINGFUL_PATTERNS,
+    TRANSIENT_CAUSES,
+)
+
+
+def _bash_pcfl_module():
+    """Load shared PCFL helpers from ace.core when project root is set."""
+    if not ACE_ROOT:
+        return None
+    import importlib.util
+
+    module_path = os.path.join(ACE_ROOT, "src", "core", "evolution", "bash_pcfl.py")
+    if os.path.isfile(module_path):
+        spec = importlib.util.spec_from_file_location("ace_bash_pcfl", module_path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+
+    src = os.path.join(ACE_ROOT, "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    try:
+        from ace.core.evolution import bash_pcfl
+
+        return bash_pcfl
+    except ImportError:
+        return None
+
+
+_BASH_PCFL = _bash_pcfl_module()
 
 # Subset of MEANINGFUL_PATTERNS that block the main flow when they fail.
 # These get an immediate insight write (don't wait for session Stop).
@@ -68,40 +85,17 @@ def _is_blocker_command(cmd: str) -> bool:
 
 
 def _detect_entity(cmd: str) -> tuple[str, str]:
-    """Detect entity_type and entity_id from command string."""
+    if _BASH_PCFL:
+        return _BASH_PCFL.detect_entity(cmd)
     entity_type = "command"
     entity_id = cmd.split()[0] if cmd else "unknown"
-
-    if "pytest" in cmd:
-        entity_type = "test_run"
-        match = re.search(r"tests?/(\S+\.py)", cmd)
-        entity_id = match.group(1) if match else "test_suite"
-    elif re.search(r"git\s+clone", cmd):
-        entity_type = "env_setup"
-        # Extract repo name from URL or path
-        match = re.search(r"git\s+clone\S*\s+\S*[/:](\S+?)(?:\.git)?(?:\s+\S+)?$", cmd)
-        entity_id = f"git_clone/{match.group(1)}" if match else "git_clone"
-    elif re.search(r"git\s+submodule", cmd):
-        entity_type = "env_setup"
-        entity_id = "git_submodule"
-    elif re.search(r"(pip|uv)\s+(pip\s+)?install|python.*-m\s+pip", cmd):
-        entity_type = "env_setup"
-        # Extract package name(s)
-        match = re.search(r"install\s+(.+?)(?:\s+-|$)", cmd)
-        pkg = match.group(1).strip() if match else "package"
-        entity_id = f"pip_install/{pkg[:40]}"
-    elif "workflow" in cmd.lower():
+    match = re.search(r"workflow\s+(?:run|execute)\s+(\S+)", cmd, re.IGNORECASE)
+    if match:
+        return "workflow", match.group(1)
+    if "workflow" in cmd.lower():
         entity_type = "workflow"
         match = re.search(r"workflow\S*\s+(\S+)", cmd)
         entity_id = match.group(1) if match else "workflow_run"
-    elif "node" in cmd.lower() and "run" in cmd.lower():
-        entity_type = "node"
-        match = re.search(r"node\S*\s+run\s+(\S+)", cmd)
-        entity_id = match.group(1) if match else "node_run"
-    elif "simulate" in cmd.lower():
-        entity_type = "simulation"
-        entity_id = "simulation_run"
-
     return entity_type, entity_id
 
 
@@ -203,7 +197,21 @@ def extract_failure_trace(data: dict) -> dict:
     stderr = tool_result.get("stderr", "")
     error = stderr[:500] if stderr else stdout[:500]
 
-    entity_type, entity_id = _detect_entity(cmd)
+    # PCFL reflection on the error
+    if _BASH_PCFL:
+        pcfl = _BASH_PCFL.build_failure_pcfl(cmd, error)
+        entity_type = pcfl["entity_type"]
+        entity_id = pcfl["entity_id"]
+        problem = pcfl["problem"]
+        cause = pcfl["cause"]
+        fix = pcfl["fix"]
+        lesson = pcfl["lesson"]
+    else:
+        entity_type, entity_id = _detect_entity(cmd)
+        problem = f"{entity_type} '{entity_id}' failed"
+        cause = _analyze_cause(error)
+        fix = ""
+        lesson = _extract_lesson(entity_id, error)
 
     # Duration from output
     duration = None
@@ -211,12 +219,6 @@ def extract_failure_trace(data: dict) -> dict:
     if duration_match:
         duration = float(duration_match.group(1))
 
-    # PCFL reflection on the error
-    problem = f"{entity_type} '{entity_id}' failed"
-    cause = _analyze_cause(error)
-    lesson = _extract_lesson(entity_id, error)
-
-    # Record in session state for eureka detection
     _record_session_failure(entity_id, cause, error, cmd)
 
     trace = {
@@ -232,7 +234,7 @@ def extract_failure_trace(data: dict) -> dict:
         # PCFL fields
         "problem": problem,
         "cause": cause,
-        "fix": "",
+        "fix": fix,
         "lesson": lesson,
     }
     if duration is not None:

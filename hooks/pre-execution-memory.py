@@ -22,16 +22,19 @@ if ACE_ROOT:
 
 # Import shared config
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _ace_config import log_hook_error
+from _ace_config import ensure_ace_importable, log_hook_error
 
 # Patterns that trigger memory injection
 WORKFLOW_PATTERNS = [
     r"workflow[_\s]?(run|execute|start)",
+    r"ace\s+workflow\s+run",
     r"ace.*workflow.*run",
     r"python.*workflow.*execute",
 ]
 
 NODE_PATTERNS = [
+    r"node[_\s]?run",
+    r"ace\s+node\s+run",
     r"node[_\s]?build",
     r"ace.*node.*create",
     r"build[_\s]?node",
@@ -48,6 +51,7 @@ def _extract_workflow_id(command: str) -> str | None:
     """Extract workflow ID from command."""
     # Match: workflow_run workflow_id, workflow run workflow_id, etc.
     patterns = [
+        r"ace\s+workflow\s+run\s+([\w_-]+)",
         r"workflow[_\s]?run[_\s]+([\w_-]+)",
         r"workflow[_\s]?execute[_\s]+([\w_-]+)",
         r"ace[_\s]+workflow[_\s]+run[_\s]+([\w_-]+)",
@@ -82,6 +86,8 @@ def _extract_node_info(command: str) -> tuple[str | None, str | None]:
 
     # Node ID patterns
     node_patterns = [
+        r"ace\s+node\s+run\s+([\w_-]+)",
+        r"node[_\s]?run[_\s]+([\w_-]+)",
         r"node[_\s]?build[_\s]+([\w_-]+)",
         r"build[_\s]?node[_\s]+([\w_-]+)",
         r"--node[_\s]+([\w_-]+)",
@@ -98,6 +104,37 @@ def _extract_node_info(command: str) -> tuple[str | None, str | None]:
         device_id = device_match.group(1)
 
     return node_id, device_id
+
+
+def _gateway_warnings(entity_type: str, entity_id: str | None) -> list[str]:
+    """Load negative experience warnings from QueryGateway (gbrain)."""
+    if not entity_id:
+        return []
+    try:
+        ensure_ace_importable()
+        import asyncio
+
+        from ace.core.knowledge.gateway import resolve_gateway
+
+        gateway = resolve_gateway()
+        return asyncio.run(gateway.get_warnings(entity_type, entity_id))
+    except Exception as ex:
+        log_hook_error("pre-execution-memory/gateway", ex)
+        return []
+
+
+def _merge_warnings(existing: list[str], gateway_msgs: list[str]) -> list[str]:
+    merged = list(existing)
+    seen = set(merged)
+    for msg in gateway_msgs:
+        text = (msg or "").strip()
+        if not text:
+            continue
+        line = text if text.startswith("⚠️") else f"⚠️ {text[:200]}"
+        if line not in seen:
+            seen.add(line)
+            merged.append(line)
+    return merged
 
 
 def _load_memories_for_workflow(workflow_id: str) -> dict:
@@ -142,6 +179,11 @@ def _load_memories_for_workflow(workflow_id: str) -> dict:
                     warning += f" (症状: {', '.join(m.symptoms[:2])})"
                 warnings.append(warning)
 
+        gw = _gateway_warnings("workflow", workflow_id)
+        if device_id:
+            gw.extend(_gateway_warnings("device", device_id))
+        warnings = _merge_warnings(warnings, gw)
+
         return {
             "workflow_id": workflow_id,
             "device_id": device_id,
@@ -180,6 +222,8 @@ def _load_memories_for_device(device_id: str, operation: str = "") -> dict:
                 if m.solution:
                     warning += f" | 解决: {m.solution[0][:50]}"
                 warnings.append(warning)
+
+        warnings = _merge_warnings(warnings, _gateway_warnings("device", device_id))
 
         return {
             "device_id": device_id,
@@ -225,6 +269,13 @@ def _load_memories_for_node(device_id: str | None, node_id: str | None) -> dict:
                     warning += f" (症状: {', '.join(m.symptoms[:2])})"
                 warnings.append(warning)
 
+        gw: list[str] = []
+        if device_id:
+            gw.extend(_gateway_warnings("device", device_id))
+        if node_id:
+            gw.extend(_gateway_warnings("node", node_id))
+        warnings = _merge_warnings(warnings, gw)
+
         return {
             "device_id": device_id,
             "node_id": node_id,
@@ -252,7 +303,7 @@ def should_inject_memory(command: str) -> tuple[bool, str, dict]:
             if workflow_id:
                 return True, "workflow", {"workflow_id": workflow_id}
 
-    # Check node patterns
+    # Check node patterns (including ace node run)
     for pattern in NODE_PATTERNS:
         if re.search(pattern, cmd_lower):
             node_id, device_id = _extract_node_info(command)
@@ -275,7 +326,7 @@ def format_memory_message(entity_type: str, context: dict, memory_data: dict) ->
     insight_count = memory_data.get("insight_count", 0)
 
     if not warnings and memory_count == 0:
-        return ""  # No memories to show
+        return ""  # No memories or gateway warnings to show
 
     lines = [f"[ACE] Pre-execution Memory Check for {entity_type}"]
 

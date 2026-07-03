@@ -16,6 +16,7 @@ from _ace_config import (
     INSIGHT_DIR,
     TRACE_DIR,
     check_ace_health,
+    ensure_ace_importable,
     log_hook_error,
 )
 
@@ -56,6 +57,27 @@ def count_knowledge() -> dict:
     return {"total": total, "active": active, "negative": negative}
 
 
+def count_gbrain() -> dict:
+    """Count gbrain experiences and documents."""
+    try:
+        ensure_ace_importable()
+        from ace.core.knowledge.document_service import DocumentService
+        from ace.core.knowledge.experience_service import ExperienceService
+
+        svc = DocumentService()
+        experiences = ExperienceService().list()
+        documents = svc.list_document_overviews()
+        negative = sum(1 for e in experiences if e.polarity == "negative")
+        return {
+            "experiences": len(experiences),
+            "documents": len(documents),
+            "negative": negative,
+        }
+    except Exception as ex:
+        log_hook_error("session-start/gbrain", ex)
+        return {"experiences": 0, "documents": 0, "negative": 0}
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -75,11 +97,12 @@ def main():
 
     traces_7d = count_recent_traces(7)
     knowledge = count_knowledge()
+    gbrain = count_gbrain()
 
-    if traces_7d == 0 and knowledge["total"] == 0:
+    if traces_7d == 0 and knowledge["total"] == 0 and gbrain["experiences"] == 0:
         # System cold — give actionable guidance instead of silence
         print(
-            "[ACE] Health: 0 traces (7d), 0 insights — system cold. "
+            "[ACE] Health: 0 traces (7d), 0 insights, 0 gbrain experiences — system cold. "
             "Run tests or workflows to start accumulating data.",
             file=sys.stderr,
         )
@@ -88,11 +111,17 @@ def main():
     summary_parts = []
     if traces_7d > 0:
         summary_parts.append(f"{traces_7d} traces (7d)")
+    if gbrain["experiences"] > 0:
+        summary_parts.append(f"{gbrain['experiences']} gbrain experiences")
+        if gbrain["negative"] > 0:
+            summary_parts.append(f"{gbrain['negative']} negative")
+    if gbrain["documents"] > 0:
+        summary_parts.append(f"{gbrain['documents']} documents")
     if knowledge["total"] > 0:
         summary_parts.append(
-            f"{knowledge['active']}/{knowledge['total']} insights active"
+            f"{knowledge['active']}/{knowledge['total']} legacy insights"
         )
-    if knowledge["negative"] > 0:
+    if knowledge["negative"] > 0 and gbrain["negative"] == 0:
         summary_parts.append(f"{knowledge['negative']} negative patterns")
 
     summary = " | ".join(summary_parts)
@@ -117,7 +146,7 @@ def _load_recent_memories() -> str:
     Returns a summary string or empty string if no memories.
     """
     try:
-        sys.path.insert(0, ACE_ROOT)
+        ensure_ace_importable()
         from ace.core.memory.manager import MemoryManager
 
         manager = MemoryManager()

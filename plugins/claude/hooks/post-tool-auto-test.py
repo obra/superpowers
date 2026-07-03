@@ -148,7 +148,7 @@ def main():
         test_dir = None
 
         if entity_type == "node":
-            for sub in ["*", "builtin"]:
+            for sub in ["atomic", "auto", "composite", "builtin"]:
                 td = store_dir / "nodes" / sub / entity_id / "tests"
                 if td.exists():
                     test_dir = td
