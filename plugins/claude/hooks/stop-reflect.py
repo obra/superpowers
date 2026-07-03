@@ -7,22 +7,41 @@
 No manual intervention needed. The system decides and executes automatically.
 """
 import asyncio
+import hashlib
 import json
+import re
 import sys
 import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
-_ACE_HOME = Path.home() / ".ace"
-TRACE_DIR = _ACE_HOME / "traces"
+
+
+def _ace_home() -> Path:
+    """Return the ACE user directory used by core path helpers."""
+    raw = os.environ.get("ACE_USER_DIR", "").strip()
+    return Path(os.path.expanduser(raw)) if raw else Path.home() / ".ace"
+
+
+_ACE_HOME = _ace_home()
+TRACE_DIR = _ACE_HOME / "store" / "traces"
 INSIGHT_DIR = _ACE_HOME / "insights"
 SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
 EVOLUTION_STATE_FILE = _ACE_HOME / ".evolution_state.json"
 
-# Evolution thresholds
-MIN_TRACES_FOR_EVOLUTION = 15  # Enough data to extract meaningful patterns
-MIN_HOURS_BETWEEN_EVOLUTIONS = 2  # Don't evolve too frequently
+# Evolution thresholds — single source of truth lives in _ace_config (which
+# also reads ~/.ace/config.json overrides). Importing here means a project
+# can lower min_traces for dev or raise it for batch runs without editing
+# this hook.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _ace_config import (  # noqa: E402
+    MIN_TRACES_FOR_EVOLUTION,
+    MIN_HOURS_BETWEEN_EVOLUTIONS,
+    CONFIDENCE_THRESHOLD,
+    log_hook_error,
+    ensure_ace_importable,
+)
 
 
 # ── Phase 1: Reflect (traces → insight markdown + checkpoint) ──────────
@@ -54,8 +73,117 @@ def load_traces() -> tuple[list[dict], list[dict]]:
     return errors, eurekas
 
 
+# Quality filter and content-dedup — kept local to the hook to avoid
+# import-failure risk in production sessions. Mirrors the canonical
+# logic in src/core/evolution/reflection_extractor.py; tests for both
+# live alongside the library version.
+
+_GENERIC_LESSON_RE = re.compile(r"^investigate\s+failures?\s+in\s+", re.IGNORECASE)
+_VAGUE_CAUSES = {"", "unknown", "see trace error"}
+_SIG_RE = re.compile(r"<!--\s*sig:\s*([0-9a-f]{12})\s*-->")
+
+
+def _is_actionable(t: dict) -> bool:
+    """True when a trace carries enough signal to be worth storing.
+
+    Drops auto-generated drivel (Cause: Unknown + Lesson: 'Investigate
+    failures in X') that previously poisoned ~/.ace/insights/.
+    """
+    if t.get("status") == "eureka":
+        return bool(t.get("challenge") or t.get("solution") or t.get("insight"))
+
+    cause = (t.get("cause") or "").strip()
+    fix = (t.get("fix") or "").strip()
+    error = (t.get("error") or "").strip()
+
+    has_cause = cause.lower() not in _VAGUE_CAUSES
+    has_fix = bool(fix)
+    has_error = len(error) > 20
+    return has_cause or has_fix or has_error
+
+
+def _entry_signature(t: dict) -> str:
+    """12-char content signature; same problem+cause → same signature."""
+    parts = [
+        (t.get("status") or "").strip(),
+        (t.get("problem") or "").strip(),
+        (t.get("cause") or "").strip(),
+        (t.get("challenge") or "").strip(),
+        (t.get("solution") or "").strip(),
+    ]
+    return hashlib.md5("|".join(parts).encode("utf-8")).hexdigest()[:12]
+
+
+def _trace_to_reflect_insight(trace: dict) -> dict:
+    """Build an insight-shaped dict from a reflect trace for ExperienceWriter."""
+    entity_id = trace.get("entity_id", "unknown")
+    entity_type = trace.get("entity_type", "global")
+    if entity_type in ("test_run", "command", "env_setup", "simulation"):
+        entity_type = "global"
+    ts = trace.get("timestamp", "")
+    insight_id = f"reflect-{_entry_signature(trace)}"
+
+    if trace.get("status") == "eureka":
+        return {
+            "id": insight_id,
+            "title": f"EUREKA: {entity_id}",
+            "insight": trace.get("insight", ""),
+            "solution": trace.get("solution", ""),
+            "challenge": trace.get("challenge", ""),
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "polarity": "positive",
+            "created_at": ts,
+            "tags": ["reflect", "eureka"],
+        }
+
+    return {
+        "id": insight_id,
+        "title": trace.get("problem", "Error"),
+        "problem": trace.get("problem", ""),
+        "cause": trace.get("cause", ""),
+        "fix": trace.get("fix", ""),
+        "lesson": trace.get("lesson", ""),
+        "error": trace.get("error", ""),
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "polarity": "negative",
+        "created_at": ts,
+        "tags": ["reflect"],
+    }
+
+
+def sync_reflect_traces_to_experience(traces: list[dict]) -> int:
+    """Write reflect traces to gbrain via ExperienceWriter. Returns count synced."""
+    if not traces:
+        return 0
+
+    try:
+        if ACE_ROOT:
+            ensure_ace_importable()
+        from ace.core.knowledge.insight_sync import sync_insight_to_experience
+    except Exception as ex:
+        log_hook_error("stop-reflect/experience_import", ex)
+        return 0
+
+    synced = 0
+    for trace in traces:
+        if not _is_actionable(trace):
+            continue
+        try:
+            insight = _trace_to_reflect_insight(trace)
+            slug = sync_insight_to_experience(insight, source="reflect")
+            if slug:
+                synced += 1
+        except Exception as ex:
+            log_hook_error("stop-reflect/experience_write", ex)
+    return synced
+
+
 def write_insight_markdown(error_traces: list[dict], eureka_traces: list[dict]) -> list[str]:
-    """Write/update insight markdown files per entity."""
+    """Write/update insight markdown files per entity, applying quality
+    filter and content-based dedup.
+    """
     if not INSIGHT_DIR or (not error_traces and not eureka_traces):
         return []
 
@@ -63,29 +191,40 @@ def write_insight_markdown(error_traces: list[dict], eureka_traces: list[dict]) 
 
     by_entity: dict[str, list[dict]] = {}
     for t in error_traces + eureka_traces:
+        if not _is_actionable(t):
+            continue
         entity = t.get("entity_id", "unknown")
         by_entity.setdefault(entity, []).append(t)
 
     updated = []
+    new_traces: list[dict] = []
     for entity_id, entity_traces in by_entity.items():
         safe_name = entity_id.replace("/", "_").replace(" ", "_")
         md_path = INSIGHT_DIR / f"{safe_name}.md"
 
         existing_content = ""
+        existing_sigs: set[str] = set()
         if md_path.exists():
             existing_content = md_path.read_text(encoding="utf-8")
+            existing_sigs = set(_SIG_RE.findall(existing_content))
 
         new_entries = []
+        entity_new_traces: list[dict] = []
         for t in entity_traces:
             ts = t.get("timestamp", "")
+            sig = _entry_signature(t)
             if ts and ts in existing_content:
                 continue
+            if sig in existing_sigs:
+                continue
+            existing_sigs.add(sig)  # within-batch dedup
 
             if t.get("status") == "eureka":
-                entry = _format_eureka_entry(t)
+                entry = _format_eureka_entry(t, sig)
             else:
-                entry = _format_error_entry(t)
+                entry = _format_error_entry(t, sig)
             new_entries.append(entry)
+            entity_new_traces.append(t)
 
         if not new_entries:
             continue
@@ -102,11 +241,14 @@ def write_insight_markdown(error_traces: list[dict], eureka_traces: list[dict]) 
                     f.write("\n" + entry + "\n\n")
 
         updated.append(entity_id)
+        new_traces.extend(entity_new_traces)
+
+    sync_reflect_traces_to_experience(new_traces)
 
     return updated
 
 
-def _format_error_entry(t: dict) -> str:
+def _format_error_entry(t: dict, sig: str) -> str:
     ts = t.get("timestamp", "")
     problem = t.get("problem", "Error")
     cause = t.get("cause", "Unknown")
@@ -114,13 +256,12 @@ def _format_error_entry(t: dict) -> str:
     lesson = t.get("lesson", "")
     error = t.get("error", "")
 
-    lines = [f"## [{ts}] {problem}"]
-    lines.append("")
+    lines = [f"## [{ts}] {problem}", f"<!-- sig: {sig} -->", ""]
     lines.append(f"- **Problem**: {problem}")
     lines.append(f"- **Cause**: {cause}")
     if fix:
         lines.append(f"- **Fix**: {fix}")
-    if lesson:
+    if lesson and not _GENERIC_LESSON_RE.match(lesson):
         lines.append(f"- **Lesson**: {lesson}")
     if error and error != cause and len(error) > 10:
         lines.append(f"- **Error**: `{error[:200]}`")
@@ -128,7 +269,7 @@ def _format_error_entry(t: dict) -> str:
     return "\n".join(lines)
 
 
-def _format_eureka_entry(t: dict) -> str:
+def _format_eureka_entry(t: dict, sig: str) -> str:
     ts = t.get("timestamp", "")
     entity_id = t.get("entity_id", "unknown")
     challenge = t.get("challenge", "")
@@ -141,8 +282,7 @@ def _format_eureka_entry(t: dict) -> str:
     if prior_count:
         header += f" after {prior_count} attempt{'s' if prior_count > 1 else ''}"
 
-    lines = [f"## [{ts}] {header}"]
-    lines.append("")
+    lines = [f"## [{ts}] {header}", f"<!-- sig: {sig} -->", ""]
     if challenge:
         lines.append(f"- **Challenge**: {challenge}")
     if detours:
@@ -151,7 +291,7 @@ def _format_eureka_entry(t: dict) -> str:
         lines.append(f"- **Solution**: {solution}")
     if insight:
         lines.append(f"- **Insight**: {insight}")
-    lines.append(f"- **Polarity**: positive")
+    lines.append("- **Polarity**: positive")
 
     return "\n".join(lines)
 
@@ -280,7 +420,7 @@ def _run_evolution() -> str | None:
     try:
         # Add project root to path so we can import ace.core
         if ACE_ROOT:
-            sys.path.insert(0, ACE_ROOT)
+            ensure_ace_importable()
 
         from ace.core.evolution.trace import TraceStore, ExecutionTrace
         from ace.core.evolution.patterns import extract_all_patterns
@@ -314,18 +454,30 @@ def _run_evolution() -> str | None:
 
         async def store_candidates():
             nonlocal created
+            write_experience = None
+            try:
+                from ace.core.knowledge.insight_sync import sync_insight_to_experience as write_experience
+            except Exception as ex:
+                log_hook_error("stop-reflect/experience_import", ex)
+
             for c in candidates:
-                if c.confidence >= 0.3:
+                if c.confidence >= CONFIDENCE_THRESHOLD:
                     try:
-                        await km.create_knowledge_versioned(c.to_knowledge_dict())
+                        entry = c.to_knowledge_dict()
+                        await km.create_knowledge_versioned(entry)
                         created += 1
-                    except Exception:
-                        pass
+                        if write_experience:
+                            try:
+                                write_experience(entry, source="evolution")
+                            except Exception as ex:
+                                log_hook_error("stop-reflect/experience_write", ex)
+                    except Exception as ex:
+                        log_hook_error("stop-reflect/store_candidate", ex)
             # Decay old insights
             try:
                 await km.decay_all()
-            except Exception:
-                pass
+            except Exception as ex:
+                log_hook_error("stop-reflect/decay_all", ex)
 
         asyncio.run(store_candidates())
 
@@ -338,9 +490,9 @@ def _run_evolution() -> str | None:
                 item for item in all_knowledge.get("items", [])
                 if item.get("created_at", "") >= since
             ]
-            memory_count, memory_ids = bridge.sync_insights_batch(recent_knowledge)
-        except Exception:
-            pass
+            memory_count, _memory_ids = bridge.sync_insights_batch(recent_knowledge)
+        except Exception as ex:
+            log_hook_error("stop-reflect/memory_sync", ex)
 
         _save_evolution_state({
             "last_run": datetime.now(timezone.utc).isoformat(),
@@ -356,8 +508,11 @@ def _run_evolution() -> str | None:
             return f"{' | '.join(parts)} from {len(traces)} traces"
         return None
 
-    except Exception as e:
-        # Evolution failure should never block the hook
+    except Exception as ex:
+        # Evolution failure should never block the hook, but it must be
+        # visible — silent failures are the reason the loop went unnoticed
+        # for so long.
+        log_hook_error("stop-reflect/run_evolution", ex)
         return None
 
 
