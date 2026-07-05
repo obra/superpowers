@@ -129,10 +129,10 @@ git branch -d <feature-branch>
 git push -u origin <feature-branch>
 ```
 
-Then create the pull/merge request against <base-branch> with the host's
-tooling (`gh pr create`, `glab mr create`, or the URL git prints on push),
-following the repo's PR template and conventions if present, and report
-the URL to your human partner.
+Then create the pull/merge request against <base-branch> with the forge's
+tooling — its CLI if one is available, or the creation URL most forges
+print when you push — following the repo's PR template and conventions if
+present, and report the URL to your human partner.
 
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
