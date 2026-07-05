@@ -8,22 +8,86 @@ adding cleanup/helper methods for tests.
 Good tests verify real behavior. Mocks exist to isolate the code under
 test — they are never the thing being tested.
 
-**Core principle:** Test what the code does, not what the mocks do.
+**Core principle:** Test what the code does, not what the mocks do — and
+make every test able to fail.
 
 Strict TDD produces every rule below naturally: a test written first and
-watched failing against real code only earns a mock when the real
-dependency proves slow or external. A test asserting on a mock means TDD
-was skipped somewhere.
+watched failing against real code has already proven it can fail, and
+only earns a mock when the real dependency proves slow or external. A
+test asserting on a mock means TDD was skipped somewhere.
 
 ## The Iron Laws
 
 ```
-1. Assert on real behavior, never on mock behavior
-2. Production classes carry production methods only
-3. Understand a dependency's side effects before mocking it
+1. Every test can fail — name the production change that would fail it
+2. Assert on real behavior, never on mock behavior
+3. Production classes carry production methods only
+4. Understand a dependency's side effects before mocking it
 ```
 
-## Rule 1: Assert on Real Behavior
+## Rule 1: Write Tests That Can Fail
+
+Before writing or changing a test, name the production change that would
+make it fail. If you cannot, redesign the test around an observable
+behavior — a test that cannot fail protects nothing.
+
+Derive expected values independently of the code under test: literals,
+hand-checked fixtures, small worked examples, or invariant assertions.
+Keep test logic simple enough to review by inspection — table-driven
+tests with literal `want` values are the preferred shape.
+
+```typescript
+// ✅ GOOD: literal, hand-derived expectation
+test('builds tag query', () => {
+  expect(buildSearchQuery({ tag: 'urgent' })).toBe('tag:"urgent"');
+});
+```
+
+```typescript
+// ❌ The violation: expectation computed by the logic under test
+test('builds tag query', () => {
+  const expected = buildSearchQuery({ tag: 'urgent' });  // same builder!
+  expect(buildSearchQuery({ tag: 'urgent' })).toBe(expected);  // always true
+});
+
+// ❌ Subtler: the expectation reuses the same helper the code calls
+test('formats timestamp', () => {
+  expect(render(entry)).toContain(formatTime(entry.ts));  // mirrors implementation
+});
+```
+
+A mirror assertion re-derives the answer with the answer's own machinery:
+it passes no matter what that machinery does.
+
+**The string-presence trap.** For a script, skill, prompt, or config, a
+test that asserts the source contains an exact line counterfeits this
+rule: it can fail (delete the line), so it passes the letter of
+falsifiability while asserting only that the source is the source. It
+breaks on every legitimate rewording and survives every real regression.
+The observable for a script is what it does — run it against controlled
+inputs and assert outputs, side effects, or exit codes. The observable
+for a document that instructs an agent is the consuming agent's behavior
+— pressure-test it. Text containment is never the observable.
+
+### Gate Function
+
+```
+BEFORE writing the test body:
+  Ask: "What production change should make this test fail?"
+
+  IF you cannot name one:
+    STOP - Redesign the test around an observable behavior
+
+  IF the only answer is "the source text changed":
+    STOP - Run the artifact and assert its effects instead
+
+  Ask: "Is the expected value derived independently of the code under test?"
+
+  IF it reuses the code's own logic or helpers:
+    STOP - Replace it with a literal or hand-checked fixture
+```
+
+## Rule 2: Assert on Real Behavior
 
 ```typescript
 // ✅ GOOD: Test the real component
@@ -60,7 +124,7 @@ BEFORE asserting on any mock element:
   Test real behavior instead
 ```
 
-## Rule 2: Keep Test Cleanup in Test Utilities
+## Rule 3: Keep Test Cleanup in Test Utilities
 
 ```typescript
 // ✅ GOOD: Test utilities own test cleanup
@@ -110,11 +174,17 @@ BEFORE adding any method to a production class:
     STOP - Wrong class for this method
 ```
 
-## Rule 3: Mock at the Right Level
+## Rule 4: Mock at the Right Level
 
 Learn what the real method does — every side effect — before replacing
 it. Mock the slow or external operation and preserve the behavior your
 test depends on.
+
+Make doubles specific to their contract: when arguments, call counts, or
+ordering matter, assert them — a fake that accepts anything verifies
+nothing. And give each branch its own double: success, error, and
+malformed paths each get their own fixture or spy, so the wrong branch
+cannot satisfy the expectation.
 
 ```typescript
 // ✅ GOOD: Mock the slow part, preserve behavior the test needs
@@ -165,7 +235,7 @@ BEFORE mocking any method:
     - Mocking before tracing the dependency chain
 ```
 
-## Rule 4: Mirror Real Data Completely
+## Rule 5: Mirror Real Data Completely
 
 Mock the COMPLETE data structure as it exists in reality, not just the
 fields your immediate test uses.
@@ -209,13 +279,50 @@ BEFORE creating mock responses:
   If uncertain: include all documented fields
 ```
 
-## Rule 5: Tests Ship With the Implementation
+## Rule 6: Test Your Code, Not the Framework
+
+Test the contract your code makes at its boundaries — the route you
+register, the query you emit, the payload shape you produce, the value
+handoff between layers. Dependencies' documented mechanics are their
+maintainers' tests to write.
+
+```typescript
+// ✅ GOOD: your contract at the boundary
+test('GET /sessions/:id returns 404 for unknown id', async () => {
+  const res = await request(app).get('/sessions/nope');
+  expect(res.status).toBe(404);
+  expect(res.body.error).toBe('session not found');
+});
+```
+
+```typescript
+// ❌ The violation: re-proving the router works as documented
+test('router calls handler for matching route', () => {
+  const handler = vi.fn();
+  router.get('/x', handler);
+  router.handle(makeRequest('/x'));
+  expect(handler).toHaveBeenCalled();
+});
+```
+
+When upstream behavior genuinely surprised you (a quoting rule, an event
+ordering), write one narrow characterization test around your integration
+point and name the assumption in the test name or a comment.
+
+The same boundary applies inside your own code: test behavior, not that
+the implementation is written the way it is currently written. Plain
+constructor assignment, getters, trivial forwarding, and data-only
+structs earn tests only when they validate, normalize, default, derive,
+enforce, or cause side effects — otherwise assert the first
+consumer-visible result that depends on them.
+
+## Rule 7: Tests Ship With the Implementation
 
 Testing is part of implementation. The TDD cycle — failing test, minimal
 implementation, refactor — is what "complete" means; "implementation
 complete, ready for testing" describes an unfinished task.
 
-## Rule 6: Prefer Real Components Over Complex Mocks
+## Rule 8: Prefer Real Components Over Complex Mocks
 
 Integration tests with real components are often simpler than elaborate
 mocks. Reach for one when you see:
@@ -227,15 +334,33 @@ mocks. Reach for one when you see:
 
 **your human partner's question:** "Do we need to be using a mock here?"
 
+## The Mutation Check
+
+Before finishing, mentally mutate the production code. At least one test
+should fail for each realistic mutation:
+
+- Wrong constant or argument
+- Wrong branch handler
+- Missing state change or side effect (row not written, event not emitted)
+- Empty or default return
+- Missing validation for zero, empty, nil, unauthorized, or malformed input
+
+A mutation no test can catch marks the behavior as unprotected — or the
+test as tautological.
+
 ## Quick Reference
 
 | When you... | Do |
 |-------------|-----|
+| Write any test | Name the production change that would make it fail |
+| Build an expected value | Derive it independently — literal or hand-checked fixture |
 | Want to assert on a mocked element | Test the real component, or unmock it |
 | Need cleanup that only tests use | Put it in test utilities |
 | Are about to mock a method | Learn its side effects first; mock the slow/external level |
 | Build a mock response | Mirror the real structure completely |
+| Reach for a dependency test | Test your boundary contract, not their documented mechanics |
 | Finish an implementation | Tests already exist (TDD) — or it is unfinished |
+| Finish a test file | Run the mutation check |
 | Watch mock setup balloon | Switch to an integration test with real components |
 
 ## Warning Signs
@@ -246,3 +371,9 @@ mocks. Reach for one when you see:
 - The test fails when you remove the mock
 - You can't explain why the mock is needed
 - Mocking "just to be safe"
+- Setup and assertion share the same object, guaranteeing equality
+- The test can fail only through a panic, crash, or missing selector
+- The test would still matter if only the framework remained
+- Expected values are hidden behind loops, builders, or helpers
+- The test greps source text instead of observing behavior
+- The test asserts that a removed function, file, or symbol stays removed
