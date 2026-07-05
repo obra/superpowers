@@ -59,23 +59,18 @@ test('formats timestamp', () => {
 A mirror assertion re-derives the answer with the answer's own machinery:
 it passes no matter what that machinery does.
 
-**Falsifiable is necessary, not sufficient — name the break.** A test must
-fail for the right reason: name the wrong branch, missing side effect,
-wrong argument, boundary case, or contract violation it would catch. If
-every change that could fail it is an intentional decision — a constant's
-value, the exact wording of a message, private structure — you have
-written a change detector, not a test: it fires on redesign and sleeps
-through bugs. Test the behavior that depends on the decision instead.
+**Name the break, not just the change.** A test earns its place by
+catching a wrong branch, missing side effect, wrong argument, boundary,
+or broken contract. If only intentional decisions can fail it — a
+constant's value, exact message wording — it is a change detector: it
+fires on redesign and sleeps through bugs.
 
-**The string-presence trap.** For a script, skill, prompt, or config, a
-test that asserts the source contains an exact line counterfeits this
-rule: it can fail (delete the line), so it passes the letter of
-falsifiability while asserting only that the source is the source. It
-breaks on every legitimate rewording and survives every real regression.
-The observable for a script is what it does — run it against controlled
-inputs and assert outputs, side effects, or exit codes. The observable
-for a document that instructs an agent is the consuming agent's behavior
-— pressure-test it. Text containment is never the observable.
+**The string-presence trap.** Asserting that a script, skill, or config
+contains an exact line counterfeits falsifiability: it proves only that
+the source is the source, breaking on every rewording and surviving every
+real regression. Run scripts and assert outputs, side effects, or exit
+codes; test agent-instructing documents by their consumer's behavior.
+Text containment is never the observable.
 
 ### Gate Function
 
@@ -336,9 +331,12 @@ Testing is part of implementation. The TDD cycle — failing test, minimal
 implementation, refactor — is what "complete" means; "implementation
 complete, ready for testing" describes an unfinished task.
 
-Ship the tests the behavior needs — and only those. A change that touches
-only trivial code (Rule 6) earns no ceremonial test: a test written to
-satisfy process protects nothing and costs maintenance forever.
+Ship the tests the behavior needs — and only those. Trivial-code changes
+(Rule 6) and prose for humans (READMEs, comments, docs) earn no test:
+there is no behavior to protect, and a test written to satisfy process
+costs maintenance forever. Skills and prompts follow their own discipline
+— pressure-test the consuming agent when an edit changes behavior
+(superpowers:writing-skills) — never their text.
 
 ## Rule 8: Prefer Real Components Over Complex Mocks
 
