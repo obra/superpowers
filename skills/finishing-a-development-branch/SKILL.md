@@ -7,39 +7,25 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Overview
 
-Guide completion of development work by presenting clear options and handling chosen workflow.
-
 **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
-## The Process
+## Step 1: Verify Tests
 
-### Step 1: Verify Tests
+Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
-**Before presenting options, verify tests pass:**
+**If tests fail**, report the failures and stop — the menu comes after a green suite:
 
-```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
-```
-
-**If tests fail:**
 ```
 Tests failing (<N> failures). Must fix before completing:
 
 [Show failures]
-
-Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed to Step 2.
+**If tests pass:** continue to Step 2.
 
-**If tests pass:** Continue to Step 2.
-
-### Step 2: Detect Environment
-
-**Determine workspace state before presenting options:**
+## Step 2: Detect Environment
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -52,16 +38,16 @@ This determines which menu to show and how cleanup works:
 |-------|------|---------|
 | `GIT_DIR == GIT_COMMON` (normal repo) | Standard 3 options | No worktree to clean up |
 | `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 3 options (no merge) | No cleanup (externally managed) |
+| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
 
-### Step 3: Determine Base Branch
+## Step 3: Determine Base Branch
 
 The base branch is whatever this work forked from — usually named in the
 plan, the conversation, or the branch's upstream. If it is not already
 known, ask: "This branch split from <your best guess> - is that correct?"
-Don't guess silently: merging into the wrong base is expensive to undo.
+Confirm before merging: merging into the wrong base is expensive to undo.
 
-### Step 4: Present Options
+## Step 4: Present Options
 
 **Normal repo and named-branch worktree — present exactly these 3 options:**
 
@@ -86,15 +72,15 @@ Implementation complete. You're on a detached HEAD (externally managed workspace
 Which option?
 ```
 
-**Don't add explanation** - keep options concise.
-
-Discarding the work is never offered. It exists only as a response to your
+Present the menu exactly as written — concise, with every option coming
+from the list above. Discarding the work happens only in response to your
 human partner explicitly asking for it (see "If your human partner asks to
-discard the work" below).
+discard the work" below). Wait for their answer; the integration decision
+is theirs.
 
-### Step 5: Execute Choice
+## Step 5: Execute Choice
 
-#### Option 1: Merge Locally
+### Option 1: Merge Locally
 
 ```bash
 # Get main repo root for CWD safety
@@ -108,24 +94,22 @@ git merge <feature-branch>
 
 # Verify tests on merged result
 <test command>
-
-# Only after merge succeeds: cleanup worktree (Step 6), then delete branch
 ```
 
-If tests fail on the merged result: STOP. Leave the worktree and branch in
-place and investigate — nothing has been pushed, so the merge is local and
-recoverable.
+If tests fail on the merged result: stop, leave the worktree and branch in
+place, and investigate — nothing has been pushed, so the merge is local
+and recoverable.
 
-Then: Cleanup worktree (Step 6), then delete branch:
+Once the merged result is green: clean up the worktree (Step 6), then
+delete the branch:
 
 ```bash
 git branch -d <feature-branch>
 ```
 
-#### Option 2: Push and Create PR
+### Option 2: Push and Create PR
 
 ```bash
-# Push branch
 git push -u origin <feature-branch>
 ```
 
@@ -134,18 +118,16 @@ tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
-**Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
+Keep the worktree — your human partner iterates on PR feedback there.
 
-#### Option 3: Keep As-Is
+### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
-**Don't cleanup worktree.**
+### If your human partner asks to discard the work
 
-#### If your human partner asks to discard the work
-
-Never offer this. Only do it when your human partner explicitly asks to
-throw the work away — and even then, confirm first:
+This path exists only as a response to an explicit request to throw the
+work away. Confirm first:
 
 ```
 This will permanently delete:
@@ -156,22 +138,23 @@ This will permanently delete:
 Type 'discard' to confirm.
 ```
 
-Wait for exact confirmation.
+Wait for that exact confirmation. When it arrives:
 
-If confirmed:
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 ```
 
-Then: Cleanup worktree (Step 6), then force-delete branch:
+Then clean up the worktree (Step 6) and force-delete the branch:
+
 ```bash
 git branch -D <feature-branch>
 ```
 
-### Step 6: Cleanup Workspace
+## Step 6: Cleanup Workspace
 
-**Only runs for Option 1 and confirmed discards.** Options 2 and 3 always preserve the worktree.
+**Runs for Option 1 and confirmed discards.** Options 2 and 3 always
+preserve the worktree.
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -181,7 +164,9 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.worktrees/` or `worktrees/`:** Superpowers created this worktree — we own cleanup.
+**If worktree path is under `.worktrees/` or `worktrees/`:** Superpowers
+created this worktree — we own cleanup. Run it from the main repo root
+(removal fails from inside the worktree being removed):
 
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
@@ -190,7 +175,8 @@ git worktree remove "$WORKTREE_PATH"
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
 
-**Otherwise:** The host environment (harness) owns this workspace. Do NOT remove it. If your platform provides a workspace-exit tool, use it. Otherwise, leave the workspace in place.
+**Otherwise:** The host environment owns this workspace — leave it in
+place. If your platform provides a workspace-exit tool, use it.
 
 ## Quick Reference
 
@@ -201,57 +187,16 @@ git worktree prune  # Self-healing: clean up any stale registrations
 | 3. Keep as-is | - | - | yes | - |
 | Discard (explicit request only) | - | - | - | yes (force) |
 
-## Common Mistakes
+## Common Rationalizations
 
-**Skipping test verification**
-- **Problem:** Merge broken code, create failing PR
-- **Fix:** Always verify tests before offering options
-
-**Open-ended questions**
-- **Problem:** "What should I do next?" is ambiguous
-- **Fix:** Present exactly 3 structured options (or 2 for detached HEAD)
-
-**Offering to discard the work**
-- **Problem:** Puts throwing away completed, passing work on the menu
-- **Fix:** Discard only on your human partner's explicit request, never as an offer
-
-**Cleaning up worktree for Option 2**
-- **Problem:** Remove worktree user needs for PR iteration
-- **Fix:** Only cleanup for Option 1 and confirmed discards
-
-**Deleting branch before removing worktree**
-- **Problem:** `git branch -d` fails because worktree still references the branch
-- **Fix:** Merge first, remove worktree, then delete branch
-
-**Running git worktree remove from inside the worktree**
-- **Problem:** Command fails silently when CWD is inside the worktree being removed
-- **Fix:** Always `cd` to main repo root before `git worktree remove`
-
-**Cleaning up harness-owned worktrees**
-- **Problem:** Removing a worktree the harness created causes phantom state
-- **Fix:** Only clean up worktrees under `.worktrees/` or `worktrees/`
-
-**No confirmation for discard**
-- **Problem:** Accidentally delete work
-- **Fix:** Require typed "discard" confirmation
-
-## Red Flags
-
-**Never:**
-- Proceed with failing tests
-- Merge without verifying tests on result
-- Offer discarding the work — it happens only on explicit request
-- Delete work without confirmation
-- Force-push without explicit request
-- Remove a worktree before confirming merge success
-- Clean up worktrees you didn't create (provenance check)
-- Run `git worktree remove` from inside the worktree
-
-**Always:**
-- Verify tests before offering options
-- Detect environment before presenting menu
-- Present exactly 3 options (or 2 for detached HEAD)
-- Get typed confirmation before any discard
-- Clean up worktree for Option 1 and confirmed discards only
-- `cd` to main repo root before worktree removal
-- Run `git worktree prune` after removal
+| Excuse | Reality |
+|--------|---------|
+| "Tests passed earlier this session" | Run the suite now. The tree changed since the last green run. |
+| "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
+| "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
+| "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
+| "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
+| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
+| "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
+| "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
+| "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
