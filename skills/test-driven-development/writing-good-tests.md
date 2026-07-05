@@ -59,6 +59,14 @@ test('formats timestamp', () => {
 A mirror assertion re-derives the answer with the answer's own machinery:
 it passes no matter what that machinery does.
 
+**Falsifiable is necessary, not sufficient — name the break.** A test must
+fail for the right reason: name the wrong branch, missing side effect,
+wrong argument, boundary case, or contract violation it would catch. If
+every change that could fail it is an intentional decision — a constant's
+value, the exact wording of a message, private structure — you have
+written a change detector, not a test: it fires on redesign and sleeps
+through bugs. Test the behavior that depends on the decision instead.
+
 **The string-presence trap.** For a script, skill, prompt, or config, a
 test that asserts the source contains an exact line counterfeits this
 rule: it can fail (delete the line), so it passes the letter of
@@ -80,6 +88,12 @@ BEFORE writing the test body:
 
   IF the only answer is "the source text changed":
     STOP - Run the artifact and assert its effects instead
+
+  Ask: "What BREAK would this catch?"
+
+  IF every failing change is an intentional decision, never a bug:
+    STOP - That is a change detector; test the behavior that
+    depends on the decision instead
 
   Ask: "Is the expected value derived independently of the code under test?"
 
@@ -291,7 +305,7 @@ maintainers' tests to write.
 test('GET /sessions/:id returns 404 for unknown id', async () => {
   const res = await request(app).get('/sessions/nope');
   expect(res.status).toBe(404);
-  expect(res.body.error).toBe('session not found');
+  expect(res.body.error).toMatch(/not found/);  // contract, not exact copy
 });
 ```
 
@@ -311,9 +325,9 @@ point and name the assumption in the test name or a comment.
 
 The same boundary applies inside your own code: test behavior, not that
 the implementation is written the way it is currently written. Plain
-constructor assignment, getters, trivial forwarding, and data-only
-structs earn tests only when they validate, normalize, default, derive,
-enforce, or cause side effects — otherwise assert the first
+constructor assignment, getters, constants, trivial forwarding, and
+data-only structs earn tests only when they validate, normalize, default,
+derive, enforce, or cause side effects — otherwise assert the first
 consumer-visible result that depends on them.
 
 ## Rule 7: Tests Ship With the Implementation
@@ -321,6 +335,10 @@ consumer-visible result that depends on them.
 Testing is part of implementation. The TDD cycle — failing test, minimal
 implementation, refactor — is what "complete" means; "implementation
 complete, ready for testing" describes an unfinished task.
+
+Ship the tests the behavior needs — and only those. A change that touches
+only trivial code (Rule 6) earns no ceremonial test: a test written to
+satisfy process protects nothing and costs maintenance forever.
 
 ## Rule 8: Prefer Real Components Over Complex Mocks
 
@@ -377,3 +395,5 @@ test as tautological.
 - Expected values are hidden behind loops, builders, or helpers
 - The test greps source text instead of observing behavior
 - The test asserts that a removed function, file, or symbol stays removed
+- The test exists for coverage, checking no side effect, boundary, or outcome
+- The test fails on every intentional change and never on accidental breakage
