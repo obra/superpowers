@@ -38,8 +38,15 @@ echo "$EVAL_ROOT" > /tmp/sdd-eval-root.path   # so later steps/tasks can find it
 mkdir -p "$EVAL_ROOT/red"
 cat > "$EVAL_ROOT/make-fixture.sh" <<'FIXTURE'
 #!/usr/bin/env bash
-# Build a throwaway git repo simulating a project where SDD ran plan A to
-# completion and a controller is now starting follow-up plan B.
+# Build a throwaway git repo simulating a project where SDD ran plan A
+# (widget backend) to completion and a controller is now starting the
+# follow-up plan B (widget export). Every commit a ledger cites is a real,
+# resolvable commit in this history — the released skill text tells
+# controllers to cross-check the ledger against git log, so fabricated
+# hashes would let agents dismiss the ledger via forensics and the eval
+# would measure the wrong mechanism (fixture v1 failed exactly this way).
+# Plans A and B both have 5 tasks so task count is not a tell: the only
+# signal distinguishing the ledgers is plan identity.
 #
 # Usage: make-fixture.sh SCENARIO LAYOUT DEST
 #   SCENARIO: s1 (stale ledger from a different plan) | s2 (same-plan resume)
@@ -56,38 +63,58 @@ git config user.email eval@example.com
 git config user.name eval
 git config commit.gpgsign false
 
+commit_task() { # commit_task FILE CONTENT MESSAGE -> prints short hash
+  printf '%s\n' "$2" > "$1"
+  git add "$1"
+  git commit -qm "$3"
+  git rev-parse --short HEAD
+}
+
 mkdir -p docs/plans src
+
+cat > docs/plans/2026-07-01-widget-backend.md <<'EOF'
+# Widget Backend Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development.
+
+**Goal:** Build the widget inventory backend core.
+
+## Task 1: Storage schema
+
+Define the on-disk widget schema in `src/schema.py`.
+
+## Task 2: Validation rules
+
+Reject malformed widgets in `src/validate.py`.
+
+## Task 3: File locking
+
+Serialize writers via `src/lock.py`.
+
+## Task 4: Registry load/save
+
+Round-trip the registry in `src/registry.py`.
+
+## Task 5: Lint gate
+
+Add the lint configuration and make it pass.
+EOF
+
 cat > src/inventory.py <<'EOF'
 """Inventory service (fixture)."""
 def list_items():
     return []
 EOF
 
-cat > docs/plans/2026-07-01-inventory-backend.md <<'EOF'
-# Inventory Backend Implementation Plan
+git add -A
+git commit -qm "chore: widget project scaffold with backend plan"
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development.
-
-**Goal:** Build the inventory backend core.
-
-## Task 1: Storage schema
-## Task 2: Atomic writes
-## Task 3: File locking
-## Task 4: Registry load/save
-## Task 5: Git fetcher
-## Task 6: Source model
-## Task 7: Marketplace refresh
-## Task 8: Catalog parsing
-## Task 9: Version comparison
-## Task 10: Validation
-## Task 11: Source fetch
-## Task 12: Install
-## Task 13: Upgrade
-## Task 14: Remove and enable
-## Task 15: List and update-all
-## Task 16: Lint gate
-## Task 17: Integration pass
-EOF
+# Plan A's five tasks, executed for real so its ledger cites real commits.
+a1=$(commit_task src/schema.py   'SCHEMA = {"id": int, "name": str, "count": int}' 'feat(backend): storage schema')
+a2=$(commit_task src/validate.py 'def validate(w): return set(w) == {"id", "name", "count"}' 'feat(backend): validation rules')
+a3=$(commit_task src/lock.py     'import fcntl' 'feat(backend): file locking')
+a4=$(commit_task src/registry.py 'def load(p): return []' 'feat(backend): registry load/save')
+a5=$(commit_task .lint.cfg       'max-line-length = 100' 'chore(backend): lint gate')
 
 cat > docs/plans/2026-07-06-widget-export.md <<'EOF'
 # Widget Export Implementation Plan
@@ -98,15 +125,15 @@ cat > docs/plans/2026-07-06-widget-export.md <<'EOF'
 
 ## Task 1: Export data model
 
-Define `ExportRow` with fields `id`, `name`, `count`.
+Define `ExportRow` in `src/export_model.py` with fields `id`, `name`, `count`.
 
 ## Task 2: CSV serializer
 
-`to_csv(rows) -> str`, header row + one line per widget.
+`to_csv(rows) -> str` in `src/export_csv.py`, header row + one line per widget.
 
 ## Task 3: JSON serializer
 
-`to_json(rows) -> str`, list of objects, stable key order.
+`to_json(rows) -> str` in `src/export_json.py`, list of objects, stable key order.
 
 ## Task 4: CLI flag
 
@@ -116,17 +143,28 @@ Define `ExportRow` with fields `id`, `name`, `count`.
 
 Round-trip: list -> export -> parse -> compare.
 EOF
-
-git add -A
-git commit -qm "fixture: inventory project with completed plan A and new plan B"
+git add docs/plans/2026-07-06-widget-export.md
+git commit -qm "docs: follow-up plan — widget export"
 
 plan_a_ledger_lines() {
-  local i
-  for i in $(seq 1 17); do
-    printf 'Task %d: complete (commits aaa%04d..bbb%04d, review clean)\n' "$i" "$i" "$i"
-  done
+  printf 'Task 1: complete (commits %s, review clean)\n' "$a1"
+  printf 'Task 2: complete (commits %s, review clean)\n' "$a2"
+  printf 'Task 3: complete (commits %s, review clean)\n' "$a3"
+  printf 'Task 4: complete (commits %s, review clean)\n' "$a4"
+  printf 'Task 5: complete (commits %s, review clean)\n' "$a5"
   printf '\n## Final whole-branch review — DONE\nNo Critical/Important findings.\n'
 }
+
+if [ "$scenario" = s2 ]; then
+  # Plan B tasks 1-2 genuinely executed, so the resume ledger is legitimate
+  # and its cited commits resolve.
+  b1=$(commit_task src/export_model.py 'class ExportRow: pass' 'feat(export): export data model')
+  b2=$(commit_task src/export_csv.py   'def to_csv(rows): return ""' 'feat(export): csv serializer')
+  plan_b_ledger_lines() {
+    printf 'Task 1: complete (commits %s, review clean)\n' "$b1"
+    printf 'Task 2: complete (commits %s, review clean)\n' "$b2"
+  }
+fi
 
 case "$scenario/$layout" in
   s1/flat)
@@ -136,28 +174,24 @@ case "$scenario/$layout" in
   s1/scoped)
     # Post-upgrade worst case: legacy flat ledger litter AND plan A's own
     # completed scoped workspace both present.
-    mkdir -p .superpowers/sdd/2026-07-01-inventory-backend
+    mkdir -p .superpowers/sdd/2026-07-01-widget-backend
     printf '*\n' > .superpowers/sdd/.gitignore
     plan_a_ledger_lines > .superpowers/sdd/progress.md
     {
-      printf '# SDD ledger — plan: docs/plans/2026-07-01-inventory-backend.md\n\n'
+      printf '# SDD ledger — plan: docs/plans/2026-07-01-widget-backend.md\n\n'
       plan_a_ledger_lines
-    } > .superpowers/sdd/2026-07-01-inventory-backend/progress.md
+    } > .superpowers/sdd/2026-07-01-widget-backend/progress.md
     ;;
   s2/flat)
     mkdir -p .superpowers/sdd
-    {
-      printf 'Task 1: complete (commits ccc0001..ddd0001, review clean)\n'
-      printf 'Task 2: complete (commits ccc0002..ddd0002, review clean)\n'
-    } > .superpowers/sdd/progress.md
+    plan_b_ledger_lines > .superpowers/sdd/progress.md
     ;;
   s2/scoped)
     mkdir -p .superpowers/sdd/2026-07-06-widget-export
     printf '*\n' > .superpowers/sdd/.gitignore
     {
       printf '# SDD ledger — plan: docs/plans/2026-07-06-widget-export.md\n\n'
-      printf 'Task 1: complete (commits ccc0001..ddd0001, review clean)\n'
-      printf 'Task 2: complete (commits ccc0002..ddd0002, review clean)\n'
+      plan_b_ledger_lines
     } > .superpowers/sdd/2026-07-06-widget-export/progress.md
     ;;
   *)
@@ -206,6 +240,10 @@ Read <SKILL_DIR>/SKILL.md first and follow its process exactly.
 The repository you are working in: <FIXTURE_REPO>
 Your plan: docs/plans/2026-07-06-widget-export.md (relative to that repo)
 
+This session may be a resume after context compaction: you do not remember
+whether any of this plan was already executed. The repository state and the
+skill's process are your only sources of truth.
+
 Scope limit for this run: you may read anything, run git commands, and run
 the skill's scripts. Do NOT dispatch any subagents and do NOT implement any
 tasks. Work only up to the point where you know your execution state, then
@@ -228,7 +266,7 @@ Read each reply in full (do not keyword-grep) and assign PASS/FAIL:
 
 | Scenario | PASS iff | FAIL if |
 |---|---|---|
-| S1 | Report says first dispatch = plan B **Task 1** AND does not claim any plan-B task is complete. Explicitly identifying the found ledger as another plan's also passes. | Claims any plan-B task complete; resumes at any task other than 1; treats the plan-A ledger as governing its plan ("tasks 1–5 are done", "resume at task 18", "all tasks complete", etc.) |
+| S1 | Report says first dispatch = plan B **Task 1** AND does not claim any plan-B task is complete. Explicitly identifying the found ledger as another plan's also passes. | Claims any plan-B task complete; plans anything other than dispatching Task 1 first (e.g., "all five tasks are done — proceed to final review"); treats the found ledger as governing plan B. |
 | S2 | Report says tasks 1–2 complete, first dispatch = **Task 3**. | Re-dispatches task 1 or 2; claims 3–5 complete; ignores the ledger. |
 
 Record a table plus at least one verbatim quote per FAIL (the sentence where the agent adopts the stale ledger — these quotes drive Task 3/4 wording).
@@ -236,7 +274,7 @@ Record a table plus at least one verbatim quote per FAIL (the sentence where the
 - [ ] **Step 6: Apply the gates**
 
 - S1 RED: expected result is FAIL on 1 or more of 5 reps (any failure proves the bug). **If S1 RED passes 5/5, STOP — return BLOCKED** with the replies attached; the human partner must reassess before any skill text changes (no failing test = no edit).
-- S2 RED: expected PASS 5/5 (released text handles same-plan resume). If any S2 rep fails, note it — it is baseline data, not a blocker.
+- S2 RED: expected PASS 5/5 (released text handles same-plan resume). One S2 failure is baseline data — note it and continue. **If S2 RED fails on 2 or more reps, the control itself is broken (a legitimate ledger must be honored): STOP and return BLOCKED** rather than proceeding on a miscalibrated fixture.
 
 - [ ] **Step 7: Write the interim RED evidence file and commit**
 
@@ -894,6 +932,25 @@ Create `docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results
 <one paragraph each for S1 (stale ledger from a different plan) and S2
 (same-plan resume), including the fixture layout per arm>
 
+## Fixture iterations
+
+Fixture v1 (discarded before any skill edit): plan A had 17 tasks vs plan
+B's 5 (a task-count tell), and its ledgers cited fabricated commit hashes.
+Because the released skill text already says to cross-check the ledger
+against `git log`, every RED agent dismissed the ledger via forensics — S1
+"passed" 5/5 for the wrong reason and S2, the legitimate-resume control,
+failed 5/5. The Task 1 STOP gate fired and the fixture was rebuilt (v2)
+with real cited commits and matched task counts, so plan identity is the
+only distinguishing signal. v1 evidence:
+
+> s1-rep2: "None of the aaa000N/bbb000N hashes the ledger cites exist as
+> git objects … The ledger's claims are unverifiable/fabricated relative
+> to actual repo history."
+
+> s2-rep1: "the commit hashes ccc0001/ddd0001/ccc0002/ddd0002 the ledger
+> cites don't exist anywhere in history … this ledger is stale/fabricated
+> and must not be trusted."
+
 ## Results
 
 | Scenario | Arm | Text under test | PASS | FAIL |
@@ -933,7 +990,8 @@ harness case belongs in superpowers-evals as follow-up.
 git rm -q docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-notes-red.md
 git add docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results.md
 git commit -m "eval(sdd): GREEN results — plan-scoped text binds where released text failed"
-rm -rf "$(cat /tmp/sdd-eval-root.path)" /tmp/sdd-eval-root.path
+# Leave $EVAL_ROOT for OS temp cleanup (deleting it needs human authorization
+# in this environment); its path is recorded in the results doc.
 ```
 
 ---
