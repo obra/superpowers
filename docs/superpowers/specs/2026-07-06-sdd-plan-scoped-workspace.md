@@ -141,32 +141,43 @@ plan's cleanup.
   `-integration.sh` audited for old-path expectations (none found in initial
   grep; audit is a task gate anyway).
 
-### Evaluation (writing-skills RED → GREEN, the "basic eval")
+### Evaluation (writing-skills RED → GREEN, re-scoped 2026-07-06)
 
-Pressure scenarios run as fresh subagent sessions against a fixture repo in a
-temp directory (never inside this worktree). Fixture: git repo with plan A
-(17-task backend plan) and plan B (5-task follow-up), plus SDD workspace state
-as each scenario dictates. The agent under test is pointed at a specific
-SKILL.md text (old = `git show` of the released text; new = this branch's) and
-plan B, and asked to state concretely which task it starts with and what it
-does about existing ledger state. No real implementer dispatches — the measured
-output is the controller's resume decision.
+Pressure scenarios run as fresh sonnet subagent sessions against fixture repos
+in temp directories (never inside this worktree), compaction-resume framing,
+each rep hand-scored; the measured output is the controller's resume decision
+(no real implementer dispatches).
 
-- **S1 — stale ledger from a different plan (the reported bug):**
-  workspace contains plan A's completed ledger in the layout the skill text
-  under test prescribes. PASS = starts plan B at Task 1 (or explicitly
-  identifies the ledger as another plan's); FAIL = resumes past plan B tasks,
-  claims tasks complete, or adopts plan A's ledger.
-- **S2 — same-plan resume (regression guard):** ledger for plan B marks Tasks
-  1–2 complete. PASS = resumes at Task 3 without re-dispatching 1–2. This
-  protects the ledger's original purpose; the fix must not break it.
+**RED outcome that forced the re-scope (maintainer decision, Jesse,
+2026-07-06):** the originally hypothesized failure — a controller blindly
+adopting a stale foreign ledger as its own progress — did **not** reproduce:
+25/25 reps across three framings (fresh session, may-be-resumed, faithful
+post-compaction resume with the skill's "trust the ledger" line active)
+forensically cross-checked the ledger's cited commits against git history and
+the plan files, refused the foreign ledger, and started plan B at Task 1 —
+spending 6–13 tool calls of cross-plan forensics per resume to do so. Two
+fixture iterations were burned proving this honestly (v1: fabricated hashes
+were dismissed on sight; v2: stub implementations were ruled false "review
+clean" records — the S2 control failed both times). Full record in the
+committed eval docs.
 
-Reps: 5 per scenario per arm (RED = current released text, GREEN = new text),
-every response read and scored by hand against the PASS/FAIL criteria above;
-verbatim failure rationalizations captured. Expected: S1 RED fails ≥1/5 and
-plausibly most runs (any failure validates the bug; if S1 RED passes 5/5, STOP
-and reassess with Jesse before editing skill text — per writing-skills, no
-skill change without a failing test). S1 GREEN and S2 both arms must pass 5/5.
+**Re-scoped claims and gates:**
+
+- The change ships on the structural record (collisions, improvised side-band
+  names, overwritten briefs, git contamination — serf repo) plus the measured
+  disambiguation tax, with explicit maintainer sign-off standing in for the
+  writing-skills failing-baseline requirement on the SKILL.md text.
+- **S1 GREEN (5/5 required):** stale plan-A workspace present in the new
+  scoped layout plus legacy flat litter; a resumed controller on plan B
+  resolves its own plan-scoped workspace directly and starts at Task 1;
+  per-rep `tool_uses` recorded against the RED baseline (7/13/9/10/6) as the
+  cost delta.
+- **S2 RED control (≥4/5 required) and S2 GREEN (5/5 required)** on a
+  truthful v3 fixture (cited commits genuinely implement their tasks' specs,
+  rotating authors, spread timestamps): legitimate same-plan resume — tasks
+  1–2 recognized, Task 3 dispatched. This protects the ledger's original
+  purpose; the fix must not break it, and the control validates the fixture.
+
 Results land in `docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results.md`
 and are summarized in the PR.
 
