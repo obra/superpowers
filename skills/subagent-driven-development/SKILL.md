@@ -63,6 +63,7 @@ digraph process {
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
+    "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -78,7 +79,8 @@ digraph process {
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Final review clean: delete this plan's workspace";
+    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -136,7 +138,7 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -182,10 +184,10 @@ final whole-branch review. When you fill a reviewer template:
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
 - Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
-  and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
+  `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the
+  file path it prints (or, without bash: `git log --oneline`,
+  `git diff --stat`, and `git diff -U10` for the range, redirected to one
+  uniquely named file). The output never enters your own context, and the reviewer sees
   the commit list, stat summary, and full diff with context in one Read
   call. Use the BASE you recorded before dispatching the implementer —
   never `HEAD~1`, which silently truncates multi-commit tasks.
@@ -204,8 +206,8 @@ final whole-branch review. When you fill a reviewer template:
   Do not dismiss the finding because the plan mandates it, and do not
   dispatch a fix that contradicts the plan without asking.
 - The final whole-branch review gets a package too: run
-  `scripts/review-package MERGE_BASE HEAD` (MERGE_BASE = the commit the
-  branch started from, e.g. `git merge-base main HEAD`) and include the
+  `scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the
+  commit the branch started from, e.g. `git merge-base main HEAD`) and include the
   printed path in the final review dispatch, so the final reviewer reads
   one file instead of re-deriving the branch diff with git commands.
 - Every fix dispatch carries the implementer contract: the fix subagent
@@ -253,18 +255,31 @@ controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
-- At skill start, check for a ledger:
-  `cat "$(git rev-parse --show-toplevel)/.superpowers/sdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-dispatch them; resume at the first task
-  not marked complete.
+- Each plan owns a workspace: at skill start, run this skill's
+  `scripts/sdd-workspace PLAN_FILE` — it prints the plan's git-ignored
+  directory (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to
+  every artifact for THIS plan: ledger, briefs, reports, review packages.
+  Another plan's directory is never yours to read or write.
+- Check for this plan's ledger at `<workspace>/progress.md`. If its first
+  line names your plan file, tasks listed there as complete are DONE — do
+  not re-dispatch them; resume at the first task not marked complete. A
+  ledger whose first line names a different plan file — or a stray ledger
+  at the old flat path `.superpowers/sdd/progress.md` — is another plan's
+  progress: leave it in place and start your own, fresh.
+- Create the ledger with its identity as the first line:
+  `# SDD ledger — plan: <plan file path>`.
 - When a task's review comes back clean, append one line to the ledger in
   the same message as your other bookkeeping:
   `Task N: complete (commits <base7>..<head7>, review clean)`.
 - The ledger is your recovery map: the commits it names exist in git even
   when your context no longer remembers creating them. After compaction,
   trust the ledger and `git log` over your own recollection.
-- `git clean -fdx` will destroy the ledger (it's git-ignored scratch); if
+- `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
+- When the final whole-branch review is clean and its fixes are merged,
+  delete this plan's workspace (`rm -rf <workspace>`) — the git history
+  is the record now. Sibling directories belong to other plans; leave
+  them alone.
 
 ## Prompt Templates
 
@@ -278,6 +293,7 @@ a ledger file, not only in todos.
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
+[Resolve workspace: scripts/sdd-workspace docs/superpowers/plans/feature-plan.md — no ledger inside, fresh start]
 [Create todos for all tasks]
 
 Task 1: Hook installation script
@@ -332,6 +348,8 @@ Task reviewer: Spec ✅. Task quality: Approved.
 [Dispatch final code-reviewer]
 Final reviewer: All requirements met, ready to merge
 
+[Delete this plan's workspace — the record now lives in git]
+
 Done!
 ```
 
@@ -353,8 +371,8 @@ Done!
   dispatch prompt ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
 - Dispatch a task reviewer without a diff file — generate it first
-  (`scripts/review-package BASE HEAD`) and name the printed path in the
-  prompt
+  (`scripts/review-package PLAN_FILE BASE HEAD`) and name the printed
+  path in the prompt
 - Move to next task while the review has open Critical/Important issues
 - Re-dispatch a task the progress ledger already marks complete — check
   the ledger (and `git log`) after any compaction or resume
