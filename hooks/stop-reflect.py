@@ -30,6 +30,9 @@ INSIGHT_DIR = _ACE_HOME / "insights"
 SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
 EVOLUTION_STATE_FILE = _ACE_HOME / ".evolution_state.json"
 
+# Threshold for suggesting traceback at session end
+_TRACEBACK_SUGGEST_FAILURE_THRESHOLD = 3
+
 # Evolution thresholds — single source of truth lives in _ace_config (which
 # also reads ~/.ace/config.json overrides). Importing here means a project
 # can lower min_traces for dev or raise it for batch runs without editing
@@ -526,6 +529,38 @@ def cleanup_session_state() -> None:
             pass
 
 
+def _total_session_failures() -> int:
+    """Count total failures recorded in the session failures file."""
+    if not SESSION_FAILURES_FILE or not SESSION_FAILURES_FILE.exists():
+        return 0
+    try:
+        data = json.loads(SESSION_FAILURES_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 0
+    if isinstance(data, int):
+        return data
+    if not isinstance(data, dict):
+        return 0
+    total = 0
+    for value in data.values():
+        if isinstance(value, int):
+            total += value
+        elif isinstance(value, dict):
+            total += sum(v for v in value.values() if isinstance(v, int))
+    return total
+
+
+def _maybe_traceback_suggestion() -> str | None:
+    """Suggest traceback upload if the session ended with repeated failures."""
+    total = _total_session_failures()
+    if total < _TRACEBACK_SUGGEST_FAILURE_THRESHOLD:
+        return None
+    return (
+        "[ACE] 本 session 记录了多次失败。"
+        "需要运行 /ace:doctor 做本地诊断或 /ace:traceback 上报售后团队吗？"
+    )
+
+
 # ── Main ───────────────────────────────────────────────────────────────
 
 def main():
@@ -568,9 +603,18 @@ def main():
         parts.append(reflect_summary)
     if evolve_summary:
         parts.append(f"evolved: {evolve_summary}")
+
+    system_messages: list[str] = []
     if parts:
+        system_messages.append(f"[ACE] {' | '.join(parts)}")
+
+    traceback_suggestion = _maybe_traceback_suggestion()
+    if traceback_suggestion:
+        system_messages.append(traceback_suggestion)
+
+    if system_messages:
         print(json.dumps({
-            "systemMessage": f"[ACE] {' | '.join(parts)}"
+            "systemMessage": " ".join(system_messages)
         }))
 
     sys.exit(0)
