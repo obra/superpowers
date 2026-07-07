@@ -182,19 +182,36 @@ def _detect_frustration_words(prompt: str, words: list[str]) -> bool:
 
 
 def _count_session_failures(session_id: str) -> int:
+    """Count failure records in the session-scoped failures file.
+
+    post-tool-trace.py writes {entity_id: [failure_records]}.
+    The file is deleted at session end, so all records belong to the
+    current session; we still accept the legacy {session_id: count} shape
+    for backwards compatibility.
+    """
     try:
         data = json.loads(_SESSION_FAILURES_FILE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return 0
     if not isinstance(data, dict):
         return 0
-    # .session_failures.json 结构为 {session_id: {entity_id: count}} 或 {session_id: count}
-    session_data = data.get(session_id, {})
-    if isinstance(session_data, int):
-        return session_data
-    if isinstance(session_data, dict):
-        return sum(v for v in session_data.values() if isinstance(v, int))
-    return 0
+
+    # Legacy shapes written by older hook versions / test harnesses.
+    if session_id in data:
+        session_data = data[session_id]
+        if isinstance(session_data, int):
+            return session_data
+        if isinstance(session_data, dict):
+            return sum(v for v in session_data.values() if isinstance(v, int))
+        if isinstance(session_data, list):
+            return len(session_data)
+
+    # Real shape from post-tool-trace.py: {entity_id: [records]}.
+    total = 0
+    for value in data.values():
+        if isinstance(value, list):
+            total += len(value)
+    return total
 
 
 def _transcript_age_hours(transcript_path: Path) -> float:

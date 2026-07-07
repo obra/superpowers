@@ -530,7 +530,13 @@ def cleanup_session_state() -> None:
 
 
 def _total_session_failures() -> int:
-    """Count total failures recorded in the session failures file."""
+    """Count total failure records in the session-scoped failures file.
+
+    post-tool-trace.py writes {entity_id: [failure_records]} and deletes
+    the file at session end, so every record belongs to the current session.
+    Legacy {session_id: count} and {session_id: {entity: count}} shapes are
+    still accepted for backwards compatibility.
+    """
     if not SESSION_FAILURES_FILE or not SESSION_FAILURES_FILE.exists():
         return 0
     try:
@@ -547,6 +553,8 @@ def _total_session_failures() -> int:
             total += value
         elif isinstance(value, dict):
             total += sum(v for v in value.values() if isinstance(v, int))
+        elif isinstance(value, list):
+            total += len(value)
     return total
 
 
