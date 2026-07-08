@@ -216,6 +216,9 @@ lark-cli im +messages-send --as user --chat-id <chat_id> --msg-type interactive 
 
 ## 已知坑（务必遵守）
 
+**⚠️ 执行 Phase 0.1 和 Phase 4-6（任何 lark-cli 调用）之前，必须先读本 skill 同目录的 [trouble_shooting.md](trouble_shooting.md)**——它是完整的踩坑记录（wiki token 解析、scope 名、Base 字段格式、批量写入 JSON 结构等 10 条），下面只是最高频的摘要。执行中新踩并解决的坑，要当场追加到 trouble_shooting.md 并 push（只在会话里解决而不落盘 = 没解决）。
+
+- **131005 not found ≠ 无权限**：`/wiki/{token}` 里是 wiki node token，不是 docx obj_token；用**完整 URL + 不带 `--obj-type`** 调 `wiki +node-get` 让 CLI 自己解析（详见 trouble_shooting.md 第 1 条）。
 - **互动卡片 + 外部群**：user 身份可向**内部群**发互动卡片；**外部群**（`chats get` 返回 `external: true`）user 身份发送被平台拒绝（230027），必须走 bot。前置条件链：开发者后台「版本管理与发布→创建版本→对外共享」勾选「允许机器人被添加到外部群」并发布版本（未开启时拉群报 232033）→ `im chat.members create`（`member_id_type=app_id`）把 bot 拉进目标群（bot 不在群发送报 230002）→ `--as bot` 发卡片。
 - **91403 不可重试**：bot 对 Base 无权限时立即停止，走 user 身份。
 - **scope 增量授权**：缺 scope 时用 `lark-cli auth login --scope "..." --no-wait` 拿 verification_url，二维码 + 链接发给用户，等确认后 `--device-code` 完成。本链路需要：`wiki:node:retrieve`、`wiki:node:create`、`docx:document`、`base:record:create`、`im:message`、`im:message.send_as_user`。
