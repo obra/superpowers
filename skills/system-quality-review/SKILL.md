@@ -1,0 +1,135 @@
+---
+name: system-quality-review
+description: "系统架构和代码质量 review — 以严苛测试工程师/架构师视角实测核心链路，产出根因分析 + 分阶段修复计划，报告写入飞书 wiki，任务拆入 buglist 多维表格，摘要卡片发到飞书群。支持 ace（默认）与任意其他项目，适合每日例行执行。"
+user-invocable: true
+---
+
+# 系统架构和代码质量 Review
+
+以严苛测试工程师和架构师的视角，对一个项目做端到端质量审查：**实测核心链路 → 根因归并 → 分阶段修复计划 → 报告落盘 → 任务拆分 → 群通知**。整条链路曾在 ace 上完整跑通（2026-07-08 首次执行），本 skill 把该流程固化为可复用、可每日执行的标准动作。
+
+## When to use
+
+- 用户调用 `ace:system-quality-review` skill（可带参数指定项目/群）。
+- 用户要求"系统性测试/审查某项目的质量"、"跑一遍质量 review"、"系统架构和代码质量 review"。
+- 每日例行执行（cron / schedule 触发）。
+
+## 参数（全部可选）
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| project | `git@github.com:hyper-instrument/ace.git` | 被审查项目；可传 git URL 或本地仓库路径 |
+| chat_id | `oc_335cc3ff0ab0f353fa920fed387d5162`（HyperEM 群，外部群，bot 已入群） | 摘要卡片发送目标群；**外部群一律用 `--as bot` 发**（user 身份发外部群被平台拒 230027）。bot 不在群时报 230002：先 `im chat.members create`（member_id_type=app_id）拉 bot 入群——前提是应用已开启「对外共享→允许机器人被添加到外部群」（版本表单里配置，本应用 1.0.5 起已开启） |
+| wiki_node | `TvV8wYrayikOrskEIhxcFfYkn7b`（ace 问题收集表） | 报告文档的父 wiki 节点 |
+| base/table | base `LJrYbZA0paJyDismpECckHSqnVf`；**按项目路由表**：ace → `tblQNpirUlTtUVr3`（buglist），hyper-fib → `tbluiL2In7V2HT96`（同 view `vewJpKS6UZ`） | 任务拆分目标多维表格；新项目先问用户建表还是复用 |
+
+非 ace 项目若未指定 wiki/base/群，则询问用户或仅在本地输出报告。
+
+### 项目定位（先扫描本地，再考虑 clone）
+
+拿到 project 参数（git URL 或路径）后按此顺序解析工作目录：
+
+1. **当前目录**：若 cwd 已在目标仓库内（`git remote get-url origin` 与目标 URL 的 org/repo 匹配，SSH/HTTPS 视为等价），直接使用。
+2. **扫描本地常见位置**：按 `~/Projects`、`~/projects`、`~/code`、`~/dev`、`~/workspace` 等目录（深度 ≤3）找 `.git/config` 中 remote 匹配 org/repo 的仓库；也可用 `find ~/Projects -maxdepth 3 -name .git -type d` 后核对 remote。找到即使用，**不要重复 clone**。
+3. **本地命中后**：`git pull --ff-only` 拉最新代码（有未提交改动或 pull 失败时不要强拉，报告中注明基于本地当前状态并给出 commit 哈希）。
+4. **本地未命中**：clone 到 `~/Projects/<repo-name>` 后使用。
+
+报告环境信息中必须写明：仓库路径、分支、commit 短哈希、是否有本地未提交改动。
+
+## 核心原则
+
+1. **实测，不推断。** 每条链路必须真实运行命令并检查产物，不能只读代码下结论。
+2. **不信任绿色输出。** 显示 success 的运行要核对产物（run JSON、输出文件、状态字段），警惕"假成功"（如 ace 的 simulate fallback：节点 `simulated: true` 却报 ✓）。
+3. **证据落到 file:line。** 每个根因必须给出源码位置和可复现命令。
+4. **根因归并。** 几十个表象通常收敛到少数根因（ace 首轮：9 条链路全挂 → 6 个根因）。按根因组织报告，不按表象。
+5. **修复计划可验收。** 每项修复带工作量估计和可执行的验收标准（一条命令 + 期望输出）。
+6. **每日执行要幂等。** 写 buglist 前先查已有未关闭记录去重；报告标题带日期；卡片只报增量与趋势。
+
+## Phase 1 — 核心链路实测
+
+**ace 项目的标准链路清单**（其他项目按同样思路推导：安装 → quickstart → 核心工作流 → 扩展接入 → 持久化 → 集成闭环）：
+
+1. 安装配置：`make install`（可只静态检查 Makefile）& `ace --help` / `ace version`
+2. quickstart 接入 calculator：`ace workflow run calc_expr --mode auto`
+3. FIBSEM 基础切割工作流（检查是否真实执行，见"假成功"）
+4. 已有 simulator 时再接入第二个设备（tescan/thermofisher，`ace device create`）
+5. TEM 工作流（sample_preparation）
+6. 记忆库存取：`ace gbrain doctor`
+7. `ace hub pull/push <device>`（含 hub git sync 状态）
+8. session 后 trace/evolution 触发：检查 `~/.ace/store/traces/<today>.jsonl` 质量（状态是否正确、是否重复、error 是否非空）+ `ace evolve run` 是否产出 pattern/insight
+9. 失败→修正→召回闭环：负面 insight 是否在下次运行前被 `get_warnings_for_execution` 召回
+
+**执行要点：**
+- 默认 agentic 的命令要同时测 agentic 和 `--mode auto` 两条路径。
+- 每次运行后读 run JSON（`~/.ace/store/run/workflow/<wf>/<job>.json`）核对节点真实状态。
+- 用后台任务跑全量测试套件做基线：`python -m pytest tests/core/ -q`，统计 FAILED 按文件归并。
+- 记录所有噪音（loader 告警、重复注册表条目、无关提示），它们是易用性问题的直接证据。
+
+## Phase 2 — 根因分析
+
+- 把所有失败聚类到根因，每个根因写清：现象 → 机理 → 证据（file:line + 复现命令）→ 波及面。
+- 常见根因模式（来自 ace 首轮）：argv 构造错误（可变参数吞位置参数）、双重导入身份（`src.x` vs `pkg.x` 的 issubclass 失败）、静默降级假成功、hook payload 字段假设错误、依赖未随 artifact 分发、无 CI 门禁。
+
+## Phase 3 — 修复计划
+
+- 三阶段结构：**P0 恢复黄金路径 → P1 闭合核心闭环 → P2 质量门禁 + UX**。
+- 每项：修复内容 / 工作量（人天）/ 验收标准。
+- 结尾量化：链路通过数基线 vs 目标、红测试数、预计关闭缺陷数。
+
+## Phase 4 — 报告落盘（飞书 wiki）
+
+```bash
+# wiki 链接先解析成 base token / 确认 obj_type（ldx 开头的 table 参数是内嵌文档，无 API 可写！）
+lark-cli wiki +node-get --as bot --node-token "<wiki_url>" --jq '.data | {obj_type, obj_token}'
+
+# 报告写成父节点下的子文档（markdown 文件必须用相对路径 @./xxx.md，先 cd 到文件目录）
+lark-cli docs +create --as user --wiki-node <wiki_node> \
+  --title "<项目> 系统质量 Review (YYYY-MM-DD)" --markdown @./report.md
+```
+
+## Phase 5 — 任务拆分（多维表格）
+
+```bash
+# 1. 先拿字段结构（绝不猜字段名）
+lark-cli base +field-list --as bot --base-token <base> --table-id <table>
+
+# 2. 执行下方「每日去重协议」后，只批量写入真正的新增（单批 ≤200 行）
+lark-cli base +record-batch-create --as user --base-token <base> --table-id <table> --json @./batch.json
+```
+
+### 每日去重协议（定时执行必须遵守）
+
+**原则：表是唯一事实源。** 每天的 session 全新、没有上轮记忆，因此写入前必须先读全表比对，绝不凭本轮认知直接写。
+
+1. **拉全表**：`+record-list --format json --limit 200` 分页拉取（`has_more=true` 必须翻页），取 `record_id + 问题描述 + 失败原因 + 修复状态 + 状态`。
+2. **稳定指纹**：新发现的每个问题生成 `[<项目>-<锚点slug>]` 前缀写在问题描述开头。slug 从**根因锚点**派生：核心文件名 + 缺陷本质，如 `[HF-session-manager-async-url]`、`[ACE-launcher-mcp-config-argv]`。**禁止用 P0/P1 轮次编号或日期当 slug**（编号会随每轮排序漂移）；指纹一经写入永不更改。
+3. **两级匹配**：新发现先按指纹与存量精确匹配；未命中再与所有**未关闭**记录做语义比对——同一文件 + 同一症状/根因 = 同一问题（存量旧格式前缀如 `[HF-P0.1]` 靠这一级兜住）。
+4. **处置规则**：
+   - 命中且未关闭（待修复/修复中/待审核）→ **跳过不写**，计入卡片"仍存在 N"。
+   - 命中但已关闭（修复完成/已确认/暂不修复）且今日复现 → **回归**：新建记录，问题描述加 `[回归]` 标记，失败原因里引用旧 record_id；计入"回归 R"。
+   - 无命中 → 新增写入；计入"新增 M"。
+5. **反向核销**：存量未关闭、但今日实测未复现的问题 → **不改记录**（人工确认修复才关闭），卡片单列"疑似已修复待确认 K 条"。
+6. **卡片只报增量**：`新增 M / 仍存在 N / 回归 R / 疑似修复 K`，附链路通过数与测试基线和上一轮的对比。
+
+buglist 字段映射约定：`问题描述`（[P0-x.y] 前缀 + 一句话）、`失败原因`（根因 + 验收标准）、`复现路径`（精确命令）、`变更文件`（file:line + 修法）、`类型`（缺陷/优化/文档）、`重要程度(P0优先)`、`修复难度(L1 最难)`、`修复状态`=待修复、`环境`、`上报人`=[{"id":"ou_aa1da0fb8d5b42eb69389ba4eca58303"}]。
+
+## Phase 6 — 群通知（卡片）
+
+```bash
+lark-cli im +messages-send --as user --chat-id <chat_id> --msg-type interactive --content "$(cat card.json)"
+```
+
+卡片结构：红色 header（🧪 标题+日期）→ markdown 根因摘要（emoji 分级 🔴🟠🟡）→ hr → 修复计划一句话 → action 按钮（📄 完整报告 / 📋 buglist 表）→ note（环境信息）。每日执行时卡片正文只写**增量**（新增问题数、已修复数、链路通过数变化）。
+
+## 已知坑（务必遵守）
+
+- **互动卡片 + 外部群**：user 身份可向**内部群**发互动卡片；**外部群**（`chats get` 返回 `external: true`）user 身份发送被平台拒绝（230027），必须走 bot。前置条件链：开发者后台「版本管理与发布→创建版本→对外共享」勾选「允许机器人被添加到外部群」并发布版本（未开启时拉群报 232033）→ `im chat.members create`（`member_id_type=app_id`）把 bot 拉进目标群（bot 不在群发送报 230002）→ `--as bot` 发卡片。
+- **91403 不可重试**：bot 对 Base 无权限时立即停止，走 user 身份。
+- **scope 增量授权**：缺 scope 时用 `lark-cli auth login --scope "..." --no-wait` 拿 verification_url，二维码 + 链接发给用户，等确认后 `--device-code` 完成。本链路需要：`wiki:node:retrieve`、`wiki:node:create`、`docx:document`、`base:record:create`、`im:message`、`im:message.send_as_user`。
+- **lark-cli @file 只接受当前目录相对路径**，先 `cd` 到文件所在目录。
+- **`ldx` 开头的 table 参数是 Base 内嵌文档**，没有任何开放 API 可写，报告写到同级 wiki 子文档并在回复中说明位置。
+- zsh 下避免 `echo ===`、裸 `--include=*.py` 等会被 glob 展开的写法。
+
+## Output
+
+回复用户时必须包含：链路通过统计（n/9 或 n/m）、根因列表、报告文档链接、buglist 写入条数、卡片 message_id。每日执行时额外给出与上一次的对比（新增/修复/回归）。
