@@ -208,6 +208,8 @@ lark-cli im +messages-send --as user --chat-id <chat_id> --msg-type interactive 
 
 卡片结构：红色 header（🧪 标题+日期）→ markdown 根因摘要（emoji 分级 🔴🟠🟡）→ hr → 修复计划一句话 → action 按钮（📄 完整报告 / 📋 buglist 表）→ note（环境信息）。
 
+**@ 项目 owner（Agent Discovery 路由）**：卡片摘要首行必须 @ 被审查项目的 owner，owner 从同仓库 `skills/agent-discovery/SKILL.md` 的路由表查（ace → hyper-instrument bot、hyper-data → 杜卓然、hyper-fib → 苗宏图，含 open_id）。卡片 lark_md 里用 `<at id=ou_xxx></at>`；项目未登记时按 agent-discovery 的未登记协议处理（@ 兜底联系人问 owner，拿到后写回路由表并 push），不要猜。
+
 每日执行时卡片正文只写**增量与归因**，不重复旧问题详情：
 
 - 对比行：`链路 y/9（上次 x/9）｜新增 M ｜回归 R ｜疑似修复 K ｜仍存在 N`
