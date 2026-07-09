@@ -23,7 +23,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
+ACE_ROOT = os.environ.get("ACE_ROOT") or os.environ.get("CLAUDE_PROJECT_DIR", "")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _ace_config import (  # noqa: E402
@@ -60,7 +60,39 @@ def _bash_pcfl_module():
         return None
 
 
+def _capture_module():
+    """Load the shared P2 capture policy from ace.core (multi-tool + sampling)."""
+    if not ACE_ROOT:
+        return None
+    import importlib.util
+
+    module_path = os.path.join(ACE_ROOT, "src", "core", "evolution", "capture.py")
+    if os.path.isfile(module_path):
+        spec = importlib.util.spec_from_file_location("ace_capture", module_path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            # Register before exec: @dataclass fields resolve cls.__module__
+            # via sys.modules, which is None for an unregistered module.
+            sys.modules[spec.name] = mod
+            try:
+                spec.loader.exec_module(mod)
+                return mod
+            except Exception:  # noqa: BLE001 — capture is best-effort
+                sys.modules.pop(spec.name, None)
+                return None
+    src = os.path.join(ACE_ROOT, "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    try:
+        from ace.core.evolution import capture
+
+        return capture
+    except ImportError:
+        return None
+
+
 _BASH_PCFL = _bash_pcfl_module()
+_CAPTURE = _capture_module()
 
 # Subset of MEANINGFUL_PATTERNS that block the main flow when they fail.
 # These get an immediate insight write (don't wait for session Stop).
@@ -423,6 +455,67 @@ def write_blocker_insight(trace: dict) -> None:
                 f.write("\n" + entry + "\n\n")
 
 
+def handle_extended_capture(data: dict) -> bool:
+    """P2 — capture beyond Bash failures: Edit/Write/API + sampled successes.
+
+    Runs only when the Bash failure/eureka path did not fire. Delegates the
+    policy (status, entity, sampling) to ``ace.core.evolution.capture`` so it
+    stays testable. Returns True if a trace was written.
+    """
+    if _CAPTURE is None:
+        return False
+
+    tool_name = data.get("tool_name", "")
+    tool_input = data.get("tool_input", {})
+    tool_result = data.get("tool_result", {})
+
+    # Bash meaningfulness is decided by MEANINGFUL_PATTERNS; non-Bash tools let
+    # the capture module apply its own file/API gate.
+    if tool_name == "Bash":
+        meaningful = _is_meaningful_command(tool_input.get("command", ""))
+    else:
+        meaningful = None
+
+    decision = _CAPTURE.classify_event(
+        tool_name, tool_input, tool_result, meaningful=meaningful
+    )
+    if not decision.capture:
+        return False
+
+    if decision.kind == "success":
+        trace = _CAPTURE.build_success_trace(tool_name, tool_input, tool_result, decision)
+        trace["timestamp"] = datetime.now(timezone.utc).isoformat()
+        append_trace(trace)
+        return True
+
+    if decision.kind == "failure":
+        # Non-Bash (or Bash semantic-only) failure the rich PCFL path missed.
+        result = tool_result or {}
+        error = str(result.get("error") or result.get("stderr") or result.get("stdout") or "")[:500]
+        trace = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "entity_type": decision.entity_type,
+            "entity_id": decision.entity_id,
+            "status": "failed",
+            "inputs": (
+                {"command": tool_input.get("command", "")}
+                if tool_name == "Bash"
+                else {"tool": tool_name, "target": decision.entity_id}
+            ),
+            "outputs": {},
+            "error": error,
+            "tags": decision.tags,
+            "significance": decision.significance,
+        }
+        append_trace(trace)
+        print(json.dumps({
+            "systemMessage": f"[ACE] Traced {tool_name} failure: {decision.entity_type}/{decision.entity_id}"
+        }))
+        return True
+
+    return False
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -451,6 +544,13 @@ def main():
                 f"succeeded after {n} attempt{'s' if n > 1 else ''} — {trace['insight']}"
             )
         }))
+    else:
+        # No significant Bash event — try the broadened P2 capture policy
+        # (multi-tool failures + sampled positive successes). Best-effort.
+        try:
+            handle_extended_capture(data)
+        except Exception:  # noqa: BLE001 — hooks must never break the tool call
+            pass
 
     sys.exit(0)
 

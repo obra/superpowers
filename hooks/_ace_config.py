@@ -5,11 +5,21 @@ All three hooks (session-start, post-tool-trace, stop-reflect) import from here.
 """
 
 import fcntl
+import hashlib
 import json
 import os
 import sys
 from pathlib import Path
 from typing import Any
+
+
+def _parse_bool(value: Any, *, default: bool) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
 
 # ── Path Resolution ───────────────────────────────────────────────────
 
@@ -37,6 +47,22 @@ CHECKPOINT_DIR: Path | None = ACE_DIR / "checkpoints" if ACE_DIR else None
 SESSION_FAILURES_FILE: Path | None = ACE_DIR / ".session_failures.json" if ACE_DIR else None
 EVOLUTION_STATE_FILE: Path | None = ACE_DIR / ".evolution_state.json" if ACE_DIR else None
 CONFIG_FILE: Path | None = ACE_DIR / "config.json" if ACE_DIR else None
+
+
+def project_source_id() -> str:
+    """Return a stable gbrain source id for the current project.
+
+    Derived from CLAUDE_PROJECT_DIR so each local project directory gets its
+    own experience store. Falls back to ``default`` when no project context.
+    """
+    if not ACE_ROOT:
+        return "default"
+    root = Path(ACE_ROOT).resolve()
+    # Use the last directory name plus a short hash of the full path so
+    # different clones/checkouts of the same repo name do not collide.
+    name = root.name or "project"
+    h = hashlib.md5(str(root).encode("utf-8")).hexdigest()[:8]
+    return f"{name}-{h}"
 
 
 # ── User Config (loaded from .ace/config.json if present) ────────────
@@ -108,6 +134,31 @@ MIN_TRACES_FOR_EVOLUTION: int = _evolution_config.get("min_traces", 3)
 MIN_HOURS_BETWEEN_EVOLUTIONS: float = _evolution_config.get("min_hours_between", 0.0)
 CONFIDENCE_THRESHOLD: float = _evolution_config.get("confidence_threshold", 0.3)
 
+# ── Semantic Deduplication for conversational/reflect experience writes ─
+# A higher threshold means fewer merges (stricter matches); lower means more
+# aggressive merging. Disable entirely by setting enabled=false.
+
+_experience_dedup_config = _USER_CONFIG.get("experience_dedup", {})
+EXPERIENCE_DEDUP_ENABLED: bool = _parse_bool(
+    _experience_dedup_config.get("enabled"), default=True
+)
+EXPERIENCE_DEDUP_THRESHOLD: float = float(
+    _experience_dedup_config.get("threshold", 0.92)
+)
+
+# ── Conversational extract cursor (Stop Phase 1b, incremental) ────────
+# Each Stop extracts only new transcript turns (plus a short overlap).
+# Override via ~/.ace/config.json:
+#   {"conversation_extract": {"overlap_turns": 2}}
+
+_conversation_extract_config = _USER_CONFIG.get("conversation_extract", {})
+CONVERSATION_EXTRACT_OVERLAP_TURNS: int = int(
+    _conversation_extract_config.get("overlap_turns", 2)
+)
+CONVERSATION_EXTRACT_CURSOR_FILE: Path | None = (
+    ACE_DIR / ".conversation_extract_cursor.json" if ACE_DIR else None
+)
+
 
 # ── Health Check ─────────────────────────────────────────────────────
 
@@ -165,6 +216,45 @@ def log_hook_error(hook_name: str, error: Exception) -> None:
     print(f"[ACE] {hook_name} error (non-blocking): {error}", file=sys.stderr)
 
 
+# ── Recall State Helpers ───────────────────────────────────────────────
+# Shared between user-prompt-recall.py and stop-reflect.py so the
+# per-turn recall utility loop can be flushed at session end.
+
+RECALL_STATE_NAME = "recall_state.json"
+
+
+def _recall_state_path(cwd: str) -> Path | None:
+    """Return the project-local recall state path, or None when cwd is empty."""
+    if not cwd:
+        return None
+    return Path(cwd) / ".ace" / RECALL_STATE_NAME
+
+
+def load_recall_state(cwd: str) -> dict[str, Any]:
+    """Load recall state with safe defaults for all known fields."""
+    path = _recall_state_path(cwd)
+    if path is None:
+        return {"startup_slugs": [], "turn_slugs": [], "pending_applications": []}
+    data = safe_json_read(path)
+    return {
+        "startup_slugs": list(data.get("startup_slugs") or []),
+        "turn_slugs": list(data.get("turn_slugs") or []),
+        "pending_applications": list(data.get("pending_applications") or []),
+    }
+
+
+def save_recall_state(cwd: str, state: dict[str, Any]) -> bool:
+    """Persist recall state atomically with file locking."""
+    path = _recall_state_path(cwd)
+    if path is None:
+        return False
+    return safe_json_write(path, {
+        "startup_slugs": list(state.get("startup_slugs") or []),
+        "turn_slugs": list(state.get("turn_slugs") or []),
+        "pending_applications": list(state.get("pending_applications") or []),
+    })
+
+
 def ensure_ace_importable() -> bool:
     """Prepend project venv site-packages so hooks can ``import ace``."""
     if not ACE_ROOT:
@@ -172,9 +262,18 @@ def ensure_ace_importable() -> bool:
     lib = Path(ACE_ROOT) / ".venv" / "lib"
     if not lib.is_dir():
         return False
+    inserted = False
     for site in sorted(lib.glob("python*/site-packages")):
         sp = str(site)
         if sp not in sys.path:
             sys.path.insert(0, sp)
-        return True
-    return False
+        inserted = True
+        break
+    # Also expose the project source tree for editable installs
+    src = str(Path(ACE_ROOT) / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    return inserted
+
+
+__all__ = ["project_source_id"]

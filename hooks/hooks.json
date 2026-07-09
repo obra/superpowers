@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start-context.py\"",
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start-context.py\"",
             "timeout": 5
           }
         ]
@@ -18,13 +18,23 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-trace.py\"",
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-trace.py\"",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-execution-memory.py\"",
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-execution-memory.py\"",
             "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|WebFetch|WebSearch|CallMcpTool",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-trace.py\"",
+            "timeout": 5
           }
         ]
       },
@@ -33,8 +43,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-auto-test.py\"",
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-auto-test.py\"",
             "timeout": 60
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-recall.py\"",
+            "timeout": 5
           }
         ]
       }
@@ -45,8 +67,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-reflect.py\"",
-            "timeout": 30
+            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-reflect.py\"",
+            "async": true,
+            "timeout": 120
           }
         ]
       }

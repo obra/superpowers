@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""ACE Eureka System — reflect + auto-evolve at session end.
+"""ACE Eureka System — reflect + auto-evolve.
 
-1. Reflect: traces → insight markdown + checkpoint
-2. Evolve: if thresholds met, run pattern extraction → store insights, decay old ones
+Claude Code fires ``Stop`` after every assistant turn. Register with
+``"async": true`` so Claude does not wait on this hook (mem0-style).
 
-No manual intervention needed. The system decides and executes automatically.
+**Stop (every turn):**
+1a. Reflect (traces): PCFL/CDSI → gbrain (exact-id skip only, no embedding)
+1c. Flush pending recall applications (utility loop)
+1b. Conversational extract + embedding dedup — incremental turns + overlap
+2.  Evolve — when evolution thresholds are met (independent gate)
+3.  Cleanup session failure state (cheap)
 """
 import asyncio
 import hashlib
 import json
-import re
 import sys
 import os
 from datetime import datetime, timezone, timedelta
@@ -26,7 +30,6 @@ def _ace_home() -> Path:
 
 _ACE_HOME = _ace_home()
 TRACE_DIR = _ACE_HOME / "store" / "traces"
-INSIGHT_DIR = _ACE_HOME / "insights"
 SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
 EVOLUTION_STATE_FILE = _ACE_HOME / ".evolution_state.json"
 
@@ -39,12 +42,21 @@ from _ace_config import (  # noqa: E402
     MIN_TRACES_FOR_EVOLUTION,
     MIN_HOURS_BETWEEN_EVOLUTIONS,
     CONFIDENCE_THRESHOLD,
+    EXPERIENCE_DEDUP_ENABLED,
+    EXPERIENCE_DEDUP_THRESHOLD,
+    CONVERSATION_EXTRACT_CURSOR_FILE,
+    CONVERSATION_EXTRACT_OVERLAP_TURNS,
     log_hook_error,
     ensure_ace_importable,
+    project_source_id,
+    load_recall_state,
+    save_recall_state,
+    safe_json_read,
+    safe_json_write,
 )
 
 
-# ── Phase 1: Reflect (traces → insight markdown + checkpoint) ──────────
+# ── Phase 1a: Reflect (traces → gbrain experiences + checkpoint) ──────
 
 def load_traces() -> tuple[list[dict], list[dict]]:
     """Load today's error traces (PCFL) and eureka traces (CDSI)."""
@@ -74,13 +86,11 @@ def load_traces() -> tuple[list[dict], list[dict]]:
 
 
 # Quality filter and content-dedup — kept local to the hook to avoid
-# import-failure risk in production sessions. Mirrors the canonical
-# logic in src/core/evolution/reflection_extractor.py; tests for both
-# live alongside the library version.
+# import-failure risk in production sessions. Drops non-actionable
+# reflections before they are synced to gbrain and derives a stable
+# signature so re-runs of the same trace do not create duplicate pages.
 
-_GENERIC_LESSON_RE = re.compile(r"^investigate\s+failures?\s+in\s+", re.IGNORECASE)
 _VAGUE_CAUSES = {"", "unknown", "see trace error"}
-_SIG_RE = re.compile(r"<!--\s*sig:\s*([0-9a-f]{12})\s*-->")
 
 
 def _is_actionable(t: dict) -> bool:
@@ -153,147 +163,235 @@ def _trace_to_reflect_insight(trace: dict) -> dict:
     }
 
 
-def sync_reflect_traces_to_experience(traces: list[dict]) -> int:
-    """Write reflect traces to gbrain via ExperienceWriter. Returns count synced."""
+def sync_reflect_traces_to_experience(
+    traces: list[dict],
+    *,
+    source_id: str | None = None,
+) -> list[str]:
+    """Write actionable reflect traces to gbrain via ExperienceWriter.
+
+    gbrain is the single source of truth, so this is the only reflect write
+    path. Each trace maps to a deterministic ``reflect-<sig>`` page; if that
+    page already exists we skip it so lifecycle state (fitness, enabled,
+    application counters) is never clobbered by a re-sync of the same trace.
+
+    Runs on the per-turn Stop path, so semantic embedding dedup is disabled —
+    only exact id checks keep the write cheap.
+
+    Returns the list of entity_ids that were newly written.
+    """
     if not traces:
-        return 0
+        return []
 
     try:
         if ACE_ROOT:
             ensure_ace_importable()
-        from ace.core.knowledge.insight_sync import sync_insight_to_experience
+        from ace.core.knowledge.insight_sync import (
+            experience_write_enabled,
+            insight_to_experience_entry,
+        )
+        from ace.core.knowledge.experience_service import ExperienceService
+        from ace.core.knowledge.semantic_dedup import maybe_merge_experience
     except Exception as ex:
         log_hook_error("stop-reflect/experience_import", ex)
-        return 0
+        return []
 
-    synced = 0
+    if not experience_write_enabled():
+        return []
+
+    try:
+        service = ExperienceService(project_id=source_id or project_source_id())
+    except Exception as ex:
+        log_hook_error("stop-reflect/experience_service", ex)
+        return []
+
+    written: list[str] = []
     for trace in traces:
         if not _is_actionable(trace):
             continue
+        insight = _trace_to_reflect_insight(trace)
         try:
-            insight = _trace_to_reflect_insight(trace)
-            slug = sync_insight_to_experience(insight, source="reflect")
-            if slug:
-                synced += 1
+            if service.get(insight["id"]):
+                continue  # already on gbrain — don't clobber lifecycle state
+        except Exception:
+            pass
+        try:
+            entry = insight_to_experience_entry(insight, source="reflect")
+            # Stop path: skip embedding — exact id gate above is enough.
+            asyncio.run(
+                maybe_merge_experience(
+                    service,
+                    entry,
+                    enabled=False,
+                )
+            )
+            written.append(trace.get("entity_id", "unknown"))
         except Exception as ex:
             log_hook_error("stop-reflect/experience_write", ex)
-    return synced
+    return written
 
 
-def write_insight_markdown(error_traces: list[dict], eureka_traces: list[dict]) -> list[str]:
-    """Write/update insight markdown files per entity, applying quality
-    filter and content-based dedup.
+def reflect_to_experience(
+    error_traces: list[dict],
+    eureka_traces: list[dict],
+    *,
+    source_id: str | None = None,
+) -> list[str]:
+    """Reflect phase: persist actionable traces to gbrain only.
+
+    Legacy per-entity insight markdown (③, ~/.ace/insights/*.md) is retired —
+    reflect content now lives solely in gbrain. Returns the unique list of
+    entity_ids that were written (for the session summary message).
     """
-    if not INSIGHT_DIR or (not error_traces and not eureka_traces):
-        return []
-
-    INSIGHT_DIR.mkdir(parents=True, exist_ok=True)
-
-    by_entity: dict[str, list[dict]] = {}
-    for t in error_traces + eureka_traces:
-        if not _is_actionable(t):
-            continue
-        entity = t.get("entity_id", "unknown")
-        by_entity.setdefault(entity, []).append(t)
-
-    updated = []
-    new_traces: list[dict] = []
-    for entity_id, entity_traces in by_entity.items():
-        safe_name = entity_id.replace("/", "_").replace(" ", "_")
-        md_path = INSIGHT_DIR / f"{safe_name}.md"
-
-        existing_content = ""
-        existing_sigs: set[str] = set()
-        if md_path.exists():
-            existing_content = md_path.read_text(encoding="utf-8")
-            existing_sigs = set(_SIG_RE.findall(existing_content))
-
-        new_entries = []
-        entity_new_traces: list[dict] = []
-        for t in entity_traces:
-            ts = t.get("timestamp", "")
-            sig = _entry_signature(t)
-            if ts and ts in existing_content:
-                continue
-            if sig in existing_sigs:
-                continue
-            existing_sigs.add(sig)  # within-batch dedup
-
-            if t.get("status") == "eureka":
-                entry = _format_eureka_entry(t, sig)
-            else:
-                entry = _format_error_entry(t, sig)
-            new_entries.append(entry)
-            entity_new_traces.append(t)
-
-        if not new_entries:
-            continue
-
-        if not md_path.exists():
-            with open(md_path, "w", encoding="utf-8") as f:
-                f.write(f"# Insight: {entity_id}\n\n")
-                f.write("Auto-generated from traces (errors + eureka moments).\n\n")
-                for entry in new_entries:
-                    f.write(entry + "\n\n")
-        else:
-            with open(md_path, "a", encoding="utf-8") as f:
-                for entry in new_entries:
-                    f.write("\n" + entry + "\n\n")
-
-        updated.append(entity_id)
-        new_traces.extend(entity_new_traces)
-
-    sync_reflect_traces_to_experience(new_traces)
-
-    return updated
+    written = sync_reflect_traces_to_experience(
+        error_traces + eureka_traces,
+        source_id=source_id,
+    )
+    # De-duplicate while preserving first-seen order for a stable message.
+    seen: set[str] = set()
+    unique: list[str] = []
+    for entity_id in written:
+        if entity_id not in seen:
+            seen.add(entity_id)
+            unique.append(entity_id)
+    return unique
 
 
-def _format_error_entry(t: dict, sig: str) -> str:
-    ts = t.get("timestamp", "")
-    problem = t.get("problem", "Error")
-    cause = t.get("cause", "Unknown")
-    fix = t.get("fix", "")
-    lesson = t.get("lesson", "")
-    error = t.get("error", "")
+# ── Phase 1b: Conversational memory (transcript → preferences/facts/etc.) ──
 
-    lines = [f"## [{ts}] {problem}", f"<!-- sig: {sig} -->", ""]
-    lines.append(f"- **Problem**: {problem}")
-    lines.append(f"- **Cause**: {cause}")
-    if fix:
-        lines.append(f"- **Fix**: {fix}")
-    if lesson and not _GENERIC_LESSON_RE.match(lesson):
-        lines.append(f"- **Lesson**: {lesson}")
-    if error and error != cause and len(error) > 10:
-        lines.append(f"- **Error**: `{error[:200]}`")
-
-    return "\n".join(lines)
+def _load_extract_cursor_state() -> dict:
+    if not CONVERSATION_EXTRACT_CURSOR_FILE:
+        return {"sessions": {}}
+    data = safe_json_read(CONVERSATION_EXTRACT_CURSOR_FILE)
+    if not isinstance(data, dict):
+        return {"sessions": {}}
+    sessions = data.get("sessions")
+    if not isinstance(sessions, dict):
+        data["sessions"] = {}
+    return data
 
 
-def _format_eureka_entry(t: dict, sig: str) -> str:
-    ts = t.get("timestamp", "")
-    entity_id = t.get("entity_id", "unknown")
-    challenge = t.get("challenge", "")
-    detours = t.get("detours", "")
-    solution = t.get("solution", "")
-    insight = t.get("insight", "")
-    prior_count = t.get("prior_failure_count", 0)
+def _save_extract_cursor_state(state: dict) -> None:
+    if not CONVERSATION_EXTRACT_CURSOR_FILE:
+        return
+    safe_json_write(CONVERSATION_EXTRACT_CURSOR_FILE, state)
 
-    header = f"EUREKA: {entity_id} succeeded"
-    if prior_count:
-        header += f" after {prior_count} attempt{'s' if prior_count > 1 else ''}"
 
-    lines = [f"## [{ts}] {header}", f"<!-- sig: {sig} -->", ""]
-    if challenge:
-        lines.append(f"- **Challenge**: {challenge}")
-    if detours:
-        lines.append(f"- **Detours**: {detours}")
-    if solution:
-        lines.append(f"- **Solution**: {solution}")
-    if insight:
-        lines.append(f"- **Insight**: {insight}")
-    lines.append("- **Polarity**: positive")
+def _get_turns_processed(session_id: str) -> int:
+    state = _load_extract_cursor_state()
+    entry = state.get("sessions", {}).get(session_id or "") or {}
+    try:
+        return max(0, int(entry.get("turns_processed") or 0))
+    except (TypeError, ValueError):
+        return 0
 
-    return "\n".join(lines)
+
+def _set_turns_processed(session_id: str, turns_processed: int) -> None:
+    state = _load_extract_cursor_state()
+    sessions = state.setdefault("sessions", {})
+    sessions[session_id or ""] = {"turns_processed": int(turns_processed)}
+    _save_extract_cursor_state(state)
+
+
+def reflect_conversation(
+    hook_data: dict,
+    *,
+    source_id: str | None = None,
+) -> str:
+    """Mine new transcript turns for durable knowledge → gbrain experience.
+
+    Incremental (mem0-style per-turn): only turns after the per-session cursor
+    are sent to the LLM, plus a short overlap for multi-turn corrections.
+    Advances the cursor only when the LLM call succeeds (including 0 candidates).
+    Best-effort and LLM-gated. Returns a short summary string (or ``""``).
+    """
+    transcript_path = hook_data.get("transcript_path") or ""
+    session_id = hook_data.get("session_id") or ""
+    cwd = hook_data.get("cwd") or ""
+
+    try:
+        if ACE_ROOT:
+            ensure_ace_importable()
+        from ace.core.agent.jsonl_history import (
+            load_session_messages,
+            load_transcript_messages,
+        )
+        from ace.core.evolution.conversation_extractor import (
+            extract_memories,
+            gate_candidate,
+            llm_configured,
+            messages_to_turns,
+        )
+        from ace.core.knowledge.experience_service import ExperienceService
+        from ace.core.knowledge.insight_sync import insight_to_experience_entry
+        from ace.core.knowledge.semantic_dedup import maybe_merge_experience
+    except Exception as ex:
+        log_hook_error("stop-reflect/memory_import", ex)
+        return ""
+
+    # Extraction needs semantic understanding — nothing sensible to do offline.
+    if not llm_configured():
+        return ""
+
+    messages = load_transcript_messages(transcript_path)
+    if not messages and session_id:
+        messages = load_session_messages(cwd or None, session_id)
+    turns = messages_to_turns(messages)
+    if not turns:
+        return ""
+
+    cursor = _get_turns_processed(session_id)
+    if cursor >= len(turns):
+        return ""
+
+    overlap = max(0, int(CONVERSATION_EXTRACT_OVERLAP_TURNS))
+    start = max(0, cursor - overlap)
+    window = turns[start:]
+
+    try:
+        candidates = asyncio.run(extract_memories(window, session_id=session_id))
+    except Exception as ex:
+        log_hook_error("stop-reflect/memory_extract", ex)
+        return ""
+
+    # LLM succeeded (even with 0 candidates) — advance past all known turns.
+    _set_turns_processed(session_id, len(turns))
+
+    if not candidates:
+        return ""
+
+    try:
+        service = ExperienceService(project_id=source_id or project_source_id())
+    except Exception as ex:
+        log_hook_error("stop-reflect/memory_service", ex)
+        return ""
+
+    written = 0
+    for candidate in candidates:
+        insight = gate_candidate(candidate)
+        try:
+            if service.get(insight["id"]):
+                continue  # already captured — don't clobber lifecycle state
+        except Exception:
+            pass
+        try:
+            entry = insight_to_experience_entry(insight, source="reflect")
+            created, _ = asyncio.run(
+                maybe_merge_experience(
+                    service,
+                    entry,
+                    enabled=EXPERIENCE_DEDUP_ENABLED,
+                    threshold=EXPERIENCE_DEDUP_THRESHOLD,
+                )
+            )
+            if created:
+                written += 1
+        except Exception as ex:
+            log_hook_error("stop-reflect/memory_write", ex)
+
+    if not written:
+        return ""
+    return f"{written} memor{'ies' if written > 1 else 'y'}"
 
 
 def write_checkpoint(error_traces: list[dict], eureka_traces: list[dict]) -> Path | None:
@@ -422,12 +520,11 @@ def _run_evolution() -> str | None:
         if ACE_ROOT:
             ensure_ace_importable()
 
-        from ace.core.evolution.trace import TraceStore, ExecutionTrace
+        from ace.core.evolution.trace import TraceStore
         from ace.core.evolution.patterns import extract_all_patterns
-        from ace.core.knowledge.manager import KnowledgeManager
-        from ace.core.storage.file_storage import FileStorage
-        from ace.core.memory.evolution_bridge import EvolutionBridge
-        from ace.core.memory.manager import MemoryManager
+        from ace.core.knowledge.experience_service import ExperienceService
+        from ace.core.knowledge.experience_lifecycle import ExperienceLifecycle
+        from ace.core.knowledge.insight_sync import insight_to_experience_entry
 
         store = TraceStore()
         state = _load_evolution_state()
@@ -448,64 +545,32 @@ def _run_evolution() -> str | None:
             })
             return None
 
-        # Store insights that pass the confidence threshold
-        km = KnowledgeManager(FileStorage())
+        # Persist candidates above threshold directly to gbrain — the single
+        # source of truth. Recall, decay and the utility loop all operate here.
+        service = ExperienceService(project_id=project_source_id())
         created = 0
+        for c in candidates:
+            if c.confidence >= CONFIDENCE_THRESHOLD:
+                entry = c.to_knowledge_dict()
+                try:
+                    service.create(insight_to_experience_entry(entry, source="evolution"))
+                    created += 1
+                except Exception as ex:
+                    log_hook_error("stop-reflect/store_candidate", ex)
 
-        async def store_candidates():
-            nonlocal created
-            write_experience = None
-            try:
-                from ace.core.knowledge.insight_sync import sync_insight_to_experience as write_experience
-            except Exception as ex:
-                log_hook_error("stop-reflect/experience_import", ex)
-
-            for c in candidates:
-                if c.confidence >= CONFIDENCE_THRESHOLD:
-                    try:
-                        entry = c.to_knowledge_dict()
-                        await km.create_knowledge_versioned(entry)
-                        created += 1
-                        if write_experience:
-                            try:
-                                write_experience(entry, source="evolution")
-                            except Exception as ex:
-                                log_hook_error("stop-reflect/experience_write", ex)
-                    except Exception as ex:
-                        log_hook_error("stop-reflect/store_candidate", ex)
-            # Decay old insights
-            try:
-                await km.decay_all()
-            except Exception as ex:
-                log_hook_error("stop-reflect/decay_all", ex)
-
-        asyncio.run(store_candidates())
-
-        # Sync to entity memories
-        memory_count = 0
+        # Decay existing experience pages on gbrain.
         try:
-            bridge = EvolutionBridge(MemoryManager())
-            all_knowledge = asyncio.run(km.list_knowledge(page_size=1000))
-            recent_knowledge = [
-                item for item in all_knowledge.get("items", [])
-                if item.get("created_at", "") >= since
-            ]
-            memory_count, _memory_ids = bridge.sync_insights_batch(recent_knowledge)
+            ExperienceLifecycle(service).decay_all()
         except Exception as ex:
-            log_hook_error("stop-reflect/memory_sync", ex)
+            log_hook_error("stop-reflect/decay_all", ex)
 
         _save_evolution_state({
             "last_run": datetime.now(timezone.utc).isoformat(),
             "last_trace_count": len(traces),
         })
 
-        parts = []
         if created:
-            parts.append(f"{len(candidates)} patterns → {created} new insights")
-        if memory_count:
-            parts.append(f"{memory_count} memories synced")
-        if parts:
-            return f"{' | '.join(parts)} from {len(traces)} traces"
+            return f"{len(candidates)} patterns → {created} new insights from {len(traces)} traces"
         return None
 
     except Exception as ex:
@@ -526,53 +591,148 @@ def cleanup_session_state() -> None:
             pass
 
 
-# ── Main ───────────────────────────────────────────────────────────────
+def _flush_pending_applications(cwd: str, source_id: str | None = None) -> str:
+    """Record successful applications for per-turn recalled experiences.
 
-def main():
+    Per-turn recall injects lessons via ``additionalContext`` but has no
+    synchronous outcome signal. At session end we treat every shown lesson
+    as a successful application so the utility loop can update counters.
+    Best-effort: errors are swallowed and pending ids are cleared regardless.
+    """
+    state = load_recall_state(cwd)
+    pending = list(state.get("pending_applications") or [])
+    if not pending:
+        return ""
+
+    recorded = 0
     try:
-        json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError):
-        pass
+        ensure_ace_importable()
+        from ace.core.knowledge.experience_service import ExperienceService
+        from ace.core.knowledge.insight_sync import experience_write_enabled
 
-    # Phase 1: Reflect
-    error_traces, eureka_traces = load_traces()
-    reflect_summary = ""
+        if experience_write_enabled():
+            service = ExperienceService(project_id=source_id or project_source_id())
+            for entry_id in pending:
+                try:
+                    service.record_application(entry_id, success=True)
+                    recorded += 1
+                except Exception as ex:
+                    log_hook_error("stop-reflect/pending_application", ex)
+    except Exception as ex:
+        log_hook_error("stop-reflect/flush_pending", ex)
 
-    if error_traces or eureka_traces:
-        updated_entities = write_insight_markdown(error_traces, eureka_traces)
-        write_checkpoint(error_traces, eureka_traces)
+    state["pending_applications"] = []
+    save_recall_state(cwd, state)
 
-        if updated_entities:
-            n_errors = len(error_traces)
-            n_eurekas = len(eureka_traces)
-            parts = []
-            if n_errors:
-                parts.append(f"{n_errors} error{'s' if n_errors > 1 else ''}")
-            if n_eurekas:
-                parts.append(f"{n_eurekas} eureka{'s' if n_eurekas > 1 else ''}")
-            entities_str = ", ".join(updated_entities[:5])
-            reflect_summary = f"{', '.join(parts)} → insights for: {entities_str}"
+    if recorded:
+        return f"{recorded} experience application(s) recorded"
+    return ""
 
-    # Phase 2: Auto-evolve
-    evolve_summary = ""
-    should_evolve, reason = _should_evolve()
-    if should_evolve:
-        evolve_summary = _run_evolution() or ""
 
-    # Clean up
-    cleanup_session_state()
+# ── Stop path (single entry; Claude registers with async:true) ────────
 
-    # Report
-    parts = []
-    if reflect_summary:
-        parts.append(reflect_summary)
-    if evolve_summary:
-        parts.append(f"evolved: {evolve_summary}")
+def _emit_summary(parts: list[str]) -> None:
     if parts:
         print(json.dumps({
             "systemMessage": f"[ACE] {' | '.join(parts)}"
         }))
 
+
+def _run_conversation_extract(hook_data: dict) -> str:
+    """Run Phase 1b with a flock so twin Stop hooks only extract once.
+
+    Cursor advance happens inside ``reflect_conversation`` after a successful
+    LLM call — this wrapper only serializes concurrent runners.
+    """
+    state_path = CONVERSATION_EXTRACT_CURSOR_FILE
+    if state_path is None:
+        try:
+            return reflect_conversation(hook_data) or ""
+        except Exception as ex:
+            log_hook_error("stop-reflect/memory", ex)
+            return ""
+
+    lock_path = state_path.with_suffix(state_path.suffix + ".lock")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import fcntl
+
+        with open(lock_path, "a+", encoding="utf-8") as lock_fh:
+            fcntl.flock(lock_fh, fcntl.LOCK_EX)
+            try:
+                return reflect_conversation(hook_data) or ""
+            finally:
+                fcntl.flock(lock_fh, fcntl.LOCK_UN)
+    except OSError as ex:
+        log_hook_error("stop-reflect/memory_lock", ex)
+        try:
+            return reflect_conversation(hook_data) or ""
+        except Exception as ex2:
+            log_hook_error("stop-reflect/memory", ex2)
+            return ""
+    except Exception as ex:
+        log_hook_error("stop-reflect/memory", ex)
+        return ""
+
+
+def _run_evolve_if_due() -> str:
+    try:
+        should_evolve, _reason = _should_evolve()
+        if should_evolve:
+            return _run_evolution() or ""
+    except Exception as ex:
+        log_hook_error("stop-reflect/evolve", ex)
+    return ""
+
+
+def _run_stop(hook_data: dict) -> list[str]:
+    """Per-turn Stop: traces + pending flush + incremental extract + evolve."""
+    parts: list[str] = []
+
+    error_traces, eureka_traces = load_traces()
+    if error_traces or eureka_traces:
+        updated_entities = reflect_to_experience(error_traces, eureka_traces)
+        write_checkpoint(error_traces, eureka_traces)
+        if updated_entities:
+            n_errors = len(error_traces)
+            n_eurekas = len(eureka_traces)
+            bits = []
+            if n_errors:
+                bits.append(f"{n_errors} error{'s' if n_errors > 1 else ''}")
+            if n_eurekas:
+                bits.append(f"{n_eurekas} eureka{'s' if n_eurekas > 1 else ''}")
+            entities_str = ", ".join(updated_entities[:5])
+            parts.append(f"{', '.join(bits)} → insights for: {entities_str}")
+
+    try:
+        pending_summary = _flush_pending_applications(hook_data.get("cwd") or "")
+        if pending_summary:
+            parts.append(pending_summary)
+    except Exception as ex:
+        log_hook_error("stop-reflect/pending_flush", ex)
+
+    memory_summary = _run_conversation_extract(hook_data)
+    if memory_summary:
+        parts.append(memory_summary)
+
+    evolve_summary = _run_evolve_if_due()
+    if evolve_summary:
+        parts.append(f"evolved: {evolve_summary}")
+
+    cleanup_session_state()
+    return parts
+
+
+# ── Main ───────────────────────────────────────────────────────────────
+
+def main():
+    try:
+        hook_data = json.load(sys.stdin)
+    except (json.JSONDecodeError, EOFError):
+        hook_data = {}
+
+    parts = _run_stop(hook_data)
+    _emit_summary(parts)
     sys.exit(0)
 
 
