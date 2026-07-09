@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""ACE UserPromptSubmit hook — 判定是否建议上报 traceback（非阻塞）。
+"""ACE Doctor UserPromptSubmit hook — 判定是否建议上报 traceback（非阻塞）。
 
-以 asyncRewake 方式注册（hooks.json / settings.json 中 "asyncRewake": true）：
-hook 在后台运行、完全不阻塞用户 prompt；判定命中时 exit 2 + stderr 消息，
-Claude Code 会把 stderr 作为 system reminder 唤醒 Claude 跟进。
+注册为两条 hook（hooks.json）：
+1. `detect-frustration.py --fast`（同步，毫秒级）：只做关键词/客观信号短路。
+   命中时 exit 0 输出 JSON：`systemMessage` 直接显示给用户（用户能立刻看到
+   ACE Doctor 在工作），`additionalContext` 告知 Claude 如何跟进。
+2. `detect-frustration.py`（asyncRewake，后台）：负责 --fast 未命中时的
+   LLM 语义判定。命中时 exit 2 + stderr 消息，Claude Code 把 stderr 作为
+   system reminder 唤醒 Claude，Claude 以 「🩺 [ACE Doctor]」 署名向用户转述。
 
 本 hook 不依赖 CLAUDE_PROJECT_DIR/ACE_ROOT，直接解析 ~/.ace 下的用户级状态。
 
@@ -20,10 +24,10 @@ config 的 judge_model 强制指定。
 成本与防打扰控制：
 - 递归防护：ACE_TRACEBACK_JUDGE=1 时直接退出（judge 子进程自身不再判定）
 - 冷却：每 session 至多每 judge_cooldown_seconds（默认 120s）调一次 LLM
-- 去重：按 session_id + trigger 每会话每触发器最多提示一次
+- 去重：按 session_id + trigger 每会话每触发器最多提示一次（--fast 与 async 共享）
 - 所有 trigger 都提示过后不再调 LLM
 
-~/.ace/config.json 可覆盖（"frustration" 段）：
+~/.ace/config.json 可覆盖（"doctor" 段，旧 "frustration" 段向后兼容）：
   judge_model / judge_timeout / judge_cooldown_seconds / failure_threshold /
   long_session_lines / long_session_hours /
   frustration_keywords / workflow_failure_keywords
@@ -42,19 +46,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-# 用户级 ACE 目录
-_ACE_HOME = Path.home() / ".ace"
-_SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
-_SUGGEST_STATE_FILE = _ACE_HOME / ".traceback_suggest_state.json"
-
-# judge 冷却时间戳在 state 文件里的保留键（不会与 trigger 名冲突）
-_JUDGED_AT_KEY = "_judged_at"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _ace_doctor import (  # noqa: E402
+    JUDGED_AT_KEY,
+    claude_context,
+    doctor_config,
+    read_session_state,
+    record_session_key,
+    session_failures_file,
+    user_hint,
+    wake_message,
+    within_cooldown,
+)
 
 _VALID_TRIGGERS = {"frustration", "repeated_failures", "workflow_failure", "long_session"}
 
 _DEFAULT_JUDGE_TIMEOUT = 15
 _DEFAULT_JUDGE_COOLDOWN_SECONDS = 120
-_DEFAULT_FAILURE_THRESHOLD = 3
 
 _PROMPT_MAX_CHARS = 400
 _FAILURE_SAMPLE_MAX = 3
@@ -99,9 +107,15 @@ _DEFAULT_FRUSTRATION_KEYWORDS = [
     "not working",
 ]
 
+# 工作流失败关键词：必须带失败语义。裸 "workflow"/"工作流" 在正常讨论中会误触发，
+# 客观的工作流执行失败由 post-tool-trace.py（PostToolUseFailure）负责检测。
 _DEFAULT_WORKFLOW_FAILURE_KEYWORDS = [
-    "workflow",
-    "工作流",
+    "workflow failed",
+    "workflow 失败",
+    "workflow 报错",
+    "工作流失败",
+    "工作流报错",
+    "工作流执行失败",
     "执行失败",
     "运行失败",
     "跑不通",
@@ -112,21 +126,9 @@ _DEFAULT_LONG_SESSION_LINES = 1000
 _DEFAULT_LONG_SESSION_HOURS = 1.0
 
 
-def _load_user_config() -> dict[str, Any]:
-    """读取 ~/.ace/config.json 中的覆盖配置。"""
-    path = _ACE_HOME / "config.json"
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if isinstance(data, dict):
-            return data
-    except (OSError, json.JSONDecodeError):
-        pass
-    return {}
-
-
 def _get_config() -> dict[str, Any]:
-    """合并默认与 user config 中的 frustration 段。"""
-    cfg = _load_user_config().get("frustration", {})
+    """合并默认与 user config（doctor/frustration 段）。"""
+    cfg = doctor_config()
     return {
         # 默认不指定模型（None）：跟随用户 claude 配置，兼容自定义 API endpoint
         "judge_model": os.environ.get("ACE_TRACEBACK_JUDGE_MODEL") or cfg.get("judge_model"),
@@ -134,7 +136,7 @@ def _get_config() -> dict[str, Any]:
         "judge_cooldown_seconds": cfg.get(
             "judge_cooldown_seconds", _DEFAULT_JUDGE_COOLDOWN_SECONDS
         ),
-        "failure_threshold": cfg.get("failure_threshold", _DEFAULT_FAILURE_THRESHOLD),
+        "failure_threshold": cfg["failure_threshold"],
         "long_session_lines": cfg.get("long_session_lines", _DEFAULT_LONG_SESSION_LINES),
         "long_session_hours": cfg.get("long_session_hours", _DEFAULT_LONG_SESSION_HOURS),
         "frustration_keywords": cfg.get(
@@ -146,89 +148,14 @@ def _get_config() -> dict[str, Any]:
     }
 
 
-def _lock_file(fd: int) -> None:
-    try:
-        import fcntl
-
-        fcntl.flock(fd, fcntl.LOCK_EX)
-    except Exception:
-        pass
-
-
-def _unlock_file(fd: int) -> None:
-    try:
-        import fcntl
-
-        fcntl.flock(fd, fcntl.LOCK_UN)
-    except Exception:
-        pass
-
-
-def _read_session_state(session_id: str) -> dict[str, Any]:
-    """读取本 session 的提示/判定状态。"""
-    try:
-        state = json.loads(_SUGGEST_STATE_FILE.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    if not isinstance(state, dict):
-        return {}
-    session_state = state.get(session_id, {})
-    return session_state if isinstance(session_state, dict) else {}
-
-
-def _record_session_key(session_id: str, key: str) -> None:
-    """带文件锁记录本 session 的一个状态键（trigger 或 _judged_at）。"""
-    _SUGGEST_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(str(_SUGGEST_STATE_FILE), os.O_RDWR | os.O_CREAT)
-    except OSError:
-        return
-    try:
-        _lock_file(fd)
-        try:
-            state = json.loads(os.read(fd, 1024 * 1024).decode("utf-8", errors="replace"))
-        except (OSError, json.JSONDecodeError, ValueError):
-            state = {}
-        if not isinstance(state, dict):
-            state = {}
-        session_state = state.setdefault(session_id, {})
-        if not isinstance(session_state, dict):
-            session_state = {}
-            state[session_id] = session_state
-        session_state[key] = datetime.now(tz=timezone.utc).isoformat()
-        payload = json.dumps(state, indent=2, ensure_ascii=False)
-        os.lseek(fd, 0, os.SEEK_SET)
-        os.ftruncate(fd, 0)
-        os.write(fd, payload.encode("utf-8"))
-        os.fsync(fd)
-    finally:
-        _unlock_file(fd)
-        try:
-            os.close(fd)
-        except OSError:
-            pass
-
-
-def _within_cooldown(session_state: dict[str, Any], cooldown_seconds: int) -> bool:
-    raw = session_state.get(_JUDGED_AT_KEY)
-    if not isinstance(raw, str):
-        return False
-    try:
-        judged_at = datetime.fromisoformat(raw)
-    except ValueError:
-        return False
-    elapsed = (datetime.now(tz=timezone.utc) - judged_at).total_seconds()
-    return 0 <= elapsed < cooldown_seconds
-
-
 def _collect_failures(session_id: str) -> tuple[int, list[str]]:
     """统计 session 失败数并取最近几条样例。
 
-    post-tool-trace.py 写入 {entity_id: [failure_records]}；文件在 session 结束时
-    删除，因此全部记录都属于当前 session。兼容旧的 {session_id: count} 形状。
+    post-tool-trace.py 写入 {entity_id: [failure_records]}；文件在 SessionEnd
+    时删除，因此全部记录都属于当前 session。兼容旧的 {session_id: count} 形状。
     """
     try:
-        data = json.loads(_SESSION_FAILURES_FILE.read_text(encoding="utf-8"))
+        data = json.loads(session_failures_file().read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return 0, []
     if not isinstance(data, dict):
@@ -246,8 +173,8 @@ def _collect_failures(session_id: str) -> tuple[int, list[str]]:
 
     total = 0
     records: list[dict[str, Any]] = []
-    for value in data.values():
-        if isinstance(value, list):
+    for key, value in data.items():
+        if isinstance(value, list) and not str(key).startswith("_"):
             total += len(value)
             records.extend(r for r in value if isinstance(r, dict))
 
@@ -337,16 +264,20 @@ def _keyword_shortcut(
 
 def _emit_wake(session_id: str, trigger: str, reason: str, failure_count: int) -> None:
     """按 asyncRewake 契约输出 stderr 并 exit 2 唤醒 Claude。"""
-    message = (
-        f"[ACE] 后台判定：当前 session（{session_id[:8]}）可能存在困扰"
-        f"（trigger={trigger}，依据：{reason}，失败计数：{failure_count}）。"
-        "请在合适的时机温和地向用户提供两个选项："
-        "1) 运行 /ace:doctor 做纯本地诊断；"
-        "2) 运行 /ace:traceback 把脱敏后的 session 上下文上报给售后团队。"
-        "不要替用户做决定，只提供选项并说明隐私和上报流程。"
-    )
-    print(message, file=sys.stderr)
+    print(wake_message(session_id, trigger, reason, failure_count), file=sys.stderr)
     sys.exit(2)
+
+
+def _emit_fast_hint(trigger: str, reason: str) -> None:
+    """--fast 同步模式：systemMessage 给用户 + additionalContext 给 Claude。"""
+    print(json.dumps({
+        "systemMessage": user_hint(trigger, reason),
+        "hookSpecificOutput": {
+            "hookEventName": "UserPromptSubmit",
+            "additionalContext": claude_context(trigger, reason),
+        },
+    }, ensure_ascii=False))
+    sys.exit(0)
 
 
 def _build_judge_input(
@@ -359,7 +290,7 @@ def _build_judge_input(
 ) -> str:
     samples = "; ".join(failure_samples) if failure_samples else "无"
     return (
-        "你是 ACE 售后 traceback 触发判定器。根据下列信号判断当前 Claude Code session "
+        "你是 ACE Doctor traceback 触发判定器。根据下列信号判断当前 Claude Code session "
         "是否值得建议用户上报日志（traceback）。\n"
         "值得建议：工具反复失败、用户明显沮丧或愤怒（含隐含表达）、工作流执行失败、"
         "会话异常漫长且进展不顺。\n"
@@ -402,7 +333,7 @@ def _invoke_judge(judge_input: str, cfg: dict[str, Any]) -> dict[str, Any] | Non
             text=True,
             timeout=float(cfg["judge_timeout"]),
             env=env,
-            cwd=str(_ACE_HOME),
+            cwd=str(session_failures_file().parent),
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
@@ -424,6 +355,8 @@ def _parse_verdict(output: str) -> dict[str, Any] | None:
 
 
 def main() -> None:
+    fast_mode = "--fast" in sys.argv[1:]
+
     # 递归防护：judge 子进程内不再判定
     if os.environ.get("ACE_TRACEBACK_JUDGE"):
         sys.exit(0)
@@ -440,28 +373,37 @@ def main() -> None:
         sys.exit(0)
 
     cfg = _get_config()
-    session_state = _read_session_state(session_id)
+    session_state = read_session_state(session_id)
 
-    # 所有 trigger 都提示过 → 不再花钱调 LLM
+    # 所有 trigger 都提示过 → 不再判定
     if _VALID_TRIGGERS.issubset(session_state.keys()):
-        sys.exit(0)
-
-    # 冷却期内不判定
-    if _within_cooldown(session_state, int(cfg["judge_cooldown_seconds"])):
         sys.exit(0)
 
     failure_count, failure_samples = _collect_failures(session_id)
     age_hours, line_count = _transcript_stats(transcript_path, session_id)
 
-    # 1) 快速关键词/客观信号短路：命中直接触发，不再调 LLM
+    # 1) 快速关键词/客观信号短路：命中直接触发，不调 LLM。
+    #    --fast（同步 hook）：systemMessage 直接展示给用户；
+    #    async 模式保留同一逻辑兜底（单 hook 注册的集成，如 codex/cursor）。
     shortcut = _keyword_shortcut(prompt, failure_count, line_count, age_hours, cfg)
     if shortcut:
         trigger, reason = shortcut
-        if trigger in session_state:
+        # 重新读取，避免与并行注册的另一条 hook 双重提示
+        if trigger in read_session_state(session_id):
             sys.exit(0)
-        _record_session_key(session_id, _JUDGED_AT_KEY)
-        _record_session_key(session_id, trigger)
+        record_session_key(session_id, JUDGED_AT_KEY)
+        record_session_key(session_id, trigger)
+        if fast_mode:
+            _emit_fast_hint(trigger, reason)
         _emit_wake(session_id, trigger, reason, failure_count)
+
+    # --fast 只负责短路：未命中即静默退出，语义判定交给 async hook
+    if fast_mode:
+        sys.exit(0)
+
+    # 冷却期内不调 LLM
+    if within_cooldown(session_state, int(cfg["judge_cooldown_seconds"])):
+        sys.exit(0)
 
     # 2) 未命中短路 → LLM 语义判定
     judge_input = _build_judge_input(
@@ -470,7 +412,7 @@ def main() -> None:
     )
 
     # 先记录判定时间戳：无论结果如何都进入冷却，避免连续 prompt 连续调 LLM
-    _record_session_key(session_id, _JUDGED_AT_KEY)
+    record_session_key(session_id, JUDGED_AT_KEY)
 
     verdict = _invoke_judge(judge_input, cfg)
     if not verdict or not verdict.get("suggest"):
@@ -479,10 +421,11 @@ def main() -> None:
     trigger = str(verdict.get("trigger") or "")
     if trigger not in _VALID_TRIGGERS:
         sys.exit(0)
-    if trigger in session_state:
+    # LLM 判定期间 --fast hook 可能已经提示过 → 重新读取去重
+    if trigger in read_session_state(session_id):
         sys.exit(0)
 
-    _record_session_key(session_id, trigger)
+    record_session_key(session_id, trigger)
     reason = str(verdict.get("reason") or "")[:60]
 
     # asyncRewake 契约：本 hook 以 async 方式后台运行，exit 2 时 stderr 会作为
@@ -494,5 +437,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"[ACE] detect-frustration error (non-blocking): {e}", file=sys.stderr)
+        print(f"[ACE Doctor] detect-frustration error (non-blocking): {e}", file=sys.stderr)
         sys.exit(0)
