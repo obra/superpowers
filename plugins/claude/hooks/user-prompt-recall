@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# UserPromptSubmit hook wrapper — delegates to the Python implementation.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+exec python3 "${SCRIPT_DIR}/user-prompt-recall.py"

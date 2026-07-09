@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Stop hook wrapper for Cursor — delegates to the Python implementation.
-# Cursor pipes JSON to stdin; the Python script reads it.
+# Stop hook wrapper — delegates to the Python implementation.
+# Claude/Cursor pipe JSON to stdin.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-exec python3 "${SCRIPT_DIR}/stop-reflect.py"
+exec python3 "${SCRIPT_DIR}/stop-reflect.py" "$@"

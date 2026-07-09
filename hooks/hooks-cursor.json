@@ -10,6 +10,10 @@
       {
         "event": "Bash",
         "command": "./hooks/run-hook.cmd post-tool-trace"
+      },
+      {
+        "event": "Edit|Write|MultiEdit|WebFetch|WebSearch|CallMcpTool",
+        "command": "./hooks/run-hook.cmd post-tool-trace"
       }
     ],
     "stop": [

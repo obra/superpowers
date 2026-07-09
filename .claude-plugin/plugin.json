@@ -18,5 +18,6 @@
     "best-practices",
     "workflows",
     "scientific-instruments"
-  ]
+  ],
+  "hooks": "./hooks/hooks.json"
 }
