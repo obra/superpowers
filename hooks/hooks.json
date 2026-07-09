@@ -103,11 +103,6 @@
             "type": "command",
             "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-doctor.py\"",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "\"${ACE_ROOT}/.venv/bin/python\" \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-reflect.py\"",
-            "timeout": 30
           }
         ]
       }
