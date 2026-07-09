@@ -51,7 +51,8 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/detect-frustration.py\"",
-            "timeout": 3
+            "timeout": 30,
+            "asyncRewake": true
           }
         ]
       }
