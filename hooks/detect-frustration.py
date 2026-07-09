@@ -23,6 +23,8 @@ config 的 judge_model 强制指定。
 
 成本与防打扰控制：
 - 递归防护：ACE_TRACEBACK_JUDGE=1 时直接退出（judge 子进程自身不再判定）
+- headless 防护：CLAUDE_CODE_ENTRYPOINT=sdk-*（claude -p / SDK）时 async 直接退出——
+  headless 下 asyncRewake 不生效、exit 2 会拦截 prompt，且没有交互用户可唤醒
 - 冷却：每 session 至多每 judge_cooldown_seconds（默认 120s）调一次 LLM
 - 去重：按 session_id + trigger 每会话每触发器最多提示一次（--fast 与 async 共享）
 - 所有 trigger 都提示过后不再调 LLM
@@ -382,34 +384,40 @@ def main() -> None:
     failure_count, failure_samples = _collect_failures(session_id)
     age_hours, line_count = _transcript_stats(transcript_path, session_id)
 
-    # 1) 快速关键词/客观信号短路：命中直接触发，不调 LLM。
-    #    --fast（同步 hook）：systemMessage 直接展示给用户；
-    #    async 模式保留同一逻辑兜底（单 hook 注册的集成，如 codex/cursor）。
-    shortcut = _keyword_shortcut(prompt, failure_count, line_count, age_hours, cfg)
-    if shortcut:
-        trigger, reason = shortcut
-        # 重新读取，避免与并行注册的另一条 hook 双重提示
-        if trigger in read_session_state(session_id):
-            sys.exit(0)
-        record_session_key(session_id, JUDGED_AT_KEY)
-        record_session_key(session_id, trigger)
-        if fast_mode:
-            _emit_fast_hint(trigger, reason)
-        _emit_wake(session_id, trigger, reason, failure_count)
-
-    # --fast 只负责短路：未命中即静默退出，语义判定交给 async hook
+    # 1) --fast（同步 hook）独占快速关键词/客观信号短路：命中直接触发，不调 LLM，
+    #    systemMessage 直接展示给用户。async hook **不做**短路——两条 hook 并行启动，
+    #    async 里短路会与 --fast 竞态导致双重提示（headless 下 exit 2 还会拦截 prompt）。
     if fast_mode:
+        shortcut = _keyword_shortcut(prompt, failure_count, line_count, age_hours, cfg)
+        if shortcut:
+            trigger, reason = shortcut
+            if trigger in session_state:
+                sys.exit(0)
+            record_session_key(session_id, JUDGED_AT_KEY)
+            record_session_key(session_id, trigger)
+            _emit_fast_hint(trigger, reason)
+        # 未命中即静默退出，语义判定交给 async hook
+        sys.exit(0)
+
+    # 2) async：LLM 语义判定。
+    # headless（claude -p / SDK，CLAUDE_CODE_ENTRYPOINT=sdk-*）下 asyncRewake 不生效，
+    # hook 同步运行且 exit 2 会**拦截** prompt；且没有可唤醒的交互用户 → 直接退出。
+    entrypoint = os.environ.get("CLAUDE_CODE_ENTRYPOINT", "")
+    if entrypoint.startswith("sdk"):
         sys.exit(0)
 
     # 冷却期内不调 LLM
     if within_cooldown(session_state, int(cfg["judge_cooldown_seconds"])):
         sys.exit(0)
 
-    # 2) 未命中短路 → LLM 语义判定
     judge_input = _build_judge_input(
         prompt, failure_count, failure_samples, age_hours, line_count,
         int(cfg["failure_threshold"]),
     )
+
+    # 判定前重读状态：--fast 可能刚在毫秒级窗口内命中并记录（并行竞态）
+    if within_cooldown(read_session_state(session_id), int(cfg["judge_cooldown_seconds"])):
+        sys.exit(0)
 
     # 先记录判定时间戳：无论结果如何都进入冷却，避免连续 prompt 连续调 LLM
     record_session_key(session_id, JUDGED_AT_KEY)
