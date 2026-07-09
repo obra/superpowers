@@ -1,0 +1,11 @@
+bitable:
+  base_token: "LJrYbZA0paJyDismpECckHSqnVf"
+  table_id: "tblQNpirUlTtUVr3"
+  view_id: "vewJpKS6UZ"
+
+ace:
+  repo_path: "/data/codes/ace"
+  test_command: ["make", "test-core"]
+
+poll_interval: 60
+log_level: "INFO"

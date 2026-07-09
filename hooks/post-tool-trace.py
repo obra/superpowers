@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
-"""ACE PostToolUse hook — trace errors with PCFL + detect eureka moments.
+"""ACE PostToolUse/PostToolUseFailure hook — trace errors with PCFL + detect eureka moments.
+
+Registered for BOTH events (hooks.json): Claude Code fires PostToolUse only
+when a tool call succeeds; failures fire PostToolUseFailure instead. The real
+payload carries `tool_response` (no exit_code) — the event name itself is the
+failure signal. Legacy `tool_result` + `exit_code` payloads are still accepted
+for tests and older harnesses.
 
 Creates traces for two kinds of significant events:
 1. Failures: errors with Problem→Cause→Fix→Lesson (PCFL) reflection
 2. Eurekas: milestone successes after genuine struggle (CDSI reflection)
+
+Also feeds ACE Doctor: consecutive tool-failure counting and workflow
+execution failures produce an immediate user-visible suggestion
+(systemMessage) to run /ace:doctor or /ace:traceback.
 
 A eureka is NOT defined by failure count. Even 1 substantive failure
 followed by success is a breakthrough — the resolution of real confusion.
@@ -32,6 +42,14 @@ from _ace_config import (  # noqa: E402
     SESSION_FAILURES_FILE,
     MEANINGFUL_PATTERNS,
     TRANSIENT_CAUSES,
+)
+from _ace_doctor import (  # noqa: E402
+    bump_consecutive_failures,
+    claude_context,
+    doctor_config,
+    read_session_state,
+    record_session_key,
+    user_hint,
 )
 
 
@@ -131,18 +149,52 @@ def _detect_entity(cmd: str) -> tuple[str, str]:
     return entity_type, entity_id
 
 
-def should_trace(tool_name: str, tool_input: dict, tool_result: dict) -> str | None:
+def _tool_response(data: dict) -> dict:
+    """兼容真实 payload（tool_response）与旧测试形状（tool_result）。"""
+    resp = data.get("tool_response")
+    if not isinstance(resp, dict):
+        resp = data.get("tool_result")
+    return resp if isinstance(resp, dict) else {}
+
+
+def _is_failure(data: dict, tool_response: dict) -> bool:
+    """判定本次工具调用是否失败。
+
+    真实环境：失败走 PostToolUseFailure 事件（PostToolUse 只在成功时触发），
+    事件名本身即失败信号；tool_response 里没有 exit_code。
+    兼容旧形状：显式 exit_code != 0 也视为失败。
+    """
+    if data.get("hook_event_name") == "PostToolUseFailure":
+        return True
+    exit_code = tool_response.get("exit_code")
+    return isinstance(exit_code, int) and exit_code != 0
+
+
+_WORKFLOW_CMD_RE = re.compile(
+    r"\bworkflow\b.*\b(run|execute)\b|\b(run|execute)\b.*\bworkflow\b|\bace\s+run\b",
+    re.IGNORECASE,
+)
+
+
+def _is_workflow_command(cmd: str) -> bool:
+    """判断命令是否是一次工作流执行。"""
+    if _WORKFLOW_CMD_RE.search(cmd):
+        return True
+    entity_type, _ = _detect_entity(cmd)
+    return entity_type == "workflow"
+
+
+def should_trace(tool_name: str, tool_input: dict, failed: bool) -> str | None:
     """Determine trace type: None (skip), 'failure', or 'eureka'."""
     if tool_name != "Bash":
         return None
 
     cmd = tool_input.get("command", "")
-    exit_code = tool_result.get("exit_code", -1)
 
     if not _is_meaningful_command(cmd):
         return None
 
-    if exit_code != 0:
+    if failed:
         return "failure"
 
     # Success on meaningful command — check for prior struggle
@@ -221,13 +273,13 @@ def extract_failure_trace(data: dict) -> dict:
     """Extract a failure trace with PCFL reflection."""
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
-    tool_result = data.get("tool_result", {})
+    tool_response = _tool_response(data)
 
     cmd = tool_input.get("command", "")
-    exit_code = tool_result.get("exit_code", -1)
-    stdout = tool_result.get("stdout", "")
-    stderr = tool_result.get("stderr", "")
-    error = stderr[:500] if stderr else stdout[:500]
+    exit_code = tool_response.get("exit_code", 1)
+    stdout = tool_response.get("stdout", "") or ""
+    stderr = tool_response.get("stderr", "") or ""
+    error = stderr[:500] or stdout[:500] or str(data.get("error") or "")[:500]
 
     # PCFL reflection on the error
     if _BASH_PCFL:
@@ -279,10 +331,10 @@ def extract_eureka_trace(data: dict) -> dict:
     """Extract a eureka trace with CDSI reflection."""
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
-    tool_result = data.get("tool_result", {})
+    tool_response = _tool_response(data)
 
     cmd = tool_input.get("command", "")
-    stdout = tool_result.get("stdout", "")
+    stdout = tool_response.get("stdout", "") or ""
 
     entity_type, entity_id = _detect_entity(cmd)
     prior = _get_prior_failures(entity_id)
@@ -514,6 +566,40 @@ def handle_extended_capture(data: dict) -> bool:
         return True
 
     return False
+def _doctor_checks(data: dict, failed: bool) -> tuple[list[str], list[str]]:
+    """ACE Doctor 即时触发：连续失败达到阈值、工作流执行失败。
+
+    返回 (给用户的 systemMessage 列表, 给 Claude 的 additionalContext 列表)。
+    """
+    session_id = data.get("session_id") or ""
+    if not session_id or data.get("tool_name") != "Bash":
+        return [], []
+
+    count = bump_consecutive_failures(session_id, failed)
+    if not failed:
+        return [], []
+
+    messages: list[str] = []
+    contexts: list[str] = []
+    cfg = doctor_config()
+    state = read_session_state(session_id)
+
+    threshold = int(cfg["consecutive_failure_threshold"])
+    if count >= threshold and "consecutive_failures" not in state:
+        record_session_key(session_id, "consecutive_failures")
+        detail = f"连续 {count} 次工具调用失败"
+        messages.append(user_hint("consecutive_failures", detail))
+        contexts.append(claude_context("consecutive_failures", detail))
+
+    cmd = (data.get("tool_input") or {}).get("command", "")
+    if cmd and _is_workflow_command(cmd) and "workflow_failure" not in state:
+        record_session_key(session_id, "workflow_failure")
+        _, entity_id = _detect_entity(cmd)
+        detail = f"workflow '{entity_id}' 执行失败"
+        messages.append(user_hint("workflow_failure", detail))
+        contexts.append(claude_context("workflow_failure", detail))
+
+    return messages, contexts
 
 
 def main():
@@ -522,18 +608,23 @@ def main():
     except (json.JSONDecodeError, EOFError):
         sys.exit(0)
 
+    tool_response = _tool_response(data)
+    failed = _is_failure(data, tool_response)
+
+    messages: list[str] = []
+
     trace_type = should_trace(
         data.get("tool_name", ""),
         data.get("tool_input", {}),
-        data.get("tool_result", {}),
+        failed,
     )
 
     if trace_type == "failure":
         trace = extract_failure_trace(data)
         append_trace(trace)
-        print(json.dumps({
-            "systemMessage": f"[ACE] Error traced: {trace['entity_type']}/{trace['entity_id']} — {trace['cause']}"
-        }))
+        messages.append(
+            f"[ACE] Error traced: {trace['entity_type']}/{trace['entity_id']} — {trace['cause']}"
+        )
     elif trace_type == "eureka":
         trace = extract_eureka_trace(data)
         append_trace(trace)
@@ -544,6 +635,10 @@ def main():
                 f"succeeded after {n} attempt{'s' if n > 1 else ''} — {trace['insight']}"
             )
         }))
+        messages.append(
+            f"[ACE] Eureka! {trace['entity_type']}/{trace['entity_id']} "
+            f"succeeded after {n} attempt{'s' if n > 1 else ''} — {trace['insight']}"
+        )
     else:
         # No significant Bash event — try the broadened P2 capture policy
         # (multi-tool failures + sampled positive successes). Best-effort.
@@ -551,6 +646,21 @@ def main():
             handle_extended_capture(data)
         except Exception:  # noqa: BLE001 — hooks must never break the tool call
             pass
+
+    doctor_messages, doctor_contexts = _doctor_checks(data, failed)
+    messages.extend(doctor_messages)
+
+    output: dict = {}
+    if messages:
+        output["systemMessage"] = "\n".join(messages)
+    if doctor_contexts:
+        output["hookSpecificOutput"] = {
+            "hookEventName": data.get("hook_event_name")
+            or ("PostToolUseFailure" if failed else "PostToolUse"),
+            "additionalContext": "\n".join(doctor_contexts),
+        }
+    if output:
+        print(json.dumps(output, ensure_ascii=False))
 
     sys.exit(0)
 

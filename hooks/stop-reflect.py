@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ACE Eureka System — reflect + auto-evolve.
+"""ACE Eureka System — reflect + auto-evolve at each Stop (turn end).
 
 Claude Code fires ``Stop`` after every assistant turn. Register with
 ``"async": true`` so Claude does not wait on this hook (mem0-style).
@@ -9,7 +9,9 @@ Claude Code fires ``Stop`` after every assistant turn. Register with
 1c. Flush pending recall applications (utility loop)
 1b. Conversational extract + embedding dedup — incremental turns + overlap
 2.  Evolve — when evolution thresholds are met (independent gate)
-3.  Cleanup session failure state (cheap)
+
+会话状态清理在 session-end-cleanup.py（SessionEnd）；traceback 收尾建议在
+stop-doctor.py。此前两者都在这里：Stop 每轮触发导致失败计数每轮清零。
 """
 import asyncio
 import hashlib
@@ -30,7 +32,6 @@ def _ace_home() -> Path:
 
 _ACE_HOME = _ace_home()
 TRACE_DIR = _ACE_HOME / "store" / "traces"
-SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
 EVOLUTION_STATE_FILE = _ACE_HOME / ".evolution_state.json"
 
 # Evolution thresholds — single source of truth lives in _ace_config (which
@@ -581,16 +582,6 @@ def _run_evolution() -> str | None:
         return None
 
 
-# ── Cleanup ────────────────────────────────────────────────────────────
-
-def cleanup_session_state() -> None:
-    if SESSION_FAILURES_FILE and SESSION_FAILURES_FILE.exists():
-        try:
-            SESSION_FAILURES_FILE.unlink()
-        except OSError:
-            pass
-
-
 def _flush_pending_applications(cwd: str, source_id: str | None = None) -> str:
     """Record successful applications for per-turn recalled experiences.
 
@@ -719,7 +710,6 @@ def _run_stop(hook_data: dict) -> list[str]:
     if evolve_summary:
         parts.append(f"evolved: {evolve_summary}")
 
-    cleanup_session_state()
     return parts
 
 
