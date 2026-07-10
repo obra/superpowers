@@ -16,7 +16,12 @@ if ACE_ROOT:
     sys.path.insert(0, ACE_ROOT)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _ace_config import ensure_ace_importable, log_hook_error  # noqa: E402
+from _ace_config import (  # noqa: E402
+    ensure_ace_importable,
+    load_recall_state,
+    log_hook_error,
+    save_recall_state,
+)
 
 RECALL_STATE_NAME = "recall_state.json"
 WORK_DIR_STATE_NAME = ".ace_recall_state.json"
@@ -30,41 +35,59 @@ def _truthy(name: str, *, default: bool = True) -> bool:
 
 
 def _load_recall_state(cwd: str) -> dict:
-    """Load slug dedup state written by ``prepare_claude_context``."""
-    candidates: list[Path] = []
+    """Load slug dedup + pending application state.
+
+    Prefers project ``.ace/recall_state.json`` (shared with stop-reflect).
+    Falls back to Claude Code workdir state files when present.
+    """
     if cwd:
-        candidates.append(Path(cwd) / ".ace" / RECALL_STATE_NAME)
+        state = load_recall_state(cwd)
+        path = Path(cwd) / ".ace" / RECALL_STATE_NAME
+        if path.is_file():
+            return state
     ace_home = os.environ.get("ACE_USER_DIR", "").strip()
     base = Path(os.path.expanduser(ace_home)) if ace_home else Path.home() / ".ace"
     claude_root = base / "claude_code"
     if claude_root.is_dir():
         for path in claude_root.rglob(WORK_DIR_STATE_NAME):
-            candidates.append(path)
-    for path in candidates:
-        try:
-            if path.is_file():
-                return json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-    return {"startup_slugs": [], "turn_slugs": []}
+            try:
+                if path.is_file():
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    return {
+                        "startup_slugs": list(data.get("startup_slugs") or []),
+                        "turn_slugs": list(data.get("turn_slugs") or []),
+                        "pending_applications": list(
+                            data.get("pending_applications") or []
+                        ),
+                    }
+            except (json.JSONDecodeError, OSError):
+                continue
+    return {"startup_slugs": [], "turn_slugs": [], "pending_applications": []}
 
 
 def _save_recall_state(cwd: str, state: dict) -> None:
-    """Best-effort persist updated turn slugs."""
+    """Best-effort persist turn slugs + pending applications for stop-reflect."""
     if not cwd:
         return
-    path = Path(cwd) / ".ace" / RECALL_STATE_NAME
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
-    except OSError as ex:
-        log_hook_error("user-prompt-recall/save_state", ex)
+    if not save_recall_state(cwd, state):
+        log_hook_error(
+            "user-prompt-recall/save_state",
+            OSError(f"failed to write recall state under {cwd}"),
+        )
 
 
 def _seen_slugs(state: dict) -> set[str]:
     startup = state.get("startup_slugs") or []
     turns = state.get("turn_slugs") or []
     return {s for s in (*startup, *turns) if isinstance(s, str) and s}
+
+
+def _entry_id_from_slug(slug: str) -> str:
+    """Strip ``experience/`` prefix so ExperienceService.get can resolve the id."""
+    s = (slug or "").strip()
+    if s.startswith("experience/"):
+        return s[len("experience/") :]
+    return s
 
 
 def _turn_top_k() -> int:
@@ -118,11 +141,18 @@ def main() -> None:
     if new_slugs:
         turn_slugs = list(state.get("turn_slugs") or [])
         seen = set(turn_slugs)
+        pending = list(state.get("pending_applications") or [])
+        pending_seen = set(pending)
         for slug in new_slugs:
             if slug not in seen:
                 turn_slugs.append(slug)
                 seen.add(slug)
+            entry_id = _entry_id_from_slug(slug)
+            if entry_id and entry_id not in pending_seen:
+                pending.append(entry_id)
+                pending_seen.add(entry_id)
         state["turn_slugs"] = turn_slugs
+        state["pending_applications"] = pending
         _save_recall_state(cwd, state)
 
     print(
