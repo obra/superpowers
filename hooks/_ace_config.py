@@ -143,7 +143,7 @@ EXPERIENCE_DEDUP_ENABLED: bool = _parse_bool(
     _experience_dedup_config.get("enabled"), default=True
 )
 EXPERIENCE_DEDUP_THRESHOLD: float = float(
-    _experience_dedup_config.get("threshold", 0.92)
+    _experience_dedup_config.get("threshold", 0.77)
 )
 
 # ── Conversational extract cursor (Stop Phase 1b, incremental) ────────
