@@ -11,6 +11,31 @@ import os
 import sys
 from pathlib import Path
 
+
+def _reexec_into_ace_venv() -> None:
+    """Re-exec with the project venv python before touching stdin.
+
+    Robustness for invocation styles that use a non-venv interpreter: the ace
+    import chain pulls C extensions (tiktoken 等) built for the venv python.
+    No-op when already running the venv interpreter or when no venv exists.
+    """
+    if os.environ.get("_ACE_HOOK_REEXEC"):
+        return
+    root = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not root:
+        return
+    venv_py = Path(root) / ".venv" / "bin" / "python3"
+    if not venv_py.is_file():
+        return
+    os.environ["_ACE_HOOK_REEXEC"] = "1"
+    try:
+        os.execv(str(venv_py), [str(venv_py), os.path.abspath(__file__), *sys.argv[1:]])
+    except OSError:
+        pass  # fall through: best-effort with the current interpreter
+
+
+_reexec_into_ace_venv()
+
 ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
 if ACE_ROOT:
     sys.path.insert(0, ACE_ROOT)
@@ -110,7 +135,8 @@ def main() -> None:
         sys.exit(0)
 
     prompt = (data.get("prompt") or "").strip()
-    if not prompt:
+    # 超短输入（如 "ok"、"继续"）与斜杠命令没有语义召回价值
+    if len(prompt) < 6 or prompt.startswith("/"):
         sys.exit(0)
 
     cwd = (data.get("cwd") or "").strip()
@@ -121,14 +147,14 @@ def main() -> None:
         if not ensure_ace_importable():
             sys.exit(0)
         from ace.core.brain.inject import render_turn_recall
-        from ace.core.knowledge.gateway import resolve_gateway
 
-        gateway = resolve_gateway()
+        # gateway 缺省走 inject 的召回专用 gateway：2.5s 硬性总预算 + 60s 熔断。
+        # 不要显式传 resolve_gateway()——那是 15s 超时的通用 gateway，gbrain
+        # 卡住时会顶满 5s hook 超时，每轮拖慢用户输入。
         block, new_slugs = render_turn_recall(
             user_message=prompt,
             cwd=cwd,
             exclude_slugs=exclude or None,
-            gateway=gateway,
             top_k=_turn_top_k(),
         )
     except Exception as ex:  # noqa: BLE001 — must never block the session

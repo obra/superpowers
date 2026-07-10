@@ -256,17 +256,22 @@ def save_recall_state(cwd: str, state: dict[str, Any]) -> bool:
 
 
 def ensure_ace_importable() -> bool:
-    """Prepend project venv site-packages so hooks can ``import ace``."""
+    """Register project venv site-packages so hooks can ``import ace``.
+
+    ``site.addsitedir`` (not a bare ``sys.path`` insert) is required: ace is
+    an editable install whose ``__editable__*.pth`` finder only activates when
+    the ``.pth`` file is processed.
+    """
     if not ACE_ROOT:
         return False
     lib = Path(ACE_ROOT) / ".venv" / "lib"
     if not lib.is_dir():
         return False
+    import site
+
     inserted = False
-    for site in sorted(lib.glob("python*/site-packages")):
-        sp = str(site)
-        if sp not in sys.path:
-            sys.path.insert(0, sp)
+    for sp_dir in sorted(lib.glob("python*/site-packages")):
+        site.addsitedir(str(sp_dir))
         inserted = True
         break
     # Also expose the project source tree for editable installs
