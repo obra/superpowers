@@ -91,10 +91,53 @@ lark-cli auth status
 - Batch upload/download attachments (up to 50 files, 2GB each)
 
 ### Calendar
-- Check schedules, create meetings
+- Check schedules, create single or recurring meetings
+- Resolve shared event links through the user's primary calendar
+- Invite users, groups, and meeting rooms
 - Check availability, recommend times
-- Book meeting rooms
 - Reply to invitations
+
+#### Creating recurring meetings (verified workflow)
+
+Always use the `calendar +create` shortcut with `--attendee-ids`; the lower-level `calendar events create --data` silently drops attendees.
+
+```bash
+lark-cli calendar +create --as user \
+  --summary "paper 摘要" \
+  --description "" \
+  --start "2026-07-10T18:00:00+09:00" \
+  --end "2026-07-10T19:30:00+09:00" \
+  --rrule "FREQ=WEEKLY;INTERVAL=2;BYDAY=FR;COUNT=7" \
+  --attendee-ids "ou_xxxxxxxxxxxxx,oc_xxxxxxxxxxxxx" \
+  --format json
+```
+
+Common RRULE patterns:
+- Every 2 weeks on Friday, 7 times: `FREQ=WEEKLY;INTERVAL=2;BYDAY=FR;COUNT=7`
+- Weekly Friday for 3 months: `FREQ=WEEKLY;BYDAY=FR;COUNT=13`
+- Until a specific date: `FREQ=WEEKLY;INTERVAL=2;BYDAY=FR;UNTIL=20261031T235959Z`
+
+Attendee ID formats:
+- User: `ou_xxxxxxxx`
+- Chat/group: `oc_xxxxxxxx`
+- Meeting room: `omm_xxxxxxxx` (booking may fail silently; verify after creation)
+
+After creation, always verify attendees:
+
+```bash
+lark-cli calendar event.attendees list --as user --calendar-id primary --event-id <event_id>
+```
+
+If attendees are missing, delete the broken event and recreate it with `+create`.
+
+**Pitfalls**
+1. Login must use `--domain calendar`; manually listing scopes with `--scope` often fails.
+2. Share-link `calendarId` values are not API-usable. Search the user's primary calendar instead:
+   ```bash
+   lark-cli calendar +search-event --as user --query "<title>" --start YYYY-MM-DD --end YYYY-MM-DD
+   ```
+3. Primary-calendar event IDs end in `_0`; use that suffixed ID for `+get` and attendee operations.
+4. A successful `events create` response does not guarantee attendees were added — verify explicitly.
 
 ### Meetings & Minutes (妙记)
 - Search recordings, download media
@@ -158,10 +201,17 @@ lark-cli doc create --title "My Document" --content "# Heading\n\nBody text"
 lark-cli message search --query "project update"
 ```
 
-### Schedule a Meeting
+### Schedule a Recurring Meeting
 ```bash
-lark-cli calendar event create --title "Team Sync" --start "2026-05-30 10:00" --duration 60
+lark-cli calendar +create --as user \
+  --summary "Team Sync" \
+  --start "2026-07-10T18:00:00+09:00" \
+  --end "2026-07-10T19:00:00+09:00" \
+  --rrule "FREQ=WEEKLY;INTERVAL=2;BYDAY=FR;COUNT=7" \
+  --attendee-ids "ou_xxxxxxxxxxxxx,oc_xxxxxxxxxxxxx"
 ```
+
+Then verify attendees with `lark-cli calendar event.attendees list`.
 
 ### Check Unread Emails
 ```bash
