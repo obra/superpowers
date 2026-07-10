@@ -1,17 +1,18 @@
 ---
 name: agent-discovery
-description: "Agent Discovery — 团队服务 owner 路由：遇到我们研发的系统（ace / hyper-fib / hyperdata / ace-xxx / hyper-xxx）的 bug 时查该上报给谁；遇到不好解决的问题时在飞书群 @ 对应的人或 bot 寻求帮助。供用户直接调用，也供其他 skill（如 ace:system-quality-review）在发飞书消息时查 owner。"
+description: "Agent Discovery — 团队服务 owner 路由：遇到我们研发的系统（ace / hyper-fib / hyperdata / ace-xxx / hyper-xxx）的 bug 时查该上报给谁；遇到不好解决的问题时在飞书群 @ 对应的人或 bot 寻求帮助；功能 merge 到 main 后若影响某服务，则发飞书通知该服务 owner。供用户直接调用，也供其他 skill（如 ace:system-quality-review）在发飞书消息时查 owner。"
 user-invocable: true
 ---
 
 # Agent Discovery — 服务负责人路由
 
-回答两个问题：**这个系统的 bug 该报给谁？** 和 **这个难题该 @ 谁求助？** 查表 → 在飞书群发消息并 @ 对应 owner。整条链路已实测验证（2026-07-09，message_id `om_x100b6bdb70478c80c3538642fa3ec4f`，@人 与 @bot 均解析为真实 mention）。
+回答三个问题：**这个系统的 bug 该报给谁？**、**这个难题该 @ 谁求助？** 以及 **功能 merge 到 main 后影响谁该通知谁？** 查表 → 在飞书群发消息并 @ 对应 owner。整条链路已实测验证（2026-07-09，message_id `om_x100b6bdb70478c80c3538642fa3ec4f`，@人 与 @bot 均解析为真实 mention）。
 
 ## When to use
 
 - 用户或 agent 遇到 ace / hyper-* 系列系统的 bug，需要知道上报给谁、并把 bug 发到群里 @ 对应 owner。
 - 用户或 agent 遇到不好解决的问题（环境、权限、依赖、架构决策等），需要在飞书群 @ 人/agent 寻求帮助。
+- 用户开发的功能已 merge 到 `main`，若会影响 ace / hyper-* 系列服务，需要发飞书群消息通知对应 owner。
 - 其他 skill 需要按项目查 owner（如 system-quality-review 的日报卡片 @ 项目负责人）。
 
 ## Owner 路由表（唯一事实源）
@@ -21,6 +22,7 @@ user-invocable: true
 | ace | bot | hyper-instrument | `ou_2a0b3e6edcbca832452757b5bd043ed9` |
 | hyper-data | 人 | 杜卓然 | `ou_da4b3a6a463472241d91e56be0011822` |
 | hyper-fib | 人 | 苗宏图 | `ou_f4b53eba875ad32fbe8e016c94de2180` |
+| ace-benchmark | 人 | 杨天宇 | `ou_fc78ccb4b78c1cfe6680bb9e042d2a18` |
 
 - **服务名宽松匹配**：`hyper-data` / `hyperdata` / `hyper_data` 视为同一服务，其余同理。
 - **默认群**：HyperEM `oc_335cc3ff0ab0f353fa920fed387d5162`（外部群，**发消息一律 `--as bot`**）。
@@ -59,6 +61,24 @@ user-invocable: true
 · 已尝试: <做过什么、结果如何>
 · 卡点: <当前具体障碍，带报错/file:line 更好>
 · 期望: <需要对方做什么>
+```
+
+## 用法 3 — merge 到 main 后影响通知
+
+1. 识别本次 merge 影响到的服务：从 PR / commit / 变更文件里判断涉及哪些 ace / hyper-* 服务；若用户已明确告知，直接采用。
+2. 对受影响且已在路由表登记的服务，查 owner，发群消息 @ 对应负责人；未登记服务走「未登记服务的处理协议」。
+3. 消息必须包含：merge 的服务/仓库、影响点摘要、相关 PR/commit、需要 owner 关注或确认的事项。
+4. 若一次 merge 影响多个服务，可合并为一条消息并 @ 多个 owner，也可分开发送；优先合并，避免刷屏。
+5. 模板：
+
+```
+🚀 [<服务> main 更新通知] <at user_id="<owner_id>"></at>
+· 仓库/服务: <服务名>
+· 变更摘要: <一句话>
+· 相关提交: <commit / PR 链接>
+· 影响点: <可能影响的接口/行为/依赖>
+· 需要确认: <请 owner 确认是否有风险或需同步>
+· 发送方: <用户名或 agent 名>
 ```
 
 ## 发消息命令
