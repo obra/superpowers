@@ -95,6 +95,33 @@ scripts/start-server.sh \
 
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
+## Existing Design Systems
+
+Before writing the first mockup in a project that already has a UI, resolve
+design-system intent — otherwise the user selects a mockup that looks nothing
+like what will ship.
+
+1. **Inspect the codebase for design tokens:** CSS custom properties, Tailwind
+   (or similar) config, theme files, component libraries.
+2. **Ask the user one question** (terminal or browser, per the usual test):
+
+   > "Should mockups follow your app's existing design system, or explore a
+   > new visual direction?"
+
+3. **Apply the answer:**
+   - **Existing system** — embed the app's real tokens in each mockup via a
+     scoped `<style>` block inside the fragment. What the user selects is an
+     honest preview of what ships.
+   - **New direction** — mock freely; the design lock (see Locking a Design)
+     captures the new look as the design source of truth.
+   - **Greenfield project** — skip the question; the locked mockup seeds the
+     design system.
+
+Record the answer — it becomes the **fidelity decision** in the spec's Design
+Lock section. If discovery was skipped or the answer is ambiguous when a
+design is locked, ask then — lock time is the fallback checkpoint, not the
+primary one.
+
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
@@ -114,7 +141,7 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
    - Merge with the user's terminal text to get the full picture
    - The terminal message is the primary feedback; `state_dir/events` provides structured interaction data
 
-4. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated.
+4. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated. When a visual choice is final, lock it — see **Locking a Design** below.
 
 5. **Unload when returning to terminal** — when the next step doesn't need the browser (e.g., a clarifying question, a tradeoff discussion), push a waiting screen to clear the stale content:
 
@@ -260,6 +287,35 @@ When the user clicks options in the browser, their interactions are recorded to 
 The full event stream shows the user's exploration path — they may click multiple options before settling. The last `choice` event is typically the final selection, but the pattern of clicks can reveal hesitation or preferences worth asking about.
 
 If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser — use only their terminal text.
+
+## Locking a Design
+
+When a visual choice is finalized — the selection that ends exploration for a
+screen, not every click — lock it so the design survives into the spec, the
+plan, and implementation:
+
+1. **Push a final-design fragment** to `screen_dir` containing only the
+   winning design — no A/B/C chooser, no selection UI, no `onclick` handlers.
+   This doubles as visual confirmation for the user.
+2. **Export it** with the deterministic export script:
+
+   ```bash
+   scripts/export-mockup.sh $SCREEN_DIR/dashboard-final.html \
+     docs/superpowers/specs/assets/YYYY-MM-DD-<topic>/dashboard.html \
+     --title "Dashboard"
+   ```
+
+   The output is a self-contained standalone HTML file: frame CSS inlined, no
+   helper script, no connection chrome, no external references. One file per
+   locked screen. (User preferences for spec location override this default.)
+3. **Opportunistic screenshot:** if your harness has a browser screenshot tool
+   (Playwright MCP, Chrome DevTools MCP, etc.), also capture `<screen>.png`
+   beside the HTML. Never install tooling to get one; with no tool available,
+   skip silently. The HTML is the artifact of record.
+4. **Commit the artifacts together with the spec**, and record them in the
+   spec's **Design Lock** section (see the brainstorming skill): artifact
+   paths, the fidelity decision from design-system discovery, and 3–7
+   plain-language load-bearing properties per screen.
 
 ## Design Tips
 
