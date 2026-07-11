@@ -490,6 +490,32 @@ async function runTests() {
     assert(!opened, 'must not open the browser without explicit approval');
   });
 
+  await test('BRAINSTORM_OPEN_CMD launches without a shell and keeps the URL as one argv element', async () => {
+    // Regression for #1957: BRAINSTORM_OPEN_CMD must not go through `sh -c`.
+    // Capture the launched argv with a node script that writes each argv element
+    // on its own line; the server URL carries a `?key=` query (shell metachar `&`),
+    // which a shell would split. execFile passes it intact as the final element.
+    const dir = fs.mkdtempSync('/tmp/bs-argv-');
+    const marker = path.join(dir, 'argv.log');
+    const scriptPath = path.resolve(dir, 'capture-argv.cjs');
+    fs.writeFileSync(scriptPath,
+      "const fs = require('fs');\n" +
+      "fs.appendFileSync(" + JSON.stringify(marker) + ", process.argv.slice(1).join('\\n') + '\\n');\n");
+    const openCmd = `node ${JSON.stringify(scriptPath)}`;
+    const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3420, BRAINSTORM_DIR: dir, BRAINSTORM_OPEN: '1', BRAINSTORM_OPEN_CMD: openCmd, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 } });
+    let out = ''; srv.stdout.on('data', d => out += d.toString());
+    for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
+    fs.writeFileSync(path.join(dir, 'content', 'first.html'), '<h2>First</h2>');
+    await waitForFile(marker);
+    await killAndWait(srv);
+    const lines = fs.readFileSync(marker, 'utf8').trim().split('\n').filter(Boolean);
+    fs.rmSync(dir, { recursive: true, force: true });
+    // argv = [scriptPath, url]; the URL must be a single element carrying the key.
+    assert.strictEqual(lines.length, 2, `expected 2 argv elements (script + url), got ${lines.length}`);
+    assert(/key=/.test(lines[1]), `final argv element should be the URL carrying the key, got ${lines[1]}`);
+    assert(!/[ ;|]/.test(lines[1]), `URL must not be shell-split; found shell metacharacters in ${lines[1]}`);
+  });
+
   await test('unauthenticated requests do not defeat the idle timeout', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-life-');
     const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3419, BRAINSTORM_DIR: dir, BRAINSTORM_TOKEN: 'authtok', BRAINSTORM_IDLE_TIMEOUT_MS: 400, BRAINSTORM_LIFECYCLE_CHECK_MS: 100 } });
