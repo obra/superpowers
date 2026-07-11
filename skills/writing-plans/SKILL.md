@@ -125,6 +125,25 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
+## Design Lock Threading
+
+If the spec contains a Design Lock section (locked visual designs from the
+brainstorming companion):
+
+- Copy the fidelity decision and artifact paths into **Global Constraints**
+  verbatim.
+- For every task that implements UI covered by a locked design:
+  - Add the artifact to the task's **Files** block:
+    `Read: docs/superpowers/specs/assets/<...>/<screen>.html (locked design)`
+  - Add a verification step before the commit step: render the result and
+    compare against the locked mockup — with browser tooling if available,
+    otherwise by diffing DOM structure and styles against the mockup file.
+    Deviations from the spec's load-bearing properties are failures, not
+    style choices.
+
+Plans are self-contained and a task's implementer sees only their own task —
+this threading is how the locked design reaches them.
+
 ## No Placeholders
 
 Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
