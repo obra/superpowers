@@ -516,6 +516,37 @@ async function runTests() {
     assert(!/[ ;|]/.test(lines[1]), `URL must not be shell-split; found shell metacharacters in ${lines[1]}`);
   });
 
+  await test('BRAINSTORM_OPEN_CMD metacharacters do not splice a second command (no shell)', async () => {
+    // Companion to the URL-integrity test above: prove shell metacharacters in the
+    // OPEN_CMD value itself can't inject a second command. A value containing a
+    // command separator (`; touch <pwned>`) must NOT result in <pwned> being
+    // created — the launcher tokenizes and runs without a shell, so `;` is literal.
+    // Without the no-shell fix (#1957), this value reached `sh -c`, the `;`
+    // split it, and `touch <pwned>` executed as a sibling command.
+    const dir = fs.mkdtempSync('/tmp/bs-inj-');
+    const marker = path.join(dir, 'argv.log');
+    const pwned = path.join(dir, 'pwned.flag');
+    const scriptPath = path.resolve(dir, 'capture-argv.cjs');
+    fs.writeFileSync(scriptPath,
+      "const fs = require('fs');\n" +
+      "fs.appendFileSync(" + JSON.stringify(marker) + ", process.argv.slice(1).join('\\n') + '\\n');\n");
+    // A shell would split on `;` and run `touch <pwned>` as a second command.
+    // The no-shell path treats the whole value as one tokenized argv, so the
+    // `;`-bearing command simply fails to launch and <pwned> never appears.
+    const openCmd = `node ${JSON.stringify(scriptPath)} ; touch ${JSON.stringify(pwned)}`;
+    const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3424, BRAINSTORM_DIR: dir, BRAINSTORM_OPEN: '1', BRAINSTORM_OPEN_CMD: openCmd, BRAINSTORM_LIFECYCLE_CHECK_MS: 100000 } });
+    let out = ''; srv.stdout.on('data', d => out += d.toString());
+    for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
+    fs.writeFileSync(path.join(dir, 'content', 'first.html'), '<h2>Inject</h2>');
+    // Give the launcher (which fails to spawn the `;`-bearing command) time to
+    // have done nothing — wait long enough that a `sh -c` would have run `touch`.
+    await sleep(500);
+    await killAndWait(srv);
+    const pwnedCreated = fs.existsSync(pwned);
+    fs.rmSync(dir, { recursive: true, force: true });
+    assert(!pwnedCreated, `shell metacharacter ';' must not splice a command: <pwned> was created, meaning BRAINSTORM_OPEN_CMD went through a shell`);
+  });
+
   await test('unauthenticated requests do not defeat the idle timeout', async () => {
     const dir = fs.mkdtempSync('/tmp/bs-life-');
     const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3419, BRAINSTORM_DIR: dir, BRAINSTORM_TOKEN: 'authtok', BRAINSTORM_IDLE_TIMEOUT_MS: 400, BRAINSTORM_LIFECYCLE_CHECK_MS: 100 } });
