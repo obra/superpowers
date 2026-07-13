@@ -102,6 +102,22 @@ scripts/start-server.sh \
 
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
+### Custom browser launcher: `BRAINSTORM_OPEN_CMD`
+
+The `--open` flag auto-launches the user's default browser using the platform's native launcher. For environments where that doesn't apply — a container with no desktop session, a headless dev box reached via a tunnel, or a non-standard browser binary — set `BRAINSTORM_OPEN_CMD` to the command that should open a URL:
+
+```bash
+BRAINSTORM_OPEN_CMD='firefox' scripts/start-server.sh --project-dir /path --open
+BRAINSTORM_OPEN_CMD='flatpak run org.mozilla.firefox' scripts/start-server.sh --project-dir /path --open
+```
+
+The server passes the companion URL as the final argument. Accepted shapes:
+- A bare command: `firefox` → `firefox <url>`
+- A command with arguments: `flatpak run org.mozilla.firefox` → `flatpak run org.mozilla.firefox <url>`
+- Quoted argv segments: `node "/path/to/capture.js" "marker"` → that exact argv with `<url>` appended
+
+**Trust posture:** `BRAINSTORM_OPEN_CMD` is an environment variable, so it runs with the invoking user's authority — only set it from a trusted environment, and treat any value the way you'd treat a shell command you typed yourself. The launcher deliberately invokes the command **without a shell** (it tokenizes the value and passes `<url>` as a single argv element), so shell metacharacters in the value are not interpreted — the URL's `&`/`?` stay intact, and the value can't splice in extra commands. This means a value like `firefox ; curl evil` will *not* execute the `curl`; it just fails to find a binary named `firefox ; curl evil`. The no-shell path is the safe default; you don't need to do anything to get it.
+
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
