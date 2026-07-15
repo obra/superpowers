@@ -2,6 +2,11 @@
 
 Use this template when dispatching a code reviewer subagent.
 
+On Claude Code, dispatch through the effort-matched worker agent, scaled to the
+review's difficulty (see subagent-driven-development's Effort Selection). SDD's
+final whole-branch review is a judgment task and stays at high effort regardless
+of the diff size. On Codex, set model_reasoning_effort.
+
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
 
 ```

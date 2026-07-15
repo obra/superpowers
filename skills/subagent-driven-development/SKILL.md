@@ -132,6 +132,59 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+## Effort Selection
+
+Reasoning effort is the second axis of the same capability match as Model
+Selection. Set it to the least effort the role needs, for the same reason you
+set the model: a high-effort session spends high-effort reasoning transcribing
+a plan that already contains the code, and a default-effort session runs the
+final review at default effort.
+
+The judgment guardrail from Model Selection applies unchanged:
+cheapen mechanics, never judgment. Low effort goes only to mechanical work
+(deterministic, cheaply verifiable, gated by the task review). High effort
+stays on every judgment point. Matching effort to task type this way does not
+trade quality for cost, because the task categories are the ones Model
+Selection already draws.
+
+**Effort by role:**
+- Transcription-grade implementation (the plan carries the complete code) and
+  single-file mechanical fixes: low.
+- Standard implementation from a prose spec, and integration work: medium.
+- Design or architecture implementation: high.
+- The final whole-branch review: high, on the most capable model. It is a
+  judgment task, so do not lower its effort.
+- Task reviewer: scale effort to the diff exactly as you scale the model. A
+  small mechanical diff does not need high effort. A subtle change
+  (concurrency, a contract change, shared mutable state) does. Reviewing is
+  judgment, so do not default reviewer effort to the floor.
+- Fix subagents: match the task's tier, one step up if the fix itself needs
+  judgment the original task did not.
+
+**Always dispatch through the effort-matched agent on Claude Code.** An omitted
+effort inherits the session's, which defeats this section, the same way an
+omitted model does for Model Selection.
+
+**Per-harness mechanism.** The harnesses expose reasoning depth at different
+points:
+- **Claude Code:** the Task tool overrides model per dispatch but not effort.
+  The only per-subagent effort control is agent-definition frontmatter, so
+  dispatch through the effort-matched worker agent shipped in this plugin's
+  `agents/` directory: `worker-low-effort`, `worker-medium-effort`,
+  `worker-high-effort`. A dispatch-time model override still takes precedence
+  over the agent's frontmatter, so pick the model per Model Selection and the
+  effort by the worker name. The two axes stay independent.
+- **Codex:** set `model_reasoning_effort` in the role's custom-agent config
+  alongside its model. Unset keys inherit from the session.
+- **Other harnesses:** effort is session-level only. A session pinned high
+  pays an effort tax on every micro-task, with no per-role control until the
+  harness adds one.
+
+Haiku has no effort parameter, so `worker-low-effort` dispatched on Haiku runs
+Haiku with no effort change. That is fine for the cheapest tier, since Haiku is
+already the reasoning floor. When you want low effort on a non-floor model,
+pair `worker-low-effort` with a model that honors effort (for example Sonnet).
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:

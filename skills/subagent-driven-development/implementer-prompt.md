@@ -3,10 +3,16 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Subagent (general-purpose):
+Subagent (Claude Code: the effort-matched worker per SKILL.md Effort
+Selection, one of worker-low-effort, worker-medium-effort, or
+worker-high-effort. Other harnesses, or if the roster is absent:
+general-purpose):
   description: "Implement Task N: [task name]"
   model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
          model silently inherits the session's most expensive one]
+  effort: [Claude Code carries effort via the worker agent above. Codex: set
+          model_reasoning_effort per SKILL.md Effort Selection. Other
+          harnesses run at session effort.]
   prompt: |
     You are implementing Task N: [task name]
 
