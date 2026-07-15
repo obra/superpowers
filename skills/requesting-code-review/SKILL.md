@@ -44,6 +44,7 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - Fix Important issues before proceeding
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
+- Release the reviewer unless you intend to send it further input — on some harnesses a finished agent holds its slot until closed (see the per-platform tool refs in `../using-superpowers/references/`)
 
 ## Example
 

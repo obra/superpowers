@@ -83,6 +83,7 @@ When agents return:
 - Verify fixes don't conflict
 - Run full test suite
 - Integrate all changes
+- Release each agent unless you intend to send it further input — on some harnesses a finished agent holds its slot until closed (see the per-platform tool refs in `../using-superpowers/references/`)
 
 ## Agent Prompt Structure
 
