@@ -112,13 +112,27 @@ Subagent (general-purpose):
 
     Your report should point at evidence: file:line references for every
     finding and for any check you would otherwise answer with a bare
-    "yes." A tight report that cites lines gives the controller everything
-    it needs.
+    "yes." A tight report that cites lines gives the fix subagent
+    everything it needs.
 
-    Your final message is the report itself: begin directly with the
-    spec-compliance verdict. Every line is a verdict, a finding with
-    file:line, or a check you ran — no preamble, no process narration,
-    no closing summary.
+    ## Report Format
+
+    Write your full report to [REVIEW_FILE] using the Output Format
+    below: verdicts, strengths, every finding with file:line, and any
+    check you ran outside the diff. Fix subagents read this file — it is
+    the only place your detail survives.
+
+    Then report back with ONLY (under 15 lines — the detail lives in the
+    review file):
+    - **Spec:** ✅ | ❌ — if ❌, one line per missing/extra/misunderstood
+      item (file:line + summary)
+    - **⚠️ Cannot verify from diff:** [items the controller must resolve
+      itself — always in this message, never only in the file]
+    - **Quality:** Approved | Needs fixes
+    - One line per Critical/Important finding: file:line + what's wrong,
+      with any plan-mandated finding marked (the human adjudicates those)
+    - Minor findings: count only
+    - The review file path
 
     ## Calibration
 
@@ -136,7 +150,7 @@ Subagent (general-purpose):
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
-    ## Output Format
+    ## Output Format (the review file)
 
     ### Spec Compliance
 
@@ -180,9 +194,14 @@ Subagent (general-purpose):
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`scripts/review-package BASE HEAD` prints the unique path it
   wrote; the package never enters the controller's context)
+- `[REVIEW_FILE]` — REQUIRED: the file the reviewer writes its full report
+  to; name it after the brief (brief `…/task-N-brief.md` → review
+  `…/task-N-review.md`). Re-reviews append to the same file.
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+**Reviewer returns:** full report in `[REVIEW_FILE]`; final message under
+15 lines — Spec verdict (✅/❌/⚠️), Quality verdict, Critical/Important
+findings one line each, Minor count, review file path
 
-A fix dispatch can address spec gaps and quality findings together;
-re-review after fixes covers both verdicts.
+A fix dispatch can address spec gaps and quality findings together — give
+it the review file path for the full findings; re-review after fixes
+covers both verdicts.

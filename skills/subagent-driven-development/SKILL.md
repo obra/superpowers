@@ -194,9 +194,10 @@ final whole-branch review. When you fill a reviewer template:
   later dispatches — a real session's dispatch hit 42k chars of which 99%
   was pasted history. A fresh subagent needs its task, the interfaces it
   touches, and the global constraints. Nothing else.
-- Dispatch fix subagents for Critical and Important findings. Record Minor
-  findings in the progress ledger as you go, and point the final
-  whole-branch review at that list so it can triage which must be fixed
+- Dispatch fix subagents for Critical and Important findings, passing the
+  review file path for the full detail. Record each task's Minor count and
+  review file path in the progress ledger as you go, and point the final
+  whole-branch review at those files so it can triage which must be fixed
   before merge. A roll-up nobody reads is a silent discard.
 - A finding labeled plan-mandated — or any finding that conflicts with
   what the plan's text requires — is the human's decision, like any plan
@@ -240,11 +241,18 @@ and is re-read on every later turn. Hand artifacts over as files:
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
-- Fix dispatches append their fix report (with test results) to the same
-  report file and return a short summary; re-reviews read the updated file.
+- **Reviewer inputs:** the task reviewer gets four paths — the same brief
+  file, the report file, the review package, and a review file to write
+  to (brief `…/task-N-brief.md` → review `…/task-N-review.md`) — plus
+  the global constraints that bind the task.
+- **Review file:** the reviewer writes its full report there and returns
+  only verdicts, ⚠️ items, one line per Critical/Important finding, a
+  Minor count, and the path. Don't read the review file — the final
+  message is your decision surface; the detail is for fix subagents.
+- Fix dispatches get the review file path for the full findings, append
+  their fix report (with test results) to the same report file, and
+  return a short summary; re-reviews read the updated report file and
+  append to the review file.
 
 ## Durable Progress
 
@@ -295,9 +303,9 @@ Implementer: "Got it. Implementing now..."
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Run review-package, dispatch task reviewer with the printed path]
-Task reviewer: Spec ✅ - all requirements met, nothing extra.
-  Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
+[Run review-package, dispatch task reviewer with the printed path + review file]
+Task reviewer: Spec ✅. Quality: Approved. Minor: 0.
+  Full report: task-1-review.md
 
 [Mark Task 1 complete]
 
@@ -312,13 +320,13 @@ Implementer:
   - Self-review: All good
   - Committed
 
-[Run review-package, dispatch task reviewer with the printed path]
+[Run review-package, dispatch task reviewer with the printed path + review file]
 Task reviewer: Spec ❌:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
-  Issues (Important): Magic number (100)
+  Important: Magic number (100). Minor: 0. Full report: task-2-review.md
 
-[Dispatch fix subagent with all findings]
+[Dispatch fix subagent with the review file path]
 Fixer: Removed --json flag, added progress reporting, extracted PROGRESS_INTERVAL constant
 
 [Task reviewer reviews again]
