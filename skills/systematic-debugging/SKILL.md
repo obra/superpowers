@@ -276,8 +276,8 @@ If you catch yourself thinking:
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
-| "Human partner said not to waste time searching" | For shared external failures, sanitized exact-signature upstream search prevents local thrashing. Distinguish speed pressure from a hard no-web/security constraint. |
-| "The human forbade web/network use, but the skill says search anyway" | No. Hard no-web, security, and privacy constraints override search. State upstream search is unverified and continue locally. |
+| "Your human partner said not to waste time searching" | For shared external failures, sanitized exact-signature upstream search prevents local thrashing. Distinguish speed pressure from a hard no-web/security constraint. |
+| "Your human partner forbade web/network use, but the skill says search anyway" | No. Hard no-web, security, and privacy constraints override search. State upstream search is unverified and continue locally. |
 | "I'll search the full error/log text" | Search sanitized public fragments. Strip secrets, private identifiers, hostnames, paths, and tenant/customer data first. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
 
