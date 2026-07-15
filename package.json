@@ -19,5 +19,10 @@
     "skills": [
       "./skills"
     ]
+  },
+  "omp": {
+    "extensions": [
+      "./.omp/extensions/superpowers.ts"
+    ]
   }
 }
