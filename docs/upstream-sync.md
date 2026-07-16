@@ -48,7 +48,8 @@ unvalidated skill/behavior changes straight to `main`.
 - **Versioning.** Since v5.1.2-rails, all manifests carry the fork version —
   `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
   `package.json`, `.cursor-plugin/plugin.json`, `.codex-plugin/plugin.json`,
-  and `gemini-extension.json` (the set listed in `.version-bump.json`). Pick
+  `.kimi-plugin/plugin.json`, and `gemini-extension.json` (the set listed in
+  `.version-bump.json`). Pick
   the next free `X.Y.Z-rails`, where major.minor tracks the upstream base —
   note the fork once shipped its own `5.1.0-rails` ahead of upstream, so a
   collision is possible (we used `5.1.1-rails` for the upstream v5.1.0 sync).
@@ -85,13 +86,23 @@ See `docs/testing.md` for mechanics.
 1. **Confirm Rails customizations survived the merge** (files present + wired):
    the list under "Conflict-resolution norms" above.
 
+1a. **Execute the SessionStart hook** — `bash -n` is not enough; the v6.1.1
+   sync shipped a hook that passed syntax check but died at runtime on an
+   unbound variable (a fork-side consumer of a block upstream had deleted —
+   the classic merge hazard here is fork lines surviving the deletion of
+   what they consume). All three platform modes must emit valid JSON:
+   ```bash
+   CLAUDE_PLUGIN_ROOT=. bash hooks/session-start | python3 -m json.tool >/dev/null
+   CURSOR_PLUGIN_ROOT=. bash hooks/session-start | python3 -m json.tool >/dev/null
+   COPILOT_CLI=1 bash hooks/session-start | python3 -m json.tool >/dev/null
+   ```
+
 2. **Run the skill test suite:**
    ```bash
    cd tests/claude-code
    ./run-skill-tests.sh                 # fast
    ./run-skill-tests.sh --integration   # full (10-30 min)
    ```
-   - `test-requesting-code-review.sh` — validates the code-review consolidation
    - `test-rails-reviewer.sh` — validates the Rails reviewer dispatch (our
      customization; the one with no upstream coverage)
    - `test-subagent-driven-development-integration.sh` — full SDD loop
@@ -113,7 +124,8 @@ a merge and not a behavioral defect in the merged code.
    compliance or code quality?"). The fork's Rails-review insertion plus a
    rationalization row mentioning "Code quality" make the model say "code
    quality" early in its prose, so the grep-based ordering check fails. The
-   skill content is correct: spec compliance → Rails conventions → code quality.
+   skill content is correct (since the v6.1.1 sync: task review covering spec
+   compliance + code quality, then Rails conventions).
 
 2. **`test-subagent-driven-development-integration.sh` Test 3 ("Task
    tracking").** Greps the transcript for a `TodoWrite` tool call. The model

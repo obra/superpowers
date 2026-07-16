@@ -1,8 +1,8 @@
 ---
-description: "Run three-stage code review: spec compliance, Rails conventions (if Rails), code quality"
+description: "Run full code review: task review (spec compliance + code quality), plus Rails conventions (if Rails)"
 ---
 
-# Three-Stage Code Review
+# Full Code Review
 
 Run the full review pipeline on recent changes.
 
@@ -18,14 +18,14 @@ git log --oneline -5  # Find BASE_SHA and HEAD_SHA
 git diff --name-only BASE_SHA HEAD_SHA  # Files changed
 ```
 
-## Step 2: Spec Compliance Review
+## Step 2: Task Review (spec compliance + code quality)
 
-Dispatch spec reviewer using prompt template from `skills/subagent-driven-development/spec-reviewer-prompt.md`:
+Generate the review package (`skills/subagent-driven-development/scripts/review-package BASE_SHA HEAD_SHA` — it prints the file path it wrote), then dispatch the task reviewer using the template at `skills/subagent-driven-development/task-reviewer-prompt.md`:
 
 ```
 Task tool (general-purpose):
-  description: "Review spec compliance"
-  prompt: [Use template, fill in requirements and changes]
+  description: "Task review (spec + quality)"
+  prompt: [Use template, fill in requirements and the review-package path]
 ```
 
 **If issues found:** Report and stop. User must fix before continuing.
@@ -46,28 +46,16 @@ Task tool (general-purpose):
 
 **If violations found:** Report and stop. User must fix before continuing.
 
-## Step 4: Code Quality Review
-
-Dispatch code quality reviewer using the template at `skills/requesting-code-review/code-reviewer.md`:
-
-```
-Task tool (general-purpose):
-  Fill template at skills/requesting-code-review/code-reviewer.md
-  FILES_CHANGED: [list]
-  BASE_SHA: [sha]
-  HEAD_SHA: [sha]
-```
-
-## Step 5: Run Local CI (if available)
+## Step 4: Run Local CI (if available)
 
 If `bin/ci` exists, run it. Can run in parallel with review agents. If it fails, stop and report.
 
-## Step 6: Report
+## Step 5: Report
 
 Summarize all review results:
 - ✅ Spec compliance: [passed/issues]
-- ✅ Rails conventions: [passed/skipped/issues]
 - ✅ Code quality: [passed/issues]
+- ✅ Rails conventions: [passed/skipped/issues]
 - ✅ Local CI: [passed/skipped/failed]
 
 If all passed: "Ready for merge/PR"

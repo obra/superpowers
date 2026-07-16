@@ -1,0 +1,20 @@
+{
+  "name": "superpowers-dev",
+  "interface": {
+    "displayName": "Superpowers Dev"
+  },
+  "plugins": [
+    {
+      "name": "superpowers-rails",
+      "source": {
+        "source": "url",
+        "url": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "superpowers-rails",
-  "version": "5.1.2-rails",
+  "version": "6.1.1-rails",
   "description": "Rails-focused fork of Superpowers: an agentic skills framework & software development methodology with planning, TDD, debugging, collaboration workflows, and Rails conventions.",
   "author": {
     "name": "Marcin Ostrowski",
@@ -22,12 +22,13 @@
     "rails"
   ],
   "skills": "./skills/",
+  "hooks": {},
   "interface": {
     "displayName": "Superpowers Rails",
     "shortDescription": "Planning, TDD, debugging, and delivery workflows for coding agents, with Rails conventions",
     "longDescription": "Use Superpowers Rails to guide agent work through brainstorming, implementation planning, test-driven development, systematic debugging, parallel execution, code review, finish-the-branch workflows, and Rails convention enforcement. A Rails-focused fork of Jesse Vincent's Superpowers.",
     "developerName": "Marcin Ostrowski",
-    "category": "Coding",
+    "category": "Developer Tools",
     "capabilities": [
       "Interactive",
       "Read",

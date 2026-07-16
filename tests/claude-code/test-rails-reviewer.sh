@@ -166,7 +166,9 @@ echo ""
 echo "Analyzing reviewer output..."
 echo ""
 
-# Locate the session transcript (same approach as test-requesting-code-review.sh).
+# Locate the session transcript (same approach as upstream's former
+# test-requesting-code-review.sh, since lifted into the evals/ drill
+# code-review-catches-planted-bugs).
 TEST_PROJECT_REAL=$(cd "$TEST_PROJECT" && pwd -P)
 SESSION_DIR="$HOME/.claude/projects/$(echo "$TEST_PROJECT_REAL" | sed 's|[^a-zA-Z0-9]|-|g')"
 SESSION_FILE=$(ls -t "$SESSION_DIR"/*.jsonl 2>/dev/null | head -1 || true)
@@ -179,7 +181,8 @@ echo ""
 # Test 1: A subagent was actually dispatched (the whole point of the refactor —
 # the review runs in a general-purpose subagent, not inline).
 #
-# Note: unlike upstream's test-requesting-code-review.sh we do NOT assert a
+# Note: unlike upstream's former test-requesting-code-review.sh (now an
+# evals/ drill) we do NOT assert a
 # skill invocation here — the rails reviewer is dispatched from a prompt
 # template (rails-reviewer-prompt.md), not a Skill, so there is no
 # "skill":"..." marker to match. "name":"Agent" is the available dispatch
@@ -207,7 +210,7 @@ echo ""
 # headless `claude -p` the subagent's own transcript is not surfaced — there
 # are no sidechain entries or Skill tool-uses in the main session JSONL — so
 # subagent-internal skill loading is not observable. Upstream's
-# test-requesting-code-review.sh makes the same scoping choice.)
+# former test-requesting-code-review.sh made the same scoping choice.)
 echo "Test 2: reviewer template content (skill-loading directive) reached the subagent..."
 if [ -z "$SESSION_FILE" ] || [ ! -f "$SESSION_FILE" ]; then
     echo "  [FAIL] Could not locate session transcript in $SESSION_DIR"
@@ -231,8 +234,8 @@ echo ""
 # was printed", not "the violation was caught". Each per-violation test below
 # anchors to language a reviewer uses when FLAGGING the issue (a negative /
 # analysis phrasing), and Test 6 adds an ungameable verdict gate that code-echo
-# cannot satisfy. (Mirrors the negative-verdict assertion in
-# test-requesting-code-review.sh:182.)
+# cannot satisfy. (Mirrors the negative-verdict assertion upstream's former
+# test-requesting-code-review.sh carried at line 182, now in the evals/ drill.)
 
 # Test 3: Missing authorize call FLAGGED — require negative/finding context near
 # "authoriz" so a correct mention of #index's authorize doesn't pass.

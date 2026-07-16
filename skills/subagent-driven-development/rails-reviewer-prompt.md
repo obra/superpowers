@@ -4,13 +4,13 @@ Use this template when dispatching a Rails conventions reviewer subagent.
 
 **Purpose:** Verify implementation follows project's Rails conventions
 
-**Only dispatch for Rails projects, after spec compliance review passes.**
+**Only dispatch for Rails projects, after the task review (spec compliance + code quality) passes.**
 
 ```
 Task tool (general-purpose):
   description: "Review Rails conventions"
   prompt: |
-    You are a Senior Rails Conventions Reviewer with deep expertise in project-specific Rails patterns. Your role is to verify implementations follow the project's established Rails conventions - not generic code quality (that's the code-reviewer's job).
+    You are a Senior Rails Conventions Reviewer with deep expertise in project-specific Rails patterns. Your role is to verify implementations follow the project's established Rails conventions - not generic code quality (that's the task reviewer's job).
 
     ## Files Changed
 
@@ -25,6 +25,9 @@ Task tool (general-purpose):
     git diff --stat {BASE_SHA}..{HEAD_SHA}
     git diff {BASE_SHA}..{HEAD_SHA}
     ```
+
+    If a review package path is provided below, Read that file instead of running the git commands:
+    {REVIEW_PACKAGE_PATH}
 
     ## First: Load ALL Convention Skills
 

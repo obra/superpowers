@@ -1,6 +1,6 @@
 # Fork Changes vs Upstream
 
-This fork tracks [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. **Current upstream base: v5.1.0.**
+This fork tracks [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. **Current upstream base: v6.1.1.**
 
 This is the maintained delta — what this fork adds or changes relative to upstream. It is updated on every upstream sync (see [upstream-sync.md](upstream-sync.md)) and every fork release. Derived from `git diff --stat upstream/main...HEAD`.
 
@@ -12,19 +12,24 @@ This is the maintained delta — what this fork adds or changes relative to upst
 
 ## Rails-aware code review
 
-- **`skills/subagent-driven-development/rails-reviewer-prompt.md`**: a dedicated Rails reviewer dispatched as a third review stage. The pipeline is spec compliance → Rails conventions (if Rails) → code quality, replacing upstream's two-stage review. `skills/subagent-driven-development/SKILL.md` wires the stage into the process flowchart; references to "two-stage review" in `README.md` and `skills/writing-skills/SKILL.md` are updated to match.
-- **`commands/codereview.md`**: a `/codereview` slash command that runs the full three-stage pipeline on demand, outside the SDD loop.
+- **`skills/subagent-driven-development/rails-reviewer-prompt.md`**: a dedicated Rails reviewer dispatched as an extra per-task review stage. The pipeline is upstream's task review (spec compliance + code quality) → Rails conventions (if Rails), before the broad whole-branch review at the end. `skills/subagent-driven-development/SKILL.md` wires the stage into the process flowchart; wording in `README.md` and `skills/writing-skills/SKILL.md` is updated to match.
+- **`commands/codereview.md`**: a `/codereview` slash command that runs the full pipeline (task review + Rails conventions + local CI) on demand, outside the SDD loop.
 
 ## Planning philosophy: vertical slices, intent-level steps
 
 - **`skills/writing-plans/SKILL.md`**: rewritten around vertical slices (37signals/Basecamp style). Every slice delivers a user-visible capability end-to-end; horizontal layer-by-layer plans are treated as a red flag. Steps are intent-level (WHAT to build, not full code); exact code is reserved for fragile operations like migrations. Includes a mandatory Rails section (load convention skills while planning) and a scope check.
-- **`skills/subagent-driven-development/SKILL.md` + `implementer-prompt.md`**: model-selection guidance adjusted for intent-level plans — cheap models only for tasks with exact code in the plan or trivial gem calls; intent-level tasks need at least a standard model. The implementer runs `bin/ci` before handoff.
+- **`skills/subagent-driven-development/SKILL.md` + `implementer-prompt.md`**: model-selection complexity signals adjusted for intent-level plans — cheap models only for tasks with exact code in the plan or trivial gem calls; intent-level tasks need at least a standard model. The implementer runs `bin/ci` before handoff. Upstream's v6.x additions to writing-plans (File Structure mapping, Task Right-Sizing, Bite-Sized Task Granularity with exact-code steps) are not adopted — they encode upstream's exact-code planning philosophy, which the vertical-slice rewrite replaces.
 
 ## Fork tests
 
 - **`tests/claude-code/test-rails-reviewer.sh`**: behavioral smoke test asserting the Rails reviewer stage is dispatched in a Rails project.
 - **`tests/claude-code/test-writing-plans-vertical-slices.sh`**: committed eval asserting writing-plans produces vertical slices, not horizontal layers.
 - Both registered in `tests/claude-code/run-skill-tests.sh` (`--integration`).
+
+## Fork identity: new-harness manifests (v6.1.1-rails)
+
+- **`.kimi-plugin/plugin.json`** (new upstream in v6.x) ships rebranded as `superpowers-rails`, consistent with the other harness manifests.
+- README install sections for upstream's new harnesses (Antigravity, Kimi Code, Pi) point at this repo where a git-based install exists, and note where a marketplace serves upstream Superpowers instead.
 
 ## Fork identity and distribution (v5.1.2-rails)
 

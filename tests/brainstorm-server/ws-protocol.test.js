@@ -329,6 +329,21 @@ function runTests() {
     assert.strictEqual(result.payload.length, 65536);
   });
 
+  test('rejects oversized 64-bit frames before payload allocation', () => {
+    const mask = Buffer.from([0x00, 0x00, 0x00, 0x00]);
+    const header = Buffer.alloc(14);
+    header[0] = 0x81; // FIN + TEXT
+    header[1] = 0x80 | 127; // masked, 64-bit length
+    header.writeBigUInt64BE(BigInt(ws.MAX_FRAME_PAYLOAD_BYTES) + 1n, 2);
+    mask.copy(header, 10);
+
+    assert.throws(
+      () => ws.decodeFrame(header),
+      /exceeds maximum allowed size/i,
+      'oversized advertised payload must be rejected from header alone'
+    );
+  });
+
   // ========== Close Frame with Status Code ==========
   console.log('\n--- Close Frame Details ---');
 

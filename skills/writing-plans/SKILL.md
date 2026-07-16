@@ -99,6 +99,13 @@ If the spec covers multiple independent subsystems, it should have been broken i
 
 **Spec:** [path to the spec this plan implements]
 
+## Global Constraints
+
+[The spec's project-wide requirements — version floors, dependency limits,
+naming and copy rules, platform requirements — one line each, with exact
+values copied verbatim from the spec. Every task's requirements implicitly
+include this section.]
+
 ---
 ```
 
