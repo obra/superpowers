@@ -37,7 +37,8 @@ TEST_PROJECT=$(create_test_project)
 echo "Test project: $TEST_PROJECT"
 
 # Trap to cleanup
-trap "cleanup_test_project $TEST_PROJECT" EXIT
+_cleanup() { cleanup_test_project "$TEST_PROJECT"; }
+trap _cleanup EXIT
 
 # Set up minimal Node.js project
 cd "$TEST_PROJECT"
@@ -165,9 +166,10 @@ PLUGIN_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
 cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+    exit_code=$?
     echo ""
     echo "================================================================================"
-    echo "EXECUTION FAILED (exit code: $?)"
+    echo "EXECUTION FAILED (exit code: $exit_code)"
     exit 1
 }
 echo "================================================================================"
