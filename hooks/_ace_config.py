@@ -306,6 +306,36 @@ def append_recall_log(cwd: str, session_id: str, entry: dict[str, Any]) -> bool:
         return False
 
 
+# ── Trigger Logging Helper ─────────────────────────────────────────────
+# Lightweight "the hook fired" log under the global ~/.ace tree so we can
+# observe recall hook reach even when a project has no .ace directory yet.
+
+TRIGGER_LOG_DIR = "log/user-prompt-recall"
+
+
+def append_trigger_log(session_id: str, entry: dict[str, Any]) -> bool:
+    """Append a JSONL record to the global trigger log.
+
+    Creates ``~/.ace/log/user-prompt-recall/<session_id>.jsonl``.
+    File locking keeps concurrent hooks from interleaving lines.
+    """
+    if ACE_DIR is None:
+        return False
+    path = ACE_DIR / TRIGGER_LOG_DIR / f"{_safe_session_id(session_id)}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        line = json.dumps(entry, ensure_ascii=False, default=str)
+        with open(path, "a", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.write(line + "\n")
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+        return True
+    except (OSError, TypeError, ValueError):
+        return False
+
+
 def ensure_ace_importable() -> bool:
     """Register project venv site-packages so hooks can ``import ace``.
 

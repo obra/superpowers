@@ -9,7 +9,7 @@
     {
       "name": "ace",
       "description": "ACE three paradigms (Run Workflow, Device Onboarding, Development) + superpowers skills",
-      "version": "0.3.2",
+      "version": "0.3.4",
       "source": "./",
       "author": {
         "name": "Liu Peng",
