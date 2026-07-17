@@ -6,6 +6,7 @@ current prompt and inject them via ``additionalContext`` (mem0-style retrieve).
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import sys
@@ -42,6 +43,7 @@ if ACE_ROOT:
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _ace_config import (  # noqa: E402
+    append_recall_log,
     ensure_ace_importable,
     load_recall_state,
     log_hook_error,
@@ -140,6 +142,7 @@ def main() -> None:
         sys.exit(0)
 
     cwd = (data.get("cwd") or "").strip()
+    session_id = (data.get("session_id") or "").strip()
     state = _load_recall_state(cwd)
     exclude = _seen_slugs(state)
 
@@ -163,6 +166,26 @@ def main() -> None:
 
     if not block:
         sys.exit(0)
+
+    # Best-effort diagnostic log: captured block + returned slugs for this turn.
+    try:
+        append_recall_log(
+            cwd,
+            session_id,
+            {
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "session_id": session_id,
+                "prompt": prompt,
+                "cwd": cwd,
+                "top_k": _turn_top_k(),
+                "excluded_count": len(exclude),
+                "slugs": new_slugs or [],
+                "block": block,
+                "block_length": len(block) if block else 0,
+            },
+        )
+    except Exception as ex:  # noqa: BLE001 — logging must never block the session
+        log_hook_error("user-prompt-recall/log", ex)
 
     if new_slugs:
         turn_slugs = list(state.get("turn_slugs") or [])

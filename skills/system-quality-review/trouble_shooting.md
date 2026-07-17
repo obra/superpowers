@@ -201,6 +201,68 @@ lark-cli ... --json @./batch.json
 lark-cli update
 ```
 
+## 11. lark-cli 1.0.68+ 文档/表格/消息 API 已切到 v2
+
+### 现象
+- `lark-cli docs +create --markdown @./report.md --wiki-node ...` 报错：`docs +create is v2-only; the old v1 interface has been shut down; legacy v1 flag(s) --markdown, --wiki-node are no longer supported`
+- `lark-cli base +record-batch-create --json @...` 仍可用，但 `lark-cli im +messages-send --content @...` 不再支持 `@file`
+
+### 正确姿势
+1. **docs +create v2**（Markdown 导入场景）：
+   ```bash
+   lark-cli docs +create --doc-format markdown --title "标题" \
+     --parent-token <wiki_node_token> --content @./report.md
+   ```
+   - `--wiki-node` → `--parent-token`
+   - `--markdown` → `--doc-format markdown` + `--content @file`
+   - `@file` 只接受 cwd 相对路径，需先把文件放到当前目录
+
+2. **im +messages-send**：`--content` 不支持 `@file`，需用 shell 展开：
+   ```bash
+   lark-cli im +messages-send --as bot --chat-id <chat_id> \
+     --msg-type interactive --content "$(cat card.json)"
+   ```
+
+3. **创建前必读 skill 参考**（AI agent 必须）：
+   ```bash
+   lark-cli skills read lark-doc references/lark-doc-create.md
+   lark-cli skills read lark-doc references/lark-doc-md.md
+   ```
+
+---
+
+## 12. Hyper-FIB Docker 部署：输出目录必须落在 `h5-result` 共享卷
+
+### 现象
+- 用 `deploy/production/deploy_docker_stack.sh` 启动 hyper-fib 后，CLI 离线运行 `AcquireImageNode` 等会报：
+  `Image acquisition failed: Parent directory does not exist: /tmp/.../AcquireImageNode(1)`。
+- 报错时目标目录在 api/worker 容器里确实存在，但节点目录下只有 `.h5` 和 `.png`，没有 `.stl`。
+
+### 根因
+- `SimulatorMicroscope._write_stl()` 调用 `pyvista` 保存 STL，而 simulator 服务是**独立容器**（`fibsem-simulator`）。
+- 默认 compose 只把 `/app/h5_result` 作为 named volume共享给 api / worker / simulator / frontend；`/tmp` 在每个容器里是独立的 overlay 文件系统，simulator 容器看不到 api 容器的 `/tmp/xxx`。
+- 因此 `.h5` 和 `.png`（在 api 容器写入）能成功，`.stl`（在 simulator 容器写入）因父目录不存在而失败。
+
+### 正确姿势
+- **离线 CLI 测试**时，把 `--output` 指向共享卷：
+  ```bash
+  docker compose -p <project> -f deploy/production/docker-compose-cpu.yml \
+    --env-file deploy/docker.env --env-file deploy/production/app.env \
+    exec api bash -c 'cd /app/src/flow && PYTHONPATH=/app/src:/app/ace:/app/hyper-data/client \
+      /app/src/flow/.venv/bin/python -m flow.cli run node AcquireImageNode \
+      --manufacturer Simulator --output /app/h5_result/<test-run-dir>'
+  ```
+- 不要直接把宿主机 `/tmp` 或任意路径当作输出目录；必须保证 api/worker/simulator 三端都能访问同一路径。
+- 生产 compose 本身已经把 `ace-run` 卷共享给 api/worker，前端通过 nginx 直出；`h5-result` 卷同理共享给 simulator。测试链路应复用这些已挂载路径。
+
+### 反例
+```bash
+# ❌ /tmp 不在 simulator 容器
+--output /tmp/hyperfib-run
+# ✅ 用共享 named volume
+--output /app/h5_result/hyperfib-run
+```
+
 ---
 
 ## 快速检查清单（每次执行 Phase 3-5 前）

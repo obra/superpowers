@@ -4,6 +4,7 @@ Single source of truth for paths, patterns, thresholds, and helpers.
 All three hooks (session-start, post-tool-trace, stop-reflect) import from here.
 """
 
+import datetime
 import fcntl
 import hashlib
 import json
@@ -253,6 +254,56 @@ def save_recall_state(cwd: str, state: dict[str, Any]) -> bool:
         "turn_slugs": list(state.get("turn_slugs") or []),
         "pending_applications": list(state.get("pending_applications") or []),
     })
+
+
+RECALL_LOG_DIR = "logs/user-prompt-recall"
+
+
+def _safe_session_id(session_id: str) -> str:
+    """Sanitize a session id for use in a filename.
+
+    Falls back to ``unknown`` when empty. Replaces path separators and dots to
+    keep the log file safely inside ``.ace/logs/user-prompt-recall/``.
+    """
+    sid = (session_id or "").strip()
+    if not sid:
+        return "unknown"
+    for ch in ("/", "\\", ":", "\x00"):
+        sid = sid.replace(ch, "_")
+    # Avoid hidden / parent-dir names
+    sid = sid.lstrip(".")
+    return sid or "unknown"
+
+
+def _recall_log_path(cwd: str, session_id: str) -> Path | None:
+    """Return the session-scoped recall log path, or None when cwd is empty."""
+    if not cwd:
+        return None
+    return Path(cwd) / ".ace" / RECALL_LOG_DIR / f"{_safe_session_id(session_id)}.jsonl"
+
+
+def append_recall_log(cwd: str, session_id: str, entry: dict[str, Any]) -> bool:
+    """Append a JSONL record for a recall event.
+
+    Creates ``.ace/logs/user-prompt-recall/<session_id>.jsonl`` under the
+    project directory. File locking keeps concurrent hooks from interleaving
+    lines.
+    """
+    path = _recall_log_path(cwd, session_id)
+    if path is None:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        line = json.dumps(entry, ensure_ascii=False, default=str)
+        with open(path, "a", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.write(line + "\n")
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+        return True
+    except (OSError, TypeError, ValueError):
+        return False
 
 
 def ensure_ace_importable() -> bool:
