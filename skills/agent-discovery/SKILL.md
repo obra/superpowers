@@ -19,7 +19,7 @@ user-invocable: true
 
 | 服务 | 类型 | 名称 | id（open_id / bot_id） |
 |------|------|------|------------------------|
-| ace | bot | hyper-instrument | `ou_2a0b3e6edcbca832452757b5bd043ed9` |
+| ace | 人 | 刘鹏 | `ou_aa1da0fb8d5b42eb69389ba4eca58303` |
 | hyper-data | 人 | 杜卓然 | `ou_da4b3a6a463472241d91e56be0011822` |
 | hyper-fib | 人 | 苗宏图 | `ou_f4b53eba875ad32fbe8e016c94de2180` |
 | ace-benchmark | 人 | 杨天宇 | `ou_fc78ccb4b78c1cfe6680bb9e042d2a18` |

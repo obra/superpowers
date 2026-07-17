@@ -6,6 +6,7 @@ current prompt and inject them via ``additionalContext`` (mem0-style retrieve).
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import sys
@@ -15,6 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _ace_config import (  # noqa: E402
     ACE_ROOT,
     PROJECT_DIR,
+    append_recall_log,
+    append_trigger_log,
     ensure_ace_importable,
     load_recall_state,
     log_hook_error,
@@ -135,11 +138,29 @@ def main() -> None:
         sys.exit(0)
 
     prompt = (data.get("prompt") or "").strip()
+    cwd = (data.get("cwd") or "").strip()
+    session_id = (data.get("session_id") or "").strip()
+
+    # Best-effort trigger log: record that the hook fired for this turn.
+    try:
+        append_trigger_log(
+            session_id,
+            {
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "event": "trigger",
+                "session_id": session_id,
+                "prompt_length": len(prompt),
+                "cwd": cwd,
+                "recall_enabled": _truthy("ACE_TURN_RECALL", default=True),
+            },
+        )
+    except Exception as ex:  # noqa: BLE001 — logging must never block the session
+        log_hook_error("user-prompt-recall/trigger-log", ex)
+
     # 超短输入（如 "ok"、"继续"）与斜杠命令没有语义召回价值
     if len(prompt) < 6 or prompt.startswith("/"):
         sys.exit(0)
 
-    cwd = (data.get("cwd") or "").strip()
     state = _load_recall_state(cwd)
     exclude = _seen_slugs(state)
 
@@ -163,6 +184,26 @@ def main() -> None:
 
     if not block:
         sys.exit(0)
+
+    # Best-effort diagnostic log: captured block + returned slugs for this turn.
+    try:
+        append_recall_log(
+            cwd,
+            session_id,
+            {
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "session_id": session_id,
+                "prompt": prompt,
+                "cwd": cwd,
+                "top_k": _turn_top_k(),
+                "excluded_count": len(exclude),
+                "slugs": new_slugs or [],
+                "block": block,
+                "block_length": len(block) if block else 0,
+            },
+        )
+    except Exception as ex:  # noqa: BLE001 — logging must never block the session
+        log_hook_error("user-prompt-recall/log", ex)
 
     if new_slugs:
         turn_slugs = list(state.get("turn_slugs") or [])

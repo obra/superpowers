@@ -2,7 +2,7 @@
   "name": "ace",
   "displayName": "ACE",
   "description": "ACE three paradigms + superpowers skills for scientific instrument automation",
-  "version": "0.3.2",
+  "version": "0.3.4",
   "author": {
     "name": "Liu Peng",
     "email": "liupeng@dp.tech"
