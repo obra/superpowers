@@ -308,15 +308,17 @@ def append_recall_log(cwd: str, session_id: str, entry: dict[str, Any]) -> bool:
 
 # ── Trigger Logging Helper ─────────────────────────────────────────────
 # Lightweight "the hook fired" log under the global ~/.ace tree so we can
-# observe recall hook reach even when a project has no .ace directory yet.
+# observe recall hook reach regardless of whether the current project has a
+# .ace directory. Uses ``logs/`` (not ``log/``) for consistency with the
+# project-level recall block log directory.
 
-TRIGGER_LOG_DIR = "log/user-prompt-recall"
+TRIGGER_LOG_DIR = "logs/user-prompt-recall"
 
 
 def append_trigger_log(session_id: str, entry: dict[str, Any]) -> bool:
     """Append a JSONL record to the global trigger log.
 
-    Creates ``~/.ace/log/user-prompt-recall/<session_id>.jsonl``.
+    Creates ``~/.ace/logs/user-prompt-recall/<session_id>.jsonl``.
     File locking keeps concurrent hooks from interleaving lines.
     """
     if ACE_DIR is None:
