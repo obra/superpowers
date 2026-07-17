@@ -12,37 +12,10 @@ import os
 import sys
 from pathlib import Path
 
-
-def _reexec_into_ace_venv() -> None:
-    """Re-exec with the project venv python before touching stdin.
-
-    Robustness for invocation styles that use a non-venv interpreter: the ace
-    import chain pulls C extensions (tiktoken 等) built for the venv python.
-    No-op when already running the venv interpreter or when no venv exists.
-    """
-    if os.environ.get("_ACE_HOOK_REEXEC"):
-        return
-    root = os.environ.get("CLAUDE_PROJECT_DIR", "")
-    if not root:
-        return
-    venv_py = Path(root) / ".venv" / "bin" / "python3"
-    if not venv_py.is_file():
-        return
-    os.environ["_ACE_HOOK_REEXEC"] = "1"
-    try:
-        os.execv(str(venv_py), [str(venv_py), os.path.abspath(__file__), *sys.argv[1:]])
-    except OSError:
-        pass  # fall through: best-effort with the current interpreter
-
-
-_reexec_into_ace_venv()
-
-ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
-if ACE_ROOT:
-    sys.path.insert(0, ACE_ROOT)
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _ace_config import (  # noqa: E402
+    ACE_ROOT,
+    PROJECT_DIR,
     append_recall_log,
     append_trigger_log,
     ensure_ace_importable,
@@ -50,6 +23,33 @@ from _ace_config import (  # noqa: E402
     log_hook_error,
     save_recall_state,
 )
+
+
+def _reexec_into_ace_venv() -> None:
+    """Re-exec with the framework venv python before touching stdin.
+
+    Prefer env/config ``ACE_ROOT``, then a Claude project that is itself an
+    ACE checkout. No-op when already re-exec'd or when no venv exists.
+    """
+    if os.environ.get("_ACE_HOOK_REEXEC"):
+        return
+    for root in (ACE_ROOT, PROJECT_DIR):
+        if not root:
+            continue
+        venv_py = Path(root) / ".venv" / "bin" / "python3"
+        if not venv_py.is_file():
+            continue
+        os.environ["_ACE_HOOK_REEXEC"] = "1"
+        try:
+            os.execv(str(venv_py), [str(venv_py), os.path.abspath(__file__), *sys.argv[1:]])
+        except OSError:
+            return  # fall through: best-effort with the current interpreter
+
+
+_reexec_into_ace_venv()
+
+if ACE_ROOT:
+    sys.path.insert(0, ACE_ROOT)
 
 RECALL_STATE_NAME = "recall_state.json"
 WORK_DIR_STATE_NAME = ".ace_recall_state.json"

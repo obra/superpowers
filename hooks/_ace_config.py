@@ -23,24 +23,73 @@ def _parse_bool(value: Any, *, default: bool) -> bool:
 
 
 # ── Path Resolution ───────────────────────────────────────────────────
+#
+# Two distinct roots (do not conflate):
+# - ACE_ROOT / framework root: where the ACE install + .venv live
+# - PROJECT_DIR: Claude Code session project (CLAUDE_PROJECT_DIR)
+# User state lives under ACE_USER_DIR or ~/.ace once either root (or an
+# explicit ACE_USER_DIR) is present.
 
-ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
+
+def _default_user_ace() -> Path:
+    raw = os.environ.get("ACE_USER_DIR", "").strip()
+    return Path(os.path.expanduser(raw)) if raw else Path.home() / ".ace"
+
+
+def _looks_like_ace_checkout(path: str) -> bool:
+    if not path:
+        return False
+    root = Path(path)
+    return (root / ".venv").is_dir() and (root / "src").is_dir()
+
+
+def _read_ace_root_from_user_config() -> str:
+    """Read ``ace_root`` from the user-level config before ACE_DIR is wired."""
+    cfg_path = _default_user_ace() / "config.json"
+    if not cfg_path.is_file():
+        return ""
+    try:
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    raw = data.get("ace_root") or data.get("ACE_ROOT") or ""
+    return str(raw).strip() if raw else ""
+
+
+def _resolve_framework_root(project_dir: str) -> str:
+    env_root = os.environ.get("ACE_ROOT", "").strip()
+    if env_root:
+        return env_root
+    from_config = _read_ace_root_from_user_config()
+    if from_config:
+        return from_config
+    if _looks_like_ace_checkout(project_dir):
+        return project_dir
+    return ""
+
+
+PROJECT_DIR: str = os.environ.get("CLAUDE_PROJECT_DIR", "").strip()
+ACE_ROOT: str = _resolve_framework_root(PROJECT_DIR)
 
 
 def _ace_home() -> Path | None:
     """Return the ACE user directory used by core path helpers.
 
-    Hooks are no-ops when there is no project context, but when they do run
-    their trace paths must match ``ace.core.config.paths.ace_traces_dir`` so
-    the evolution engine can consume the same records.
+    Enabled when a framework root, Claude project, or explicit ACE_USER_DIR
+    is present. Trace paths must match ``ace.core.config.paths.ace_traces_dir``.
     """
-    if not ACE_ROOT:
+    if not (
+        ACE_ROOT
+        or PROJECT_DIR
+        or os.environ.get("ACE_USER_DIR", "").strip()
+    ):
         return None
-    raw = os.environ.get("ACE_USER_DIR", "").strip()
-    return Path(os.path.expanduser(raw)) if raw else Path.home() / ".ace"
+    return _default_user_ace()
 
 
-# All paths are None when ACE_ROOT is unset (hooks become no-ops)
+# All paths are None when there is no framework/project/user context
 ACE_DIR: Path | None = _ace_home()
 TRACE_DIR: Path | None = ACE_DIR / "store" / "traces" if ACE_DIR else None
 INSIGHT_DIR: Path | None = ACE_DIR / "insights" if ACE_DIR else None
@@ -51,14 +100,15 @@ CONFIG_FILE: Path | None = ACE_DIR / "config.json" if ACE_DIR else None
 
 
 def project_source_id() -> str:
-    """Return a stable gbrain source id for the current project.
+    """Return a stable gbrain source id for the current Claude project.
 
-    Derived from CLAUDE_PROJECT_DIR so each local project directory gets its
-    own experience store. Falls back to ``default`` when no project context.
+    Derived from CLAUDE_PROJECT_DIR / PROJECT_DIR only — never from the
+    framework ACE_ROOT — so experience buckets follow the user's working
+    project. Falls back to ``default`` when no project context.
     """
-    if not ACE_ROOT:
+    if not PROJECT_DIR:
         return "default"
-    root = Path(ACE_ROOT).resolve()
+    root = Path(PROJECT_DIR).resolve()
     # Use the last directory name plus a short hash of the full path so
     # different clones/checkouts of the same repo name do not collide.
     name = root.name or "project"
@@ -165,15 +215,20 @@ CONVERSATION_EXTRACT_CURSOR_FILE: Path | None = (
 
 def check_ace_health() -> str | None:
     """Check if ACE is properly configured. Returns warning message or None."""
-    if not ACE_ROOT:
+    if ACE_DIR is None:
         return (
-            "[ACE] WARNING: CLAUDE_PROJECT_DIR not set — tracing disabled. "
-            "Run /ace:init to set up."
+            "[ACE] WARNING: no ACE_ROOT / CLAUDE_PROJECT_DIR / ACE_USER_DIR — "
+            "tracing disabled. Set ACE_ROOT or open a project session."
         )
-    if not ACE_DIR or not ACE_DIR.exists():
+    if not ACE_DIR.exists():
         return (
             f"[ACE] WARNING: {ACE_DIR} not found — tracing disabled. "
             "Run /ace:init to initialize."
+        )
+    if not ACE_ROOT:
+        return (
+            "[ACE] WARNING: ACE_ROOT not set — hooks may fail to import ace. "
+            "Run make install-global-config or export ACE_ROOT."
         )
     return None
 
@@ -339,29 +394,37 @@ def append_trigger_log(session_id: str, entry: dict[str, Any]) -> bool:
 
 
 def ensure_ace_importable() -> bool:
-    """Register project venv site-packages so hooks can ``import ace``.
+    """Register framework venv site-packages so hooks can ``import ace``.
 
-    ``site.addsitedir`` (not a bare ``sys.path`` insert) is required: ace is
-    an editable install whose ``__editable__*.pth`` finder only activates when
-    the ``.pth`` file is processed.
+    Uses the framework ``ACE_ROOT`` (env / config / ace-checkout fallback),
+    not ``CLAUDE_PROJECT_DIR``. ``site.addsitedir`` (not a bare ``sys.path``
+    insert) is required: ace is an editable install whose
+    ``__editable__*.pth`` finder only activates when the ``.pth`` is processed.
+
+    If the framework venv is missing but ``ace`` is already importable
+    (hooks.json often launches ``$ACE_ROOT/.venv/bin/python``), return True.
     """
-    if not ACE_ROOT:
+    if ACE_ROOT:
+        lib = Path(ACE_ROOT) / ".venv" / "lib"
+        if lib.is_dir():
+            import site
+
+            inserted = False
+            for sp_dir in sorted(lib.glob("python*/site-packages")):
+                site.addsitedir(str(sp_dir))
+                inserted = True
+                break
+            src = str(Path(ACE_ROOT) / "src")
+            if src not in sys.path:
+                sys.path.insert(0, src)
+            if inserted:
+                return True
+
+    try:
+        import ace  # noqa: F401
+        return True
+    except ImportError:
         return False
-    lib = Path(ACE_ROOT) / ".venv" / "lib"
-    if not lib.is_dir():
-        return False
-    import site
-
-    inserted = False
-    for sp_dir in sorted(lib.glob("python*/site-packages")):
-        site.addsitedir(str(sp_dir))
-        inserted = True
-        break
-    # Also expose the project source tree for editable installs
-    src = str(Path(ACE_ROOT) / "src")
-    if src not in sys.path:
-        sys.path.insert(0, src)
-    return inserted
 
 
-__all__ = ["project_source_id"]
+__all__ = ["project_source_id", "PROJECT_DIR", "ACE_ROOT"]

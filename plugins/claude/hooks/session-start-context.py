@@ -12,7 +12,6 @@ from datetime import datetime, timedelta, timezone
 # Import shared config (relative import via sys.path)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _ace_config import (
-    ACE_ROOT,
     INSIGHT_DIR,
     TRACE_DIR,
     check_ace_health,

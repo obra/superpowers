@@ -15,14 +15,12 @@ import re
 import sys
 from pathlib import Path
 
-# Add project root to path for imports
-ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
+# Import shared config (framework ACE_ROOT, not CLAUDE_PROJECT_DIR)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _ace_config import ACE_ROOT, ensure_ace_importable, log_hook_error
+
 if ACE_ROOT:
     sys.path.insert(0, ACE_ROOT)
-
-# Import shared config
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _ace_config import ensure_ace_importable, log_hook_error
 
 # Patterns that trigger memory injection
 WORKFLOW_PATTERNS = [
