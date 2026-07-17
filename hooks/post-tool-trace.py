@@ -33,10 +33,9 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-ACE_ROOT = os.environ.get("ACE_ROOT") or os.environ.get("CLAUDE_PROJECT_DIR", "")
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _ace_config import (  # noqa: E402
+    ACE_ROOT,
     TRACE_DIR,
     INSIGHT_DIR,
     SESSION_FAILURES_FILE,

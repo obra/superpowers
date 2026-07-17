@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ACE Eureka System — reflect + auto-evolve.
+"""ACE Eureka System — reflect + auto-evolve at each Stop (turn end).
 
 Claude Code fires ``Stop`` after every assistant turn. Register with
 ``"async": true`` so Claude does not wait on this hook (mem0-style).
@@ -9,7 +9,9 @@ Claude Code fires ``Stop`` after every assistant turn. Register with
 1c. Flush pending recall applications (utility loop)
 1b. Conversational extract + embedding dedup — incremental turns + overlap
 2.  Evolve — when evolution thresholds are met (independent gate)
-3.  Cleanup session failure state (cheap)
+
+会话状态清理在 session-end-cleanup.py（SessionEnd）；traceback 收尾建议在
+stop-doctor.py。此前两者都在这里：Stop 每轮触发导致失败计数每轮清零。
 """
 import asyncio
 import hashlib
@@ -18,20 +20,6 @@ import sys
 import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-
-ACE_ROOT = os.environ.get("CLAUDE_PROJECT_DIR", "")
-
-
-def _ace_home() -> Path:
-    """Return the ACE user directory used by core path helpers."""
-    raw = os.environ.get("ACE_USER_DIR", "").strip()
-    return Path(os.path.expanduser(raw)) if raw else Path.home() / ".ace"
-
-
-_ACE_HOME = _ace_home()
-TRACE_DIR = _ACE_HOME / "store" / "traces"
-SESSION_FAILURES_FILE = _ACE_HOME / ".session_failures.json"
-EVOLUTION_STATE_FILE = _ACE_HOME / ".evolution_state.json"
 
 # Evolution thresholds — single source of truth lives in _ace_config (which
 # also reads ~/.ace/config.json overrides). Importing here means a project
@@ -46,6 +34,8 @@ from _ace_config import (  # noqa: E402
     EXPERIENCE_DEDUP_THRESHOLD,
     CONVERSATION_EXTRACT_CURSOR_FILE,
     CONVERSATION_EXTRACT_OVERLAP_TURNS,
+    TRACE_DIR,
+    EVOLUTION_STATE_FILE,
     log_hook_error,
     ensure_ace_importable,
     project_source_id,
@@ -54,6 +44,13 @@ from _ace_config import (  # noqa: E402
     safe_json_read,
     safe_json_write,
 )
+
+# Local aliases for historical call sites that used a private _ACE_HOME layout.
+_ACE_HOME = TRACE_DIR.parent.parent if TRACE_DIR is not None else Path.home() / ".ace"
+if TRACE_DIR is None:
+    TRACE_DIR = _ACE_HOME / "store" / "traces"
+if EVOLUTION_STATE_FILE is None:
+    EVOLUTION_STATE_FILE = _ACE_HOME / ".evolution_state.json"
 
 
 # ── Phase 1a: Reflect (traces → gbrain experiences + checkpoint) ──────
@@ -184,8 +181,7 @@ def sync_reflect_traces_to_experience(
         return []
 
     try:
-        if ACE_ROOT:
-            ensure_ace_importable()
+        ensure_ace_importable()
         from ace.core.knowledge.insight_sync import (
             experience_write_enabled,
             insight_to_experience_entry,
@@ -310,8 +306,7 @@ def reflect_conversation(
     cwd = hook_data.get("cwd") or ""
 
     try:
-        if ACE_ROOT:
-            ensure_ace_importable()
+        ensure_ace_importable()
         from ace.core.agent.jsonl_history import (
             load_session_messages,
             load_transcript_messages,
@@ -516,9 +511,7 @@ def _should_evolve() -> tuple[bool, str]:
 def _run_evolution() -> str | None:
     """Run the evolution engine. Returns summary or None on failure."""
     try:
-        # Add project root to path so we can import ace.core
-        if ACE_ROOT:
-            ensure_ace_importable()
+        ensure_ace_importable()
 
         from ace.core.evolution.trace import TraceStore
         from ace.core.evolution.patterns import extract_all_patterns
@@ -579,16 +572,6 @@ def _run_evolution() -> str | None:
         # for so long.
         log_hook_error("stop-reflect/run_evolution", ex)
         return None
-
-
-# ── Cleanup ────────────────────────────────────────────────────────────
-
-def cleanup_session_state() -> None:
-    if SESSION_FAILURES_FILE and SESSION_FAILURES_FILE.exists():
-        try:
-            SESSION_FAILURES_FILE.unlink()
-        except OSError:
-            pass
 
 
 def _flush_pending_applications(cwd: str, source_id: str | None = None) -> str:
@@ -719,7 +702,6 @@ def _run_stop(hook_data: dict) -> list[str]:
     if evolve_summary:
         parts.append(f"evolved: {evolve_summary}")
 
-    cleanup_session_state()
     return parts
 
 
