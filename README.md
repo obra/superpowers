@@ -11,7 +11,7 @@ If this sounds like someone you know, definitely send them our way.
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi), [ECA](#eca).
 
 ## How it works
 
@@ -198,6 +198,23 @@ pi -e /path/to/superpowers
 ```
 
 The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
+
+### ECA
+
+Add Superpowers as a plugin source in `~/.config/eca/config.json` (or `.eca/config.json` for project-local):
+
+```json
+{
+  "plugins": {
+    "superpowers-source": {
+      "source": "https://github.com/obra/superpowers.git"
+    },
+    "install": ["superpowers"]
+  }
+}
+```
+
+Restart ECA. Detailed docs: [docs/README.eca.md](docs/README.eca.md)
 
 ## The Basic Workflow
 

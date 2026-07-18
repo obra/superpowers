@@ -792,6 +792,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
 | OpenCode | `.opencode/plugins/superpowers.js` (declared via root `package.json` `main`) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` plugin git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
+| ECA | `.eca-plugin/marketplace.json` + `.eca-plugin/superpowers/eca.json` | shell hook → `hooks/session-start` (`additionalContext`); `chatStart` + `postCompact` hooks | `references/eca-tools.md` | `tests/hooks/`, `tests/eca/` | plugin source (git URL or local path) |
 
 ## Appendix B — Gotchas that have bitten porters
 

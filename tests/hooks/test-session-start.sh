@@ -196,6 +196,15 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+eca_home="$(make_home eca)"
+assert_command_output \
+    "ECA (no harness env vars) emits top-level additionalContext" \
+    "sdk" \
+    "" \
+    "" \
+    "$eca_home" \
+    bash "$HOOK_UNDER_TEST"
+
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
     exit 1
