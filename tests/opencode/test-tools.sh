@@ -31,7 +31,7 @@ run_opencode() {
     local exit_code
 
     set +e
-    command_output=$(cd "$dir" && timeout "${OPENCODE_TEST_TIMEOUT_SECONDS}s" opencode run --print-logs --format json "$prompt" 2>&1)
+    command_output=$(cd "$dir" && timeout "${OPENCODE_TEST_TIMEOUT_SECONDS}s" opencode run --format json "$prompt" 2>&1)
     exit_code=$?
     set -e
 
