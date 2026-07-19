@@ -92,7 +92,7 @@ class <DeviceName>Backend(DeviceBackend):
         self._faults.pop(fault_type, None)
 
     def set_speed_multiplier(self, value: float) -> None:
-        """Adjust simulation speed (optional)."""
+        """Adjust execution speed for simulator leaves (optional)."""
         self._speed_multiplier = max(value, 0.1)
 
     def get_speed_multiplier(self) -> float:

@@ -53,12 +53,13 @@ In that case:
    `AskUserQuestion`, write speculative alternatives, or re-open approved decisions.
 4. Proceed directly to a short task list and TDD execution.
 
-This fast path is invalid when any safety constraint, physical-device action, SDK source,
-or success criterion is missing. Never infer that physical hardware is safe. For a valid
-fast path, the same pre-approval applies throughout Phases 2–5: skip their interactive
-design, plan, create, and local simulator/code-only run gates when those operations are
-listed in the acceptance contract. It never pre-approves physical-device actions or
-`ace hub push`; either requirement makes the run interactive.
+This fast path is invalid when any safety constraint, SDK source, or success criterion is
+missing, or when any physical-device action is required. Never infer that physical
+hardware is safe. For a valid fast path, the same pre-approval applies throughout
+Phases 2–5: skip their interactive design, plan, create, and local simulator/code-only
+run gates when those operations are listed in the acceptance contract. It never
+pre-approves physical-device actions or `ace hub push`; either requirement makes the run
+interactive.
 
 For the interactive path, when all five gates are collected, summarise the answers back
 to the human in one short message and explicitly ask for approval to move to Phase 2.
