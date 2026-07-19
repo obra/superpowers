@@ -294,7 +294,7 @@ case "$FORMAT" in
     (
       cd "$STAGE"
       rm -f "$OUTPUT"
-      COPYFILE_DISABLE=1 zip -X -q - -@ <"$ARCHIVE_LIST" >"$OUTPUT"
+      COPYFILE_DISABLE=1 TZ=UTC zip -X -q - -@ <"$ARCHIVE_LIST" >"$OUTPUT"
     )
     ;;
   tar.gz)
