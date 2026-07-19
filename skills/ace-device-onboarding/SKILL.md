@@ -84,7 +84,11 @@ Once Phase 1 is approved:
 
 1. **Write a plan** to `docs/superpowers/plans/YYYY-MM-DD-<device>-onboarding-plan.md`
    enumerating the concrete tasks for Phases 4–6. A typical breakdown:
-   - Create `type.json` (when using `type_ref`) + `device.json` + `device.py`
+   - Choose the device contract shape:
+     - standalone: `devices/<device-id>/`, no `type_ref`
+     - family-backed: `devices/<family>/<implementation>/` with
+       `type_ref: "<family>"` and `devices/<family>/type.json`
+   - Create `device.json` + `device.py`; create `type.json` only for family-backed devices
    - Write test → implement each backend operation (RED/GREEN)
    - Add `node.json` metadata for editor/discovery when useful; add `node.py` only for
      custom logic that cannot route through the device backend
@@ -131,7 +135,9 @@ user Store:
 - user scope: `<ACE_USER_DIR>/store/` (default `~/.ace/store/`)
 
 Assets use:
-- `devices/<type>/<impl>/` — device definitions
+- `devices/<device-id>/` — standalone device definitions
+- `devices/<family>/<implementation>/` — family-backed device definitions
+- `devices/<family>/type.json` — shared family contract, only when using `type_ref`
 - `nodes/<device-family>/<operation>/` — optional node metadata/custom implementations
 - `workflows/` — workflow definitions
 
@@ -196,13 +202,23 @@ device capability.
 
 ### Scope Reminder
 
-**Hierarchy:** `devices/<device_type>/<implementation>/`
-- Example: `devices/stm/nanonis/` (hardware), `devices/stm/simulator/` (simulator)
+Choose one shape:
+
+- **Standalone:** `devices/<device-id>/device.json`; omit `type_ref`. A non-empty
+  `capabilities` list is required. `capability_schemas` is optional in the JSON Schema
+  but recommended to define every declared capability; `parameters` is optional.
+- **Family-backed:** `devices/<family>/type.json` plus
+  `devices/<family>/<implementation>/device.json`; set `type_ref` to the family.
+  Leaf `capabilities`, `capability_schemas`, and `parameters` are optional additions or
+  overrides of the family contract.
+
+See `references/device-json-template.md` for complete examples of both forms.
 
 | Layer | Content | Location |
 |-------|---------|----------|
-| Device definition | Capability contract, SDK config | `device.json` (in `<type>/<impl>/`) |
-| Device backend | Connection, SDK calls, ordinary operation routing | `device.py` (in `<type>/<impl>/`) |
+| Standalone device | Complete capability contract, SDK config, backend | `devices/<device-id>/` |
+| Device family | Shared capability schemas and parameters | `devices/<family>/type.json` |
+| Family implementation | Leaf additions/overrides, SDK config, backend | `devices/<family>/<implementation>/` |
 | Node metadata | Editor schemas and descriptions | optional `nodes/<family>/<operation>/node.json` |
 | Custom node logic | Cross-device/composite logic not owned by one backend | optional `node.py` |
 | SDK installation | Reproducible package declaration | `metadata.sdk_install` |
