@@ -32,15 +32,38 @@ Use `AskUserQuestion` to collect exactly five answers, **one question per call**
 Rules:
 - Ask **one question at a time** via `AskUserQuestion`. Do not batch.
 - After each answer, acknowledge briefly (one line) and immediately ask the next gate.
-- If the human says "just do it" / "you decide" / "pick sensible defaults" — still collect
-  all five answers, but accept short ones. Do not skip any gate.
+- If the human only says "just do it" / "you decide" / "pick sensible defaults", still
+  collect all five answers. The non-interactive exception below applies only when the
+  same prompt already supplies all five answers and an exact acceptance contract.
 - You may use `Read` / `Glob` / `Grep` to inspect SDK source **only when the human explicitly
   points you at a file path** in their answer. Do not run exploratory `Read` or `Bash` on
   your own initiative during Phase 1.
-- **Each gate MUST use `AskUserQuestion`** — do not infer answers from context or skip gates.
+- Outside the pre-approved non-interactive path, **each gate MUST use
+  `AskUserQuestion`** — do not infer answers from context or skip gates.
 
-When all five gates are collected, summarise the answers back to the human in one short
-message and explicitly ask for approval to move to Phase 2.
+### Pre-approved non-interactive brief
+
+For headless automation only, the user may explicitly say "do not ask questions" and
+provide all five answers plus an exact output/verification contract in the same prompt.
+In that case:
+
+1. Extract the five answers from the prompt and SDK source the user named.
+2. Treat the requested approach and outputs as already approved.
+3. State the extracted assumptions once in the execution log; do not call
+   `AskUserQuestion`, write speculative alternatives, or re-open approved decisions.
+4. Proceed directly to a short task list and TDD execution.
+
+This fast path is invalid when any safety constraint, SDK source, or success criterion is
+missing, or when any physical-device action is required. Never infer that physical
+hardware is safe. For a valid fast path, the same pre-approval applies throughout
+Phases 2–5: skip their interactive design, plan, create, and local simulator/code-only
+run gates when those operations are listed in the acceptance contract. It never
+pre-approves physical-device actions or `ace hub push`; either requirement makes the run
+interactive.
+
+For the interactive path, when all five gates are collected, summarise the answers back
+to the human in one short message and explicitly ask for approval to move to Phase 2.
+For a valid non-interactive brief, log the supplied answers and proceed.
 
 ## Phase 2 — Design (brainstorming + spec)
 
@@ -52,6 +75,7 @@ Once Phase 1 is approved:
    - **Approach B**: Human-in-the-loop with traces for future automation.
    - **Approach C**: Hybrid (simulator for safe ops, HITL for destructive ops).
    State pros/cons briefly. Call `AskUserQuestion` for the human to choose (A / B / C / Other).
+   For a valid pre-approved non-interactive brief, use its approved approach directly.
 3. **Write the spec** to `docs/superpowers/specs/YYYY-MM-DD-<device>-onboarding.md`
    summarising the 5 Clarify answers and the chosen approach.
 4. **If spec already exists and is approved**, skip to Phase 3.
@@ -60,18 +84,26 @@ Once Phase 1 is approved:
 
 1. **Write a plan** to `docs/superpowers/plans/YYYY-MM-DD-<device>-onboarding-plan.md`
    enumerating the concrete tasks for Phases 4–6. A typical breakdown:
-   - Create `device.json` + simulator
-   - Write test → implement node (RED/GREEN) for each operation
+   - Choose the device contract shape:
+     - standalone: `devices/<device-id>/`, no `type_ref`
+     - family-backed: `devices/<family>/<implementation>/` with
+       `type_ref: "<family>"` and `devices/<family>/type.json`
+   - Create `device.json` + `device.py`; create `type.json` only for family-backed devices
+   - Write test → implement each backend operation (RED/GREEN)
+   - Add `node.json` metadata for editor/discovery when useful; add `node.py` only for
+     custom logic that cannot route through the device backend
    - Compose workflow JSON, run end-to-end
    - Write `CLAUDE_BENCHMARK_STATUS.md`
 
 2. **Present the plan** to the human via `AskUserQuestion` and **wait for explicit approval**
-   before starting any execution work.
+   before starting any execution work. For a valid pre-approved non-interactive brief,
+   record the short task list and proceed without another approval gate.
 
 3. Once approved, create the corresponding task items via `TodoWrite` or `TaskCreate`
    and mark them `in_progress` / `completed` as you go.
 
-**Do NOT start Phase 4 until the human has approved the plan.**
+**Do NOT start Phase 4 until the human has approved the plan or a valid non-interactive
+brief has pre-approved it.**
 
 ## Phase 4 — Execute with TDD
 
@@ -88,13 +120,25 @@ Once Phase 1 is approved:
 - `ace hub push` — ask: "Ready to push to ace-hub. Proceed?"
 
 Do NOT batch these into one confirmation. Each destructive CLI call gets its own
-`AskUserQuestion` gate. The human must explicitly approve before each operation.
+`AskUserQuestion` gate. The human must explicitly approve before each operation. The
+only exception is a valid pre-approved non-interactive brief, which may cover local
+artifact creation and simulator/code-only runs named in its acceptance contract.
+Physical-device actions and `ace hub push` always require an interactive gate.
 
 ### Scope Boundary
 
-Device onboarding creates **adapter layers only** in `~/.ace/store/`:
-- `devices/<type>/<impl>/` — device definitions
-- `nodes/<device-id>/<node_id>/` — node implementations
+Run `ace store info` first and create adapter layers only in its active Store. Resolution
+priority is `$ACE_STORE_DIR`, then explicit scope, then an enabled repo Store, then the
+user Store:
+- explicit override: `$ACE_STORE_DIR`
+- repo scope: `<git-root>/.ace/store/`
+- user scope: `<ACE_USER_DIR>/store/` (default `~/.ace/store/`)
+
+Assets use:
+- `devices/<device-id>/` — standalone device definitions
+- `devices/<family>/<implementation>/` — family-backed device definitions
+- `devices/<family>/type.json` — shared family contract, only when using `type_ref`
+- `nodes/<device-family>/<operation>/` — optional node metadata/custom implementations
 - `workflows/` — workflow definitions
 
 Never modify ACE framework core. Work around limitations in your adapter.
@@ -108,7 +152,7 @@ Never modify ACE framework core. Work around limitations in your adapter.
 
 ## Phase 5 — Verify
 
-1. Unit tests per node / per simulator — all must pass.
+1. Unit tests per node / per device backend — all must pass.
 2. End-to-end: `ace workflow run <test-workflow>` must succeed.
 3. **Show the workflow run output** to the human — paste the full stdout/stderr
    so they can see the result (e.g. "2+3=5, 5-1=4, 4*4=16, 16/2=8.0").
@@ -149,30 +193,47 @@ ace hub push <workflow-id> --type workflow --commit
 
 ## Reference Templates
 
-**Device adapter layer is thin. Implementation complexity lives in nodes.**
+**A concrete device has exactly one backend.** Put SDK calls and ordinary operation
+handlers in `device.py`. Use `node.py` only for custom/composite logic that is not a
+device capability.
 
 - **`device.json` template** → see `references/device-json-template.md`
-- **`device.py` simulator template** → see `references/device-py-template.md`
+- **`device.py` backend template** → see `references/device-py-template.md`
 
 ### Scope Reminder
 
-**Hierarchy:** `devices/<device_type>/<implementation>/`
-- Example: `devices/stm/nanonis/` (hardware), `devices/stm/simulator/` (simulator)
+Choose one shape:
+
+- **Standalone:** `devices/<device-id>/device.json`; omit `type_ref`. A non-empty
+  `capabilities` list is required. `capability_schemas` is optional in the JSON Schema
+  but recommended to define every declared capability; `parameters` is optional.
+- **Family-backed:** `devices/<family>/type.json` plus
+  `devices/<family>/<implementation>/device.json`; set `type_ref` to the family.
+  Leaf `capabilities`, `capability_schemas`, and `parameters` are optional additions or
+  overrides of the family contract.
+
+See `references/device-json-template.md` for complete examples of both forms.
 
 | Layer | Content | Location |
 |-------|---------|----------|
-| Device definition | Capability contract, SDK config | `device.json` (in `<type>/<impl>/`) |
-| Simulator adapter | State management, operation routing | `device.py` (in `<type>/simulator/`) |
-| Operation logic | Complex validation, protocol encoding | **Nodes** |
-| SDK integration | Device-specific API calls | **Nodes** |
+| Standalone device | Complete capability contract, SDK config, backend | `devices/<device-id>/` |
+| Device family | Shared capability schemas and parameters | `devices/<family>/type.json` |
+| Family implementation | Leaf additions/overrides, SDK config, backend | `devices/<family>/<implementation>/` |
+| Node metadata | Editor schemas and descriptions | optional `nodes/<family>/<operation>/node.json` |
+| Custom node logic | Cross-device/composite logic not owned by one backend | optional `node.py` |
+| SDK installation | Reproducible package declaration | `metadata.sdk_install` |
 
-**Device adapter is thin. Implementation complexity lives in nodes.**
+New assets must use `device_backend`, `metadata.sdk_install`, and imports from
+`ace.core.*`. Legacy keys (`simulator`, `simulator_id`, `metadata.sdk`, and
+`metadata.sdk_path`) are read-only compatibility and must not be generated.
 
 ## Anti-Patterns — STOP Immediately
 
-- Writing code before all 5 Clarify gates → STOP, go back to Phase 1
-- Skipping `AskUserQuestion` for a gate → STOP, ask now
-- Skipping `AskUserQuestion` before destructive CLI calls → STOP, ask first
+- Writing code before all 5 Clarify gates are answered or supplied in a valid
+  non-interactive brief → STOP, go back to Phase 1
+- Skipping `AskUserQuestion` without a valid non-interactive brief → STOP, ask now
+- Skipping a required physical-device or `ace hub push` gate → STOP, ask first
 - Running `Bash` exploratory commands during Phase 1 → STOP, ask first
-- Starting execution before plan is approved → STOP, present plan first
+- Starting execution before plan approval or a valid non-interactive brief → STOP,
+  present plan first
 - 100+ tool calls without completion → simplify approach

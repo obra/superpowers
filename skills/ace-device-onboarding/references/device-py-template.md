@@ -1,11 +1,11 @@
-# Device Simulator — Standard Pattern
+# Device Backend — Current Pattern
 
-**`device.py`** — Thin adapter extending `SimulatorDevice`:
+**`device.py`** — one concrete device backend extending `DeviceBackend`:
 
 ```python
 """
-<Device Name> Simulator Implementation
-Reference: FIB-SEM Simulator Implementation Pattern
+<Device Name> Backend Implementation
+Reference: ACE DeviceBackend implementation pattern
 """
 import asyncio
 import datetime
@@ -16,25 +16,19 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-import sys
-import os
-from pathlib import Path
-ace_root = os.environ.get("ACE_ROOT", str(Path(__file__).parent.parent.parent.parent.parent.parent.parent))
-sys.path.insert(0, str(ace_root))
-
-from ace.core.simulator.base import DeviceState, OperationResult, SimulatorDevice
+from ace.core.devices.base import DeviceBackend, DeviceState, OperationResult
 
 logger = logging.getLogger(__name__)
 
 
-class <DeviceName>Simulator(SimulatorDevice):
+class <DeviceName>Backend(DeviceBackend):
     """
-    <Device Name> Simulator
+    <Device Name> backend
 
     Thin adapter layer:
     - Defines default state schema
     - Implements operation handlers
-    - Delegates complex logic to nodes
+    - Calls the installed SDK for ordinary device operations
     """
 
     _DEFAULT_STATE: Dict[str, Any] = {
@@ -43,8 +37,10 @@ class <DeviceName>Simulator(SimulatorDevice):
         "status": "idle",
     }
 
-    def __init__(self, simulator_id: str = "<device-id>-simulator", speed_multiplier: float = 10.0):
-        super().__init__(simulator_id=simulator_id, device_type="<DEVICE_TYPE>")
+    def __init__(self, device_id: str = "<device-family>/<implementation>", speed_multiplier: float = 10.0):
+        # DeviceBackend is the neutral alias of the legacy SimulatorDevice base;
+        # its constructor parameter remains simulator_id for compatibility.
+        super().__init__(simulator_id=device_id, device_type="<DEVICE_TYPE>")
         self._speed_multiplier = max(speed_multiplier, 0.1)
         self._faults: Dict[str, float] = {}
 
@@ -58,7 +54,7 @@ class <DeviceName>Simulator(SimulatorDevice):
 
     @property
     def description(self) -> str:
-        return "<Device> Simulator"
+        return "<Device> backend"
 
     @property
     def capabilities(self) -> List[str]:
@@ -69,19 +65,19 @@ class <DeviceName>Simulator(SimulatorDevice):
         ]
 
     def connect(self) -> None:
-        """Initialize simulator state."""
+        """Initialize backend state."""
         self._state = DeviceState(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             properties=deepcopy(self._DEFAULT_STATE),
         )
         self._connected = True
         self._faults = {}
-        logger.info(f"<Device> simulator connected: session={self.session_id}")
+        logger.info(f"<Device> backend connected: session={self.session_id}")
 
     def disconnect(self) -> None:
-        """Clean up simulator state."""
+        """Clean up backend state."""
         self._connected = False
-        logger.info(f"<Device> simulator disconnected: session={self.session_id}")
+        logger.info(f"<Device> backend disconnected: session={self.session_id}")
 
     def inject_fault(self, fault_type: str, severity: float = 0.5) -> None:
         """Inject fault for testing (optional)."""
@@ -96,7 +92,7 @@ class <DeviceName>Simulator(SimulatorDevice):
         self._faults.pop(fault_type, None)
 
     def set_speed_multiplier(self, value: float) -> None:
-        """Adjust simulation speed (optional)."""
+        """Adjust execution speed for simulator leaves (optional)."""
         self._speed_multiplier = max(value, 0.1)
 
     def get_speed_multiplier(self) -> float:
@@ -126,7 +122,7 @@ class <DeviceName>Simulator(SimulatorDevice):
             )
 
     # --- Operation Handlers ---
-    # Each handler is thin - complex logic goes in nodes
+    # Each handler is thin; extract reusable helpers when logic grows.
 
     async def _op_connect(self, params: Dict[str, Any]) -> OperationResult:
         """Handle connect operation."""
@@ -143,13 +139,13 @@ class <DeviceName>Simulator(SimulatorDevice):
         return OperationResult(
             success=True,
             operation="get_state",
-            data={"state": self._state.properties if self._state else {}}
+            output={"state": self._state.properties if self._state else {}}
         )
 
     async def _op_set_parameter(self, params: Dict[str, Any]) -> OperationResult:
         """
         Set device parameter.
-        Validation logic should be in node, this just applies.
+        Apply one backend-owned parameter update.
         """
         subsystem = params.get("subsystem")
         param = params.get("parameter")
@@ -173,13 +169,13 @@ class <DeviceName>Simulator(SimulatorDevice):
         )
 
     # Add more operation handlers as needed...
-    # Each should be THIN - just state updates and basic validation
+    # Keep ordinary SDK calls and backend-owned validation here.
 ```
 
 **Key Principles:**
-- `device.py` is a **thin adapter** extending `SimulatorDevice`
+- `device.py` is the concrete backend extending `DeviceBackend`
 - State schema defined in `_DEFAULT_STATE`
 - Operation handlers route to `_op_<operation>` methods
-- **Keep handlers thin** — complex validation/encoding goes in nodes
-- Fault injection optional but recommended for testing
-- Reference `FIBSEMSimulator` for complete implementation pattern
+- Ordinary SDK calls and backend-owned validation stay in `device.py`
+- Use `node.py` only for custom or composite logic that is not a device capability
+- Fault injection is optional for simulator leaves
