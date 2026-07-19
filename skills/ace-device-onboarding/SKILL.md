@@ -32,12 +32,29 @@ Use `AskUserQuestion` to collect exactly five answers, **one question per call**
 Rules:
 - Ask **one question at a time** via `AskUserQuestion`. Do not batch.
 - After each answer, acknowledge briefly (one line) and immediately ask the next gate.
-- If the human says "just do it" / "you decide" / "pick sensible defaults" — still collect
-  all five answers, but accept short ones. Do not skip any gate.
+- If the human only says "just do it" / "you decide" / "pick sensible defaults", still
+  collect all five answers. The non-interactive exception below applies only when the
+  same prompt already supplies all five answers and an exact acceptance contract.
 - You may use `Read` / `Glob` / `Grep` to inspect SDK source **only when the human explicitly
   points you at a file path** in their answer. Do not run exploratory `Read` or `Bash` on
   your own initiative during Phase 1.
-- **Each gate MUST use `AskUserQuestion`** — do not infer answers from context or skip gates.
+- Outside the pre-approved non-interactive path, **each gate MUST use
+  `AskUserQuestion`** — do not infer answers from context or skip gates.
+
+### Pre-approved non-interactive brief
+
+For headless automation only, the user may explicitly say "do not ask questions" and
+provide all five answers plus an exact output/verification contract in the same prompt.
+In that case:
+
+1. Extract the five answers from the prompt and SDK source the user named.
+2. Treat the requested approach and outputs as already approved.
+3. State the extracted assumptions once in the execution log; do not call
+   `AskUserQuestion`, write speculative alternatives, or re-open approved decisions.
+4. Proceed directly to a short task list and TDD execution.
+
+This fast path is invalid when any safety constraint, physical-device action, SDK source,
+or success criterion is missing. Never infer that physical hardware is safe.
 
 When all five gates are collected, summarise the answers back to the human in one short
 message and explicitly ask for approval to move to Phase 2.
@@ -60,8 +77,10 @@ Once Phase 1 is approved:
 
 1. **Write a plan** to `docs/superpowers/plans/YYYY-MM-DD-<device>-onboarding-plan.md`
    enumerating the concrete tasks for Phases 4–6. A typical breakdown:
-   - Create `device.json` + simulator
-   - Write test → implement node (RED/GREEN) for each operation
+   - Create `type.json` (when using `type_ref`) + `device.json` + `device.py`
+   - Write test → implement each backend operation (RED/GREEN)
+   - Add `node.json` metadata for editor/discovery when useful; add `node.py` only for
+     custom logic that cannot route through the device backend
    - Compose workflow JSON, run end-to-end
    - Write `CLAUDE_BENCHMARK_STATUS.md`
 
@@ -92,9 +111,13 @@ Do NOT batch these into one confirmation. Each destructive CLI call gets its own
 
 ### Scope Boundary
 
-Device onboarding creates **adapter layers only** in `~/.ace/store/`:
+Device onboarding creates **adapter layers only** in the active Store returned by ACE:
+- repo scope: `<git-root>/.ace/store/`
+- user scope: `<ACE_USER_DIR>/store/` (default `~/.ace/store/`)
+
+Assets use:
 - `devices/<type>/<impl>/` — device definitions
-- `nodes/<device-id>/<node_id>/` — node implementations
+- `nodes/<device-family>/<operation>/` — optional node metadata/custom implementations
 - `workflows/` — workflow definitions
 
 Never modify ACE framework core. Work around limitations in your adapter.
@@ -149,7 +172,9 @@ ace hub push <workflow-id> --type workflow --commit
 
 ## Reference Templates
 
-**Device adapter layer is thin. Implementation complexity lives in nodes.**
+**A concrete device has exactly one backend.** Put SDK calls and ordinary operation
+handlers in `device.py`. Use `node.py` only for custom/composite logic that is not a
+device capability.
 
 - **`device.json` template** → see `references/device-json-template.md`
 - **`device.py` simulator template** → see `references/device-py-template.md`
@@ -162,11 +187,14 @@ ace hub push <workflow-id> --type workflow --commit
 | Layer | Content | Location |
 |-------|---------|----------|
 | Device definition | Capability contract, SDK config | `device.json` (in `<type>/<impl>/`) |
-| Simulator adapter | State management, operation routing | `device.py` (in `<type>/simulator/`) |
-| Operation logic | Complex validation, protocol encoding | **Nodes** |
-| SDK integration | Device-specific API calls | **Nodes** |
+| Device backend | Connection, SDK calls, ordinary operation routing | `device.py` (in `<type>/<impl>/`) |
+| Node metadata | Editor schemas and descriptions | optional `nodes/<family>/<operation>/node.json` |
+| Custom node logic | Cross-device/composite logic not owned by one backend | optional `node.py` |
+| SDK installation | Reproducible package declaration | `metadata.sdk_install` |
 
-**Device adapter is thin. Implementation complexity lives in nodes.**
+New assets must use `device_backend`, `metadata.sdk_install`, and imports from
+`ace.core.*`. Legacy keys (`simulator`, `sdk_path`, `sdk_module`, `sdk_class`) are
+read-only compatibility and must not be generated.
 
 ## Anti-Patterns — STOP Immediately
 

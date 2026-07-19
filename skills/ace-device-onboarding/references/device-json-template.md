@@ -1,54 +1,52 @@
-# Device Definition — Standard Pattern
+# Device Definition — Current Single-Backend Pattern
 
-**`device.json`** — Thin capability contract, NOT implementation:
+`device.json` declares one concrete leaf device and its one backend:
 
 ```json
 {
-  "name": "<device-type>/<implementation>",
+  "name": "<device-family>/<implementation>",
   "type": "<DEVICE_TYPE>",
+  "type_ref": "<device-family>",
   "vendor": "<Vendor Name>",
   "model": "<Model Name>",
   "version": "1.0.0",
-  "description": "Brief description of the device",
-  "capabilities": [
-    "capability_1",
-    "capability_2",
-    "capability_3"
-  ],
-  "parameters": {
-    "param_group_1": {
-      "range": [min, max],
-      "presets": ["preset1", "preset2"]
-    },
-    "param_group_2": {
-      "options": ["option1", "option2"]
-    }
-  },
-  "connection": {
-    "protocol": "tcp|serial|rest|...",
-    "host": "127.0.0.1",
-    "port": 50000,
-    "authkey": "optional_auth_key"
-  },
+  "description": "Brief description of the concrete device",
+  "capabilities": [],
+  "parameters": {},
   "has_simulator": true,
-  "simulator_id": "<device-id>-simulator",
-  "simulator": {
+  "device_backend": {
     "source": "local",
-    "simulator_id": "<device-id>-simulator",
-    "speed_multiplier": 10.0
+    "config": {}
   },
   "metadata": {
-    "simulator_class": "<DeviceName>Simulator",
     "sdk_install": {
-      "method": "pip|local",
-      "package": "git+ssh://... OR /local/path/to/sdk"
+      "method": "pip",
+      "package": "git+ssh://git@github.com/org/sdk.git@<commit>",
+      "import_name": ["sdk_top_level_module"]
     }
   }
 }
 ```
 
-**Key Principles:**
-- `device.json` is a **capability declaration**, not implementation code
-- Implementation details go in **nodes**, referenced by capabilities
-- SDK configuration in `metadata.sdk_install` (pip URL or local path)
-- Simulator class name in `metadata.simulator_class` (matches device.py)
+For a project-local SDK, use a portable environment-based path:
+
+```json
+"sdk_install": {
+  "method": "local",
+  "package": "${ACE_PROJECT_ROOT}/path/to/sdk",
+  "import_name": ["sdk_top_level_module"]
+}
+```
+
+`type_ref` requires `devices/<device-family>/type.json`; omit `type_ref` only when
+the leaf fully declares all capability schemas itself.
+
+Key principles:
+
+- A concrete device has exactly one `device_backend`.
+- `has_simulator` describes whether this leaf is simulated; it does not select a
+  second backend.
+- Ordinary SDK operations live in `device.py`; `node.py` is optional custom logic.
+- New definitions must use `metadata.sdk_install`.
+- Do not generate legacy `simulator`, `simulator_id`, `sdk_path`, `sdk_module`, or
+  `sdk_class` fields. The runtime reads them only for backward compatibility.

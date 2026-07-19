@@ -1,6 +1,6 @@
-# Device Simulator — Standard Pattern
+# Device Backend — Current Pattern
 
-**`device.py`** — Thin adapter extending `SimulatorDevice`:
+**`device.py`** — one concrete device backend extending `DeviceBackend`:
 
 ```python
 """
@@ -16,25 +16,19 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-import sys
-import os
-from pathlib import Path
-ace_root = os.environ.get("ACE_ROOT", str(Path(__file__).parent.parent.parent.parent.parent.parent.parent))
-sys.path.insert(0, str(ace_root))
-
-from ace.core.simulator.base import DeviceState, OperationResult, SimulatorDevice
+from ace.core.devices.base import DeviceBackend, DeviceState, OperationResult
 
 logger = logging.getLogger(__name__)
 
 
-class <DeviceName>Simulator(SimulatorDevice):
+class <DeviceName>Backend(DeviceBackend):
     """
-    <Device Name> Simulator
+    <Device Name> backend
 
     Thin adapter layer:
     - Defines default state schema
     - Implements operation handlers
-    - Delegates complex logic to nodes
+    - Calls the installed SDK for ordinary device operations
     """
 
     _DEFAULT_STATE: Dict[str, Any] = {
@@ -126,7 +120,7 @@ class <DeviceName>Simulator(SimulatorDevice):
             )
 
     # --- Operation Handlers ---
-    # Each handler is thin - complex logic goes in nodes
+    # Each handler is thin; extract reusable helpers when logic grows.
 
     async def _op_connect(self, params: Dict[str, Any]) -> OperationResult:
         """Handle connect operation."""
