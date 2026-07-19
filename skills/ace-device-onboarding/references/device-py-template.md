@@ -4,8 +4,8 @@
 
 ```python
 """
-<Device Name> Simulator Implementation
-Reference: FIB-SEM Simulator Implementation Pattern
+<Device Name> Backend Implementation
+Reference: ACE DeviceBackend implementation pattern
 """
 import asyncio
 import datetime
@@ -37,8 +37,10 @@ class <DeviceName>Backend(DeviceBackend):
         "status": "idle",
     }
 
-    def __init__(self, simulator_id: str = "<device-id>-simulator", speed_multiplier: float = 10.0):
-        super().__init__(simulator_id=simulator_id, device_type="<DEVICE_TYPE>")
+    def __init__(self, device_id: str = "<device-family>/<implementation>", speed_multiplier: float = 10.0):
+        # DeviceBackend is the neutral alias of the legacy SimulatorDevice base;
+        # its constructor parameter remains simulator_id for compatibility.
+        super().__init__(simulator_id=device_id, device_type="<DEVICE_TYPE>")
         self._speed_multiplier = max(speed_multiplier, 0.1)
         self._faults: Dict[str, float] = {}
 
@@ -52,7 +54,7 @@ class <DeviceName>Backend(DeviceBackend):
 
     @property
     def description(self) -> str:
-        return "<Device> Simulator"
+        return "<Device> backend"
 
     @property
     def capabilities(self) -> List[str]:
@@ -63,19 +65,19 @@ class <DeviceName>Backend(DeviceBackend):
         ]
 
     def connect(self) -> None:
-        """Initialize simulator state."""
+        """Initialize backend state."""
         self._state = DeviceState(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             properties=deepcopy(self._DEFAULT_STATE),
         )
         self._connected = True
         self._faults = {}
-        logger.info(f"<Device> simulator connected: session={self.session_id}")
+        logger.info(f"<Device> backend connected: session={self.session_id}")
 
     def disconnect(self) -> None:
-        """Clean up simulator state."""
+        """Clean up backend state."""
         self._connected = False
-        logger.info(f"<Device> simulator disconnected: session={self.session_id}")
+        logger.info(f"<Device> backend disconnected: session={self.session_id}")
 
     def inject_fault(self, fault_type: str, severity: float = 0.5) -> None:
         """Inject fault for testing (optional)."""
@@ -137,13 +139,13 @@ class <DeviceName>Backend(DeviceBackend):
         return OperationResult(
             success=True,
             operation="get_state",
-            data={"state": self._state.properties if self._state else {}}
+            output={"state": self._state.properties if self._state else {}}
         )
 
     async def _op_set_parameter(self, params: Dict[str, Any]) -> OperationResult:
         """
         Set device parameter.
-        Validation logic should be in node, this just applies.
+        Apply one backend-owned parameter update.
         """
         subsystem = params.get("subsystem")
         param = params.get("parameter")
@@ -167,13 +169,13 @@ class <DeviceName>Backend(DeviceBackend):
         )
 
     # Add more operation handlers as needed...
-    # Each should be THIN - just state updates and basic validation
+    # Keep ordinary SDK calls and backend-owned validation here.
 ```
 
 **Key Principles:**
-- `device.py` is a **thin adapter** extending `SimulatorDevice`
+- `device.py` is the concrete backend extending `DeviceBackend`
 - State schema defined in `_DEFAULT_STATE`
 - Operation handlers route to `_op_<operation>` methods
-- **Keep handlers thin** — complex validation/encoding goes in nodes
-- Fault injection optional but recommended for testing
-- Reference `FIBSEMSimulator` for complete implementation pattern
+- Ordinary SDK calls and backend-owned validation stay in `device.py`
+- Use `node.py` only for custom or composite logic that is not a device capability
+- Fault injection is optional for simulator leaves

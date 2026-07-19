@@ -13,7 +13,7 @@
   "description": "Brief description of the concrete device",
   "capabilities": [],
   "parameters": {},
-  "has_simulator": true,
+  "has_simulator": false,
   "device_backend": {
     "source": "local",
     "config": {}
@@ -44,9 +44,9 @@ the leaf fully declares all capability schemas itself.
 Key principles:
 
 - A concrete device has exactly one `device_backend`.
-- `has_simulator` describes whether this leaf is simulated; it does not select a
-  second backend.
+- `has_simulator` describes whether this leaf is simulated; keep the safe template
+  default `false` for physical devices and set it to `true` only for simulator leaves.
 - Ordinary SDK operations live in `device.py`; `node.py` is optional custom logic.
 - New definitions must use `metadata.sdk_install`.
-- Do not generate legacy `simulator`, `simulator_id`, `sdk_path`, `sdk_module`, or
-  `sdk_class` fields. The runtime reads them only for backward compatibility.
+- Do not generate legacy `simulator`, `simulator_id`, `metadata.sdk`, or
+  `metadata.sdk_path` fields. The runtime reads them only for backward compatibility.
