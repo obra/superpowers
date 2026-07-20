@@ -3,25 +3,22 @@
 # reads `.devin-plugin/plugin.json` and auto-discovers the co-located `skills/`
 # directory; Devin CLI surfaces every installed skill's name + description in
 # the system prompt at session start and invokes them via its native `skill`
-# tool, so there is no hook or injector scaffold to test. What IS Devin-specific
-# is the manifest and the tool mapping — subagent dispatch via run_subagent
-# profiles and task tracking via todo_write — and SKILL.md pointing at it.
+# tool, and its system prompt already documents its own tools (subagent
+# profiles, todo tracking, question prompts), so there is no hook, injector,
+# or tool-mapping scaffold to test. What IS Devin-specific is the manifest.
 #
-# Mirrors tests/kimi/test-plugin-manifest.sh (manifest) and
-# tests/antigravity/test-antigravity-tools.sh (mapping). CI-safe: does not
-# require `devin` installed.
+# Mirrors tests/kimi/test-plugin-manifest.sh. CI-safe: does not require
+# `devin` installed.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 MANIFEST="$REPO_ROOT/.devin-plugin/plugin.json"
-MAPPING="$REPO_ROOT/skills/using-superpowers/references/devin-tools.md"
-SKILL="$REPO_ROOT/skills/using-superpowers/SKILL.md"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
-echo "test-devin-plugin: checking Devin CLI manifest and tool mapping"
+echo "test-devin-plugin: checking Devin CLI manifest"
 
 # --- Manifest is valid and matches the repo version -------------------------
 [ -f "$MANIFEST" ] || fail "manifest missing at $MANIFEST"
@@ -63,23 +60,4 @@ if not isinstance(entries, list) or not any(
 print("Devin plugin manifest looks good")
 PY
 
-# --- Mapping exists ----------------------------------------------------------
-[ -f "$MAPPING" ] || fail "tool mapping missing at $MAPPING"
-
-# --- Core action→tool mappings are documented --------------------------------
-for tool in skill run_subagent todo_write ask_user_question; do
-  grep -q "$tool" "$MAPPING" \
-    || fail "mapping does not document the '$tool' tool"
-done
-
-# --- Subagents use the built-in profiles --------------------------------------
-grep -q 'subagent_general' "$MAPPING" \
-  || fail "mapping does not document the 'subagent_general' profile"
-grep -q 'subagent_explore' "$MAPPING" \
-  || fail "mapping does not document the 'subagent_explore' profile"
-
-# --- SKILL.md Platform Adaptation links the mapping ---------------------------
-grep -q "devin-tools.md" "$SKILL" \
-  || fail "SKILL.md Platform Adaptation does not reference devin-tools.md"
-
-echo "PASS: Devin CLI plugin valid (manifest, tool mapping, SKILL.md link)"
+echo "PASS: Devin CLI plugin valid (manifest)"
