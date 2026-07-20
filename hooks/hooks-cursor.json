@@ -1,6 +1,14 @@
 {
   "version": 1,
   "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Shell",
+        "command": "./hooks/run-hook.cmd cursor-traceback-current",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ],
     "sessionStart": [
       {
         "command": "./hooks/run-hook.cmd session-start"

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# preToolUse hook wrapper for Cursor — delegates to the Python implementation.
+# Cursor pipes JSON to stdin; the Python script reads it.
+
+set -euo pipefail
+
+normalize_script_path() {
+  printf '%s\n' "${1//\\//}"
+}
+
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  return 0
+fi
+
+SCRIPT_PATH="$(normalize_script_path "${BASH_SOURCE[0]}")"
+case "${SCRIPT_PATH}" in
+  */*) SCRIPT_BASE="${SCRIPT_PATH%/*}" ;;
+  *) SCRIPT_BASE="." ;;
+esac
+SCRIPT_DIR="$(cd -- "${SCRIPT_BASE}" && pwd)"
+
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON=python3
+elif command -v python >/dev/null 2>&1; then
+  PYTHON=python
+else
+  echo "cursor-traceback-current: Python interpreter not found" >&2
+  exit 127
+fi
+
+exec "${PYTHON}" "${SCRIPT_DIR}/cursor-traceback-current.py"
