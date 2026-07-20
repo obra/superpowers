@@ -1,9 +1,12 @@
 ---
-description: 上报 Claude Code、Cursor 或 Codex CLI session traceback 到 HyperData 并登记售后报告
+description: 上报 Claude Code、Cursor 或 Codex App Local session traceback 到 HyperData 并登记售后报告
 ---
 # /ace:traceback
 
 调用 `ace:ace-traceback` skill，引导用户完成 session 选择、bundle 预览、脱敏确认和上传。
+
+> **实验性状态：** Codex App Local 契约测试通过，但真实 Codex App Local 环境待验收；
+> 不得按正式生产支持宣传。Codex Cloud Agent 明确不支持。
 
 ## Usage
 
@@ -11,15 +14,23 @@ description: 上报 Claude Code、Cursor 或 Codex CLI session traceback 到 Hyp
 /ace:traceback
 ```
 
+在 Codex App Local 中由用户调用 `/ace-traceback`；Skill 内部使用 `--codex-current`，
+无需用户手动运行 `ace traceback`。Codex Cloud Agent 不支持（not supported）此流程，
+应在预览前停止并说明范围限制。Codex CLI 不是承诺支持的运行时；现有版本可能保持兼容，
+但本命令不把它作为用户路径。
+
 Skill 会：
 1. 识别当前运行时并锁定会话：
    - Cursor 使用 `--cursor-current`。
-   - Codex CLI 使用 `--codex-current`。
+   - Codex App Local 内部使用 `--codex-current`，并要求输出
+     `runtime=codex_app_local`。
+   - Codex App Local 不得使用 `--last`、扫描 transcript 或回退到最近会话。
    - Claude Code 使用 hook 提供的固定 session id；若无 hook id，仅首次预览使用 `--last`，随后固定预览返回的 id。
 2. 询问用户一句话描述问题。
 3. 按 Skill 的当前运行时契约预览文件清单、脱敏统计和 session 信息。
 4. 在对话中展示预览，取得明确确认。
 5. 按同一预览 session 和摘要执行上传；若当前会话变化，重新预览并重新确认。
-6. 核对上传与预览的 session id / source，汇报 dataset_id / report_id，并说明 inbox 跟进方式。
+6. 核对上传与预览的 session id / source / runtime；任一字段不一致都停止并报错。
+7. 汇报 dataset_id / report_id，并说明 inbox 跟进方式。
 
 如果 `ace` CLI 不可用，说明纯本地诊断替代方案 `/ace:doctor`。
