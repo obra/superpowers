@@ -10,47 +10,86 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have classified the workflow, presented a design, and the user has approved it. A compact in-chat design satisfies this gate only when every compact-workflow condition below holds.
 </HARD-GATE>
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## Route the Workflow First
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+### Context gate
+
+Use direct research when the task is confined to one known module and no more than three targeted files. Use **superpowers:exploring-codebase-context** before detailed questions when any of these are true:
+
+- two or more independent domains are involved;
+- the implementation point is unclear;
+- more than five files are likely needed;
+- direct exploration would consume substantial parent context.
+
+Treat its context brief as the exploration result. Open primary files yourself only for conflicts, missing evidence, or high-impact claims.
+
+### Ceremony gate
+
+Use the compact workflow only when **all** conditions hold:
+
+- one module owns the change;
+- no more than two implementation files are expected;
+- no public API, schema, dependency, or architectural boundary changes;
+- no authentication, payments, security, migrations, or infrastructure impact;
+- the solution is unambiguous and has no competing architectural approaches;
+- verification is local and already understood.
+
+Tests and fixtures do not count as implementation files, but their impact must remain local. If any condition fails—or later exploration invalidates one—use the full workflow.
+
+## Anti-Pattern: "Small Means No Design"
+
+Small tasks still require an approved design. What changes is the ceremony: compact tasks use one concise in-chat design; larger or risk-sensitive tasks retain the complete spec and planning workflow.
 
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+1. **Explore project context** — apply the context gate; use the context skill when it fires
+2. **Classify ceremony** — record which compact conditions pass or fail
+3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Run the selected workflow**:
+   - **Compact:** present one concise design and verification strategy, then get approval
+   - **Full:** propose 2-3 approaches, present design sections, write and commit the spec, self-review it, obtain user review, then invoke writing-plans
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
     "Explore project context" [shape=box];
-    "Ask clarifying questions" [shape=box];
+    "All compact conditions hold?" [shape=diamond];
+    "Ask compact clarifying questions" [shape=box];
+    "Ask full clarifying questions" [shape=box];
+    "Present compact design" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
+    "Compact design approved?" [shape=diamond];
+    "Full design approved?" [shape=diamond];
+    "Implementation requested?" [shape=diamond];
+    "Invoke TDD and domain skill" [shape=doublecircle];
+    "Stop with approved design" [shape=doublecircle];
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Explore project context" -> "All compact conditions hold?";
+    "All compact conditions hold?" -> "Ask compact clarifying questions" [label="yes"];
+    "All compact conditions hold?" -> "Ask full clarifying questions" [label="no"];
+    "Ask compact clarifying questions" -> "Present compact design";
+    "Ask full clarifying questions" -> "Propose 2-3 approaches";
+    "Present compact design" -> "Compact design approved?";
     "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
+    "Present design sections" -> "Full design approved?";
+    "Compact design approved?" -> "Ask compact clarifying questions" [label="no, revise"];
+    "Compact design approved?" -> "Implementation requested?" [label="yes"];
+    "Implementation requested?" -> "Invoke TDD and domain skill" [label="yes"];
+    "Implementation requested?" -> "Stop with approved design" [label="no"];
+    "Full design approved?" -> "Ask full clarifying questions" [label="no, revise"];
+    "Full design approved?" -> "Write design doc" [label="yes"];
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
@@ -58,7 +97,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**Terminal state depends on the selected workflow.** Full workflow invokes writing-plans. Compact workflow, when implementation was requested, invokes test-driven-development and the applicable domain skill only after design approval.
 
 ## The Process
 
@@ -72,7 +111,7 @@ digraph brainstorming {
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
-**Exploring approaches:**
+**Exploring approaches (full workflow):**
 
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
@@ -81,6 +120,8 @@ digraph brainstorming {
 **Presenting the design:**
 
 - Once you believe you understand what you're building, present the design
+- For compact work, present one concise section covering the intended change, preserved behavior, affected boundary, and verification
+- For full work, present sections scaled to their complexity
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
@@ -100,6 +141,12 @@ digraph brainstorming {
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
 
 ## After the Design
+
+### Compact workflow
+
+After approval, do not create a design document or separate implementation plan. If implementation was requested, invoke superpowers:test-driven-development and the applicable domain skill. If the user requested discussion only, stop with the approved design.
+
+### Full workflow
 
 **Documentation:**
 
