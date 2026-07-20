@@ -33,6 +33,16 @@ def base_payload(**overrides: Any) -> dict[str, Any]:
     return payload
 
 
+def app_local_payload(**overrides: Any) -> dict[str, Any]:
+    """Codex App Local fixture with a non-sessions, non-rollout transcript path."""
+    payload = base_payload(
+        session_id="codex-app-local-session-123",
+        transcript_path="/home/user/.codex/app-local/threads/current-thread.jsonl",
+    )
+    payload.update(overrides)
+    return payload
+
+
 def hook_output(
     decision: str,
     **fields: Any,
@@ -126,6 +136,37 @@ class TestRewritePayload(CodexHookTestCase):
                 updatedInput={"command": expected_command, "timeout": 5000},
             ),
         )
+
+    def test_app_local_payload_injects_exact_session_metadata(self) -> None:
+        payload = app_local_payload()
+        command = payload["tool_input"]["command"]
+
+        result = self.run_hook(payload)
+
+        expected_command = (
+            "env "
+            f"ACE_CODEX_SESSION_ID={shlex.quote(payload['session_id'])} "
+            f"ACE_CODEX_TRANSCRIPT_PATH={shlex.quote(payload['transcript_path'])} "
+            f"{command}"
+        )
+        self.assertEqual(
+            result,
+            hook_output(
+                "allow",
+                updatedInput={
+                    **payload["tool_input"],
+                    "command": expected_command,
+                },
+            ),
+        )
+
+    def test_app_local_target_still_denies_missing_transcript_path(self) -> None:
+        result = self.run_hook(app_local_payload(transcript_path=""))
+
+        output = result["hookSpecificOutput"]
+        self.assertEqual(output["permissionDecision"], "deny")
+        self.assertIn("transcript_path", output["permissionDecisionReason"])
+        self.assertNotIn("updatedInput", output)
 
     def test_target_command_quotes_spaces_and_shell_metacharacters(self) -> None:
         session_id = "session with spaces"
