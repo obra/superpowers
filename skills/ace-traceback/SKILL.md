@@ -8,14 +8,10 @@ user-invocable: true
 
 You help the user report a Claude Code, Cursor, or Codex App Local session traceback for after-sales support.
 
-> **实验性状态：** Codex App Local 契约测试通过，但真实 Codex App Local 环境待验收；
-> 不得声称已经完成正式生产验收。Codex Cloud Agent 明确不支持。
-
 ## When to use
 
-- The user explicitly runs `/ace:traceback`.
-- In Codex App Local, the user explicitly runs `/ace-traceback`.
-- A hook (`detect-frustration`) has surfaced the `/ace:traceback` option and the user agrees to upload.
+- The user explicitly runs `/ace-traceback` in Claude Code, Cursor, or Codex App Local.
+- A hook (`detect-frustration`) has surfaced the `/ace-traceback` option and the user agrees to upload.
 
 ## Goal
 
@@ -28,10 +24,9 @@ Determine which runtime you are in before choosing CLI flags:
 - **Cursor** — the host explicitly identifies itself as Cursor, or `CURSOR_AGENT=1`.
 - **Claude Code** — the host explicitly identifies itself as Claude Code.
 - **Codex App Local** — the host explicitly identifies itself as a local Codex App thread and exposes the current tool-call Hook metadata.
-- **Codex Cloud Agent** — stop and explain that traceback upload is not supported. Cloud Agent is outside this feature's trust boundary.
-- **Codex CLI** — not part of the supported contract. Existing versions may remain compatible, but do not promise or guide that path as supported.
 
 If the signals conflict or no runtime is explicit, ask the user which environment they are reporting from. Do not guess.
+If the current local session cannot be obtained and verified, **stop** and do not fall back.
 
 ## Step-by-step
 
@@ -49,8 +44,6 @@ If the signals conflict or no runtime is explicit, ask the user which environmen
    - Before starting, run `ace traceback --help` and verify that its output contains `--codex-current`.
    - If `--codex-current` is absent, **stop** and tell the user to upgrade ACE. This is a version mismatch; do **not** fall back to another session selection strategy.
    - The user starts this workflow with `/ace-traceback` in Codex App Local. Run the commands below internally; do not ask the user to open a terminal or manually run `ace traceback`.
-   - Verify the current App Local shell is POSIX-compatible and has an `env` command available because the Hook injects metadata via a leading `env` prefix. If it does not, **stop** and explain that this App Local environment is not supported. Do **not** scan `$CODEX_HOME`, pick the newest transcript, or manually supply another session.
-   - Secure transcript snapshots also require POSIX file APIs: `O_NOFOLLOW`, `O_DIRECTORY`, and `dir_fd`. A POSIX-compatible shell alone is insufficient; Windows Git Bash and similar environments are not guaranteed to support this path. If ACE reports any capability missing, **stop**. Never retry with weaker path handling.
    - Always use `ace traceback --codex-current`.
    - Do **not** use `--last`, `--session`, scan `$CODEX_HOME`, or pick the newest file.
    - A Codex `PreToolUse` hook injects `ACE_CODEX_SESSION_ID` and `ACE_CODEX_TRANSCRIPT_PATH` for a direct invocation with `--codex-current` immediately after `traceback`; use the canonical commands below.
@@ -69,18 +62,18 @@ If the signals conflict or no runtime is explicit, ask the user which environmen
    - Ask the user: "请用一句话描述你遇到的问题：".
    - Keep the answer short (it will be redacted and uploaded).
    - Keep the summary under 2000 characters.
-   - Safely pass the exact same summary to every dry-run and upload. Use a tool's structured argument passing when available; otherwise apply POSIX `shlex.quote` (or an equivalent shell-safe quoting function) and substitute the resulting single shell word for `<shell-quoted-summary>`.
+   - Safely pass the exact same summary to every dry-run and upload. Use a tool's structured argument passing when available; otherwise apply `shlex.quote` (or an equivalent shell-safe quoting function) and substitute the resulting single shell word for `<shell-quoted-summary>`.
    - Never build a shell command by directly concatenating or interpolating the raw summary.
 
 3. **Preview the bundle**
 
    **Cursor**
    - Run `ace traceback --cursor-current --dry-run --json -m <shell-quoted-summary>`.
-   - Save the returned `session_id` and `source` for upload verification. Pass the preview `session_id` later using structured argument passing when available; otherwise apply POSIX `shlex.quote` (or an equivalent shell-safe quoting function) and use the resulting single shell word as `<shell-quoted-preview-session-id>`.
+   - Save the returned `session_id` and `source` for upload verification. Pass the preview `session_id` later using structured argument passing when available; otherwise apply `shlex.quote` (or an equivalent shell-safe quoting function) and use the resulting single shell word as `<shell-quoted-preview-session-id>`.
 
    **Codex App Local**
    - Run `ace traceback --codex-current --dry-run --json -m <shell-quoted-summary>`.
-   - Require `source="codex"` and `runtime="codex_app_local"`. Save the returned `session_id`, `source`, and `runtime` for upload verification. Pass the preview `session_id` later using structured argument passing when available; otherwise apply POSIX `shlex.quote` (or an equivalent shell-safe quoting function) and use the resulting single shell word as `<shell-quoted-preview-session-id>`.
+   - Require `source="codex"` and `runtime="codex_app_local"`. Save the returned `session_id`, `source`, and `runtime` for upload verification. Pass the preview `session_id` later using structured argument passing when available; otherwise apply `shlex.quote` (or an equivalent shell-safe quoting function) and use the resulting single shell word as `<shell-quoted-preview-session-id>`.
 
    **Claude Code**
    - With a hook-provided session id, run `ace traceback --session <id> --dry-run --json -m <shell-quoted-summary>`.
@@ -143,8 +136,7 @@ If the signals conflict or no runtime is explicit, ask the user which environmen
 
 - Never upload without explicit user confirmation after preview.
 - **Cursor:** if `--cursor-current` capability is unavailable, hook metadata is missing, session pinning fails, or validation fails, stop — do not substitute another session selection strategy. A changed current session requires a new preview and new confirmation.
-- **Codex App Local:** if `--codex-current` capability is unavailable, the shell is not POSIX-compatible or lacks `env`, Hook metadata is missing, `$CODEX_HOME` validation fails, `runtime` is not `codex_app_local`, or session pinning fails, stop — do not substitute another session selection strategy. A changed current session requires a new preview and new confirmation.
-- **Codex Cloud Agent:** stop before preview and explain that it is not supported.
+- **Codex App Local:** if `--codex-current` capability is unavailable, Hook metadata is missing, `$CODEX_HOME` validation fails, `runtime` is not `codex_app_local`, or session pinning fails, stop — do not substitute another session selection strategy. A changed current session requires a new preview and new confirmation.
 - **Claude Code:** pin one captured session id across preview and upload; after capture, never re-resolve with `--last`.
 - Pass summaries and session ids as structured arguments when available or as safely quoted shell arguments; never concatenate untrusted values into a command.
 - If `ace` CLI returns an error, print the error and suggest `/ace:doctor`.

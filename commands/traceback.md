@@ -1,23 +1,18 @@
 ---
 description: 上报 Claude Code、Cursor 或 Codex App Local session traceback 到 HyperData 并登记售后报告
 ---
-# /ace:traceback
+# /ace-traceback
 
 调用 `ace:ace-traceback` skill，引导用户完成 session 选择、bundle 预览、脱敏确认和上传。
-
-> **实验性状态：** Codex App Local 契约测试通过，但真实 Codex App Local 环境待验收；
-> 不得按正式生产支持宣传。Codex Cloud Agent 明确不支持。
 
 ## Usage
 
 ```
-/ace:traceback
+/ace-traceback
 ```
 
-在 Codex App Local 中由用户调用 `/ace-traceback`；Skill 内部使用 `--codex-current`，
-无需用户手动运行 `ace traceback`。Codex Cloud Agent 不支持（not supported）此流程，
-应在预览前停止并说明范围限制。Codex CLI 不是承诺支持的运行时；现有版本可能保持兼容，
-但本命令不把它作为用户路径。
+Claude Code、Cursor 和 Codex App Local 统一由用户调用 `/ace-traceback`。
+Skill 根据当前运行时选择内部参数，无需用户手动运行 `ace traceback`。无法获得并验证当前本地会话时停止且不得回退。
 
 Skill 会：
 1. 识别当前运行时并锁定会话：
