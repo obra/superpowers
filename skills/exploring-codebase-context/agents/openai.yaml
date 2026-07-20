@@ -1,0 +1,4 @@
+interface:
+  display_name: "Exploring Codebase Context"
+  short_description: "Delegate focused repository context research"
+  default_prompt: "Use $exploring-codebase-context to gather the minimum repository context needed for this task."
