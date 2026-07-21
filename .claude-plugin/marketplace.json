@@ -15,6 +15,13 @@
         "name": "Jesse Vincent",
         "email": "jesse@fsck.com"
       }
+    },
+    {
+      "name": "team-workflow",
+      "description": "Your team's Claude Code workflow: intake-generated skills, connectors, and conventions layered on Superpowers.",
+      "version": "0.1.0",
+      "source": "./team",
+      "author": { "name": "Your Team" }
     }
   ]
 }

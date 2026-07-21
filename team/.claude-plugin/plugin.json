@@ -1,0 +1,6 @@
+{
+  "name": "team-workflow",
+  "description": "Your team's Claude Code workflow: intake-generated skills, connectors, and conventions layered on Superpowers.",
+  "version": "0.1.0",
+  "keywords": ["team", "workflow", "onboarding", "superpowers"]
+}
