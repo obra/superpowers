@@ -10,4 +10,5 @@ check_skill() { # <path> <expected-name> <marker...>
   for m in "$@"; do assert_contains "$f" "$m"; done
 }
 check_skill team/skills/team-setup/SKILL.md team-setup "rename-plugin.sh" "one question at a time" "team/intake"
+check_skill team/skills/generate-workflow/SKILL.md generate-workflow "compose and scaffold, never hallucinate" "team/workflow.md" "requesting-code-review"
 finish
