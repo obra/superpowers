@@ -69,6 +69,13 @@ actually works, generated from the team intake. When in doubt about "how
 do we do things here," that file is the answer, and `/getting-started`
 (this skill) is the map to it.
 
+**If `team/workflow.md` doesn't exist yet**, this team hasn't finished
+setup — the file is generated, not shipped. Don't send the member looking
+for a file that isn't there. Instead tell them so plainly and point at the
+one-time setup path: a leader runs `/team-setup` (interview → `team/intake/`)
+then `/generate-workflow` to produce it. Until then, the general mindset
+above plus the raw Superpowers engine skills are what's available.
+
 ## Credit
 
 This workflow is built on **Superpowers** by Jesse Vincent (obra), MIT
@@ -96,3 +103,4 @@ project is the source.
 | "I'll just tell them to memorize the skill names" | Skills auto-trigger from descriptions. Teach them to describe the goal well; explicit invocation is the exception. |
 | "No need to mention Superpowers" | Always credit upstream. The engine is Superpowers (obra), MIT — point them at the source. |
 | "Skip the team workflow, the general mindset is enough" | The whole point is `team/workflow.md` — the team's *own* flow. Orientation that doesn't land them there is incomplete. |
+| "`team/workflow.md` is missing — I'll just generate it for them" | Missing file means setup hasn't run. This skill teaches only. Tell them to run `/team-setup` then `/generate-workflow`; don't generate it here. |

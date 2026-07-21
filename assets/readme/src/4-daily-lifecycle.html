@@ -1,0 +1,60 @@
+<style>html,body{margin:0;padding:0}</style>
+<svg width="1040" height="520" viewBox="0 0 1040 520" xmlns="http://www.w3.org/2000/svg" font-family="'Chalkboard SE','Bradley Hand',cursive">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="2" seed="23" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="6" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowY" markerWidth="12" markerHeight="12" refX="6" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#8a6d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1040" height="520" fill="#fdf8ec"/>
+  <rect width="1040" height="520" filter="url(#paper)"/>
+
+  <text x="520" y="50" text-anchor="middle" font-size="32" fill="#2b2b2b">Daily use — every member, every task</text>
+  <g filter="url(#rough)" stroke="#e8b23a" stroke-width="5" stroke-linecap="round"><line x1="300" y1="66" x2="740" y2="66"/></g>
+
+  <!-- you -->
+  <g filter="url(#rough)"><rect x="60" y="180" width="220" height="120" rx="16" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2.8"/></g>
+  <text x="170" y="228" text-anchor="middle" font-size="21" fill="#2b2b2b">describe</text>
+  <text x="170" y="256" text-anchor="middle" font-size="21" fill="#2b2b2b">your goal</text>
+  <text x="170" y="284" text-anchor="middle" font-size="13" fill="#6b6b6b">no commands to memorize</text>
+
+  <g filter="url(#rough)"><line x1="280" y1="240" x2="345" y2="240" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+
+  <!-- trigger skill -->
+  <g filter="url(#rough)"><rect x="350" y="185" width="180" height="110" rx="14" fill="#fef3d0" stroke="#8a6d1f" stroke-width="2.6"/></g>
+  <text x="440" y="222" text-anchor="middle" font-size="16" fill="#2b2b2b">team trigger</text>
+  <text x="440" y="244" text-anchor="middle" font-size="16" fill="#2b2b2b">skill fires</text>
+  <text x="440" y="272" text-anchor="middle" font-size="12" fill="#8a6d1f">routes you into</text>
+  <text x="440" y="288" text-anchor="middle" font-size="12" fill="#8a6d1f">team/workflow.md</text>
+
+  <g filter="url(#rough)"><line x1="530" y1="240" x2="595" y2="240" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+
+  <!-- the engine flow -->
+  <g filter="url(#rough)"><rect x="600" y="120" width="380" height="290" rx="18" fill="#e9edf2" stroke="#2b2b2b" stroke-width="2.8"/></g>
+  <text x="790" y="150" text-anchor="middle" font-size="17" fill="#6b6b6b">Superpowers engine skills auto-fire</text>
+
+  <g filter="url(#rough)">
+    <rect x="650" y="168" width="280" height="40" rx="10" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="650" y="218" width="280" height="40" rx="10" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="650" y="268" width="280" height="40" rx="10" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="650" y="318" width="280" height="40" rx="10" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <line x1="790" y1="208" x2="790" y2="217" stroke="#2b2b2b" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="790" y1="258" x2="790" y2="267" stroke="#2b2b2b" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="790" y1="308" x2="790" y2="317" stroke="#2b2b2b" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+  <text x="790" y="194" text-anchor="middle" font-size="17" fill="#2b2b2b">brainstorm  →  plan</text>
+  <text x="790" y="244" text-anchor="middle" font-size="17" fill="#2b2b2b">test-driven implementation</text>
+  <text x="790" y="294" text-anchor="middle" font-size="17" fill="#2b2b2b">review</text>
+  <text x="790" y="344" text-anchor="middle" font-size="17" fill="#2b2b2b">ship</text>
+
+  <text x="520" y="470" text-anchor="middle" font-size="16" fill="#8a8a8a">Same Superpowers workflow you'd use anyway — the team layer just points it at how YOUR team works.</text>
+</svg>

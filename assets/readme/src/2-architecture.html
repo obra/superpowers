@@ -1,0 +1,66 @@
+<style>html,body{margin:0;padding:0}</style>
+<svg width="1040" height="620" viewBox="0 0 1040 620" xmlns="http://www.w3.org/2000/svg" font-family="'Chalkboard SE','Bradley Hand',cursive">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="6" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1040" height="620" fill="#fdf8ec"/>
+  <rect width="1040" height="620" filter="url(#paper)"/>
+
+  <text x="520" y="52" text-anchor="middle" font-size="32" fill="#2b2b2b">Two plugins, one private marketplace</text>
+  <g filter="url(#rough)" stroke="#e8b23a" stroke-width="5" stroke-linecap="round"><line x1="330" y1="68" x2="710" y2="68"/></g>
+
+  <!-- upstream cloud -->
+  <g filter="url(#rough)">
+    <rect x="70" y="100" width="300" height="70" rx="30" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2.4"/>
+  </g>
+  <text x="220" y="132" text-anchor="middle" font-size="19" fill="#2b2b2b">github.com/obra/superpowers</text>
+  <text x="220" y="156" text-anchor="middle" font-size="14" fill="#6b6b6b">upstream engine (MIT)</text>
+
+  <!-- sync arrow -->
+  <g filter="url(#rough)"><line x1="220" y1="172" x2="220" y2="252" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+  <g filter="url(#rough)"><rect x="120" y="196" width="200" height="30" rx="9" fill="#fef3d0" stroke="#8a6d1f" stroke-width="1.8"/></g>
+  <text x="220" y="216" text-anchor="middle" font-size="15" fill="#8a6d1f">./scripts/sync-engine.sh</text>
+
+  <!-- marketplace container -->
+  <g filter="url(#rough)"><rect x="40" y="255" width="960" height="330" rx="24" fill="none" stroke="#b7b7b7" stroke-width="2.4" stroke-dasharray="3 8"/></g>
+  <text x="60" y="285" font-size="17" fill="#8a8a8a">your private marketplace  (one repo your team clones)</text>
+
+  <!-- LEFT: engine plugin -->
+  <g filter="url(#rough)"><rect x="80" y="305" width="380" height="250" rx="18" fill="#e9edf2" stroke="#2b2b2b" stroke-width="2.8"/></g>
+  <text x="270" y="345" text-anchor="middle" font-size="23" fill="#2b2b2b">superpowers</text>
+  <text x="270" y="370" text-anchor="middle" font-size="15" fill="#6b6b6b">the engine — byte-for-byte upstream</text>
+  <g filter="url(#rough)">
+    <rect x="120" y="392" width="140" height="46" rx="10" fill="#fff" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="280" y="392" width="140" height="46" rx="10" fill="#fff" stroke="#2b2b2b" stroke-width="2"/>
+  </g>
+  <text x="190" y="421" text-anchor="middle" font-size="18" fill="#2b2b2b">skills/</text>
+  <text x="350" y="421" text-anchor="middle" font-size="18" fill="#2b2b2b">hooks/</text>
+  <g filter="url(#rough)"><rect x="128" y="470" width="284" height="34" rx="10" fill="#fff" stroke="#c0392b" stroke-width="2"/></g>
+  <text x="270" y="493" text-anchor="middle" font-size="14" fill="#c0392b">never edit — synced from upstream</text>
+
+  <!-- RIGHT: team plugin -->
+  <g filter="url(#rough)"><rect x="580" y="305" width="380" height="250" rx="18" fill="#fef3d0" stroke="#2b2b2b" stroke-width="2.8"/></g>
+  <text x="770" y="345" text-anchor="middle" font-size="23" fill="#2b2b2b">your-team plugin</text>
+  <text x="770" y="370" text-anchor="middle" font-size="15" fill="#8a6d1f">renamed from "team-workflow" at setup</text>
+  <g filter="url(#rough)">
+    <rect x="612" y="392" width="150" height="42" rx="10" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="792" y="392" width="146" height="42" rx="10" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <line x1="762" y1="413" x2="790" y2="413" stroke="#2b2b2b" stroke-width="2.2" marker-end="url(#arrow)"/>
+  </g>
+  <text x="687" y="418" text-anchor="middle" font-size="15" fill="#2b2b2b">intake/*.md</text>
+  <text x="865" y="411" text-anchor="middle" font-size="14" fill="#2b2b2b">generators</text>
+  <text x="865" y="428" text-anchor="middle" font-size="12" fill="#6b6b6b">team/skills/</text>
+  <g filter="url(#rough)"><rect x="640" y="470" width="260" height="34" rx="10" fill="#fffdf6" stroke="#8a6d1f" stroke-width="2"/></g>
+  <text x="770" y="493" text-anchor="middle" font-size="15" fill="#8a6d1f">generated workflow + team skills</text>
+
+  <text x="520" y="605" text-anchor="middle" font-size="15" fill="#8a8a8a">sync-engine.sh only ever touches the left box — your team's work on the right is never disturbed</text>
+</svg>

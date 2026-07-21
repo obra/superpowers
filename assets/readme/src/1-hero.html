@@ -1,0 +1,61 @@
+<style>
+  html,body{margin:0;padding:0}
+  .wrap{width:960px;height:600px}
+</style>
+<div class="wrap">
+<svg width="960" height="600" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" font-family="'Chalkboard SE','Bradley Hand',cursive">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.03 0"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="6" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- paper -->
+  <rect width="960" height="600" fill="#fdf8ec"/>
+  <rect width="960" height="600" filter="url(#paper)"/>
+
+  <!-- title -->
+  <text x="480" y="58" text-anchor="middle" font-size="34" fill="#2b2b2b">How the Team Template fits together</text>
+  <g filter="url(#rough)" stroke="#e8b23a" stroke-width="5" stroke-linecap="round">
+    <line x1="300" y1="74" x2="662" y2="74"/>
+  </g>
+
+  <g filter="url(#rough)">
+    <!-- TOP: your team -->
+    <rect x="300" y="110" width="360" height="90" rx="18" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2.6"/>
+    <!-- MIDDLE: team layer -->
+    <rect x="150" y="250" width="660" height="130" rx="20" fill="#fef3d0" stroke="#2b2b2b" stroke-width="2.8"/>
+    <!-- BASE: engine -->
+    <rect x="120" y="430" width="720" height="140" rx="22" fill="#e9edf2" stroke="#2b2b2b" stroke-width="3"/>
+    <!-- connectors -->
+    <line x1="480" y1="200" x2="480" y2="248" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/>
+    <line x1="480" y1="380" x2="480" y2="428" stroke="#2b2b2b" stroke-width="2.4" stroke-dasharray="2 7" marker-start="url(#arrow)"/>
+  </g>
+
+  <!-- labels (kept outside rough so text stays legible) -->
+  <text x="480" y="150" text-anchor="middle" font-size="24" fill="#2b2b2b">YOUR TEAM</text>
+  <text x="480" y="180" text-anchor="middle" font-size="16" fill="#6b6b6b">everyone works the same way</text>
+
+  <text x="480" y="290" text-anchor="middle" font-size="26" fill="#2b2b2b">TEAM LAYER</text>
+  <text x="480" y="322" text-anchor="middle" font-size="16" fill="#8a6d1f">your intake · generated workflow · connectors · team skills</text>
+  <text x="480" y="352" text-anchor="middle" font-size="15" fill="#8a6d1f">— generated once, from how YOUR team works —</text>
+
+  <text x="480" y="478" text-anchor="middle" font-size="26" fill="#2b2b2b">SUPERPOWERS ENGINE</text>
+  <text x="480" y="510" text-anchor="middle" font-size="16" fill="#6b6b6b">brainstorm · plan · TDD · review · debug</text>
+  <text x="480" y="538" text-anchor="middle" font-size="15" fill="#6b6b6b">frozen &amp; synced from upstream — never edited</text>
+
+  <!-- lock tag -->
+  <g filter="url(#rough)">
+    <rect x="742" y="446" width="86" height="34" rx="10" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+  </g>
+  <text x="785" y="469" text-anchor="middle" font-size="15" fill="#c0392b">locked</text>
+</svg>
+</div>

@@ -1,0 +1,68 @@
+<style>html,body{margin:0;padding:0}</style>
+<svg width="1040" height="560" viewBox="0 0 1040 560" xmlns="http://www.w3.org/2000/svg" font-family="'Chalkboard SE','Bradley Hand',cursive">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="2" seed="19" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="6" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1040" height="560" fill="#fdf8ec"/>
+  <rect width="1040" height="560" filter="url(#paper)"/>
+
+  <text x="520" y="50" text-anchor="middle" font-size="32" fill="#2b2b2b">Setup — run once, by the team leader</text>
+  <g filter="url(#rough)" stroke="#e8b23a" stroke-width="5" stroke-linecap="round"><line x1="300" y1="66" x2="740" y2="66"/></g>
+
+  <!-- step 1 -->
+  <g filter="url(#rough)"><rect x="60" y="120" width="230" height="110" rx="16" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2.8"/></g>
+  <text x="175" y="160" text-anchor="middle" font-size="21" fill="#2b2b2b">/team-setup</text>
+  <text x="175" y="188" text-anchor="middle" font-size="14" fill="#6b6b6b">names the plugin,</text>
+  <text x="175" y="208" text-anchor="middle" font-size="14" fill="#6b6b6b">interviews you one Q at a time</text>
+
+  <g filter="url(#rough)"><line x1="290" y1="175" x2="345" y2="175" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+
+  <!-- intake -->
+  <g filter="url(#rough)"><rect x="350" y="128" width="180" height="94" rx="14" fill="#eef1f5" stroke="#2b2b2b" stroke-width="2.4"/></g>
+  <text x="440" y="165" text-anchor="middle" font-size="17" fill="#2b2b2b">team/intake/</text>
+  <text x="440" y="188" text-anchor="middle" font-size="13" fill="#6b6b6b">5 files: what-we-do,</text>
+  <text x="440" y="206" text-anchor="middle" font-size="13" fill="#6b6b6b">use, conventions, testing…</text>
+
+  <g filter="url(#rough)"><line x1="530" y1="175" x2="585" y2="175" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+
+  <!-- generate -->
+  <g filter="url(#rough)"><rect x="590" y="120" width="240" height="110" rx="16" fill="#fef3d0" stroke="#2b2b2b" stroke-width="2.8"/></g>
+  <text x="710" y="160" text-anchor="middle" font-size="20" fill="#2b2b2b">/generate-workflow</text>
+  <text x="710" y="188" text-anchor="middle" font-size="14" fill="#8a6d1f">composes engine skills,</text>
+  <text x="710" y="208" text-anchor="middle" font-size="14" fill="#8a6d1f">proposes fixes for gaps</text>
+
+  <!-- down arrow to outputs -->
+  <g filter="url(#rough)"><line x1="710" y1="230" x2="710" y2="285" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+
+  <!-- outputs container -->
+  <g filter="url(#rough)"><rect x="120" y="300" width="800" height="140" rx="18" fill="#fbfbfb" stroke="#2b2b2b" stroke-width="2.6"/></g>
+  <text x="520" y="330" text-anchor="middle" font-size="18" fill="#2b2b2b">generates your team's working system</text>
+  <g filter="url(#rough)">
+    <rect x="150" y="348" width="180" height="72" rx="12" fill="#fef3d0" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="345" y="348" width="170" height="72" rx="12" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="530" y="348" width="170" height="72" rx="12" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+    <rect x="715" y="348" width="180" height="72" rx="12" fill="#fffdf6" stroke="#2b2b2b" stroke-width="2"/>
+  </g>
+  <text x="240" y="380" text-anchor="middle" font-size="16" fill="#2b2b2b">team/workflow.md</text>
+  <text x="240" y="402" text-anchor="middle" font-size="12" fill="#8a6d1f">the canonical flow</text>
+  <text x="430" y="380" text-anchor="middle" font-size="16" fill="#2b2b2b">team/CLAUDE.md</text>
+  <text x="430" y="402" text-anchor="middle" font-size="12" fill="#6b6b6b">conventions</text>
+  <text x="615" y="380" text-anchor="middle" font-size="16" fill="#2b2b2b">connectors</text>
+  <text x="615" y="402" text-anchor="middle" font-size="12" fill="#6b6b6b">docs + MCP config</text>
+  <text x="805" y="380" text-anchor="middle" font-size="16" fill="#2b2b2b">trigger skill</text>
+  <text x="805" y="402" text-anchor="middle" font-size="12" fill="#6b6b6b">routes members in</text>
+
+  <!-- commit -->
+  <g filter="url(#rough)"><line x1="520" y1="440" x2="520" y2="480" stroke="#2b2b2b" stroke-width="2.4" marker-end="url(#arrow)"/></g>
+  <g filter="url(#rough)"><rect x="410" y="484" width="220" height="46" rx="12" fill="#e9edf2" stroke="#2b2b2b" stroke-width="2.4"/></g>
+  <text x="520" y="513" text-anchor="middle" font-size="18" fill="#2b2b2b">commit &amp; push — done</text>
+</svg>
