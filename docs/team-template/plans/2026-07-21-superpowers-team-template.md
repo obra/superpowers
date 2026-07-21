@@ -32,12 +32,12 @@
 - `team/CLAUDE.md` (placeholder conventions), `team/README.md`
 - `team/intake/` templates: `what-we-do.md`, `what-we-use.md`, `our-conventions.md`, `testing.md`, `connectors.md`
 - `team/scripts/rename-plugin.sh`
-- `team/generators/team-setup/SKILL.md`
-- `team/generators/generate-workflow/SKILL.md`
-- `team/generators/new-skill/SKILL.md`
-- `team/generators/new-connector/SKILL.md`
-- `team/generators/new-workflow/SKILL.md`
-- `team/generators/getting-started/SKILL.md`
+- `team/skills/team-setup/SKILL.md`
+- `team/skills/generate-workflow/SKILL.md`
+- `team/skills/new-skill/SKILL.md`
+- `team/skills/new-connector/SKILL.md`
+- `team/skills/new-workflow/SKILL.md`
+- `team/skills/getting-started/SKILL.md`
 - `team/skills/.gitkeep`, `team/docs/.gitkeep`
 
 **Modified:**
@@ -630,7 +630,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## Skill-authoring tasks (8–13)
 
-Tasks 8–13 create skill files. For each, the deliverable is `team/generators/<name>/SKILL.md`. Author with the **`superpowers:writing-skills`** sub-skill. Each task gives the exact frontmatter (`name`, `description`) and a concrete body spec (sections + the interview/output behavior). The "test" for a skill is twofold and both must pass:
+Tasks 8–13 create skill files. For each, the deliverable is `team/skills/<name>/SKILL.md`. Author with the **`superpowers:writing-skills`** sub-skill. Each task gives the exact frontmatter (`name`, `description`) and a concrete body spec (sections + the interview/output behavior). The "test" for a skill is twofold and both must pass:
 
 - **Structural test** (automated): `tests/team-template/test-skills.sh` (created in Task 8, extended per task) checks the file exists, has valid frontmatter with the exact `name`, and contains the required section markers.
 - **Acceptance test** (manual, recorded): run the documented prompt in a clean Claude Code session and paste the transcript into the task's PR/commit notes, confirming the skill triggers and behaves as specified.
@@ -642,7 +642,7 @@ Skills are behavior-shaping prose — do not invent pytest-style tests for them.
 ## Task 8: `/team-setup` skill
 
 **Files:**
-- Create: `team/generators/team-setup/SKILL.md`, `tests/team-template/test-skills.sh`
+- Create: `team/skills/team-setup/SKILL.md`, `tests/team-template/test-skills.sh`
 
 **Interfaces:**
 - Consumes: `team/scripts/rename-plugin.sh` (Task 6), `team/intake/*` templates (Task 7).
@@ -663,7 +663,7 @@ check_skill() { # <path> <expected-name> <marker...>
   grep -q '^description:' "$f" && echo "ok: has description $f" || { echo "FAIL: no description $f"; FAILED=1; }
   for m in "$@"; do assert_contains "$f" "$m"; done
 }
-check_skill team/generators/team-setup/SKILL.md team-setup "rename-plugin.sh" "one question at a time" "team/intake"
+check_skill team/skills/team-setup/SKILL.md team-setup "rename-plugin.sh" "one question at a time" "team/intake"
 finish
 ```
 
@@ -674,7 +674,7 @@ Expected: FAIL (skill missing).
 
 - [ ] **Step 3: Author the skill (use `superpowers:writing-skills`)**
 
-Create `team/generators/team-setup/SKILL.md` with frontmatter:
+Create `team/skills/team-setup/SKILL.md` with frontmatter:
 ```markdown
 ---
 name: team-setup
@@ -701,7 +701,7 @@ In a clean session with the plugin installed: run `/team-setup`. Confirm it rena
 - [ ] **Step 6: Commit**
 
 ```bash
-git add team/generators/team-setup tests/team-template/test-skills.sh
+git add team/skills/team-setup tests/team-template/test-skills.sh
 git commit -m "Add /team-setup: interactive intake + plugin rename
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -712,7 +712,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 9: `/generate-workflow` skill (assembler + gap-analyzer)
 
 **Files:**
-- Create: `team/generators/generate-workflow/SKILL.md`
+- Create: `team/skills/generate-workflow/SKILL.md`
 - Test: extend `tests/team-template/test-skills.sh`
 
 **Interfaces:**
@@ -723,7 +723,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 Append to `tests/team-template/test-skills.sh` before `finish`:
 ```bash
-check_skill team/generators/generate-workflow/SKILL.md generate-workflow "compose and scaffold, never hallucinate" "team/workflow.md" "requesting-code-review"
+check_skill team/skills/generate-workflow/SKILL.md generate-workflow "compose and scaffold, never hallucinate" "team/workflow.md" "requesting-code-review"
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -733,7 +733,7 @@ Expected: FAIL (skill missing).
 
 - [ ] **Step 3: Author the skill (use `superpowers:writing-skills`)**
 
-Create `team/generators/generate-workflow/SKILL.md` frontmatter:
+Create `team/skills/generate-workflow/SKILL.md` frontmatter:
 ```markdown
 ---
 name: generate-workflow
@@ -762,7 +762,7 @@ With intake filled (from Task 8 acceptance), run `/generate-workflow`. Confirm i
 - [ ] **Step 6: Commit**
 
 ```bash
-git add team/generators/generate-workflow tests/team-template/test-skills.sh
+git add team/skills/generate-workflow tests/team-template/test-skills.sh
 git commit -m "Add /generate-workflow: compose engine skills + propose gap fixes
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -773,7 +773,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 10: `/new-skill` generator (team|personal routing, teach-while-doing)
 
 **Files:**
-- Create: `team/generators/new-skill/SKILL.md`
+- Create: `team/skills/new-skill/SKILL.md`
 - Test: extend `tests/team-template/test-skills.sh`
 
 **Interfaces:**
@@ -784,7 +784,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 Append before `finish`:
 ```bash
-check_skill team/generators/new-skill/SKILL.md new-skill "team or personal" "~/.claude/skills" "trigger description"
+check_skill team/skills/new-skill/SKILL.md new-skill "team or personal" "~/.claude/skills" "trigger description"
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -820,7 +820,7 @@ Run `/new-skill`, choose personal, create a trivial skill; confirm it lands in `
 - [ ] **Step 6: Commit**
 
 ```bash
-git add team/generators/new-skill tests/team-template/test-skills.sh
+git add team/skills/new-skill tests/team-template/test-skills.sh
 git commit -m "Add /new-skill: team|personal routing, teaches anatomy while building
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -831,7 +831,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 11: `/new-connector` generator
 
 **Files:**
-- Create: `team/generators/new-connector/SKILL.md`
+- Create: `team/skills/new-connector/SKILL.md`
 - Test: extend `tests/team-template/test-skills.sh`
 
 **Interfaces:**
@@ -842,7 +842,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 Append before `finish`:
 ```bash
-check_skill team/generators/new-connector/SKILL.md new-connector "doc, MCP tool, or convention" "team/docs" "MCP"
+check_skill team/skills/new-connector/SKILL.md new-connector "doc, MCP tool, or convention" "team/docs" "MCP"
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -877,7 +877,7 @@ Run `/new-connector`, exercise each of the three branches once. Paste transcript
 - [ ] **Step 6: Commit**
 
 ```bash
-git add team/generators/new-connector tests/team-template/test-skills.sh
+git add team/skills/new-connector tests/team-template/test-skills.sh
 git commit -m "Add /new-connector: doc | MCP | convention, teach-while-doing
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -888,7 +888,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 12: `/new-workflow` generator
 
 **Files:**
-- Create: `team/generators/new-workflow/SKILL.md`
+- Create: `team/skills/new-workflow/SKILL.md`
 - Test: extend `tests/team-template/test-skills.sh`
 
 **Interfaces:**
@@ -899,7 +899,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 Append before `finish`:
 ```bash
-check_skill team/generators/new-workflow/SKILL.md new-workflow "compose" "team/workflows"
+check_skill team/skills/new-workflow/SKILL.md new-workflow "compose" "team/workflows"
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -930,7 +930,7 @@ Run `/new-workflow`, create a 3-step flow; confirm `team/workflows/<name>.md` na
 - [ ] **Step 6: Commit**
 
 ```bash
-git add team/generators/new-workflow tests/team-template/test-skills.sh
+git add team/skills/new-workflow tests/team-template/test-skills.sh
 git commit -m "Add /new-workflow: compose engine+team skills into an ordered flow
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -941,7 +941,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 13: `/getting-started` skill (teach-only mindset)
 
 **Files:**
-- Create: `team/generators/getting-started/SKILL.md`
+- Create: `team/skills/getting-started/SKILL.md`
 - Test: extend `tests/team-template/test-skills.sh`
 
 **Interfaces:**
@@ -952,7 +952,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 Append before `finish`:
 ```bash
-check_skill team/generators/getting-started/SKILL.md getting-started "github.com/obra/superpowers" "brainstorm" "team/workflow.md"
+check_skill team/skills/getting-started/SKILL.md getting-started "github.com/obra/superpowers" "brainstorm" "team/workflow.md"
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -983,7 +983,7 @@ Run `/getting-started` in a clean session; confirm it orients without creating f
 - [ ] **Step 6: Commit**
 
 ```bash
-git add team/generators/getting-started tests/team-template/test-skills.sh
+git add team/skills/getting-started tests/team-template/test-skills.sh
 git commit -m "Add /getting-started: teach-only onboarding mindset + Superpowers credit
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"

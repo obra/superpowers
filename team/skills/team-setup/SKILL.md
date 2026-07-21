@@ -14,8 +14,8 @@ This skill runs a short, structured interview with whoever is setting up the
 template for their team, then writes the answers straight into the intake
 files under `team/intake`. It does two jobs, in a fixed order: name the
 plugin first, then interview. Nothing gets generated here — this skill only
-captures facts. The workflow generator (`/generate-workflow`) is what turns
-captured facts into skills.
+captures facts. The workflow generator is what turns captured facts into
+skills.
 
 ## When to Use
 
@@ -93,8 +93,8 @@ Once all five `team/intake` files are filled in, summarize what was
 captured: one or two lines per file naming the key facts recorded. Then tell
 the leader the next step:
 
-> Setup captured. Run `/generate-workflow` next to turn this into your
-> team's skills.
+> Setup captured. Run `/<slug>:generate-workflow` next (using your team's
+> slug) to turn this into your team's skills.
 
 ## Quick Reference
 
@@ -104,7 +104,7 @@ the leader the next step:
 | 2 | Get slug, validate, run `team/scripts/rename-plugin.sh <slug>`, confirm `/<slug>:` prefix |
 | 3 | Interview one question at a time, walking `team/intake` files in fixed order |
 | 4 | Write each answer under its matching `##` heading, same file, same headings |
-| 5 | Summarize, point to `/generate-workflow` |
+| 5 | Summarize, point to `/<slug>:generate-workflow` |
 
 ## Red Flags — Stop and Correct
 

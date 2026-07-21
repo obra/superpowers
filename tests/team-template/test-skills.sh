@@ -9,5 +9,5 @@ check_skill() { # <path> <expected-name> <marker...>
   grep -q '^description:' "$f" && echo "ok: has description $f" || { echo "FAIL: no description $f"; FAILED=1; }
   for m in "$@"; do assert_contains "$f" "$m"; done
 }
-check_skill team/generators/team-setup/SKILL.md team-setup "rename-plugin.sh" "one question at a time" "team/intake"
+check_skill team/skills/team-setup/SKILL.md team-setup "rename-plugin.sh" "one question at a time" "team/intake"
 finish

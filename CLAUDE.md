@@ -13,6 +13,6 @@ This repo is a team-onboarding template built on Superpowers (obra/Jesse Vincent
 ## Layout
 
 - `skills/`, `hooks/` — engine (do not touch)
-- `team/` — the team plugin: `intake/`, `skills/`, `docs/`, `generators/`, `CLAUDE.md`
+- `team/` — the team plugin: `intake/`, `skills/` (generators + generated team skills), `docs/`, `CLAUDE.md`
 - `scripts/sync-engine.sh` — pull upstream engine + bump version
 - `docs/team-template/` — this project's specs and plans
