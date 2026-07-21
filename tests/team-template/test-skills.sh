@@ -11,4 +11,5 @@ check_skill() { # <path> <expected-name> <marker...>
 }
 check_skill team/skills/team-setup/SKILL.md team-setup "rename-plugin.sh" "one question at a time" "team/intake"
 check_skill team/skills/generate-workflow/SKILL.md generate-workflow "compose and scaffold, never hallucinate" "team/workflow.md" "requesting-code-review"
+check_skill team/skills/new-skill/SKILL.md new-skill "team or personal" "~/.claude/skills" "trigger description"
 finish
