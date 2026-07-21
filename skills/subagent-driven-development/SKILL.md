@@ -413,6 +413,15 @@ rulings, or stop on load-bearing ones. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
 finishing-a-development-branch presents the options.
 
+The wave closing is policy, not a verdict. A sufficiently strong reviewer
+finds real defects indefinitely, so "review until one comes back clean"
+never terminates — the completed wave is the exit, not a clean report.
+New Critical/Important breakage in the final fix diff joins the residuals
+for adjudication; it does not start a second wave. And review procedures
+your human partner sets up for one review — competing reviewers, scoring,
+extra seats — apply to that review only. Never adopt them as standing
+procedure for reviews they didn't ask about.
+
 ## Finish
 
 When the final whole-branch review is clean and its fixes are merged,
@@ -434,6 +443,8 @@ Use superpowers:finishing-a-development-branch.
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
+| "This new finding is real — one more wave" | Real findings are infinite under a strong reviewer. The completed wave is the exit; adjudicate and route. |
+| "They liked competing reviewers earlier, I'll run them again" | One-off review procedures apply to the review they were given for. Re-adopting them unasked is scope creep in review clothing. |
 
 ## Example Workflow
 

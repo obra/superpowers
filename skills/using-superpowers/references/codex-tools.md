@@ -9,6 +9,47 @@ multi_agent = true
 
 This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`. When using subagent-driven-development, close reviewer subagents when their review returns. Keep each implementer subagent open until its task's review passes — the fix loop resumes the implementer — then close it. If your harness cannot send another message to a spawned agent, dispatch each fix round as a fresh implementer carrying the brief, the report file, and the findings.
 
+## SDD dispatch: pin fork_turns and the model on every spawn
+
+Every `spawn_agent` call in subagent-driven-development sets
+`fork_turns: "none"`. The parameter defaults to `"all"`, which forks your
+entire session transcript into the child — the opposite of the fresh,
+constructed context SDD requires — and a full-history fork also refuses
+model and effort overrides. Never omit the parameter, and never pass
+`"all"` or a turn count for an SDD dispatch.
+
+Before Task 1, check your `spawn_agent` tool schema for `model` and
+`reasoning_effort` parameters (present on Codex 0.145+).
+
+**If the parameters exist**, set both explicitly on every dispatch:
+
+| Role | model | reasoning_effort |
+|------|-------|------------------|
+| Implementer (all rounds) | `gpt-5.6-terra` | `high` |
+| Task reviewer | `gpt-5.6-terra` | `high` |
+| Scoped re-review | `gpt-5.6-terra` | `medium` |
+| Final whole-branch review | `gpt-5.6-terra` | `high` |
+
+On Codex this table IS the Model Selection mapping — including the final
+review, which stays on terra/high rather than "most capable available."
+Never give a subagent your session's model when you run a frontier config
+(sol at xhigh or max): reviewer tier never exceeds implementer tier, and
+a fix round never gets an effort bump. Rounds 4-5's "more capable model"
+means a fresh implementer at the same tier; a task that genuinely needs
+more than terra/high is a BLOCKED escalation to your human partner, not
+a quiet tier climb. Frontier-tier subagents at inherited effort are the
+measured top driver of Codex SDD runs spinning out to 8+ hours
+(PRI-2672): review seats that inherited sol found real-but-endless
+defects every round, and fix diffs ballooned instead of converging.
+
+**If the parameters do not exist** (Codex 0.144 and earlier), every child
+inherits your session's model and effort and no override is possible —
+role files in `~/.codex/agents/` do not attach to spawns either. Say so
+to your human partner before starting a plan of more than a few tasks,
+and offer the choice: proceed with inheritance, or restart the session
+at a lower effort so the whole run — controller and children — pays the
+lower rate.
+
 ## Environment Detection
 
 Skills that create worktrees or finish branches should detect their
