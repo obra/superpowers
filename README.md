@@ -80,27 +80,28 @@ Meet a realistic team, so the two lifecycles above stop being abstract.
 
 **Company Z's platform team, 9 developers.** Their institutional knowledge lives
 in **Confluence** — a deploy runbook, a "how we cut a release" page, coding
-standards, an incident playbook. Their Claude Code adoption is uneven: **Dana and
-Sam** have used it for months and have built up personal skills and sharp habits;
-**Priya** (the lead) uses it some; **Marcus** got access last week and is still
-finding his feet. Everyone works slightly differently, and none of that hard-won
-practice is shared. That's the problem this template exists to fix.
+standards, an incident playbook. Their Claude Code adoption is uneven: **a couple
+of senior engineers** have used it for months and have built up personal skills and
+sharp habits; **the team lead** uses it some; **a new hire** got access last week
+and is still finding their feet. Everyone works slightly differently, and none of
+that hard-won practice is shared. That's the problem this template exists to fix.
 
-### Act 1 — Priya sets it up (once)
+### Act 1 — the team lead sets it up (once)
 
-Priya forks the template privately, clones it, opens it in Claude Code, and runs:
+The **team lead** forks the template privately, clones it, opens it in Claude Code,
+and runs:
 
 ```
 /team-setup
 ```
 
-It renames the plugin to `platform-z` and then **interviews her one question at a
+It renames the plugin to `platform-z` and then **interviews them one question at a
 time** — how work flows from idea to shipped, what stack they use, their review
-rules, how they test before merge. She's not writing skills; she's answering
-questions, and her answers land in `team/intake/*.md`.
+rules, how they test before merge. They're not writing skills; they're answering
+questions, and the answers land in `team/intake/*.md`.
 
-When the interview reaches connectors, she wires their Confluence in so Claude can
-actually *use* it:
+When the interview reaches connectors, the lead wires their Confluence in so Claude
+can actually *use* it:
 
 ```
 /platform-z:new-connector
@@ -108,9 +109,9 @@ actually *use* it:
 ```
 
 Now Claude can **read the team's Confluence runbooks on demand** — the release
-page, the deploy runbook — at the moment a task needs them, instead of Priya
-pasting stale snapshots. She also records their "squash-merge only, PR needs one
-approval" rule as an always-on convention.
+page, the deploy runbook — at the moment a task needs them, instead of anyone
+pasting stale snapshots. The lead also records their "squash-merge only, PR needs
+one approval" rule as an always-on convention.
 
 Then:
 
@@ -122,9 +123,9 @@ This reads the intake and **composes** their flow out of existing Superpowers
 engine skills — mapping "shape the idea" → `brainstorming`, "turn it into a plan"
 → `writing-plans`, "build it" → `test-driven-development`, "before merge" →
 `requesting-code-review`, and so on — and writes `team/workflow.md`. Where the
-intake had a **gap** (Company Z described no explicit review step), it doesn't
+intake had a **gap** (the team described no explicit review step), it doesn't
 silently patch it: it *proposes* wiring in `requesting-code-review` and waits for
-Priya's yes. She approves, reviews the result, and:
+the lead's yes. They approve, review the result, and:
 
 ```
 git commit -am "platform-z workflow" && git push
@@ -140,54 +141,56 @@ Company Z now has one shared, documented workflow. Total time: an afternoon.
 > it synthesize everything" is the natural next connector to build on top of this
 > — the interview + live-connector approach is what ships today.
 
-### Act 2 — Marcus's first real cycle (day 6 on the job)
+### Act 2 — the new hire's first real cycle (day 6 on the job)
 
-Marcus picks up ticket `PLZ-482: add rate-limiting to the auth endpoint`. He's new
-to Claude Code, so he does the only thing he needs to:
+The **new hire** picks up ticket `PLZ-482: add rate-limiting to the auth endpoint`.
+New to Claude Code, they do the only thing they need to:
 
 ```
-/getting-started      # 3-minute orientation, points him at team/workflow.md
+/getting-started      # 3-minute orientation, points them at team/workflow.md
 ```
 
-Then he just describes the task — no command incantation:
+Then they just describe the task — no command incantation:
 
 > "I need to add rate-limiting to our auth endpoint, ticket PLZ-482."
 
-From here the workflow carries him, and he watches it happen:
+From here the workflow carries them, and they watch it happen:
 
 1. **Brainstorm** (`superpowers:brainstorming` auto-fires) — Claude asks whether
-   he wants per-IP or per-account limits, pulls **Company Z's API conventions
-   straight from Confluence** via the connector Priya wired, and lands on an
+   they want per-IP or per-account limits, pulls **Company Z's API conventions
+   straight from Confluence** via the connector the lead wired, and lands on an
    approach.
-2. **Plan** (`superpowers:writing-plans`) — writes a short plan; Marcus approves.
+2. **Plan** (`superpowers:writing-plans`) — writes a short plan; the new hire
+   approves.
 3. **Build, test-first** (`superpowers:test-driven-development`) — failing test
    for "6th request in a minute is rejected" → implementation → green.
-4. **Review** (`superpowers:requesting-code-review`) — the step Priya wired in
-   during setup; Marcus gets review feedback before he ever opens a PR.
-5. **Ship** — squash-merge, one approval, exactly the convention Priya recorded.
+4. **Review** (`superpowers:requesting-code-review`) — the step the lead wired in
+   during setup; the new hire gets review feedback before ever opening a PR.
+5. **Ship** — squash-merge, one approval, exactly the convention the lead recorded.
 
-Marcus didn't need to *know* Company Z's standards — the workflow and the
-connectors knew them for him. He shipped his first ticket the same way Dana would.
+The new hire didn't need to *know* Company Z's standards — the workflow and the
+connectors knew them for them. They shipped their first ticket the same way a
+seasoned team member would.
 
-### Act 3 — Dana promotes a personal skill to the whole team
+### Act 3 — a senior engineer promotes a personal skill to the whole team
 
-Dana (the months-long veteran) has a personal skill she wrote ages ago for
+One of the **senior engineers** has a personal skill they wrote ages ago for
 generating their DB-migration boilerplate the way Company Z likes it. It's been
-helping only her. Now she shares it:
+helping only them. Now they share it:
 
 ```
 /platform-z:new-skill
 > team or personal?  →  team
 ```
 
-The skill interviews her, teaches the anatomy as it goes, and writes the result to
-`team/skills/` — committed, shared, auto-triggering for **everyone**. The veterans'
-accumulated edge stops being private. Next time Marcus touches a migration, Dana's
-skill fires for him too.
+The skill interviews them, teaches the anatomy as it goes, and writes the result to
+`team/skills/` — committed, shared, auto-triggering for **everyone**. The seniors'
+accumulated edge stops being private. Next time the new hire touches a migration,
+that skill fires for them too.
 
-That's the whole arc: **Priya captures the team once, connectors make the wiki
-live, the shared workflow levels Marcus up to the team's standard on day 6, and
-Dana's private expertise becomes everyone's.**
+That's the whole arc: **the lead captures the team once, connectors make the wiki
+live, the shared workflow levels the new hire up to the team's standard on day 6,
+and a senior engineer's private expertise becomes everyone's.**
 
 ---
 
