@@ -165,6 +165,48 @@ PLAN
         echo "    got: $rp_explicit"
     fi
 
+    # --- dispatch hints ride the script output ---
+    if [[ "$brief_out" == *"dispatch (codex spawn_agent): role=implementer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+        pass "task-brief prints the implementer dispatch hint"
+    else
+        fail "task-brief prints the implementer dispatch hint"
+        echo "    got: $brief_out"
+    fi
+
+    if [[ "$rp_out" == *"dispatch (codex spawn_agent): role=task-reviewer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+        pass "review-package defaults to the task-reviewer dispatch hint"
+    else
+        fail "review-package defaults to the task-reviewer dispatch hint"
+        echo "    got: $rp_out"
+    fi
+
+    local rp_rereview
+    rp_rereview="$(cd "$repo" && "$SDD_SCRIPTS/review-package" --role re-review plan-a.md HEAD~1 HEAD)"
+    if [[ "$rp_rereview" == *"role=scoped-re-reviewer fork_turns=none model=gpt-5.6-terra reasoning_effort=medium"* ]]; then
+        pass "review-package --role re-review prints the medium-effort hint"
+    else
+        fail "review-package --role re-review prints the medium-effort hint"
+        echo "    got: $rp_rereview"
+    fi
+
+    local rp_final
+    rp_final="$(cd "$repo" && "$SDD_SCRIPTS/review-package" --role final-review plan-a.md HEAD~1 HEAD)"
+    if [[ "$rp_final" == *"role=final-reviewer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+        pass "review-package --role final-review prints the final-reviewer hint"
+    else
+        fail "review-package --role final-review prints the final-reviewer hint"
+        echo "    got: $rp_final"
+    fi
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" --role bogus plan-a.md HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "review-package rejects an unknown --role with exit 2"
+    else
+        fail "review-package rejects an unknown --role with exit 2"
+        echo "    exit: $rc"
+    fi
+
     # --- Worktree isolation: a linked worktree resolves its own workspace ---
     local wt="$TEST_ROOT/wt"
     ( cd "$repo" && git worktree add -q "$wt" -b wt-feature )

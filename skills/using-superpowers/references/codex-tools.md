@@ -32,6 +32,9 @@ Before Task 1, check your `spawn_agent` tool schema for `model` and
 
 On Codex this table IS the Model Selection mapping — including the final
 review, which stays on terra/high rather than "most capable available."
+The task-brief and review-package scripts reprint the applicable row as a
+`dispatch (codex spawn_agent):` line with their output — copy those values
+onto the spawn_agent call verbatim, every time, even late in a long session.
 Never give a subagent your session's model when you run a frontier config
 (sol at xhigh or max): reviewer tier never exceeds implementer tier, and
 a fix round never gets an effort bump. Rounds 4-5's "more capable model"

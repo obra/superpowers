@@ -4,13 +4,31 @@
 # call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
 # tasks intact.
 #
-# Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
+# Usage: review-package [--role task-review|re-review|final-review] PLAN_FILE BASE HEAD [OUTFILE]
 # Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
+#
+# The trailing dispatch hint rides this output because the controller reads it
+# immediately before spawning the reviewer; skill text loaded at session start
+# does not survive context compaction, but this line is reprinted every round.
 set -euo pipefail
 
+role=task-review
+if [ "${1:-}" = "--role" ]; then
+  [ $# -ge 2 ] || { echo "usage: review-package [--role task-review|re-review|final-review] PLAN_FILE BASE HEAD [OUTFILE]" >&2; exit 2; }
+  role=$2
+  shift 2
+fi
+
+case "$role" in
+  task-review)  hint_role=task-reviewer;      hint_effort=high ;;
+  re-review)    hint_role=scoped-re-reviewer; hint_effort=medium ;;
+  final-review) hint_role=final-reviewer;     hint_effort=high ;;
+  *) echo "bad --role: ${role} (task-review|re-review|final-review)" >&2; exit 2 ;;
+esac
+
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package PLAN_FILE BASE HEAD [OUTFILE]" >&2
+  echo "usage: review-package [--role task-review|re-review|final-review] PLAN_FILE BASE HEAD [OUTFILE]" >&2
   exit 2
 fi
 
@@ -44,3 +62,4 @@ fi
 
 commits=$(git rev-list --count "${base}..${head}")
 echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+echo "dispatch (codex spawn_agent): role=${hint_role} fork_turns=none model=gpt-5.6-terra reasoning_effort=${hint_effort}"
