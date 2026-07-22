@@ -9,48 +9,30 @@ multi_agent = true
 
 This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`. When using subagent-driven-development, close reviewer subagents when their review returns. Keep each implementer subagent open until its task's review passes — the fix loop resumes the implementer — then close it. If your harness cannot send another message to a spawned agent, dispatch each fix round as a fresh implementer carrying the brief, the report file, and the findings.
 
-## SDD dispatch: pin fork_turns and the model on every spawn
+## SDD dispatch on Codex
 
-Every `spawn_agent` call in subagent-driven-development sets
-`fork_turns: "none"`. The parameter defaults to `"all"`, which forks your
-entire session transcript into the child — the opposite of the fresh,
-constructed context SDD requires — and a full-history fork also refuses
-model and effort overrides. Never omit the parameter, and never pass
-`"all"` or a turn count for an SDD dispatch.
+Every SDD `spawn_agent` call sets `fork_turns: "none"` — the default
+`"all"` forks your whole transcript into the child and refuses model
+and effort overrides.
 
-Before Task 1, check your `spawn_agent` tool schema for `model` and
-`reasoning_effort` parameters (present on Codex 0.145+).
+If your `spawn_agent` schema has `model` and `reasoning_effort`
+parameters (Codex 0.145+), set both on every dispatch: task-brief and
+review-package print a `dispatch:` hint line with the exact values —
+copy it onto the call verbatim, every time, even late in a long
+session. Those hints are the Model Selection mapping on Codex:
+reviewer tier never exceeds implementer tier, no fix round gets an
+effort bump, and rounds 4-5's "more capable model" means a fresh
+implementer at the same tier — needing more is a BLOCKED escalation
+to your human partner. Inherited frontier-tier subagents are a
+measured cause of runs spinning out for hours. (Values live in
+`codex-dispatch.hints` beside this file; they track the spawn_agent
+model allowlist.)
 
-**If the parameters exist**, set both explicitly on every dispatch. The
-task-brief and review-package scripts print the exact values for each
-dispatch as a `dispatch (codex spawn_agent):` line with their output —
-copy that line's values onto the spawn_agent call verbatim, every time,
-even late in a long session. The mapping they print: every SDD seat runs
-`gpt-5.6-terra` — implementers and reviewers at `reasoning_effort: high`,
-scoped re-reviews at `medium`. On Codex this mapping IS the Model
-Selection section — including the final review, which stays on
-terra/high rather than "most capable available." Never give a subagent
-your session's model when you run a frontier config (sol at xhigh or
-max): reviewer tier never exceeds implementer tier, and a fix round
-never gets an effort bump. Rounds 4-5's "more capable model" means a
-fresh implementer at the same tier; a task that genuinely needs more
-than terra/high is a BLOCKED escalation to your human partner, not a
-quiet tier climb. Inherited frontier-tier subagents are a measured cause
-of SDD runs spinning out for hours: review seats that inherit a frontier
-model at maximum effort find real-but-endless defects every round, and
-fix diffs balloon instead of converging.
-
-The model names here track Codex's `spawn_agent` allowlist (currently
-`gpt-5.6-sol` and `gpt-5.6-terra`). When the allowlist changes, update
-this file and the hint lines in task-brief and review-package together.
-
-**If the parameters do not exist** (Codex 0.144 and earlier), every child
-inherits your session's model and effort and no override is possible —
-role files in `~/.codex/agents/` do not attach to spawns either. Say so
-to your human partner before starting a plan of more than a few tasks,
-and offer the choice: proceed with inheritance, or restart the session
-at a lower effort so the whole run — controller and children — pays the
-lower rate.
+Without those parameters (Codex 0.144 and earlier), children inherit
+your model and effort with no override — role files in
+`~/.codex/agents/` do not attach to spawns either. Tell your human
+partner before starting a plan of more than a few tasks, and offer a
+lower-effort session instead.
 
 ## Environment Detection
 

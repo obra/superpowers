@@ -1,0 +1,11 @@
+# Per-role dispatch lines for Codex spawn_agent, relayed by the
+# subagent-driven-development task-brief and review-package scripts at the
+# moment of dispatch (skill text loaded at session start does not survive
+# context compaction; these lines reprint every round).
+# Model names track Codex's spawn_agent allowlist (currently gpt-5.6-sol
+# and gpt-5.6-terra) — update this file when the allowlist changes.
+# Format: <role>: <line printed verbatim>
+implementer: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high
+task-review: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high
+fix-review: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=medium
+final-review: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high

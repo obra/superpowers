@@ -13,6 +13,8 @@
 # does not survive context compaction, but this line is reprinted every round.
 set -euo pipefail
 
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
 role=task-review
 if [ "${1:-}" = "--role" ]; then
   [ $# -ge 2 ] || { echo "usage: review-package [--role task-review|re-review|final-review] PLAN_FILE BASE HEAD [OUTFILE]" >&2; exit 2; }
@@ -20,12 +22,12 @@ if [ "${1:-}" = "--role" ]; then
   shift 2
 fi
 
-# Model/effort values are mirrored in using-superpowers/references/codex-tools.md
-# (they track Codex's spawn_agent allowlist) — update both together.
 case "$role" in
-  task-review)  hint_role=task-reviewer;      hint_effort=high ;;
-  re-review)    hint_role=scoped-re-reviewer; hint_effort=medium ;;
-  final-review) hint_role=final-reviewer;     hint_effort=high ;;
+  task-review)  hint_key=task-review ;;
+  # re-review maps onto the fix-review hints entry; the --role value itself
+  # is renamed in the next commit.
+  re-review)    hint_key=fix-review ;;
+  final-review) hint_key=final-review ;;
   *) echo "bad --role: ${role} (task-review|re-review|final-review)" >&2; exit 2 ;;
 esac
 
@@ -45,7 +47,7 @@ git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&
 if [ $# -eq 4 ]; then
   out=$4
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  dir=$("$script_dir/sdd-workspace" "$plan")
   out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
 fi
 
@@ -64,4 +66,16 @@ fi
 
 commits=$(git rev-list --count "${base}..${head}")
 echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
-echo "dispatch (codex spawn_agent): role=${hint_role} fork_turns=none model=gpt-5.6-terra reasoning_effort=${hint_effort}"
+
+# Platform dispatch hints ride this output because the controller reads it
+# immediately before spawning; the lines themselves are owned by the platform
+# reference layer (using-superpowers/references/*-dispatch.hints), not this
+# script. Claude Code's dispatch templates carry model selection already, so
+# the relay is suppressed there and on any harness without a hints file.
+hints_file="$script_dir/../../using-superpowers/references/codex-dispatch.hints"
+if [ -z "${CLAUDECODE:-}" ] && [ -f "$hints_file" ]; then
+  hint_line=$(grep "^${hint_key}:" "$hints_file" | head -1 | cut -d: -f2- | sed 's/^ *//') || true
+  if [ -n "$hint_line" ]; then
+    echo "$hint_line"
+  fi
+fi

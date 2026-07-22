@@ -18,10 +18,12 @@ plan=$1
 n=$2
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  dir=$("$script_dir/sdd-workspace" "$plan")
   out="$dir/task-${n}-brief.md"
 fi
 
@@ -39,9 +41,16 @@ if [ ! -s "$out" ]; then
 fi
 
 echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"
-# The dispatch hint rides this output because the controller reads it
-# immediately before spawning the implementer; skill text loaded at session
-# start does not survive context compaction, but this line reprints per task.
-# Model/effort values are mirrored in using-superpowers/references/codex-tools.md
-# (they track Codex's spawn_agent allowlist) — update both together.
-echo "dispatch (codex spawn_agent): role=implementer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"
+
+# Platform dispatch hints ride this output because the controller reads it
+# immediately before spawning; the lines themselves are owned by the platform
+# reference layer (using-superpowers/references/*-dispatch.hints), not this
+# script. Claude Code's dispatch templates carry model selection already, so
+# the relay is suppressed there and on any harness without a hints file.
+hints_file="$script_dir/../../using-superpowers/references/codex-dispatch.hints"
+if [ -z "${CLAUDECODE:-}" ] && [ -f "$hints_file" ]; then
+  hint_line=$(grep "^implementer:" "$hints_file" | head -1 | cut -d: -f2- | sed 's/^ *//') || true
+  if [ -n "$hint_line" ]; then
+    echo "$hint_line"
+  fi
+fi

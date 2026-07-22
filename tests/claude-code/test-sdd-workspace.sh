@@ -165,37 +165,52 @@ PLAN
         echo "    got: $rp_explicit"
     fi
 
-    # --- dispatch hints ride the script output ---
-    if [[ "$brief_out" == *"dispatch (codex spawn_agent): role=implementer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
-        pass "task-brief prints the implementer dispatch hint"
+    # --- platform dispatch hints ride the script output (suppressed on CC) ---
+    local brief_hint
+    brief_hint="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/task-brief" plan-a.md 1)"
+    if [[ "$brief_hint" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+        pass "task-brief relays the implementer dispatch hint off Claude Code"
     else
-        fail "task-brief prints the implementer dispatch hint"
-        echo "    got: $brief_out"
+        fail "task-brief relays the implementer dispatch hint off Claude Code"
+        echo "    got: $brief_hint"
     fi
 
-    if [[ "$rp_out" == *"dispatch (codex spawn_agent): role=task-reviewer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
-        pass "review-package defaults to the task-reviewer dispatch hint"
+    local rp_hint
+    rp_hint="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD)"
+    if [[ "$rp_hint" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+        pass "review-package relays the default-role hint off Claude Code"
     else
-        fail "review-package defaults to the task-reviewer dispatch hint"
-        echo "    got: $rp_out"
+        fail "review-package relays the default-role hint off Claude Code"
+        echo "    got: $rp_hint"
     fi
 
     local rp_rereview
-    rp_rereview="$(cd "$repo" && "$SDD_SCRIPTS/review-package" --role re-review plan-a.md HEAD~1 HEAD)"
-    if [[ "$rp_rereview" == *"role=scoped-re-reviewer fork_turns=none model=gpt-5.6-terra reasoning_effort=medium"* ]]; then
-        pass "review-package --role re-review prints the medium-effort hint"
+    rp_rereview="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/review-package" --role re-review plan-a.md HEAD~1 HEAD)"
+    if [[ "$rp_rereview" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=medium"* ]]; then
+        pass "review-package --role re-review relays the medium-effort hint"
     else
-        fail "review-package --role re-review prints the medium-effort hint"
+        fail "review-package --role re-review relays the medium-effort hint"
         echo "    got: $rp_rereview"
     fi
 
     local rp_final
-    rp_final="$(cd "$repo" && "$SDD_SCRIPTS/review-package" --role final-review plan-a.md HEAD~1 HEAD)"
-    if [[ "$rp_final" == *"role=final-reviewer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
-        pass "review-package --role final-review prints the final-reviewer hint"
+    rp_final="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/review-package" --role final-review plan-a.md HEAD~1 HEAD)"
+    if [[ "$rp_final" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+        pass "review-package --role final-review relays the high-effort hint"
     else
-        fail "review-package --role final-review prints the final-reviewer hint"
+        fail "review-package --role final-review relays the high-effort hint"
         echo "    got: $rp_final"
+    fi
+
+    local brief_cc rp_cc
+    brief_cc="$(cd "$repo" && CLAUDECODE=1 "$SDD_SCRIPTS/task-brief" plan-a.md 1)"
+    rp_cc="$(cd "$repo" && CLAUDECODE=1 "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD)"
+    if [[ "$brief_cc" != *"dispatch (spawn_agent)"* && "$rp_cc" != *"dispatch (spawn_agent)"* ]]; then
+        pass "dispatch hints are suppressed under Claude Code (CLAUDECODE set)"
+    else
+        fail "dispatch hints are suppressed under Claude Code (CLAUDECODE set)"
+        echo "    brief: $brief_cc"
+        echo "    rp:    $rp_cc"
     fi
 
     rc=0
