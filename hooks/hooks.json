@@ -8,10 +8,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
             "shell": "bash",
-            "async": false
+            "async": false,
+            "timeout": 10
           }
         ]
       }
     ]
   }
 }
+
