@@ -21,29 +21,28 @@ model and effort overrides. Never omit the parameter, and never pass
 Before Task 1, check your `spawn_agent` tool schema for `model` and
 `reasoning_effort` parameters (present on Codex 0.145+).
 
-**If the parameters exist**, set both explicitly on every dispatch:
+**If the parameters exist**, set both explicitly on every dispatch. The
+task-brief and review-package scripts print the exact values for each
+dispatch as a `dispatch (codex spawn_agent):` line with their output —
+copy that line's values onto the spawn_agent call verbatim, every time,
+even late in a long session. The mapping they print: every SDD seat runs
+`gpt-5.6-terra` — implementers and reviewers at `reasoning_effort: high`,
+scoped re-reviews at `medium`. On Codex this mapping IS the Model
+Selection section — including the final review, which stays on
+terra/high rather than "most capable available." Never give a subagent
+your session's model when you run a frontier config (sol at xhigh or
+max): reviewer tier never exceeds implementer tier, and a fix round
+never gets an effort bump. Rounds 4-5's "more capable model" means a
+fresh implementer at the same tier; a task that genuinely needs more
+than terra/high is a BLOCKED escalation to your human partner, not a
+quiet tier climb. Inherited frontier-tier subagents are a measured cause
+of SDD runs spinning out for hours: review seats that inherit a frontier
+model at maximum effort find real-but-endless defects every round, and
+fix diffs balloon instead of converging.
 
-| Role | model | reasoning_effort |
-|------|-------|------------------|
-| Implementer (all rounds) | `gpt-5.6-terra` | `high` |
-| Task reviewer | `gpt-5.6-terra` | `high` |
-| Scoped re-review | `gpt-5.6-terra` | `medium` |
-| Final whole-branch review | `gpt-5.6-terra` | `high` |
-
-On Codex this table IS the Model Selection mapping — including the final
-review, which stays on terra/high rather than "most capable available."
-The task-brief and review-package scripts reprint the applicable row as a
-`dispatch (codex spawn_agent):` line with their output — copy those values
-onto the spawn_agent call verbatim, every time, even late in a long session.
-Never give a subagent your session's model when you run a frontier config
-(sol at xhigh or max): reviewer tier never exceeds implementer tier, and
-a fix round never gets an effort bump. Rounds 4-5's "more capable model"
-means a fresh implementer at the same tier; a task that genuinely needs
-more than terra/high is a BLOCKED escalation to your human partner, not
-a quiet tier climb. Frontier-tier subagents at inherited effort are the
-measured top driver of Codex SDD runs spinning out to 8+ hours
-(PRI-2672): review seats that inherited sol found real-but-endless
-defects every round, and fix diffs ballooned instead of converging.
+The model names here track Codex's `spawn_agent` allowlist (currently
+`gpt-5.6-sol` and `gpt-5.6-terra`). When the allowlist changes, update
+this file and the hint lines in task-brief and review-package together.
 
 **If the parameters do not exist** (Codex 0.144 and earlier), every child
 inherits your session's model and effort and no override is possible —

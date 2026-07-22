@@ -42,4 +42,6 @@ echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"
 # The dispatch hint rides this output because the controller reads it
 # immediately before spawning the implementer; skill text loaded at session
 # start does not survive context compaction, but this line reprints per task.
+# Model/effort values are mirrored in using-superpowers/references/codex-tools.md
+# (they track Codex's spawn_agent allowlist) — update both together.
 echo "dispatch (codex spawn_agent): role=implementer fork_turns=none model=gpt-5.6-terra reasoning_effort=high"

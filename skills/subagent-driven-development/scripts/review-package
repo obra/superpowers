@@ -20,6 +20,8 @@ if [ "${1:-}" = "--role" ]; then
   shift 2
 fi
 
+# Model/effort values are mirrored in using-superpowers/references/codex-tools.md
+# (they track Codex's spawn_agent allowlist) — update both together.
 case "$role" in
   task-review)  hint_role=task-reviewer;      hint_effort=high ;;
   re-review)    hint_role=scoped-re-reviewer; hint_effort=medium ;;
