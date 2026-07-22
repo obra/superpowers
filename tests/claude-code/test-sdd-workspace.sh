@@ -184,13 +184,13 @@ PLAN
         echo "    got: $rp_hint"
     fi
 
-    local rp_rereview
-    rp_rereview="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/review-package" --role re-review plan-a.md HEAD~1 HEAD)"
-    if [[ "$rp_rereview" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=medium"* ]]; then
-        pass "review-package --role re-review relays the medium-effort hint"
+    local rp_fixreview
+    rp_fixreview="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/review-package" --role fix-review plan-a.md HEAD~1 HEAD)"
+    if [[ "$rp_fixreview" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=medium"* ]]; then
+        pass "review-package --role fix-review relays the medium-effort hint"
     else
-        fail "review-package --role re-review relays the medium-effort hint"
-        echo "    got: $rp_rereview"
+        fail "review-package --role fix-review relays the medium-effort hint"
+        echo "    got: $rp_fixreview"
     fi
 
     local rp_final
