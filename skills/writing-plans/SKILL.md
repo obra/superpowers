@@ -147,11 +147,25 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+## Commit the Plan
+
+After the self-review passes, commit the plan document:
+
+```bash
+git add docs/superpowers/plans/<filename>.md
+git commit -m "docs: add <feature-name> implementation plan"
+```
+
+An uncommitted plan exists only in the working tree — worktree cleanup at
+finish time deletes untracked files, taking the plan with it. Committing
+puts the plan in git history, where merge and PR both preserve it. The
+spec already gets this treatment in brainstorming; the plan gets the same.
+
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After committing the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and committed at `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
