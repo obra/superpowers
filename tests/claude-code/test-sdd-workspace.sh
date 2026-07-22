@@ -129,6 +129,35 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    # --- task-brief overwrite protection & --force flag ---
+    local overwrite_rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 >/dev/null 2>&1) || overwrite_rc=$?
+    if [[ "$overwrite_rc" -eq 4 ]]; then
+        pass "task-brief refuses to overwrite existing brief without --force"
+    else
+        fail "task-brief refuses to overwrite existing brief without --force"
+        echo "    exit: $overwrite_rc"
+    fi
+
+    local force_out force_rc=0
+    force_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" --force plan-a.md 1)" || force_rc=$?
+    if [[ "$force_rc" -eq 0 && "$force_out" == *"wrote"* ]]; then
+        pass "task-brief overwrites existing brief when --force is passed"
+    else
+        fail "task-brief overwrites existing brief when --force is passed"
+        echo "    exit: $force_rc"
+    fi
+
+    # --- task-brief missing task cleanup ---
+    local missing_rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 99 >/dev/null 2>&1) || missing_rc=$?
+    if [[ "$missing_rc" -eq 3 && ! -f "$repo/.superpowers/sdd/plan-a/task-99-brief.md" ]]; then
+        pass "task-brief errors and leaves no file when task is missing"
+    else
+        fail "task-brief errors and leaves no file when task is missing"
+        echo "    exit: $missing_rc"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \
