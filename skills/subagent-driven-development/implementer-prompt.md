@@ -110,14 +110,21 @@ Subagent (general-purpose):
     Fix them, re-run the tests that cover the amended code, and append a fix
     report to your report file: what you changed, the covering tests you
     ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
-    status contract as your first report.
+    you — your report is the test evidence. If your fix report claims a
+    full-suite pass, that claim needs a fresh run after your last edit —
+    a suite run from before the findings arrived no longer counts. Then
+    reply with the same short status contract as your first report.
 
     ## Report Format
 
     Write your full report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
-    - What you tested and test results
+    - What you tested, and for every gate you claim — focused tests, full
+      suite, lint, build — the exact command and the tail of its fresh
+      output. Fresh means run after your final edit: if you edited anything
+      since your last full-suite run, that run is stale — rerun it or
+      report the suite as unverified. A gate claim without pasted fresh
+      output is itself a defect for the reviewer to flag.
     - **TDD Evidence** (if TDD was required for this task):
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation
