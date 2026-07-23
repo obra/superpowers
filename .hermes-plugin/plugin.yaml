@@ -1,0 +1,6 @@
+name: superpowers
+version: 6.0.3
+description: Superpowers skills and workflow bootstrap for Hermes Agent
+author: obra
+provides_hooks:
+  - on_session_start
