@@ -1,23 +1,35 @@
 import os
 import re
-from typing import Optional
+from pathlib import Path
 
 BOOTSTRAP_MARKER = "superpowers:using-superpowers bootstrap for hermes"
 
-# Resolved once at import — avoids repeated path work on every session-start.
-# hermes plugins install does a full git clone, so .hermes-plugin/__init__.py
-# and skills/ end up at the same level in ~/.hermes/plugins/superpowers/.
-_SKILLS_DIR: str = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), "..", "skills")
-)
 
-# Module-level cache:
-#   None  = not yet assembled
-#   False = SKILL.md missing (skip injection silently)
-#   str   = assembled bootstrap content
-_bootstrap_cache = None
+def _skills_dir() -> str:
+    """Locate the stock skills/ tree for either supported install layout.
 
-_last_session_id = None
+    - git-clone install (`hermes plugins install obra/superpowers`): the plugin
+      dir is the repo root, so `.hermes-plugin/` and `skills/` are siblings and
+      this module resolves `../skills`.
+    - flattened install (plugin files copied to the plugin dir root): `skills/`
+      sits next to this module.
+
+    Raises loudly when neither matches — a bootstrap that silently skips is how
+    a broken install masquerades as a working one.
+    """
+    here = os.path.dirname(os.path.realpath(__file__))
+    candidates = (
+        os.path.realpath(os.path.join(here, "..", "skills")),
+        os.path.realpath(os.path.join(here, "skills")),
+    )
+    for cand in candidates:
+        if os.path.isfile(os.path.join(cand, "using-superpowers", "SKILL.md")):
+            return cand
+    raise RuntimeError(
+        "superpowers plugin: cannot find the skills/ tree "
+        f"(looked at {candidates}). Reinstall with "
+        "`hermes plugins install obra/superpowers`."
+    )
 
 
 def _strip_frontmatter(content: str) -> str:
@@ -25,44 +37,20 @@ def _strip_frontmatter(content: str) -> str:
     return (match.group(1) if match else content).strip()
 
 
-def _hermes_tool_mapping() -> str:
-    # Tool names confirmed empirically in Task 1.
-    return """\
-## Hermes tool mapping
+def _build_bootstrap(skills_dir: str) -> str:
+    with open(
+        os.path.join(skills_dir, "using-superpowers", "SKILL.md"),
+        encoding="utf-8",
+    ) as f:
+        body = _strip_frontmatter(f.read())
 
-When skills request actions, use these Hermes equivalents:
+    tools_path = os.path.join(
+        skills_dir, "using-superpowers", "references", "hermes-tools.md"
+    )
+    with open(tools_path, encoding="utf-8") as f:
+        tool_mapping = f.read().strip()
 
-| Action | Hermes tool |
-|--------|-------------|
-| Read a file | `read_file` |
-| Create a new file | `write_file` |
-| Edit a file (targeted patch) | `patch` |
-| Run a shell command | `terminal` |
-| Search file contents | `search_files` |
-| Find files by name | `terminal` with `find` |
-| Fetch a URL / read a webpage | `web_extract(urls=[...])` |
-| Search the web | `web_search(query=...)` |
-| Dispatch a subagent | `delegate_task(goal=..., context=..., toolsets=[...], role="leaf")` |
-| Task tracking | `todo` tool |
-| Invoke a skill | `skill_view("skill-name")` — this is the native skill-loading mechanism on Hermes |
-"""
-
-
-def _get_bootstrap() -> Optional[str]:
-    global _bootstrap_cache
-    if _bootstrap_cache is not None:
-        return None if _bootstrap_cache is False else _bootstrap_cache
-
-    skill_path = os.path.join(_SKILLS_DIR, "using-superpowers", "SKILL.md")
-    if not os.path.exists(skill_path):
-        _bootstrap_cache = False
-        return None
-
-    with open(skill_path, encoding="utf-8") as f:
-        raw = f.read()
-
-    body = _strip_frontmatter(raw)
-    _bootstrap_cache = (
+    return (
         f"<EXTREMELY_IMPORTANT>\n"
         f"{BOOTSTRAP_MARKER}\n\n"
         f"You have superpowers.\n\n"
@@ -71,31 +59,46 @@ def _get_bootstrap() -> Optional[str]:
         f"Do not try to load using-superpowers again.\n\n"
         f"{body}\n\n"
         f"## Loading Superpowers Skills on Hermes\n\n"
-        f"Superpowers skills are NOT in Hermes' built-in skill registry — "
-        f"`skill_view` will return 'not found' for them. "
-        f"When using-superpowers tells you to invoke a skill, use this two-step:\n\n"
-        f"1. Try `skill_view(\"skill-name\")` first (it works for Hermes' own skills).\n"
-        f"2. If that returns 'not found', immediately use `read_file` instead:\n"
-        f"   `read_file(\"{_SKILLS_DIR}/skill-name/SKILL.md\")`\n\n"
-        f"Example — to load the brainstorming skill:\n"
-        f"  `read_file(\"{_SKILLS_DIR}/brainstorming/SKILL.md\")`\n\n"
-        f"The superpowers skills directory is: `{_SKILLS_DIR}`\n\n"
-        f"{_hermes_tool_mapping()}\n"
+        f"Superpowers skills are registered with Hermes' native skill loader: "
+        f'invoke one with `skill_view("superpowers:skill-name")` '
+        f'(for example `skill_view("superpowers:brainstorming")`). '
+        f"If a namespaced lookup returns 'not found', read the skill file "
+        f"directly instead:\n"
+        f'`read_file("{skills_dir}/skill-name/SKILL.md")`\n\n'
+        f"The superpowers skills directory is: `{skills_dir}`\n\n"
+        f"{tool_mapping}\n"
         f"</EXTREMELY_IMPORTANT>"
     )
-    return _bootstrap_cache
 
 
 def register(ctx):
-    def on_session_start(**kwargs):
-        global _last_session_id
-        session_id = kwargs.get("session_id")
-        if session_id is not None and session_id == _last_session_id:
-            return
-        bootstrap = _get_bootstrap()
-        if bootstrap is None:
-            return
-        ctx.inject_message(bootstrap, role="user")
-        _last_session_id = session_id
+    skills_dir = _skills_dir()
+    bootstrap = _build_bootstrap(skills_dir)
 
-    ctx.register_hook("on_session_start", on_session_start)
+    # Register every stock skill with Hermes' native loader so skill_view can
+    # load them on demand. Standard markdown; no conversion (plugin guide).
+    # register_skill requires a pathlib.Path — a str raises AttributeError and
+    # hermes silently disables the whole plugin (verified 2026-07-23).
+    for name in sorted(os.listdir(skills_dir)):
+        skill_md = os.path.join(skills_dir, name, "SKILL.md")
+        if os.path.isfile(skill_md):
+            ctx.register_skill(name, Path(skill_md))
+
+    # pre_llm_call returning {"context": ...} is the documented injection path
+    # (on_session_start return values are ignored, and ctx.inject_message
+    # refuses from that hook — verified empirically 2026-07-23). The context is
+    # appended to the first turn's user message.
+    def pre_llm_call(
+        session_id=None,
+        user_message=None,
+        conversation_history=None,
+        is_first_turn=None,
+        model=None,
+        platform=None,
+        **kwargs,
+    ):
+        if is_first_turn:
+            return {"context": bootstrap}
+        return None
+
+    ctx.register_hook("pre_llm_call", pre_llm_call)
