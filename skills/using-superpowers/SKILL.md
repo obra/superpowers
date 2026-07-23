@@ -49,6 +49,17 @@ These thoughts mean STOP—you're rationalizing:
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
 
+## Fast-Loop Observation Logging (Self-Updating Skills)
+
+When executing any superpower skill, if you catch yourself using a new rationalization, hitting an ambiguous instruction, or encountering unexpected process friction:
+
+- **Do NOT block the user's task.** Continue executing the task cleanly.
+- **Write a fast-loop observation note** under `references/observations/` in `evolving-skills`:
+  `YYYY-MM-DD-HHmm-<skill>-failed-during-<phase>-for-<context_slug>.md`
+- Include: timestamp, skill name, phase/step, observed failure, verbatim rationalization, and proposed universal fix.
+- The slow-loop (`superpowers:evolving-skills`) will harvest, micro-test, and consolidate these notes later.
+
+
 ## Platform Adaptation
 
 If your harness appears here, read its reference file for special instructions:
