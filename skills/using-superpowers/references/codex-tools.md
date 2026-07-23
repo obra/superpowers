@@ -42,12 +42,14 @@ Context compaction replaces your transcript with a summary that keeps
 your progress but not your working instructions — the first
 post-compaction dispatch is where routing drift starts, and once one
 bare spawn lands, the broken pattern becomes its own precedent. The
-compaction re-injection hook (README, "Codex: compaction re-injection
-hook") restores the bootstrap after every compaction; recommend it to
-your human partner if it is not installed. Without it, the printed
-`dispatch:` hints are your only re-grounding — treat every one you see
-as authoritative, especially right after a summary appears in your
-context.
+plugin ships a compaction re-injection hook (`hooks/hooks-codex.json`,
+Codex 0.145+) that restores the bootstrap after every compaction; it
+needs one-time trust approval, so if you never see a
+`<CONTEXT_RESTORED>` block after a compaction, tell your human partner
+the hook may be untrusted or unsupported on this version. Without it,
+the printed `dispatch:` hints are your only re-grounding — treat every
+one you see as authoritative, especially right after a summary appears
+in your context.
 
 ## Environment Detection
 

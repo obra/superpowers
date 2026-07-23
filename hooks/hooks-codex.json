@@ -2,10 +2,12 @@
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "compact",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"/ABSOLUTE/PATH/TO/superpowers/hooks/session-start-codex\"",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
+            "async": false,
             "timeout": 30
           }
         ]

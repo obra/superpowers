@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HOOK_UNDER_TEST="$REPO_ROOT/hooks/session-start-codex"
-EXAMPLE_UNDER_TEST="$REPO_ROOT/hooks/hooks-codex.json.example"
+CONFIG_UNDER_TEST="$REPO_ROOT/hooks/hooks-codex.json"
 
 FAILURES=0
 
@@ -86,20 +86,25 @@ else
 fi
 
 if node -e '
-const example = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-const entry = example.hooks.SessionStart[0].hooks[0];
+const config = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const group = config.hooks.SessionStart[0];
+if (group.matcher !== "compact") {
+  console.error(`hook matcher is ${JSON.stringify(group.matcher)}, expected "compact"`);
+  process.exit(1);
+}
+const entry = group.hooks[0];
 if (entry.type !== "command") {
-  console.error(`example hook type is ${JSON.stringify(entry.type)}, expected "command"`);
+  console.error(`hook type is ${JSON.stringify(entry.type)}, expected "command"`);
   process.exit(1);
 }
-if (!/session-start-codex"$/.test(entry.command)) {
-  console.error(`unexpected example command shape: ${entry.command}`);
+if (!entry.command.includes("${PLUGIN_ROOT}") || !/run-hook\.cmd" session-start-codex$/.test(entry.command)) {
+  console.error(`unexpected command shape: ${entry.command}`);
   process.exit(1);
 }
-' "$EXAMPLE_UNDER_TEST"; then
-    pass "hooks-codex.json.example parses and invokes session-start-codex"
+' "$CONFIG_UNDER_TEST"; then
+    pass "hooks-codex.json runs session-start-codex via \${PLUGIN_ROOT} on compact"
 else
-    fail "hooks-codex.json.example parses and invokes session-start-codex"
+    fail "hooks-codex.json runs session-start-codex via \${PLUGIN_ROOT} on compact"
 fi
 
 if [[ "$FAILURES" -gt 0 ]]; then

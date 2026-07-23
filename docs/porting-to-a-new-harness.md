@@ -237,10 +237,12 @@ nesting differ per harness**.
 - Manifests: `.cursor-plugin/plugin.json` is the Shape A manifest example that
   points the harness at `./skills/` and the right `hooks-*.json`. Claude Code's
   `.claude-plugin/plugin.json` sets neither field — it auto-discovers `skills/`
-  and `hooks/hooks.json` by convention. Do **not** copy Codex's
-  `.codex-plugin/plugin.json` for Shape A: it declares an empty `hooks` object
-  specifically to suppress Codex's `hooks/hooks.json` auto-discovery, because
-  Codex surfaces skills natively and runs no session-start hook.
+  and `hooks/hooks.json` by convention. Codex's `.codex-plugin/plugin.json`
+  points `hooks` at `./hooks/hooks-codex.json` — a compaction-only hook, not a
+  bootstrap injector: Codex surfaces skills natively at session start, so its
+  hook fires only on post-compaction re-starts. The explicit pointer also
+  suppresses Codex's `hooks/hooks.json` auto-discovery fallback, which would
+  otherwise run the Claude Code hook.
 
 > **A hook *system* is not a session-start *event*.** A harness can have a
 > `hooks.json` mechanism — and even contain the literal string `SessionStart` in
@@ -785,7 +787,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
 | Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; no adapter file needed | `tests/hooks/` | marketplace |
-| Codex | `.codex-plugin/plugin.json` (declares empty `hooks`) | native skill discovery (no session-start hook) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
+| Codex | `.codex-plugin/plugin.json` + `hooks/hooks-codex.json` | native skill discovery at startup; shell hook → `hooks/session-start-codex` re-injects after compaction only | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |

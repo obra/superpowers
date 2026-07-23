@@ -98,37 +98,18 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Select `Install Plugin`.
 
-#### Codex: compaction re-injection hook (recommended)
+#### Codex: compaction re-injection hook
 
 Codex compacts long sessions, replacing the transcript with a summary that
 drops Superpowers' skill instructions mid-run — long autonomous workflows
 (like subagent-driven-development) then drift back to harness defaults.
-Claude Code re-injects the bootstrap after every compaction; this hook
-restores the same behavior on Codex (0.145+).
+Claude Code re-injects the bootstrap after every compaction; the plugin ships
+a SessionStart hook (`hooks/hooks-codex.json`) that restores the same
+behavior on Codex (0.145+). It fires only on post-compaction re-starts
+(`source: "compact"`) and is silent at normal session start.
 
-Merge `hooks/hooks-codex.json.example` from your Superpowers install into
-`~/.codex/hooks.json`, replacing the placeholder with the absolute path to
-your install:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"/path/to/superpowers/hooks/session-start-codex\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Codex asks you to trust the hook once, the first time it runs in the app.
+The hook installs with the plugin — no configuration needed. Codex asks you
+to review and trust it once, the first time it loads after install or update.
 Headless automation (CI, eval harnesses) must pass
 `--dangerously-bypass-hook-trust` instead, because untrusted hooks are
 skipped silently.
