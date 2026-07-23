@@ -180,7 +180,12 @@ Confirm:
 
 **Test fails?** Fix code, not test.
 
-**Other tests fail?** Fix now.
+**Other tests fail?** They encode existing behavior your change touched. For each,
+answer one question before editing anything: **is the CODE wrong (a regression you
+didn't intend) or is this an intended behavior change?** Code wrong → fix the code,
+leave the test. Intended change → update the test to the new contract, this same
+commit. Never edit a red test green without answering. See [Modifying Existing
+Behavior](#modifying-existing-behavior).
 
 ### REFACTOR - Clean Up
 
@@ -194,6 +199,48 @@ Keep tests green. Don't add behavior.
 ### Repeat
 
 Next failing test for next feature.
+
+## Modifying Existing Behavior
+
+The cycle above starts from a blank test file. **Changing** behavior that already
+has tests is different: some already-passing tests encode the OLD behavior, and
+the failure mode is editing those tests green without asking whether the code is
+what's wrong. That turns the regression net into a rubber stamp.
+
+**1. Inventory the existing tests FIRST.** Before touching code, find every test
+that pins the behavior you're about to change. Don't discover them later when CI
+goes red — that's how stale tests are born.
+
+```bash
+grep -rn "functionYoureChanging" test/    # by symbol, route, field, or fixture shape
+```
+
+Can't find a test for behavior you're about to change? Add coverage before changing
+it (see "Existing code has no tests" in Common Rationalizations).
+
+**2. Change the existing test first, in the same commit.** Same red-green, but you
+edit the *existing* test, not a new one: update it to the NEW contract, watch it
+fail against the current code (proving it pins the behavior), then change the code
+to pass. Test and code move in one commit — a contract change whose test lags into
+a later commit is exactly how stale tests surface days later.
+
+**3. When any OTHER test goes red, answer the fork.** For each unexpectedly-red
+test, decide before editing:
+
+> **Is the CODE wrong, or is this an intended behavior change?**
+
+- **Code wrong (a real regression):** fix the *code*. Leave the test. This is the
+  test doing its job.
+- **Intended change:** update the *test* to the new contract, this same commit.
+  Legitimate maintenance — *because you consciously decided the change was
+  intended*, not because green is convenient.
+
+If you can't say which branch you're on, you don't yet understand your own change.
+
+**Brittleness smell:** a refactor that changed no observable behavior yet reddened
+many tests means those tests were coupled to implementation (exact mock shapes,
+call counts), not behavior. Prefer behavior-level assertions so future refactors
+don't pay this tax.
 
 ## Good Tests
 
