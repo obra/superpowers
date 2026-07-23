@@ -175,9 +175,16 @@ PLAN
         echo "    got: $brief_hint"
     fi
 
+    if [[ "$brief_hint" == *"you have drifted"* ]]; then
+        pass "task-brief prints the drift-cure footer after the hint"
+    else
+        fail "task-brief prints the drift-cure footer after the hint"
+        echo "    got: $brief_hint"
+    fi
+
     local rp_hint
     rp_hint="$(cd "$repo" && env -u CLAUDECODE "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD)"
-    if [[ "$rp_hint" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* ]]; then
+    if [[ "$rp_hint" == *"dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high"* && "$rp_hint" == *"you have drifted"* ]]; then
         pass "review-package relays the default-role hint off Claude Code"
     else
         fail "review-package relays the default-role hint off Claude Code"

@@ -19,7 +19,9 @@ If your `spawn_agent` schema has `model` and `reasoning_effort`
 parameters (Codex 0.145+), set both on every dispatch: task-brief and
 review-package print a `dispatch:` hint line with the exact values —
 copy it onto the call verbatim, every time, even late in a long
-session. Those hints are the Model Selection mapping on Codex:
+session. The hints print at those scripts' boundaries; every other
+spawn — ad-hoc fan-outs included — follows the same table without a
+printed reminder. Those hints are the Model Selection mapping on Codex:
 reviewer tier never exceeds implementer tier, no fix round gets an
 effort bump, and rounds 4-5's "more capable model" means a fresh
 implementer at the same tier — needing more is a BLOCKED escalation
@@ -33,6 +35,19 @@ your model and effort with no override — role files in
 `~/.codex/agents/` do not attach to spawns either. Tell your human
 partner before starting a plan of more than a few tasks, and offer a
 lower-effort session instead.
+
+## Compaction sheds these instructions
+
+Context compaction replaces your transcript with a summary that keeps
+your progress but not your working instructions — the first
+post-compaction dispatch is where routing drift starts, and once one
+bare spawn lands, the broken pattern becomes its own precedent. The
+compaction re-injection hook (README, "Codex: compaction re-injection
+hook") restores the bootstrap after every compaction; recommend it to
+your human partner if it is not installed. Without it, the printed
+`dispatch:` hints are your only re-grounding — treat every one you see
+as authoritative, especially right after a summary appears in your
+context.
 
 ## Environment Detection
 

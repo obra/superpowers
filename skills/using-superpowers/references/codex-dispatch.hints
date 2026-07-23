@@ -5,6 +5,10 @@
 # Model names track Codex's spawn_agent allowlist (currently gpt-5.6-sol
 # and gpt-5.6-terra) — update this file when the allowlist changes.
 # Format: <role>: <line printed verbatim>
+# The footer line prints after every role line: prevention alone does not
+# cure drift — in instrumented runs, reprinted hints did not heal an
+# already-broken dispatch pattern until the text named the drift directly.
+footer: If any spawn this session omitted these params or used fork_turns "all", you have drifted — re-read references/codex-tools.md before dispatching again.
 implementer: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high
 task-review: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=high
 fix-review: dispatch (spawn_agent): fork_turns=none model=gpt-5.6-terra reasoning_effort=medium

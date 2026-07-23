@@ -52,5 +52,9 @@ if [ -z "${CLAUDECODE:-}" ] && [ -f "$hints_file" ]; then
   hint_line=$(grep "^implementer:" "$hints_file" | head -1 | cut -d: -f2- | sed 's/^ *//') || true
   if [ -n "$hint_line" ]; then
     echo "$hint_line"
+    footer_line=$(grep "^footer:" "$hints_file" | head -1 | cut -d: -f2- | sed 's/^ *//') || true
+    if [ -n "$footer_line" ]; then
+      echo "$footer_line"
+    fi
   fi
 fi

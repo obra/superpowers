@@ -98,6 +98,41 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Select `Install Plugin`.
 
+#### Codex: compaction re-injection hook (recommended)
+
+Codex compacts long sessions, replacing the transcript with a summary that
+drops Superpowers' skill instructions mid-run — long autonomous workflows
+(like subagent-driven-development) then drift back to harness defaults.
+Claude Code re-injects the bootstrap after every compaction; this hook
+restores the same behavior on Codex (0.145+).
+
+Merge `hooks/hooks-codex.json.example` from your Superpowers install into
+`~/.codex/hooks.json`, replacing the placeholder with the absolute path to
+your install:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/path/to/superpowers/hooks/session-start-codex\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Codex asks you to trust the hook once, the first time it runs in the app.
+Headless automation (CI, eval harnesses) must pass
+`--dangerously-bypass-hook-trust` instead, because untrusted hooks are
+skipped silently.
+
 ### Cursor
 
 - In Cursor Agent chat, install from marketplace:
