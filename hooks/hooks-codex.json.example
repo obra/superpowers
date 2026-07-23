@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/ABSOLUTE/PATH/TO/superpowers/hooks/session-start-codex\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
