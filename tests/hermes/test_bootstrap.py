@@ -1,6 +1,7 @@
+import importlib
 import os
 import sys
-import importlib
+
 import pytest
 
 sys.path.insert(0, os.path.abspath(
@@ -9,11 +10,20 @@ sys.path.insert(0, os.path.abspath(
 
 BOOTSTRAP_MARKER = "superpowers:using-superpowers bootstrap for hermes"
 
+# Hermes spills injected context over 10,000 chars to a file, which breaks
+# inline injection semantics. The bootstrap must stay under it with margin.
+HERMES_CONTEXT_SPILL_LIMIT = 10_000
+
 
 def _load():
     if "__init__" in sys.modules:
         del sys.modules["__init__"]
     return importlib.import_module("__init__")
+
+
+def _bootstrap():
+    m = _load()
+    return m._build_bootstrap(m._skills_dir())
 
 
 class TestStripFrontmatter:
@@ -33,49 +43,56 @@ class TestStripFrontmatter:
         assert m._strip_frontmatter(content) == "# Body"
 
 
-class TestGetBootstrap:
-    def test_returns_none_when_skill_file_missing(self, tmp_path):
+class TestSkillsDirResolution:
+    def test_repo_layout_resolves(self):
+        # The repo checkout IS the git-clone layout: .hermes-plugin/ and
+        # skills/ are siblings, so resolution must succeed from here.
         m = _load()
-        m._bootstrap_cache = None
-        m._SKILLS_DIR = str(tmp_path / "nonexistent")
-        assert m._get_bootstrap() is None
+        skills = m._skills_dir()
+        assert os.path.isfile(
+            os.path.join(skills, "using-superpowers", "SKILL.md")
+        )
 
-    def test_caches_false_on_missing_file(self, tmp_path):
-        m = _load()
-        m._bootstrap_cache = None
-        m._SKILLS_DIR = str(tmp_path / "nonexistent")
-        m._get_bootstrap()
-        assert m._bootstrap_cache is False
 
-    def test_returns_string_with_real_skill(self):
-        m = _load()
-        m._bootstrap_cache = None
-        result = m._get_bootstrap()
-        assert result is not None
-        assert isinstance(result, str)
+class TestBootstrapContent:
+    def test_marker_and_wrapper(self):
+        content = _bootstrap()
+        assert BOOTSTRAP_MARKER in content
+        assert content.startswith("<EXTREMELY_IMPORTANT>")
+        assert content.rstrip().endswith("</EXTREMELY_IMPORTANT>")
 
-    def test_same_object_returned_on_second_call(self):
-        m = _load()
-        m._bootstrap_cache = None
-        r1 = m._get_bootstrap()
-        r2 = m._get_bootstrap()
-        assert r1 is r2
+    def test_contains_using_superpowers_body(self):
+        content = _bootstrap()
+        # A distinctive line from the skill body proves the real SKILL.md was
+        # embedded, not a stub.
+        assert "You have superpowers" in content
+        assert "## The Rule" in content
 
-    def test_contains_marker(self):
-        m = _load()
-        m._bootstrap_cache = None
-        result = m._get_bootstrap()
-        assert BOOTSTRAP_MARKER in result
+    def test_frontmatter_stripped(self):
+        content = _bootstrap()
+        assert "---\nname:" not in content
 
-    def test_contains_extremely_important_wrapper(self):
+    def test_tool_mapping_sourced_from_reference_file(self):
         m = _load()
-        m._bootstrap_cache = None
-        result = m._get_bootstrap()
-        assert result.startswith("<EXTREMELY_IMPORTANT>")
-        assert result.rstrip().endswith("</EXTREMELY_IMPORTANT>")
+        content = _bootstrap()
+        ref = os.path.join(
+            m._skills_dir(), "using-superpowers", "references", "hermes-tools.md"
+        )
+        with open(ref, encoding="utf-8") as f:
+            ref_text = f.read().strip()
+        # The mapping is included verbatim from the reference file — the
+        # single source, not a drift-prone inline copy.
+        assert ref_text in content
+        assert "read_file" in content
 
-    def test_frontmatter_absent_from_output(self):
-        m = _load()
-        m._bootstrap_cache = None
-        result = m._get_bootstrap()
-        assert "---\nname:" not in result
+    def test_skill_view_guidance_present(self):
+        content = _bootstrap()
+        assert 'skill_view("superpowers:brainstorming")' in content
+
+    def test_under_hermes_context_spill_limit(self):
+        content = _bootstrap()
+        assert len(content) < HERMES_CONTEXT_SPILL_LIMIT, (
+            f"bootstrap is {len(content)} chars; hermes spills injected "
+            f"context over {HERMES_CONTEXT_SPILL_LIMIT} to a file, which "
+            "breaks inline injection"
+        )
