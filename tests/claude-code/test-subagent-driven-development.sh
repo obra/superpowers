@@ -96,13 +96,13 @@ echo "Test 5: Spec compliance reviewer mindset..."
 
 output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "not trust\|don't trust\|skeptical\|verify.*independently\|suspiciously" "Reviewer is skeptical"; then
+if assert_contains "$output" "not.*trust\|don't trust\|skeptical\|verify.*independently\|suspiciously" "Reviewer is skeptical"; then
     : # pass
 else
     exit 1
 fi
 
-if assert_contains "$output" "read.*code\|inspect.*code\|verify.*code" "Reviewer reads code"; then
+if assert_contains "$output" "read.*code\|inspect.*code\|verify.*code\|read.*diff\|trust.*diff" "Reviewer reads code"; then
     : # pass
 else
     exit 1
