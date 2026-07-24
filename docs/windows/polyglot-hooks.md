@@ -6,9 +6,18 @@ Claude Code plugins need hooks that work on Windows, macOS, and Linux. This docu
 
 ## The Problem
 
-Claude Code runs hook commands through the system's default shell:
-- **Windows**: CMD.exe
+Claude Code runs hook commands through a shell:
 - **macOS/Linux**: bash or sh
+- **Windows with Git Bash installed**: Git Bash
+- **Windows without Git Bash**: PowerShell (older versions used CMD.exe)
+
+Neither Windows fallback shell can parse our command string: PowerShell treats
+a leading quoted path as a string expression and errors on the next bareword,
+and CMD.exe's `/c` quoting rules strip the outer quotes when the path contains
+a metacharacter such as `(`. Our hooks therefore declare `"shell": "bash"`
+(supported since Claude Code 2.1.81; older versions ignore the key), which
+forces the Git Bash route and, when Git Bash is absent, produces an actionable
+"install Git for Windows" error instead of a shell parser failure.
 
 This creates several challenges:
 
@@ -42,6 +51,7 @@ hooks/
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "shell": "bash",
             "async": false
           }
         ]
@@ -140,7 +150,7 @@ Check that the script filename is **extensionless** in `hooks.json`. A command l
 
 ### Hook doesn't fire at all
 
-Verify the `matcher` in `hooks.json` matches the event type your harness emits. Claude Code uses `startup|clear|compact`; Codex uses `startup|resume|clear`. Check `hooks-codex.json` for the Codex variant.
+Verify the `matcher` in `hooks.json` matches the event type your harness emits. Claude Code uses `startup|clear|compact`; Cursor uses `sessionStart`. Check `hooks-cursor.json` for the Cursor variant.
 
 ## Related Issues
 

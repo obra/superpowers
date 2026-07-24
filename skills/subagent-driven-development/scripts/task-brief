@@ -4,8 +4,9 @@
 # through the controller's context.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/task-<N>-brief.md
-# (per worktree; concurrent runs in the same working tree share it).
+# Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/task-<N>-brief.md
+# (per plan and per worktree; concurrent runs of the SAME plan in the same
+# working tree share it).
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -20,7 +21,7 @@ n=$2
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
   out="$dir/task-${n}-brief.md"
 fi
 
