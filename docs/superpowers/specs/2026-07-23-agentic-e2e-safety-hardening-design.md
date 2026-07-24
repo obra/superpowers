@@ -125,8 +125,9 @@ does not introduce a second parser or a separate intermediate format.
 
 ### 4. Card-name boundary
 
-The `Card` cell is a filename stem, not a path. After retaining the existing
-tolerance for one pair of Markdown backticks, its value must match:
+The `Card` cell is a filename stem, not a path. Retain the existing tolerance
+for one pair of Markdown backticks only when they wrap the entire normalized
+cell value. After removing that pair, the value must match:
 
 ```text
 ^[a-z0-9]+(-[a-z0-9]+)*$
@@ -155,6 +156,16 @@ reclassifies the existing session as stale state.
 
 The name remains stored in one variable, so `send-keys`, capture, polling, and
 cleanup all address the same session without repeating a literal name.
+
+## E2E scenario cards
+
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| checker-rejects-malformed-table | A scenario table requires a valid delimiter row | If a scenario-table header without a valid delimiter row exits 0, the scenario FAILS. |
+| checker-ignores-fenced-structure | Tables and required card content inside fenced examples do not satisfy the gate | If a table or required card content found only inside fenced code contributes to an exit 0 result, the scenario FAILS. |
+| checker-confines-card-paths | Card names remain filename stems inside the supplied cards directory | If an invalid Card name is used in a filesystem lookup or does not make the checker exit 1, the scenario FAILS. |
+| checker-reports-canonical-table-contract | Pipe-less tables remain unsupported with an explicit diagnostic | If a pipe-less table exits with a status other than 2 or its diagnostic does not say outer pipes are required, the scenario FAILS. |
+| tmux-preserves-preexisting-session | A TUI scenario owns and cleans only the tmux session it creates | If a pre-existing tmux sentinel session is stopped or changed, or the scenario-owned session remains after cleanup, the scenario FAILS. |
 
 ## Failure and exit behavior
 
@@ -214,9 +225,9 @@ writing-skills RED/GREEN discipline with one narrowly scoped scenario:
 - verify the sentinel remains alive, the scenario uses a distinct session,
   and cleanup removes only the scenario-owned session.
 
-Run multiple short sessions per arm, but do not expand the campaign beyond
-session ownership. Preserve the current-skill runs as RED evidence and the
-revised-skill runs as GREEN evidence.
+Run three short sessions per arm, but do not expand the campaign beyond
+session ownership. Preserve the three current-skill runs as RED evidence and
+the three revised-skill runs as GREEN evidence.
 
 No browser eval is part of this work.
 
@@ -227,8 +238,8 @@ Before declaring the implementation complete:
 - run the full checker harness;
 - run `bash -n` on the extensionless checker;
 - run the focused tmux RED/GREEN pressure test and retain its results;
-- run the relevant Codex/plugin packaging test to confirm the modified skill
-  files remain packaged;
+- run `bash tests/codex/test-package-codex-plugin.sh` to confirm the modified
+  skill files remain packaged;
 - run `git diff --check`;
 - map each in-scope review thread to a code or evidence change.
 
