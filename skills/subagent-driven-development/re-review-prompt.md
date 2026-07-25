@@ -8,10 +8,10 @@ new breakage. It is not a fresh review — the full review already happened.
 that the fix itself broke nothing.
 
 ```
-Subagent (general-purpose):
+Subagent ([REVIEWER_AGENT]):
   description: "Re-review Task N fix round R"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIRED for general-purpose: choose per SKILL.md Model
+         Selection. Omit for codex:codex-rescue unless the user chose one.]
   prompt: |
     You are re-reviewing one task's fix round. A previous review produced
     findings; an implementer has attempted to fix them. Your job is to
@@ -92,8 +92,11 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
-  re-reviews of small fix diffs take a cheap-to-mid tier
+- `[REVIEWER_AGENT]` — REQUIRED: the reviewer type selected from the fix
+  author's type by SKILL.md Independent review routing
+- `[MODEL]` — REQUIRED for `general-purpose`: reviewer model per SKILL.md
+  Model Selection; scoped re-reviews of small fix diffs take a cheap-to-mid
+  tier. Omit for `codex:codex-rescue` unless the user chose one
 - `[BRIEF_FILE]` — the task brief file (same file the implementer worked from)
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
