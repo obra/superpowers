@@ -25,11 +25,12 @@ You MUST create a task for each of these items and complete them in order:
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Present candidate design** — in sections scaled to their complexity, validate each section with the user
+6. **Review and synthesize design** — after the full candidate is coherent, run constructive and adversarial review, synthesize against evidence and user intent, then get final user approval (see below)
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -38,8 +39,18 @@ digraph brainstorming {
     "Explore project context" [shape=box];
     "Ask clarifying questions" [shape=box];
     "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
+    "Present candidate design sections" [shape=box];
+    "Candidate design coherent?" [shape=diamond];
+    "Constructive + adversarial review" [shape=box];
+    "Synthesize against\nevidence + user intent" [shape=box];
+    "Material issue remains?" [shape=diamond];
+    "Targeted second review" [shape=box];
+    "Targeted synthesis" [shape=box];
+    "Material issue still remains?" [shape=diamond];
+    "Resolve with user" [shape=box];
+    "User gives final approval?" [shape=diamond];
+    "Revise with user" [shape=box];
+    "Materially different candidate?" [shape=diamond];
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
@@ -47,10 +58,24 @@ digraph brainstorming {
 
     "Explore project context" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
+    "Propose 2-3 approaches" -> "Present candidate design sections";
+    "Present candidate design sections" -> "Candidate design coherent?";
+    "Candidate design coherent?" -> "Present candidate design sections" [label="no, revise"];
+    "Candidate design coherent?" -> "Constructive + adversarial review" [label="yes"];
+    "Constructive + adversarial review" -> "Synthesize against\nevidence + user intent";
+    "Synthesize against\nevidence + user intent" -> "Material issue remains?";
+    "Material issue remains?" -> "Targeted second review" [label="yes"];
+    "Targeted second review" -> "Targeted synthesis";
+    "Targeted synthesis" -> "Material issue still remains?";
+    "Material issue still remains?" -> "Resolve with user" [label="yes"];
+    "Resolve with user" -> "User gives final approval?";
+    "Material issue still remains?" -> "User gives final approval?" [label="no"];
+    "Material issue remains?" -> "User gives final approval?" [label="no"];
+    "User gives final approval?" -> "Revise with user" [label="no"];
+    "Revise with user" -> "Materially different candidate?";
+    "Materially different candidate?" -> "Constructive + adversarial review" [label="yes, new bounded gate"];
+    "Materially different candidate?" -> "User gives final approval?" [label="no, minor revision"];
+    "User gives final approval?" -> "Write design doc" [label="yes"];
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
@@ -83,7 +108,7 @@ digraph brainstorming {
 
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
+- Ask after each section whether it looks right so far; these checks make the complete design a coherent review candidate, not yet the final approval
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
@@ -99,6 +124,29 @@ digraph brainstorming {
 - Explore the current structure before proposing changes. Follow existing patterns.
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
+
+## Design Review Gate
+
+Run this gate once the project context is inspected, intent and constraints are understood, approaches have been explored, and the complete candidate design is coherent. Do not run it on every message or unfinished design section.
+
+Use [design-reviewer-prompt.md](design-reviewer-prompt.md) to dispatch:
+
+1. a Claude constructive reviewer; and
+2. a Codex adversarial reviewer through the official Codex integration when available.
+
+Both reviews are read-only and capability-dependent. If a reviewer capability is absent before dispatch, apply that reviewer's rubric yourself, tell the user which independent perspective was unavailable, and continue — never invent a command or block the generic workflow. If an available reviewer fails to start, authenticate, finish, or return usable output, report the actionable failure and ask whether to retry or proceed with an explicitly degraded self-review. Do not silently substitute your own answer for a failed invocation.
+
+**Synthesis:**
+
+- Compare both reviews with the user's stated intent and constraints.
+- Verify load-bearing factual disputes against repository evidence or authoritative documentation where practical. Mark material claims `VERIFIED`, `INFERRED`, or `UNSUPPORTED` when that distinction helps the decision.
+- Ask: **Can this be materially simpler while still fully solving the current requirement?** Remove premature abstractions, speculative extensibility, and unnecessary interfaces, adapters, factories, service layers, dependencies, or configuration. Simple must remain correct and maintainable.
+- Accept evidence-backed findings; reject preference-only redesign and invented requirements. Codex is an input, not final authority. Do not vote.
+- Present the synthesized design and explain material accepted or rejected findings before asking for final user approval.
+
+Run at most one targeted second review using the scoped contract in [design-reviewer-prompt.md](design-reviewer-prompt.md), and only when a blocker remains, an important factual dispute is unresolved, or synthesis materially changed the design and needs re-checking. Dispatch only the reviewer needed for that issue. Optional findings never trigger another pass. If a material issue remains after the targeted pass, surface it to the user instead of starting a debate loop.
+
+User-requested revisions after synthesis restart the bounded gate only when they produce a materially different coherent candidate. Minor corrections return directly to final approval. Withholding approval by itself does not restart reviewers.
 
 ## After the Design
 
