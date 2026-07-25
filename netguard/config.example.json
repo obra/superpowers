@@ -1,0 +1,60 @@
+{
+  "_comment": "Copia para config.json e corre `python3 netguard.py learn` para preencher os MAC reais.",
+
+  "network": {
+    "cidr": "auto",
+    "gateway": "auto"
+  },
+
+  "authorized": [
+    {
+      "name": "Xiaomi 14T Pro",
+      "mac": "PREENCHER",
+      "role": "telemovel",
+      "expected_ip": null,
+      "required": false
+    },
+    {
+      "name": "Asus K550C",
+      "mac": "PREENCHER",
+      "role": "desktop",
+      "expected_ip": null,
+      "required": false
+    },
+    {
+      "name": "Router TP-Link",
+      "mac": "PREENCHER",
+      "role": "router",
+      "expected_ip": null,
+      "required": true
+    }
+  ],
+
+  "router": {
+    "ip": "auto",
+    "allowed_ports": [80, 443],
+    "watch_ports": [22, 23, 80, 443, 8080, 8443, 1900, 5555, 7547]
+  },
+
+  "scan": {
+    "timeout_ms": 800,
+    "workers": 64,
+    "interval_minutes": 10,
+    "extra_probe_ports": [80, 443, 22, 445, 62078, 5555]
+  },
+
+  "syslog": {
+    "port": 1514
+  },
+
+  "alerts": {
+    "command": null,
+    "min_severity": "warning"
+  },
+
+  "report": {
+    "dir": "reports",
+    "keep_days": 90,
+    "daily_hour": 8
+  }
+}

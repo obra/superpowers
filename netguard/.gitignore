@@ -1,0 +1,8 @@
+# Contém os MAC reais dos teus equipamentos — não vai para o repositório
+config.json
+state.json
+events.jsonl
+reports/
+*.log
+__pycache__/
+*.pyc
