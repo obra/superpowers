@@ -3,10 +3,10 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Subagent (general-purpose):
+Subagent ([IMPLEMENTER_AGENT]):
   description: "Implement Task N: [task name]"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIRED for general-purpose: choose per SKILL.md Model
+         Selection. Omit for codex:codex-rescue unless the user chose one.]
   prompt: |
     You are implementing Task N: [task name]
 
@@ -38,6 +38,13 @@ Subagent (general-purpose):
     4. Commit your work
     5. Self-review (see below)
     6. Report back
+
+    If you are `codex:codex-rescue` and implementation, tests, and report are
+    complete but the sandbox specifically prevents creating `.git/index.lock`,
+    leave the completed changes uncommitted and report DONE_WITH_CONCERNS with
+    the exact Git error. Do not call the task BLOCKED for that restriction
+    alone; the controller will validate and commit unchanged artifacts. This
+    exception does not apply to any implementation, test, or report failure.
 
     Work from: [directory]
 
@@ -137,6 +144,16 @@ Subagent (general-purpose):
     itself — the controller acts on it directly.
 
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
+    Also use DONE_WITH_CONCERNS for the Codex-only `.git/index.lock` exception
+    described above.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
 ```
+
+**Placeholders:**
+- `[IMPLEMENTER_AGENT]` — `codex:codex-rescue` for high-value/high-risk
+  implementation; otherwise `general-purpose`
+- `[MODEL]` — explicit Claude model for `general-purpose`; omitted for
+  `codex:codex-rescue` unless the user explicitly chose a Codex model
+- `[BRIEF_FILE]` — task brief produced by `scripts/task-brief`
+- `[REPORT_FILE]` — implementer's detailed report path
