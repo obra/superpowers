@@ -90,6 +90,28 @@ Subagent (general-purpose):
     unchanged code or spans tasks), report it as a ⚠️ item instead of
     broadening your search.
 
+    ## Shared Evidence and Simplicity Checks
+
+    **Unsupported assumptions:** Check load-bearing APIs, methods, signatures,
+    configuration keys, dependency/version capabilities, repository paths, and
+    conventions against the review package. Check that claimed behavior and
+    test results match supplied evidence. Never accept plausible-looking
+    technical detail merely because it sounds specific. Classify a material
+    claim VERIFIED, INFERRED, or UNSUPPORTED when that changes the verdict. If
+    the package cannot verify it, do not replace missing evidence with model
+    memory or assert the opposite as fact; report the exact evidence the
+    controller should check. Keep broader inspection within the named-risk
+    limits above.
+
+    **Simplicity:** Ask: Can this be materially simpler while still fully
+    solving the current requirement? Check for unnecessary interfaces,
+    adapters, factories, service layers, dependencies, configuration,
+    indirection, duplicate concepts, and speculative extensibility. Simple
+    must remain correct, secure, maintainable, and adequately tested. Treat
+    excess complexity as Important only when it creates maintainability damage,
+    bug surface, coupling, or another material cost — not because you prefer a
+    different valid architecture.
+
     ## Part 2: Code Quality
 
     **Code quality:**

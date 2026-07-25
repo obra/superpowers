@@ -60,6 +60,29 @@ Subagent (general-purpose):
     - Integration tests where they matter?
     - All tests passing?
 
+    **Evidence and unsupported assumptions:**
+    - Are APIs, methods, signatures, configuration keys, dependency/version
+      capabilities, repository paths, and conventions supported by inspected
+      evidence?
+    - Do claimed behavior and test results match the supplied diff and command
+      output? Never treat plausible technical detail or an implementer claim as
+      verified merely because it sounds specific.
+    - Classify load-bearing claims as VERIFIED, INFERRED, or UNSUPPORTED where
+      that distinction affects the verdict. Model memory is not evidence: when
+      supplied evidence cannot establish a claim, report it as UNSUPPORTED and
+      name what would verify it rather than asserting the opposite as fact. Do
+      not create a ledger for routine facts.
+
+    **Simplicity:**
+    - Can this be materially simpler while still fully solving the current
+      requirement?
+    - Look for unnecessary interfaces, adapters, factories, service layers,
+      dependencies, configuration, indirection, duplicate concepts, and
+      speculative extensibility.
+    - Simple must remain correct, secure, maintainable, and adequately tested.
+      Block complexity only when its cost is material, not because you prefer a
+      different valid architecture.
+
     **Production readiness:**
     - Migration strategy if schema changed?
     - Backward compatibility considered?
