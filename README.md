@@ -1,7 +1,49 @@
 # Superpowers
 
+> [!IMPORTANT]
+> **About this fork:** This is the
+> [Stratus Design fork](https://github.com/stratusdesign/sd-superpowers) of
+> [obra/superpowers](https://github.com/obra/superpowers). Its purpose is to
+> preserve the existing Superpowers architecture while adding a deliberate
+> Claude + Codex multi-agent workflow: complementary design and specification
+> review, explicit evidence and simplicity checks, risk-aware implementation
+> routing, and review independent of implementation authorship. It is not the
+> upstream or official Superpowers distribution. The V1 workflow is implemented
+> with documented evaluation limits; see the
+> [Phase 6 verification report](docs/phase-6-final-verification.md).
+
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
+## What This Fork Adds
+
+This fork uses Claude as the primary agent and controller while bringing in
+Codex at specific, high-value points:
+
+- A coherent candidate design receives constructive Claude review and
+  adversarial Codex review before approval.
+- The resulting written specification receives a separate completeness and
+  unsupported-assumption review.
+- Design, task, and final code reviews explicitly check material technical
+  claims and ask whether the solution can be materially simpler.
+- In **subagent-driven-development**, high-value or high-risk implementation
+  can route to Codex, while routine mechanical work stays on an economical
+  Claude route.
+- That same workflow routes review by authorship: Codex-authored work receives
+  Claude review, while selected Claude-authored work receives an independent
+  Codex challenge.
+- The primary agent verifies and synthesizes findings. There is no model vote,
+  and neither reviewer replaces user intent or becomes the final authority.
+
+The workflow degrades explicitly when Codex is unavailable and retains the
+existing bounded fix loops and fresh-evidence completion gate. It does not add
+MCP orchestration, persistent agents, external memory, CodeGraph, or a complex
+risk-scoring engine.
+
+The installation links below describe upstream Superpowers unless they
+explicitly reference this fork. Official marketplaces do not include this
+fork's workflow changes; use this repository checkout through your harness's
+supported local-plugin or repository-install mechanism when evaluating the
+fork.
 
 ## We're Hiring!
 
@@ -201,17 +243,17 @@ The Pi package loads the Superpowers skills and a small extension that injects t
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, and presents design in sections for validation. Once a coherent candidate exists, Claude reviews constructively, Codex reviews adversarially, and the primary agent verifies and synthesizes their findings. The saved design then receives an independent written-spec review.
 
 2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
 
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+4. **subagent-driven-development** or **executing-plans** - Activates with a plan. Subagent-driven development routes high-value/high-risk implementation to Codex and routine mechanical implementation to an appropriate Claude tier, then independently reviews each task through its bounded fix loop. Executing plans remains the direct, batch-oriented path with human checkpoints and plan-specified verification; it does not inherit the SDD routing or per-task review loop.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+6. **requesting-code-review** - Supports the final whole-branch review. Reviews against the plan, checks unsupported assumptions and avoidable complexity, and reports issues by severity. Critical issues block progress.
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
