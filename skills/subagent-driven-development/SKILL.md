@@ -205,6 +205,31 @@ diff's size, complexity, and risk. A small mechanical diff does not need the
 most capable model; a subtle concurrency change does. Scoped re-reviews of
 small fix diffs take a cheap-to-mid tier.
 
+**Independent review routing:** Record whether each task was implemented by
+Claude (`general-purpose`) or Codex (`codex:codex-rescue`), then choose the
+reviewer:
+
+- Codex-authored work is reviewed by a fresh `general-purpose` Claude
+  reviewer with an explicit model tier.
+- Claude-authored work normally uses a fresh `general-purpose` Claude
+  reviewer. Use `codex:codex-rescue` for the review only when independent
+  cross-model challenge is materially justified: the work fell back from a
+  high-risk Codex route, or it relies on uncertain external APIs, versions,
+  configuration, repository capabilities, or a difficult integration.
+
+Do not route routine Claude-authored work to Codex merely for symmetry, and do
+not add a second reviewer or vote between models. Tests do not replace either
+review route. A Codex reviewer must be a different thread from any Codex
+implementer, receive the same task-reviewer prompt, and be explicitly told the
+review is read-only. Prepend `--wait --fresh` to its initial request and leave
+Codex model and effort unset unless the user chose them.
+
+If the Codex review capability is absent, use the most capable available
+Claude reviewer and disclose degraded routing. If Codex setup,
+authentication, dispatch, completion, or result retrieval fails, report the
+actionable failure and ask whether to retry or explicitly fall back to Claude.
+Never claim an independent Codex review when no usable Codex result exists.
+
 **Fix-loop escalation (rounds 4-5)**: for a Claude implementer, use a model at
 least one tier above the implementer that got stuck. For a Codex implementer,
 dispatch a fresh `codex:codex-rescue` agent with the existing brief, report,
@@ -324,6 +349,11 @@ report missing either verdict — spec compliance AND task quality are both
 required. Implementer self-review never replaces the task review; both are
 needed.
 
+- Select the reviewer using **Independent review routing** in Model Selection
+  and record its agent identity for any scoped re-review. Fill the same
+  [task-reviewer-prompt.md](task-reviewer-prompt.md) for either route. For
+  Codex, prepend `--wait --fresh` and state that the task is read-only; do not
+  proceed until the foreground request returns a usable review report.
 - Hand the reviewer its diff as a file: run this skill's
   `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
   it prints (or, without bash: `git log --oneline`, `git diff --stat`,
@@ -424,6 +454,20 @@ diff only. New Critical/Important breakage in the fix diff joins the open
 findings list. Out-of-scope observations go to the ledger as deferred
 minors — they never extend the loop.
 
+Record the author type of each fix and apply **Independent review routing**
+again to the fix diff:
+
+- **Codex-authored fix:** dispatch a fresh `general-purpose` Claude reviewer
+  with an explicit model. Do not resume a prior Codex reviewer.
+- **Claude-authored fix:** use Claude by default. If the material cross-model
+  reasons above select Codex and the prior reviewer was Codex, resume that
+  reviewer with `--wait --resume`; otherwise dispatch a fresh Codex reviewer
+  with `--wait --fresh`.
+
+Any fresh reviewer receives the complete re-review prompt. A Codex reviewer is
+read-only. Never let the fix author review its own work, and never resume a
+Codex implementation thread for review.
+
 **After each round,** append to the ledger:
 `Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
 
@@ -476,6 +520,12 @@ superpowers:requesting-code-review's
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
+This broad final review remains a fresh, most-capable Claude review.
+Codex-authored tasks therefore receive independent review here as well as at
+their task gate; Claude-authored tasks that materially required cross-model
+challenge already received Codex at their task gate. Do not add a second
+whole-branch reviewer.
+
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
@@ -483,6 +533,10 @@ session's final-review fix wave cost more than all its tasks combined.
 Then run exactly one scoped re-review of the fix wave
 (`scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
 [re-review-prompt.md](re-review-prompt.md)).
+Select this re-reviewer from the fix author's type using **Independent review
+routing**; there is no task-reviewer thread to inherit. Dispatch a fresh
+reviewer with the complete scoped prompt. A Claude reviewer gets an explicit
+model tier; a Codex reviewer is read-only and uses `--wait --fresh`.
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or stop on load-bearing ones. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
