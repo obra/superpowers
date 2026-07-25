@@ -19,9 +19,9 @@ specified change gets a two-sentence design and a single approval question.
 What you may never skip is presenting SOME design and getting approval before
 implementing — unexamined assumptions are where wasted work comes from.
 Even on the lightweight path, still write the spec file (a few sentences is
-fine) and get the user's approval of it: the file is what gets committed at
-execution start, and writing-plans needs it as input. What the lightweight
-path compresses is the questioning and the alternatives, not the artifact.
+fine) and get the user's approval of it: the next skill - executing-specs or
+writing-plans - needs it as input. What the lightweight path compresses is
+the questioning and the alternatives, not the artifact.
 
 ## Checklist
 
@@ -36,10 +36,11 @@ and 4-8 always happen):
 5. **Write design doc** — save to `docs/specs/YYYY-MM-DD-<topic>-design.md` (do NOT commit — see below)
 6. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 7. **User reviews written spec** — ask user to review the spec file before proceeding
-8. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+8. **Tier triage** — assess light vs. heavy scope, confirm the recommendation with the user, and route to executing-specs (light) or writing-plans (heavy)
 
-**The terminal state is invoking writing-plans.** Do NOT invoke any other
-implementation skill after brainstorming.
+**The terminal state is the tier triage, routing to executing-specs or
+writing-plans.** Do NOT invoke any other implementation skill after
+brainstorming.
 
 ## The Process
 
@@ -47,7 +48,7 @@ implementation skill after brainstorming.
 
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
-- If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
+- If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → implementation cycle through the tier triage.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
 - If a fact is discoverable in the environment (files, git history, docs, running a command), look it up instead of asking. Questions are reserved for decisions and preferences that are the user's to make.
 - With every question, include your recommended answer and why - the user can then confirm with a word or push back
@@ -89,9 +90,16 @@ implementation skill after brainstorming.
 
 - Write the validated design (spec) to `docs/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+- If you expect to recommend the light tier at the triage step below, the
+  spec MUST include an **Implementation notes** section: files to
+  create/modify, key interfaces, and test intent. On the light path the
+  spec is the implementer's brief - there is no plan document to fill the
+  gap. Heavy-path specs don't need this section; the plan carries it.
 - Do NOT commit the spec. You will iterate on it; drafts are file edits, not
-  commits. The spec is committed once, together with the plan, when
-  subagent-driven-development starts executing.
+  commits. Commit timing depends on the tier: on the heavy path the spec is
+  committed together with the plan when subagent-driven-development starts
+  executing; on the light path it is committed as part of the single final
+  commit when executing-specs finishes.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -106,16 +114,31 @@ Fix any issues inline. No need to re-review — just fix and move on.
 **User Review Gate:**
 The user approved the design in conversation; this second gate is for the
 written artifact — the act of writing it down introduces drift, and the file
-(not the chat) is what writing-plans consumes. Ask the user to review it:
+(not the chat) is what the next skill consumes. Ask the user to review it:
 
-> "Spec written to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+> "Spec written to `<path>`. Please review it and let me know if you want to make any changes before we proceed."
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
-**Implementation:**
+**Tier Triage:**
 
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other implementation skill. writing-plans is the next step.
+Once the user has approved the written spec, route to the next skill based
+on scope - do not default to writing-plans.
+
+1. Assess tier from concrete signals:
+   - **Light:** single subsystem; roughly 1-5 files touched; no schema or
+     API migrations; no new cross-component interfaces to design; work fits
+     about 1-3 implementer dispatches.
+   - **Heavy:** multiple subsystems; many files; new interfaces between
+     components; migrations; anything needing task-by-task interface
+     pinning.
+2. State your recommendation with a one-line rationale and ask one
+   confirmation question. Borderline cases default to heavy.
+3. Route: light → invoke the executing-specs skill; heavy → invoke the
+   writing-plans skill to create a detailed implementation plan.
+
+Do NOT invoke any other implementation skill. The skill chosen by the
+triage - executing-specs or writing-plans - is the next step.
 
 ## Key Principles
 
