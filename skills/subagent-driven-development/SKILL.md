@@ -156,7 +156,41 @@ conflicts that only emerge from implementation.
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Route implementation by value and risk first, then choose the least powerful
+model that can handle the role. Do not calculate a score.
+
+**High-value or high-risk implementation:** dispatch the official
+`codex:codex-rescue` subagent with the same task brief, context, report path,
+and implementer contract described below. Prepend `--wait --fresh` to the
+initial Codex request so SDD receives a terminal result rather than a
+background-job acknowledgement. Prefer Codex when the task involves
+architecture changes, authentication or authorization, security-sensitive
+code, payments, migrations, data integrity, critical business logic,
+concurrency, broad cross-codebase effects, difficult integrations, or failure
+that would be expensive. Risk overrides apparent mechanical simplicity: exact
+plan text or a one-file diff does not make a payment or authorization change
+low-risk.
+
+The installed Codex subagent is a write-capable implementation route, not a
+model name for `general-purpose`. Do not invent a Codex model identifier or
+put Codex in the Claude `model` field. Leave Codex model and effort unset unless
+the user explicitly chose them.
+
+**Routine or mechanical implementation:** dispatch `general-purpose` with an
+explicit suitable Claude model. Examples include isolated changes with a clear
+spec, straightforward CRUD or UI work, boilerplate, routine configuration,
+ordinary tests, and mechanical refactoring.
+
+**Neither class clearly dominates:** use the standard Claude integration and
+judgment tier below. Escalate to Codex only when the actual task has a
+high-value/high-risk signal, not merely because Codex is available.
+
+If the Codex capability is absent before dispatch, use the most capable
+available Claude implementer and disclose the degraded routing. If Codex is
+available but setup, authentication, dispatch, completion, or result retrieval
+fails, report the actionable failure and ask whether to retry or explicitly
+fall back to Claude. Never claim Codex implemented work when no usable Codex
+result exists.
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
 
@@ -171,12 +205,16 @@ diff's size, complexity, and risk. A small mechanical diff does not need the
 most capable model; a subtle concurrency change does. Scoped re-reviews of
 small fix diffs take a cheap-to-mid tier.
 
-**Fix-loop escalation (rounds 4-5)**: use a model at least one tier above
-the implementer that got stuck.
+**Fix-loop escalation (rounds 4-5)**: for a Claude implementer, use a model at
+least one tier above the implementer that got stuck. For a Codex implementer,
+dispatch a fresh `codex:codex-rescue` agent with the existing brief, report,
+and findings; leave its model/effort unset unless the user chose them. Fresh
+context supplies the escalation without inventing a Codex tier.
 
-**Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
+**Always specify the model explicitly when dispatching a Claude subagent.**
+An omitted Claude model inherits your session's model — often the most capable
+and most expensive — which silently defeats this section. The Codex route is
+the explicit exception described above.
 
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the
@@ -201,6 +239,27 @@ and is re-read on every later turn. Hand artifacts over as files.
 
 Record BASE (`git rev-parse HEAD`) before dispatching — the review package
 and fix-round diffs need it.
+
+First classify the task using Model Selection. For high-value/high-risk work,
+dispatch `codex:codex-rescue`; otherwise dispatch `general-purpose` with the
+explicit Claude model tier. In either case, fill the single
+[implementer-prompt.md](implementer-prompt.md) contract below—do not maintain a
+second Codex-specific task prompt.
+
+For Codex, prepend `--wait --fresh` to the initial filled prompt. Do not proceed
+to task review until the foreground dispatch has returned a usable terminal
+result, the report file exists with the required test evidence, and the
+recorded BASE..HEAD range contains the claimed commit(s). A background job
+acknowledgement is not `DONE`.
+
+The Codex write sandbox may complete files and tests but be unable to write
+`.git/index.lock`. Accept this one exception only when the terminal result and
+report name that exact Git-metadata restriction, the worktree contains only the
+task's expected changes, `git diff --check` passes, and the reported focused
+tests pass when the controller reruns them. The controller then commits those
+unchanged files and records the SHA before review. The controller must not edit
+the implementation while doing this. Any other missing artifact, blocker, or
+nonterminal result follows the failure handling in Model Selection.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -238,6 +297,10 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 **DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+
+For a Codex `DONE_WITH_CONCERNS` caused only by the verified `.git/index.lock`
+restriction, apply the controller-commit exception above before generating the
+review package.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
@@ -324,6 +387,8 @@ verbatim. Its context is intact: it knows the task, the code, and its own
 choices. If your harness cannot send another message to a live subagent,
 dispatch a fresh implementer carrying the brief path, the report-file path,
 and the findings — the report file is the persistent memory either way.
+When the implementer is `codex:codex-rescue`, prepend `--wait --resume` so the
+same Codex thread finishes the fix in the foreground.
 
 **Rounds 4-5 — dispatch a fresh implementer on a more capable model** (per
 Model Selection), with the brief path, the report-file path, the open
@@ -331,6 +396,8 @@ findings, and this framing: "A prior implementer attempted this task
 [N] times; you own it now. Read the report file for what was tried." A loop
 that survives three resumes usually means the implementer cannot see its
 own problem — fresh eyes and a capability bump in one move.
+For the Codex route, prepend `--wait --fresh`; the fresh thread is the
+escalation and model/effort remain unset unless the user chose them.
 
 **Every round, either way:** the implementer fixes, re-runs the tests
 covering the amended code, appends its fix report to the same report file,
@@ -339,6 +406,14 @@ the fix report contains the covering tests, the command run, and the
 output; dispatch the re-review once all three are present. Name the
 covering test files in the fix message — a one-line fix does not need the
 whole suite.
+
+For every Codex fix round, repeat the lifecycle gate before re-review: require
+a usable foreground terminal result, validate the appended report and its
+focused test evidence, and verify FIX_BASE..HEAD contains the claimed commit(s).
+If the only failure is the exact `.git/index.lock` sandbox restriction, apply
+the same controller validation and commit the unchanged fix artifacts before
+building the review package. Stop on every other missing, stale, nonterminal,
+or blocked result; never consume a review round with an empty or stale diff.
 
 **The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and dispatch
