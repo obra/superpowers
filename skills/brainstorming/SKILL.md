@@ -27,10 +27,11 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present candidate design** — in sections scaled to their complexity, validate each section with the user
 6. **Review and synthesize design** — after the full candidate is coherent, run constructive and adversarial review, synthesize against evidence and user intent, then get final user approval (see below)
-7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
 8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-9. **User reviews written spec** — ask user to review the spec file before proceeding
-10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+9. **Review and synthesize written spec** — run Codex adversarial/completeness review, verify and apply findings, and establish the canonical spec
+10. **User reviews written spec** — ask user to review the canonical spec before proceeding
+11. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -53,6 +54,12 @@ digraph brainstorming {
     "Materially different candidate?" [shape=diamond];
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
+    "Codex spec review" [shape=box];
+    "Synthesize canonical spec" [shape=box];
+    "Spec blocker remains?" [shape=diamond];
+    "Targeted spec re-check" [shape=box];
+    "Resolve spec with user" [shape=box];
+    "Commit canonical spec" [shape=box];
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
@@ -77,7 +84,15 @@ digraph brainstorming {
     "Materially different candidate?" -> "User gives final approval?" [label="no, minor revision"];
     "User gives final approval?" -> "Write design doc" [label="yes"];
     "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
+    "Spec self-review\n(fix inline)" -> "Codex spec review";
+    "Codex spec review" -> "Synthesize canonical spec";
+    "Synthesize canonical spec" -> "Spec blocker remains?";
+    "Spec blocker remains?" -> "Targeted spec re-check" [label="yes, once"];
+    "Targeted spec re-check" -> "Resolve spec with user" [label="still unresolved"];
+    "Targeted spec re-check" -> "Commit canonical spec" [label="resolved"];
+    "Resolve spec with user" -> "Commit canonical spec";
+    "Spec blocker remains?" -> "Commit canonical spec" [label="no"];
+    "Commit canonical spec" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
     "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
 }
@@ -155,7 +170,6 @@ User-requested revisions after synthesis restart the bounded gate only when they
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -167,12 +181,32 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
+**Written Spec Review Gate:**
+
+After self-review, dispatch a fresh, read-only Codex review using [spec-document-reviewer-prompt.md](spec-document-reviewer-prompt.md). The central question is: **Could another competent coding agent implement this specification without making material assumptions?**
+
+The independent review must challenge blockers, ambiguity, unsupported or hallucinated claims, missing acceptance criteria and tests, invented requirements, unnecessary complexity, missing edge cases, and unimplementable dependencies. It must ask whether the requirement can be solved materially more simply without becoming brittle or incomplete.
+
+Use the official `codex:codex-rescue` subagent for the in-conversation spec review when available. Apply the same capability-absence and invocation-failure handling as the Design Review Gate: disclose degraded self-review when capability is absent; for setup, authentication, dispatch, completion, or result failure, report the failure and ask whether to retry or explicitly continue degraded. Never fabricate reviewer output.
+
+Synthesize findings into the spec before asking the user to review it:
+
+- Before canonicalizing the spec, identify and verify its load-bearing technical claims and repository assumptions, including every one flagged by review, against repository evidence, observed output, or authoritative documentation. If verification is not practical, label the claim `UNSUPPORTED` and resolve it with the user; never present it as fact or silently proceed.
+- Resolve blockers, ambiguities, missing acceptance criteria, missing tests, and implementability gaps.
+- Reject invented requirements and preference-only redesign that conflict with approved intent.
+- Ask: **Can this be materially simpler while still fully solving the current requirement?**
+- The primary agent owns the canonical spec. Codex reports findings; it does not rewrite the spec or make the final decision.
+
+Use at most one targeted re-check, only for an unresolved blocker or material factual dispute after synthesis. Optional or advisory findings do not trigger another pass. If a material issue remains, resolve it with the user instead of starting another reviewer loop.
+
+Commit the canonical spec after synthesis and any targeted re-check or user resolution. Verify the committed file contains the reviewed version before asking for approval.
+
 **User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+After the written spec review gate passes, ask the user to review the canonical spec before proceeding:
 
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Wait for the user's response. If they request changes, make them and re-run self-review plus the written spec review gate. Only proceed once the user approves.
 
 **Implementation:**
 
