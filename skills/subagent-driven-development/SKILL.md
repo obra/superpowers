@@ -106,34 +106,24 @@ conflicts that only emerge from implementation.
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Fixed policy - two roles, two models:
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+- **Implementers and fix subagents: Sonnet** (the current mid-tier model),
+  regardless of task size. A well-specified plan makes implementation
+  mechanical enough for the mid-tier, and cheaper models take 2-3x the
+  turns on multi-step work - costing more overall.
+- **Reviewers: Opus** (the current strong-tier model), for every review
+  dispatch - task reviews, re-reviews, and the final whole-branch review.
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
-
-**Architecture and design tasks**: use the most capable available model.
-The final whole-branch review is one of these — dispatch it on the most
-capable available model, not the session default.
-
-**Review tasks**: choose the model with the same judgment, scaled to the
-diff's size, complexity, and risk. A small mechanical diff does not need the
-most capable model; a subtle concurrency change does.
+The only sanctioned deviation: a Sonnet implementer reports BLOCKED for
+reasoning depth - re-dispatch that one task on Opus.
 
 **Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
+omitted model inherits your session's model - often the most expensive -
+which silently defeats this policy.
 
-**Turn count beats token price.** Wall-clock and context cost scale with how
-many turns a subagent takes, and the cheapest models routinely take 2-3× the
-turns on multi-step work — costing more overall. Use a mid-tier model as the
-floor for reviewers and implementers. Reserve the cheapest tier for
-single-file mechanical fixes with fully pinned-down requirements.
-
-**Task complexity signals (implementation tasks):**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+If the model lineup changes, map by tier: implementers get the mid-tier
+model, reviewers get the strong tier.
 
 ## Handling Implementer Status
 

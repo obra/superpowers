@@ -108,15 +108,12 @@ By design, none of the following exist on this path:
 
 ## Model Selection
 
-Same principle as subagent-driven-development: use the least powerful model
-that can handle the work, but weigh turn count against sticker price - a
-cheap model taking 2-3x the turns often costs more overall. A single-file
-mechanical dispatch with a fully pinned-down Implementation notes section
-can run on a cheap model; multi-file work with any integration or judgment
-call needs a standard model. Size the final reviewer to the diff's size and
-risk rather than defaulting to either extreme. Always specify the model
-explicitly when dispatching a subagent - an omitted model silently inherits
-your session's model, often the most expensive one available.
+Same policy as subagent-driven-development: implementers and fix subagents
+run on Sonnet, reviewers run on Opus. Always specify the model explicitly
+when dispatching a subagent - an omitted model silently inherits your
+session's model, often the most expensive one available. If a Sonnet
+implementer reports BLOCKED for reasoning depth, re-dispatch that task on
+Opus.
 
 ## Escalation Valve
 
