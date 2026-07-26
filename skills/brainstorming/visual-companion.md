@@ -91,16 +91,24 @@ scripts/start-server.sh --project-dir /path/to/project --open --foreground
 
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
 
-If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
+If the URL is unreachable from your browser because the agent runs remotely or
+inside a container, keep the companion bound to loopback and forward its port
+through SSH. The session URL contains a bearer key, so the server must not be
+exposed through plaintext HTTP on a LAN or the Internet.
 
 ```bash
+# On the remote machine: start normally and note the returned port and URL.
 scripts/start-server.sh \
-  --project-dir /path/to/project \
-  --host 0.0.0.0 \
-  --url-host localhost
+  --project-dir /path/to/project
+
+# On your local machine: replace both ports with the returned remote port.
+ssh -L <local-port>:127.0.0.1:<remote-port> user@remote-host
 ```
 
-Use `--url-host` to control what hostname is printed in the returned URL JSON.
+Open the returned URL after replacing its host and port with
+`localhost:<local-port>`. If direct non-loopback exposure is unavoidable, pass
+`--insecure-remote` explicitly and place the server behind TLS; this mode is
+not safe over plaintext HTTP.
 
 ## The Loop
 
