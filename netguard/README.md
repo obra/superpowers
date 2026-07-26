@@ -39,6 +39,36 @@ substitui essas duas.
 
 ---
 
+## A persona
+
+O agente apresenta-se pelo nome que lhe deres. Por omissão no
+`config.example.json` chama-se **Francisco**:
+
+```json
+"persona": { "name": "Francisco", "voice": true }
+```
+
+Com isto, o relatório abre com uma linha na primeira pessoa e assina no fim:
+
+```markdown
+# Francisco — relatorio de 2026-07-26
+
+> Sou o Francisco. Vigiei a rede o dia inteiro e nao vi nada fora do sitio.
+...
+— Francisco, de vigia.
+```
+
+O nome aparece também nos alertas (`Francisco: 2 evento(s)…`) e no cabeçalho do
+`scan` e do `status`.
+
+- `"voice": false` — mantém o nome nos títulos e alertas, mas corta as frases na
+  primeira pessoa, para relatórios secos.
+- `"name": ""` ou secção `persona` ausente — volta a assinar como `NetGuard`,
+  sem voz.
+
+A persona é só apresentação: não muda uma única deteção, nem o que entra nos
+relatórios. O Francisco é a cara, o motor é o mesmo.
+
 ## Instalação
 
 ### No desktop Asus K550C (recomendado — é o posto de vigia principal)

@@ -274,12 +274,39 @@ def summarize(events):
     return counts, kinds
 
 
+def persona_name(config):
+    """Nome com que o agente se apresenta. 'NetGuard' se nao houver persona."""
+    persona = config.get("persona") or {}
+    return persona.get("name") or "NetGuard"
+
+
+def persona_speaks(config):
+    """True se o agente deve escrever na primeira pessoa."""
+    persona = config.get("persona") or {}
+    return bool(persona.get("name")) and persona.get("voice", True)
+
+
+def persona_greeting(name, counts):
+    """Frase de abertura do relatorio, na voz do agente."""
+    if counts.get("critical"):
+        return ("Sou o %s. Ma noticia: apanhei %d ocorrencia(s) grave(s) na tua rede "
+                "e precisas de olhar para isto hoje." % (name, counts["critical"]))
+    if counts.get("warning"):
+        return ("Sou o %s. A rede aguentou-se, mas ha %d ponto(s) que merecem "
+                "uma vista de olhos." % (name, counts["warning"]))
+    return ("Sou o %s. Vigiei a rede o dia inteiro e nao vi nada fora do sitio." % name)
+
+
 def render_report(day, events, state, config):
     """Constroi o relatorio diario em Markdown."""
     counts, kinds = summarize(events)
+    name = persona_name(config)
     lines = []
-    lines.append("# Relatorio NetGuard — %s" % day)
+    lines.append("# %s — relatorio de %s" % (name, day))
     lines.append("")
+    if persona_speaks(config):
+        lines.append("> %s" % persona_greeting(name, counts))
+        lines.append("")
     if counts["critical"]:
         veredito = "ALERTA: %d evento(s) critico(s)" % counts["critical"]
     elif counts["warning"]:
@@ -326,6 +353,9 @@ def render_report(day, events, state, config):
     lines.append("")
     lines.append("Ultima varredura: %s" % state.get("last_scan", "nunca"))
     lines.append("MAC do router memorizado: %s" % state.get("gateway_mac", "desconhecido"))
+    if persona_speaks(config):
+        lines.append("")
+        lines.append("— %s, de vigia." % name)
     return "\n".join(lines) + "\n"
 
 
@@ -569,7 +599,8 @@ def notify(config, events):
     relevant = [e for e in events if SEVERITY_ORDER.get(e.get("severity"), 0) >= floor]
     if not relevant:
         return
-    text = "NetGuard: %d evento(s)\n%s" % (
+    text = "%s: %d evento(s)\n%s" % (
+        persona_name(config),
         len(relevant),
         "\n".join("[%s] %s" % (e["severity"], e["message"]) for e in relevant[:10]),
     )
@@ -638,8 +669,9 @@ def cmd_scan(args):
     notify(config, events)
 
     counts, _ = summarize(events)
-    print("Rede %s — %d host(s) ativo(s), gateway %s" %
-          (scan["cidr"], len(scan["hosts"]), scan.get("gateway") or "?"))
+    print("%s — rede %s, %d host(s) ativo(s), gateway %s" %
+          (persona_name(config), scan["cidr"], len(scan["hosts"]),
+           scan.get("gateway") or "?"))
     for event in events:
         print("[%s] %s" % (event["severity"].upper(), event["message"]))
     if not events:
@@ -755,6 +787,7 @@ def cmd_status(args):
     config = load_config(args.config)
     paths = paths_for(config, args.config)
     state = load_json(paths["state"], {})
+    print("%s, de vigia." % persona_name(config))
     print("Ultima varredura: %s" % state.get("last_scan", "nunca"))
     print("MAC do router:    %s" % state.get("gateway_mac", "desconhecido"))
     print("\nAutorizados:")

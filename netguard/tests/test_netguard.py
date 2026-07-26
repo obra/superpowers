@@ -210,6 +210,45 @@ class TestAnalyse(unittest.TestCase):
         self.assertEqual(state, snapshot)
 
 
+class TestPersona(unittest.TestCase):
+    def config(self, persona):
+        config = dict(CONFIG)
+        config["persona"] = persona
+        return config
+
+    def test_defaults_to_netguard_without_persona(self):
+        self.assertEqual(netguard.persona_name(CONFIG), "NetGuard")
+        self.assertFalse(netguard.persona_speaks(CONFIG))
+
+    def test_named_persona_signs_the_report(self):
+        config = self.config({"name": "Francisco"})
+        text = netguard.render_report("2026-07-25", [], {}, config)
+        self.assertIn("# Francisco — relatorio de 2026-07-25", text)
+        self.assertIn("Sou o Francisco", text)
+        self.assertIn("— Francisco, de vigia.", text)
+
+    def test_voice_can_be_turned_off_keeping_the_name(self):
+        config = self.config({"name": "Francisco", "voice": False})
+        text = netguard.render_report("2026-07-25", [], {}, config)
+        self.assertIn("# Francisco — relatorio", text)
+        self.assertNotIn("Sou o Francisco", text)
+
+    def test_greeting_matches_the_day(self):
+        clean = netguard.persona_greeting("Francisco", {"critical": 0, "warning": 0})
+        warn = netguard.persona_greeting("Francisco", {"critical": 0, "warning": 2})
+        bad = netguard.persona_greeting("Francisco", {"critical": 1, "warning": 0})
+        self.assertIn("nao vi nada fora do sitio", clean)
+        self.assertIn("2 ponto(s)", warn)
+        self.assertIn("1 ocorrencia(s) grave(s)", bad)
+        for line in (clean, warn, bad):
+            self.assertTrue(line.startswith("Sou o Francisco."), line)
+
+    def test_empty_name_falls_back_and_stays_silent(self):
+        config = self.config({"name": "", "voice": True})
+        self.assertEqual(netguard.persona_name(config), "NetGuard")
+        self.assertFalse(netguard.persona_speaks(config))
+
+
 class TestReport(unittest.TestCase):
     def test_clean_day_says_no_incidents(self):
         text = netguard.render_report("2026-07-25", [], {"known_ips": {}}, CONFIG)

@@ -1,6 +1,11 @@
 {
   "_comment": "Copia para config.json e corre `python3 netguard.py learn` para preencher os MAC reais.",
 
+  "persona": {
+    "name": "Francisco",
+    "voice": true
+  },
+
   "network": {
     "cidr": "auto",
     "gateway": "auto"
