@@ -76,6 +76,7 @@ done
 tests=(
     "test-worktree-path-policy.sh"
     "test-jira-start-skill.sh"
+    "test-finish-pr-default.sh"
     "test-sdd-workspace.sh"
     "test-subagent-driven-development.sh"
 )

@@ -50,40 +50,74 @@ plan, the conversation, or the branch's upstream. If it is not already
 known, ask: "This branch split from <your best guess> - is that correct?"
 Confirm before merging: merging into the wrong base is expensive to undo.
 
-## Step 4: Present Options
+## Step 4: Present Options and Proceed
 
-**Normal repo and named-branch worktree — present exactly these 3 options:**
+**Normal repo and named-branch worktree — present exactly this menu:**
 
 ```
-Implementation complete. What would you like to do?
+Implementation complete.
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
+1. Push and create a Pull Request  <- doing this now
+2. Merge back to <base-branch> locally
+3. Keep the branch as-is
 
-Which option?
+Proceeding with the PR. Say so now if you want 2 or 3 instead.
 ```
 
-**Detached HEAD — present exactly these 2 options:**
+**Detached HEAD — present exactly this menu:**
 
 ```
 Implementation complete. You're on a detached HEAD (externally managed workspace).
 
-1. Push as new branch and create a Pull Request
-2. Keep as-is (I'll handle it later)
+1. Push as new branch and create a Pull Request  <- doing this now
+2. Keep as-is
 
-Which option?
+Proceeding with the PR. Say so now if you want 2 instead.
 ```
 
-Present the menu exactly as written — concise, with every option coming
-from the list above. Discarding the work happens only in response to your
-human partner explicitly asking for it (see "If your human partner asks to
-discard the work" below). Wait for their answer; the integration decision
-is theirs.
+Print the menu, then act on the PR immediately — **do not wait for a reply**.
+Pushing a branch and opening a PR are additive and reversible: close the PR,
+delete the remote branch, nothing is lost. Merging into a base branch and
+discarding work are not reversible, so those run only when your human partner
+asks for them by name. The menu exists so they can redirect, not to gate the
+default.
+
+Acting without waiting applies to the integration *choice*, not to the gates
+in front of it. A red test suite (Step 1) or an unconfirmed base branch
+(Step 3) still stops everything.
 
 ## Step 5: Execute Choice
 
-### Option 1: Merge Locally
+### Push and Create PR (the default)
+
+```bash
+git push -u origin <feature-branch>
+# From a detached HEAD, name the new branch on the remote:
+# git push origin HEAD:refs/heads/<new-branch>
+```
+
+Assemble the PR before creating it:
+
+1. **Ticket key.** Match `[A-Z][A-Z0-9]+-[0-9]+` against the branch name. No
+   match — look for a ticket key in the session. Neither — skip the ticket
+   link and carry on. A missing link never blocks the PR.
+2. **Title.** `<KEY>: <summary>` when a key was found. Otherwise a
+   conventional-commit style title built from the branch name and commits.
+3. **Body.** Use `.github/PULL_REQUEST_TEMPLATE.md` when the repo has one and
+   fill every section with real content. No template — use `## Summary`,
+   `## Changes`, `## Testing`.
+4. **Sources.** `git log <base-branch>..HEAD` for the change narrative, plus
+   the `docs/superpowers/specs/*-design.md` written for this work if one
+   exists. Add a ticket link line when a key was found.
+5. **Ready for review, not a draft.**
+
+Create it with the forge's CLI when one is available (`gh pr create --base
+<base-branch> --title ... --body-file ...`), otherwise via the creation URL the
+remote prints on push. Report the URL to your human partner.
+
+Keep the worktree — your human partner iterates on PR feedback there.
+
+### Merge Locally (on explicit request)
 
 ```bash
 # Get main repo root for CWD safety
@@ -110,22 +144,7 @@ delete the branch:
 git branch -d <feature-branch>
 ```
 
-### Option 2: Push and Create PR
-
-```bash
-git push -u origin <feature-branch>
-# From a detached HEAD, name the new branch on the remote:
-# git push origin HEAD:refs/heads/<new-branch>
-```
-
-Then create the pull/merge request against <base-branch> with the forge's
-tooling — its CLI if one is available, or the creation URL most forges
-print when you push — following the repo's PR template and conventions if
-present, and report the URL to your human partner.
-
-Keep the worktree — your human partner iterates on PR feedback there.
-
-### Option 3: Keep As-Is
+### Keep As-Is (on explicit request)
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
@@ -158,8 +177,8 @@ git branch -D <feature-branch>
 
 ## Step 6: Cleanup Workspace
 
-**Runs for Option 1 and confirmed discards.** Options 2 and 3 always
-preserve the worktree. Both callers have already changed directory to the
+**Runs for the merge-locally path and confirmed discards.** The PR and
+keep-as-is paths always preserve the worktree. Both callers have already changed directory to the
 main repo root — worktree removal must run from outside the worktree —
 and use the `GIT_DIR`/`GIT_COMMON`/`WORKTREE_PATH` values captured in
 Step 2, from before that directory change.
@@ -179,11 +198,11 @@ place. If your platform provides a workspace-exit tool, use it.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | yes | - | - | yes |
-| 2. Create PR | - | yes | yes | - |
-| 3. Keep as-is | - | - | yes | - |
+| Path | Merge | Push | Keep Worktree | Cleanup Branch |
+|------|-------|------|---------------|----------------|
+| Create PR (default) | - | yes | yes | - |
+| Merge locally (on request) | yes | - | - | yes |
+| Keep as-is (on request) | - | - | yes | - |
 | Discard (explicit request only) | - | - | - | yes (force) |
 
 ## Common Rationalizations
@@ -191,7 +210,6 @@ place. If your platform provides a workspace-exit tool, use it.
 | Excuse | Reality |
 |--------|---------|
 | "Tests passed earlier this session" | Run the suite on the tree you are about to integrate. A green run only proves the tree it ran on. |
-| "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
@@ -199,3 +217,7 @@ place. If your platform provides a workspace-exit tool, use it.
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
+| "They'll probably want a local merge this time" | PR is the default. Merge-local runs only when your human partner asks for it by name. |
+| "No PR template section applies here, I'll write N/A" | Fill it, or say in one sentence why it does not apply. Placeholders are why PRs get closed. |
+| "Tests are red but the PR is only for review" | A red test suite blocks the PR exactly as it blocks a merge. |
+| "No ticket key on the branch, I'll stop and ask" | A missing ticket link never blocks the PR. Open it without the link. |
