@@ -94,6 +94,13 @@ intact.
 `ABC-123 "Add retry to webhook sender"` (Story) becomes
 `feat/ABC-123-add-retry-webhook`.
 
+Work happens in the current checkout. This skill does not create a worktree.
+If your human partner wants one, invoke `superpowers:using-git-worktrees`
+**first** and give it this branch name — it creates the branch itself
+(`git worktree add ... -b "$BRANCH_NAME"`), so running it after this step
+either collides with the branch just created or invents a new name and loses
+the ticket key.
+
 Run this as one shell invocation — shell variables set in Step 4 do not
 survive into a new tool call, so `DEFAULT` has to be resolved again here:
 
@@ -104,13 +111,6 @@ DEFAULT=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD | sed 's|^or
 DEFAULT=${DEFAULT:-$(git remote show origin | sed -n 's/.*HEAD branch: //p')}
 git checkout -b "$BRANCH" "origin/$DEFAULT"
 ```
-
-Work happens in the current checkout. This skill does not create a worktree.
-If your human partner wants one, invoke `superpowers:using-git-worktrees`
-**first** and give it this branch name — it creates the branch itself
-(`git worktree add ... -b "$BRANCH_NAME"`), so running it after this step
-either collides with the branch just created or invents a new name and loses
-the ticket key.
 
 ## Step 6: Route by Issue Type
 
