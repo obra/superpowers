@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Structure check: the starting-from-a-jira-ticket skill must keep its
-# preflight gates, fetch-before-branch ordering, and both routing targets.
+# preflight gates, the fetch-before-branch step, and both routing targets.
 
 set -euo pipefail
 
@@ -50,7 +50,7 @@ assert_contains "$JIRA_SKILL" "description: Use when starting work from a Jira t
 assert_contains "$JIRA_SKILL" 'git status --porcelain' "preflight checks for a clean working tree"
 assert_contains "$JIRA_SKILL" "Never auto-stash" "skill refuses to stash on its own"
 
-assert_contains "$JIRA_SKILL" "git fetch origin" "skill fetches before branching"
+assert_contains "$JIRA_SKILL" "git fetch origin" "skill fetches from origin before branching"
 assert_contains "$JIRA_SKILL" "refs/remotes/origin/HEAD" "skill resolves the default branch from origin/HEAD"
 assert_contains "$JIRA_SKILL" 'git checkout -b "$BRANCH" "origin/$DEFAULT"' "branch is created from the fetched default branch"
 
