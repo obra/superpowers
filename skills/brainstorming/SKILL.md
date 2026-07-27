@@ -26,7 +26,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc** — save to `.superpowers/specs/YYYY-MM-DD-<topic>-design.md` (untracked scratch — do not commit it)
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -104,10 +104,25 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+Before writing the spec, make sure the scratch directory is ignored:
+
+```bash
+git check-ignore -q .superpowers/ || printf '\n.superpowers/\n' >> "$(git rev-parse --show-toplevel)/.gitignore"
+```
+
+If you added the line, say so — a silent `.gitignore` edit surfaces as an
+unexplained diff in your human partner's next commit. If you can't make the
+repair (not a git repo, or `.gitignore` isn't writable), report it and ask
+rather than writing the spec into a directory that will show up as untracked
+noise.
+
+- Write the validated design (spec) to `.superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- **Do not commit the spec.** It is a working artifact for one change, not
+  repository documentation — it describes intent at a single moment and goes
+  stale as soon as the code lands. If your human partner wants to keep it,
+  they move it out of `.superpowers/` deliberately.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

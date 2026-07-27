@@ -125,7 +125,7 @@ keeps its own title and body):
    fill every section with real content. No template — use `## Summary`,
    `## Changes`, `## Testing`.
 4. **Sources.** `git log <base-branch>..HEAD` for the change narrative, plus
-   the `docs/superpowers/specs/*-design.md` written for this work if one
+   the `.superpowers/specs/*-design.md` written for this work if one
    exists. When a key was found, add a ticket *reference* line — a URL only
    if the Jira base URL is already known from the session or from a Jira MCP
    tool, otherwise the bare key. Never guess a hostname.

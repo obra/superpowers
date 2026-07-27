@@ -56,7 +56,7 @@ assert_contains "$FINISHING_SKILL" "explicit request to throw the" "discard is s
 
 assert_contains "$FINISHING_SKILL" '[A-Z][A-Z0-9]+-[0-9]+' "PR assembly recovers the ticket key from the branch name"
 assert_contains "$FINISHING_SKILL" "PULL_REQUEST_TEMPLATE.md" "PR body honours the repo template"
-assert_contains "$FINISHING_SKILL" "docs/superpowers/specs" "PR body draws on the design spec when one exists"
+assert_contains "$FINISHING_SKILL" ".superpowers/specs" "PR body draws on the design spec when one exists"
 assert_contains "$FINISHING_SKILL" "not a draft" "PR is opened ready for review"
 
 assert_contains "$FINISHING_SKILL" "A red test suite (Step 1) or an unconfirmed base branch" "test gate still blocks the PR"
