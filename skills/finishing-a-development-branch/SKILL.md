@@ -1,13 +1,13 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+description: Use when implementation is complete, all tests pass, and the work needs to be integrated - opens a Pull Request by default, with merge-locally and discard available on explicit request
 ---
 
 # Finishing a Development Branch
 
 ## Overview
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Detect environment → Announce the default → Open the PR → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -48,7 +48,12 @@ This determines which menu to show and how cleanup works:
 The base branch is whatever this work forked from — usually named in the
 plan, the conversation, or the branch's upstream. If it is not already
 known, ask: "This branch split from <your best guess> - is that correct?"
-Confirm before merging: merging into the wrong base is expensive to undo.
+Confirm before merging or opening a PR: landing on the wrong base is
+expensive to undo either way.
+
+If the repo's `CLAUDE.md`, `AGENTS.md`, or `CONTRIBUTING.md` names a
+required PR target branch, use that. (This repo is a live example — its
+own docs require PRs against `dev`, not `main`.)
 
 ## Step 4: Present Options and Proceed
 
@@ -82,6 +87,10 @@ discarding work are not reversible, so those run only when your human partner
 asks for them by name. The menu exists so they can redirect, not to gate the
 default.
 
+If your human partner redirects to another option after the PR is already
+up, make good on that reversibility before switching: close the PR and
+delete the remote branch first, then take the requested path.
+
 Acting without waiting applies to the integration *choice*, not to the gates
 in front of it. A red test suite (Step 1) or an unconfirmed base branch
 (Step 3) still stops everything.
@@ -90,25 +99,36 @@ in front of it. A red test suite (Step 1) or an unconfirmed base branch
 
 ### Push and Create PR (the default)
 
+The worktree is kept specifically so PR feedback can be addressed here, so
+re-entering this skill on a branch that already has a PR is expected, not an
+error. Before pushing, check whether one is already open (`gh pr view
+--json url` or equivalent). If one exists: push the update and report the
+existing URL instead of trying to create a new one.
+
 ```bash
 git push -u origin <feature-branch>
 # From a detached HEAD, name the new branch on the remote:
 # git push origin HEAD:refs/heads/<new-branch>
 ```
 
-Assemble the PR before creating it:
+Assemble the PR before creating it (skip this on re-entry — the existing PR
+keeps its own title and body):
 
 1. **Ticket key.** Match `[A-Z][A-Z0-9]+-[0-9]+` against the branch name. No
    match — look for a ticket key in the session. Neither — skip the ticket
    link and carry on. A missing link never blocks the PR.
-2. **Title.** `<KEY>: <summary>` when a key was found. Otherwise a
-   conventional-commit style title built from the branch name and commits.
+2. **Title.** `<KEY>: <summary>` when a key was found. The summary comes
+   from the commit log (`git log <base-branch>..HEAD`), falling back to the
+   de-slugged branch name if the log has nothing usable. No key — a
+   conventional-commit style title built the same way.
 3. **Body.** Use `.github/PULL_REQUEST_TEMPLATE.md` when the repo has one and
    fill every section with real content. No template — use `## Summary`,
    `## Changes`, `## Testing`.
 4. **Sources.** `git log <base-branch>..HEAD` for the change narrative, plus
    the `docs/superpowers/specs/*-design.md` written for this work if one
-   exists. Add a ticket link line when a key was found.
+   exists. When a key was found, add a ticket *reference* line — a URL only
+   if the Jira base URL is already known from the session or from a Jira MCP
+   tool, otherwise the bare key. Never guess a hostname.
 5. **Ready for review, not a draft.**
 
 Create it with the forge's CLI when one is available (`gh pr create --base

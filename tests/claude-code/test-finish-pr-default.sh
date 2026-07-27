@@ -27,6 +27,21 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local file="$1"
+  local pattern="$2"
+  local label="$3"
+
+  if grep -Fq "$pattern" "$file"; then
+    echo "  [FAIL] $label"
+    echo "    Did not expect to find: $pattern"
+    echo "    In file: $file"
+    failures=$((failures + 1))
+  else
+    echo "  [PASS] $label"
+  fi
+}
+
 echo "=== Finish PR-Default Test ==="
 echo ""
 
@@ -44,7 +59,10 @@ assert_contains "$FINISHING_SKILL" "PULL_REQUEST_TEMPLATE.md" "PR body honours t
 assert_contains "$FINISHING_SKILL" "docs/superpowers/specs" "PR body draws on the design spec when one exists"
 assert_contains "$FINISHING_SKILL" "not a draft" "PR is opened ready for review"
 
-assert_contains "$FINISHING_SKILL" "A red test suite" "test gate still blocks the PR"
+assert_contains "$FINISHING_SKILL" "A red test suite (Step 1) or an unconfirmed base branch" "test gate still blocks the PR"
+
+assert_not_contains "$FINISHING_SKILL" "Which option?" "the old blocking prompt is gone"
+assert_not_contains "$FINISHING_SKILL" "They obviously want it merged" "the contradicting rationalization row is gone"
 
 echo ""
 

@@ -53,15 +53,6 @@ partner to commit or stash them. Never auto-stash — uncommitted work carried
 onto a ticket branch contaminates the PR, and a stash you created is a stash
 they don't know about.
 
-**A branch for this ticket already exists:**
-
-```bash
-git branch --list "*<KEY>*"
-```
-
-If that prints anything, stop and offer to check the existing branch out
-instead of creating a second one.
-
 ## Step 4: Determine the Base Branch
 
 ```bash
@@ -76,6 +67,15 @@ time that look real but aren't.
 If `origin/dev` exists and the repo's `CLAUDE.md` or `AGENTS.md` says work
 lands on an integration branch rather than the default, ask which base to use
 before branching.
+
+**A branch for this ticket already exists, local or remote:**
+
+```bash
+git branch -a --list "*<KEY>*"
+```
+
+If that prints anything, stop and offer to check the existing branch out
+instead of creating a second one — a teammate may have already pushed it.
 
 ## Step 5: Create the Branch
 
@@ -94,14 +94,23 @@ intact.
 `ABC-123 "Add retry to webhook sender"` (Story) becomes
 `feat/ABC-123-add-retry-webhook`.
 
+Run this as one shell invocation — shell variables set in Step 4 do not
+survive into a new tool call, so `DEFAULT` has to be resolved again here:
+
 ```bash
 BRANCH="feat/ABC-123-add-retry-webhook"
+git fetch origin
+DEFAULT=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD | sed 's|^origin/||')
+DEFAULT=${DEFAULT:-$(git remote show origin | sed -n 's/.*HEAD branch: //p')}
 git checkout -b "$BRANCH" "origin/$DEFAULT"
 ```
 
-Work happens in the current checkout. This skill does not create a worktree —
-invoke `superpowers:using-git-worktrees` separately if your human partner wants
-one.
+Work happens in the current checkout. This skill does not create a worktree.
+If your human partner wants one, invoke `superpowers:using-git-worktrees`
+**first** and give it this branch name — it creates the branch itself
+(`git worktree add ... -b "$BRANCH_NAME"`), so running it after this step
+either collides with the branch just created or invents a new name and loses
+the ticket key.
 
 ## Step 6: Route by Issue Type
 
@@ -131,8 +140,8 @@ really a bug hunt.
 | No ticket key given | Ask for it |
 | No Jira MCP | Ask for a paste, then continue |
 | Dirty working tree | Stop, report, ask commit-or-stash |
-| Branch for key already exists | Offer checkout, don't create a second |
 | `origin/dev` plus repo docs naming it | Ask which base |
+| Branch for key already exists, local or remote | Offer checkout, don't create a second |
 | Bug ticket | Route to systematic-debugging |
 | Any other type | Route to brainstorming |
 

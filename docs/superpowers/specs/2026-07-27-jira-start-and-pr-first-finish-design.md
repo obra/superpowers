@@ -184,8 +184,12 @@ list and as a step 0 in the numbered workflow, since it now precedes
 brainstorming.
 
 **Cross-references.** `executing-plans` and `subagent-driven-development` refer
-to `finishing-a-development-branch` by name; the change is internal to that
-skill, so those references stay correct and need no edit.
+to `finishing-a-development-branch` by name. `executing-plans` stays correct
+and needs no edit. `subagent-driven-development`'s residual-findings handoff
+said load-bearing findings "surface to your human partner when
+finishing-a-development-branch presents the options" — that described a
+blocking menu that no longer blocks, so it needed updating to say those
+findings are carried into the PR description instead.
 
 **Tests.** Two shell tests in `tests/claude-code/`, matching the existing
 content-assertion style of `test-worktree-path-policy.sh`:

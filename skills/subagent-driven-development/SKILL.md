@@ -410,8 +410,9 @@ Then run exactly one scoped re-review of the fix wave
 [re-review-prompt.md](re-review-prompt.md)).
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or stop on load-bearing ones. There is no second fix wave —
-residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+carry residual load-bearing findings into the PR description so your
+human partner sees them on review; finishing-a-development-branch no
+longer pauses on a menu to surface them.
 
 ## Finish
 

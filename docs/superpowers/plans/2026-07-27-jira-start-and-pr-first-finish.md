@@ -609,9 +609,9 @@ In the **Collaboration** list, replace the `finishing-a-development-branch` line
 
 - [ ] **Step 4: Verify the numbering**
 
-Run: `grep -n '^[0-9]\.' README.md`
+Run: `grep -n '^[0-9]\. \*\*' README.md`
 
-Expected: eight consecutively numbered lines, `1.` through `8.`, starting with `starting-from-a-jira-ticket` and ending with `finishing-a-development-branch`.
+Expected: eight consecutively numbered lines, `1.` through `8.`, starting with `starting-from-a-jira-ticket` and ending with `finishing-a-development-branch`. (The unscoped `grep -n '^[0-9]\.' README.md` also matches an unrelated pre-existing numbered list further down the file and returns 13 lines, not 8 — scope the pattern to `^[0-9]\. \*\*` to match only the bolded workflow-step lines.)
 
 - [ ] **Step 5: Commit**
 
