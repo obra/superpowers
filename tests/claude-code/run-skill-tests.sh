@@ -75,6 +75,9 @@ done
 # List of skill tests to run (fast unit tests)
 tests=(
     "test-worktree-path-policy.sh"
+    "test-jira-start-skill.sh"
+    "test-finish-pr-default.sh"
+    "test-planning-artifacts-untracked.sh"
     "test-sdd-workspace.sh"
     "test-subagent-driven-development.sh"
 )

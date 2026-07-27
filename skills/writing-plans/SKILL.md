@@ -15,8 +15,20 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `.superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+- **Do not commit the plan.** It is a working artifact for one change, not
+  repository documentation — it is superseded by the code it produces.
+
+Before writing the plan, make sure the scratch directory is ignored:
+
+```bash
+git check-ignore -q .superpowers/ || printf '\n.superpowers/\n' >> "$(git rev-parse --show-toplevel)/.gitignore"
+```
+
+If you added the line, say so. If you can't make the repair (not a git repo, or
+`.gitignore` isn't writable), report it and ask rather than writing the plan
+into a directory that will show up as untracked noise.
 
 ## Scope Check
 
@@ -151,7 +163,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `.superpowers/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
