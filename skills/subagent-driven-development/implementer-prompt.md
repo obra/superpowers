@@ -41,6 +41,11 @@ Subagent (general-purpose):
 
     Work from: [directory]
 
+    **Git:** ALL git commands must use `git -C [worktree path]`. The `.worktrees/`
+    directory is gitignored in the main repo — running `git status` from the main
+    repo path will show nothing. If you see an empty `git status`, you are using
+    the wrong path. Always use the worktree path from the plan's Git Target section.
+
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 

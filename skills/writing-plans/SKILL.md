@@ -13,7 +13,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time. Before writing the plan, run `git worktree list` to find the worktree path. Every commit step must use `git -C <worktree-path>` — never bare `git` commands. See the Git Target section below.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -74,7 +74,23 @@ values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
 
 ---
+
+## Git Target
+
+**ALL git commands in this plan must use the worktree path below. Never use the main repo path for commits.**
+
 ```
+WORKTREE=<absolute path from `git worktree list`>
+```
+
+Every commit step is written as `git -C $WORKTREE ...`. If you are running steps manually, substitute the full path.
+
+The `.worktrees/` directory is gitignored in the main repo — `git status` from the main repo path will show nothing. All reads, writes, and commits must target the worktree path.
+
+---
+```
+
+**How to fill in the Git Target:** Before writing tasks, run `git worktree list`. Use the path of the feature worktree (not the main repo). If no worktree exists yet, note that one must be created before execution begins.
 
 ## Task Structure
 
@@ -120,8 +136,8 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git -C /absolute/path/to/worktree add tests/path/test.py src/path/file.py
+git -C /absolute/path/to/worktree commit -m "feat: add specific feature"
 ```
 ````
 
