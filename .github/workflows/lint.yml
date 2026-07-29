@@ -1,0 +1,15 @@
+name: lint
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  cross-harness-lint:
+    name: cross-harness-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash tests/lint-cross-harness.sh
