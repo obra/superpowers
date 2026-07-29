@@ -387,15 +387,15 @@ own event-matcher strings (Claude Code uses `startup|clear|compact`, Cursor
 The **hook-config schema itself varies per harness** — don't assume the
 Claude Code shape is universal. Compare `hooks/hooks.json` and
 `hooks/hooks-cursor.json`: Cursor's uses
-`"version": 1`, a lowercase `sessionStart` key, a relative
-`./hooks/run-hook.cmd` command, and omits the `matcher`/`type`/`async` fields
+`"version": 1`, a lowercase `sessionStart` key, a
+`"${CURSOR_PLUGIN_ROOT}/hooks/run-hook.cmd" session-start` command, and omits the `matcher`/`type`/`async` fields
 Claude Code uses. Match your `hooks-<harness>.json` to whichever existing file is
 closest, not to a single canonical template.
 
 The hook **command string references a harness-provided plugin-root variable**,
-and its name differs per harness: `hooks.json` uses `${CLAUDE_PLUGIN_ROOT}`,
-`hooks-cursor.json` uses a relative path. Use
-whatever your harness exports. (The `session-start` script re-derives the root
+and its name differs per harness: `hooks.json` uses `${CLAUDE_PLUGIN_ROOT}` and
+`hooks-cursor.json` uses `${CURSOR_PLUGIN_ROOT}`. Use whatever your harness
+exports. (The `session-start` script re-derives the root
 itself via `dirname`, so the script body doesn't depend on this — but the
 command in the manifest does.)
 
