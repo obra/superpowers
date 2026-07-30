@@ -198,12 +198,15 @@ prints back — stays resident in your context for the rest of the session
 and is re-read on every later turn. Hand artifacts over as files.
 
 **Waiting on dispatched subagents:** never poll a wait interface with
-short timeouts. While you have local work — ledger updates, packaging
-the next review, reading reports — keep working; child results arrive
-on their own. Wait only when you are genuinely idle, and then issue one
-long wait (fifteen minutes or more, where your platform allows it)
-instead of many short ones: a long wait wakes just as fast and costs
-one call instead of dozens.
+short timeouts, and never sit in one silent, open-ended wait either.
+While you have local work — ledger updates, packaging the next review,
+reading reports — keep working; child results arrive on their own.
+When you are genuinely idle, wait in bounded stretches (five to ten
+minutes, where your platform allows), and between stretches post one
+line of status and reconcile your live children: list them, and chase
+any that finished without reporting. A bounded stretch keeps nearly
+all of a long wait's efficiency while guaranteeing a stuck or lost
+child is noticed within minutes, not at the end of the session.
 
 ### 1. Dispatch the implementer
 

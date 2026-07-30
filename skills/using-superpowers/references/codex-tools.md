@@ -47,13 +47,17 @@ two-thirds of all wait calls were short polls that timed out.
 - While you still have local work, do not wait at all. A completed
   child's final answer is pushed into your mailbox and arrives with
   your next turn.
-- When you are genuinely idle with children outstanding, issue ONE
-  `wait_agent` with a long `timeout_ms` — 900000 (15 minutes) or more —
-  and let the event wake you.
+- When you are genuinely idle with children outstanding, wait in
+  bounded stretches: `wait_agent` with `timeout_ms` 300000-600000
+  (5-10 minutes). After each stretch — wake or timeout — post one
+  status line, run `list_agents`, and chase any child that finished
+  without reporting. Never stack polls shorter than five minutes; the
+  event subscription wakes a bounded stretch just as fast as a short
+  one.
 - Completion mail cannot wake an idle controller (it is delivered
   without triggering a turn); covering that idle window is
-  `wait_agent`'s only job. If a long wait times out, check
-  `list_agents` for stuck children — do not fall back to short polls.
+  `wait_agent`'s only job. A stretch that times out with no activity
+  is your cue to reconcile, not to shorten the next stretch.
 
 ## Environment Detection
 
