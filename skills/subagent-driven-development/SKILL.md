@@ -223,6 +223,12 @@ and fix-round diffs need it.
   later dispatches — a real session's dispatch hit 42k chars of which 99%
   was pasted history. A fresh subagent needs its task, the interfaces it
   touches, and the global constraints. Nothing else.
+- The dispatch carries the no-subagents contract (it is in the
+  implementer template): the implementer never dispatches subagents —
+  not helpers, and never a reviewer. Review arrives from you, after the
+  report. In real sessions, every reviewer a worker spawned duplicated
+  the task review the controller dispatched anyway — a full extra
+  review seat per task.
 - If an earlier task parked a finding in the area this task touches, carry
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
@@ -434,6 +440,7 @@ Use superpowers:finishing-a-development-branch.
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
+| "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
 
 ## Example Workflow
 
