@@ -36,6 +36,25 @@ disagree.
   spawn allowlist — V2 accepts only V2-capable presets and hard-errors
   on the rest.
 
+## Waiting on children
+
+`wait_agent` is an event subscription, not a poll: a long wait wakes
+the moment a child produces mailbox activity, with the same latency as
+a short one. Short-timeout polling buys nothing and costs a tool call —
+and a context rebill — per poll. In measured sessions, roughly
+two-thirds of all wait calls were short polls that timed out.
+
+- While you still have local work, do not wait at all. A completed
+  child's final answer is pushed into your mailbox and arrives with
+  your next turn.
+- When you are genuinely idle with children outstanding, issue ONE
+  `wait_agent` with a long `timeout_ms` — 900000 (15 minutes) or more —
+  and let the event wake you.
+- Completion mail cannot wake an idle controller (it is delivered
+  without triggering a turn); covering that idle window is
+  `wait_agent`'s only job. If a long wait times out, check
+  `list_agents` for stuck children — do not fall back to short polls.
+
 ## Environment Detection
 
 Skills that create worktrees or finish branches should detect their
