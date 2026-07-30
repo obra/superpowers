@@ -197,6 +197,14 @@ Everything you paste into a dispatch prompt — and everything a subagent
 prints back — stays resident in your context for the rest of the session
 and is re-read on every later turn. Hand artifacts over as files.
 
+**Waiting on dispatched subagents:** never poll a wait interface with
+short timeouts. While you have local work — ledger updates, packaging
+the next review, reading reports — keep working; child results arrive
+on their own. Wait only when you are genuinely idle, and then issue one
+long wait (fifteen minutes or more, where your platform allows it)
+instead of many short ones: a long wait wakes just as fast and costs
+one call instead of dozens.
+
 ### 1. Dispatch the implementer
 
 Record BASE (`git rev-parse HEAD`) before dispatching — the review package
