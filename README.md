@@ -5,7 +5,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Junie](#junie), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
 
 ## How it works
 
@@ -143,6 +143,24 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```bash
   copilot plugin install superpowers@superpowers-marketplace
   ```
+
+### Junie
+
+Junie has native support for Superpowers. Just open any repository containing a `skills/` folder, and Junie will automatically discover and offer to use the skills.
+
+To install Superpowers as a global extension (available in all projects):
+- Register the repository as a marketplace:
+  ```bash
+  /extensions marketplace add obra/superpowers
+  ```
+- Install the extension from the registered marketplace:
+  ```bash
+  /extensions install superpowers
+  ```
+
+To ensure the full Superpowers methodology is enforced:
+- Junie loads `AGENTS.md` and `JUNIE.md` as context at the start of every session.
+- The `using-superpowers` bootstrap is automatically suggested when Junie detects the Superpowers environment.
 
 ### Kimi Code
 
