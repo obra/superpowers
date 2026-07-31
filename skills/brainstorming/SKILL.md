@@ -32,8 +32,11 @@ override it:
   a nod, then find out as cheaply as correctness allows. No design
   doc, no spec file. Report findings as a recommendation; anything you
   built stays labeled throwaway.
-- **Bounded** — a well-scoped change to an existing, understood flow: a
-  new flag, a small endpoint, a one-file fix. Ask the clarifying
+- **Bounded** — a well-scoped change to code that already exists in
+  this repo: a new flag, a small endpoint, a one-file fix.
+  Understanding the kind of app is not enough — bounded means the flow
+  you are changing is already here to read. If there is no existing
+  flow to change, the task is not bounded. Ask the clarifying
   questions that matter, present a short design IN CHAT (a few
   sentences to a few short paragraphs), and STOP. Implementation
   starts only after your human partner says yes to that design — a
@@ -64,6 +67,7 @@ artifact, never the approval.
 | "This is too simple to need a design" | Simple means a short design, not no design. Two sentences in chat, then approval. |
 | "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
 | "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
+| "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
 | "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
 | "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
