@@ -15,8 +15,13 @@ run_claude() {
         cmd+=(--allowed-tools="$allowed_tools")
     fi
 
-    # Run Claude in headless mode with timeout
-    if timeout "$timeout" "${cmd[@]}" > "$output_file" 2>&1; then
+    # Run Claude in headless mode with timeout.
+    # stdin is redirected from /dev/null: the prompt is passed as an argument,
+    # so these calls never want piped input. Without this, an inherited
+    # non-TTY stdin that never closes (CI, or the suite run under a harness)
+    # makes `claude -p` wait on it and the whole script hits its timeout
+    # instead of reporting assertion results.
+    if timeout "$timeout" "${cmd[@]}" < /dev/null > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
         return 0
@@ -32,12 +37,17 @@ run_claude() {
 # Usage: assert_contains "output" "pattern" "test name"
 # Matching is case-insensitive: patterns are prose keywords, and models
 # freely capitalize skill terms ("Do Not Trust", "Spec Compliance").
+# Newlines are flattened before matching: patterns link two keywords with
+# `.*` ("implementer.*fix"), but grep is line-based, so an answer that puts
+# those keywords in different paragraphs failed despite being correct. Only
+# assert_contains flattens, and flattening can only turn a FAIL into a PASS,
+# so no currently-passing assertion changes meaning.
 assert_contains() {
     local output="$1"
     local pattern="$2"
     local test_name="${3:-test}"
 
-    if echo "$output" | grep -qi "$pattern"; then
+    if echo "$output" | tr '\n' ' ' | grep -qi "$pattern"; then
         echo "  [PASS] $test_name"
         return 0
     else
