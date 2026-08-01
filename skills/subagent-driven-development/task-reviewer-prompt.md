@@ -49,6 +49,19 @@ Subagent (general-purpose):
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
+    A diff cannot show an absence, so these two are always named risks worth
+    one grep each:
+    - **Incomplete sweeps.** If the diff changes a user-facing string, a
+      label, an icon, a colour, a constant, or a magic value that plausibly
+      appears elsewhere, grep the source tree for the OLD value. A sweep
+      that fixed three of four call sites looks complete in the diff and is
+      wrong in the product. Report the grep and its hits.
+    - **Missed call sites.** If the diff changes a signature, adds a
+      required parameter, or adds a case to something built per-surface or
+      per-variant, grep for the callers and confirm each was updated.
+      Sibling implementations that no longer share a builder have no
+      compiler or test to reveal the one you missed.
+
     Your review is read-only on this checkout. Do not mutate the working
     tree, the index, HEAD, or branch state in any way.
 
