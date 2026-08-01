@@ -52,6 +52,14 @@ Subagent (general-purpose):
     does not block this task and does not extend the loop. A broad
     whole-branch review happens after all tasks are complete.
 
+    One check does reach outside the fix diff, because a diff cannot show an
+    absence: if a finding was "this value/string/call site is wrong" and the
+    fix changed it, grep the source tree for the OLD value and confirm no
+    other instance survives. A fix that corrected three of four occurrences
+    verdicts as ADDRESSED on the diff alone and is still broken in the
+    product. This is verifying the finding, not re-reviewing — report the
+    grep and its hits alongside that finding's verdict.
+
     ## Tests
 
     The implementer re-ran the tests covering the amended code and appended
