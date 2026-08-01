@@ -103,7 +103,22 @@ def test_specific_behavior():
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
+Expected: FAIL with a **behavior assertion** rejecting the wrong result
+(e.g. `AssertionError: assert actual == expected`), not a load/import error.
+
+**RED evidence (required for claiming the test works):**
+- **Behavioral RED** — the test runs far enough to execute its assertion and
+  fails because the observable result is wrong. This is the only evidence that
+  the behavior check has teeth.
+- **Structural RED** — `ImportError` / `ModuleNotFoundError` / missing symbol /
+  syntax / collection / setup error. This only proves the surface is absent or
+  not loadable. **Do not** plan or report structural RED as proof that a
+  behavior assertion detects incorrect results.
+- If Step 2 hits structural failure first: get past load/setup (minimal
+  importable stub or negative-control return value as needed), re-run, and
+  record behavioral RED before implementing the real logic — unless the plan
+  explicitly states why behavioral RED is impossible for this technology.
+  Aligns with `test-driven-development` (fails, not errors).
 
 - [ ] **Step 3: Write minimal implementation**
 
