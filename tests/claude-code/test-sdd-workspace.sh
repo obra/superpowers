@@ -189,6 +189,36 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- Mode-stripped install path (Codex marketplace zip extractors that
+    # ignore Unix external attributes leave helpers at 0644). Invoking via
+    # bash must still resolve the default workspace OUTFILE path.
+    local stripped="$TEST_ROOT/stripped-scripts"
+    mkdir -p "$stripped"
+    cp "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
+    chmod a-x "$stripped"/*
+    local stripped_brief stripped_rp
+    stripped_brief="$(cd "$repo" && bash "$stripped/task-brief" plan-a.md 1)" || true
+    if [[ "$stripped_brief" == *"wrote $repo/.superpowers/sdd/plan-a/task-1-brief.md"* ]]; then
+        pass "task-brief via bash works when helpers are non-executable"
+    else
+        fail "task-brief via bash works when helpers are non-executable"
+        echo "    got: $stripped_brief"
+    fi
+    stripped_rp="$(cd "$repo" && bash "$stripped/review-package" plan-a.md HEAD~1 HEAD)" || true
+    case "$stripped_rp" in
+        wrote\ "$repo"/.superpowers/sdd/plan-a/review-*.diff:*)
+            pass "review-package via bash works when helpers are non-executable" ;;
+        *)
+            fail "review-package via bash works when helpers are non-executable"
+            echo "    got: $stripped_rp"
+            ;;
+    esac
+    if ! "$stripped/sdd-workspace" plan-a.md >/dev/null 2>&1; then
+        pass "direct exec of mode-stripped sdd-workspace fails as expected"
+    else
+        fail "direct exec of mode-stripped sdd-workspace fails as expected"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."

@@ -179,11 +179,40 @@ skill_count="$(find "$extracted/skills" -mindepth 1 -maxdepth 1 -type d | wc -l 
 metadata_count="$(find "$extracted/skills" -path '*/agents/openai.yaml' -type f | wc -l | tr -d ' ')"
 assert_equals "$metadata_count" "$skill_count" "every packaged skill has OpenAI metadata"
 
-if [[ -x "$extracted/skills/subagent-driven-development/scripts/task-brief" ]]; then
-  pass "archive preserves executable script mode"
-else
-  fail "archive preserves executable script mode"
-fi
+sdd_helpers=(
+  skills/subagent-driven-development/scripts/sdd-workspace
+  skills/subagent-driven-development/scripts/task-brief
+  skills/subagent-driven-development/scripts/review-package
+)
+for helper in "${sdd_helpers[@]}"; do
+  if [[ -x "$extracted/$helper" ]]; then
+    pass "zip extract preserves executable mode: $helper"
+  else
+    fail "zip extract preserves executable mode: $helper"
+  fi
+done
+
+zip_sdd_modes="$(python3 - "$archive" <<'PY'
+import sys
+import zipfile
+
+paths = [
+    "skills/subagent-driven-development/scripts/sdd-workspace",
+    "skills/subagent-driven-development/scripts/task-brief",
+    "skills/subagent-driven-development/scripts/review-package",
+]
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    for path in paths:
+        info = archive.getinfo(path)
+        mode = (info.external_attr >> 16) & 0o7777
+        print(f"{path}\t{oct(mode)}")
+PY
+)"
+expected_zip_sdd_modes="$(printf '%s\n' \
+  $'skills/subagent-driven-development/scripts/sdd-workspace\t0o755' \
+  $'skills/subagent-driven-development/scripts/task-brief\t0o755' \
+  $'skills/subagent-driven-development/scripts/review-package\t0o755')"
+assert_equals "$zip_sdd_modes" "$expected_zip_sdd_modes" "zip stores Unix 0755 for SDD helper scripts"
 
 zip_times="$(python3 - "$archive" <<'PY'
 import sys
@@ -207,8 +236,10 @@ extract_archive "$tar_archive" "$tar_extracted"
 tar_archive_paths="$(list_archive "$tar_archive" | normalize_archive_paths)"
 assert_equals "$tar_archive_paths" "$archive_paths" "zip and tar.gz archives contain the same paths"
 
-tar_task_brief_mode="$(tar -tzvf "$tar_archive" skills/subagent-driven-development/scripts/task-brief | awk '{print $1}')"
-assert_equals "$tar_task_brief_mode" "-rwxr-xr-x" "tar.gz archive preserves executable script mode"
+for helper in "${sdd_helpers[@]}"; do
+  tar_helper_mode="$(tar -tzvf "$tar_archive" "$helper" | awk '{print $1}')"
+  assert_equals "$tar_helper_mode" "-rwxr-xr-x" "tar.gz archive preserves executable mode: $helper"
+done
 
 tar_metadata_times="$(python3 - "$tar_archive" <<'PY'
 import sys, tarfile

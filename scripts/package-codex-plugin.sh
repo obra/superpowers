@@ -140,7 +140,8 @@ if [[ "$FORMAT" == "zip" ]]; then
   command -v unzip >/dev/null || die "unzip not found in PATH"
 fi
 
-[[ -d "$REPO_ROOT/.git" ]] || die "repo root is not a git checkout: $REPO_ROOT"
+# Accept linked worktrees (.git is a file) as well as primary checkouts (.git is a dir).
+[[ -e "$REPO_ROOT/.git" ]] || die "repo root is not a git checkout: $REPO_ROOT"
 git -C "$REPO_ROOT" rev-parse --verify "$REF^{commit}" >/dev/null ||
   die "git ref does not resolve to a commit: $REF"
 
@@ -240,6 +241,25 @@ git -C "$REPO_ROOT" -c tar.umask=0022 archive --format=tar "$REF" -- \
   assets \
   skills \
   | tar -xpf - -C "$STAGE"
+
+# Re-apply +x from the git tree for every staged 100755 path. Zip archives
+# store Unix modes in external attributes only when the staged files are
+# executable; installers that honor those bits (Info-ZIP unzip, tar) need
+# them present. Fail closed if any tracked executable lost its mode.
+missing_exec=0
+while IFS=$'\t' read -r meta path; do
+  mode="${meta%% *}"
+  [[ "$mode" == "100755" ]] || continue
+  staged="$STAGE/$path"
+  [[ -f "$staged" ]] || continue
+  chmod a+x "$staged" || die "failed to mark executable: $path"
+  if [[ ! -x "$staged" ]]; then
+    echo "staged path lost executable bit: $path" >&2
+    missing_exec=1
+  fi
+done < <(git -C "$REPO_ROOT" ls-tree -r "$REF")
+[[ "$missing_exec" -eq 0 ]] ||
+  die "one or more staged 100755 files are not executable after extract"
 
 VERSION="$(jq -r '.version // empty' "$STAGE/.codex-plugin/plugin.json")"
 [[ -n "$VERSION" ]] || die "could not read version from .codex-plugin/plugin.json"

@@ -25,7 +25,11 @@ git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&
 if [ $# -eq 4 ]; then
   out=$4
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  # Invoke sdd-workspace via bash so default OUTFILE still works when an
+  # installer drops the git-tracked 100755 bit (common with zip extractors
+  # that ignore Unix external attributes, e.g. Python zipfile).
+  scripts_dir=$(cd "$(dirname "$0")" && pwd)
+  dir=$("${BASH:-bash}" "$scripts_dir/sdd-workspace" "$plan")
   out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
 fi
 
