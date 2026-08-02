@@ -5,8 +5,8 @@
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
 # Default OUTFILE: <sdd-workspace>/task-<N>-brief.md
-# where <sdd-workspace> is per worktree and, when the harness provides a stable
-# session id, per session.
+# where <sdd-workspace> is per worktree, per plan, and, when the harness
+# provides a stable session id, per session.
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -21,7 +21,7 @@ n=$2
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
   out="$dir/task-${n}-brief.md"
 fi
 

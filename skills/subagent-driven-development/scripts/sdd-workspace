@@ -1,35 +1,58 @@
 #!/usr/bin/env bash
-# Resolve and ensure the working-tree directory SDD uses for its short-lived
-# artifacts: task briefs, implementer reports, review packages, and the
-# progress ledger. Print the directory's absolute path.
+# Resolve and ensure the working-tree directory SDD uses for one execution's
+# short-lived artifacts: task briefs, implementer reports, review packages,
+# and the progress ledger. Print the workspace's absolute path.
+#
+# The workspace uses one flat key. When a harness provides a stable session
+# id, the key combines the plan basename with a sanitized session id so even
+# concurrent executions of the same plan remain isolated. Without a session
+# id, the plan basename is the key, preserving plan-scoped isolation.
 #
 # The workspace lives in the working tree (not under .git/) because Claude Code
 # treats .git/ as a protected path and denies agent writes there — which blocks
 # an implementer subagent from writing its report file. A self-ignoring
-# .gitignore keeps the workspace out of `git status` and out of accidental
-# commits without modifying any tracked file.
+# .gitignore at .superpowers/sdd/ keeps every plan's workspace out of
+# `git status` and out of accidental commits without modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
 # When a harness provides a stable session id, scope the workspace under a
-# sanitized single path segment so concurrent sessions on the same checkout do
-# not overwrite each other's briefs, reports, diffs, or progress ledger.
+# sanitized single path segment so concurrent sessions on one checkout do not
+# overwrite each other's briefs, reports, diffs, or progress ledger.
+# SUPERPOWERS_SDD_SESSION takes precedence over CLAUDE_CODE_SESSION_ID.
 #
-# Usage: sdd-workspace
+# Usage: sdd-workspace PLAN_FILE
 set -euo pipefail
 
+if [ $# -ne 1 ]; then
+  echo "usage: sdd-workspace PLAN_FILE" >&2
+  exit 2
+fi
+
+plan=$1
+[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+
+slug=$(basename "$plan" .md)
+[ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
+  || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
+
 root=$(git rev-parse --show-toplevel)
+base="$root/.superpowers/sdd"
 session="${SUPERPOWERS_SDD_SESSION:-${CLAUDE_CODE_SESSION_ID:-}}"
 if [ -n "$session" ]; then
-  session=$(printf '%s' "$session" | LC_CTYPE=C tr -c 'A-Za-z0-9._-' '_')
-  case "$session" in
-    .|..) session="_$session" ;;
+  session_safe=$(printf '%s' "$session" | LC_CTYPE=C tr -c 'A-Za-z0-9._-' '_')
+  case "$session_safe" in
+    .|..) session_safe="_$session_safe" ;;
   esac
-  dir="$root/.superpowers/sdd/$session"
+  # Keep the readable sanitized id, but include an exact byte identity so two
+  # raw ids that sanitize alike (for example a/b and a?b) cannot collide.
+  session_hex=$(printf '%s' "$session" | od -An -tx1 | tr -d '[:space:]')
+  key="${slug}--${session_safe}+${session_hex}"
 else
-  dir="$root/.superpowers/sdd"
+  key=$slug
 fi
+dir="$base/$key"
 mkdir -p "$dir"
-printf '*\n' > "$dir/.gitignore"
+printf '*\n' > "$base/.gitignore"
 cd "$dir" && pwd
