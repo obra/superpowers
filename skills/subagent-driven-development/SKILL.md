@@ -193,6 +193,14 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 
 ## The Task Loop
 
+**Batch small same-shape work.** When the plan lists several tasks that are
+each a small, independent edit of the same kind — the same one-line fix,
+constant change, or field addition repeated across files — do not dispatch
+one subagent per task. Compose ONE dispatch brief listing every file and
+its change, send the whole batch to a single subagent, and review its diff
+as one unit. Reserve one-dispatch-per-task for work that needs its own
+judgment, its own tests, or its own review surface.
+
 Everything you paste into a dispatch prompt — and everything a subagent
 prints back — stays resident in your context for the rest of the session
 and is re-read on every later turn. Hand artifacts over as files.
