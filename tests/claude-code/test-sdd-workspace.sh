@@ -189,6 +189,62 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- review-package refuses a range whose commits are not on this
+    # checkout's branch: a subagent that committed from the parent checkout
+    # otherwise produces a plausible-looking package (issue #2050) ---
+    local wt_base stray
+    ( cd "$wt" && printf 'feature\n' > feature.txt && git add feature.txt \
+        && git "${git_id[@]}" commit -qm "task 1: feature" )
+    wt_base="$(cd "$wt" && git rev-parse HEAD)"
+
+    ( cd "$repo" && printf 'task 2\n' > task2.txt && git add task2.txt \
+        && git "${git_id[@]}" commit -qm "task 2: committed in the parent checkout" )
+    stray="$(cd "$repo" && git rev-parse HEAD)"
+
+    rc=0
+    (cd "$wt" && "$SDD_SCRIPTS/review-package" plan-a.md "$wt_base" "$stray" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 3 ]]; then
+        pass "review-package rejects a HEAD committed in another working tree"
+    else
+        fail "review-package rejects a HEAD committed in another working tree"
+        echo "    exit: $rc"
+    fi
+
+    rc=0
+    (cd "$wt" && "$SDD_SCRIPTS/review-package" plan-a.md "$wt_base" HEAD >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 3 ]]; then
+        pass "review-package rejects an empty range: nothing landed on this branch"
+    else
+        fail "review-package rejects an empty range: nothing landed on this branch"
+        echo "    exit: $rc"
+    fi
+
+    ( cd "$wt" && printf 'more\n' >> feature.txt && git add feature.txt \
+        && git "${git_id[@]}" commit -qm "task 2: in the worktree" )
+    rc=0
+    (cd "$wt" && "$SDD_SCRIPTS/review-package" plan-a.md "$wt_base" HEAD >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+        pass "review-package accepts commits made in this worktree"
+    else
+        fail "review-package accepts commits made in this worktree"
+        echo "    exit: $rc"
+    fi
+
+    # A fix round that amends orphans the recorded FIX_BASE; the re-review
+    # package must still build.
+    local fix_base
+    fix_base="$(cd "$wt" && git rev-parse HEAD)"
+    ( cd "$wt" && printf 'amended\n' >> feature.txt && git add feature.txt \
+        && git "${git_id[@]}" commit -q --amend -m "task 2: in the worktree (amended)" )
+    rc=0
+    (cd "$wt" && "$SDD_SCRIPTS/review-package" plan-a.md "$fix_base" HEAD >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+        pass "review-package accepts a FIX_BASE orphaned by an amend"
+    else
+        fail "review-package accepts a FIX_BASE orphaned by an amend"
+        echo "    exit: $rc"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
