@@ -92,10 +92,10 @@ copilot plugin install superpowers@superpowers-marketplace
 ### GitHub Copilot chat in Visual Studio Code (vscode)
 
 * In the copilot chat pane, click the settings icon top-right
-* Click on Plugins and next to "Browse Marketplace" button, click the "+" to add a marketplace
-* Enter `https://github.com/obra/superpowers.git` for the marketplace URL
+* Click **Plugins**, then click the **+** button labeled `Install Plugin from Source`
+* Enter `https://github.com/obra/superpowers.git` as the plugin source URL
 * Ensure the `superpowers` plugin is enabled in the plugin list
-* Now you can use the agents and skills in your chat sessions! For example to use the brainstorming skill: `/brainstorming Help me brainstorm how CQRS can fit into my codebase`.
+* Now you can use the agents and skills in your chat sessions. Skills are usually auto-invoked when relevant, and you can manually trigger one if needed (for example: `/superpowers brainstorming Help me brainstorm how CQRS can fit into my codebase`).
 
 **Detailed docs:** [Configure plugin marketplaces](https://code.visualstudio.com/docs/copilot/customization/agent-plugins#_configure-plugin-marketplaces)
 
