@@ -74,6 +74,17 @@ On Windows, the script auto-detects and switches to foreground mode (which block
 scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
+**Cursor:**
+```bash
+# Cursor reaps nohup children after the Shell tool call exits. The script
+# auto-detects CURSOR_AGENT (or CURSOR_EXTENSION_HOST_ROLE=agent-exec) and
+# switches to foreground mode. Launch with block_until_ms: 0 so the waiting
+# shell stays alive across turns, then read state/server-info and curl the
+# url (must return HTTP 200) BEFORE telling the user the companion is ready
+# or pushing the first screen.
+scripts/start-server.sh --project-dir /path/to/project --open
+```
+
 **Gemini CLI:**
 ```bash
 # Use --foreground and set is_background: true on your shell tool call
@@ -106,7 +117,7 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - **Required: confirm the server is alive before referring to the URL or pushing a screen.** Check that `$STATE_DIR/server-info` exists and `$STATE_DIR/server-stopped` does not. If it has shut down, restart it with `start-server.sh` using the **same `--project-dir`** — it reuses the same port, so the user's open tab reconnects on its own (it shows a "paused" overlay while the server is down) and you don't need to send a new URL. The server auto-exits after 4 hours idle (configurable with `--idle-timeout-minutes`).
+   - **Required: confirm the server is alive before referring to the URL or pushing a screen.** Check that `$STATE_DIR/server-info` exists and `$STATE_DIR/server-stopped` does not. Then **HTTP readiness gate:** `curl` the full `url` from `server-info` (including `?key=…`) and require HTTP 200 before sharing the link or writing the first screen. Connection refused / non-200 means the process was reaped — restart with `start-server.sh` (on Cursor: async Shell + foreground) using the **same `--project-dir`**; do not ask the user to debug. A healthy restart reuses the same port, so the user's open tab reconnects on its own (it shows a "paused" overlay while the server is down) and you don't need to send a new URL. The server auto-exits after 4 hours idle (configurable with `--idle-timeout-minutes`).
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use your file-creation tool — **never use cat/heredoc** (dumps noise into terminal)
