@@ -92,6 +92,22 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Select `Install Plugin`.
 
+#### Codex: compaction re-injection hook
+
+Codex compacts long sessions, replacing the transcript with a summary that
+drops Superpowers' skill instructions mid-run — long autonomous workflows
+(like subagent-driven-development) then drift back to harness defaults.
+Claude Code re-injects the bootstrap after every compaction; the plugin ships
+a SessionStart hook (`hooks/hooks-codex.json`) that restores the same
+behavior on Codex (0.145+). It fires only on post-compaction re-starts
+(`source: "compact"`) and is silent at normal session start.
+
+The hook installs with the plugin — no configuration needed. Codex asks you
+to review and trust it once, the first time it loads after install or update.
+Headless automation (CI, eval harnesses) must pass
+`--dangerously-bypass-hook-trust` instead, because untrusted hooks are
+skipped silently.
+
 ### Cursor
 
 - In Cursor Agent chat, install from marketplace:
