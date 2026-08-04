@@ -59,6 +59,25 @@ two-thirds of all wait calls were short polls that timed out.
   `wait_agent`'s only job. A stretch that times out with no activity
   is your cue to reconcile, not to shorten the next stretch.
 
+## Model routing on spawns
+
+Every `spawn_agent` you issue — including when you are yourself a
+spawned child running a fan-out — sets `model` AND `reasoning_effort`
+explicitly, per the Model Selection rules of the skill you are
+executing. Setting `model` alone is a trap: the child's effort
+silently resets to that model's default, not to yours.
+
+Ask your human partner to add a machine-level backstop to
+`~/.codex/config.toml` so any spawn that slips through still routes to
+a deliberate tier instead of silently inheriting the session's most
+expensive model:
+
+```toml
+[agents]
+default_subagent_model = "<a mid-tier model from your spawn allowlist>"
+default_subagent_reasoning_effort = "medium"
+```
+
 ## Environment Detection
 
 Skills that create worktrees or finish branches should detect their
