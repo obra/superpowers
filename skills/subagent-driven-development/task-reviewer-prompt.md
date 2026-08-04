@@ -95,6 +95,12 @@ Subagent (general-purpose):
     - **Misunderstood:** right feature built the wrong way, wrong problem
       solved
 
+    If the brief lists several files each with its own change (a batched
+    dispatch), check the diff against that list file by file: every listed
+    file must have its corresponding hunk. A listed file the diff never
+    touches is a Missing finding, no matter how clean the rest of the
+    batch looks.
+
     If a requirement cannot be verified from this diff alone (it lives in
     unchanged code or spans tasks), report it as a ⚠️ item instead of
     broadening your search.
