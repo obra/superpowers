@@ -55,6 +55,17 @@ The Superpowers marketplace provides Superpowers and some other related plugins 
   /plugin install superpowers@superpowers-marketplace
   ```
 
+### AdaL (proposed — acceptance test in progress)
+
+AdaL's plugin system reads `.claude-plugin/marketplace.json` natively.
+Autonomous skill activation is under development; see
+[docs/README.adal.md](docs/README.adal.md) for current status.
+
+```bash
+/plugin marketplace add obra/superpowers
+/plugin install superpowers@superpowers-dev
+```
+
 ### Antigravity
 
 Install Superpowers as a plugin from this repository:
