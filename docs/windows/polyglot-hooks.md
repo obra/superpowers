@@ -65,9 +65,9 @@ The path is quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces.
 
 ## How `run-hook.cmd` Works at a High Level
 
-`run-hook.cmd` is a polyglot script: Windows treats the first block as batch
-commands, while Unix shells treat that block as a no-op heredoc and continue
-after it.
+`run-hook.cmd` is a polyglot script: its first lines start with `:;`, which
+cmd.exe skips as labels and Unix shells execute — the shell execs the hook
+before ever reaching the batch block that Windows runs.
 
 Do not copy an implementation from this document. Read `hooks/run-hook.cmd`
 directly when changing the dispatcher, and run `tests/hooks/test-session-start.sh`
@@ -89,10 +89,14 @@ afterward.
 
 ### How it works on Unix (bash/sh)
 
-1. `: << 'CMDBLOCK'` opens a heredoc on a no-op command.
-2. The entire CMD batch block is consumed by the heredoc and ignored.
-3. After `CMDBLOCK`, bash resolves the script directory and `exec`s the named
-   extensionless script directly.
+1. Each leading `:;` line is a no-op label to cmd.exe but real commands to a
+   POSIX shell.
+2. The shell checks bash exists (silent exit 0 if not), resolves the script
+   directory CDPATH-proof, and `exec`s the named extensionless script — it
+   never reads the batch block at all.
+3. Heredocs are banned in this file and all hooks/ executables (issue #571:
+   bash >= 5.1 pre-fork pipe writes deadlock on macOS under pipe pressure);
+   `tests/hooks/test-no-heredocs-in-hooks.sh` enforces the ban.
 
 ### Key design decisions
 
