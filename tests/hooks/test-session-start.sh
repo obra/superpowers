@@ -206,6 +206,17 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+codebuddy_home="$(make_home codebuddy)"
+assert_command_output \
+    "CodeBuddy emits nested SessionStart additionalContext (sets both CODEBUDDY_PLUGIN_ROOT and CLAUDE_PLUGIN_ROOT)" \
+    "nested" \
+    "" \
+    "" \
+    "$codebuddy_home" \
+    CODEBUDDY_PLUGIN_ROOT="$REPO_ROOT" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$HOOK_UNDER_TEST"
+
 legacy_home="$(make_home legacy-warning-removed)"
 mkdir -p "$legacy_home/.config/superpowers/skills"
 assert_command_output \
