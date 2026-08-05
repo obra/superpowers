@@ -2,6 +2,31 @@
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
+## Table of Contents
+
+- [Quickstart](#quickstart)
+- [How it works](#how-it-works)
+- [Commercial Services](#commercial-services)
+- [Installation](#installation)
+  - [Claude Code](#claude-code)
+  - [Antigravity](#antigravity)
+  - [Codex App](#codex-app)
+  - [Codex CLI](#codex-cli)
+  - [Cursor](#cursor)
+  - [Factory Droid](#factory-droid)
+  - [Gemini CLI](#gemini-cli)
+  - [GitHub Copilot CLI](#github-copilot-cli)
+  - [Kimi Code](#kimi-code)
+  - [OpenCode](#opencode)
+  - [Pi](#pi)
+- [The Basic Workflow](#the-basic-workflow)
+- [Community](#community)
+- [What's Inside](#whats-inside)
+- [Philosophy](#philosophy)
+- [Contributing](#contributing)
+- [Updating](#updating)
+- [License](#license)
+- [Visual companion telemetry](#visual-companion-telemetry)
 
 ## Quickstart
 
@@ -211,6 +236,14 @@ The Pi package loads the Superpowers skills and a small extension that injects t
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+## Community
+
+Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
+
+- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
+- **Issues**: https://github.com/obra/superpowers/issues
+- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
+
 ## What's Inside
 
 ### Skills Library
@@ -271,11 +304,3 @@ MIT License - see LICENSE file for details
 ## Visual companion telemetry
 
 Because skills and plugins don't provide any feedback to creators, we have no idea how many of you are using Superpowers. By default, the Prime Radiant logo on brainstorming's optional visual companion feature is loaded from our website. It includes the version of Superpowers in use. It does not include any details about your project, prompt, or coding agent. We don't see your clicks or anything about what you're building. This helps us have a rough idea of how many folks are using Superpowers and which version of Superpowers they're using. It's 100% optional. To disable this, set the environment variable `SUPERPOWERS_DISABLE_TELEMETRY` to any true value. Superpowers also honors Claude Code's `DISABLE_TELEMETRY` and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` opt-outs.
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
