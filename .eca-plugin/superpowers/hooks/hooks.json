@@ -1,0 +1,22 @@
+{
+  "superpowers-bootstrap": {
+    "type": "chatStart",
+    "visible": false,
+    "actions": [
+      {
+        "type": "shell",
+        "file": "${plugin:root}/hooks/session-start"
+      }
+    ]
+  },
+  "superpowers-bootstrap-compact": {
+    "type": "postCompact",
+    "visible": false,
+    "actions": [
+      {
+        "type": "shell",
+        "file": "${plugin:root}/hooks/session-start"
+      }
+    ]
+  }
+}

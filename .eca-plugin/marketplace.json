@@ -1,0 +1,14 @@
+{
+  "plugins": [
+    {
+      "name": "superpowers",
+      "description": "Agentic development methodology: spec-driven brainstorming, structured planning, subagent-driven development, TDD, and systematic debugging",
+      "source": ".eca-plugin/superpowers",
+      "category": "Workflow",
+      "tags": ["methodology", "skill", "planning", "tdd", "debugging", "subagent", "workflow"],
+      "author": "obra",
+      "icon": "⚡",
+      "featured": true
+    }
+  ]
+}
