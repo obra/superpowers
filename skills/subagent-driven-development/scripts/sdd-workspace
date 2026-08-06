@@ -8,11 +8,12 @@
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
-# The workspace lives in the working tree (not under .git/) because Claude Code
-# treats .git/ as a protected path and denies agent writes there — which blocks
-# an implementer subagent from writing its report file. A self-ignoring
+# The workspace lives in the working tree (not under .git/) to keep plan
+# artifacts out of the commit graph regardless of platform. A self-ignoring
 # .gitignore at .superpowers/sdd/ keeps every plan's workspace out of
 # `git status` and out of accidental commits without modifying any tracked file.
+# (Originally sited outside .git/ because Claude Code treats .git/ as a
+# protected path; the location is also good hygiene for other platforms.)
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
