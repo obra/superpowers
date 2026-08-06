@@ -180,7 +180,7 @@ or scratch work. Never `--force` on your own initiative. Show your human
 partner what is at stake and ask:
 
 ```bash
-git -C "$WORKTREE_PATH" status --porcelain
+git -C "$WORKTREE_PATH" status --porcelain -uall
 ```
 
 ```
