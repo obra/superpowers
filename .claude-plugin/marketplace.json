@@ -8,7 +8,7 @@
     {
       "name": "minipowers",
       "description": "Minimal fork of superpowers: subagent-driven development with adversarial per-task review, plans, TDD, and verification guardrails. Claude Code only.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "./",
       "author": {
         "name": "Ian Poey"
