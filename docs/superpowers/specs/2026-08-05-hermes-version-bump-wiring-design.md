@@ -1,6 +1,7 @@
 # Hermes Version-Bump Wiring Design
 
 **Date:** 2026-08-05
+**Revised:** 2026-08-06
 **Status:** Draft for Drew review
 
 ## Goal
@@ -13,28 +14,30 @@ to process YAML without implementing a YAML parser in Bash.
 
 - Add `{ "path": ".hermes-plugin/plugin.yaml", "field": "version" }` to
   `.version-bump.json`.
-- Dispatch manifest reads and writes by extension.
-- Keep the existing `jq` path for JSON manifests.
-- Use Mike Farah `yq` v4 for `.yaml` and `.yml` manifests.
-- Limit YAML entries to one top-level field such as `version`; dotted YAML
-  paths are out of scope.
-- Route `--check`, `--audit`, and version updates through the same dispatcher.
+- Route `.json` through the existing `jq` helpers and `.yaml` through Mike
+  Farah `yq` v4. The YAML key and value are passed as data, not interpolated
+  into the expression.
+- Support only a present top-level YAML string field. Nested fields and `.yml`
+  are out of scope.
+- Route `--check`, `--audit`, and version updates through the same small
+  read/write dispatcher.
+- Before any non-help command, run one read-only preflight that validates the
+  required tools and configured extensions, then reads every present declared
+  manifest. This prevents a deterministic YAML failure from occurring after
+  earlier JSON files have already been updated. Missing-file behavior remains
+  unchanged, and `--help` still works without `jq` or `yq`.
 
-Non-help commands fail with an actionable message when a required tool is
-missing, `yq` is not the Mike Farah v4 implementation, a YAML field is nested
-or missing, or a configured extension is unsupported. Existing JSON behavior
-and unrelated release-script semantics remain unchanged.
+The preflight is the only reliability addition. It does not make the script
+transactional or redesign its existing audit and error-status behavior.
 
 ## Tests
 
-Behavioral tests run the real script against an isolated temporary fixture and
-prove:
+Three focused behavioral tests run the real script against an isolated
+temporary fixture and prove:
 
-- aligned JSON and YAML manifests pass `--check`;
-- YAML drift fails `--check`;
-- a version bump updates both formats;
-- nested YAML fields and an incompatible `yq` fail clearly; and
-- the real Hermes manifest is registered in `.version-bump.json`.
+- aligned JSON and YAML pass `--check`, and a bump updates both formats;
+- a preflight failure leaves every manifest unchanged; and
+- the real `.version-bump.json` registers the Hermes manifest.
 
 Verification also runs the existing Hermes tests, shell lint, and
 `scripts/bump-version.sh --check` against the repository.
@@ -42,6 +45,9 @@ Verification also runs the existing Hermes tests, shell lint, and
 ## Non-Goals
 
 - No hand-written YAML parser.
-- No general nested-YAML support.
+- No `.yml` or nested-YAML support.
 - No Hermes runtime changes.
-- No refactor of unrelated audit, missing-file, or version-validation behavior.
+- No rollback framework, general config-schema layer, audit/status refactor, or
+  exhaustive failure matrix.
+- No change to the separate version-validation and JSON-expression issue found
+  during review.
