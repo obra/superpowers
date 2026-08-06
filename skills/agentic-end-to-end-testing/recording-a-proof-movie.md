@@ -31,14 +31,18 @@ markers. Use `bash`, not `zsh` — zsh's read-only `$status` injects a spurious
 error *after* a passing run and pollutes the movie.
 
 ```bash
+run_log=<evidence-dir>/run.log
 bash -o pipefail -c '
-  printf "MANUAL_E2E_KIND=<name>\n";
-  printf "STARTED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
-  <the real e2e command>;             # e.g. xcodebuild test-without-building ... -resultBundlePath ...
-  rc=$?;
-  printf "FINISHED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
-  printf "EXIT_STATUS=%s\n" "$rc"; exit "$rc"
-' 2>&1 | tee <evidence-dir>/run.log
+  {
+    printf "MANUAL_E2E_KIND=<name>\n";
+    printf "STARTED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
+    <the real e2e command>;             # e.g. xcodebuild test-without-building ... -resultBundlePath ...
+    rc=$?;
+    printf "FINISHED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
+    printf "EXIT_STATUS=%s\n" "$rc";
+    exit "$rc"
+  } 2>&1 | tee "$1"
+' bash "$run_log"
 ```
 
 ## Snapshot external state before and after
@@ -47,10 +51,13 @@ If the run touches a remote host or a shared tmux, snapshot it identically
 pre- and post-run and diff. Equal snapshots prove the run left no residue.
 
 ```bash
-ssh <host> 'date -Is; tmux list-sessions -F "#{session_name}|#{session_windows}|attached=#{session_attached}"; \
-  ps -eo pid=,args= | awk "/<helper>/ {print}"; find /tmp -maxdepth 1 -name "<sock-glob>" | wc -l' \
-  | tee <evidence-dir>/pre-snapshot.txt
-# ... run gate ...  then repeat with SNAPSHOT_KIND=post => post-snapshot.txt ; assert they match
+host=<host>
+snapshot_path=<evidence-dir>/pre-snapshot.txt
+bash -o pipefail -c 'ssh "$1" "$2" | tee "$3"' bash \
+  "$host" \
+  'date -Is; tmux list-sessions -F "#{session_name}|#{session_windows}|attached=#{session_attached}"; ps -eo pid=,args= | awk "/<helper>/ {print}"; find /tmp -maxdepth 1 -name "<sock-glob>" | wc -l' \
+  "$snapshot_path"
+# ... run gate ... then repeat for post-snapshot.txt. Begin comparison only after both capture commands succeed.
 ```
 
 ## Render the reel from the log
