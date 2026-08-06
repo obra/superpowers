@@ -30,7 +30,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Command Code](https://commandcode.ai), [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
 
 ## How it works
 
@@ -229,6 +229,21 @@ hermes plugins install obra/superpowers --enable
 Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
+
+### Command Code
+
+Install Superpowers as a Command Code mod package:
+
+```bash
+cmd mods add -g yansigit/superpowers-commandcode
+mkdir -p ~/.commandcode/skills
+cp -R ~/.commandcode/mods/.registry/git/github.com/yansigit/superpowers-commandcode/skills/* ~/.commandcode/skills/
+```
+
+The mod's `appendSystemPrompt` hook injects the `using-superpowers` bootstrap every session. Verify with `cmd skills list` (14 skills) and `cmd -p "What are your superpowers?"`.
+
+Detailed docs: [docs/README.commandcode.md](docs/README.commandcode.md)
+
 
 ## The Basic Workflow
 
