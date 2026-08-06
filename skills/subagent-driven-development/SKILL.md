@@ -213,6 +213,14 @@ final whole-branch review. When you fill a reviewer template:
   branch started from, e.g. `git merge-base main HEAD`) and include the
   printed path in the final review dispatch, so the final reviewer reads
   one file instead of re-deriving the branch diff with git commands.
+- Every reviewer dispatch also carries a findings file path
+  (`.minipowers/sdd/review-findings-BASE..HEAD.md`), and the reviewer
+  appends each finding as it confirms it - see code-reviewer.md's Findings
+  File section. Long reviews get interrupted or run out of context;
+  findings held only in a reviewer's context are lost with it and the pass
+  has to be redone. If a review ends without a report, read the findings
+  file first and re-dispatch only for what it does not cover, handing the
+  existing file over to be amended rather than restarted.
 - Every fix dispatch carries the implementer contract: the fix subagent
   re-runs the tests covering its change and reports the results. Name the
   covering test files in the dispatch — a one-line fix does not need the

@@ -63,12 +63,22 @@ skill directory: `../subagent-driven-development/scripts/review-package
 BASE HEAD` - it prints the file path it wrote. Hand the reviewer that path
 instead of pasting the diff into your own context.
 
+Also pass a findings file path -
+`.minipowers/sdd/review-findings-BASE..HEAD.md` - and require the
+reviewer to append each finding as it confirms it (see
+code-reviewer.md's Findings File section). Long reviews get interrupted
+or exhaust context; the file survives when the reviewer does not. If a
+dispatch ends without a report, read the file first, then re-dispatch
+only for what it does not cover, handing the file over to be amended.
+
 ### 4. Fix Loop
 
 If the reviewer finds Critical or Important issues, dispatch one fix
 subagent with the complete findings list - not one fixer per finding - then
 regenerate the review package for the same range and re-review. Repeat
 until the reviewer reports no open Critical/Important issues.
+
+Pass the fixer the findings file path rather than pasting findings inline.
 
 ### 5. Verify
 
@@ -133,6 +143,9 @@ checkpoints that make the handoff clean.
 
 - Start implementation on main/master without explicit user consent
 - Dispatch implementer subagents in parallel
+- Dispatch a reviewer without a findings file path
+- Re-dispatch a reviewer from scratch after an interrupted review without
+  first reading the file
 - Squash before the reviewer reports no open Critical/Important issues
 - Squash before resolving (or escalating) a scope-ballooned dispatch
 - Skip the verification gate before squashing

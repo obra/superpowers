@@ -22,15 +22,18 @@ Subagent (general-purpose):
     [Scene-setting: where this fits, any prior dispatches already done and
     what they produced, any decisions made since the spec was written]
 
-    ## Before You Begin
+    ## The Spec Is Settled
 
-    If you have questions about:
-    - The requirements or acceptance criteria
-    - The approach or implementation strategy
-    - Dependencies or assumptions
-    - Anything unclear in the spec
+    The spec is approved. Its decisions - names, values, interfaces,
+    file layout - are settled inputs, not open questions. Use them
+    verbatim; do not re-derive the design or weigh alternatives it
+    already rejected. "I would have designed this differently" is not a
+    blocker.
 
-    **Ask them now.** Raise any concerns before starting work.
+    **Ask now, before starting work**, only where the spec is silent or
+    self-contradictory on something you must decide - an acceptance
+    criterion, a dependency, an assumption you cannot resolve from the
+    spec or the codebase - and say which.
 
     ## Your Job
 
@@ -48,8 +51,19 @@ Subagent (general-purpose):
     **ask questions**. It's always OK to pause and clarify. Don't guess or
     make assumptions.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    ## Test Run Budget
+
+    While iterating, run only the focused test for what you're changing.
+
+    You get **one** full-suite run, immediately before your final commit.
+    In your report, state your full-suite run count; if more than one,
+    say why each was needed. The suite is slow enough that
+    repeat runs dominate this dispatch's wall-clock while telling you
+    nothing a focused run would not have.
+
+    The same applies to whole-repo lint and type-check passes: focused
+    invocations on the files you touched while iterating, one whole-repo
+    pass before the final commit.
 
     ## Test-Driven Development
 
@@ -63,6 +77,16 @@ Subagent (general-purpose):
     rollback point if a later step goes wrong. These are checkpoints, not
     the final commit: the controller squashes the whole dispatch into one
     commit later, so message wording doesn't matter.
+
+    ## Reading Files
+
+    Read each file you need once, in full. To revisit part of a file you
+    have already read, use `offset`/`limit` or grep for the symbol - do not
+    re-read a large file from the top. Repeatedly re-reading the same
+    thousand-line file is the most common way these dispatches burn time
+    without making progress.
+
+    Before a broad grep, ask whether you already have the answer in context.
 
     ## Code Organization
 
@@ -144,6 +168,7 @@ Subagent (general-purpose):
     - **TDD Evidence:** RED command + failing output, GREEN command +
       passing output
     - One-line test summary (e.g. "14/14 passing, output pristine")
+    - **Full-suite runs:** N (with a reason for each beyond the first)
     - Files changed
     - Self-review findings, if any
     - Your concerns, if any

@@ -34,6 +34,37 @@ Subagent (general-purpose):
 
     Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
 
+    The single exception is the findings file below, which you append to as you work.
+
+    ## Findings File - Append As You Go
+
+    Write findings to [FINDINGS_FILE] **as you confirm each one**, not in a
+    batch at the end. Append a finding the moment you have verified it,
+    before moving on to the next investigation.
+
+    Your final message can be lost - the controller may be interrupted, or
+    your context may run out mid-verification. A finding that exists only in
+    your context is a finding nobody acts on, and the review restarts from
+    scratch. The file is the deliverable; your final message summarizes it.
+
+    One block per finding, prefixed with its verification state:
+
+    ```
+    ## [CONFIRMED|SUSPECTED] Critical - <one-line title>
+    - **File:line:** path/to/file.py:123
+    - **What's wrong:** ...
+    - **Why it matters:** ...
+    - **How to fix:** ...
+    - **Evidence:** command you ran / code path you traced
+    ```
+
+    Write `SUSPECTED` when you first spot something and intend to verify it,
+    then amend that block to `CONFIRMED` (or delete it) once you know. An
+    interrupted review then still hands over its open leads.
+
+    Finish by appending the `### Assessment` block, so a reader can tell a
+    complete review from a truncated one.
+
     ## What to Check
 
     **Plan alignment:**
@@ -116,6 +147,7 @@ Subagent (general-purpose):
     - Explain WHY each issue matters
     - Acknowledge strengths
     - Give a clear verdict
+    - Append each finding to [FINDINGS_FILE] as you confirm it
 
     **DON'T:**
     - Say "looks good" without checking
@@ -123,6 +155,7 @@ Subagent (general-purpose):
     - Give feedback on code you didn't actually read
     - Be vague ("improve error handling")
     - Avoid giving a clear verdict
+    - Hold findings in context to report them all at the end
 ```
 
 **Placeholders:**
@@ -130,8 +163,9 @@ Subagent (general-purpose):
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
+- `[FINDINGS_FILE]` — path the reviewer appends confirmed findings to as it works
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment - appended to `[FINDINGS_FILE]` as work proceeds and summarized in the final message
 
 ## Example Output
 

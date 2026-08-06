@@ -44,8 +44,29 @@ Subagent (general-purpose):
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    ## Test Run Budget
+
+    While iterating, run only the focused test for what you're changing.
+
+    You get **one** full-suite run, immediately before your final commit.
+    In your report, state your full-suite run count; if more than one,
+    say why each was needed. The suite is slow enough that
+    repeat runs dominate this dispatch's wall-clock while telling you
+    nothing a focused run would not have.
+
+    The same applies to whole-repo lint and type-check passes: focused
+    invocations on the files you touched while iterating, one whole-repo
+    pass before the final commit.
+
+    ## Reading Files
+
+    Read each file you need once, in full. To revisit part of a file you
+    have already read, use `offset`/`limit` or grep for the symbol - do not
+    re-read a large file from the top. Repeatedly re-reading the same
+    thousand-line file is the most common way these dispatches burn time
+    without making progress.
+
+    Before a broad grep, ask whether you already have the answer in context.
 
     ## Code Organization
 
@@ -127,6 +148,7 @@ Subagent (general-purpose):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Commits created (short SHA + subject)
     - One-line test summary (e.g. "14/14 passing, output pristine")
+    - **Full-suite runs:** N (with a reason for each beyond the first)
     - Your concerns, if any
     - The report file path
 
