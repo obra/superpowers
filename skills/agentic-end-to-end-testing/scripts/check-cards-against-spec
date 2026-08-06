@@ -38,24 +38,31 @@ normalize() { tr -s '[:space:]' ' ' | sed -e 's/^ //' -e 's/ $//'; }
 # only backtick/tilde fences; it is not a general Markdown parser.
 without_fenced_code() {
   awk '
-    function fence_family(line, first, count) {
+    function read_fence(line, first, count) {
+      marker_family = ""
+      marker_width = 0
       sub(/^[[:space:]]*/, "", line)
       first = substr(line, 1, 1)
-      if (first != "`" && first != "~") return ""
+      if (first != "`" && first != "~") return
       count = 0
       while (substr(line, count + 1, 1) == first) count++
-      return count >= 3 ? first : ""
+      if (count >= 3) {
+        marker_family = first
+        marker_width = count
+      }
     }
     {
-      marker = fence_family($0)
-      if (!in_fence && marker != "") {
+      read_fence($0)
+      if (!in_fence && marker_family != "") {
         in_fence = 1
-        family = marker
+        family = marker_family
+        opening_width = marker_width
         next
       }
-      if (in_fence && marker == family) {
+      if (in_fence && marker_family == family && marker_width >= opening_width) {
         in_fence = 0
         family = ""
+        opening_width = 0
         next
       }
       if (!in_fence) print

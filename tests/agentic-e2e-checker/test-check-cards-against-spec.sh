@@ -327,6 +327,85 @@ assert_exit 2 "pipe-less table remains unsupported -> exit 2" \
 assert_out_contains "scenario table rows must use leading and trailing outer pipes" \
   "diagnostic names the canonical outer-pipe contract"
 
+echo "a shorter backtick run does not close a longer spec fence"
+mkdir -p "$TEST_ROOT/t21/cards"
+make_cards "$TEST_ROOT/t21/cards"
+cat > "$TEST_ROOT/t21/spec.md" <<'EOF'
+# Widget Design
+
+## E2E scenario cards
+
+````markdown
+```text
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| widget-show-table | Example only | If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS. |
+````
+EOF
+assert_exit 2 "shorter backtick run stays inside four-backtick fence -> exit 2" \
+  "$CHECKER" "$TEST_ROOT/t21/spec.md" "$TEST_ROOT/t21/cards"
+
+echo "a shorter tilde run does not expose card structure"
+make_spec "$TEST_ROOT/t22"; make_cards "$TEST_ROOT/t22/cards"
+cat > "$TEST_ROOT/t22/cards/widget-show-table.md" <<'EOF'
+# widget-show-table: fenced example only
+
+~~~~markdown
+~~~text
+**What this covers**: the rendered table.
+
+## Pre-state
+A built widget binary.
+
+## Steps
+1. Run `widget show`.
+
+## Expected
+If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS.
+
+## Cleanup
+Nothing to clean.
+~~~~
+EOF
+assert_exit 1 "shorter tilde run stays inside four-tilde fence -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t22/spec.md" "$TEST_ROOT/t22/cards"
+
+echo "a longer same-family run closes the fence"
+mkdir -p "$TEST_ROOT/t23/cards"
+make_cards "$TEST_ROOT/t23/cards"
+cat > "$TEST_ROOT/t23/spec.md" <<'EOF'
+# Widget Design
+
+## E2E scenario cards
+
+````markdown
+example only
+``````
+
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| widget-show-table | Rendered table | If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS. |
+EOF
+assert_exit 0 "longer backtick run closes four-backtick fence -> exit 0" \
+  "$CHECKER" "$TEST_ROOT/t23/spec.md" "$TEST_ROOT/t23/cards"
+
+echo "the other marker family does not close the fence"
+mkdir -p "$TEST_ROOT/t24/cards"
+make_cards "$TEST_ROOT/t24/cards"
+cat > "$TEST_ROOT/t24/spec.md" <<'EOF'
+# Widget Design
+
+## E2E scenario cards
+
+````markdown
+~~~~
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| widget-show-table | Example only | If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS. |
+EOF
+assert_exit 2 "tilde run does not close backtick fence -> exit 2" \
+  "$CHECKER" "$TEST_ROOT/t24/spec.md" "$TEST_ROOT/t24/cards"
+
 echo "no scenario table"
 mkdir -p "$TEST_ROOT/t7/cards"
 printf '# Widget Design\n\nNo table here.\n' > "$TEST_ROOT/t7/spec.md"
