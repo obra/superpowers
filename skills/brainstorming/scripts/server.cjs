@@ -537,7 +537,10 @@ function maybeOpenBrowser() {
   const cp = require('child_process');
   // Operator-provided launcher: run as given (this env var is trusted operator input).
   if (process.env.BRAINSTORM_OPEN_CMD) {
-    try { cp.exec(process.env.BRAINSTORM_OPEN_CMD + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
+    try {
+      // Use execFile (no shell) to avoid command injection via URL or env.
+      cp.execFile(process.env.BRAINSTORM_OPEN_CMD, [url], (err) => { /* best effort */ });
+    } catch (e) { /* best effort */ }
     return;
   }
   // Platform launchers: pass the URL as an argv element via execFile (no shell),
