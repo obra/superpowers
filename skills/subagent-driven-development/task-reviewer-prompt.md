@@ -84,6 +84,13 @@ Subagent (general-purpose):
     Warnings or other noise in the implementer's reported test output are
     findings — test output should be pristine.
 
+    Evidence you cannot see is not evidence that doesn't exist. If the
+    report or its test evidence looks truncated, or you cannot locate the
+    results it claims, re-read the file at its stated path — and if it is
+    genuinely missing or garbled, report that as a gap for the controller.
+    Re-running the suite to regenerate what you failed to read is not
+    verification; illegibility of the evidence is not invalidation of it.
+
     ## Part 1: Spec Compliance
 
     Compare the diff against What Was Requested:
