@@ -254,6 +254,79 @@ EOF
 assert_exit 0 "real table after fenced example -> exit 0" \
   "$CHECKER" "$TEST_ROOT/t13/spec.md" "$TEST_ROOT/t13/cards"
 
+echo "card structure inside a fenced example does not count"
+make_spec "$TEST_ROOT/t14"; make_cards "$TEST_ROOT/t14/cards"
+cat > "$TEST_ROOT/t14/cards/widget-show-table.md" <<'EOF'
+# widget-show-table: illustrative card only
+
+~~~markdown
+**What this covers**: the rendered table.
+
+## Pre-state
+A built widget binary.
+
+## Steps
+1. Run `widget show`.
+
+## Expected
+If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS.
+
+## Cleanup
+Nothing to clean.
+~~~
+EOF
+assert_exit 1 "required card content found only inside a fence -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t14/spec.md" "$TEST_ROOT/t14/cards"
+
+echo "unrelated fenced examples remain valid card content"
+make_spec "$TEST_ROOT/t15"; make_cards "$TEST_ROOT/t15/cards"
+cat >> "$TEST_ROOT/t15/cards/widget-show-table.md" <<'EOF'
+
+```console
+$ widget show
+TOTAL  20.85
+```
+EOF
+assert_exit 0 "valid card with unrelated fenced example -> exit 0" \
+  "$CHECKER" "$TEST_ROOT/t15/spec.md" "$TEST_ROOT/t15/cards"
+
+echo "card names cannot traverse outside the cards directory"
+make_spec "$TEST_ROOT/t16"; make_cards "$TEST_ROOT/t16/cards"
+sed -i.bak 's/| widget-show-table |/| ..\/outside |/' "$TEST_ROOT/t16/spec.md"
+mv "$TEST_ROOT/t16/cards/widget-show-table.md" "$TEST_ROOT/t16/outside.md"
+assert_exit 1 "parent-traversing Card value -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t16/spec.md" "$TEST_ROOT/t16/cards"
+assert_out_contains "invalid Card value" "traversal failure names the invalid value"
+
+echo "card names use lowercase kebab case"
+make_spec "$TEST_ROOT/t17"; make_cards "$TEST_ROOT/t17/cards"
+sed -i.bak 's/| widget-show-table |/| Upper-Case |/' "$TEST_ROOT/t17/spec.md"
+mv "$TEST_ROOT/t17/cards/widget-show-table.md" "$TEST_ROOT/t17/cards/Upper-Case.md"
+assert_exit 1 "uppercase Card value -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t17/spec.md" "$TEST_ROOT/t17/cards"
+assert_out_contains "invalid Card value" "uppercase failure names the invalid value"
+
+make_spec "$TEST_ROOT/t18"; make_cards "$TEST_ROOT/t18/cards"
+sed -i.bak 's/| widget-show-table |/| two--segments |/' "$TEST_ROOT/t18/spec.md"
+mv "$TEST_ROOT/t18/cards/widget-show-table.md" "$TEST_ROOT/t18/cards/two--segments.md"
+assert_exit 1 "empty kebab segment -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t18/spec.md" "$TEST_ROOT/t18/cards"
+assert_out_contains "invalid Card value" "empty-segment failure names the invalid value"
+
+echo "one enclosing backtick pair remains supported"
+make_spec "$TEST_ROOT/t19"; make_cards "$TEST_ROOT/t19/cards"
+sed -i.bak 's/| widget-show-table |/| `widget-show-table` |/' "$TEST_ROOT/t19/spec.md"
+assert_exit 0 "backticked kebab-case Card value -> exit 0" \
+  "$CHECKER" "$TEST_ROOT/t19/spec.md" "$TEST_ROOT/t19/cards"
+
+echo "pipe-less tables report the canonical outer-pipe contract"
+make_spec "$TEST_ROOT/t20"; make_cards "$TEST_ROOT/t20/cards"
+sed -E -i.bak 's/^\| (.*) \|$/\1/' "$TEST_ROOT/t20/spec.md"
+assert_exit 2 "pipe-less table remains unsupported -> exit 2" \
+  "$CHECKER" "$TEST_ROOT/t20/spec.md" "$TEST_ROOT/t20/cards"
+assert_out_contains "scenario table rows must use leading and trailing outer pipes" \
+  "diagnostic names the canonical outer-pipe contract"
+
 echo "no scenario table"
 mkdir -p "$TEST_ROOT/t7/cards"
 printf '# Widget Design\n\nNo table here.\n' > "$TEST_ROOT/t7/spec.md"

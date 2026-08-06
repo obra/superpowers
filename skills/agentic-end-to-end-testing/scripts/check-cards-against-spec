@@ -73,7 +73,7 @@ expected_section() {
       if (insec) exit
     }
     insec { print }
-  ' "$1"
+  '
 }
 
 # --- extract the first table under the (case-insensitive) heading ----------
@@ -90,6 +90,7 @@ TABLE="$(awk '
 if [ -z "$TABLE" ]; then
   echo "no scenario table: $SPEC has no \"E2E scenario cards\" heading with a table under it" >&2
   echo "(heading must be exactly \"E2E scenario cards\" — no numbering or extra words)" >&2
+  echo "(scenario table rows must use leading and trailing outer pipes)" >&2
   exit 2
 fi
 
@@ -121,7 +122,6 @@ while IFS= read -r line; do
     c="$(printf '%s' "$c" | normalize)"
     trimmed+=("$c")
   done
-  # cells[0] is empty (before first |); last may be empty too
   if [ "$lineno" -eq 1 ]; then
     for i in "${!trimmed[@]}"; do
       low="$(printf '%s' "${trimmed[$i]}" | tr '[:upper:]' '[:lower:]')"
@@ -153,9 +153,18 @@ while IFS= read -r line; do
   fi
   card="${trimmed[$CARD_COL]:-}"
   falsif="${trimmed[$FALS_COL]:-}"
-  card="${card//\`/}"          # tolerate `card-name` backticks in the cell
   if [ -z "$card" ] || [ -z "$falsif" ]; then
     fail "row $lineno: empty Card or Falsification cell"
+    continue
+  fi
+  case "$card" in
+    \`*\`)
+      card="${card#\`}"
+      card="${card%\`}"
+      ;;
+  esac
+  if ! [[ "$card" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+    fail "row $lineno: invalid Card value: $card"
     continue
   fi
   ROW_CARD[$ROWS]="$card"; ROW_FALS[$ROWS]="$falsif"; ROWS=$((ROWS + 1))
@@ -174,15 +183,16 @@ while [ "$i" -lt "$ROWS" ]; do
     fail "missing card file: $f"
     i=$((i + 1)); continue
   fi
-  hay="$(expected_section "$f" | normalize)"
+  card_text="$(without_fenced_code "$f")"
+  hay="$(printf '%s\n' "$card_text" | expected_section | normalize)"
   case "$hay" in
     *"$falsif"*) : ;;
     *) fail "$f: falsification line not present verbatim in the ## Expected section.
        expected (normalized): $falsif" ;;
   esac
-  grep -q '\*\*What this covers\*\*' "$f" || fail "$f: missing **What this covers**"
+  grep -q '\*\*What this covers\*\*' <<< "$card_text" || fail "$f: missing **What this covers**"
   for sec in Pre-state Steps Expected Cleanup; do
-    grep -Eiq "^#{2,}[[:space:]]*${sec}[[:space:]]*$" "$f" || fail "$f: missing ## ${sec} section"
+    grep -Eiq "^#{2,}[[:space:]]*${sec}[[:space:]]*$" <<< "$card_text" || fail "$f: missing ## ${sec} section"
   done
   i=$((i + 1))
 done
