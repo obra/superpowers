@@ -1,8 +1,8 @@
 # Agentic E2E Safety Hardening — Design
 
 Date: 2026-07-23; amended 2026-08-06
-Status: initial design approved with Drew, 2026-07-23; final-review
-correction approved in principle, with written amendment pending review
+Status: approved with Drew (initial design 2026-07-23; final-review
+correction 2026-08-06)
 Builds on:
 - `2026-07-04-agentic-end-to-end-testing-design.md`
 - `2026-07-04-spec-derived-scenario-cards-design.md`
@@ -44,10 +44,9 @@ the workflow can produce misleading or incomplete evidence:
   whole-branch review, but the successful path does not require those durable
   files to be committed or reviewed before finishing.
 
-Each finding has a direct reproduction. A gate exiting `7` becomes status
-`0` through the documented outer pipeline; a four-marker fence containing a
-three-marker literal can produce a false checker pass; and the successful E2E
-path can reach finishing with its passing cards still untracked.
+Direct reproductions show a gate exiting `7` becoming status `0`, a shorter
+marker exposing fenced structure, and a successful E2E path reaching
+finishing with passing cards still untracked.
 
 The review also identified that direct calls to a web application's internal
 JavaScript action can bypass its user-facing event wiring. That finding is
@@ -62,11 +61,8 @@ valid, but Drew explicitly deferred the browser behavior change on
   than growing it into a general Markdown parser.
 - Ensure the tmux recipe cleans up only a session the scenario successfully
   created.
-- Preserve failures from the real gate, SSH snapshot command, and `tee` in
-  evidence-capture recipes.
-- Honor the opening fence's marker width when filtering structural Markdown.
-- Ensure passing scenario cards are committed and focused-reviewed before
-  finishing, without committing them before they have been run.
+- Close the final-review gaps in evidence-pipeline status, fence-width
+  tracking, and post-run card commit and review.
 - Add focused tests and behavior evidence for only the changed contracts.
 
 ## Non-goals
@@ -75,11 +71,9 @@ valid, but Drew explicitly deferred the browser behavior change on
 - Supporting tables without leading and trailing outer pipes.
 - Building or importing a Markdown parser.
 - Changing the browser-driving recipe.
-- Reordering the final whole-branch review or otherwise redesigning
-  subagent-driven development beyond finalizing its E2E artifacts.
-- Committing scenario cards before they have passed their live run.
-- Requiring an extra human pause for ordinary card authoring when the
-  governing spec already contains an approved scenario table.
+- Redesigning subagent-driven development beyond finalizing its E2E
+  artifacts, committing cards before their live run passes, or adding a human
+  pause when the governing spec already has an approved scenario table.
 - Making remote-state snapshots mandatory for runs that do not touch remote
   or shared state.
 - Changing brainstorming, the card format, or the card-author role.
@@ -193,25 +187,12 @@ cleanup all address the same session without repeating a literal name.
 
 ### 6. Evidence pipeline failure propagation
 
-The shell that owns an evidence pipeline must also enable `pipefail`. Placing
-`bash -o pipefail -c` around only the real gate and piping that child process
-to `tee` in the caller is insufficient: the caller observes `tee` as the last
-pipeline command and can return `0` after the gate failed.
-
-The proof-log recipe places the complete producer-and-`tee` pipeline inside
-one Bash invocation with `pipefail` enabled. It retains live terminal output
-and the saved log, while returning nonzero if either the real gate or `tee`
-fails. The log still records the real gate's `EXIT_STATUS`; that marker does
-not replace the shell's process status.
-
-The optional pre/post SSH snapshot recipe follows the same rule. The complete
-`ssh`-and-`tee` pipeline runs under one pipefail-owning shell, so an SSH
-transport or remote-command failure cannot leave an empty snapshot that the
-workflow accepts as successful. A `tee` write failure also fails the capture.
-The pre/post comparison runs only after both captures succeed.
-
-This design does not prescribe a reusable wrapper or add a dependency. It
-corrects the executable command shape in the existing reference.
+Both the proof-log and optional SSH snapshot recipes place their complete
+producer-and-`tee` pipeline inside one `bash -o pipefail -c` invocation. Live
+output and the saved log remain available, while a failed real gate, SSH
+capture, or `tee` write makes the recipe return nonzero. The proof log still
+records the gate's `EXIT_STATUS`, and snapshot comparison starts only after
+both captures succeed. No reusable wrapper or dependency is added.
 
 ### 7. Proven scenario artifacts
 
@@ -255,8 +236,7 @@ remains a separate delivery gate.
 | checker-reports-canonical-table-contract | Pipe-less tables remain unsupported with an explicit diagnostic | If a pipe-less table exits with a status other than 2 or its diagnostic does not say outer pipes are required, the scenario FAILS. |
 | checker-respects-opening-fence-width | Fenced examples remain excluded until a same-family marker run at least as long as the opener | If a shorter same-family run or an other-family run exposes example-only structure, the scenario FAILS. |
 | tmux-preserves-preexisting-session | A TUI scenario owns and cleans only the tmux session it creates | If a pre-existing tmux sentinel session is stopped or changed, or the scenario-owned session remains after cleanup, the scenario FAILS. |
-| proof-log-preserves-command-failure | Live proof logging preserves failures from the real gate and from writing its log | If a failing gate or `tee` returns success from the documented proof-log pipeline, the scenario FAILS. |
-| snapshot-log-preserves-ssh-failure | Optional remote-state capture fails when SSH or snapshot logging fails | If a failed SSH capture or `tee` write is accepted as a valid snapshot, the scenario FAILS. |
+| evidence-pipelines-preserve-failures | Proof logging and optional SSH snapshots preserve producer and logging failures | If a failing gate, SSH capture, or `tee` returns success from the documented evidence pipeline, the scenario FAILS. |
 | passing-cards-land-before-finishing | Cards are run before commit, then committed and focused-reviewed before finishing | If finishing begins with a passing card untracked, modified, absent from `HEAD`, or unreviewed, the scenario FAILS. |
 
 ## Failure and exit behavior
@@ -277,11 +257,7 @@ Specific outcomes:
 - an invalid card name exits `1` before path construction;
 - headings or falsification text found only in a card's fenced code do not
   count and therefore exit `1`;
-- a shorter same-family marker run does not close a longer fence;
-- a failed real gate, SSH capture, or `tee` write makes its evidence recipe
-  return nonzero;
-- a successful live card run does not complete the E2E phase until the
-  unchanged passing card is committed and focused-reviewed.
+- a shorter same-family marker run does not close a longer fence.
 
 Diagnostics identify the affected file and row or section. Tests assert only
 stable diagnostic contracts needed by a caller, not complete rendered error
