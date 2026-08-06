@@ -154,7 +154,10 @@ a ledger file, not only in todos.
   that happens, recover from `git log`.
 
 Read the plan once, note its context and Global Constraints, and create a
-todo per task.
+todo per task. If the plan names a Spec, read that too: the spec is the
+authority the plan argues from, and conflicts inside the plan resolve
+against it. A plan with no reachable spec gets a ledger note saying so —
+rulings made without one are provisional.
 
 Before dispatching Task 1, scan the plan once for conflicts, writing down
 what you checked as you check it:
