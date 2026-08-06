@@ -255,7 +255,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-tmux new-session -d -s "$session" -x 200 -y 50 "$command 2>\"$stderr_log\""
+if ! tmux new-session -d -s "$session" -x 200 -y 50 "$command 2>\"$stderr_log\""; then
+  echo "failed to create tmux session: $session" >&2
+  exit 1
+fi
 session_owned=1
 tmux send-keys -t "$session" -l "literal text"
 tmux send-keys -t "$session" Enter
