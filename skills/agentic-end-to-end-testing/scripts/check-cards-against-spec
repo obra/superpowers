@@ -34,6 +34,35 @@ warn() { echo "warn: $1"; }
 # design spec: markdown re-wrapping must not defeat the verbatim check.)
 normalize() { tr -s '[:space:]' ' ' | sed -e 's/^ //' -e 's/ $//'; }
 
+# Exclude fenced examples from structural matching. This intentionally models
+# only backtick/tilde fences; it is not a general Markdown parser.
+without_fenced_code() {
+  awk '
+    function fence_family(line, first, count) {
+      sub(/^[[:space:]]*/, "", line)
+      first = substr(line, 1, 1)
+      if (first != "`" && first != "~") return ""
+      count = 0
+      while (substr(line, count + 1, 1) == first) count++
+      return count >= 3 ? first : ""
+    }
+    {
+      marker = fence_family($0)
+      if (!in_fence && marker != "") {
+        in_fence = 1
+        family = marker
+        next
+      }
+      if (in_fence && marker == family) {
+        in_fence = 0
+        family = ""
+        next
+      }
+      if (!in_fence) print
+    }
+  ' "$1"
+}
+
 # Text of the card's Expected section only (case-insensitive heading match,
 # any ##+ level; section ends at the next heading or EOF).
 expected_section() {
@@ -56,7 +85,7 @@ TABLE="$(awk '
   }
   insec && /^[[:space:]]*\|/ { intable = 1; print; next }
   insec && intable { exit }
-' "$SPEC")"
+' < <(without_fenced_code "$SPEC"))"
 
 if [ -z "$TABLE" ]; then
   echo "no scenario table: $SPEC has no \"E2E scenario cards\" heading with a table under it" >&2
@@ -68,13 +97,24 @@ fi
 US=$'\x1f'
 CARD_COL=-1; FALS_COL=-1; ROWS=0
 declare -a ROW_CARD ROW_FALS
+HEADER_COLS=0; TABLE_VALID=1
 
 lineno=0
 while IFS= read -r line; do
   lineno=$((lineno + 1))
-  esc="${line//\\|/$US}"
+  row="$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  case "$row" in
+    \|*\|) ;;
+    *)
+      fail "row $lineno: canonical table rows require leading and trailing pipes"
+      TABLE_VALID=0
+      break
+      ;;
+  esac
+  row="${row#|}"
+  row="${row%|}"
+  esc="${row//\\|/$US}"
   IFS='|' read -r -a cells <<< "$esc"
-  # drop leading/trailing empty fields produced by the outer pipes
   trimmed=()
   for c in "${cells[@]}"; do
     c="${c//$US/|}"
@@ -88,14 +128,28 @@ while IFS= read -r line; do
       [ "$low" = "card" ] && CARD_COL=$i
       [ "$low" = "falsification" ] && FALS_COL=$i
     done
+    HEADER_COLS=${#trimmed[@]}
+    if [ "$CARD_COL" -lt 0 ] || [ "$FALS_COL" -lt 0 ]; then
+      fail "table header must name Card and Falsification columns"
+      TABLE_VALID=0
+      break
+    fi
     continue
   fi
-  # separator row: cells of dashes/colons only
-  joined="$(printf '%s' "${trimmed[*]}" | tr -d ' :-')"
-  [ -z "$joined" ] && continue
-  if [ "$CARD_COL" -lt 0 ] || [ "$FALS_COL" -lt 0 ]; then
-    fail "table header must name Card and Falsification columns"
-    break
+  if [ "$lineno" -eq 2 ]; then
+    delimiter_ok=1
+    [ "${#trimmed[@]}" -eq "$HEADER_COLS" ] || delimiter_ok=0
+    for c in "${trimmed[@]}"; do
+      if ! printf '%s\n' "$c" | grep -Eq '^:?-{3,}:?$'; then
+        delimiter_ok=0
+      fi
+    done
+    if [ "$delimiter_ok" -ne 1 ]; then
+      fail "row 2: malformed table delimiter"
+      TABLE_VALID=0
+      break
+    fi
+    continue
   fi
   card="${trimmed[$CARD_COL]:-}"
   falsif="${trimmed[$FALS_COL]:-}"
@@ -107,7 +161,9 @@ while IFS= read -r line; do
   ROW_CARD[$ROWS]="$card"; ROW_FALS[$ROWS]="$falsif"; ROWS=$((ROWS + 1))
 done <<< "$TABLE"
 
-[ "$ROWS" -ge 1 ] || fail "scenario table has no data rows"
+if [ "$TABLE_VALID" -eq 1 ] && [ "$ROWS" -lt 1 ]; then
+  fail "scenario table has no data rows"
+fi
 
 # --- checks 2-4 per row -----------------------------------------------------
 i=0

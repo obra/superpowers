@@ -202,6 +202,58 @@ assert_exit 0 "extra card -> exit 0" \
   "$CHECKER" "$TEST_ROOT/t6/spec.md" "$TEST_ROOT/t6/cards"
 assert_out_contains "extra-exploration" "warning names the extra card"
 
+echo "scenario table requires a delimiter row"
+make_spec "$TEST_ROOT/t10"; make_cards "$TEST_ROOT/t10/cards"
+sed -i.bak '/^| --- | --- | --- |$/d' "$TEST_ROOT/t10/spec.md"
+assert_exit 1 "header followed by data without delimiter -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t10/spec.md" "$TEST_ROOT/t10/cards"
+
+echo "scenario table requires a valid delimiter row"
+make_spec "$TEST_ROOT/t11"; make_cards "$TEST_ROOT/t11/cards"
+sed -i.bak 's/^| --- | --- | --- |$/| -- | --- | --- |/' "$TEST_ROOT/t11/spec.md"
+assert_exit 1 "delimiter cells require at least three hyphens -> exit 1" \
+  "$CHECKER" "$TEST_ROOT/t11/spec.md" "$TEST_ROOT/t11/cards"
+
+echo "scenario table inside a fenced example does not count"
+mkdir -p "$TEST_ROOT/t12/cards"
+make_cards "$TEST_ROOT/t12/cards"
+cat > "$TEST_ROOT/t12/spec.md" <<'EOF'
+# Widget Design
+
+## E2E scenario cards
+
+```markdown
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| widget-show-table | Rendered table incl. TOTAL row | If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS. |
+| widget-status-flags | Status output | If `widget status` does not print exactly `OK \| DEGRADED` (a literal pipe) with dots . and stars * intact, the scenario FAILS. |
+```
+EOF
+assert_exit 2 "fenced-only table -> exit 2" \
+  "$CHECKER" "$TEST_ROOT/t12/spec.md" "$TEST_ROOT/t12/cards"
+
+echo "fenced example before a real table is ignored"
+mkdir -p "$TEST_ROOT/t13/cards"
+make_cards "$TEST_ROOT/t13/cards"
+cat > "$TEST_ROOT/t13/spec.md" <<'EOF'
+# Widget Design
+
+## E2E scenario cards
+
+~~~markdown
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| fake-card | Example only | If the example is absent, the scenario FAILS. |
+~~~
+
+| Card | Covers | Falsification |
+| --- | --- | --- |
+| widget-show-table | Rendered table incl. TOTAL row | If stdout's last line is not `TOTAL` followed by the two-decimal sum (20.85 for the seed fixture), or the TOTAL row is absent entirely, the scenario FAILS. |
+| widget-status-flags | Status output | If `widget status` does not print exactly `OK \| DEGRADED` (a literal pipe) with dots . and stars * intact, the scenario FAILS. |
+EOF
+assert_exit 0 "real table after fenced example -> exit 0" \
+  "$CHECKER" "$TEST_ROOT/t13/spec.md" "$TEST_ROOT/t13/cards"
+
 echo "no scenario table"
 mkdir -p "$TEST_ROOT/t7/cards"
 printf '# Widget Design\n\nNo table here.\n' > "$TEST_ROOT/t7/spec.md"
