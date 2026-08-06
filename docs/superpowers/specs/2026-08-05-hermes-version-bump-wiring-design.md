@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-05
 **Revised:** 2026-08-06
-**Status:** Draft for Drew review
+**Status:** Approved
 
 ## Goal
 
@@ -21,11 +21,11 @@ to process YAML without implementing a YAML parser in Bash.
   are out of scope.
 - Route `--check`, `--audit`, and version updates through the same small
   read/write dispatcher.
-- Before any non-help command, run one read-only preflight that validates the
-  required tools and configured extensions, then reads every present declared
-  manifest. This prevents a deterministic YAML failure from occurring after
-  earlier JSON files have already been updated. Missing-file behavior remains
-  unchanged, and `--help` still works without `jq` or `yq`.
+- Before a version bump writes any manifest, run one read-only preflight that
+  validates the required tools and reads every present declared manifest
+  through the dispatcher. This prevents a deterministic YAML failure from
+  occurring after earlier JSON files have already been updated. Missing-file
+  behavior remains unchanged, and `--help` still works without `jq` or `yq`.
 
 The preflight is the only reliability addition. It does not make the script
 transactional or redesign its existing audit and error-status behavior.
@@ -35,12 +35,15 @@ transactional or redesign its existing audit and error-status behavior.
 Three focused behavioral tests run the real script against an isolated
 temporary fixture and prove:
 
-- aligned JSON and YAML pass `--check`, and a bump updates both formats;
-- a preflight failure leaves every manifest unchanged; and
+- aligned JSON and YAML pass `--check` and `--audit`, and a bump updates both
+  formats;
+- an actual bump with JSON declared first and a later YAML manifest whose
+  top-level `version` is not a string exits nonzero and leaves every manifest
+  byte-for-byte unchanged; and
 - the real `.version-bump.json` registers the Hermes manifest.
 
-Verification also runs the existing Hermes tests, shell lint, and
-`scripts/bump-version.sh --check` against the repository.
+Verification also runs shell lint and `scripts/bump-version.sh --check` against
+the repository.
 
 ## Non-Goals
 
