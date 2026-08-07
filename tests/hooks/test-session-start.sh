@@ -164,6 +164,20 @@ else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
 fi
 
+if node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const entry = hooks.hooks.sessionStart[0];
+const expected = "\"${CURSOR_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start";
+if (entry.command !== expected) {
+  console.error(`unexpected Cursor sessionStart command: ${entry.command}`);
+  process.exit(1);
+}
+' "$REPO_ROOT/hooks/hooks-cursor.json"; then
+    pass "Cursor resolves the SessionStart dispatcher from CURSOR_PLUGIN_ROOT"
+else
+    fail "Cursor resolves the SessionStart dispatcher from CURSOR_PLUGIN_ROOT"
+fi
+
 claude_home="$(make_home claude-code)"
 assert_command_output \
     "Claude Code emits nested SessionStart additionalContext" \
