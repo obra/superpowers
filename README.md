@@ -211,9 +211,7 @@ Install Superpowers as a Hermes plugin from this repository:
 hermes plugins install obra/superpowers --enable
 ```
 
-Restart any active Hermes sessions after installing. Note: Hermes has no
-post-compaction hook, so a very long session that compacts over its first
-turn loses the bootstrap — start a fresh session if skills stop triggering.
+Restart any active Hermes sessions after installing.
 
 ### Kimi Code
 
