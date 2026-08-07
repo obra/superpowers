@@ -184,6 +184,7 @@ is the whole process.
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
+- For a new project (or one with no configured tooling), the design presentation includes a short tooling question alongside the architecture: which of these to set up from the start — cheapest before any code exists: aggressive linting + auto-formatting (the stack's standard, e.g. ruff+format / eslint+prettier / clippy+rustfmt); unit-test infrastructure (runner, layout, a first passing fixture); end-to-end test infrastructure; fuzz or mutation testing where the stack supports it. The user's selections land in the spec's Global Constraints so every later plan and task inherits them.
 - Be ready to go back and clarify if something doesn't make sense
 
 **Design for isolation and clarity:**
