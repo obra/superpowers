@@ -21,6 +21,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
+  - [Qwen Code](#qwen-code)
 - [The Basic Workflow](#the-basic-workflow)
 - [Community](#community)
 - [What's Inside](#whats-inside)
@@ -32,7 +33,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Devin CLI](#devin-cli), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Grok Build CLI](#grok-build-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Devin CLI](#devin-cli), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Grok Build CLI](#grok-build-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi), [Qwen Code](#qwen-code).
 
 ## How it works
 
@@ -249,6 +250,22 @@ pi -e /path/to/superpowers
 ```
 
 The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
+
+### Qwen Code
+
+Qwen Code installs plugins from Claude Code marketplaces directly.
+
+- Install the plugin from this repository, and pick `superpowers` when prompted:
+
+  ```bash
+  qwen extensions install obra/superpowers
+  ```
+
+- Update later:
+
+  ```bash
+  qwen extensions update superpowers
+  ```
 
 ### Hermes Agent
 
