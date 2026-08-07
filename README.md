@@ -18,6 +18,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Gemini CLI](#gemini-cli)
   - [GitHub Copilot CLI](#github-copilot-cli)
   - [Grok Build CLI](#grok-build-cli)
+  - [Hermes Agent](#hermes-agent)
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
@@ -202,6 +203,18 @@ Superpowers is available via the [official Grok plugin marketplace](https://gith
   /marketplace
   ```
 
+### Hermes Agent
+
+Install Superpowers as a Hermes plugin from this repository:
+
+```bash
+hermes plugins install obra/superpowers --enable
+```
+
+Restart any active Hermes sessions after installing. Note: Hermes has no
+post-compaction hook, so a very long session that compacts over its first
+turn loses the bootstrap — start a fresh session if skills stop triggering.
+
 ### Kimi Code
 
 Superpowers is available in Kimi Code's plugin marketplace.
@@ -266,18 +279,6 @@ Qwen Code installs plugins from Claude Code marketplaces directly.
   ```bash
   qwen extensions update superpowers
   ```
-
-### Hermes Agent
-
-Install Superpowers as a Hermes plugin from this repository:
-
-```bash
-hermes plugins install obra/superpowers --enable
-```
-
-Restart any active Hermes sessions after installing. Note: Hermes has no
-post-compaction hook, so a very long session that compacts over its first
-turn loses the bootstrap — start a fresh session if skills stop triggering.
 
 ## The Basic Workflow
 
