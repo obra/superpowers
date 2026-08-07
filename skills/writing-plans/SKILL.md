@@ -33,6 +33,84 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## Hierarchical Plan Mode
+
+**Trigger:** After writing out the File Structure section (where all files and responsibilities are listed), if you can identify **8 or more distinct tasks**, switch to Hierarchical Plan Mode. Below 8 tasks, use the standard single-file layout.
+
+**Why:** Very large single-file plans cause two failure modes: (1) a single Write call with an oversized `content` payload fails with a parameter error, and (2) generating a massive file exhausts the agent's context window mid-write. Hierarchical mode writes one small file per task, making each unit independently generatable and verifiable.
+
+### Folder Layout
+
+```
+docs/superpowers/plans/
+  YYYY-MM-DD-<feature-name>/
+    README.md              ← index: header + task directory table only
+    task-01-<name>.md      ← one task per file
+    task-02-<name>.md
+    task-NN-<name>.md
+```
+
+Task files: `task-NN-<kebab-case-component-name>.md` (two-digit zero-padded: `task-01`, `task-02`, … `task-12`).
+
+### README.md Contents
+
+The README contains **only**:
+1. The standard plan header (Goal, Architecture, Tech Stack, Global Constraints)
+2. Task directory table with links and status column
+3. Execution Handoff section
+
+```markdown
+## Task Directory
+
+| # | Task | File | Status |
+|---|------|------|--------|
+| 1 | Component A | [task-01-component-a.md](task-01-component-a.md) | pending |
+| 2 | Component B | [task-02-component-b.md](task-02-component-b.md) | pending |
+```
+
+No task steps, no code — those live only in the task files.
+
+### Per-Task File Contents
+
+Each task file contains exactly one task using the standard Task Structure (Files, Interfaces, Steps). No prose preamble. No cross-references in the Steps — all necessary context must be self-contained within the task file. Cross-task dependencies belong only in the Interfaces block.
+
+Task files use `# Task N:` (H1) because each is a standalone document — this differs from the H3 used in inline single-file plans.
+
+```markdown
+# Task N: [Component Name]
+
+**Files:**
+...
+
+**Interfaces:**
+- Consumes: ...
+- Produces: ...
+
+- [ ] Step 1: ...
+...
+- [ ] Commit
+```
+
+### Write Order
+
+1. Write `README.md` first
+2. Write each task file in sequence: `task-01-…`, `task-02-…`, …
+3. **One Write call per file** — never batch multiple tasks into one call
+
+### Fallback on Write Failure
+
+If a Write call fails:
+1. Do NOT retry the same payload
+2. If the file does not yet exist, use Write with a reduced payload (header only), then use Edit to append remaining sections in chunks
+3. If the file was partially written, use Edit to append from the last complete section
+4. Continue with remaining task files after recovery
+
+### Execution Handoff in Hierarchical Mode
+
+When offering the execution choice, reference the README path instead of a single file:
+
+> "Plan complete and saved to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>/README.md`. Two execution options: ..."
+
 ## Task Right-Sizing
 
 A task is the smallest unit that carries its own test cycle and is worth a
