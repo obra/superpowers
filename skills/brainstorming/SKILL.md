@@ -205,6 +205,16 @@ is the whole process.
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+- If the design adds or changes user-visible behavior (a UI, CLI/TUI
+  output, or a rendered artifact), the spec MUST include a section whose
+  heading is exactly "E2E scenario cards" (no numbering or extra words —
+  tools match this heading verbatim): a table with one row per scenario —
+  Card (kebab-case name) | Covers (the user-visible behavior) |
+  Falsification (the exact observable that makes the scenario FAIL,
+  written from the requested behavior). These lines become verbatim
+  contracts for post-implementation scenario cards. A design that leaves
+  user-visible behavior unchanged (a pure refactor, internal cleanup) gets
+  NO scenario table — not even as regression insurance.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
@@ -215,6 +225,9 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+5. **Scenario-table check:** Design adds or changes user-visible behavior
+   but no "E2E scenario cards" table? Add it. No user-visible behavior
+   change but a table present? Remove it.
 
 Fix any issues inline. No need to re-review — just fix and move on.
 

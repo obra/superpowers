@@ -261,6 +261,7 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 ### Skills Library
 
 **Testing**
+- **agentic-end-to-end-testing** - Prove a running app works through its real interface, with evidence that can't be faked
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
 **Debugging**
