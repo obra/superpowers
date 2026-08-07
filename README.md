@@ -188,6 +188,8 @@ Superpowers is available via the [official Grok plugin marketplace](https://gith
 - Install the plugin from xAI's official marketplace:
 
   ```bash
+  grok plugin install superpowers --trust
+  # or pin the marketplace qualifier:
   grok plugin install superpowers@xai-official --trust
   ```
 
@@ -196,6 +198,20 @@ Superpowers is available via the [official Grok plugin marketplace](https://gith
   ```text
   /marketplace
   ```
+
+- Or install straight from this repository:
+
+  ```bash
+  grok plugin install obra/superpowers --trust
+  ```
+
+- Enable if the plugin is installed but inactive:
+
+  ```bash
+  grok plugin enable superpowers
+  ```
+
+- Detailed docs: [docs/README.grok.md](docs/README.grok.md)
 
 ### Kimi Code
 
