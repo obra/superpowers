@@ -4,10 +4,9 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Table of Contents
 
-- [Quickstart](#quickstart)
 - [How it works](#how-it-works)
 - [Commercial Services](#commercial-services)
-- [Installation](#installation)
+- [Getting Started](#installation)
   - [Claude Code](#claude-code)
   - [Antigravity](#antigravity)
   - [Codex App](#codex-app)
@@ -29,10 +28,6 @@ Superpowers is a complete software development methodology for your coding agent
 - [Updating](#updating)
 - [License](#license)
 - [Visual companion telemetry](#visual-companion-telemetry)
-
-## Quickstart
-
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Devin CLI](#devin-cli), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Grok Build CLI](#grok-build-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
 
 ## How it works
 
