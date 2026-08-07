@@ -16,6 +16,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Factory Droid](#factory-droid)
   - [Gemini CLI](#gemini-cli)
   - [GitHub Copilot CLI](#github-copilot-cli)
+  - [Grok Build CLI](#grok-build-cli)
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
@@ -30,7 +31,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Quickstart
 
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
+Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Grok Build CLI](#grok-build-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi).
 
 ## How it works
 
@@ -168,6 +169,33 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```bash
   copilot plugin install superpowers@superpowers-marketplace
   ```
+
+
+### Grok Build CLI
+
+Superpowers is available via the [xAI Official plugin marketplace](https://github.com/xai-org/plugin-marketplace).
+
+- Install and trust:
+
+  ```bash
+  grok plugin install superpowers --trust
+  # or pin the marketplace qualifier:
+  grok plugin install superpowers@xai-official --trust
+  ```
+
+- Or install straight from this repository:
+
+  ```bash
+  grok plugin install obra/superpowers --trust
+  ```
+
+- Enable if the plugin is installed but inactive:
+
+  ```bash
+  grok plugin enable superpowers
+  ```
+
+- Detailed docs: [docs/README.grok.md](docs/README.grok.md)
 
 ### Kimi Code
 
