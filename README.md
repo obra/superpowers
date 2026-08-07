@@ -20,6 +20,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
+  - [Hermes Agent](#hermes-agent)
 - [The Basic Workflow](#the-basic-workflow)
 - [Community](#community)
 - [What's Inside](#whats-inside)
