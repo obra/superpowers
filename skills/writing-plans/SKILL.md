@@ -127,22 +127,33 @@ git commit -m "feat: add specific feature"
 
 ## Design Lock Threading
 
-If the spec contains a Design Lock section (locked visual designs from the
-brainstorming companion):
+If the spec contains a v2 Design Lock with approved PNG screenshots:
 
-- Copy the fidelity decision and artifact paths into **Global Constraints**
-  verbatim.
-- For every task that implements UI covered by a locked design:
-  - Add the artifact to the task's **Files** block:
-    `Read: docs/superpowers/specs/assets/<...>/<screen>.html (locked design)`
-  - Add a verification step before the commit step: render the result and
-    compare against the locked mockup — with browser tooling if available,
-    otherwise by diffing DOM structure and styles against the mockup file.
-    Deviations from the spec's load-bearing properties are failures, not
-    style choices.
+- Copy the fidelity decision, authoritative source paths, artifact paths,
+  viewport, PNG dimensions, theme, state, and load-bearing properties into
+  **Global Constraints** verbatim.
+- For every task that implements UI covered by a locked screenshot:
+  - Add the PNG to the task's **Files** block:
+    `Read: docs/superpowers/specs/assets/.../screen--state--WIDTHxHEIGHT.png (approved locked design)`
+  - Repeat the relevant viewport, theme, state, fidelity, and load-bearing
+    properties inside the task so its implementer has the complete contract.
+  - Before the commit step, require the implementer to render the runtime UI
+    under the same conditions, capture a runtime screenshot, inspect it beside
+    the locked PNG, and reconcile visible deviations according to the fidelity
+    decision. Deviations from load-bearing properties fail verification.
+
+An implementer that cannot view the PNG or capture the runtime surface cannot
+claim the comparison passed. It must obtain equivalent tooling or report
+verification as incomplete. Textual properties improve clarity but do not
+silently replace the visual comparison. Automated pixel diffing is optional.
+
+If the spec contains only a legacy HTML Design Lock, stop before writing the
+plan. Identify it as legacy and ask the user to choose migration to an approved
+PNG lock or explicit continuation without a v2 Design Lock. Never treat the HTML
+as a completed v2 lock or add a DOM/style-diff fallback.
 
 Plans are self-contained and a task's implementer sees only their own task —
-this threading is how the locked design reaches them.
+this threading is how the approved visual contract reaches them.
 
 ## No Placeholders
 
