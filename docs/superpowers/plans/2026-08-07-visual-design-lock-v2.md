@@ -916,13 +916,14 @@ Replace the entire section with:
 If the spec contains a v2 Design Lock with approved PNG screenshots:
 
 - Copy the fidelity decision, authoritative source paths, artifact paths,
-  viewport, PNG dimensions, theme, state, and load-bearing properties into
-  **Global Constraints** verbatim.
+  viewport, PNG dimensions, capture tool family, theme, state, and load-bearing
+  properties into **Global Constraints** verbatim.
 - For every task that implements UI covered by a locked screenshot:
   - Add the PNG to the task's **Files** block:
     `Read: docs/superpowers/specs/assets/.../screen--state--WIDTHxHEIGHT.png (approved locked design)`
-  - Repeat the relevant viewport, theme, state, fidelity, and load-bearing
-    properties inside the task so its implementer has the complete contract.
+  - Repeat the relevant viewport, PNG dimensions, capture tool family, theme,
+    state, fidelity, and load-bearing properties inside the task so its
+    implementer has the complete contract.
   - Before the commit step, require the implementer to render the runtime UI
     under the same conditions, capture a runtime screenshot, inspect it beside
     the locked PNG, and reconcile visible deviations according to the fidelity
@@ -945,10 +946,11 @@ this threading is how the approved visual contract reaches them.
 - [ ] **Step 2: Verify active plan guidance**
 
 ```bash
-rg -n 'approved PNG screenshots|runtime screenshot|legacy HTML|verification as incomplete' \
+rg -n 'approved PNG screenshots|approved locked design|capture tool family|viewport, PNG dimensions|same conditions|runtime screenshot|verification as incomplete|legacy HTML|migration to an approved|PNG lock or explicit continuation without a v2 Design Lock' \
   skills/writing-plans/SKILL.md
 ! rg -n '\.html \(locked design\)|diffing DOM structure' skills/writing-plans/SKILL.md
-git diff --check -- skills/writing-plans/SKILL.md
+git diff --check -- skills/writing-plans/SKILL.md \
+  docs/superpowers/plans/2026-08-07-visual-design-lock-v2.md
 ```
 
 Expected: v2 PNG threading and legacy migration are explicit; HTML/DOM fallback is absent.

@@ -130,13 +130,14 @@ git commit -m "feat: add specific feature"
 If the spec contains a v2 Design Lock with approved PNG screenshots:
 
 - Copy the fidelity decision, authoritative source paths, artifact paths,
-  viewport, PNG dimensions, theme, state, and load-bearing properties into
-  **Global Constraints** verbatim.
+  viewport, PNG dimensions, capture tool family, theme, state, and load-bearing
+  properties into **Global Constraints** verbatim.
 - For every task that implements UI covered by a locked screenshot:
   - Add the PNG to the task's **Files** block:
     `Read: docs/superpowers/specs/assets/.../screen--state--WIDTHxHEIGHT.png (approved locked design)`
-  - Repeat the relevant viewport, theme, state, fidelity, and load-bearing
-    properties inside the task so its implementer has the complete contract.
+  - Repeat the relevant viewport, PNG dimensions, capture tool family, theme,
+    state, fidelity, and load-bearing properties inside the task so its
+    implementer has the complete contract.
   - Before the commit step, require the implementer to render the runtime UI
     under the same conditions, capture a runtime screenshot, inspect it beside
     the locked PNG, and reconcile visible deviations according to the fidelity
