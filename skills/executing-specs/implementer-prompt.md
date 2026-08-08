@@ -22,6 +22,24 @@ Subagent (general-purpose):
     [Scene-setting: where this fits, any prior dispatches already done and
     what they produced, any decisions made since the spec was written]
 
+    ## Baseline
+
+    At the base commit, verification results were:
+    [per-command pass/fail from Setup's baseline snapshot, with a one-line
+    summary of each pre-existing failure]
+
+    Any failure listed here predates your work. Do not spend time proving
+    it is not yours — note it in your report and move on.
+
+    ## Test Seam
+
+    - **Existing test to copy:** [one test function that already exercises
+      the target path — clone its fixture setup instead of re-deriving it
+      from the production file. If none exists, say "none — first test for
+      this path".]
+    - **Scoped test command:** [the exact command that runs only this
+      dispatch's tests]
+
     ## The Spec Is Settled
 
     The spec is approved. Its decisions - names, values, interfaces,
@@ -53,17 +71,19 @@ Subagent (general-purpose):
 
     ## Test Run Budget
 
-    While iterating, run only the focused test for what you're changing.
+    While iterating, run only the scoped test command above.
 
-    You get **one** full-suite run, immediately before your final commit.
-    In your report, state your full-suite run count; if more than one,
-    say why each was needed. The suite is slow enough that
-    repeat runs dominate this dispatch's wall-clock while telling you
+    Do **not** run the full suite, whole-repo lint, or whole-repo
+    type-check — the controller's Verify phase owns those. Before your
+    final commit, run the scoped tests plus lint and type-check on the
+    files you touched, nothing wider. The suite is slow enough that
+    full runs dominate this dispatch's wall-clock while telling you
     nothing a focused run would not have.
 
-    The same applies to whole-repo lint and type-check passes: focused
-    invocations on the files you touched while iterating, one whole-repo
-    pass before the final commit.
+    Never run repo-wide autofix targets (`eslint . --fix`, repo-wide
+    `prettier --write`, or make targets wrapping them) — they rewrite
+    files you never touched. Path-scoped only:
+    `npx prettier --write <files>`, `npx eslint --fix <files>`.
 
     ## Test-Driven Development
 
@@ -168,7 +188,8 @@ Subagent (general-purpose):
     - **TDD Evidence:** RED command + failing output, GREEN command +
       passing output
     - One-line test summary (e.g. "14/14 passing, output pristine")
-    - **Full-suite runs:** N (with a reason for each beyond the first)
+    - **Verification scope:** scoped test command run + result; any run
+      wider than your touched files, with a reason
     - Files changed
     - Self-review findings, if any
     - Your concerns, if any

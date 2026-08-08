@@ -21,11 +21,41 @@ dispatches if the spec needs more than one), one final review, one commit.
 
 ## The Process
 
+### 0. Entry Gate
+
+This skill is reachable directly as a slash command, so the tier decision
+is enforced here, not by the route that led here. Read the spec's header
+lines before anything else:
+
+- **Tier: light** — proceed.
+- **Tier: heavy** — STOP. State that brainstorming routed this spec to the
+  heavy path and invoke writing-plans instead.
+- **No tier recorded** (older spec, or skill invoked directly) — do not
+  assume light. Apply brainstorming's tier-triage criteria to the spec
+  inline, state your assessment, and get the user's confirmation before
+  proceeding. If the spec contains any unresolved decision ("TBD",
+  "implementation must confirm", an open interface), it is heavy — route
+  to writing-plans.
+
 ### 1. Setup
 
-Record the base SHA before any changes: `git rev-parse HEAD`. Same branch
-rule as subagent-driven-development: never start implementation on
-main/master without explicit user consent.
+Require a clean working tree: `git status --porcelain` must be empty. If
+there are uncommitted changes, stop and ask the user to commit or stash
+them first. A base SHA recorded over a dirty tree makes the final Squash
+step fold in work nobody dispatched.
+
+Record the base SHA only once the tree is clean: `git rev-parse HEAD`.
+Same branch rule as subagent-driven-development: never start
+implementation on main/master without explicit user consent.
+
+Then take a baseline verification snapshot: run each verification command
+the spec or project defines (test suite, lint, type-check) once at base
+and record pass/fail with a one-line summary of any failure. Pass this
+baseline into every implementer and fix dispatch — a failure that exists
+at base is not the dispatch's fault, and implementers have burned whole
+sessions proving that the hard way. The snapshot also proves the
+toolchain resolves (dependencies installed, runners on PATH) before any
+dispatch is in flight; fix environment problems now, not mid-dispatch.
 
 ### 2. Implement
 
@@ -83,7 +113,9 @@ Pass the fixer the findings file path rather than pasting findings inline.
 ### 5. Verify
 
 Run the minipowers:verification-before-completion gate before squashing:
-full test suite green, evidence before any completion claim.
+full test suite green, evidence before any completion claim. Judge results
+against Setup's baseline snapshot: failures that existed at base are
+reported to the user, not blockers; anything newly red blocks.
 
 ### 6. Squash
 
@@ -127,10 +159,21 @@ Opus.
 
 ## Escalation Valve
 
-If implementation reveals the scope was misjudged - file count ballooning
-past the light-tier criteria, or interface ambiguity between components
-emerging that the spec didn't anticipate - STOP. Do not push through or
-improvise a plan mid-execution.
+After each dispatch, run the counted check:
+
+```
+git diff --name-only <base SHA>..HEAD | wc -l
+```
+
+Compare against the spec's **Escalation threshold** header. STOP if any of
+these hold:
+
+- files changed exceed the threshold
+- a single dispatch ran past ~30 minutes or reported ballooning scope
+- interface ambiguity between components emerged that the spec didn't
+  anticipate
+
+Do not push through or improvise a plan mid-execution.
 
 Report to the user what changed since the spec was written, and offer to
 route the remaining work through writing-plans and
@@ -142,7 +185,13 @@ checkpoints that make the handoff clean.
 ## Never
 
 - Start implementation on main/master without explicit user consent
+- Proceed past the Entry Gate with a heavy-tier or unconfirmed spec
+- Record a base SHA over a dirty working tree
+- Run (or let a dispatch run) repo-wide format/lint autofix targets —
+  path-scoped only (`npx prettier --write <files>`, `npx eslint --fix
+  <files>`); repo-wide autofix silently rewrites files nobody touched
 - Dispatch implementer subagents in parallel
+- Skip the post-dispatch counted escalation check
 - Dispatch a reviewer without a findings file path
 - Re-dispatch a reviewer from scratch after an interrupted review without
   first reading the file

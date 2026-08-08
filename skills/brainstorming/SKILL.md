@@ -36,7 +36,7 @@ and 4-8 always happen):
 5. **Write design doc** — save to `docs/specs/YYYY-MM-DD-<topic>-design.md` (do NOT commit — see below)
 6. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 7. **User reviews written spec** — ask user to review the spec file before proceeding
-8. **Tier triage** — assess light vs. heavy scope, confirm the recommendation with the user, and route to executing-specs (light) or writing-plans (heavy)
+8. **Tier triage** — assess light vs. heavy scope, confirm the recommendation with the user, record the verdict in the spec's header lines, and route to executing-specs (light) or writing-plans (heavy)
 
 **The terminal state is the tier triage, routing to executing-specs or
 writing-plans.** Do NOT invoke any other implementation skill after
@@ -90,11 +90,28 @@ brainstorming.
 
 - Write the validated design (spec) to `docs/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+- Start the spec with header lines recording the tier verdict:
+
+  ```
+  **Tier:** light|heavy (provisional until triage)
+  **Escalation threshold:** N files
+  ```
+
+  Write your provisional assessment when you first draft the spec; the
+  Tier Triage step confirms or corrects it and removes the "provisional"
+  marker. These header lines — not the conversation — are what
+  executing-specs' entry gate reads, so a session that dies before triage
+  still leaves a recorded verdict. Set the escalation threshold to the
+  Implementation notes' file count plus a small margin (2-3 files).
 - If you expect to recommend the light tier at the triage step below, the
   spec MUST include an **Implementation notes** section: files to
-  create/modify, key interfaces, and test intent. On the light path the
-  spec is the implementer's brief - there is no plan document to fill the
-  gap. Heavy-path specs don't need this section; the plan carries it.
+  create/modify, key interfaces, and test intent — plus, for each area of
+  work, one existing test to copy (a test function that already exercises
+  the target path, or "none — first test for this path") and the exact
+  scoped test command for it. On the light path the spec is the
+  implementer's brief - there is no plan document to fill the gap.
+  Heavy-path specs don't need this section; the plan carries it. The
+  section's presence carries no tier signal — the **Tier:** header does.
 - Do NOT commit the spec. You will iterate on it; drafts are file edits, not
   commits. Commit timing depends on the tier: on the heavy path the spec is
   committed together with the plan when subagent-driven-development starts
@@ -132,9 +149,15 @@ on scope - do not default to writing-plans.
    - **Heavy:** multiple subsystems; many files; new interfaces between
      components; migrations; anything needing task-by-task interface
      pinning.
+   - **Any unresolved decision forces heavy:** a "TBD", an "implementation
+     must confirm", or an interface left open makes the spec ineligible
+     for light. Resolve it in the spec or route heavy.
 2. State your recommendation with a one-line rationale and ask one
-   confirmation question. Borderline cases default to heavy.
-3. Route: light → invoke the executing-specs skill; heavy → invoke the
+   confirmation question. Borderline cases default to heavy: misrouting
+   heavy work to light costs more than planning overhead saves.
+3. Update the spec's **Tier:** and **Escalation threshold:** header lines
+   with the confirmed verdict.
+4. Route: light → invoke the executing-specs skill; heavy → invoke the
    writing-plans skill to create a detailed implementation plan.
 
 Do NOT invoke any other implementation skill. The skill chosen by the
