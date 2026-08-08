@@ -22,6 +22,29 @@ head=$3
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
 
+# The reviewed commits must be on the branch checked out here. A subagent
+# whose cwd resolved to another working tree of this repository commits onto
+# the branch checked out there, and the shared .git makes that commit
+# resolvable from here: without these two checks the package builds, renders
+# this branch's earlier work as deletions, and reads as plausible.
+branch=$(git rev-parse --abbrev-ref HEAD)
+root=$(git rev-parse --show-toplevel)
+
+if ! git merge-base --is-ancestor "$head" HEAD; then
+  echo "HEAD $head is not reachable from $branch in $root." >&2
+  echo "It was committed from a different working tree, so BASE..HEAD would diff two unrelated histories." >&2
+  echo "Run 'git branch --contains $head' to find where the work landed, and move it onto $branch before reviewing." >&2
+  exit 3
+fi
+
+commits=$(git rev-list --count "${base}..${head}")
+if [ "$commits" -eq 0 ]; then
+  echo "no commits in ${base}..${head}: nothing to review on $branch in $root." >&2
+  echo "If the implementer reported commits, they landed on another branch or working tree." >&2
+  echo "Run 'git branch --contains <reported sha>' before treating the task as done." >&2
+  exit 3
+fi
+
 if [ $# -eq 4 ]; then
   out=$4
 else
@@ -42,5 +65,4 @@ fi
   git diff -U10 "${base}..${head}"
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
 echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"

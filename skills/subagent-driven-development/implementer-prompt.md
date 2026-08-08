@@ -40,6 +40,19 @@ Subagent (general-purpose):
     6. Report back
 
     Work from: [directory]
+    Expected git toplevel: [WORKTREE_TOP]
+    Expected branch: [EXPECTED_BRANCH]
+
+    ## Git worktree guard (before any git add or git commit)
+
+    Agent-tool subagents do not always inherit the controller's active worktree
+    cwd. Before every `git add` or `git commit`, verify:
+    - `git rev-parse --show-toplevel` equals [WORKTREE_TOP]
+    - `git branch --show-current` equals [EXPECTED_BRANCH]
+
+    If either check fails, STOP with status BLOCKED. Report the paths and branch
+    you see. Never commit from the main repository checkout when this task runs
+    in a worktree.
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
