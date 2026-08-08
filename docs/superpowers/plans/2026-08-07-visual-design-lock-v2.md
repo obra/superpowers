@@ -34,13 +34,18 @@ scope:
   - .superpowers/sdd/2026-08-07-visual-design-lock-v2/**
   - disposable proof files under /tmp
   - machine-local Homebrew Bun runtime installation (reversible)
+  - machine-local Gauntlet checkout at /Users/wulymammoth/Desktop/lab/gauntlet and reversible Bun global link
 commands:
   - git worktree add .worktrees/design-lock-v2 -b feat/visual-design-lock-v2 2b0104cc4f4198a6e8d2f3c5ba076712515901ad
   - git clone https://github.com/prime-radiant-inc/superpowers-evals.git evals
   - git -C evals switch -c design-lock-v2-evals
   - brew install oven-sh/bun/bun
   - bun --version and bun --revision
-  - bun install
+  - git clone https://github.com/prime-radiant-inc/gauntlet.git /Users/wulymammoth/Desktop/lab/gauntlet
+  - bun install in the Gauntlet checkout
+  - bun link in the Gauntlet checkout
+  - PATH=$HOME/.bun/bin:$PATH command -v gauntlet and gauntlet --help
+  - bun install in evals
   - bun run quorum new|check|run|show for the four named Design Lock scenarios
   - bun run check
   - npm test under tests/brainstorm-server
@@ -53,15 +58,23 @@ commands:
 network_reads:
   - clone https://github.com/prime-radiant-inc/superpowers-evals.git
   - Homebrew tap/formula metadata and Bun bottle required by brew install oven-sh/bun/bun
-  - package-registry reads required by bun install
+  - clone https://github.com/prime-radiant-inc/gauntlet.git
+  - package-registry reads required by Bun installs in Gauntlet and evals
   - separately authorized Codex provider reads for named RED and GREEN Quorum cells only
 execution_authority: superpowers_sdd
 local_checkpoint_commits: allowed
 goal_mode: off
 goal_reference: none
 retry_policy:
-  mode: fail_fast
-  operations: []
+  mode: bounded
+  operations:
+    - name: retry RED design-lock-discovers-authority after installing Gauntlet
+      retryable_failures:
+        - "pre-provider missing-executable failure: Executable not found in PATH: gauntlet"
+      replay_safety: reconcile_first
+      reconciliation: verify the first run created no provider process, then require PATH=$HOME/.bun/bin:$PATH command -v gauntlet and gauntlet --help to succeed
+      max_attempts: 2
+      backoff: none
 risk_class: normal
 evidence:
   deterministic:
@@ -80,11 +93,12 @@ prohibited_actions:
   - pushes, pull requests, merges, releases, deployments, or hosted mutations
   - provider-backed Quorum calls without the immediate separate authorization required by Tasks 2 and 7
   - unrelated destructive cleanup, branch deletion, worktree removal, reset, prune, or git clean
+  - Gauntlet source edits, local Gauntlet commits, pushes, or checkout deletion
   - committing raw Quorum results, transcripts, credentials, authenticated URLs, or provider metadata
 terminal_states: [LOCAL_READY, BLOCKED]
 ```
 
-Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation after the missing-runtime blocker. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
+Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
 
 ### SDD commit and review adapter
 
