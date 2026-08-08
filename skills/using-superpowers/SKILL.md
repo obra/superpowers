@@ -19,6 +19,8 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
+**Check continuously — not only at turn start.** New decisions, facts, or rejected alternatives mid-conversation can make other skills relevant. Being inside one skill's workflow does not suspend checking for others. When a second skill's trigger is met, invoke it (respecting Skill Priority); do not wait until the active skill fully finishes if the new trigger already applies.
+
 **Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
@@ -48,6 +50,8 @@ These thoughts mean STOP—you're rationalizing:
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+| "I already checked skills this turn" | New content creates new triggers. Re-check. |
+| "I'm mid-workflow — skill check is done" | Active skill ≠ exclusive. Other skills still apply. |
 
 ## Platform Adaptation
 
