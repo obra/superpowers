@@ -45,6 +45,8 @@ commands:
   - bun install in the Gauntlet checkout
   - bun link in the Gauntlet checkout
   - PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet and gauntlet config --json
+  - one-time hidden terminal handoff through a mode-0600 FIFO inside a mode-0700 directory under /tmp; the key is read without echo, exported only in the controller's Quorum/Gauntlet subshell, and the FIFO/directory are removed immediately after receipt
+  - gauntlet config --json with output suppressed and apiKeys.anthropic required true before any provider-backed RED cell
   - bun install in evals
   - bun run quorum new|check|run|show for the four named Design Lock scenarios
   - bun run check
@@ -61,6 +63,7 @@ network_reads:
   - clone https://github.com/prime-radiant-inc/gauntlet.git
   - package-registry reads required by Bun installs in Gauntlet and evals
   - separately authorized Codex provider reads for named RED and GREEN Quorum cells only
+  - separately authorized Anthropic provider reads for the Gauntlet-Agent on the four credential-remediated RED cells only; GREEN Anthropic calls remain unapproved
 execution_authority: superpowers_sdd
 local_checkpoint_commits: allowed
 goal_mode: off
@@ -74,6 +77,12 @@ retry_policy:
       replay_safety: reconcile_first
       reconciliation: verify the first run created no provider process, then require PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet and gauntlet config --json to succeed
       max_attempts: 2
+      backoff: none
+    - name: credential-remediated RED baseline campaign after one-time Anthropic API-key handoff
+      retryable_failures: []
+      replay_safety: reconcile_first
+      reconciliation: require a non-empty process-scoped ANTHROPIC_API_KEY, PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet, and a suppressed gauntlet config --json payload whose apiKeys.anthropic field is true; verify the Codex launcher uses env -i and does not forward ANTHROPIC_API_KEY
+      max_attempts: 1 per named RED scenario
       backoff: none
 risk_class: normal
 evidence:
@@ -98,7 +107,7 @@ prohibited_actions:
 terminal_states: [LOCAL_READY, BLOCKED]
 ```
 
-Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
+Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. After that attempt exposed the missing Gauntlet-Agent credential and exhausted the old discovery budget, the owner selected an Anthropic API key and approved proceeding with a one-time hidden terminal handoff for one new credential-remediated RED campaign: the four named cells run sequentially, once each, and fail fast; GREEN remains unapproved. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The Codex target launcher uses `env -i` and does not forward `ANTHROPIC_API_KEY`. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
 
 ### SDD commit and review adapter
 
