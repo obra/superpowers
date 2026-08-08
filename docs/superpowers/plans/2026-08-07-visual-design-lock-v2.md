@@ -82,7 +82,14 @@ retry_policy:
       retryable_failures: []
       replay_safety: reconcile_first
       reconciliation: require a non-empty process-scoped CLAUDE_CODE_OAUTH_TOKEN, require ANTHROPIC_API_KEY and ANTHROPIC_AUTH_TOKEN to be unset, require PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet, and require a suppressed gauntlet config --json payload whose apiKeys.anthropic field is true; verify the Codex launcher uses env -i and does not forward CLAUDE_CODE_OAUTH_TOKEN or another Anthropic credential
-      max_attempts: 1 per named RED scenario
+      max_attempts: 1 per named RED scenario, except for the separately authorized fails-closed authentication retry below
+      backoff: none
+    - name: retry RED design-lock-fails-closed-without-capture after invalid OAuth bearer
+      retryable_failures:
+        - "pre-turn authentication failure: Anthropic HTTP 401 Invalid bearer token"
+      replay_safety: reconcile_first
+      reconciliation: verify result design-lock-fails-closed-without-capture-codex-codex_sub-linux-20260808T191046Z-df76 is indeterminate with no Gauntlet run id, no judge turn, and no Codex launch; require a freshly generated claude setup-token credential through a new protected FIFO; repeat the OAuth/config/launcher-isolation checks; never rerun the completed authority scenario; start each of the two untouched scenarios only after fails-closed produces final pass or fail
+      max_attempts: 2 for design-lock-fails-closed-without-capture, counting the invalid-bearer attempt
       backoff: none
 risk_class: normal
 evidence:
@@ -107,7 +114,7 @@ prohibited_actions:
 terminal_states: [LOCAL_READY, BLOCKED]
 ```
 
-Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. After that attempt exposed the missing Gauntlet-Agent credential and exhausted the old discovery budget, the owner first selected an Anthropic API key, then explicitly superseded that choice with Claude subscription OAuth so the Codex subject retains a cross-vendor Claude judge without separate Console API billing. The approved one-time hidden terminal handoff now supplies only `CLAUDE_CODE_OAUTH_TOKEN` for one new credential-remediated RED campaign: the four named cells run sequentially, once each, and fail fast; GREEN remains unapproved. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The Codex target launcher uses `env -i` and does not forward `CLAUDE_CODE_OAUTH_TOKEN` or another Anthropic credential. Gauntlet's OAuth mode necessarily prepends Anthropic's Claude Code identity block before the unchanged QA system prompt; this preserves the cross-vendor judge boundary but is a behavioral limitation that the sanitized eval evidence must disclose. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
+Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. After that attempt exposed the missing Gauntlet-Agent credential and exhausted the old discovery budget, the owner first selected an Anthropic API key, then explicitly superseded that choice with Claude subscription OAuth so the Codex subject retains a cross-vendor Claude judge without separate Console API billing. The approved one-time hidden terminal handoff supplies only `CLAUDE_CODE_OAUTH_TOKEN` for the credential-remediated RED campaign; GREEN remains unapproved. The authority scenario produced a complete semantic RED and must not be rerun. A later fails-closed handoff was rejected before the first judge turn with HTTP 401 `Invalid bearer token`; after reconciliation, the owner explicitly authorized one retry using a freshly generated `claude setup-token` credential, followed on success by one attempt each for the two untouched cells. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The Codex target launcher uses `env -i` and does not forward `CLAUDE_CODE_OAUTH_TOKEN` or another Anthropic credential. Gauntlet's OAuth mode necessarily prepends Anthropic's Claude Code identity block before the unchanged QA system prompt; this preserves the cross-vendor judge boundary but is a behavioral limitation that the sanitized eval evidence must disclose. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
 
 ### SDD commit and review adapter
 
@@ -686,6 +693,7 @@ After approval:
 - Pass it through the approved hidden FIFO without echo or shell-history exposure.
 - In the controller-only subshell, require non-empty `CLAUDE_CODE_OAUTH_TOKEN`, explicitly unset `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`, and validate the suppressed `gauntlet config --json` credential-presence field before starting the first cell.
 - Confirm the generated Codex launcher still uses `env -i` and cannot inherit the OAuth token.
+- When resuming after the recorded invalid-bearer attempt, require a freshly generated token, run only `design-lock-fails-closed-without-capture` attempt 2/2 first, and launch the PNG-plan and legacy-HTML cells only if that retry ends with final `pass` or `fail`; never rerun authority.
 
 ```bash
 cd evals
