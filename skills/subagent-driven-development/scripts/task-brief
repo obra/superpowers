@@ -21,7 +21,11 @@ n=$2
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  # Invoke sdd-workspace via bash so default OUTFILE still works when an
+  # installer drops the git-tracked 100755 bit (common with zip extractors
+  # that ignore Unix external attributes, e.g. Python zipfile).
+  scripts_dir=$(cd "$(dirname "$0")" && pwd)
+  dir=$("${BASH:-bash}" "$scripts_dir/sdd-workspace" "$plan")
   out="$dir/task-${n}-brief.md"
 fi
 
