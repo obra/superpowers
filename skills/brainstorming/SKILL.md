@@ -95,12 +95,13 @@ your path and complete them in order.
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+4. **Research existing solutions** — when the decision depends on unfamiliar or current external knowledge, dispatch one focused, read-only research subagent and wait for its findings before comparing approaches; skip this for self-contained work
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -115,6 +116,8 @@ digraph brainstorming {
     "Implement via normal workflow (no plan doc)" [shape=doublecircle];
     "Explore project context" [shape=box];
     "Ask clarifying questions" [shape=box];
+    "External/current implementation uncertainty?" [shape=diamond];
+    "Research existing solutions\nwith one subagent" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -134,7 +137,10 @@ digraph brainstorming {
     "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
     "Hidden complexity? Upgrade path" -> "Classify: spike / bounded / architectural";
     "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Ask clarifying questions" -> "External/current implementation uncertainty?";
+    "External/current implementation uncertainty?" -> "Research existing solutions\nwith one subagent" [label="yes"];
+    "External/current implementation uncertainty?" -> "Propose 2-3 approaches" [label="no"];
+    "Research existing solutions\nwith one subagent" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -157,9 +163,9 @@ reported recommendation.
 
 The subsections below serve the bounded and architectural paths (a
 spike stops at "present the probe, get a nod"). Sections from
-**Exploring approaches** onward are architectural-path depth — for
-bounded work, context plus a few questions plus a short in-chat design
-is the whole process.
+**Researching existing solutions** onward are architectural-path depth
+— for bounded work, context plus a few questions plus a short in-chat
+design is the whole process.
 
 **Understanding the idea:**
 
@@ -170,6 +176,23 @@ is the whole process.
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+
+**Researching existing solutions:**
+
+- Research before proposing approaches when the choice depends on unfamiliar
+  or current external technology, APIs, libraries, established practice, or a
+  difficult-to-reverse architecture decision; skip this when current project
+  context is sufficient
+- Dispatch one focused, read-only research subagent using the research tools
+  available in the current harness; do not perform the research inline or ask
+  the subagent to choose the design
+- Ask it to inspect relevant implementation source files and test files
+  directly—not only READMEs, documentation, issue threads, or popularity
+  metadata—then report reusable patterns, APIs, edge cases, and boundaries,
+  cite attributable evidence when possible, and label missing or contradictory
+  evidence
+- Use the findings in the approach comparison; if subagent dispatch is
+  unavailable, state the evidence gap and keep unsupported claims provisional
 
 **Exploring approaches:**
 
