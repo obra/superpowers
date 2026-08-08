@@ -158,15 +158,6 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 
 **Integration:** All fixes independent, no conflicts, full suite green
 
-**Time saved:** 3 problems solved in parallel vs sequentially
-
-## Key Benefits
-
-1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
-4. **Speed** - 3 problems solved in time of 1
-
 ## Verification
 
 After agents return:
@@ -174,12 +165,3 @@ After agents return:
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
-
-## Real-World Impact
-
-From debugging session (2025-10-03):
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
-- All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes

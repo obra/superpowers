@@ -137,7 +137,7 @@ PLAN
         && printf 'y\n' > f && git add f \
         && git "${git_id[@]}" commit -qm c2 )
     local rp_out rp_path
-    rp_out="$(cd "$repo" && SDD_PLAN_ID=plan.md "$SDD_SCRIPTS/review-package" HEAD~1 HEAD)"
+    rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD)"
     rp_path="$(printf '%s\n' "$rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
     case "$rp_path" in
         "$repo/.superpowers/sdd/"*) pass "review-package writes its diff under the workspace" ;;

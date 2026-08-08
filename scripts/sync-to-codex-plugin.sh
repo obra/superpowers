@@ -48,6 +48,7 @@ EXCLUDES=(
   "/.claude-plugin/"
   "/.codex/"
   "/.cursor-plugin/"
+  "/.devin-plugin/"
   "/.git/"
   "/.gitattributes"
   "/.github/"
