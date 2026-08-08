@@ -45,8 +45,8 @@ commands:
   - bun install in the Gauntlet checkout
   - bun link in the Gauntlet checkout
   - PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet and gauntlet config --json
-  - one-time hidden terminal handoff through a mode-0600 FIFO inside a mode-0700 directory under /tmp; the key is read without echo, exported only in the controller's Quorum/Gauntlet subshell, and the FIFO/directory are removed immediately after receipt
-  - gauntlet config --json with output suppressed and apiKeys.anthropic required true before any provider-backed RED cell
+  - one-time hidden terminal handoff through a mode-0600 FIFO inside a mode-0700 directory under /tmp; the Claude subscription OAuth token from claude setup-token is read without echo, exported as CLAUDE_CODE_OAUTH_TOKEN only in the controller's Quorum/Gauntlet subshell, and the FIFO/directory are removed immediately after receipt
+  - gauntlet config --json with output suppressed and apiKeys.anthropic required true before any provider-backed RED cell; ANTHROPIC_API_KEY and ANTHROPIC_AUTH_TOKEN must both remain unset so the run is provably subscription-OAuth-backed
   - bun install in evals
   - bun run quorum new|check|run|show for the four named Design Lock scenarios
   - bun run check
@@ -78,10 +78,10 @@ retry_policy:
       reconciliation: verify the first run created no provider process, then require PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet and gauntlet config --json to succeed
       max_attempts: 2
       backoff: none
-    - name: credential-remediated RED baseline campaign after one-time Anthropic API-key handoff
+    - name: credential-remediated RED baseline campaign after one-time Claude subscription OAuth handoff
       retryable_failures: []
       replay_safety: reconcile_first
-      reconciliation: require a non-empty process-scoped ANTHROPIC_API_KEY, PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet, and a suppressed gauntlet config --json payload whose apiKeys.anthropic field is true; verify the Codex launcher uses env -i and does not forward ANTHROPIC_API_KEY
+      reconciliation: require a non-empty process-scoped CLAUDE_CODE_OAUTH_TOKEN, require ANTHROPIC_API_KEY and ANTHROPIC_AUTH_TOKEN to be unset, require PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet, and require a suppressed gauntlet config --json payload whose apiKeys.anthropic field is true; verify the Codex launcher uses env -i and does not forward CLAUDE_CODE_OAUTH_TOKEN or another Anthropic credential
       max_attempts: 1 per named RED scenario
       backoff: none
 risk_class: normal
@@ -107,7 +107,7 @@ prohibited_actions:
 terminal_states: [LOCAL_READY, BLOCKED]
 ```
 
-Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. After that attempt exposed the missing Gauntlet-Agent credential and exhausted the old discovery budget, the owner selected an Anthropic API key and approved proceeding with a one-time hidden terminal handoff for one new credential-remediated RED campaign: the four named cells run sequentially, once each, and fail fast; GREEN remains unapproved. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The Codex target launcher uses `env -i` and does not forward `ANTHROPIC_API_KEY`. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
+Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. After that attempt exposed the missing Gauntlet-Agent credential and exhausted the old discovery budget, the owner first selected an Anthropic API key, then explicitly superseded that choice with Claude subscription OAuth so the Codex subject retains a cross-vendor Claude judge without separate Console API billing. The approved one-time hidden terminal handoff now supplies only `CLAUDE_CODE_OAUTH_TOKEN` for one new credential-remediated RED campaign: the four named cells run sequentially, once each, and fail fast; GREEN remains unapproved. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The Codex target launcher uses `env -i` and does not forward `CLAUDE_CODE_OAUTH_TOKEN` or another Anthropic credential. Gauntlet's OAuth mode necessarily prepends Anthropic's Claude Code identity block before the unchanged QA system prompt; this preserves the cross-vendor judge boundary but is a behavioral limitation that the sanitized eval evidence must disclose. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
 
 ### SDD commit and review adapter
 
@@ -129,6 +129,7 @@ Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit
 - Preserve `server.cjs`, session persistence, authentication, `frame-template.html`, and downstream historical HTML artifacts.
 - A legacy HTML-only lock must be migrated to an approved PNG or explicitly waived; it is not silently a completed v2 lock.
 - Raw Quorum results, transcripts, tokens, provider metadata, and authenticated Visual Companion URLs remain uncommitted and must be reviewed for sensitivity.
+- Record Claude subscription OAuth as the Gauntlet judge authentication mode and disclose its required Claude Code identity preface in sanitized RED/GREEN evidence; never record the token or raw provider metadata.
 - `evals/` is a separate ignored Git repository. Keep its branch, status, commits, and any later push separate from the Superpowers repository.
 - Live Quorum runs launch permissive coding-agent sessions and may consume provider quota. Obtain explicit authorization immediately before every live baseline or GREEN run. Static `bun run quorum check` does not require provider authorization.
 - The approved envelope permits local checkpoint commits on the owned core and eval branches. Do not push, open a PR, merge, release, or mutate hosted state without separate approval.
@@ -677,9 +678,14 @@ Expected: no v2 skill edits exist yet; the approved spec/plan preflight checkpoi
 
 Explain that each command launches a permissive Codex session and consumes subscription/provider quota. Do not run a live command until the user approves this gate.
 
-- [ ] **Step 3: Run the four Codex baseline cells**
+- [ ] **Step 3: Inject the Claude subscription OAuth token and run the four Codex baseline cells**
 
 After approval:
+
+- Generate the one-year subscription token with `claude setup-token` in a separate terminal.
+- Pass it through the approved hidden FIFO without echo or shell-history exposure.
+- In the controller-only subshell, require non-empty `CLAUDE_CODE_OAUTH_TOKEN`, explicitly unset `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`, and validate the suppressed `gauntlet config --json` credential-presence field before starting the first cell.
+- Confirm the generated Codex launcher still uses `env -i` and cannot inherit the OAuth token.
 
 ```bash
 cd evals
@@ -703,10 +709,12 @@ instructions for behavior the baseline already handles reliably.
 - [ ] **Step 4: Extract and sanitize the RED evidence**
 
 Record for each scenario: result directory basename, final verdict, failed
-criteria, and short agent rationalization. Keep `results/` ignored. Stop and fix
-the scenario if a verdict is indeterminate or a deterministic check is broken.
-Create the evaluation-results document with its Environment and RED Baseline
-sections; do not claim GREEN or capture evidence yet.
+criteria, and short agent rationalization. Record that the independent judge was
+Claude through subscription OAuth and disclose Gauntlet's required Claude Code
+identity preface as an evaluation limitation. Keep `results/` ignored. Stop and
+fix the scenario if a verdict is indeterminate or a deterministic check is
+broken. Create the evaluation-results document with its Environment and RED
+Baseline sections; do not claim GREEN or capture evidence yet.
 
 - [ ] **Step 5: Commit the sanitized RED evidence checkpoint for SDD review**
 
