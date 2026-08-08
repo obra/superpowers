@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "metadata": {
+    "featureId": "example-export-to-csv",
+    "title": "Export query results to CSV",
+    "planPath": "docs/superpowers/plans/2026-06-29-export-to-csv.md",
+    "createdAt": "2026-06-29",
+    "updatedAt": "2026-06-29"
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add CSV serializer unit + failing tests",
+      "status": "done",
+      "dependencies": []
+    },
+    {
+      "id": "T2",
+      "title": "Wire serializer into the query service",
+      "status": "done",
+      "dependencies": ["T1"]
+    },
+    {
+      "id": "T3",
+      "title": "Expose GET /export.csv endpoint",
+      "status": "done",
+      "dependencies": ["T2"]
+    },
+    {
+      "id": "T4",
+      "title": "Streaming response for large result sets",
+      "status": "pending",
+      "dependencies": ["T3"]
+    },
+    {
+      "id": "T5",
+      "title": "Export button + loading state in the UI",
+      "status": "done",
+      "dependencies": []
+    },
+    {
+      "id": "T6",
+      "title": "Download progress + error toast",
+      "status": "pending",
+      "dependencies": ["T5", "T3"]
+    },
+    {
+      "id": "T7",
+      "title": "Integration test: full export round-trip",
+      "status": "pending",
+      "dependencies": ["T4", "T6"]
+    },
+    {
+      "id": "T8",
+      "title": "Docs: add export section to the user guide",
+      "status": "cancelled",
+      "dependencies": ["T6"]
+    }
+  ]
+}

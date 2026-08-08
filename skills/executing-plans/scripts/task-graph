@@ -1,0 +1,248 @@
+#!/usr/bin/env bash
+# Validate a task graph and compute which tasks are ready to start.
+#
+# A task graph is the machine-readable companion to an implementation plan.
+# It tracks task status and dependencies as a directed acyclic graph so a
+# resumed session can recover "where am I" by reading one small file instead
+# of re-reading the whole plan and re-deriving progress from git history.
+#
+# The graph is a JSON file (see example-tasks.json next to this script). This
+# script does not create or edit graphs; it only reports on them. Status
+# transitions are made by the agent (or a human) editing the JSON directly.
+#
+# Requires jq. On macOS: brew install jq. On Debian/Ubuntu: apt install jq.
+#
+# Usage:
+#   task-graph validate <graph.json>     # structural integrity; exit 1 on any error
+#   task-graph ready <graph.json>        # print tasks ready to start now (one per line)
+set -euo pipefail
+
+# --- jq guard ---------------------------------------------------------------
+if ! command -v jq >/dev/null 2>&1; then
+  echo "task-graph requires jq. Install it: brew install jq (macOS) / apt install jq (Debian)." >&2
+  exit 2
+fi
+
+usage() {
+  echo "Usage: task-graph <validate|ready> <graph.json>" >&2
+  exit 2
+}
+
+[ $# -ge 2 ] || usage
+cmd="$1"
+graph="$2"
+
+[ -f "$graph" ] || {
+  echo "task-graph: file not found: $graph" >&2
+  exit 2
+}
+
+# --- shared scratch ---------------------------------------------------------
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+# rows: one line per task — "id<TAB>status<TAB>parentId<TAB>dep1,dep2,..."
+# deps are joined with commas so each task is exactly one line (grep-friendly).
+rows_file="$tmp/rows"
+ids_file="$tmp/ids"     # one id per line, in order
+edges_file="$tmp/edges" # "<src> <dst>" per dependency edge (src depends on dst)
+
+die() {
+  echo "task-graph: $*" >&2
+  exit 1
+}
+
+# --- load: one jq pass dumps every task to a TSV row ------------------------
+load() {
+  # reject malformed JSON up front so later jq calls get a clean error
+  jq -e '.' "$graph" >/dev/null 2>&1 || die "file is not valid JSON: $graph"
+
+  # Single jq invocation: emit "id<TAB>status<TAB>parentId<TAB>comma-joined-deps"
+  # per task. Each field is made missing-safe with `// ""`. Dependencies (an
+  # array) are joined with commas so one task = one line.
+  if ! jq -r '
+      .tasks // [] | .[] |
+      [(.id // ""), (.status // ""), (.parentId // ""), ((.dependencies // []) | join(","))] |
+      @tsv
+    ' "$graph" >"$rows_file" 2>/dev/null; then
+    die "could not read tasks from $graph (is .tasks an array?)."
+  fi
+
+  cut -f1 "$rows_file" >"$ids_file"
+  # ensure edges_file always exists; detect_cycle reads it even for empty graphs
+  : >"$edges_file"
+}
+
+# --- validate ---------------------------------------------------------------
+validate() {
+  load
+
+  # version + metadata (one jq pass; abort early on any structural gap)
+  IFS=$'\t' read -r ver has_meta <<EOF
+$(jq -r '[(.version // ""), ((.metadata // {}) | has("featureId") and has("title") and has("planPath") and has("createdAt") and has("updatedAt"))] | @tsv' "$graph")
+EOF
+  [ "$ver" = "1" ] || die "version must be 1 (got: ${ver:-<missing>})."
+  [ "$has_meta" = "true" ] || die "metadata is missing one or more required fields (featureId, title, planPath, createdAt, updatedAt)."
+  for f in featureId title planPath createdAt updatedAt; do
+    v=$(jq -r --arg f "$f" '.metadata[$f] // ""' "$graph")
+    [ -n "$v" ] || die "metadata.$f is missing or empty."
+  done
+
+  # tasks is an array
+  jq -e 'has("tasks") and (.tasks | type == "array")' "$graph" >/dev/null 2>&1 \
+    || die "tasks must be an array."
+
+  # One awk pass over rows does ALL per-task checks and writes edges:
+  #   - id non-empty + unique
+  #   - status enum
+  #   - parentId references a known id
+  #   - every dependency references a known id (and writes "<src> <dst>" edges)
+  # It reads ids_file first to build the known-id set, then scans rows. On the
+  # first violation it prints "ERROR <message>" and exits 1; otherwise it exits
+  # 0 after writing edges to edges_file.
+  # Errors go to stderr (captured into err_file); edges go to stdout (into
+  # edges_file). On error awk exits 1 before writing any edges, so edges_file
+  # stays clean and the message is read from err_file alone.
+  err_file="$tmp/err"
+  awk -F'\t' '
+    FNR == NR {
+      if ($1 != "") known[$1] = 1
+      next
+    }
+    NF == 0 { next }
+    {
+      id = $1; status = $2; parent = $3; deps = $4
+      if (id == "") { print "task[" (FNR - 1) "].id is missing or empty." > "/dev/stderr"; exit 1 }
+      if (seen[id]++) { print "duplicate task id: " id > "/dev/stderr"; exit 1 }
+      valid_status = (status=="pending"||status=="in_progress"||status=="done"||status=="blocked"||status=="cancelled")
+      if (!valid_status) { print "task " id ": invalid status '"'"'" status "'"'"' (expected: pending | in_progress | done | blocked | cancelled)." > "/dev/stderr"; exit 1 }
+      if (parent != "" && !(parent in known)) { print "task " id ": parentId '"'"'" parent "'"'"' references no known task." > "/dev/stderr"; exit 1 }
+      nd = split(deps, d, ",")
+      for (k = 1; k <= nd; k++) {
+        if (d[k] == "") continue
+        if (!(d[k] in known)) { print "task " id ": dependency '"'"'" d[k] "'"'"' references no known task." > "/dev/stderr"; exit 1 }
+        print id " " d[k]
+      }
+    }
+  ' "$ids_file" "$rows_file" >"$edges_file" 2>"$err_file" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    die "$(cat "$err_file")"
+  fi
+
+  # dependencies array-ness — one jq pass; name the first task whose deps is not an array
+  dep_bad=$(jq -r '
+      [.tasks // [] | to_entries[] | select((.value.dependencies | type) != "array")] |
+      if length == 0 then empty else .[0] | (.value.id // ("<index " + (.key | tostring) + ">")) end
+    ' "$graph" 2>/dev/null)
+  [ -z "$dep_bad" ] || die "task $dep_bad: dependencies must be an array."
+
+  count=$(wc -l <"$rows_file" | tr -d ' ')
+
+  # 8. cycle detection (iterative DFS, single awk pass)
+  detect_cycle
+
+  done_n=$(jq -r '[.tasks[] | select(.status=="done" or .status=="cancelled")] | length' "$graph")
+  echo "task-graph: OK ($count tasks, $done_n complete)"
+}
+
+# detect_cycle — iterative DFS over the dependency edges, done in a single awk
+# pass for speed (a per-node shell loop forks thousands of processes on large
+# graphs). A back-edge to a node on the current DFS stack means a cycle; the
+# stack is reported as the cycle path and awk exits 1.
+detect_cycle() {
+  awk '
+    # edges first: build adjacency list (node -> space-separated dependents)
+    FNR == NR {
+      if ($1 != "" && $2 != "") adj[$1] = adj[$1] (adj[$1] ? " " : "") $2
+      next
+    }
+    # ids file: drive DFS from each unvisited node
+    {
+      start = $1
+      if (start == "" || state[start] != "") next
+      sp = 0
+      stack[++sp] = start SUBSEP 0
+      path[++pp] = start
+      state[start] = 1
+      while (sp > 0) {
+        split(stack[sp], parts, SUBSEP)
+        node = parts[1]
+        idx = parts[2] + 0
+        n = split(adj[node], nb, " ")
+        if (idx >= n) {
+          state[node] = 2
+          sp--
+          pp--
+          continue
+        }
+        nb_cur = nb[++idx]
+        stack[sp] = node SUBSEP idx
+        if (state[nb_cur] == 1) {
+          # back-edge: build cycle path from where nb_cur first appears
+          cyc = ""
+          on = 0
+          for (k = 1; k <= pp; k++) {
+            if (on) cyc = cyc " -> " path[k]
+            if (path[k] == nb_cur) { on = 1; cyc = path[k] }
+          }
+          cyc = cyc " -> " nb_cur
+          print cyc
+          exit 1
+        } else if (state[nb_cur] == "") {
+          state[nb_cur] = 1
+          stack[++sp] = nb_cur SUBSEP 0
+          path[++pp] = nb_cur
+        }
+        # state == 2 (done): skip
+      }
+    }
+  ' "$edges_file" "$ids_file" >"$tmp/cycle" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    die "dependency cycle detected: $(cat "$tmp/cycle")"
+  fi
+}
+
+# --- ready ------------------------------------------------------------------
+# A task is ready iff status == "pending" AND every dependency is "done" or
+# "cancelled". Print "id<TAB>title" for each ready task. Done in a single awk
+# pass: store every row, mark the done-like set, then in END check each pending
+# task's deps against that set. Title is joined from a second file by id.
+ready() {
+  load
+
+  # title per id, via one jq pass
+  title_map="$tmp/titles"
+  jq -r '.tasks // [] | .[] | "\(.id)\t\(.title // "")"' "$graph" >"$title_map"
+
+  awk -F'\t' '
+    FNR == NR {
+      if ($1 != "") title[$1] = $2
+      next
+    }
+    {
+      id = $1; status = $2; deps = $4
+      rstat[id] = status
+      rdeps[id] = deps
+      if (status == "done" || status == "cancelled") done[id] = 1
+    }
+    END {
+      for (id in rstat) {
+        if (rstat[id] != "pending") continue
+        ok = 1
+        nd = split(rdeps[id], d, ",")
+        for (k = 1; k <= nd; k++) {
+          if (d[k] != "" && !(d[k] in done)) { ok = 0; break }
+        }
+        if (ok) printf "%s\t%s\n", id, (id in title ? title[id] : "")
+      }
+    }
+  ' "$title_map" "$rows_file"
+}
+
+case "$cmd" in
+  validate) validate ;;
+  ready) ready ;;
+  *)
+    echo "task-graph: unknown command '$cmd' (expected: validate | ready)." >&2
+    usage
+    ;;
+esac
