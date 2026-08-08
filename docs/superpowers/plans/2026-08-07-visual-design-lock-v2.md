@@ -44,7 +44,7 @@ commands:
   - git clone https://github.com/prime-radiant-inc/gauntlet.git /Users/wulymammoth/Desktop/lab/gauntlet
   - bun install in the Gauntlet checkout
   - bun link in the Gauntlet checkout
-  - PATH=$HOME/.bun/bin:$PATH command -v gauntlet and gauntlet --help
+  - PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet and gauntlet config --json
   - bun install in evals
   - bun run quorum new|check|run|show for the four named Design Lock scenarios
   - bun run check
@@ -72,7 +72,7 @@ retry_policy:
       retryable_failures:
         - "pre-provider missing-executable failure: Executable not found in PATH: gauntlet"
       replay_safety: reconcile_first
-      reconciliation: verify the first run created no provider process, then require PATH=$HOME/.bun/bin:$PATH command -v gauntlet and gauntlet --help to succeed
+      reconciliation: verify the first run created no provider process, then require PATH=$HOME/.cache/.bun/bin:$PATH command -v gauntlet and gauntlet config --json to succeed
       max_attempts: 2
       backoff: none
 risk_class: normal
@@ -98,7 +98,7 @@ prohibited_actions:
 terminal_states: [LOCAL_READY, BLOCKED]
 ```
 
-Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
+Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The worktree remains preserved at either terminal state. The run-wide two-round fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
 
 ### SDD commit and review adapter
 
