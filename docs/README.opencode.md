@@ -4,7 +4,7 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 
 ## Installation
 
-Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
+Add superpowers to the `plugin` array in your [`opencode.json` (global or project-level)](https://opencode.ai/docs/config/).
 
 ```json
 {
