@@ -107,11 +107,13 @@ digraph brainstorming {
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - If the visual companion was used and designs were locked, include a **Design Lock** section in the spec:
-  - **Artifact table** — screen name → committed artifact path (HTML, plus PNG when captured)
-  - **Fidelity decision** — "match the locked mockup as rendered" or "adapt: keep layout, hierarchy, and structure; restyle with the app's existing tokens," naming the actual token sources
-  - **Load-bearing properties** — 3–7 plain-language bullets per screen naming what must survive implementation
+  - **Artifact table** — screen, state, theme, approved viewport, actual PNG pixel dimensions, committed PNG path, and capture tool family
+  - **Fidelity decision** — "match the approved screenshot as rendered" or a precisely bounded adaptation, naming the actual design-system sources
+  - **Authoritative sources** — repository paths plus the resolution of material conflicts between documentation, source tokens, generated output, and implementation
+  - **Load-bearing properties** — 3–7 plain-language bullets per screenshot naming what must survive implementation
+  - **Approval statement** — confirmation that the saved PNG itself was presented and approved
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git, including any locked design artifacts under `docs/superpowers/specs/assets/`
+- Commit the design document to git, including approved PNG artifacts under `docs/superpowers/specs/assets/`
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -120,7 +122,7 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
-5. **Design lock check:** If the spec has a Design Lock section, does every artifact path it cites exist on disk?
+5. **Design lock check:** If the spec has a Design Lock section, does every required PNG exist and open, do recorded image dimensions match, is every load-bearing viewport represented, are source paths valid, is the artifact safe to commit, and was the saved PNG itself approved? New locks must not cite HTML visual artifacts.
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
