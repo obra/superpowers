@@ -76,6 +76,16 @@ naming and copy rules, platform requirements — one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
 
+## Flow Diagrams
+
+[REQUIRED when the plan spans 3+ interacting components or crosses an async
+boundary (webhooks, queues, background jobs, callbacks); omit the section
+for single-component work. Mermaid fenced blocks: `sequenceDiagram` for
+request/response and handshake flows, `flowchart` for data forking across
+paths. Label arrows with the real endpoint/event/function names the tasks
+implement — the diagram doubles as the interface map between tasks, and it
+is how an implementer holding one task sees where their piece sits.]
+
 ---
 ```
 
@@ -147,6 +157,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Diagram check:** If the plan spans 3+ components or crosses an async boundary, the header has a Flow Diagrams section and every arrow label matches an endpoint/event/function a task implements. An arrow labeled with a name no task defines is the diagram equivalent of a placeholder — fix one or the other.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
