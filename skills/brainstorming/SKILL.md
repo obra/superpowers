@@ -96,7 +96,7 @@ your path and complete them in order.
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
+5. **Present design** — in sections scaled to their complexity, render each section before any approval question, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
@@ -182,6 +182,8 @@ is the whole process.
 
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
+- Present each design section as rendered message text before asking for approval. Some harnesses do not render assistant text that appears before an interactive question tool call in the same turn.
+- Do not combine section content with `AskUserQuestion` or any other interactive question tool in the same turn. Safe pattern: send the section and end the turn, or ask approval in plain conversational text; if you want to use an interactive question tool, use it in a follow-up turn after the section has rendered.
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
