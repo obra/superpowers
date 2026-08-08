@@ -104,30 +104,29 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
 ## Existing Design Systems
 
-Before writing the first mockup in a project that already has a UI, resolve
-design-system intent — otherwise the user selects a mockup that looks nothing
-like what will ship.
+Before writing the first mockup in a project that already has a UI, discover
+what should govern the design. Inspect, in order:
 
-1. **Inspect the codebase for design tokens:** CSS custom properties, Tailwind
-   (or similar) config, theme files, component libraries.
-2. **Ask the user one question** (terminal or browser, per the usual test):
+1. **Human-authored guidance** — repository instructions, `STYLE.md`,
+   `STYLEGUIDE.md`, `DESIGN_SYSTEM.md`, brand or design-language documents,
+   accepted ADRs, and relevant product specifications.
+2. **Source tokens and generators** — Style Dictionary configuration and package
+   usage; source token JSON/YAML/JavaScript/TypeScript; semantic color,
+   typography, spacing, radius, elevation, and motion tokens; theme generators.
+   Treat generated platform output as corroboration, not an automatic authority.
+3. **Component and theme surfaces** — Tailwind or equivalent config, CSS custom
+   properties, theme modules, Storybook or another component catalog, shared
+   components, and analogous implemented screens.
 
-   > "Should mockups follow your app's existing design system, or explore a
-   > new visual direction?"
+Compare documentation, source tokens, generated output, and live implementation.
+If they materially disagree, describe the conflict and ask which source governs
+before showing a mockup. Do not silently choose the first source found.
 
-3. **Apply the answer:**
-   - **Existing system** — embed the app's real tokens in each mockup via a
-     scoped `<style>` block inside the fragment. What the user selects is an
-     honest preview of what ships.
-   - **New direction** — mock freely; the design lock (see Locking a Design)
-     captures the new look as the design source of truth.
-   - **Greenfield project** — skip the question; the locked mockup seeds the
-     design system.
-
-Record the answer — it becomes the **fidelity decision** in the spec's Design
-Lock section. If discovery was skipped or the answer is ambiguous when a
-design is locked, ask then — lock time is the fallback checkpoint, not the
-primary one.
+Then ask whether mockups should follow the resolved existing system or explore a
+new direction. Embed the chosen real tokens in existing-system mockups; for a
+new direction or greenfield project, the approved screenshot seeds the design
+system. Record the decision and exact source paths for the spec's Design Lock.
+Lock time is a fallback discovery checkpoint, not the primary one.
 
 ## The Loop
 
@@ -297,32 +296,38 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 
 ## Locking a Design
 
-When a visual choice is finalized — the selection that ends exploration for a
-screen, not every click — lock it so the design survives into the spec, the
-plan, and implementation:
+When a visual choice is finalized for a screen, lock the rendered result so it
+survives into the spec, plan, and implementation:
 
-1. **Push a final-design fragment** to `screen_dir` containing only the
-   winning design — no A/B/C chooser, no selection UI, no `onclick` handlers.
-   This doubles as visual confirmation for the user.
-2. **Export it** with the deterministic export script:
+1. **Push a winner-only fragment.** Remove option choosers, selection handlers,
+   and comparison chrome. Wrap the complete approved screen in exactly one
+   `<main data-design-lock-root>` element and have the user validate the live
+   rendering.
+2. **Check screenshot capability.** The harness must be able to navigate to the
+   authenticated Companion URL, set a deterministic viewport, verify readiness,
+   capture the design root as PNG, save it into the repo, and present the saved
+   PNG. Playwright MCP is one valid implementation; equivalent browser tooling
+   is allowed. Do not install a browser package or use an OS-level manual crop.
+3. **Capture each required condition.** Set the approved viewport, theme, and
+   state; wait for fonts; require every image to load with nonzero dimensions;
+   require one nonempty design root; disable motion without changing layout; and
+   capture only the root as lossless PNG at CSS-pixel scale.
+4. **Save and verify.** Write
+   `docs/superpowers/specs/assets/YYYY-MM-DD-topic/screen--state--WIDTHxHEIGHT.png`.
+   Verify PNG readability, actual pixel dimensions, crop, blank regions, missing
+   assets, and commit safety. Never persist the authenticated URL or token.
+5. **Approve the artifact.** Present the exact saved PNG to the user. The lock is
+   complete only after that PNG is explicitly approved. Capture another viewport
+   only when its responsive behavior is declared load-bearing.
+6. **Record the contract.** Commit approved PNGs with the spec and record paths,
+   viewport and PNG dimensions, theme, state, capture tool family, fidelity,
+   authoritative sources, approval, and 3–7 load-bearing properties per image.
 
-   ```bash
-   scripts/export-mockup.sh $SCREEN_DIR/dashboard-final.html \
-     docs/superpowers/specs/assets/YYYY-MM-DD-<topic>/dashboard.html \
-     --title "Dashboard"
-   ```
-
-   The output is a self-contained standalone HTML file: frame CSS inlined, no
-   helper script, no connection chrome, no external references. One file per
-   locked screen. (User preferences for spec location override this default.)
-3. **Opportunistic screenshot:** if your harness has a browser screenshot tool
-   (Playwright MCP, Chrome DevTools MCP, etc.), also capture `<screen>.png`
-   beside the HTML. Never install tooling to get one; with no tool available,
-   skip silently. The HTML is the artifact of record.
-4. **Commit the artifacts together with the spec**, and record them in the
-   spec's **Design Lock** section (see the brainstorming skill): artifact
-   paths, the fidelity decision from design-system discovery, and 3–7
-   plain-language load-bearing properties per screen.
+If screenshot capability or rendering validation is unavailable, state that the
+lock is incomplete. Offer to enable equivalent capture or explicitly proceed
+without a Design Lock; there is no HTML fallback. Pre-commit changes replace the
+pending PNG and require fresh approval. Post-commit changes create a versioned
+PNG and update the spec.
 
 ## Design Tips
 
