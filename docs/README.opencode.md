@@ -1,14 +1,21 @@
 # Superpowers for OpenCode
 
-Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
+Complete guide for using Superpowers with [OpenCode v2](https://v2.opencode.ai).
+
+> **OpenCode v2 only.** This plugin targets the OpenCode v2 plugin API
+> (default `{ id, setup }` export, `ctx.skill.transform`, `ctx.session.hook`).
+> OpenCode states that v1 plugins do not run under v2, so use an older
+> Superpowers release if you are still on OpenCode v1.
 
 ## Installation
 
-Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
+Add superpowers to the `plugins` array in your `opencode.json` (global or
+project-level). `plugins` is the canonical v2 key; the legacy singular `plugin`
+key still loads for now but may be removed:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugins": ["superpowers@git+https://github.com/obra/superpowers.git"]
 }
 ```
 
@@ -91,39 +98,44 @@ To pin a specific version, use a branch or tag:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+  "plugins": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
 }
 ```
 
 ## How It Works
 
-The plugin does two things:
+The plugin's `setup(ctx)` does two things:
 
-1. **Injects bootstrap context** via the `experimental.chat.messages.transform` hook, adding superpowers awareness to every conversation.
-2. **Registers the skills directory** via the `config` hook, so OpenCode discovers all superpowers skills without symlinks or manual config.
+1. **Registers the skills directory** via `ctx.skill.transform()`, adding the
+   bundled `skills/` folder as a directory skill source so OpenCode discovers
+   all superpowers skills without symlinks or manual `skills.paths` config.
+2. **Injects bootstrap context** via `ctx.session.hook("context", ...)`,
+   prepending superpowers awareness to the first user message before each model
+   dispatch. (Using a user message rather than a system message avoids token
+   bloat and multi-system-message issues on some models.)
 
 ### Tool Mapping
 
-Skills speak in actions rather than naming any one runtime's tools. On OpenCode these resolve to:
+Skills speak in actions rather than naming any one runtime's tools. On OpenCode v2 these resolve to:
 
 - "Create a todo" / "mark complete in todo list" → `todowrite`
 - `Subagent (general-purpose):` template → OpenCode's `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
 - "Invoke a skill" → OpenCode's native `skill` tool
 - "Read a file" → `read`
-- "Create a file" / "edit a file" / "delete a file" → `apply_patch`
+- "Create a file" → `write`; "edit a file" → `edit`
 - "Run a shell command" → `bash`
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
-(Verified against the installed OpenCode CLI's tool inventory.)
+(Verified against the installed OpenCode v2 CLI's tool inventory.)
 
 ## Troubleshooting
 
 ### Plugin not loading
 
-1. Check OpenCode logs: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`
-2. Verify the plugin line in your `opencode.json` is correct
-3. Make sure you're running a recent version of OpenCode
+1. Check OpenCode logs: `grep -i "loading plugin" ~/.local/share/opencode/log/opencode.log` (OpenCode v2 logs to a file; the CLI `run` command no longer has a `--print-logs` flag). If the shared background service is stuck, run `opencode service restart`.
+2. Verify the plugin line in your `opencode.json` is correct and uses the `plugins` key
+3. Make sure you're running OpenCode v2
 
 ### Windows install issues
 
@@ -141,7 +153,7 @@ Then use the installed package path in `opencode.json`:
 
 ```json
 {
-  "plugin": ["~/.config/opencode/node_modules/superpowers"]
+  "plugins": ["~/.config/opencode/node_modules/superpowers"]
 }
 ```
 
@@ -153,11 +165,11 @@ Then use the installed package path in `opencode.json`:
 
 ### Bootstrap not appearing
 
-1. Check OpenCode version supports `experimental.chat.messages.transform` hook
-2. Restart OpenCode after config changes
+1. Make sure you are on OpenCode v2 (the plugin uses the v2 `ctx.session.hook("context", ...)` API)
+2. Restart OpenCode after config changes (`opencode service restart` if the background service is stuck)
 
 ## Getting Help
 
 - Report issues: https://github.com/obra/superpowers/issues
 - Main documentation: https://github.com/obra/superpowers
-- OpenCode docs: https://opencode.ai/docs/
+- OpenCode docs: https://v2.opencode.ai/

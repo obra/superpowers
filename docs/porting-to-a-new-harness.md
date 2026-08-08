@@ -157,10 +157,11 @@ A port is finished when **all** of these are true:
 
 A quick smoke check before the full acceptance test: start a session and ask the
 model to describe its superpowers. If the bootstrap injected, it knows it has
-them. (OpenCode's install doc uses `opencode run --print-logs "hello" 2>&1 |
-grep -i superpowers` for the same goal via a different mechanism — log-grep
-rather than asking the model; the `2>&1` matters because logs go to stderr. Find
-your harness's equivalent.)
+them. (OpenCode's install doc uses `grep -i "loading plugin"
+~/.local/share/opencode/log/opencode.log` for the same goal via a different
+mechanism — log-grep rather than asking the model; OpenCode v2 writes logs to
+that file rather than exposing a `--print-logs` CLI flag. Find your harness's
+equivalent.)
 
 ---
 
@@ -520,7 +521,7 @@ honors the rule rather than breaking it. Distinguish three cases:
 2. **Native skill *discovery* but no `Skill` tool** (pi, Antigravity): the harness
    can find and list skills, but the model can't call a tool to load one. Get the
    skills installed where the harness scans (pi registers via `resources_discover`
-   → `skillPaths`; OpenCode via its `config` hook; `agy plugin install` copies
+   → `skillPaths`; OpenCode via its `ctx.skill.transform` hook; `agy plugin install` copies
    them in), and tell the model to load a skill by **reading its `SKILL.md` with
    the file-read tool when the skill applies** — the sanctioned mechanism here,
    the way `references/pi-tools.md` states it.
@@ -790,7 +791,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
-| OpenCode | `.opencode/plugins/superpowers.js` (declared via root `package.json` `main`) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` plugin git URL |
+| OpenCode (v2) | `.opencode/plugins/superpowers.js` (declared via root `package.json` `main`) | in-process v2 plugin (`{ id, setup }` default export): `ctx.skill.transform` registers skills dir; `ctx.session.hook("context", ...)` injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugins` git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
 
 ## Appendix B — Gotchas that have bitten porters
