@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or creating or finalizing design specifications and Visual Design Locks, including when a selected mockup or existing HTML winner is presented as ready to lock."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -167,3 +167,12 @@ because a source is labeled `canonical`, `source of truth`, `generated`, or
 `stale`, or because it appears newer or earlier in the inspection order. No
 visual output or readiness claim occurs until your human partner resolves the
 conflict.
+
+**Design Lock capture hard gate:** A selected or rendered HTML mockup is not a
+completed Design Lock. Completing the lock requires equivalent screenshot
+capture and rendering validation under the detailed guide. If either is
+unavailable, STOP: the lock remains incomplete. Present exactly two choices and
+ask your human partner to choose: enable equivalent screenshot capture and
+validation and complete the lock, or explicitly proceed without a Design Lock.
+Do not choose for them, manufacture a PNG, use HTML as the lock artifact,
+describe screenshots as optional, or offer another fallback.
