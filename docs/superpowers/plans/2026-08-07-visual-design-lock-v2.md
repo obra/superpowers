@@ -103,7 +103,7 @@ evidence:
     - real current-Codex Playwright capture proof with readiness checks, exact PNG inspection, and user approval
   external:
     - separately authorized Quorum RED and GREEN cells; otherwise BLOCKED (EVIDENCE_NEEDED)
-max_fix_rounds: 3
+max_fix_rounds: 4
 prohibited_actions:
   - nested executor worktrees
   - pushes, pull requests, merges, releases, deployments, or hosted mutations
@@ -117,6 +117,8 @@ terminal_states: [LOCAL_READY, BLOCKED]
 Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit the reversible Homebrew Bun installation, then expanded again to permit the machine-local Gauntlet clone/link and one reconciled retry after the pre-provider missing-executable blocker. After that attempt exposed the missing Gauntlet-Agent credential and exhausted the old discovery budget, the owner first selected an Anthropic API key, then explicitly superseded that choice with Claude subscription OAuth so the Codex subject retains a cross-vendor Claude judge without separate Console API billing. The approved one-time hidden terminal handoff supplies only `CLAUDE_CODE_OAUTH_TOKEN` for the credential-remediated RED campaign; GREEN remains unapproved. The authority scenario produced a complete semantic RED and must not be rerun. A later fails-closed handoff was rejected before the first judge turn with HTTP 401 `Invalid bearer token`; after reconciliation, the owner explicitly authorized one retry using a freshly generated `claude setup-token` credential, followed on success by one attempt each for the two untouched cells. On this Homebrew Bun installation, `bun pm bin -g` resolves to `$HOME/.cache/.bun/bin`; Gauntlet has no successful `--help` command, so reconciliation uses `gauntlet config --json` with output suppressed and JSON-validated. The Codex target launcher uses `env -i` and does not forward `CLAUDE_CODE_OAUTH_TOKEN` or another Anthropic credential. Gauntlet's OAuth mode necessarily prepends Anthropic's Claude Code identity block before the unchanged QA system prompt; this preserves the cross-vendor judge boundary but is a behavioral limitation that the sanitized eval evidence must disclose. The worktree remains preserved at either terminal state. The plan's run-wide fix cap overrides the installed SDD per-task and final-wave defaults; branch-finishing and cleanup are not invoked.
 
 After the first authorized GREEN cell exposed a real design-authority conflict-gate failure at the original cap, the owner explicitly expanded the run-wide fix budget from two to three rounds for one narrowly scoped tracked-source remediation. This approval does not authorize a provider rerun; any retry remains a fresh, separate gate after deterministic verification and independent review.
+
+After that remediation passed its targeted GREEN retry, the next cell exposed a distinct missing-capture failure: the agent did not invoke brainstorming and omitted the explicit-waiver continuation. The owner explicitly expanded the run-wide budget from three to four rounds solely for a narrowly scoped brainstorming trigger and primary fail-closed choice gate. This approval does not authorize a provider rerun or screenshot capture.
 
 ### SDD commit and review adapter
 
