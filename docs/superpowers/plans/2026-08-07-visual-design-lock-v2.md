@@ -122,6 +122,8 @@ After that remediation passed its targeted GREEN retry, the next cell exposed a 
 
 After that remediation also passed its targeted GREEN retry, the PNG-plan cell received a full semantic pass but composite failure from case- and phrase-sensitive deterministic postchecks. The owner explicitly expanded the run-wide budget from four to five rounds solely for an eval-only correction that accepts equivalent runtime-capture wording and capitalization without weakening negative discrimination. This approval does not authorize any skill change, provider rerun, or screenshot capture.
 
+After the Task 7 evidence review found that the retained real-capture record lacked same-flow source-inspection and generated-plan evidence, the owner explicitly expanded the run-wide budget from five to six rounds for one sixth and final evidence-only completion: re-inspect the unchanged disposable fixture's `STYLE.md`, `config/design-tokens.json`, and already-approved PNG; retain only the disposable Design Lock spec and generated UI plan; update only the sanitized tracked evidence and this authorization record; run deterministic checks and reviews; and create one local fix commit. This approval does not authorize any provider, browser, Playwright, server, or screenshot rerun; token or PNG change; source, test, or eval-definition change; push, PR, merge, release, or cleanup. The existing boundary remains otherwise unchanged.
+
 ### SDD commit and review adapter
 
 - Before Task 1, commit this approved plan and specification together as the core preflight checkpoint.

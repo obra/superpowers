@@ -162,6 +162,29 @@ inspection. A semantic pass alone is not reported as a composite pass.
 - Viewport and image: `1024x768` CSS pixels and a `1024x768` RGB PNG.
 - SHA-256:
   `4889b0ed78f1b66f00545b54387c85a2d48f5c3fb95892302cb508445bf19ce5`.
+- Same-flow authority evidence: this disposable Codex flow inspected `STYLE.md`
+  and `config/design-tokens.json`, resolved them as agreeing governing sources,
+  and retained the complete v2 Design Lock in
+  `docs/superpowers/specs/2026-08-09-northstar-dashboard-design.md`. That spec
+  records the exact approved PNG path, 1024x768 viewport, 1024x768 RGB pixels,
+  Playwright MCP/Chromium capture family, default dark-workspace populated
+  state, fidelity decision, approval hash above, and six visible load-bearing
+  properties.
+- Same-flow plan evidence: after announcing and using the active feature
+  `skills/writing-plans/SKILL.md`, this flow generated
+  `docs/superpowers/plans/2026-08-09-northstar-dashboard.md`. Its only UI task
+  reads the exact approved PNG path and repeats the same viewport, image
+  dimensions, capture family, theme, populated state, fidelity, agreeing
+  authorities, hash, and all six load-bearing properties. Before its commit, the
+  task requires a same-condition render and Playwright MCP/Chromium runtime
+  screenshot, side-by-side inspection with the exact locked PNG, reconciliation
+  of visible deviations, failure on load-bearing deviations, and an incomplete
+  verdict when either image cannot be viewed. It provides no textual visual
+  fallback and invents no reference artifact.
+- The retained design spec and generated plan both bind to the already-recorded
+  approved capture and hash above. The plan is implementation guidance only: it
+  was not executed in this evidence-only completion, and no new provider,
+  browser, Playwright, server, screenshot, or PNG operation is claimed.
 - Readiness checks passed: fonts loaded; every image was complete with nonzero
   dimensions, including the one required inline data-URI image inside the root;
   and exactly one Design Lock root existed.
@@ -184,8 +207,8 @@ inspection. A semantic pass alone is not reported as a composite pass.
 - The protected handoff was received and removed; token, FIFO, and disposable
   controller state were absent after the campaign, and no matching campaign
   process remained.
-- Before this evidence-only checkpoint, core and eval repositories were clean
-  and distinct at `d890f5fdae08dbae4c857170db23e80890ec0fc7` and
+- Before this sixth evidence-only checkpoint, core and eval repositories were
+  clean and distinct at `c5aea784c6ea4271db53fc84dd3001a9d11e9c89` and
   `f21471bf3d3e5bd6c60fa31224a729034fe15fea`.
 - Raw prompts, transcripts, authentication files, credential snapshots, private
   logs, run event streams, authenticated URLs, private fixture paths, raw
@@ -200,4 +223,4 @@ inspection. A semantic pass alone is not reported as a composite pass.
 - Automated pixel-difference thresholds remain deferred.
 - The optional `favicon.ico` 404 was outside the captured Design Lock root and
   did not affect the approved artifact.
-- All **5/5** tracked fix rounds are consumed.
+- All **6/6** tracked fix rounds are consumed.
