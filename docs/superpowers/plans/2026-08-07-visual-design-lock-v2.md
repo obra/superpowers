@@ -103,7 +103,7 @@ evidence:
     - real current-Codex Playwright capture proof with readiness checks, exact PNG inspection, and user approval
   external:
     - separately authorized Quorum RED and GREEN cells; otherwise BLOCKED (EVIDENCE_NEEDED)
-max_fix_rounds: 4
+max_fix_rounds: 5
 prohibited_actions:
   - nested executor worktrees
   - pushes, pull requests, merges, releases, deployments, or hosted mutations
@@ -119,6 +119,8 @@ Approved by the repository owner on 2026-08-07; expanded on 2026-08-08 to permit
 After the first authorized GREEN cell exposed a real design-authority conflict-gate failure at the original cap, the owner explicitly expanded the run-wide fix budget from two to three rounds for one narrowly scoped tracked-source remediation. This approval does not authorize a provider rerun; any retry remains a fresh, separate gate after deterministic verification and independent review.
 
 After that remediation passed its targeted GREEN retry, the next cell exposed a distinct missing-capture failure: the agent did not invoke brainstorming and omitted the explicit-waiver continuation. The owner explicitly expanded the run-wide budget from three to four rounds solely for a narrowly scoped brainstorming trigger and primary fail-closed choice gate. This approval does not authorize a provider rerun or screenshot capture.
+
+After that remediation also passed its targeted GREEN retry, the PNG-plan cell received a full semantic pass but composite failure from case- and phrase-sensitive deterministic postchecks. The owner explicitly expanded the run-wide budget from four to five rounds solely for an eval-only correction that accepts equivalent runtime-capture wording and capitalization without weakening negative discrimination. This approval does not authorize any skill change, provider rerun, or screenshot capture.
 
 ### SDD commit and review adapter
 
