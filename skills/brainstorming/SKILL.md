@@ -156,3 +156,14 @@ A question about a UI topic is not automatically a visual question. "What does p
 
 If they agree to the companion, read the detailed guide before proceeding:
 `skills/brainstorming/visual-companion.md`
+
+**Existing-UI authority hard gate:** Before generating, pushing, showing, or
+describing a mockup as ready for a project with an existing UI, follow the
+detailed guide's existing-design-system discovery contract. If human-authored
+guidance, source tokens or generators, generated output, component or theme
+surfaces, or the live implementation materially disagree, STOP: describe the
+conflict and ask your human partner which source governs. Do not choose for them
+because a source is labeled `canonical`, `source of truth`, `generated`, or
+`stale`, or because it appears newer or earlier in the inspection order. No
+visual output or readiness claim occurs until your human partner resolves the
+conflict.
