@@ -4,21 +4,24 @@ Superpowers is a complete software development methodology for your coding agent
 
 ## Table of Contents
 
-- [Quickstart](#quickstart)
 - [How it works](#how-it-works)
 - [Commercial Services](#commercial-services)
-- [Installation](#installation)
+- [Getting Started](#installation)
   - [Claude Code](#claude-code)
   - [Antigravity](#antigravity)
   - [Codex App](#codex-app)
   - [Codex CLI](#codex-cli)
   - [Cursor](#cursor)
+  - [Devin CLI](#devin-cli)
   - [Factory Droid](#factory-droid)
   - [Gemini CLI](#gemini-cli)
   - [GitHub Copilot CLI](#github-copilot-cli)
+  - [Grok Build CLI](#grok-build-cli)
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
+  - [Hermes Agent](#hermes-agent)
+  - [Oh My Pi (OMP)](#oh-my-pi-omp)
 - [The Basic Workflow](#the-basic-workflow)
 - [Community](#community)
 - [What's Inside](#whats-inside)
@@ -28,9 +31,6 @@ Superpowers is a complete software development methodology for your coding agent
 - [License](#license)
 - [Visual companion telemetry](#visual-companion-telemetry)
 
-## Quickstart
-
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity), [Codex App](#codex-app), [Codex CLI](#codex-cli), [Cursor](#cursor), [Factory Droid](#factory-droid), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Hermes Agent](#hermes-agent), [Kimi Code](#kimi-code), [OpenCode](#opencode), [Pi](#pi), [oh-my-pi](#oh-my-pi-omp).
 
 ## How it works
 
@@ -127,6 +127,20 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Or search for "superpowers" in the plugin marketplace.
 
+### Devin CLI
+
+- Install the plugin from this repository:
+
+  ```bash
+  devin plugins install obra/superpowers
+  ```
+
+- Update to the latest version with:
+
+  ```bash
+  devin plugins update superpowers
+  ```
+
 ### Factory Droid
 
 - Register the marketplace:
@@ -167,6 +181,22 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
   ```bash
   copilot plugin install superpowers@superpowers-marketplace
+  ```
+
+### Grok Build CLI
+
+Superpowers is available via the [official Grok plugin marketplace](https://github.com/xai-org/plugin-marketplace).
+
+- Install the plugin from xAI's official marketplace:
+
+  ```bash
+  grok plugin install superpowers@xai-official --trust
+  ```
+
+- Or open the marketplace in the TUI, search for Superpowers, and install it:
+
+  ```text
+  /marketplace
   ```
 
 ### Kimi Code
@@ -230,7 +260,7 @@ Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
 
-### oh-my-pi (omp)
+### Oh My Pi (OMP)
 
 Install Superpowers from Git through omp's native plugin manager:
 
