@@ -7,6 +7,12 @@
 # Usage: review-package PLAN_FILE BASE HEAD [OUTFILE]
 # Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/review-<base7>..<head7>.diff
 # (named per range, so a re-review after fixes gets a distinct fresh file).
+#
+# Foreign-ticket detection: if PLAN_FILE's basename (after its date prefix)
+# contains a ticket ID, any commit in BASE..HEAD whose subject references a
+# DIFFERENT ticket ID triggers a non-fatal warning on stderr and a header
+# section in OUTFILE — a signal that another session's work may have
+# landed in this range on a shared, non-isolated checkout.
 set -euo pipefail
 
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
@@ -29,7 +35,45 @@ else
   out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
 fi
 
+# --- foreign-ticket detection -------------------------------------------
+ticket_regex='[A-Za-z]{3,}[#-]?[0-9]{2,}'
+
+normalize_ticket() {
+  printf '%s' "$1" | tr '[:lower:]' '[:upper:]' | sed -E 's/[#-]//g'
+}
+
+plan_base=$(basename "$plan")
+plan_tail=$(printf '%s' "$plan_base" | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
+own_ticket_raw=$(printf '%s' "$plan_tail" | grep -oE "$ticket_regex" | head -n1 || true)
+
+foreign_block=""
+if [ -n "$own_ticket_raw" ]; then
+  own_ticket=$(normalize_ticket "$own_ticket_raw")
+  while IFS=$'\t' read -r hash subject; do
+    [ -n "$hash" ] || continue
+    match=$(printf '%s' "$subject" | grep -oE "$ticket_regex" | head -n1 || true)
+    [ -n "$match" ] || continue
+    if [ "$(normalize_ticket "$match")" != "$own_ticket" ]; then
+      foreign_block="${foreign_block}$(printf '%s\t%s\n' "$hash" "$subject")"
+    fi
+  done < <(git log --format='%h%x09%s' "${base}..${head}")
+fi
+
+warning=""
+if [ -n "$foreign_block" ]; then
+  warning="WARNING: this range (${base}..${head}) includes commit(s) referencing a ticket other than this plan's own (${own_ticket}):
+${foreign_block}
+Another session's work may have landed in between. Re-scope (narrower BASE, or a path filter) before handing this package to a reviewer, or confirm the inclusion is intentional."
+  echo "$warning" >&2
+fi
+
 {
+  if [ -n "$warning" ]; then
+    echo "## ⚠ Foreign-ticket commits in this range"
+    echo
+    echo "$warning"
+    echo
+  fi
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Commits"

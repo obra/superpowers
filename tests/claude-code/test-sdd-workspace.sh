@@ -165,6 +165,65 @@ PLAN
         echo "    got: $rp_explicit"
     fi
 
+    # --- foreign-ticket detection ---------------------------------------
+    cat > "$repo/2026-01-01-FEATURE-100-sample.md" <<'PLAN'
+# Plan FEATURE#100
+
+## Task 1: Sample
+
+Do the thing.
+PLAN
+
+    ( cd "$repo" \
+        && printf 'a\n' > own.txt && git add own.txt \
+        && git "${git_id[@]}" commit -qm "feat: own change (FEATURE#100)" )
+    local own_base own_head
+    own_base="$(cd "$repo" && git rev-parse HEAD~1)"
+    own_head="$(cd "$repo" && git rev-parse HEAD)"
+
+    local own_out own_path
+    own_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" 2026-01-01-FEATURE-100-sample.md "$own_base" "$own_head" 2>"$TEST_ROOT/own.stderr")"
+    own_path="$(printf '%s\n' "$own_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if [[ ! -s "$TEST_ROOT/own.stderr" ]] && ! grep -q "Foreign-ticket" "$own_path"; then
+        pass "review-package: same-ticket range produces no warning"
+    else
+        fail "review-package: same-ticket range produces no warning"
+        echo "    stderr: $(cat "$TEST_ROOT/own.stderr")"
+    fi
+
+    ( cd "$repo" \
+        && printf 'b\n' > foreign.txt && git add foreign.txt \
+        && git "${git_id[@]}" commit -qm "fix: unrelated change (FEATURE#200)" )
+    local mixed_head
+    mixed_head="$(cd "$repo" && git rev-parse HEAD)"
+
+    local mixed_out mixed_path
+    mixed_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" 2026-01-01-FEATURE-100-sample.md "$own_base" "$mixed_head" 2>"$TEST_ROOT/mixed.stderr")"
+    mixed_path="$(printf '%s\n' "$mixed_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if grep -q "FEATURE#200" "$TEST_ROOT/mixed.stderr" && grep -q "Foreign-ticket" "$mixed_path"; then
+        pass "review-package: foreign-ticket commit triggers stderr warning and output-file warning block"
+    else
+        fail "review-package: foreign-ticket commit triggers stderr warning and output-file warning block"
+        echo "    stderr: $(cat "$TEST_ROOT/mixed.stderr")"
+    fi
+
+    cat > "$repo/no-ticket-plan.md" <<'PLAN'
+# Untracked plan
+
+## Task 1: Sample
+
+Do the thing.
+PLAN
+    local notick_out notick_path
+    notick_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" no-ticket-plan.md "$own_base" "$mixed_head" 2>"$TEST_ROOT/notick.stderr")"
+    notick_path="$(printf '%s\n' "$notick_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if [[ ! -s "$TEST_ROOT/notick.stderr" ]] && ! grep -q "Foreign-ticket" "$notick_path"; then
+        pass "review-package: plan with no identifiable ticket skips the check"
+    else
+        fail "review-package: plan with no identifiable ticket skips the check"
+        echo "    stderr: $(cat "$TEST_ROOT/notick.stderr")"
+    fi
+
     # --- Worktree isolation: a linked worktree resolves its own workspace ---
     local wt="$TEST_ROOT/wt"
     ( cd "$repo" && git worktree add -q "$wt" -b wt-feature )
