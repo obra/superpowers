@@ -46,15 +46,27 @@ plan_base=$(basename "$plan")
 plan_tail=$(printf '%s' "$plan_base" | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
 own_ticket_raw=$(printf '%s' "$plan_tail" | grep -oE "$ticket_regex" | head -n1 || true)
 
+# Best-effort heuristic: matches any letters+digits token that looks like a
+# ticket ID, so an unrelated alphanumeric token (sha256, iso8601, ...) in a
+# commit subject with no real ticket ref can rarely produce a false-alarm
+# warning. Non-fatal, so the cost of a false positive is one spurious line.
 foreign_block=""
 if [ -n "$own_ticket_raw" ]; then
   own_ticket=$(normalize_ticket "$own_ticket_raw")
   while IFS=$'\t' read -r hash subject; do
     [ -n "$hash" ] || continue
-    match=$(printf '%s' "$subject" | grep -oE "$ticket_regex" | head -n1 || true)
-    [ -n "$match" ] || continue
-    if [ "$(normalize_ticket "$match")" != "$own_ticket" ]; then
-      foreign_block="${foreign_block}$(printf '%s\t%s\n' "$hash" "$subject")"
+    own_seen=0
+    other=""
+    while IFS= read -r m; do
+      [ -n "$m" ] || continue
+      if [ "$(normalize_ticket "$m")" = "$own_ticket" ]; then
+        own_seen=1
+        break
+      fi
+      [ -n "$other" ] || other=$m
+    done < <(printf '%s' "$subject" | grep -oE "$ticket_regex" || true)
+    if [ "$own_seen" -eq 0 ] && [ -n "$other" ]; then
+      foreign_block="${foreign_block}${hash}"$'\t'"${subject}"$'\n'
     fi
   done < <(git log --format='%h%x09%s' "${base}..${head}")
 fi

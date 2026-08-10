@@ -207,6 +207,23 @@ PLAN
         echo "    stderr: $(cat "$TEST_ROOT/mixed.stderr")"
     fi
 
+    ( cd "$repo" \
+        && printf 'c\n' > foreign2.txt && git add foreign2.txt \
+        && git "${git_id[@]}" commit -qm "chore: another unrelated change (BUG-300)" )
+    local multi_head
+    multi_head="$(cd "$repo" && git rev-parse HEAD)"
+
+    local multi_out multi_path
+    multi_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" 2026-01-01-FEATURE-100-sample.md "$own_base" "$multi_head" 2>"$TEST_ROOT/multi.stderr")"
+    multi_path="$(printf '%s\n' "$multi_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if grep -q "^[a-f0-9]\+	fix: unrelated change (FEATURE#200)$" "$TEST_ROOT/multi.stderr" \
+        && grep -q "^[a-f0-9]\+	chore: another unrelated change (BUG-300)$" "$TEST_ROOT/multi.stderr"; then
+        pass "review-package: two foreign-ticket commits each appear on their own line"
+    else
+        fail "review-package: two foreign-ticket commits each appear on their own line"
+        echo "    stderr: $(cat "$TEST_ROOT/multi.stderr")"
+    fi
+
     cat > "$repo/no-ticket-plan.md" <<'PLAN'
 # Untracked plan
 
@@ -222,6 +239,22 @@ PLAN
     else
         fail "review-package: plan with no identifiable ticket skips the check"
         echo "    stderr: $(cat "$TEST_ROOT/notick.stderr")"
+    fi
+
+    ( cd "$repo" \
+        && printf 'd\n' > noref.txt && git add noref.txt \
+        && git "${git_id[@]}" commit -qm "chore: tidy up formatting" )
+    local noref_head
+    noref_head="$(cd "$repo" && git rev-parse HEAD)"
+
+    local noref_out noref_path
+    noref_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" 2026-01-01-FEATURE-100-sample.md "$noref_head~1" "$noref_head" 2>"$TEST_ROOT/noref.stderr")"
+    noref_path="$(printf '%s\n' "$noref_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if [[ ! -s "$TEST_ROOT/noref.stderr" ]] && ! grep -q "Foreign-ticket" "$noref_path"; then
+        pass "review-package: commit with no ticket reference at all is never flagged"
+    else
+        fail "review-package: commit with no ticket reference at all is never flagged"
+        echo "    stderr: $(cat "$TEST_ROOT/noref.stderr")"
     fi
 
     # --- Worktree isolation: a linked worktree resolves its own workspace ---
