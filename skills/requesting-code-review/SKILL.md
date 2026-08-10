@@ -25,9 +25,15 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **1. Get git SHAs:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
+BASE_SHA=$(git merge-base origin/main HEAD)  # or HEAD~1 for a single commit
 HEAD_SHA=$(git rev-parse HEAD)
 ```
+
+`BASE_SHA` must be an **ancestor** of `HEAD_SHA`, because the reviewer diffs `BASE_SHA..HEAD_SHA`
+(two dots). A moving ref like `origin/main` is not an ancestor once `main` advances, and two-dot
+compares tip-to-tip — so everything `main` gained after you branched is shown to the reviewer as
+**deletions your branch appears to be making**. `git merge-base` is an ancestor by definition, so the
+diff matches what GitHub's Files-changed tab shows.
 
 **2. Dispatch code reviewer subagent:**
 
