@@ -270,6 +270,18 @@ needed.
   call. Use the BASE you recorded before dispatching the implementer —
   never `HEAD~1`, which silently truncates multi-commit tasks. Never
   dispatch a task reviewer without a diff file.
+- `review-package` warns — non-fatally, on stderr and in a header section
+  of the output file — when `BASE..HEAD` contains a commit whose message
+  references a different ticket ID than the plan file's own. On a shared,
+  non-worktree-isolated checkout, other sessions can land unrelated
+  commits in that window; a review package that silently includes them
+  wastes the reviewer's attention on work outside this task's scope. When
+  the warning fires: re-scope (a narrower BASE, or a path-filtered diff)
+  before dispatching the reviewer, or — if the inclusion is genuinely
+  intentional, e.g. a deliberate merge of a finished sibling branch —
+  proceed and say so in the reviewer dispatch. A plan file with no
+  identifiable ticket ID in its name is unaffected; the check only runs
+  when one is found.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
   constraints that bind the task.
