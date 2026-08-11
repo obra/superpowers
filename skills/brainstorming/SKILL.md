@@ -71,6 +71,9 @@ artifact, never the approval.
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
 | "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
 | "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
+| "The checklist says to ask questions, so I should ask one now" | Questions resolve material ambiguity after orientation; they are not a required ceremony. |
+| "My human partner must choose the technical parameters" | Own expert design choices. Recommend a default with context; ask only for product preferences or authority decisions. |
+| "A precise threshold makes the design rigorous" | Precision without evidence is invented policy. Name the metric and what evidence or product decision would establish the bound. |
 
 ## Checklist
 
@@ -86,21 +89,23 @@ your path and complete them in order.
 
 **Bounded:**
 1. **Explore project context** — check files, docs, recent commits
-2. **Ask clarifying questions** — one at a time, the ones that matter
-3. **Present short design in chat** — approach, files touched, testing
-4. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate
-5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
+2. **Orient your human partner** — summarize the goal, constraints, inferred preferences, success criteria, hard parts, and decisions ahead
+3. **Ask clarifying questions** — one at a time, only the ones that materially change the design and cannot be resolved from context
+4. **Present short design in chat** — approach, files touched, testing
+5. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate
+6. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
 
 **Architectural:**
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+2. **Orient your human partner** — summarize the goal, constraints, inferred preferences, success criteria, hard parts, and decisions ahead
+3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, only the ones that materially change the design and cannot be resolved from context
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -113,7 +118,9 @@ digraph brainstorming {
     "Human approves?" [shape=diamond];
     "Investigate; report recommendation" [shape=doublecircle];
     "Implement via normal workflow (no plan doc)" [shape=doublecircle];
+    "Explore existing flow" [shape=box];
     "Explore project context" [shape=box];
+    "Orient: goals, criteria, challenges, decisions" [shape=box];
     "Ask clarifying questions" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
@@ -125,15 +132,18 @@ digraph brainstorming {
     "Hidden complexity? Upgrade path" [shape=box];
 
     "Classify: spike / bounded / architectural" -> "Present question + probe (2-3 sentences)" [label="spike"];
-    "Classify: spike / bounded / architectural" -> "Ask clarifying questions (bounded)" [label="bounded"];
+    "Classify: spike / bounded / architectural" -> "Explore existing flow" [label="bounded"];
     "Classify: spike / bounded / architectural" -> "Explore project context" [label="architectural"];
     "Present question + probe (2-3 sentences)" -> "Human approves?";
+    "Explore existing flow" -> "Orient: goals, criteria, challenges, decisions";
+    "Orient: goals, criteria, challenges, decisions" -> "Ask clarifying questions (bounded)" [label="bounded"];
     "Ask clarifying questions (bounded)" -> "Present short design in chat";
     "Present short design in chat" -> "Human approves?";
     "Human approves?" -> "Investigate; report recommendation" [label="spike: yes"];
     "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
     "Hidden complexity? Upgrade path" -> "Classify: spike / bounded / architectural";
-    "Explore project context" -> "Ask clarifying questions";
+    "Explore project context" -> "Orient: goals, criteria, challenges, decisions";
+    "Orient: goals, criteria, challenges, decisions" -> "Ask clarifying questions" [label="architectural"];
     "Ask clarifying questions" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
@@ -166,21 +176,28 @@ is the whole process.
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
+- Before the first design question, orient your human partner. Synthesize what you understand: goals, constraints, preferences demonstrated in the conversation, candidate success criteria, hard parts, decisions ahead, and your likely direction. Scale this to the path: one or two sentences for bounded work, a short section for architectural work.
+- Classify unknowns before asking about them:
+  1. **Discoverable facts** — inspect the code, docs, or environment yourself.
+  2. **Expert design choices** — recommend a default and explain the trade-offs.
+  3. **Product, preference, or authority choices** — ask your human partner after supplying enough context to make the choice meaningful.
+- Ask a question only when its answer materially changes the design and you cannot responsibly infer or discover it. Explain why the decision matters, the viable options and consequences, and which option you recommend based on your human partner's expressed preferences.
+- "One question per message" is a maximum, not a quota. Do not turn discovery into a serial questionnaire.
+- If your human partner asks you to lead, says they lack context, or asks for a proposal, present a coherent default design; do not ask them to invent technical parameters.
 - Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+- Ground success criteria. Distinguish established requirements, proposed criteria, and unresolved product policy. Never invent a precise threshold without evidence; name the metric and explain what evidence or decision would establish its bound.
 
 **Exploring approaches:**
 
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+- Lead with your recommended option and explain why it fits the goals, constraints, and preferences already expressed
 - YAGNI ruthlessly - remove unnecessary features from every approach and design
 
 **Presenting the design:**
 
 - Once you believe you understand what you're building, present the design
+- Start with the design frame — goals/non-goals, success criteria, key challenges, and the important decisions — before component details
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
