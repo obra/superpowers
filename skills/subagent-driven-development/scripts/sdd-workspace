@@ -3,7 +3,7 @@
 # short-lived artifacts: task briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
-# One directory per plan (.superpowers/sdd/<plan-basename>/) so a follow-up
+# One directory per plan (.superpowers/sdd/<plan-slug>/) so a follow-up
 # plan in the same working tree can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
@@ -28,11 +28,33 @@ fi
 plan=$1
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-slug=$(basename "$plan" .md)
+root=$(git rev-parse --show-toplevel)
+root_named=$(cd "$(git rev-parse --show-cdup)." && pwd -L)
+
+# Slug from the plan's path relative to the repo root, not its basename:
+# foldered plans (docs/alpha/plan.md and docs/beta/plan.md) both slug to
+# "plan" otherwise. Two spellings of one name (docs/alpha/plan.md and
+# docs/alpha-plan.md) still share a slug; any single-character join is
+# ambiguous, since / is the one byte a filename cannot hold.
+#
+# Strip like against like. The caller's spelling against the tree as the
+# caller names it covers a symlinked directory inside the tree; the resolved
+# path against the resolved tree covers an absolute path given in resolved
+# form. Mixing the two makes the slug depend on which symlink was crossed.
+plan_dir=$(dirname "$plan")
+plan_file=$(basename "$plan")
+named="$(cd "$plan_dir" && pwd -L)/$plan_file"
+resolved="$(cd "$plan_dir" && pwd -P)/$plan_file"
+
+rel=""
+case "$named" in "$root_named"/*) rel=${named#"$root_named"/} ;; esac
+if [ -z "$rel" ]; then
+  case "$resolved" in "$root"/*) rel=${resolved#"$root"/} ;; esac
+fi
+[ -n "$rel" ] || { echo "plan file is outside the repository: $plan" >&2; exit 2; }
+slug=$(printf '%s' "${rel%.md}" | tr '/' '-')
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
-
-root=$(git rev-parse --show-toplevel)
 base="$root/.superpowers/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"

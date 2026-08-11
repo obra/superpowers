@@ -70,15 +70,27 @@ PLAN
         echo "    exit: $rc"
     fi
 
+    printf '# Outside\n' > "$TEST_ROOT/outside.md"
+    local outside_err
+    rc=0
+    outside_err="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" "$TEST_ROOT/outside.md" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 2 && "$outside_err" == *"outside the repository"* ]]; then
+        pass "sdd-workspace with a plan outside the repo errors with exit 2"
+    else
+        fail "sdd-workspace with a plan outside the repo errors with exit 2"
+        echo "    exit: $rc"
+        echo "    err:  $outside_err"
+    fi
+
     # --- per-plan resolution ---
     local dir_a dir_b
     dir_a="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" plan-a.md)"
     dir_b="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" plan-b.md)"
 
     if [[ "$dir_a" == "$repo/.superpowers/sdd/plan-a" ]]; then
-        pass "prints <repo-root>/.superpowers/sdd/<plan-basename>"
+        pass "prints <repo-root>/.superpowers/sdd/<plan-slug>"
     else
-        fail "prints <repo-root>/.superpowers/sdd/<plan-basename>"
+        fail "prints <repo-root>/.superpowers/sdd/<plan-slug>"
         echo "    got: $dir_a"
     fi
 
@@ -187,6 +199,110 @@ PLAN
     else
         fail "worktree workspace invisible to git status"
         echo "    status: $wt_status"
+    fi
+
+    # --- Foldered plans: one directory per plan path, not per basename ---
+    mkdir -p "$repo/docs/alpha" "$repo/docs/beta"
+    cat > "$repo/docs/alpha/plan.md" <<'PLAN'
+# Alpha
+
+## Task 1: Alpha thing
+
+Alpha requirements: MAGIC_CONST=7.
+PLAN
+    cat > "$repo/docs/beta/plan.md" <<'PLAN'
+# Beta
+
+## Task 1: Beta thing
+
+Beta requirements.
+PLAN
+
+    local dir_alpha dir_beta
+    dir_alpha="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" docs/alpha/plan.md)"
+    dir_beta="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" docs/beta/plan.md)"
+
+    if [[ "$dir_alpha" == "$repo/.superpowers/sdd/docs-alpha-plan" \
+       && "$dir_beta" == "$repo/.superpowers/sdd/docs-beta-plan" \
+       && -d "$dir_alpha" && -d "$dir_beta" ]]; then
+        pass "plans sharing a basename resolve to distinct directories"
+    else
+        fail "plans sharing a basename resolve to distinct directories"
+        echo "    alpha: $dir_alpha"
+        echo "    beta:  $dir_beta"
+    fi
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" docs/alpha/plan.md 1 >/dev/null )
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" docs/beta/plan.md 1 >/dev/null )
+    if grep -q 'MAGIC_CONST=7' "$dir_alpha/task-1-brief.md" 2>/dev/null; then
+        pass "a second plan's task-brief leaves the first plan's brief intact"
+    else
+        fail "a second plan's task-brief leaves the first plan's brief intact"
+        echo "    alpha brief: $(cat "$dir_alpha/task-1-brief.md" 2>/dev/null || echo '<missing>')"
+    fi
+
+    # --- A name that strips to a degenerate slug is rejected, not built ---
+    # Asserts the message too: three separate paths exit 2, so the code alone
+    # would pass this test for the wrong reason.
+    printf '# Dot\n' > "$repo/..md"
+    local degenerate_err
+    rc=0
+    degenerate_err="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" ..md 2>&1 >/dev/null)" || rc=$?
+    rm -f "$repo/..md"
+    if [[ "$rc" -eq 2 && "$degenerate_err" == *"cannot derive a workspace name"* ]]; then
+        pass "a plan whose slug would be '.' errors with exit 2"
+    else
+        fail "a plan whose slug would be '.' errors with exit 2"
+        echo "    exit: $rc"
+        echo "    err:  $degenerate_err"
+    fi
+
+    # --- Symlinks: the slug follows the spelling, wherever the link points ---
+    mkdir -p "$TEST_ROOT/shared-specs" "$repo/real-specs"
+    cat > "$TEST_ROOT/shared-specs/plan.md" <<'PLAN'
+# Shared
+
+## Task 1: Shared thing
+
+Shared requirements.
+PLAN
+    cp "$TEST_ROOT/shared-specs/plan.md" "$repo/real-specs/plan.md"
+    ln -s "$TEST_ROOT/shared-specs" "$repo/linked-out"
+    ln -s "$repo/real-specs" "$repo/linked-in"
+
+    local dir_out dir_in
+    rc=0
+    dir_out="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" linked-out/plan.md 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$dir_out" == "$repo/.superpowers/sdd/linked-out-plan" ]]; then
+        pass "a plan under a symlink pointing outside the tree resolves by spelling"
+    else
+        fail "a plan under a symlink pointing outside the tree resolves by spelling"
+        echo "    exit: $rc"
+        echo "    got:  $dir_out"
+    fi
+
+    rc=0
+    dir_in="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" linked-in/plan.md 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$dir_in" == "$repo/.superpowers/sdd/linked-in-plan" ]]; then
+        pass "a plan under a symlink pointing inside the tree resolves by spelling"
+    else
+        fail "a plan under a symlink pointing inside the tree resolves by spelling"
+        echo "    exit: $rc"
+        echo "    got:  $dir_in"
+    fi
+
+    # --- The same tree reached through a symlinked prefix resolves alike ---
+    ln -s "$repo" "$TEST_ROOT/link-to-repo"
+    local dir_via_link
+    rc=0
+    dir_via_link="$(cd "$TEST_ROOT/link-to-repo" && "$SDD_SCRIPTS/sdd-workspace" linked-out/plan.md 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$dir_via_link" == "$dir_out" ]]; then
+        pass "a tree reached through a symlink resolves to the same workspace"
+    else
+        fail "a tree reached through a symlink resolves to the same workspace"
+        echo "    exit:   $rc"
+        echo "    direct: $dir_out"
+        echo "    linked: $dir_via_link"
     fi
 
     echo ""
