@@ -73,13 +73,16 @@ Subagent (general-purpose):
     ## Tests
 
     The implementer already ran the tests and reported results with TDD
-    evidence for exactly this code. Do not re-run the suite to confirm their
-    report. Run a test only when reading the code raises a specific doubt
-    that no existing run answers — and then a focused test, never a
-    package-wide suite, race detector run, or repeated/high-count loop. If
-    heavy validation seems warranted, recommend it in your report instead of
-    running it. If you cannot run commands in this environment, name the
-    test you would run.
+    evidence for exactly this code. That fresh, task-specific run is the
+    verification evidence for this review: inspect the reported command and
+    result against the diff rather than duplicating the full suite. Do not
+    re-run the suite to confirm their report. Run a test only when reading
+    the code raises a specific doubt that no existing run answers — and then
+    a focused test, never a package-wide suite, race detector run, or
+    repeated/high-count loop. If heavy validation seems warranted, recommend
+    it in your report instead of running it. If you cannot run commands in
+    this environment, name the test you would run. This task-review
+    exception does not replace verification at the final completion boundary.
 
     Warnings or other noise in the implementer's reported test output are
     findings — test output should be pristine.

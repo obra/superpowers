@@ -35,6 +35,13 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+When reviewing a task implementation, reviewing the implementer's fresh,
+task-specific verification evidence against the diff satisfies the reviewer's
+evidence check; the reviewer does not need to duplicate the full suite. This
+does not permit stale evidence, skip a focused test when review raises a
+specific doubt, or replace the final verification required before a completion
+claim.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
