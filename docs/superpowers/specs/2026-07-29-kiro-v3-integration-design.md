@@ -90,7 +90,7 @@ kiro-cli chat --agent superpowers --agent-engine v3
 
 ### Installed profile
 
-The global profile has the same tools, resource roles, permissions, prompt, and welcome message. Its resource URIs are absolute because users invoke it from arbitrary project directories. Conceptually, it contains:
+The global profile has the same tools, resource roles, permissions, prompt, and welcome message. Its resource URIs are absolute because users invoke it from arbitrary project directories. The installer produces each global agent by transforming the matching tracked `.kiro/agents/*.md` from the payload — inserting the install root into every resource URI and adding the ownership marker — so the tracked files remain the single source of truth and cannot drift from what is installed. Conceptually, it contains:
 
 ```yaml
 resources:
@@ -118,7 +118,7 @@ Model tiering is expressed by choosing a worker, not by passing a model per disp
 
 **Rejected:** one worker per skill role, which multiplies configs without adding capability; a per-dispatch model argument, which is not reliably honored; and a third read-only worker for review dispatches, which would enforce the review template's read-only promise at config level but exceeds the agreed two workers, and one worker must serve implementers that legitimately write. The read-only constraint stays prose in the template, as upstream intends.
 
-**Accepted costs:** the installer grew from 75 to 116 non-comment lines and manages three agent files instead of one.
+**Accepted costs:** the installer manages three agent files instead of one. It generates all three by transforming the tracked profiles rather than embedding copies, which keeps it around 95 non-comment lines.
 
 ### Startup and skill activation
 
@@ -185,11 +185,11 @@ The implementation should remain roughly 100 lines of straightforward POSIX shel
 3. Refuse when a same-named `.json` config sits beside a managed Markdown agent.
 4. Refuse an existing payload directory that lacks the ownership marker.
 5. Download and extract the release into a temporary directory over HTTPS only.
-6. Validate the required agent, bootstrap, mapping, and skill files.
+6. Validate the required agent, worker, bootstrap, mapping, and skill files.
 7. Confirm that the archive's declared version matches the selected tag after normalizing the tag's `v` prefix.
 8. Add the ownership/version marker to the staged payload.
 9. Replace the single managed payload directory.
-10. Generate the three agents, each into a temporary file renamed into place.
+10. Generate the three global agents by transforming the tracked `.kiro/agents/*.md` shipped in the payload — inserting the install root into each resource URI and adding the ownership marker — rather than embedding copies. Each is written to a temporary file renamed into place.
 11. Print the command that starts the Superpowers agent.
 
 All refusals precede tag resolution and the download, so a refused run leaves the filesystem untouched. Staging ensures that download or extraction failures do not damage an existing installation. Because the staged payload already contains its ownership marker, an interruption after payload replacement remains recognizable as managed state and a rerun can repair the installation. The script does not implement multi-destination transaction coordination or retained rollback state.

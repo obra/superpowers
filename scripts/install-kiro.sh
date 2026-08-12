@@ -61,8 +61,8 @@ version="${tag#v}"
 
 work_dir="${TMPDIR:-/tmp}/superpowers-kiro.$$"
 (umask 077 && mkdir "$work_dir") || die "cannot create temporary directory"
-agent_tmp="$agent_path.tmp.$$"
-cleanup() { rm -rf "$work_dir"; rm -f "$agent_tmp" "$worker_default_model_path.tmp.$$" "$worker_lite_model_path.tmp.$$"; }
+agents_dir="$HOME/.kiro/agents"
+cleanup() { rm -rf "$work_dir"; rm -f "$agents_dir"/*.tmp.$$; }
 trap cleanup 0
 trap 'exit 1' 1 2 15
 
@@ -74,6 +74,8 @@ source_root="$work_dir/superpowers-$version"
 for required in \
   package.json \
   .kiro/agents/superpowers.md \
+  .kiro/agents/superpowers-worker-default-model.md \
+  .kiro/agents/superpowers-worker-lite-model.md \
   skills/using-superpowers/SKILL.md \
   skills/using-superpowers/references/kiro-tools.md \
   skills/brainstorming/SKILL.md; do
@@ -87,59 +89,31 @@ mkdir -p "$(dirname "$install_root")" "$(dirname "$agent_path")"
 rm -rf "$install_root"
 mv "$source_root" "$install_root"
 
-(umask 077 && : >"$agent_tmp")
-cat >"$agent_tmp" <<EOF
----
-description: Superpowers-enabled agent with native Kiro v3 skill activation for brainstorming, TDD, debugging, planning, and review.
-tools: ["*"]
-resources:
-  - "file://$install_root/skills/using-superpowers/SKILL.md"
-  - "file://$install_root/skills/using-superpowers/references/kiro-tools.md"
-  - "skill://$install_root/skills/**/SKILL.md"
-permissions:
-  rules:
-    - capability: fs_read
-      effect: allow
-    - capability: skill
-      effect: allow
-welcomeMessage: Superpowers is active. Relevant workflow skills load automatically.
----
-
-$AGENT_MARKER
-You are a software-engineering agent that follows the loaded Superpowers bootstrap and Kiro tool-mapping instructions.
-EOF
-mv "$agent_tmp" "$agent_path"
-
-# Neutral workers: skills dispatch a general-purpose subagent and supply the
-# whole persona in the prompt, so these carry no role of their own. They get
-# skill:// discovery so a template may name a skill, but deliberately not the
-# bootstrap resources, whose mandate would compete with the template.
-write_worker() {
-  worker_path="$1" worker_desc="$2" worker_model="$3"
-  worker_tmp="$worker_path.tmp.$$"
-  (umask 077 && : >"$worker_tmp")
-  {
-    printf '%s\n' '---'
-    printf 'description: "%s"\n' "$worker_desc"
-    printf '%s\n' 'tools: ["*"]'
-    if [ -n "$worker_model" ]; then printf 'model: %s\n' "$worker_model"; fi
-    printf '%s\n' 'resources:' \
-      "  - \"skill://$install_root/skills/**/SKILL.md\"" \
-      'permissions:' '  rules:' '    - capability: fs_read' \
-      '      effect: allow' '    - capability: skill' '      effect: allow' '---' ''
-    printf '%s\n' "$AGENT_MARKER"
-    printf '%s\n' 'Execute the dispatching prompt exactly as given. That prompt is the complete'
-    printf '%s\n' 'specification of your role, process, and output format. Add no persona, no'
-    printf '%s\n' 'checklist, and no output conventions of your own.'
-  } >"$worker_tmp"
-  mv "$worker_tmp" "$worker_path"
+# Generate each global agent from the tracked profile shipped in the payload,
+# instead of embedding a second copy here. The only differences from the tracked
+# file are absolute resource URIs (Kiro loads the global agent from unrelated
+# project directories, so relative URIs would not resolve) and the ownership
+# marker used by the collision guard. Keeping the tracked `.kiro/agents/*.md` as
+# the single source means the installed agents cannot drift from them.
+generate_agent() {
+  name="$1"
+  src="$install_root/.kiro/agents/$name.md"
+  dest="$HOME/.kiro/agents/$name.md"
+  tmp="$dest.tmp.$$"
+  [ -f "$src" ] || die "payload is missing agent $name.md"
+  (umask 077 && : >"$tmp")
+  awk -v root="$install_root" -v marker="$AGENT_MARKER" '
+    /^---$/ { print; fm++; if (fm == 2) print marker; next }
+    fm == 1 && /^[[:space:]]*-[[:space:]]+(file|skill):\/\// {
+      sub(/:\/\//, "://" root "/"); print; next
+    }
+    { print }
+  ' "$src" >"$tmp"
+  mv "$tmp" "$dest"
 }
-write_worker "$worker_default_model_path" \
-  'Neutral executor for Superpowers skill templates, on the model Kiro resolves by default. Dispatch this when a skill asks for a general-purpose subagent.' \
-  ''
-write_worker "$worker_lite_model_path" \
-  'Neutral executor for Superpowers skill templates, pinned to a cheaper model for mechanical, fully specified work.' \
-  'claude-sonnet-5'
+for name in superpowers superpowers-worker-default-model superpowers-worker-lite-model; do
+  generate_agent "$name"
+done
 
 printf 'Installed Superpowers %s for Kiro CLI v3.\n' "$version"
 printf 'Start it with: kiro-cli chat --agent superpowers --agent-engine v3\n'

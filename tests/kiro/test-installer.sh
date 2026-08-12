@@ -15,23 +15,38 @@ assert_file_contains() {
   local file="$1" text="$2" label="$3"
   if grep -Fq -- "$text" "$file"; then pass "$label"; else fail "$label"; fi
 }
-assert_file_not_contains() {
-  local file="$1" text="$2" label="$3"
-  if grep -Fq -- "$text" "$file" 2>/dev/null; then fail "$label"; else pass "$label"; fi
-}
 assert_absent() {
   local path="$1" label="$2"
   if [ -e "$path" ]; then fail "$label"; else pass "$label"; fi
 }
-resources_are_present() {
-  local profile="$1" resources="$2"
-  local entry scheme rest
-  while IFS= read -r entry; do
-    [ -n "$entry" ] || continue
-    scheme="${entry%%://*}"
-    rest="${entry#*://}"
-    grep -Fq -- "$scheme://$install_root/$rest" "$profile" || return 1
-  done <<< "$resources"
+# The installed agent must be the tracked repository profile with only two
+# changes: every resource URI made absolute under the install root, and the
+# ownership marker inserted. Stripping those back must reproduce the tracked
+# file byte-for-byte. This one check replaces a pile of hand-picked string
+# assertions and catches any drift — body, frontmatter, or permissions.
+assert_matches_tracked() {
+  local name="$1"
+  local generated="$home/.kiro/agents/$name.md"
+  local tracked="$REPO_ROOT/.kiro/agents/$name.md"
+  if [ ! -f "$generated" ]; then fail "generates $name.md"; return; fi
+  assert_file_contains "$generated" '<!-- Managed by the Superpowers Kiro installer. -->' \
+    "$name.md carries the ownership marker"
+  # Non-vacuity: the transform must change something. If the raw files were
+  # already identical, the normalized comparison below would pass for free.
+  if diff -q "$generated" "$tracked" >/dev/null 2>&1; then
+    fail "$name.md differs from the tracked profile before normalization"
+  else
+    pass "$name.md differs from the tracked profile before normalization"
+  fi
+  local normalized
+  normalized="$(sed -e "s#$install_root/##g" \
+    -e '/^<!-- Managed by the Superpowers Kiro installer\. -->$/d' "$generated")"
+  if [ "$normalized" = "$(cat "$tracked")" ]; then
+    pass "$name.md equals the tracked profile modulo install root and marker"
+  else
+    fail "$name.md equals the tracked profile modulo install root and marker"
+    diff <(printf '%s\n' "$normalized") "$tracked" | sed 's/^/    /' | head -20
+  fi
 }
 
 make_release() {
@@ -40,7 +55,10 @@ make_release() {
   rm -rf "$TEST_ROOT/build-$version"
   mkdir -p "$root/.kiro/agents" "$root/skills/using-superpowers/references"
   cp -R "$REPO_ROOT/skills/." "$root/skills/"
-  cp "$REPO_ROOT/.kiro/agents/superpowers.md" "$root/.kiro/agents/superpowers.md"
+  cp "$REPO_ROOT/.kiro/agents/superpowers.md" \
+     "$REPO_ROOT/.kiro/agents/superpowers-worker-default-model.md" \
+     "$REPO_ROOT/.kiro/agents/superpowers-worker-lite-model.md" \
+     "$root/.kiro/agents/"
   printf '{\n  "name": "superpowers",\n  "version": "%s"\n}\n' "$version" >"$root/package.json"
   printf '%s\n' "$release_marker" >"$root/release-marker.txt"
   tar -czf "$TEST_ROOT/superpowers-$version.tar.gz" -C "$TEST_ROOT/build-$version" "superpowers-$version"
@@ -170,72 +188,27 @@ else
 fi
 
 assert_file_contains "$install_root/.superpowers-kiro-install" "$fixture_version" "records installed version"
-# Every resource the tracked profile declares must appear in the generated one,
-# with the install root prefixed. Asserting the whole list rather than two
-# hand-picked entries: a dropped resource silently costs installed users half
-# the bootstrap, and a partial assertion would not notice.
-tracked_resources="$(awk '
-  /^resources:/ { inside = 1; next }
-  inside && /^  - / { sub(/^  - /, ""); gsub(/"/, ""); print; next }
-  inside { inside = 0 }
-' "$REPO_ROOT/.kiro/agents/superpowers.md")"
-if [ -z "$tracked_resources" ]; then
-  fail "could not read resources from the tracked profile"
-elif resources_are_present "$agent" "$tracked_resources"; then
-  pass "generates every resource declared by the tracked profile"
-else
-  fail "generates every resource declared by the tracked profile"
-fi
-
-# Prove the parity check is non-vacuous: removing just the mapping URI from an
-# otherwise valid generated profile must be detected.
-missing_resource_agent="$TEST_ROOT/generated-agent-missing-resource.md"
-sed '/kiro-tools\.md/d' "$agent" > "$missing_resource_agent"
-if resources_are_present "$missing_resource_agent" "$tracked_resources"; then
-  fail "resource parity detects a missing mapping URI"
-else
-  pass "resource parity detects a missing mapping URI"
-fi
-assert_file_contains "$agent" '<!-- Managed by the Superpowers Kiro installer. -->' "marks generated agent"
-for text in \
-  'tools: ["*"]' \
-  'capability: fs_read' \
-  'capability: skill' \
-  'welcomeMessage: Superpowers is active. Relevant workflow skills load automatically.' \
-  'follows the loaded Superpowers bootstrap and Kiro tool-mapping instructions.'; do
-  assert_file_contains "$agent" "$text" "keeps repository and installed agent semantics aligned"
-done
+# The installed main agent must be the tracked profile with only absolute
+# resource URIs and the ownership marker added.
+assert_matches_tracked superpowers
+assert_file_contains "$agent" "file://$install_root/skills/using-superpowers/SKILL.md" \
+  "absolutizes the bootstrap file resource"
+assert_file_contains "$agent" "file://$install_root/skills/using-superpowers/references/kiro-tools.md" \
+  "absolutizes the tool-mapping file resource"
+assert_file_contains "$agent" "skill://$install_root/skills/**/SKILL.md" \
+  "absolutizes the skill discovery glob"
 assert_file_contains "$install_root/release-marker.txt" 'release-123' "installs release payload"
 assert_file_contains "$TEST_ROOT/curl.log" '/archive/refs/tags/v1.2.3.tar.gz' "downloads selected tag"
 
 # Neutral workers give the skills a general-purpose dispatch target, so the
-# reviewer template is not substituted with a purpose-built agent.
+# reviewer template is not substituted with a purpose-built agent. Each is the
+# tracked worker profile with only absolute skill discovery and the marker added.
 worker_default="$home/.kiro/agents/superpowers-worker-default-model.md"
 worker_lite="$home/.kiro/agents/superpowers-worker-lite-model.md"
-for worker in "$worker_default" "$worker_lite"; do
-  label="generates $(basename "$worker")"
-  if [ -f "$worker" ]; then pass "$label"; else fail "$label"; continue; fi
-  assert_file_contains "$worker" 'tools: ["*"]' "$(basename "$worker") grants tools"
-  assert_file_contains "$worker" "skill://$install_root/skills/**/SKILL.md" \
-    "$(basename "$worker") gets absolute skill discovery"
-  assert_file_contains "$worker" 'capability: fs_read' "$(basename "$worker") pre-approves reads"
-  assert_file_contains "$worker" '<!-- Managed by the Superpowers Kiro installer. -->' \
-    "$(basename "$worker") is marked"
-  # The generated body must match the tracked config, which is an independent
-  # copy of the same text.
-  for sentence in \
-    'Execute the dispatching prompt exactly as given. That prompt is the complete' \
-    'specification of your role, process, and output format. Add no persona, no' \
-    'checklist, and no output conventions of your own.'; do
-    assert_file_contains "$worker" "$sentence" "$(basename "$worker") body matches tracked config"
-  done
-  assert_file_not_contains "$worker" 'using-superpowers/SKILL.md' \
-    "$(basename "$worker") must not load the bootstrap"
-done
+assert_matches_tracked superpowers-worker-default-model
+assert_matches_tracked superpowers-worker-lite-model
 assert_file_contains "$worker_lite" 'model: claude-sonnet-5' "lite worker pins the cheaper model"
-if [ ! -f "$worker_default" ]; then
-  fail "default-model worker omits model"
-elif grep -q '^model:' "$worker_default"; then
+if [ -f "$worker_default" ] && grep -q '^model:' "$worker_default"; then
   fail "default-model worker omits model"
 else
   pass "default-model worker omits model"
