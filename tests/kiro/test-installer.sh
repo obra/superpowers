@@ -15,6 +15,14 @@ assert_file_contains() {
   local file="$1" text="$2" label="$3"
   if grep -Fq -- "$text" "$file"; then pass "$label"; else fail "$label"; fi
 }
+assert_file_not_contains() {
+  local file="$1" text="$2" label="$3"
+  if grep -Fq -- "$text" "$file" 2>/dev/null; then fail "$label"; else pass "$label"; fi
+}
+assert_absent() {
+  local path="$1" label="$2"
+  if [ -e "$path" ]; then fail "$label"; else pass "$label"; fi
+}
 
 make_release() {
   local version="$1" release_marker="$2"
@@ -102,6 +110,39 @@ done
 assert_file_contains "$install_root/release-marker.txt" 'release-620' "installs release payload"
 assert_file_contains "$TEST_ROOT/curl.log" '/archive/refs/tags/v6.2.0.tar.gz' "downloads selected tag"
 
+# Neutral workers give the skills a general-purpose dispatch target, so the
+# reviewer template is not substituted with a purpose-built agent.
+worker_default="$home/.kiro/agents/superpowers-worker-default-model.md"
+worker_lite="$home/.kiro/agents/superpowers-worker-lite-model.md"
+for worker in "$worker_default" "$worker_lite"; do
+  label="generates $(basename "$worker")"
+  if [ -f "$worker" ]; then pass "$label"; else fail "$label"; continue; fi
+  assert_file_contains "$worker" 'tools: ["*"]' "$(basename "$worker") grants tools"
+  assert_file_contains "$worker" "skill://$install_root/skills/**/SKILL.md" \
+    "$(basename "$worker") gets absolute skill discovery"
+  assert_file_contains "$worker" 'capability: fs_read' "$(basename "$worker") pre-approves reads"
+  assert_file_contains "$worker" '<!-- Managed by the Superpowers Kiro installer. -->' \
+    "$(basename "$worker") is marked"
+  # The generated body must match the tracked config, which is an independent
+  # copy of the same text.
+  for sentence in \
+    'Execute the dispatching prompt exactly as given. That prompt is the complete' \
+    'specification of your role, process, and output format. Add no persona, no' \
+    'checklist, and no output conventions of your own.'; do
+    assert_file_contains "$worker" "$sentence" "$(basename "$worker") body matches tracked config"
+  done
+  assert_file_not_contains "$worker" 'using-superpowers/SKILL.md' \
+    "$(basename "$worker") must not load the bootstrap"
+done
+assert_file_contains "$worker_lite" 'model: claude-sonnet-5' "lite worker pins the cheaper model"
+if [ ! -f "$worker_default" ]; then
+  fail "default-model worker omits model"
+elif grep -q '^model:' "$worker_default"; then
+  fail "default-model worker omits model"
+else
+  pass "default-model worker omits model"
+fi
+
 archive_630="$(make_release 6.3.0 release-630)"
 if run_installer "$home" "$archive_630" v6.3.0 >/dev/null 2>&1; then
   pass "replaces a managed installation"
@@ -140,6 +181,38 @@ else
   pass "refuses unmanaged payload collision"
 fi
 assert_file_contains "$unmanaged_payload_home/data/superpowers/kiro/personal.txt" 'personal payload content' "preserves unmanaged payload"
+
+unmanaged_worker_home="$TEST_ROOT/unmanaged-worker-home"
+mkdir -p "$unmanaged_worker_home/.kiro/agents"
+printf '%s\n' 'personal worker content' \
+  >"$unmanaged_worker_home/.kiro/agents/superpowers-worker-lite-model.md"
+if run_installer "$unmanaged_worker_home" "$archive_620" v6.2.0 >/dev/null 2>&1; then
+  fail "refuses unmanaged worker collision"
+else
+  pass "refuses unmanaged worker collision"
+fi
+assert_file_contains "$unmanaged_worker_home/.kiro/agents/superpowers-worker-lite-model.md" \
+  'personal worker content' "preserves unmanaged worker"
+# The guard runs before the download, so a refusal must install nothing at all.
+assert_absent "$unmanaged_worker_home/data/superpowers/kiro" \
+  "refused run installs no payload"
+assert_absent "$unmanaged_worker_home/.kiro/agents/superpowers.md" \
+  "refused run creates no main agent"
+assert_absent "$unmanaged_worker_home/.kiro/agents/superpowers-worker-default-model.md" \
+  "refused run creates no other worker"
+
+# Both worker paths must be guarded, not just the one.
+unmanaged_default_home="$TEST_ROOT/unmanaged-default-home"
+mkdir -p "$unmanaged_default_home/.kiro/agents"
+printf '%s\n' 'personal default worker content' \
+  >"$unmanaged_default_home/.kiro/agents/superpowers-worker-default-model.md"
+if run_installer "$unmanaged_default_home" "$archive_620" v6.2.0 >/dev/null 2>&1; then
+  fail "refuses unmanaged default-model worker collision"
+else
+  pass "refuses unmanaged default-model worker collision"
+fi
+assert_file_contains "$unmanaged_default_home/.kiro/agents/superpowers-worker-default-model.md" \
+  'personal default worker content' "preserves unmanaged default-model worker"
 
 invalid_home="$TEST_ROOT/invalid-home"
 mkdir -p "$invalid_home"

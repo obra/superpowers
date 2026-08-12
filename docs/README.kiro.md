@@ -36,9 +36,35 @@ sh /tmp/install-kiro.sh
 ```
 
 The payload is installed at
-`${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro`. The generated agent is
-`$HOME/.kiro/agents/superpowers.md`. The installer refuses to replace either
-path unless it carries the Superpowers ownership marker.
+`${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro`. The installer generates
+three agents in `$HOME/.kiro/agents`:
+
+| Agent | Purpose |
+|-------|---------|
+| `superpowers.md` | The agent you start sessions with |
+| `superpowers-worker-default-model.md` | Neutral worker for skill dispatches, model resolved by Kiro |
+| `superpowers-worker-lite-model.md` | Neutral worker pinned to `claude-sonnet-5` for mechanical work |
+
+The installer refuses to replace the payload or any of the three agents unless
+they carry the Superpowers ownership marker.
+
+## Worker agents
+
+Superpowers skills dispatch a general-purpose subagent and supply the reviewer
+or implementer persona entirely through a prompt template. The workers exist to
+be that neutral target: they carry no role, no checklist, and no output
+conventions, so the template governs completely. They do carry `skill://`
+discovery and pre-approval for reads and skill loading, because a worker that
+cannot read the code it was asked to review is useless.
+
+Without them, an agent asked to run a code review has no general-purpose target
+and may substitute a purpose-built agent, which silently replaces the template's
+severity calibration and output format with its own.
+
+Choose the tier by choosing the worker. Kiro resolves a subagent's model from
+its agent config, and a per-dispatch model value is not honored on every
+surface. `superpowers-worker-default-model` omits `model`; note that this does
+not necessarily inherit the model of your session.
 
 ## Usage
 
@@ -64,18 +90,27 @@ replaces the one managed payload and does not retain rollback versions.
 
 ## Removal
 
-Inspect both ownership markers before deleting anything:
+Inspect the ownership marker on every managed path before deleting anything:
 
 ```bash
 cat "${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro/.superpowers-kiro-install"
-grep -F '<!-- Managed by the Superpowers Kiro installer. -->' "$HOME/.kiro/agents/superpowers.md"
+for agent in superpowers superpowers-worker-default-model superpowers-worker-lite-model; do
+  grep -FL '<!-- Managed by the Superpowers Kiro installer. -->' \
+    "$HOME/.kiro/agents/$agent.md"
+done
 ```
 
-If both commands show the expected markers, remove only these paths:
+The `grep -FL` loop prints the path of any file that is **missing** the marker.
+It should print nothing. Anything it prints is not managed by the installer —
+do not delete it.
+
+If the marker check printed nothing, remove only these paths:
 
 ```bash
 rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro"
 rm -f "$HOME/.kiro/agents/superpowers.md"
+rm -f "$HOME/.kiro/agents/superpowers-worker-default-model.md"
+rm -f "$HOME/.kiro/agents/superpowers-worker-lite-model.md"
 ```
 
 ## Repository-local development
@@ -106,6 +141,14 @@ native package mechanism.
   published.
 - A tag predating Kiro support cannot be installed because its archive lacks the
   required Kiro files.
+- Model identifiers are not validated when an agent config is written, so a
+  wrong one surfaces only at dispatch time, where it fails loudly. If
+  `superpowers-worker-lite-model` reports a rejected model, replace
+  `claude-sonnet-5` with an identifier your account offers. The pinned default
+  was verified on Kiro CLI 2.16.2; model availability varies by account.
+- The worker agents must appear as dispatchable subagents in your session. The
+  list of available agents is fixed when a session starts, so restart Kiro after
+  installing before expecting skills to dispatch to them.
 
 ## Troubleshooting
 

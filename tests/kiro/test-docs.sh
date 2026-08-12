@@ -22,6 +22,9 @@ for text in \
   'Native Windows is not supported' \
   'Kiro Powers' \
   'Load skill' \
+  'superpowers-worker-default-model' \
+  'superpowers-worker-lite-model' \
+  'claude-sonnet-5' \
   'TUI'; do
   grep -Fq -- "$text" "$DOC" || fail "Kiro guide missing $text"
 done

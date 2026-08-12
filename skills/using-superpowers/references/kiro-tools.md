@@ -58,11 +58,50 @@ Skills such as `subagent-driven-development`, `dispatching-parallel-agents`, and
 
 1. Read the referenced template.
 2. Fill every placeholder with the task's actual context.
-3. Dispatch it with Kiro's subagent capability.
+3. Dispatch it to a neutral worker — `superpowers-worker-default-model`, or
+   `superpowers-worker-lite-model` for the cheap tier — passing the filled template as
+   the prompt. Never dispatch a general-purpose template to a purpose-built agent.
 4. Parallelize independent tasks only.
 
 If subagents or todo lists are unavailable in a session, follow the equivalent
 workflow inline rather than blocking.
+
+### General-purpose dispatch targets
+
+Templates dispatch `Subagent (general-purpose):` and supply the entire persona,
+checklist, and output format in the prompt. The template *is* the worker's role.
+Kiro's other agents are purpose-built: they carry their own instructions and
+output contracts, which compete with the template and usually win.
+
+Two neutral workers exist for this:
+
+| Dispatch case | Kiro agent |
+|---------------|------------|
+| `Subagent (general-purpose):` | `superpowers-worker-default-model` |
+| Cheap tier for mechanical, fully specified work | `superpowers-worker-lite-model` |
+
+Dispatch a worker and pass the filled template as the prompt. The workers carry
+`skill://` discovery, so a template may tell a worker to load a skill, but they
+carry no bootstrap and no role of their own.
+
+**Never substitute a purpose-built agent** such as a named reviewer or coder for
+a general-purpose dispatch. Doing so silently discards the template's checklist,
+severity calibration, read-only constraints, and output format. If neither worker
+is available, say so and stop rather than substituting.
+
+If a worker dispatch fails because its pinned model is rejected, fall back to
+`superpowers-worker-default-model` — never to a purpose-built agent — and report
+the rejected identifier.
+
+### Model tiers
+
+Pick the tier by choosing the worker, not by passing a model argument. Kiro
+resolves a subagent's model from its agent config; a per-dispatch model value is
+not honored on every surface and can be dropped silently.
+
+`superpowers-worker-default-model` omits `model`, so Kiro resolves it. Note that
+this does not necessarily inherit the parent session's model. When a skill calls
+for a cheaper tier, dispatch `superpowers-worker-lite-model`.
 
 ## Conventions
 

@@ -13,10 +13,14 @@ done
 
 install_root="${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro"
 agent_path="$HOME/.kiro/agents/superpowers.md"
-if { [ -e "$agent_path" ] || [ -L "$agent_path" ]; } \
-  && ! grep -Fq "$AGENT_MARKER" "$agent_path" 2>/dev/null; then
-  die "refusing to overwrite unmanaged agent: $agent_path"
-fi
+worker_default_model_path="$HOME/.kiro/agents/superpowers-worker-default-model.md"
+worker_lite_model_path="$HOME/.kiro/agents/superpowers-worker-lite-model.md"
+for managed in "$agent_path" "$worker_default_model_path" "$worker_lite_model_path"; do
+  if { [ -e "$managed" ] || [ -L "$managed" ]; } \
+    && ! grep -Fq "$AGENT_MARKER" "$managed" 2>/dev/null; then
+    die "refusing to overwrite unmanaged agent: $managed"
+  fi
+done
 if { [ -e "$install_root" ] || [ -L "$install_root" ]; } \
   && [ ! -f "$install_root/$PAYLOAD_MARKER" ]; then
   die "refusing to overwrite unmanaged payload: $install_root"
@@ -35,7 +39,7 @@ version="${tag#v}"
 work_dir="${TMPDIR:-/tmp}/superpowers-kiro.$$"
 (umask 077 && mkdir "$work_dir") || die "cannot create temporary directory"
 agent_tmp="$agent_path.tmp.$$"
-cleanup() { rm -rf "$work_dir"; rm -f "$agent_tmp"; }
+cleanup() { rm -rf "$work_dir"; rm -f "$agent_tmp" "$worker_default_model_path.tmp.$$" "$worker_lite_model_path.tmp.$$"; }
 trap cleanup 0
 trap 'exit 1' 1 2 15
 
@@ -81,5 +85,37 @@ $AGENT_MARKER
 You are a software-engineering agent that follows the loaded Superpowers bootstrap and Kiro tool-mapping instructions.
 EOF
 mv "$agent_tmp" "$agent_path"
+
+# Neutral workers: skills dispatch a general-purpose subagent and supply the
+# whole persona in the prompt, so these carry no role of their own. They get
+# skill:// discovery so a template may name a skill, but deliberately not the
+# bootstrap resources, whose mandate would compete with the template.
+write_worker() {
+  worker_path="$1" worker_desc="$2" worker_model="$3"
+  worker_tmp="$worker_path.tmp.$$"
+  (umask 077 && : >"$worker_tmp")
+  {
+    printf '%s\n' '---'
+    printf 'description: "%s"\n' "$worker_desc"
+    printf '%s\n' 'tools: ["*"]'
+    if [ -n "$worker_model" ]; then printf 'model: %s\n' "$worker_model"; fi
+    printf '%s\n' 'resources:' \
+      "  - \"skill://$install_root/skills/**/SKILL.md\"" \
+      'permissions:' '  rules:' '    - capability: fs_read' \
+      '      effect: allow' '    - capability: skill' '      effect: allow' '---' ''
+    printf '%s\n' "$AGENT_MARKER"
+    printf '%s\n' 'Execute the dispatching prompt exactly as given. That prompt is the complete'
+    printf '%s\n' 'specification of your role, process, and output format. Add no persona, no'
+    printf '%s\n' 'checklist, and no output conventions of your own.'
+  } >"$worker_tmp"
+  mv "$worker_tmp" "$worker_path"
+}
+write_worker "$worker_default_model_path" \
+  'Neutral executor for Superpowers skill templates, on the model Kiro resolves by default. Dispatch this when a skill asks for a general-purpose subagent.' \
+  ''
+write_worker "$worker_lite_model_path" \
+  'Neutral executor for Superpowers skill templates, pinned to a cheaper model for mechanical, fully specified work.' \
+  'claude-sonnet-5'
+
 printf 'Installed Superpowers %s for Kiro CLI v3.\n' "$version"
 printf 'Start it with: kiro-cli chat --agent superpowers --agent-engine v3\n'
