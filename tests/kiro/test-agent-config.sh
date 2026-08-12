@@ -56,8 +56,10 @@ for worker in "$WORKER_DEFAULT" "$WORKER_LITE"; do
     'checklist, and no output conventions of your own.'; do
     assert_contains "$worker" "$sentence" "$label body"
   done
-  # The bootstrap must not reach a worker: its mandate would compete with the
-  # dispatching template, which is the defect the workers exist to fix.
+  # The bootstrap must not be DECLARED on a worker: its mandate would compete
+  # with the dispatching template. This asserts the config only -- a dispatching
+  # session may still propagate its own startup resources at runtime, which the
+  # bootstrap's own <SUBAGENT-STOP> clause handles.
   assert_not_contains "$worker" 'using-superpowers/SKILL.md' "$label must not load the bootstrap"
   assert_not_contains "$worker" 'welcomeMessage' "$label"
   # Only these frontmatter keys are permitted on a neutral worker.

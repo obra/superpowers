@@ -12,6 +12,18 @@ done
 [ "$#" -le 1 ] || die "usage: $0 [vMAJOR.MINOR.PATCH]"
 
 install_root="${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro"
+# A relative XDG_DATA_HOME would install into the current directory and emit
+# relative resource URIs, which defeats the absolute-path profile. A quote or
+# newline in the path would produce unparseable YAML in the generated agents.
+newline='
+'
+case "$install_root" in
+  /*) ;;
+  *) die "XDG_DATA_HOME must be an absolute path: $install_root" ;;
+esac
+case "$install_root" in
+  *'"'*|*"$newline"*) die "install path must not contain quotes or newlines: $install_root" ;;
+esac
 agent_path="$HOME/.kiro/agents/superpowers.md"
 worker_default_model_path="$HOME/.kiro/agents/superpowers-worker-default-model.md"
 worker_lite_model_path="$HOME/.kiro/agents/superpowers-worker-lite-model.md"
@@ -19,6 +31,14 @@ for managed in "$agent_path" "$worker_default_model_path" "$worker_lite_model_pa
   if { [ -e "$managed" ] || [ -L "$managed" ]; } \
     && ! grep -Fq "$AGENT_MARKER" "$managed" 2>/dev/null; then
     die "refusing to overwrite unmanaged agent: $managed"
+  fi
+  # A same-named .json config defines the same agent and takes precedence, so
+  # installing beside one would silently shadow the agent written here. The
+  # suffix is hardcoded to .json because that is the only non-Markdown agent
+  # form Kiro loads today; see the design spec's "Shadowing guard" open question.
+  shadow="${managed%.md}.json"
+  if [ -e "$shadow" ] || [ -L "$shadow" ]; then
+    die "$shadow defines the same agent and would shadow $managed; move it aside first"
   fi
 done
 if { [ -e "$install_root" ] || [ -L "$install_root" ]; } \
@@ -28,12 +48,15 @@ fi
 
 tag="${1:-}"
 if [ -z "$tag" ]; then
-  tag="$(curl -fsSL "https://api.github.com/repos/$REPOSITORY/releases/latest" \
+  tag="$(curl -fsSL --proto '=https' --proto-redir '=https' "https://api.github.com/repos/$REPOSITORY/releases/latest" \
     | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
     | sed -n '1p')"
+  # Distinguish a lookup failure from a malformed argument: the user gave none.
+  [ -n "$tag" ] \
+    || die "could not resolve the latest release; pass a tag explicitly, e.g. $0 v1.2.3"
 fi
 printf '%s\n' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' \
-  || die "release must look like v6.2.0"
+  || die "release must look like v1.2.3"
 version="${tag#v}"
 
 work_dir="${TMPDIR:-/tmp}/superpowers-kiro.$$"
@@ -44,8 +67,9 @@ trap cleanup 0
 trap 'exit 1' 1 2 15
 
 archive="$work_dir/release.tar.gz"
-curl -fsSL "https://github.com/$REPOSITORY/archive/refs/tags/$tag.tar.gz" -o "$archive"
-tar -xzf "$archive" -C "$work_dir"
+curl -fsSL --proto '=https' --proto-redir '=https' \
+  "https://github.com/$REPOSITORY/archive/refs/tags/$tag.tar.gz" -o "$archive"
+tar -xzf "$archive" --no-same-owner -C "$work_dir"
 source_root="$work_dir/superpowers-$version"
 for required in \
   package.json \

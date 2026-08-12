@@ -25,6 +25,8 @@ for text in \
   'superpowers-worker-default-model' \
   'superpowers-worker-lite-model' \
   'claude-sonnet-5' \
+  'would shadow' \
+  'superpowers.json.disabled' \
   'TUI'; do
   grep -Fq -- "$text" "$DOC" || fail "Kiro guide missing $text"
 done
