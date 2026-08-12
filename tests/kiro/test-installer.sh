@@ -19,11 +19,15 @@ assert_absent() {
   local path="$1" label="$2"
   if [ -e "$path" ]; then fail "$label"; else pass "$label"; fi
 }
-# The installed agent must be the tracked repository profile with only two
-# changes: every resource URI made absolute under the install root, and the
-# ownership marker inserted. Stripping those back must reproduce the tracked
-# file byte-for-byte. This one check replaces a pile of hand-picked string
-# assertions and catches any drift — body, frontmatter, or permissions.
+assert_file_not_contains() {
+  local file="$1" text="$2" label="$3"
+  if grep -Fq -- "$text" "$file" 2>/dev/null; then fail "$label"; else pass "$label"; fi
+}
+# The installed agent must be the tracked repository profile with three defined
+# changes: resource URIs made absolute, the `{{SUPERPOWERS_SKILLS_DIR}}`
+# placeholder substituted with `<install_root>/skills`, and the ownership marker
+# inserted. Reversing all three must reproduce the tracked file byte-for-byte, so
+# any other drift — body, frontmatter, permissions — fails this check.
 assert_matches_tracked() {
   local name="$1"
   local generated="$home/.kiro/agents/$name.md"
@@ -31,20 +35,29 @@ assert_matches_tracked() {
   if [ ! -f "$generated" ]; then fail "generates $name.md"; return; fi
   assert_file_contains "$generated" '<!-- Managed by the Superpowers Kiro installer. -->' \
     "$name.md carries the ownership marker"
-  # Non-vacuity: the transform must change something. If the raw files were
-  # already identical, the normalized comparison below would pass for free.
+  # The placeholder must be substituted with the absolute skills directory, and
+  # no unsubstituted placeholder may leak into the installed agent.
+  assert_file_contains "$generated" "$install_root/skills/<skill-name>/" \
+    "$name.md resolves reference files under the install root"
+  assert_file_not_contains "$generated" '{{SUPERPOWERS_SKILLS_DIR}}' \
+    "$name.md has no unsubstituted skills-dir placeholder"
+  # Non-vacuity: the transform must change something.
   if diff -q "$generated" "$tracked" >/dev/null 2>&1; then
     fail "$name.md differs from the tracked profile before normalization"
   else
     pass "$name.md differs from the tracked profile before normalization"
   fi
+  # Reverse the three transforms: URI absolutization first (only resource lines
+  # carry `://<root>/`), then the placeholder substitution (only the body now
+  # carries `<root>/skills`), then drop the marker line.
   local normalized
-  normalized="$(sed -e "s#$install_root/##g" \
-    -e '/^<!-- Managed by the Superpowers Kiro installer\. -->$/d' "$generated")"
+  normalized="$(sed -e "s#://$install_root/#://#g" "$generated" \
+    | sed -e "s#$install_root/skills#{{SUPERPOWERS_SKILLS_DIR}}#g" \
+          -e '/^<!-- Managed by the Superpowers Kiro installer\. -->$/d')"
   if [ "$normalized" = "$(cat "$tracked")" ]; then
-    pass "$name.md equals the tracked profile modulo install root and marker"
+    pass "$name.md equals the tracked profile after reversing the transforms"
   else
-    fail "$name.md equals the tracked profile modulo install root and marker"
+    fail "$name.md equals the tracked profile after reversing the transforms"
     diff <(printf '%s\n' "$normalized") "$tracked" | sed 's/^/    /' | head -20
   fi
 }

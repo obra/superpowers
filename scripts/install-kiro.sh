@@ -90,11 +90,13 @@ rm -rf "$install_root"
 mv "$source_root" "$install_root"
 
 # Generate each global agent from the tracked profile shipped in the payload,
-# instead of embedding a second copy here. The only differences from the tracked
-# file are absolute resource URIs (Kiro loads the global agent from unrelated
-# project directories, so relative URIs would not resolve) and the ownership
-# marker used by the collision guard. Keeping the tracked `.kiro/agents/*.md` as
-# the single source means the installed agents cannot drift from them.
+# instead of embedding a second copy here. The transform makes three defined
+# changes: it substitutes the `{{SUPERPOWERS_SKILLS_DIR}}` placeholder with this
+# installation's absolute skills directory, makes the resource URIs absolute
+# (Kiro loads the global agent from unrelated project directories, so relative
+# URIs would not resolve), and inserts the ownership marker used by the collision
+# guard. Keeping the tracked `.kiro/agents/*.md` as the single source means the
+# installed agents cannot drift from them.
 generate_agent() {
   name="$1"
   src="$install_root/.kiro/agents/$name.md"
@@ -103,6 +105,7 @@ generate_agent() {
   [ -f "$src" ] || die "payload is missing agent $name.md"
   (umask 077 && : >"$tmp")
   awk -v root="$install_root" -v marker="$AGENT_MARKER" '
+    { gsub(/\{\{SUPERPOWERS_SKILLS_DIR\}\}/, root "/skills") }
     /^---$/ { print; fm++; if (fm == 2) print marker; next }
     fm == 1 && /^[[:space:]]*-[[:space:]]+(file|skill):\/\// {
       sub(/:\/\//, "://" root "/"); print; next

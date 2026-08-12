@@ -90,7 +90,7 @@ kiro-cli chat --agent superpowers --agent-engine v3
 
 ### Installed profile
 
-The global profile has the same tools, resource roles, permissions, prompt, and welcome message. Its resource URIs are absolute because users invoke it from arbitrary project directories. The installer produces each global agent by transforming the matching tracked `.kiro/agents/*.md` from the payload — inserting the install root into every resource URI and adding the ownership marker — so the tracked files remain the single source of truth and cannot drift from what is installed. Conceptually, it contains:
+The global profile has the same tools, resource roles, permissions, prompt, and welcome message. Its resource URIs are absolute because users invoke it from arbitrary project directories. The installer produces each global agent by transforming the matching tracked `.kiro/agents/*.md` from the payload — substituting the `{{SUPERPOWERS_SKILLS_DIR}}` placeholder with the absolute skills directory (so the agent reads a skill's own reference files, such as `code-reviewer.md`, straight from the payload rather than globbing the workspace), inserting the install root into every resource URI, and adding the ownership marker — so the tracked files remain the single source of truth and cannot drift from what is installed. Conceptually, it contains:
 
 ```yaml
 resources:
@@ -189,7 +189,7 @@ The implementation should remain roughly 100 lines of straightforward POSIX shel
 7. Confirm that the archive's declared version matches the selected tag after normalizing the tag's `v` prefix.
 8. Add the ownership/version marker to the staged payload.
 9. Replace the single managed payload directory.
-10. Generate the three global agents by transforming the tracked `.kiro/agents/*.md` shipped in the payload — inserting the install root into each resource URI and adding the ownership marker — rather than embedding copies. Each is written to a temporary file renamed into place.
+10. Generate the three global agents by transforming the tracked `.kiro/agents/*.md` shipped in the payload — substituting the `{{SUPERPOWERS_SKILLS_DIR}}` placeholder with the absolute skills directory, inserting the install root into each resource URI, and adding the ownership marker — rather than embedding copies. Each is written to a temporary file renamed into place.
 11. Print the command that starts the Superpowers agent.
 
 All refusals precede tag resolution and the download, so a refused run leaves the filesystem untouched. Staging ensures that download or extraction failures do not damage an existing installation. Because the staged payload already contains its ownership marker, an interruption after payload replacement remains recognizable as managed state and a rerun can repair the installation. The script does not implement multi-destination transaction coordination or retained rollback state.
