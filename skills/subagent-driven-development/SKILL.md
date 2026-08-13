@@ -278,14 +278,14 @@ and fix-round diffs need it.
 - If an earlier task parked a finding in the area this task touches, carry
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
-  fix-loop rounds 1-3 resume this agent.
+  fix-loop rounds 1-3 resume this agent. **Note:** Dispatching an agent with a `name:` (which enables resuming it) means its completion will be an `idle_notification` without an automatic report. You must explicitly `SendMessage` the agent to solicit its report after it goes idle.
 - Never dispatch multiple implementation subagents in parallel (conflicts).
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
 ### 2. Handle the report
 
-Implementer subagents report one of four statuses. Handle each appropriately:
+After dispatching a named implementer, it will go idle upon completion. You must explicitly `SendMessage` the agent to solicit its report. Implementer subagents then report one of four statuses. Handle each appropriately:
 
 **DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
 
@@ -565,4 +565,3 @@ Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 [Delete this plan's workspace — the record now lives in git]
 
 Done! Using superpowers:finishing-a-development-branch.
-```
