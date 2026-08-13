@@ -34,6 +34,21 @@ const BOOTSTRAP_SKILL = 'using-superpowers';
 const BOOTSTRAP_ORDER = 50;
 
 /**
+ * The dsh-specific deltas the skills cannot name themselves: prompt-only
+ * subagents, whole-list todos, plan mode, and plain skill names. Keep in sync
+ * with `skills/using-superpowers/references/dsh-tools.md` (the plugin test
+ * asserts both carry the subagent line).
+ */
+const TOOL_MAPPING = `## DeepSeek Harness tool mapping
+
+Translate the Superpowers action vocabulary to these dsh tools (full reference: skills/using-superpowers/references/dsh-tools.md):
+
+- Dispatch a subagent → \`subagent\` (standalone prompt; background by default) or \`subagent_fork\` (inherits this conversation). dsh has NO named subagent types — put the role and instructions in the prompt itself. Follow up with \`send_message\`, list with \`list_agents\`, stop with \`interrupt_agent\`. Large multi-agent orchestration → \`workflow\`. Fresh-agent iteration loops → \`ralph\` (only when the human asks for them).
+- Create / update todos → \`todo_write\` (send the ENTIRE list every call — it replaces the previous list).
+- Plan mode → \`exit_plan_mode\` (present the complete plan as markdown; implement only after approval).
+- Invoke a skill → \`skill\` with the exact catalog name: plain \`brainstorming\`, never \`superpowers:brainstorming\`.`;
+
+/**
  * Split one SKILL.md into its frontmatter fields and its instruction body.
  * @param {string} raw - the file contents.
  * @returns {{name?: string, description?: string, whenToUse?: string, body: string}}
@@ -121,6 +136,8 @@ You have superpowers.
 The using-superpowers skill content is included below and is already loaded for this session. Follow it now. Do not load using-superpowers again with the skill tool.
 
 ${bootstrap.content}
+
+${TOOL_MAPPING}
 </EXTREMELY_IMPORTANT>`,
   });
 }
