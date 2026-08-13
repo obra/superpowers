@@ -127,6 +127,31 @@ test('apply registers one bootstrap section carrying using-superpowers', async (
     .replace(/^---\n[\s\S]*?\n---\n/, '')
     .trim();
   assert.ok(section.text.includes(body), 'bootstrap must carry the live skill body');
+
+  // The inline dsh tool mapping must travel with the bootstrap.
+  assert.match(section.text, /## DeepSeek Harness tool mapping/);
+  assert.match(section.text, /NO named subagent types/);
+  assert.match(section.text, /`todo_write` \(send the ENTIRE list/);
+  assert.match(section.text, /never `superpowers:brainstorming`/);
+});
+
+test('the dsh tool-mapping reference exists, is linked, and matches the inline mapping', async () => {
+  const referencePath = join(skillsDir, 'using-superpowers/references/dsh-tools.md');
+  const reference = await readFile(referencePath, 'utf8');
+  const skill = await readFile(join(skillsDir, 'using-superpowers/SKILL.md'), 'utf8');
+
+  // The one allowed SKILL.md edit: the pointer line in Platform Adaptation.
+  assert.match(skill, /DeepSeek Harness \(dsh\): `references\/dsh-tools\.md`/);
+
+  const mod = await loadPlugin();
+  const { ctx, sections } = fakeContext();
+  mod.apply(ctx);
+  const [section] = sections;
+
+  // The subagent delta is the load-bearing line: keep both copies identical.
+  const subagentLine = 'NO named subagent types';
+  assert.ok(reference.includes(subagentLine), 'reference must carry the subagent delta');
+  assert.ok(section.text.includes(subagentLine), 'inline mapping must carry the subagent delta');
 });
 
 test('a second apply registers the same thing again, with no leaked state', async () => {
