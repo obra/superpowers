@@ -13,6 +13,9 @@ Decide per-question, not per-session. The test: **would the user understand this
 - **Side-by-side visual comparisons** — comparing two layouts, two color schemes, two design directions
 - **Design polish** — when the question is about look and feel, spacing, visual hierarchy
 - **Spatial relationships** — state machines, flowcharts, entity relationships rendered as diagrams
+- **Dense option grids or implementation maps** — when several approaches, risks, mockups, or code paths need to be compared at once
+- **Small interaction prototypes** — sliders, knobs, animation tuning, click-throughs, and controls that are easier to feel than describe
+- **Copy/export editors** — purpose-built triage, config, prompt, or dataset editors that return selections as prompt text, JSON, diffs, or Markdown
 
 **Use the terminal** when the content is text or tabular:
 
@@ -29,6 +32,8 @@ A question *about* a UI topic is not automatically a visual question. "What kind
 The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content to `screen_dir`, the user sees it in their browser and can click to select options. Selections are recorded to `state_dir/events` that you read on your next turn.
 
 **Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, connection status, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
+
+Use companion fragments for the live brainstorming loop. Use full HTML documents for persistent review/share artifacts such as annotated diffs, implementation explainers, reports, or custom editors, and make sure any interactive editor has a copy/export path back into the workflow.
 
 ## Starting a Session
 
