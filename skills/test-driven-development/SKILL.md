@@ -123,7 +123,9 @@ Confirm:
 - Failure message is expected
 - Fails because feature missing (not typos)
 
-**Test passes?** You're testing existing behavior. Fix test.
+**Test passes?** Prove the fixture created the condition under test. If it
+didn't, fix setup and rerun RED. If it did, you're testing existing behavior;
+fix the test.
 
 **Test errors?** Fix error, re-run until it fails correctly.
 
@@ -205,6 +207,7 @@ Next failing test for next feature.
 
 When writing or changing any test, read [writing-good-tests.md](writing-good-tests.md) for the rules that keep tests honest:
 - Name the production change that would make the test fail — before writing it
+- When setup relies on a platform or dependency, prove it created the condition
 - Assert on real behavior, never on mock behavior
 - Keep test-only code in test utilities, out of production classes
 - Understand a dependency's side effects before mocking it
