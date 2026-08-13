@@ -26,6 +26,7 @@ digraph when_to_use {
     "Parallel dispatch" [shape=box];
 
     "Multiple failures?" -> "Are they independent?" [label="yes"];
+    "Multiple failures?" -> "One agent per problem domain" [label="no" ];
     "Are they independent?" -> "Single agent investigates all" [label="no - related"];
     "Are they independent?" -> "Can they work in parallel?" [label="yes"];
     "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
