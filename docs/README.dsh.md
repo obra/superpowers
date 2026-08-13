@@ -53,7 +53,11 @@ use the skill tool to load brainstorming
 
 dsh's filesystem skill provider also scans `~/.dsh/skills`, `~/.agents/skills`,
 and each project's `.dsh/skills` and `.agents/skills`. Superpowers skills are
-registered as `bundled`, so a skill of the same name in any of those roots wins.
+registered as runtime entries, and precedence depends on the profile: within one
+registry layer project-root skills outrank them while user-root skills do not,
+and in preset-based profiles the nearest scope layer wins a duplicate outright.
+If you shadow a Superpowers skill with your own, confirm your version actually
+wins in the profile you run.
 
 ### Turning the bootstrap off
 
