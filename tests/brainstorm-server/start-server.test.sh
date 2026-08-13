@@ -109,6 +109,113 @@ else
 fi
 
 echo ""
+echo "--- start-server.sh Cursor auto-detect ---"
+
+rm -rf "$TEST_DIR/project"/*
+mkdir -p "$TEST_DIR/cursor-bin" "$TEST_DIR/project"
+
+cat > "$TEST_DIR/cursor-bin/node" <<'EOF'
+#!/usr/bin/env bash
+echo "FOREGROUND_MODE=true"
+exit 0
+EOF
+chmod +x "$TEST_DIR/cursor-bin/node"
+
+captured=$(
+  PATH="$TEST_DIR/cursor-bin:$PATH" \
+    CURSOR_AGENT=1 \
+    MSYSTEM="" \
+    OSTYPE=darwin23 \
+    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>/dev/null || true
+)
+
+if echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
+  pass "auto-foregrounds when CURSOR_AGENT is set"
+else
+  fail "auto-foregrounds when CURSOR_AGENT is set" \
+       "expected foreground node path, got: $captured"
+fi
+
+rm -rf "$TEST_DIR/project"/*
+mkdir -p "$TEST_DIR/project"
+
+captured=$(
+  PATH="$TEST_DIR/cursor-bin:$PATH" \
+    CURSOR_EXTENSION_HOST_ROLE=agent-exec \
+    MSYSTEM="" \
+    OSTYPE=darwin23 \
+    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>/dev/null || true
+)
+
+if echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
+  pass "auto-foregrounds when CURSOR_EXTENSION_HOST_ROLE=agent-exec"
+else
+  fail "auto-foregrounds when CURSOR_EXTENSION_HOST_ROLE=agent-exec" \
+       "expected foreground node path, got: $captured"
+fi
+
+rm -rf "$TEST_DIR/project"/*
+mkdir -p "$TEST_DIR/project"
+
+hint_err=$(
+  PATH="$TEST_DIR/cursor-bin:$PATH" \
+    CURSOR_AGENT=1 \
+    MSYSTEM="" \
+    OSTYPE=darwin23 \
+    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1 >/dev/null || true
+)
+
+if echo "$hint_err" | grep -q '"type":"hint"'; then
+  pass "prints Cursor async-shell hint on stderr"
+else
+  fail "prints Cursor async-shell hint on stderr" \
+       "expected hint JSON on stderr, got: $hint_err"
+fi
+
+rm -rf "$TEST_DIR/project"/*
+mkdir -p "$TEST_DIR/cursor-bg-bin" "$TEST_DIR/project"
+
+cat > "$TEST_DIR/cursor-bg-bin/node" <<'EOF'
+#!/usr/bin/env bash
+echo '{"type":"server-started","port":9,"host":"127.0.0.1","url_host":"localhost","url":"http://127.0.0.1:9/?key=test","screen_dir":"/tmp","state_dir":"/tmp","idle_timeout_ms":1}'
+# Stay alive through the post-start alive window
+sleep 3
+exit 0
+EOF
+chmod +x "$TEST_DIR/cursor-bg-bin/node"
+
+cat > "$TEST_DIR/cursor-bg-bin/curl" <<'EOF'
+#!/usr/bin/env bash
+echo "200"
+exit 0
+EOF
+chmod +x "$TEST_DIR/cursor-bg-bin/curl"
+
+captured=$(
+  PATH="$TEST_DIR/cursor-bg-bin:$PATH" \
+    CURSOR_AGENT=1 \
+    MSYSTEM="" \
+    OSTYPE=darwin23 \
+    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --background 2>/dev/null || true
+)
+
+if echo "$captured" | grep -q '"type":"server-started"'; then
+  pass "Cursor --background overrides auto-foreground"
+else
+  fail "Cursor --background overrides auto-foreground" \
+       "expected server-started from background path, got: $captured"
+fi
+
+# Kill any leftover fake node from the background path
+pkill -f "brainstorm-start-test-$$" 2>/dev/null || true
+find "$TEST_DIR/project" -name server.pid -print 2>/dev/null | while read -r pidfile; do
+  pid="$(tr -d ' \n' < "$pidfile" 2>/dev/null || true)"
+  if [[ -n "$pid" ]]; then
+    kill "$pid" 2>/dev/null || true
+  fi
+done
+
+echo ""
 echo "--- Results: $passed passed, $failed failed ---"
 if [[ $failed -gt 0 ]]; then
   exit 1
