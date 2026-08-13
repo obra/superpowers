@@ -12,7 +12,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- At the end of subagent-driven development, on the whole branch — its per-task review is already done by [task-reviewer-prompt.md](../subagent-driven-development/task-reviewer-prompt.md), so don't also run this skill after every task
 - After completing major feature
 - Before merge to main
 
