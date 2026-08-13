@@ -12,6 +12,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Codex App](#codex-app)
   - [Codex CLI](#codex-cli)
   - [Cursor](#cursor)
+  - [DeepSeek Harness](#deepseek-harness)
   - [Devin CLI](#devin-cli)
   - [Factory Droid](#factory-droid)
   - [Gemini CLI](#gemini-cli)
@@ -124,6 +125,24 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```
 
 - Or search for "superpowers" in the plugin marketplace.
+
+### DeepSeek Harness
+
+Install Superpowers into the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) profile you run (`web`, `headless`, or your own):
+
+```bash
+dsh plugin --profile web add github:obra/superpowers
+```
+
+- Update later:
+
+  ```bash
+  dsh plugin --profile web update superpowers
+  ```
+
+The plugin registers the skills through dsh's skill registry and contributes the `using-superpowers` bootstrap as a system-prompt section, so Superpowers is active from the first message and after compaction. dsh has a native `skill` tool, so no compatibility shim is needed.
+
+- Detailed docs: [docs/README.dsh.md](docs/README.dsh.md)
 
 ### Devin CLI
 
