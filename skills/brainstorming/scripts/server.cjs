@@ -613,15 +613,26 @@ function startServer() {
   });
   watcher.on('error', (err) => console.error('fs.watch error:', err.message));
 
+  let shuttingDown = false;
   function shutdown(reason) {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(JSON.stringify({ type: 'server-stopped', reason }));
-    const infoFile = path.join(STATE_DIR, 'server-info');
-    if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
-    fs.writeFileSync(
-      path.join(STATE_DIR, 'server-stopped'),
-      JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
-    );
-    watcher.close();
+    // State-dir bookkeeping is best effort. The session directory can be removed
+    // while the server sits idle, and a missing or read-only state dir must never
+    // abort shutdown -- throwing here would skip every cleanup step below and kill
+    // the process with an uncaught exception instead of exiting 0.
+    try {
+      if (fs.existsSync(STATE_DIR)) {
+        const infoFile = path.join(STATE_DIR, 'server-info');
+        if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+        fs.writeFileSync(
+          path.join(STATE_DIR, 'server-stopped'),
+          JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
+        );
+      }
+    } catch (e) { /* best effort */ }
+    try { watcher.close(); } catch (e) { /* content dir may be gone */ }
     clearInterval(lifecycleCheck);
     // Close any upgraded WebSocket sockets so server.close() can complete and
     // the process actually exits instead of lingering on an open connection.
