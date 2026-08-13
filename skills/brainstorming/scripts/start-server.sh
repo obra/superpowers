@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start the brainstorm server and output connection info
-# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
+# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--insecure-remote] [--foreground] [--background]
 #
 # Starts server on a random high port, outputs JSON with URL.
 # Each session gets its own directory to avoid conflicts.
@@ -9,8 +9,10 @@
 #   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
 #                         instead of /tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
-#                         Use 0.0.0.0 in remote/containerized environments.
+#                         Non-loopback binds require --insecure-remote.
 #   --url-host <host>     Hostname shown in returned URL JSON.
+#   --insecure-remote     Acknowledge that a non-loopback bind uses plaintext HTTP.
+#                         Prefer an SSH tunnel or a TLS-terminating reverse proxy.
 #   --idle-timeout-minutes <n>  Shut down after n minutes idle (default 240 = 4h).
 #   --open                Auto-open the browser on the first screen (use only
 #                         after the user approves the visual companion).
@@ -23,6 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR=""
 FOREGROUND="false"
 FORCE_BACKGROUND="false"
+INSECURE_REMOTE="false"
 BIND_HOST="127.0.0.1"
 URL_HOST=""
 IDLE_TIMEOUT_MINUTES=""
@@ -39,6 +42,10 @@ while [[ $# -gt 0 ]]; do
     --url-host)
       URL_HOST="$2"
       shift 2
+      ;;
+    --insecure-remote)
+      INSECURE_REMOTE="true"
+      shift
       ;;
     --idle-timeout-minutes)
       IDLE_TIMEOUT_MINUTES="$2"
@@ -62,6 +69,22 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+is_loopback_bind_host() {
+  case "$1" in
+    localhost|127.*|::1|'[::1]') return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# The session key is a bearer credential carried in the companion URL and
+# WebSocket connection. This server intentionally speaks HTTP only, so exposing
+# it beyond loopback is unsafe unless the operator has arranged a secure
+# transport (for example SSH port forwarding or TLS termination).
+if ! is_loopback_bind_host "$BIND_HOST" && [[ "$INSECURE_REMOTE" != "true" ]]; then
+  echo '{"error": "Refusing non-loopback HTTP bind without --insecure-remote. Use SSH port forwarding or a TLS-terminating reverse proxy."}'
+  exit 2
+fi
 
 if [[ -z "$URL_HOST" ]]; then
   if [[ "$BIND_HOST" == "127.0.0.1" || "$BIND_HOST" == "localhost" ]]; then
