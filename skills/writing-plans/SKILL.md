@@ -22,6 +22,15 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Context Gathering
+
+Gather only the context needed to write the plan — don't explore the entire codebase.
+
+- **Always read:** The spec/requirements document
+- **Read selectively:** Only files directly referenced by the spec or that you'll need to modify
+- **Don't:** Launch broad codebase exploration agents, read unrelated modules, or list entire directories
+- **Rule of thumb:** If you need more than ~5 targeted file reads before writing, you're probably over-gathering. The plan should document what the *implementer* needs, not require the *planner* to have read everything first.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
