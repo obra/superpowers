@@ -17,6 +17,16 @@ fail() {
     FAILURES=$((FAILURES + 1))
 }
 
+# Push a path through the same `cd ... && pwd` normalization that
+# sdd-workspace's own printed output goes through, so both sides of a
+# string comparison are guaranteed to be spelled identically. On Windows
+# Git Bash/MSYS, `git rev-parse --show-toplevel` (Windows-style,
+# C:/Users/...) and `cd ... && pwd` (MSYS-style, /c/Users/...) can print
+# different spellings of the identical physical directory; on Linux/macOS
+# this is a no-op since the two already agree (module the resolved-symlink
+# /var -> /private/var case handled by the mktemp comment above).
+physical_path() { (cd "$1" && pwd); }
+
 cleanup() {
     if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
         rm -rf "$TEST_ROOT"
@@ -35,6 +45,7 @@ main() {
     git init -q -b main "$TEST_ROOT/repo"
     local repo
     repo="$(cd "$TEST_ROOT/repo" && git rev-parse --show-toplevel)"
+    repo="$(physical_path "$repo")"
 
     cat > "$repo/plan-a.md" <<'PLAN'
 # Plan A
@@ -170,6 +181,7 @@ PLAN
     ( cd "$repo" && git worktree add -q "$wt" -b wt-feature )
     local wt_root wt_dir
     wt_root="$(cd "$wt" && git rev-parse --show-toplevel)"
+    wt_root="$(physical_path "$wt_root")"
     wt_dir="$(cd "$wt" && "$SDD_SCRIPTS/sdd-workspace" plan-a.md)"
     if [[ "$wt_dir" == "$wt_root/.superpowers/sdd/plan-a" && "$wt_dir" != "$dir_a" ]]; then
         pass "linked worktree resolves its own distinct workspace"
