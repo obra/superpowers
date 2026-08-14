@@ -24,6 +24,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Hermes Agent](#hermes-agent)
   - [Muse](#muse)
 - [The Basic Workflow](#the-basic-workflow)
+- [Customizing output paths](#customizing-output-paths)
 - [When Something Goes Wrong](#when-something-goes-wrong)
 - [Community](#community)
 - [What's Inside](#whats-inside)
@@ -321,6 +322,23 @@ Restart any active Muse sessions after installing so the `SessionStart` hook tak
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+
+## Customizing output paths
+
+By default, brainstorming writes design specs to `docs/superpowers/specs/` and writing-plans writes implementation plans to `docs/superpowers/plans/`.
+
+To use different locations, put **both** an Output Paths table and a direct instruction in the project file your harness loads at session start (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`). A table alone is not enough — agents follow the concrete path in the skill unless the override is also stated as an imperative.
+
+```markdown
+## Output Paths
+
+| Artifact | Location |
+|---|---|
+| Design specs | `docs/design-docs/` |
+| Implementation plans | `docs/exec-plans/` |
+
+**Design specs MUST be saved to `docs/design-docs/`, NOT `docs/superpowers/specs/`. Implementation plans MUST be saved to `docs/exec-plans/`, NOT `docs/superpowers/plans/`.**
+```
 
 ## When Something Goes Wrong
 
