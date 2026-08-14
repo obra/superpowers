@@ -1,5 +1,44 @@
 # Superpowers Release Notes
 
+## v6.3.0 (2026-08-12)
+
+### Harness Support
+
+- **Devin CLI**: `devin plugins install obra/superpowers` now works, and skills auto-trigger at session start. (#1995)
+- **Hermes Agent**: install from a git clone; skills register with Hermes' native loader and the bootstrap loads on the first turn. (#1922, #2025)
+- **Grok Build CLI** added to the install docs. (#1919)
+
+### Brainstorming
+
+- **Ceremony now scales to the task.** Requests are classified as spike, bounded, or architectural; small tasks skip the two-document ritual. Every path still stops for your approval before implementation. (#2063)
+
+### Subagent-Driven Development
+
+- **Controllers no longer stall on plan conflicts.** Non-catastrophic conflicts and ambiguities get a recorded ruling and work continues; only destructive or irreversible actions still stop for a human. One donated session had sat blocked for almost nine hours on a question the controller could have decided. (#2077)
+- **The pre-dispatch conflict scan records its checks in the ledger** instead of just asserting the plan is clean. (#2080)
+- **Small same-shape tasks batch into one dispatch**, cutting subagent cost sharply on micro-task plans; batch reviews verify every file in the brief made it into the diff. (#2078)
+- **Implementers and reviewers may not spawn their own subagents**, which was producing duplicate reviews. (#2059)
+- **Plans carry a `Spec:` pointer** and SDD reads the spec at setup, so plan conflicts get resolved against the design instead of guessed at. (#2086)
+- Reviewers re-read evidence they find illegible instead of re-running the test suite (#2089), and circuit-breaker rulings now show up in the Finish report.
+
+### Codex
+
+- Subagent waits are event-driven instead of poll-heavy, spawns pin model and reasoning effort explicitly, and the multi-agent reference is corrected against Codex source. (#2060, #2061, #2062)
+
+### Finishing a Development Branch
+
+- **Worktree removal no longer destroys untracked files.** When `git worktree remove` refuses because the tree holds uncommitted work, the skill stops, names the files, and asks — instead of reaching for `--force`. (#2016, #1223, #2024)
+
+### Fixes
+
+- `render-graphs.js` in writing-skills works on Windows.
+- Corrected Copilot CLI backgrounding guidance for Windows. (#1929, #2006)
+- `bump-version.sh` covers the Hermes manifest.
+
+### Documentation
+
+- README: added a table of contents and reorganized Getting Started.
+
 ## v6.2.0 (2026-07-23)
 
 ### Subagent-Driven Development
