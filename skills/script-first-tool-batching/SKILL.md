@@ -15,7 +15,7 @@ LLMs are better at writing code than at emitting tool calls — they've seen mil
 
 **Use when:**
 - Batch file operations (read/transform/grep across many files)
-- Data processing (filter, aggregate, summarize structured data)
+- Data processing (filter, aggregate, summarise structured data)
 - Repetitive checks (lint, test, validate across a set)
 - Multi-step searches that could be one `find` + `grep` + `sort` pipeline
 
@@ -55,7 +55,7 @@ One tool call. The script does the work; only the summary table enters context (
 
 | Situation | Approach |
 |---|---|
-| Read + summarize N files | One script that reads all, prints a table |
+| Read + summarise N files | One script that reads all, prints a table |
 | Search + filter across a repo | One `find ... -exec grep ...` pipeline |
 | Transform N files | One script with a loop, print what changed |
 | Count/aggregate data | One script that computes, prints the result |
