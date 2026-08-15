@@ -1,0 +1,24 @@
+{
+  "name": "superpowers",
+  "version": "6.2.0",
+  "description": "An agentic skills framework for DeepSeek Harness (dsh) — planning, TDD, debugging, and collaboration workflows, pluggable into any dsh session without rewriting skills.",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "brainstorming",
+    "subagent-driven-development",
+    "skills",
+    "planning",
+    "tdd",
+    "debugging",
+    "code-review",
+    "workflow",
+    "deepseek-harness",
+    "dsh"
+  ],
+  "skills": "./skills/"
+}
