@@ -9,7 +9,7 @@ description: Use when a task would require many sequential tool calls over files
 
 LLMs are better at writing code than at emitting tool calls — they've seen millions of lines of real code and comparatively few tool-calling traces. For multi-step operations, writing one script that does the work and running it once is cheaper, faster, and more reliable than N sequential tool calls where each result re-enters context.
 
-**Core principle:** If you're about to make 3+ tool calls that could be one script, write the script.
+**Core principle:** If you know the file pattern, write the script directly. Don't explore first — the script's output IS your exploration.
 
 ## When to Use
 
@@ -65,6 +65,7 @@ One tool call. The script does the work; only the summary table enters context (
 
 | Mistake | Fix |
 |---|---|
+| **Exploring before scripting** (ls → grep → wc → then finally script) | If you know the file pattern, write the script directly. The script's output IS your exploration — you can refine based on what it returns. |
 | Over-scripting simple tasks (2 calls that could be a script) | The threshold is 3+ calls. Below that, just do them. |
 | Script fails silently (no error output) | Always `set -e` in bash, check exit codes, print what happened |
 | Script produces huge output (defeats the purpose) | Print a summary, not the full data. Use `head`, `wc`, `console.table`. |
