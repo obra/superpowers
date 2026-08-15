@@ -6,7 +6,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 - [How it works](#how-it-works)
 - [Commercial Services](#commercial-services)
-  - [Getting Started](#installation)
+- [Getting Started](#installation)
   - [Claude Code](#claude-code)
   - [Command Code](#command-code)
   - [Antigravity](#antigravity)
