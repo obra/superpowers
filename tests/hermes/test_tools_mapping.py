@@ -34,3 +34,8 @@ class TestHermesToolMapping:
         # Plugin skills are runtime-registered under the superpowers: prefix;
         # an unqualified skill_view(...) fails with "Skill not found".
         assert re.search(r'skill_view\("(?!superpowers:)', mapping_text) is None
+
+    def test_web_guidance_is_capability_aware(self, mapping_text):
+        # Web/search tools depend on the session's enabled toolsets and
+        # providers; the mapping must not instruct unconditional tool calls.
+        assert "do not invent a tool call" in mapping_text
