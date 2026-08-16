@@ -36,5 +36,8 @@ root=$(git rev-parse --show-toplevel)
 base="$root/.superpowers/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"
-printf '*\n' > "$base/.gitignore"
+# Create-only: a repo may commit its own .superpowers/sdd/.gitignore (e.g. to
+# version progress.md ledgers via a negation pattern) — an unconditional
+# overwrite here would silently revert that choice on every invocation.
+[ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 cd "$dir" && pwd
