@@ -12,11 +12,13 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Run a shell command | `terminal` |
 | Search file contents | `search_files` |
 | Find files by name | `terminal` with `find` |
-| Fetch a URL / read a webpage | `web_extract(urls=[...])` |
-| Search the web | `web_search(query=...)` |
-| Dispatch a subagent | `delegate_task(goal=..., context=..., toolsets=[...], role="leaf")` |
+| Fetch a URL / read a webpage | use the web capability exposed in the current session |
+| Search the web | use the search capability exposed in the current session |
+| Dispatch a subagent | `delegate_task(goal=..., context=..., role="leaf")` |
 | Task tracking | `todo` tool |
-| Invoke a skill | `skill_view("skill-name")` |
+| Invoke a skill | `skill_view("superpowers:skill-name")` |
+
+Web and search tools exist only when the current session exposes them. If none is available, do not invent a tool call — use an available fallback or report that web access is unavailable.
 
 ## Instructions file
 
@@ -28,8 +30,8 @@ Hermes Agent has a `skills` toolset with `skill_view` and `skills_list` tools.
 To invoke a superpowers skill, use:
 
 ```
-skill_view("brainstorming")
-skill_view("test-driven-development")
+skill_view("superpowers:brainstorming")
+skill_view("superpowers:test-driven-development")
 ```
 
 If `skill_view` cannot find a superpowers skill (it may not appear in the catalog
@@ -40,14 +42,18 @@ read_file(path="~/.hermes/plugins/superpowers/skills/<skill-name>/SKILL.md")
 ```
 
 This fallback is the same mechanism used by other harnesses without native skill loading.
+Plugin-provided skills are runtime-registered, so use the `superpowers:` prefix in
+`skill_view`; verify the integration with `hermes plugins doctor superpowers --ci` if a skill does not resolve.
 
 ## Subagent dispatch
 
 Use `delegate_task` to spawn isolated subagents for parallel or sequential workstreams:
 
 ```
-delegate_task(goal="...", context="...", toolsets=[...], role="leaf")
+delegate_task(goal="...", context="...", role="leaf")
 ```
+
+Subagents inherit the parent session's toolsets; `delegate_task` takes no toolset-restriction parameter.
 
 If `delegate_task` is unavailable, do the work inline rather than inventing tool calls.
 
