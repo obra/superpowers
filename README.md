@@ -15,6 +15,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Devin CLI](#devin-cli)
   - [Factory Droid](#factory-droid)
   - [Gemini CLI](#gemini-cli)
+  - [GitHub Copilot App](#github-copilot-app)
   - [GitHub Copilot CLI](#github-copilot-cli)
   - [Grok Build CLI](#grok-build-cli)
   - [Kimi Code](#kimi-code)
@@ -166,6 +167,12 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```bash
   gemini extensions update superpowers
   ```
+
+### GitHub Copilot App
+
+- In the GitHub Copilot app, click on **Plugins** in the sidebar.
+- Click **+ Install** > **+ Add marketplace** and enter `obra/superpowers-marketplace`.
+- Find `superpowers` in the list and click **Install**.
 
 ### GitHub Copilot CLI
 
