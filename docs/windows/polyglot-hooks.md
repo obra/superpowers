@@ -2,6 +2,10 @@
 
 Claude Code plugins need hooks that work on Windows, macOS, and Linux. This document describes the single generic dispatcher pattern used in `hooks/run-hook.cmd`.
 
+VS Code Remote WSL adds one mixed-host case: the extension host expands the
+plugin root as a Windows path, while the hook runs in WSL bash. `hooks.json`
+converts that root with `wslpath` before invoking the dispatcher.
+
 > **Authoritative source:** `hooks/run-hook.cmd` is the canonical implementation. When this document and the code diverge, trust the code.
 
 ## The Problem
@@ -89,9 +93,11 @@ afterward.
 
 ### How it works on Unix (bash/sh)
 
-1. `: << 'CMDBLOCK'` opens a heredoc on a no-op command.
-2. The entire CMD batch block is consumed by the heredoc and ignored.
-3. After `CMDBLOCK`, bash resolves the script directory and `exec`s the named
+1. In WSL, the hook command converts a Windows plugin root to a WSL path before
+  starting the dispatcher. Native Unix paths are unchanged.
+2. `: << 'CMDBLOCK'` opens a heredoc on a no-op command.
+3. The entire CMD batch block is consumed by the heredoc and ignored.
+4. After `CMDBLOCK`, bash resolves the script directory and `exec`s the named
    extensionless script directly.
 
 ### Key design decisions

@@ -154,7 +154,7 @@ if (entry.shell !== "bash") {
   console.error(`SessionStart hook shell is ${JSON.stringify(entry.shell)}, expected "bash"`);
   process.exit(1);
 }
-if (!/run-hook\.cmd" session-start$/.test(entry.command)) {
+if (!entry.command.includes("wslpath -u") || !entry.command.includes("CLAUDE_PLUGIN_ROOT")) {
   console.error(`unexpected SessionStart command shape: ${entry.command}`);
   process.exit(1);
 }
@@ -162,6 +162,70 @@ if (!/run-hook\.cmd" session-start$/.test(entry.command)) {
     pass "hooks.json registers SessionStart with shell:bash dispatch"
 else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
+fi
+
+# VS Code resolves CLAUDE_PLUGIN_ROOT on the Windows extension host before
+# dispatching the hook to the remote WSL shell. The command must translate that
+# Windows path before bash attempts to execute the wrapper.
+wsl_home="$(make_home vscode-remote-wsl)"
+wsl_bin="$TEST_ROOT/vscode-remote-wsl/bin"
+wsl_log="$TEST_ROOT/vscode-remote-wsl/executed-path"
+mkdir -p "$wsl_bin"
+cat > "$wsl_bin/wslpath" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" != "-u" ]]; then
+  exit 1
+fi
+printf '%s\n' "$WSL_TRANSLATED_PLUGIN_ROOT"
+EOF
+chmod +x "$wsl_bin/wslpath"
+
+windows_plugin_root='C:\Users\developer\.vscode\agent-plugins\github.com\obra\superpowers'
+translated_plugin_root="$TEST_ROOT/vscode-remote-wsl/plugin"
+mkdir -p "$translated_plugin_root/hooks"
+cat > "$translated_plugin_root/hooks/run-hook.cmd" <<'EOF'
+printf '%s\n' "$0" > "$WSL_EXECUTED_PATH_LOG"
+EOF
+
+hook_command="$(node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const command = hooks.hooks.SessionStart[0].hooks[0].command;
+process.stdout.write(command.replace("${CLAUDE_PLUGIN_ROOT}", process.argv[2]));
+' "$REPO_ROOT/hooks/hooks.json" "$windows_plugin_root")"
+
+if env -i \
+  PATH="$wsl_bin:/usr/bin:/bin" \
+  HOME="$wsl_home" \
+  WSL_DISTRO_NAME=Ubuntu \
+  WSL_TRANSLATED_PLUGIN_ROOT="$translated_plugin_root" \
+  WSL_EXECUTED_PATH_LOG="$wsl_log" \
+  /bin/sh -c "$hook_command" >/dev/null 2>&1 && \
+  [[ "$(cat "$wsl_log" 2>/dev/null)" == "$translated_plugin_root/hooks/run-hook.cmd" ]]; then
+  pass "hooks.json translates Windows plugin paths before WSL bash dispatch"
+else
+  fail "hooks.json translates Windows plugin paths before WSL bash dispatch"
+fi
+
+unix_home="$(make_home unix-hook-command)"
+unix_hook_command="$(node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const command = hooks.hooks.SessionStart[0].hooks[0].command;
+process.stdout.write(command.replace("${CLAUDE_PLUGIN_ROOT}", process.argv[2]));
+' "$REPO_ROOT/hooks/hooks.json" "$REPO_ROOT")"
+
+if output="$(env -i \
+  PATH="${PATH:-}" \
+  HOME="$unix_home" \
+  CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+  /bin/sh -c "$unix_hook_command" 2>&1)" && \
+  printf '%s' "$output" | node -e '
+const input = require("fs").readFileSync(0, "utf8");
+const payload = JSON.parse(input);
+if (!payload.hookSpecificOutput?.additionalContext) process.exit(1);
+'; then
+  pass "hooks.json dispatches Unix plugin paths without WSL translation"
+else
+  fail "hooks.json dispatches Unix plugin paths without WSL translation"
 fi
 
 claude_home="$(make_home claude-code)"

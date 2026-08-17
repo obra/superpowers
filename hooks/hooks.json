@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "command": "bash -c 'root=\"$0\"; if [ -n \"${WSL_DISTRO_NAME:-}\" ]; then root=$(wslpath -u \"$root\"); fi; exec bash \"$root/hooks/run-hook.cmd\" session-start' \"${CLAUDE_PLUGIN_ROOT}\"",
             "shell": "bash",
             "async": false
           }
