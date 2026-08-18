@@ -1,5 +1,9 @@
 import { buildReducedModel } from '../../lib/metrics/model.mjs';
 import { reduceRun } from '../../lib/metrics/reducer.mjs';
+import { execFileSync } from 'node:child_process';
+import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
+import { tmpdir } from 'node:os';
 
 export const RUN_ID = '20260818T120000Z-a1b2c3d4e5f6-7f31c9ab';
 export const PLAN_PATH = 'docs/superpowers/plans/foo.md';
@@ -21,6 +25,92 @@ export function makeStoredRun(overrides = {}) {
     metadata,
     eventLines: [],
   };
+}
+
+export function createRepo(t) {
+  const root = mkdtempSync(join(tmpdir(), 'superpowers-metrics-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+  execFileSync('git', ['config', 'user.name', 'Metrics Test'], { cwd: root });
+  execFileSync('git', ['config', 'user.email', 'metrics@example.test'], { cwd: root });
+  mkdirSync(join(root, 'docs/superpowers/plans'), { recursive: true });
+  writeFileSync(join(root, PLAN_PATH), '# Foo\n');
+  execFileSync('git', ['add', '.'], { cwd: root });
+  execFileSync('git', ['commit', '-qm', 'fixture'], { cwd: root });
+  return root;
+}
+
+export function snapshotFiles(root, { exclude = [], includeContents = false } = {}) {
+  const ignored = new Set(exclude);
+  const entries = [];
+  const walk = directory => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const path = join(directory, entry.name);
+      const relativePath = relative(root, path).split(sep).join('/');
+      if (ignored.has(relativePath) || ignored.has(entry.name)) continue;
+      const stat = lstatSync(path);
+      if (entry.isDirectory()) {
+        entries.push({ path: relativePath, type: 'directory', mode: stat.mode });
+        walk(path);
+      } else if (entry.isSymbolicLink()) {
+        entries.push({ path: relativePath, type: 'symlink', mode: stat.mode });
+      } else {
+        entries.push({
+          path: relativePath,
+          type: 'file',
+          mode: stat.mode,
+          ...(includeContents ? { content: readFileSync(path, 'utf8') } : {}),
+        });
+      }
+    }
+  };
+  walk(root);
+  return entries;
+}
+
+const planFingerprint = root => `git-blob:${execFileSync('git', [
+  'hash-object', '--no-filters', '--', join(root, PLAN_PATH),
+], { cwd: root, encoding: 'utf8' }).trim()}`;
+
+const writeStoredRun = (root, { runId, createdAt, events }) => {
+  const fingerprint = planFingerprint(root);
+  const runDirectory = join(root, '.superpowers/metrics/docs/superpowers/plans/foo', runId);
+  mkdirSync(runDirectory, { recursive: true });
+  writeFileSync(join(runDirectory, 'run.json'), `${JSON.stringify(makeRun({
+    run_id: runId, created_at: createdAt, initial_plan_fingerprint: fingerprint,
+  }), null, 2)}\n`);
+  const storedEvents = events.map(event => ({
+    ...event,
+    event_id: `${runId}:${event.sequence}`,
+    run_id: runId,
+    plan_fingerprint: fingerprint,
+  }));
+  writeFileSync(join(runDirectory, 'events.jsonl'), `${storedEvents.map(JSON.stringify).join('\n')}\n`);
+};
+
+export function seedLatestPassAndOlderBlockedRuns(root) {
+  const olderRun = '20260818T110000Z-older';
+  const latestRun = '20260818T120000Z-latest';
+  writeStoredRun(root, {
+    runId: olderRun,
+    createdAt: '2026-08-18T11:00:00.000Z',
+    events: blockedRunEvents(),
+  });
+  writeStoredRun(root, {
+    runId: latestRun,
+    createdAt: '2026-08-18T12:00:00.000Z',
+    events: nineTaskPassEvents().map(line => JSON.parse(line.text)),
+  });
+  return { olderRun, reportPath: join(root, 'docs/superpowers/reports/foo.md') };
+}
+
+export function seedIncompleteRunThenChangePlan(root) {
+  writeStoredRun(root, {
+    runId: '20260818T120000Z-incomplete',
+    createdAt: '2026-08-18T12:00:00.000Z',
+    events: activeRunEvents(),
+  });
+  writeFileSync(join(root, PLAN_PATH), '# Foo changed\n');
 }
 
 export function makeEvent(sequence, event_type, payload = {}, overrides = {}) {
