@@ -36,6 +36,19 @@ test('calculates approved headline metrics', () => {
   assert.equal(model.final_test.display, '146/146');
 });
 
+test('carries validated run identity into reduced model', () => {
+  const model = modelFor(outcomeEvents.emptyEvidence());
+
+  assert.deepEqual(model.run, {
+    run_id: '20260818T120000Z-a1b2c3d4e5f6-7f31c9ab',
+    workflow: 'sdd',
+    feature: 'foo',
+    plan_path: 'docs/superpowers/plans/foo.md',
+    initial_plan_fingerprint: FINGERPRINT,
+    created_at: '2026-08-18T12:00:00.000Z',
+  });
+});
+
 test('uses UNKNOWN for empty denominators and absent final verification', () => {
   const model = modelFor(outcomeEvents.emptyEvidence());
 
