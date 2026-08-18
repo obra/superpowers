@@ -155,6 +155,13 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
  *    equivalent of V1's experimental.chat.messages.transform.
  */
 async function setup(ctx) {
+  // V1 (observed on opencode 1.18.18) also invokes default.setup, but with a
+  // V1-shaped ctx that lacks the skill/session domains. Detect it and return
+  // quietly — V1 is served entirely by the SuperpowersPlugin named export.
+  if (!ctx || !ctx.skill || typeof ctx.skill.transform !== 'function' || !ctx.session || typeof ctx.session.hook !== 'function') {
+    return;
+  }
+
   // 1. Register skills (one transform; one draft.add per skill)
   try {
     const skills = [];
