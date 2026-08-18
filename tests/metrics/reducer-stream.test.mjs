@@ -3,7 +3,7 @@ import test from 'node:test';
 import { reduceRun } from '../../lib/metrics/reducer.mjs';
 import {
   RUN_ID, activeRunEvents, blockedRunEvents, makeEvent, makeRun, numberLines,
-  passingRunEvents, toLines, validTaskDispatchPayload,
+  passingRunEvents, SECOND_FINGERPRINT, toLines, validTaskDispatchPayload,
 } from './fixtures.mjs';
 
 const blockedPrefix = blockedRunEvents();
@@ -89,4 +89,59 @@ test('requires passing final review and test evidence before run_passed', () => 
   assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_PASS_PREREQUISITES_MISSING']);
   assert.equal(reduced.state.explicit_outcome, null);
   assert.equal(reduced.state.lifecycle_state, 'ACTIVE');
+});
+
+test('requires a resume after failed preflight before later preflight evidence', () => {
+  const events = activeRunEvents().slice(0, 3);
+  events.push(
+    makeEvent(4, 'preflight_completed', { result: 'FAIL', diagnostic_codes: ['BAD_PLAN'] }),
+    makeEvent(5, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }),
+  );
+  const reduced = reduceRun(makeRun(), toLines(events));
+  assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_RESUME_REQUIRED']);
+  assert.equal(reduced.state.lifecycle_state, 'RESUMABLE');
+});
+
+test('requires accepted passing preflight evidence before run_passed', () => {
+  const events = activeRunEvents().slice(0, 3);
+  events.push(
+    makeEvent(4, 'final_review_result', { result: 'PASS', review_id: 'final-review-1', finding_ids: [] }),
+    makeEvent(5, 'final_test_result', { result: 'PASS', evidence_kind: 'COUNTS', passed: 1, total: 1 }),
+    makeEvent(6, 'run_passed', { basis: 'FINAL_TEST_AND_REVIEW_PASS' }),
+  );
+  const reduced = reduceRun(makeRun(), toLines(events));
+  assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_PASS_PREREQUISITES_MISSING']);
+  assert.equal(reduced.state.explicit_outcome, null);
+});
+
+test('does not reduce passing events when run metadata is invalid', () => {
+  const reduced = reduceRun(makeRun({ feature: '' }), toLines(passingRunEvents()));
+  assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_FEATURE_INVALID']);
+  assert.equal(reduced.events.length, 0);
+  assert.equal(reduced.state.explicit_outcome, null);
+  assert.equal(reduced.state.lifecycle_state, 'ACTIVE');
+});
+
+test('uses new plan fingerprints from accepted plan adjustments', () => {
+  const events = activeRunEvents();
+  events.push(
+    makeEvent(5, 'plan_task_added', {
+      task_id: 'task-2', ordinal: 2, title: 'Added task', origin: 'ADDED',
+      previous_fingerprint: 'git-blob:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION',
+    }),
+    makeEvent(6, 'plan_task_changed', {
+      task_id: 'task-1', ordinal: 1, title: 'Changed task',
+      previous_fingerprint: SECOND_FINGERPRINT,
+      new_fingerprint: 'git-blob:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', reason_code: 'PLAN_CORRECTION',
+    }),
+    makeEvent(7, 'plan_task_superseded', {
+      task_id: 'task-1', replacement_task_ids: ['task-2'],
+      previous_fingerprint: 'git-blob:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION',
+    }),
+  );
+  const reduced = reduceRun(makeRun(), toLines(events));
+  assert.deepEqual(reduced.diagnostics, []);
+  assert.equal(reduced.latestPlanFingerprint, SECOND_FINGERPRINT);
 });
