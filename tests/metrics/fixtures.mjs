@@ -1,3 +1,6 @@
+import { buildReducedModel } from '../../lib/metrics/model.mjs';
+import { reduceRun } from '../../lib/metrics/reducer.mjs';
+
 export const RUN_ID = '20260818T120000Z-a1b2c3d4e5f6-7f31c9ab';
 export const PLAN_PATH = 'docs/superpowers/plans/foo.md';
 export const FINGERPRINT = `git-blob:${'a'.repeat(40)}`;
@@ -380,3 +383,31 @@ export const outcomeEvents = {
     makeEvent(6, 'final_test_result', { result: 'PASS', evidence_kind: 'EXIT_STATUS' }),
   ]),
 };
+
+const reportModel = events => {
+  return buildReducedModel(reduceRun(makeRun(), toLines(events)), {
+    currentPlanFingerprint: FINGERPRINT,
+  });
+};
+
+export function passModel() {
+  return reportModel(nineTaskPassEvents().map(line => JSON.parse(line.text)));
+}
+
+export function blockedModel() {
+  const events = activeRunEvents().concat([
+    makeEvent(5, 'finding_raised', {
+      finding_id: 'F-900', scope: 'TASK', task_id: 'task-1', category: 'QUALITY',
+      severity: 'CRITICAL', title: 'Missing boundary check', location: 'lib/example.mjs:10',
+    }),
+    makeEvent(6, 'task_blocked', {
+      task_id: 'task-1', reason_code: 'IMPLEMENTATION_BLOCKED', required_human_input: true,
+    }),
+    makeEvent(7, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: ['task-1'] }),
+  ]);
+  return reportModel(events);
+}
+
+export function incompleteModel() {
+  return reportModel(outcomeEvents.malformedBlocked());
+}
