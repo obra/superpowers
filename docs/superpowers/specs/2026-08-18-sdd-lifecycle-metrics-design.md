@@ -131,12 +131,15 @@ single-line JSON through the current harness's ordinary file-write capability.
 Git, which SDD already requires, supplies the plan fingerprint. Event writing
 does not invoke the metrics CLI and does not parse agent output.
 
-The repository adds an executable ESM entry point and a package `bin` mapping:
+The repository adds an executable `.mjs` entry point and a package `bin`
+mapping. The explicit extension is required because current Codex plugin
+archives intentionally omit `package.json`, so packaged runtime files cannot
+rely on the repository's `"type": "module"` declaration:
 
 ```json
 {
   "bin": {
-    "superpowers": "./bin/superpowers.js"
+    "superpowers": "./bin/superpowers.mjs"
   }
 }
 ```
@@ -145,7 +148,7 @@ Installing or linking the package exposes the required `superpowers metrics`
 command. A source-checkout fallback remains available as:
 
 ```text
-node /path/to/superpowers/bin/superpowers.js metrics <plan-path>
+node /path/to/superpowers/bin/superpowers.mjs metrics <plan-path>
 ```
 
 SDD invokes the entry point by its repository/plugin-relative path rather than
