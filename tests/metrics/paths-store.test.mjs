@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import test from 'node:test';
 import { resolvePlanIdentity } from '../../lib/metrics/paths.mjs';
 import { loadRunDirectory, selectRun } from '../../lib/metrics/store.mjs';
-import { makeRun, makeStoredRun, PLAN_PATH } from './fixtures.mjs';
+import { makeRun, makeStoredRun } from './fixtures.mjs';
 
 export function createRepo(t) {
   const root = mkdtempSync(join(tmpdir(), 'superpowers-metrics-'));
@@ -55,14 +55,14 @@ test('selects newest created_at with run id tie-break and validates --run owners
     makeStoredRun({ run_id: 'run-a', created_at: '2026-08-18T10:00:00.000Z' }),
     makeStoredRun({ run_id: 'run-b', created_at: '2026-08-18T10:00:00.000Z' }),
   ];
-  const selected = selectRun(runs, null, PLAN_PATH);
+  const selected = selectRun(runs, null);
   assert.equal(selected.metadata.run_id, 'run-b');
   const foreign = makeStoredRun({
     run_id: 'run-for-another-plan',
     plan_path: 'docs/superpowers/plans/other.md',
   });
-  assert.throws(() => selectRun([...runs, foreign], foreign.metadata.run_id, PLAN_PATH), /does not belong/);
-  assert.throws(() => selectRun([foreign, ...runs], null, PLAN_PATH), /does not belong/);
+  assert.throws(() => selectRun([...runs, foreign], foreign.metadata.run_id), /does not belong/);
+  assert.throws(() => selectRun([foreign, ...runs], null), /does not belong/);
 });
 
 test('loads metadata and retains malformed JSONL physical lines', (t) => {
