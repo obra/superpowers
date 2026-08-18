@@ -21,6 +21,23 @@ test('requires event id to bind run id and sequence', () => {
   const result = validateEvent(makeEvent(1, 'run_started', MINIMAL_PAYLOADS.run_started, { event_id: 'other-run:9' }), 1);
   assert.deepEqual(result.diagnostics.map(d => d.code), ['EVENT_ID_INVALID']);
 });
+test('rejects unrelated payload fields for every event contract', () => {
+  for (const [eventType, payload] of Object.entries(MINIMAL_PAYLOADS)) {
+    const result = validateEvent(makeEvent(1, eventType, { ...payload, unrelated_field: true }), 1);
+    assert.equal(result.diagnostics.filter(d => d.code === 'PAYLOAD_UNKNOWN_FIELD').length, 1, eventType);
+  }
+});
+test('rejects missing, malformed, unsafe, and wrong-sequence event ids', () => {
+  for (const event_id of [undefined, '', '../escape:1', 'other-run:1', `${makeEvent(1, 'run_started').run_id}:2`]) {
+    const overrides = event_id === undefined ? { event_id: undefined } : { event_id };
+    const result = validateEvent(makeEvent(1, 'run_started', MINIMAL_PAYLOADS.run_started, overrides), 1);
+    assert.deepEqual(result.diagnostics.map(d => d.code), ['EVENT_ID_INVALID'], String(event_id));
+  }
+});
+test('unknown event type never throws', () => {
+  const result = validateEvent(makeEvent(1, '__proto__', {}), 1);
+  assert.deepEqual(result.diagnostics.map(d => d.code), ['EVENT_TYPE_UNSUPPORTED']);
+});
 test('rejects unknown versions, event types, payload fields, and prose overflow', () => {
   const event = makeEvent(1, 'finding_raised', { finding_id: 'F-001', scope: 'TASK', task_id: 'task-1', category: 'QUALITY', severity: 'IMPORTANT', title: 'x'.repeat(241), surprise: true }, { schema_version: 2 });
   assert.deepEqual(validateEvent(event, 7).diagnostics.map(d => d.code), ['EVENT_SCHEMA_VERSION_UNSUPPORTED', 'PAYLOAD_UNKNOWN_FIELD', 'FINDING_TITLE_TOO_LONG']);
