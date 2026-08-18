@@ -6,7 +6,9 @@ import {
   invalidPostDispatchChange, makeRun, missingQualityReview, openBlockingFindingAccepted,
   parkedAndResolvedConflict, resolveBeforeRaise, sixFixRounds, supersededAcceptedTask,
   taskChangedBeforeDispatch, unresolvedCannotVerify, validAdjustedPlanEvents,
-  validBatchedTaskEvents, interventionForNamedTask,
+  validBatchedTaskEvents, interventionForNamedTask, failedReviewsAccepted,
+  invalidTaskTransitions, invalidFixRoundCompletion, resumePreservesReviewState,
+  mixedInterventionTasks,
 } from './fixtures.mjs';
 
 const effectiveIds = events => [...reduceRun(makeRun(), events).tasks.values()]
@@ -63,4 +65,37 @@ test('allows a blocked task to resume and attributes intervention only to named 
 
 test('does not accept a task with an open Critical or Important finding', () => {
   assert.equal(diagnosticCodes(openBlockingFindingAccepted()), 'TASK_ACCEPTANCE_OPEN_BLOCKING_FINDING');
+});
+
+test('does not accept paired reviews unless both initial gates approve', () => {
+  const reduced = reduceRun(makeRun(), failedReviewsAccepted());
+  assert.equal(diagnosticCodes(failedReviewsAccepted()), 'TASK_ACCEPTANCE_REVIEW_NOT_APPROVED');
+  assert.equal(reduced.tasks.get('task-1').state, 'UNDER_REVIEW');
+});
+
+test('rejects task transitions before prerequisites without resetting dispatch state', () => {
+  const reduced = reduceRun(makeRun(), invalidTaskTransitions());
+  assert.equal(diagnosticCodes(invalidTaskTransitions()), 'TASK_IMPLEMENTATION_DISPATCH_REQUIRED,TASK_REVIEW_IMPLEMENTATION_REQUIRED,TASK_DISPATCH_INVALID');
+  assert.equal(reduced.tasks.get('task-1').state, 'DISPATCHED');
+  assert.equal(reduced.tasks.get('task-1').dispatch_id, 'dispatch-a');
+});
+
+test('leaves fix state and findings unchanged when any completion result is invalid', () => {
+  const reduced = reduceRun(makeRun(), invalidFixRoundCompletion());
+  assert.equal(diagnosticCodes(invalidFixRoundCompletion()), 'FIX_ROUND_FINDING_INVALID');
+  assert.equal(reduced.tasks.get('task-1').fix_rounds, 0);
+  assert.equal(reduced.tasks.get('task-1').active_fix_round, 1);
+  assert.equal(reduced.findings.get('F-001').disposition, 'OPEN');
+});
+
+test('restores exact task state when a blocked run resumes', () => {
+  const reduced = reduceRun(makeRun(), resumePreservesReviewState());
+  assert.equal(reduced.tasks.get('task-1').state, 'UNDER_REVIEW');
+});
+
+test('rejects mixed known and unknown intervention tasks without partial attribution', () => {
+  const reduced = reduceRun(makeRun(), mixedInterventionTasks());
+  assert.equal(diagnosticCodes(mixedInterventionTasks()), 'INTERVENTION_TASK_UNKNOWN');
+  assert.equal(reduced.interventions.size, 0);
+  assert.equal(reduced.tasks.get('task-1').human_intervention_required, false);
 });

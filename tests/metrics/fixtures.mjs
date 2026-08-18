@@ -159,8 +159,8 @@ export function unresolvedCannotVerify() {
 }
 
 const taskWithFinding = () => reviewedTask().concat([
-  makeEvent(7, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'FAIL', gate_verdict: 'FAIL', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }),
-  makeEvent(8, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'NEEDS_FIXES' }),
+  makeEvent(7, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'PASS', gate_verdict: 'PASS', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }),
+  makeEvent(8, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'APPROVED' }),
   makeEvent(9, 'finding_raised', MINIMAL_PAYLOADS.finding_raised),
 ]);
 
@@ -236,4 +236,54 @@ export function interventionForNamedTask() {
 
 export function openBlockingFindingAccepted() {
   return numbered(taskWithFinding().concat(makeEvent(10, 'task_accepted', MINIMAL_PAYLOADS.task_accepted)));
+}
+
+export function failedReviewsAccepted() {
+  return numbered(reviewedTask().concat([
+    makeEvent(7, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'FAIL', gate_verdict: 'FAIL', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }),
+    makeEvent(8, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'NEEDS_FIXES' }),
+    makeEvent(9, 'task_accepted', MINIMAL_PAYLOADS.task_accepted),
+  ]));
+}
+
+export function invalidTaskTransitions() {
+  return numbered(preflight([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'task_registered', task('task-1', 1)),
+  ]).concat([
+    makeEvent(5, 'task_implementation_completed', { task_id: 'task-1', status: 'DONE', commit_ids: [] }),
+    makeEvent(6, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'PASS', gate_verdict: 'PASS', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }),
+    makeEvent(7, 'task_dispatched', { ...validTaskDispatchPayload(), dispatch_id: 'dispatch-a', attempt: 1 }),
+    makeEvent(8, 'task_dispatched', { ...validTaskDispatchPayload(), dispatch_id: 'dispatch-b', attempt: 2 }),
+  ]));
+}
+
+export function invalidFixRoundCompletion() {
+  return numbered([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), makeEvent(2, 'plan_registered', { task_count: 2 }),
+    makeEvent(3, 'task_registered', task('task-1', 1)), makeEvent(4, 'task_registered', task('task-2', 2)),
+    makeEvent(5, 'finding_raised', MINIMAL_PAYLOADS.finding_raised),
+    makeEvent(6, 'finding_raised', { ...MINIMAL_PAYLOADS.finding_raised, finding_id: 'F-002', task_id: 'task-2', title: 'Other task finding' }),
+    makeEvent(7, 'fix_round_started', MINIMAL_PAYLOADS.fix_round_started),
+    makeEvent(8, 'fix_round_completed', { ...MINIMAL_PAYLOADS.fix_round_completed, finding_results: [{ finding_id: 'F-001', verdict: 'ADDRESSED' }, { finding_id: 'F-002', verdict: 'ADDRESSED' }] }),
+  ]);
+}
+
+export function resumePreservesReviewState() {
+  return numbered(reviewedTask().concat([
+    makeEvent(7, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'PASS', gate_verdict: 'PASS', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }),
+    makeEvent(8, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'APPROVED' }),
+    makeEvent(9, 'task_blocked', MINIMAL_PAYLOADS.task_blocked),
+    makeEvent(10, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: ['task-1'] }),
+    makeEvent(11, 'run_resumed', MINIMAL_PAYLOADS.run_resumed),
+  ]));
+}
+
+export function mixedInterventionTasks() {
+  return numbered(preflight([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), makeEvent(2, 'plan_registered', { task_count: 2 }),
+    makeEvent(3, 'task_registered', task('task-1', 1)), makeEvent(4, 'task_registered', task('task-2', 2)),
+  ]).concat(makeEvent(6, 'human_intervention_required', {
+    intervention_id: 'intervention-1', affected_task_ids: ['task-1', 'task-9'], reason_code: 'SECURITY_SENSITIVE_ACTION',
+  })));
 }
