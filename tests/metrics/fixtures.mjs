@@ -11,6 +11,15 @@ export function makeRun(overrides = {}) {
   };
 }
 
+export function makeStoredRun(overrides = {}) {
+  const metadata = makeRun(overrides);
+  return {
+    runDir: `/tmp/superpowers-metrics/.superpowers/metrics/${metadata.plan_path.slice(0, -3)}/${metadata.run_id}`,
+    metadata,
+    eventLines: [],
+  };
+}
+
 export function makeEvent(sequence, event_type, payload = {}, overrides = {}) {
   return {
     schema_version: 1, event_id: `${RUN_ID}:${sequence}`, run_id: RUN_ID,
