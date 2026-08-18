@@ -14,6 +14,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Cursor](#cursor)
   - [Devin CLI](#devin-cli)
   - [Factory Droid](#factory-droid)
+  - [Freebuff](#freebuff)
   - [Gemini CLI](#gemini-cli)
   - [GitHub Copilot CLI](#github-copilot-cli)
   - [Grok Build CLI](#grok-build-cli)
@@ -152,6 +153,26 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
   ```bash
   droid plugin install superpowers@superpowers
   ```
+
+### Freebuff
+
+Freebuff natively scans `~/.agents/skills/` for skill files. No plugin system needed.
+
+- Install skills globally:
+
+  ```bash
+  npx skills add obra/superpowers --agent universal --skill * --yes --copy
+  ```
+
+- Add the bootstrap to your project's `CLAUDE.md`:
+
+  ```markdown
+  @~/workspace/CLAUDE-superpowers.md
+  ```
+
+- Start Freebuff — skills auto-load from `~/.agents/skills/`
+
+See [docs/README.freebuff.md](docs/README.freebuff.md) for full details and acceptance transcript.
 
 ### Gemini CLI
 
