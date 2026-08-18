@@ -21,9 +21,11 @@ export function makeStoredRun(overrides = {}) {
 }
 
 export function makeEvent(sequence, event_type, payload = {}, overrides = {}) {
+  const minute = Math.floor(sequence / 60);
+  const second = sequence % 60;
   return {
     schema_version: 1, event_id: `${RUN_ID}:${sequence}`, run_id: RUN_ID,
-    sequence, timestamp: `2026-08-18T12:${String(sequence).padStart(2, '0')}:00.000Z`,
+    sequence, timestamp: `2026-08-18T12:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}.000Z`,
     workflow: 'sdd', event_type, feature: 'foo', plan_path: PLAN_PATH,
     plan_fingerprint: FINGERPRINT, payload, ...overrides,
   };
@@ -287,3 +289,94 @@ export function mixedInterventionTasks() {
     intervention_id: 'intervention-1', affected_task_ids: ['task-1', 'task-9'], reason_code: 'SECURITY_SENSITIVE_ACTION',
   })));
 }
+
+const initialTask = (taskId, ordinal) => task(taskId, ordinal, `Task ${ordinal}`);
+
+function baseEvents(taskCount) {
+  const events = [
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: taskCount }),
+  ];
+  for (let ordinal = 1; ordinal <= taskCount; ordinal += 1) {
+    events.push(makeEvent(events.length + 1, 'task_registered', initialTask(`task-${ordinal}`, ordinal)));
+  }
+  events.push(makeEvent(events.length + 1, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }));
+  return events;
+}
+
+function initialReviewAndAccept(events, taskId, { finding = null, fixRounds = 0 } = {}) {
+  const next = (eventType, payload) => events.push(makeEvent(events.length + 1, eventType, payload));
+  next('task_dispatched', { task_id: taskId, dispatch_id: `dispatch-${taskId}`, attempt: 1, dispatch_kind: 'IMPLEMENTATION' });
+  next('task_implementation_completed', { task_id: taskId, status: 'DONE', commit_ids: [] });
+  next('task_implementation_review_result', { task_id: taskId, review_id: `review-${taskId}`, reviewer_verdict: 'PASS', gate_verdict: 'PASS', cannot_verify_count: 0, resolved_cannot_verify_count: 0 });
+  next('task_quality_review_result', { task_id: taskId, review_id: `review-${taskId}`, verdict: 'APPROVED' });
+  if (finding) next('finding_raised', finding);
+  for (let round = 1; round <= fixRounds; round += 1) {
+    next('fix_round_started', { task_id: taskId, round, finding_ids: finding ? [finding.finding_id] : [], dispatch_id: `fix-${taskId}-${round}` });
+    next('fix_round_completed', { task_id: taskId, round, review_id: `fix-review-${taskId}-${round}`, finding_results: finding ? [{ finding_id: finding.finding_id, verdict: 'ADDRESSED' }] : [] });
+  }
+  next('task_accepted', { task_id: taskId, acceptance_basis: 'REVIEW_CLEAN' });
+}
+
+export function nineTaskPassEvents() {
+  const events = baseEvents(9);
+  for (let ordinal = 1; ordinal <= 9; ordinal += 1) {
+    const finding = ordinal <= 2 ? {
+      finding_id: `F-00${ordinal}`, scope: 'TASK', task_id: `task-${ordinal}`, category: 'QUALITY', severity: 'IMPORTANT', title: `Finding ${ordinal}`,
+    } : null;
+    initialReviewAndAccept(events, `task-${ordinal}`, { finding, fixRounds: ordinal === 1 ? 2 : ordinal === 2 ? 1 : 0 });
+  }
+  events.push(makeEvent(events.length + 1, 'finding_raised', { finding_id: 'F-003', scope: 'TASK', task_id: 'task-3', category: 'QUALITY', severity: 'IMPORTANT', title: 'Recorded follow-up' }));
+  events.push(makeEvent(events.length + 1, 'finding_raised', { finding_id: 'F-004', scope: 'TASK', task_id: 'task-4', category: 'QUALITY', severity: 'IMPORTANT', title: 'Final follow-up' }));
+  events.push(makeEvent(events.length + 1, 'finding_parked', { finding_id: 'F-004', ruling_code: 'DEFERRED_NON_BLOCKING', task_id: 'task-4' }));
+  events.push(makeEvent(events.length + 1, 'final_review_result', { result: 'PASS', review_id: 'final-review', finding_ids: [] }));
+  events.push(makeEvent(events.length + 1, 'final_test_result', { result: 'PASS', evidence_kind: 'COUNTS', passed: 146, total: 146 }));
+  events.push(makeEvent(events.length + 1, 'run_passed', { basis: 'FINAL_TEST_AND_REVIEW_PASS' }));
+  return toLines(events);
+}
+
+export function reviewDenominatorEvents() {
+  const events = baseEvents(3);
+  initialReviewAndAccept(events, 'task-1');
+  initialReviewAndAccept(events, 'task-2');
+  initialReviewAndAccept(events, 'task-3', { finding: { finding_id: 'F-101', scope: 'TASK', task_id: 'task-3', category: 'QUALITY', severity: 'IMPORTANT', title: 'Needs repair' }, fixRounds: 2 });
+  return toLines(events);
+}
+
+export function autonomousCompletionEvents() {
+  const events = baseEvents(6);
+  initialReviewAndAccept(events, 'task-1');
+  initialReviewAndAccept(events, 'task-2');
+  initialReviewAndAccept(events, 'task-3');
+  initialReviewAndAccept(events, 'task-4');
+  events.push(makeEvent(events.length + 1, 'human_intervention_required', { intervention_id: 'intervention-mixed', affected_task_ids: ['task-3'], reason_code: 'SECURITY_SENSITIVE_ACTION' }));
+  return toLines(events);
+}
+
+export const outcomeEvents = {
+  emptyEvidence: () => [makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), makeEvent(2, 'plan_registered', { task_count: 0 }), makeEvent(3, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] })],
+  malformedBlocked: () => [makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), { not: 'an event' }, makeEvent(2, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: [] })],
+  failedFinalTests: () => baseEvents(0).concat([makeEvent(4, 'final_review_result', { result: 'PASS', review_id: 'final-review', finding_ids: [] }), makeEvent(5, 'final_test_result', { result: 'FAIL', evidence_kind: 'COUNTS', passed: 1, total: 2 }), makeEvent(6, 'run_blocked', { reason_code: 'FINAL_TEST_FAILED', task_ids: [] })]),
+  failedFinalReview: () => baseEvents(0).concat([makeEvent(4, 'final_review_result', { result: 'FAIL', review_id: 'final-review', finding_ids: [] }), makeEvent(5, 'run_blocked', { reason_code: 'FINAL_REVIEW_FAILED', task_ids: [] })]),
+  unresolvedWorkflowBlocker: () => baseEvents(1).concat(makeEvent(5, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: ['task-1'] })),
+  absenceOfFailureOnly: () => baseEvents(1),
+  findingsAndOrdering: () => baseEvents(2).concat([
+    makeEvent(6, 'finding_raised', { finding_id: 'F-002', scope: 'TASK', task_id: 'task-2', category: 'QUALITY', severity: 'IMPORTANT', title: 'First' }),
+    makeEvent(7, 'finding_raised', { finding_id: 'F-001', scope: 'TASK', task_id: 'task-1', category: 'SPEC', severity: 'CRITICAL', title: 'Second' }),
+    makeEvent(8, 'finding_resolved', { finding_id: 'F-002', resolution_code: 'FIX_VERIFIED', fix_round: 1 }),
+    makeEvent(9, 'finding_parked', { finding_id: 'F-001', ruling_code: 'DEFERRED_NON_BLOCKING', task_id: 'task-1' }),
+  ]),
+  resumedAndOpenFixRound: () => {
+    const events = baseEvents(1);
+    initialReviewAndAccept(events, 'task-1', { finding: { finding_id: 'F-201', scope: 'TASK', task_id: 'task-1', category: 'QUALITY', severity: 'MINOR', title: 'Minor' }, fixRounds: 1 });
+    events.push(makeEvent(events.length + 1, 'task_blocked', { task_id: 'task-1', reason_code: 'IMPLEMENTATION_BLOCKED', required_human_input: false }));
+    events.push(makeEvent(events.length + 1, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: ['task-1'] }));
+    events.push(makeEvent(events.length + 1, 'run_resumed', { previous_outcome: 'BLOCKED', reason_code: 'WORKFLOW_RESUMED' }));
+    events.push(makeEvent(events.length + 1, 'fix_round_started', { task_id: 'task-1', round: 2, finding_ids: ['F-201'], dispatch_id: 'fix-task-1-2' }));
+    return events;
+  },
+  taskCountsAndFinalExitStatus: () => baseEvents(1).concat([
+    makeEvent(5, 'task_test_result', { task_id: 'task-1', result: 'PASS', evidence_kind: 'COUNTS', passed: 2, total: 2 }),
+    makeEvent(6, 'final_test_result', { result: 'PASS', evidence_kind: 'EXIT_STATUS' }),
+  ]),
+};
