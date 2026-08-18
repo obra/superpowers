@@ -115,6 +115,21 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Select `Install Plugin`.
 
+### Metrics report CLI
+
+Codex package installs and development links expose `superpowers`. Run metrics
+locally and offline:
+
+```bash
+superpowers metrics docs/superpowers/plans/foo.md
+superpowers metrics docs/superpowers/plans/foo.md --json
+superpowers metrics docs/superpowers/plans/foo.md --write
+```
+
+Plugin workflows invoke shipped relative entry point `node bin/superpowers.mjs`.
+If Node is unavailable, workflow events remain available and report command is
+deferred until Node is available.
+
 ### Cursor
 
 - In Cursor Agent chat, install from marketplace:

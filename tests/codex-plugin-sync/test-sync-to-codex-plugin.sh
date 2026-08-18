@@ -98,6 +98,18 @@ assert_path_absent() {
     fi
 }
 
+assert_path_present() {
+    local path="$1"
+    local description="$2"
+
+    if [[ -e "$path" ]]; then
+        pass "$description"
+    else
+        fail "$description"
+        echo "    expected path to exist: $path"
+    fi
+}
+
 assert_branch_absent() {
     local repo="$1"
     local pattern="$2"
@@ -178,9 +190,11 @@ write_upstream_fixture() {
         "$repo/.kimi-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
+        "$repo/bin" \
         "$repo/evals/drill" \
         "$repo/hooks" \
         "$repo/scripts" \
+        "$repo/lib/metrics" \
         "$repo/skills/example"
 
     if [[ "$with_pure_ignored" == "1" ]]; then
@@ -242,6 +256,9 @@ EOF
 EOF
 
     printf 'png fixture\n' > "$repo/assets/app-icon.png"
+    printf '#!/usr/bin/env node\n' > "$repo/bin/superpowers.mjs"
+    chmod +x "$repo/bin/superpowers.mjs"
+    printf 'export const fixture = true;\n' > "$repo/lib/metrics/cli.mjs"
     printf 'eval harness fixture\n' > "$repo/evals/drill/README.md"
 
     cat > "$repo/hooks/hooks-codex.json" <<'EOF'
@@ -298,11 +315,13 @@ EOF
         .pre-commit-config.yaml \
         assets/app-icon.png \
         assets/superpowers-small.svg \
+        bin/superpowers.mjs \
         evals/drill/README.md \
         hooks/hooks-codex.json \
         hooks/run-hook.cmd \
         hooks/session-start \
         hooks/session-start-codex \
+        lib/metrics/cli.mjs \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
@@ -360,7 +379,9 @@ write_synced_destination_fixture() {
         "$repo/plugins/superpowers/.codex-plugin" \
         "$repo/plugins/superpowers/.private-journal" \
         "$repo/plugins/superpowers/assets" \
+        "$repo/plugins/superpowers/bin" \
         "$repo/plugins/superpowers/hooks" \
+        "$repo/plugins/superpowers/lib/metrics" \
         "$repo/plugins/superpowers/skills/example/agents" \
         "$repo/plugins/superpowers/skills/example"
 
@@ -376,6 +397,9 @@ EOF
 EOF
 
     printf 'png fixture\n' > "$repo/plugins/superpowers/assets/app-icon.png"
+    printf '#!/usr/bin/env node\n' > "$repo/plugins/superpowers/bin/superpowers.mjs"
+    chmod +x "$repo/plugins/superpowers/bin/superpowers.mjs"
+    printf 'export const fixture = true;\n' > "$repo/plugins/superpowers/lib/metrics/cli.mjs"
 
     cat > "$repo/plugins/superpowers/hooks/hooks-codex.json" <<'EOF'
 {
@@ -429,10 +453,12 @@ EOF
         plugins/superpowers/.codex-plugin/plugin.json \
         plugins/superpowers/assets/app-icon.png \
         plugins/superpowers/assets/superpowers-small.svg \
+        plugins/superpowers/bin/superpowers.mjs \
         plugins/superpowers/hooks/hooks-codex.json \
         plugins/superpowers/hooks/run-hook.cmd \
         plugins/superpowers/hooks/session-start \
         plugins/superpowers/hooks/session-start-codex \
+        plugins/superpowers/lib/metrics/cli.mjs \
         plugins/superpowers/skills/example/agents/openai.yaml \
         plugins/superpowers/skills/example/SKILL.md \
         plugins/superpowers/.private-journal/keep.txt
@@ -654,6 +680,8 @@ main() {
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
+    assert_contains "$preview_section" "bin/superpowers.mjs" "Preview includes metrics CLI"
+    assert_contains "$preview_section" "lib/metrics/cli.mjs" "Preview includes metrics runtime"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
     assert_contains "$preview_section" "hooks/session-start" "Preview includes session-start hook"
     assert_contains "$preview_section" "hooks/session-start-codex" "Preview includes Codex session-start hook"
@@ -709,6 +737,8 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     assert_file_equals "$noop_openai_metadata_path" "interface:
   display_name: \"Example\"
   short_description: \"Destination-owned OpenAI metadata\"" "Clean no-op local apply preserves OpenAI agent metadata"
+    assert_path_present "$noop_apply_dest/plugins/superpowers/bin/superpowers.mjs" "Apply destination contains metrics CLI"
+    assert_path_present "$noop_apply_dest/plugins/superpowers/lib/metrics/cli.mjs" "Apply destination contains metrics runtime"
 
     echo ""
     echo "Missing manifest assertions..."
