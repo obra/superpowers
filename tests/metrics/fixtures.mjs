@@ -29,6 +29,42 @@ export function makeEvent(sequence, event_type, payload = {}, overrides = {}) {
   };
 }
 
+export const toLines = events => events.map((event, index) => ({
+  lineNumber: index + 1,
+  text: JSON.stringify(event),
+}));
+
+export const numberLines = lines => lines.map((text, index) => ({ lineNumber: index + 1, text }));
+
+export const validTaskDispatchPayload = () => ({
+  task_id: 'task-1', dispatch_id: 'dispatch-2', attempt: 2, dispatch_kind: 'IMPLEMENTATION',
+});
+
+export function activeRunEvents() {
+  return [
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'task_registered', { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' }),
+    makeEvent(4, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }),
+  ];
+}
+
+export function blockedRunEvents() {
+  const events = activeRunEvents();
+  events.push(makeEvent(5, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: ['task-1'] }));
+  return events;
+}
+
+export function passingRunEvents() {
+  const events = activeRunEvents();
+  events.push(
+    makeEvent(5, 'final_review_result', { result: 'PASS', review_id: 'final-review-1', finding_ids: [] }),
+    makeEvent(6, 'final_test_result', { result: 'PASS', evidence_kind: 'COUNTS', passed: 1, total: 1 }),
+    makeEvent(7, 'run_passed', { basis: 'FINAL_TEST_AND_REVIEW_PASS' }),
+  );
+  return events;
+}
+
 export const MINIMAL_PAYLOADS = {
   run_started: { trigger: 'NEW_PLAN' },
   run_resumed: { previous_outcome: 'BLOCKED', reason_code: 'WORKFLOW_RESUMED' },
