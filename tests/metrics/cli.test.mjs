@@ -41,6 +41,13 @@ test('--run selects a retained run and --json emits JSON only', () => {
   assert.equal(result.stderr, '');
 });
 
+test('a structurally valid blocked run exits zero', () => {
+  const result = runCliProcess(root, ['metrics', PLAN_PATH, '--run', olderRun]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Outcome: BLOCKED/);
+  assert.equal(result.stderr, '');
+});
+
 test('--write refuses a retained run that is not latest', () => {
   const result = runCliProcess(root, ['metrics', PLAN_PATH, '--run', olderRun, '--write']);
   assert.equal(result.status, 2);
