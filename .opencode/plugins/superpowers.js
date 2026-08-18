@@ -142,31 +142,64 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
 /**
  * V2 Setup Function (default.setup)
  *
- * Called by V2 PluginSupervisor (packages/core/src/plugin/).
+ * Called by V2 PluginSupervisor (packages/core/src/plugin/supervisor.ts).
  * Performs two things:
  *
- * 1. Registers the skills directory natively via ctx.skill.transform().
+ * 1. Registers every skills/<name>/SKILL.md as a native Skill.Info object
+ *    via ctx.skill.transform((draft) => draft.add(info)).
+ *    V2 removed the old draft.source() directory registration; the draft API
+ *    is now { list, add, update, remove } where add() decodes plain objects:
+ *    { id, name, description?, slash?, autoinvoke?, location, content }.
+ *    See packages/core/src/plugin/skill.ts and packages/schema/src/skill.ts.
  * 2. Injects bootstrap context via ctx.session.hook("context"), the V2
  *    equivalent of V1's experimental.chat.messages.transform.
  */
 async function setup(ctx) {
-  // 1. Register skills
-  await ctx.skill.transform((draft) => {
-    draft.source({
-      type: 'directory',
-      path: superpowersSkillsDir,
+  // 1. Register skills (one transform; one draft.add per skill)
+  try {
+    const skills = [];
+    if (fs.existsSync(superpowersSkillsDir)) {
+      for (const entry of fs.readdirSync(superpowersSkillsDir, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+        const skillPath = path.join(superpowersSkillsDir, entry.name, 'SKILL.md');
+        if (!fs.existsSync(skillPath)) continue;
+        const { frontmatter, content } = extractAndStripFrontmatter(fs.readFileSync(skillPath, 'utf8'));
+        skills.push({
+          id: entry.name,
+          name: frontmatter.name || entry.name,
+          ...(frontmatter.description ? { description: frontmatter.description } : {}),
+          location: skillPath,
+          content,
+        });
+      }
+    }
+    await ctx.skill.transform((draft) => {
+      for (const skill of skills) draft.add(skill);
     });
-  });
+  } catch (err) {
+    // Never break plugin activation: one failing plugin takes down the whole
+    // V2 generation (including provider/catalog plugins => no models in TUI).
+    console.error('[superpowers] skill registration failed:', err);
+  }
 
   // 2. Inject bootstrap into first user message via V2 session context hook
-  await ctx.session.hook('context', (event) => {
-    const bootstrap = getBootstrapContent();
-    if (!bootstrap || !event.messages || !event.messages.length) return;
-    const firstUser = event.messages.find(m => m.role === 'user');
-    if (!firstUser || !firstUser.content || !firstUser.content.length) return;
-    if (firstUser.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
-    firstUser.content.unshift({ type: 'text', text: bootstrap });
-  });
+  try {
+    await ctx.session.hook('context', (event) => {
+      try {
+        const bootstrap = getBootstrapContent();
+        if (!bootstrap || !event.messages || !event.messages.length) return;
+        const firstUser = event.messages.find(m => m.role === 'user');
+        if (!firstUser || !firstUser.content || !firstUser.content.length) return;
+        if (firstUser.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+        firstUser.content.unshift({ type: 'text', text: bootstrap });
+      } catch (err) {
+        // Never let hook callback errors break the request pipeline.
+        console.error('[superpowers] context hook failed:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[superpowers] session hook registration failed:', err);
+  }
 }
 
 /**
