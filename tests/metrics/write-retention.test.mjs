@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, lstatSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test, { beforeEach } from 'node:test';
 import { spawnSync } from 'node:child_process';
@@ -64,12 +64,30 @@ test('--json --write emits JSON and writes Markdown', () => {
   assert.equal(readFileSync(reportPath, 'utf8'), renderMarkdown(JSON.parse(result.stdout)));
 });
 
+test('--write reports retention diagnostics on stderr without corrupting JSON stdout', () => {
+  const malformedRunId = '20260818T100000Z-malformed';
+  const malformedRunDir = join(identity.metricsPlanRoot, malformedRunId);
+  mkdirSync(malformedRunDir, { recursive: true });
+  writeFileSync(join(malformedRunDir, 'run.json'), `${JSON.stringify(makeRun({
+    run_id: malformedRunId,
+    created_at: '2026-08-18T10:00:00.000Z',
+  }))}\n`);
+  writeFileSync(join(malformedRunDir, 'events.jsonl'), 'not JSON\n');
+
+  const result = runCliProcess(root, ['metrics', PLAN_PATH, '--json', '--write']);
+  assert.equal(result.status, 0);
+  assert.doesNotThrow(() => JSON.parse(result.stdout));
+  assert.match(result.stderr, new RegExp(`RETENTION_RUN_UNCLASSIFIABLE.*${malformedRunId}`));
+});
+
 test('write failure exits 2 and preserves existing report target', () => {
   mkdirSync(reportPath, { recursive: true });
   writeFileSync(join(reportPath, 'previous-report.md'), 'previous report\n');
 
   const result = runCliProcess(root, ['metrics', PLAN_PATH, '--write']);
   assert.equal(result.status, 2);
+  assert.match(result.stderr, /Failed to write report/);
+  assert.match(result.stderr, new RegExp(reportPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.equal(readFileSync(join(reportPath, 'previous-report.md'), 'utf8'), 'previous report\n');
 });
 
@@ -115,6 +133,92 @@ test('retention preserves unclassifiable and symlinked run directories', t => {
   ]);
   assert.equal(existsSync(malformed.run.runDir), true);
   assert.equal(lstatSync(symlinkPath).isSymbolicLink(), true);
+});
+
+test('duplicate run id preserves its target once without retaining a deletable first candidate', () => {
+  const duplicate = classifiedRun('duplicate-1', '2026-08-18T12:00:00.000Z', 'PASS');
+  const result = applyRetention(identity, [duplicate, duplicate], 0);
+
+  assert.deepEqual(result.deleted, []);
+  assert.deepEqual(result.preserved, ['duplicate-1']);
+  assert.deepEqual(result.diagnostics.map(diagnostic => diagnostic.code), ['RETENTION_DUPLICATE_RUN_ID']);
+  assert.equal(existsSync(duplicate.run.runDir), true);
+});
+
+test('retention refuses a run directory replaced after classification', () => {
+  const replaced = classifiedRun('replaced-1', '2026-08-18T11:00:00.000Z', 'PASS');
+  const companion = classifiedRun('companion-1', '2026-08-18T12:00:00.000Z', 'PASS');
+  const originalMetadata = replaced.run.metadata;
+  let createdAtReads = 0;
+  Object.defineProperty(replaced.run, 'metadata', {
+    configurable: true,
+    get() {
+      return {
+        ...originalMetadata,
+        get created_at() {
+          createdAtReads += 1;
+          if (createdAtReads === 2) {
+            rmSync(replaced.run.runDir, { recursive: true, force: true });
+            mkdirSync(replaced.run.runDir, { recursive: true });
+            writeFileSync(join(replaced.run.runDir, 'run.json'), '{"replaced":true}\n');
+            writeFileSync(join(replaced.run.runDir, 'events.jsonl'), '');
+          }
+          return originalMetadata.created_at;
+        },
+      };
+    },
+  });
+
+  const result = applyRetention(identity, [replaced, companion], 0);
+  assert.equal(existsSync(replaced.run.runDir), true);
+  assert(result.preserved.includes('replaced-1'));
+  assert(result.diagnostics.some(diagnostic => diagnostic.code === 'RETENTION_TARGET_CHANGED'));
+});
+
+test('retention refuses metadata changed after classification in same directory', () => {
+  const changed = classifiedRun('metadata-changed-1', '2026-08-18T11:00:00.000Z', 'PASS');
+  const companion = classifiedRun('metadata-companion-1', '2026-08-18T12:00:00.000Z', 'PASS');
+  const originalMetadata = changed.run.metadata;
+  let createdAtReads = 0;
+  Object.defineProperty(changed.run, 'metadata', {
+    configurable: true,
+    get() {
+      return {
+        ...originalMetadata,
+        get created_at() {
+          createdAtReads += 1;
+          if (createdAtReads === 2) {
+            writeFileSync(join(changed.run.runDir, 'run.json'), `${JSON.stringify({
+              ...originalMetadata,
+              feature: 'changed-feature',
+            })}\n`);
+          }
+          return originalMetadata.created_at;
+        },
+      };
+    },
+  });
+
+  const result = applyRetention(identity, [changed, companion], 0);
+  assert.equal(existsSync(changed.run.runDir), true);
+  assert(result.preserved.includes('metadata-changed-1'));
+  assert(result.diagnostics.some(diagnostic => diagnostic.code === 'RETENTION_TARGET_CHANGED'));
+});
+
+test('retention refuses foreign-plan and non-child targets', () => {
+  const foreign = classifiedRun('foreign-1', '2026-08-18T12:00:00.000Z', 'PASS');
+  foreign.run.metadata.plan_path = 'docs/superpowers/plans/other.md';
+  const escaped = classifiedRun('escaped-1', '2026-08-18T13:00:00.000Z', 'PASS');
+  escaped.run.runDir = join(identity.metricsPlanRoot, '..', 'escaped-1');
+
+  const result = applyRetention(identity, [foreign, escaped], 0);
+  assert.deepEqual(result.deleted, []);
+  assert.equal(existsSync(join(identity.metricsPlanRoot, 'foreign-1')), true);
+  assert.equal(existsSync(join(identity.metricsPlanRoot, 'escaped-1')), true);
+  assert.deepEqual(result.diagnostics.map(diagnostic => diagnostic.code), [
+    'RETENTION_RUN_UNCLASSIFIABLE',
+    'RETENTION_RUN_UNCLASSIFIABLE',
+  ]);
 });
 
 test('writeReport does not replace byte-identical report', () => {
