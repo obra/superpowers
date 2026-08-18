@@ -29,3 +29,16 @@ test('rendering is deterministic and does not expose raw events', () => {
   assert.equal(renderMarkdown(passModel()), first);
   assert.doesNotMatch(first, /events\.jsonl|prompt|diff --git|command output/i);
 });
+
+test('requires reduced run identity for terminal and Markdown output', () => {
+  const model = { ...passModel(), run: undefined };
+  assert.throws(() => renderTerminal(model), /model\.run/);
+  assert.throws(() => renderMarkdown(model), /model\.run/);
+});
+
+test('aligns every terminal headline value in one column', () => {
+  const lines = renderTerminal(passModel()).split('\n');
+  const headline = lines.slice(5, 17);
+  const valueRightEdges = headline.map(line => line.trimEnd().length);
+  assert.deepEqual(new Set(valueRightEdges).size, 1);
+});

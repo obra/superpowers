@@ -7,7 +7,7 @@ Tasks                         9
 Completed                     9
 First-pass success        77.8%
 Autonomous completion    100.0%
-Fix rounds                   3
+Fix rounds                    3
 Fix rounds/task            0.33
 Critical findings             0
 Important findings            4
