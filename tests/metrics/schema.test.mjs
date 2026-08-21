@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { validateRunMetadata, validateEvent } from '../../lib/metrics/schema-v1.mjs';
+import { PAYLOAD_CONTRACTS, validateRunMetadata, validateEvent } from '../../lib/metrics/schema-v1.mjs';
 import { EVENT_TYPES } from '../../lib/metrics/constants.mjs';
 import { makeRun, makeEvent, MINIMAL_PAYLOADS } from './fixtures.mjs';
 
@@ -10,6 +10,17 @@ test('rejects unknown run fields and unsafe run ids', () => {
   assert.deepEqual(result.diagnostics.map(d => d.code), ['RUN_UNKNOWN_FIELD', 'RUN_ID_INVALID']);
 });
 test('event catalog has 27 entries', () => assert.equal(EVENT_TYPES.length, 27));
+test('exports one frozen payload contract for every event type', () => {
+  assert.deepEqual(Object.keys(PAYLOAD_CONTRACTS), EVENT_TYPES);
+  assert.ok(Object.isFrozen(PAYLOAD_CONTRACTS));
+  assert.deepEqual(PAYLOAD_CONTRACTS.task_test_result, {
+    allowed: ['task_id', 'result', 'evidence_kind', 'passed', 'total'],
+    required: ['task_id', 'result', 'evidence_kind'],
+    optional: ['passed', 'total'],
+    enums: { result: ['PASS', 'FAIL', 'UNKNOWN'], evidence_kind: ['COUNTS', 'EXIT_STATUS', 'UNINTERPRETABLE'] },
+  });
+  assert.deepEqual(PAYLOAD_CONTRACTS.fix_round_completed.enums['finding_results[].verdict'], ['ADDRESSED', 'NOT_ADDRESSED']);
+});
 test('accepts every v1 event type with its minimal payload', () => {
   for (const [eventType, payload] of Object.entries(MINIMAL_PAYLOADS)) assert.deepEqual(validateEvent(makeEvent(1, eventType, payload), 1).diagnostics, []);
 });

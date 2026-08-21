@@ -70,11 +70,59 @@ rereview. One initial reviewer emits both review events with same `review_id`.
 | `run_blocked` | `{"reason_code":"UPPER_SNAKE_CASE","task_ids":["task-N"] optional}` |
 | `run_incomplete` | `{"reason_code":"UPPER_SNAKE_CASE"}` |
 
+## Canonical payload template matrix
+
+`req`, `opt`, and `enum` are machine-parseable controller templates. `-` means
+empty. Nested enum key names use `[]`.
+
+| Event | req | opt | enum |
+|---|---|---|---|
+| `run_started` | trigger | - | trigger=NEW_PLAN\|MANUAL_START |
+| `run_resumed` | previous_outcome,reason_code | - | previous_outcome=BLOCKED\|INCOMPLETE |
+| `plan_registered` | task_count | - | - |
+| `preflight_completed` | result,diagnostic_codes | - | result=PASS\|FAIL |
+| `task_registered` | task_id,ordinal,title,origin | - | origin=INITIAL\|ADDED |
+| `plan_task_added` | task_id,ordinal,title,origin,previous_fingerprint,new_fingerprint,reason_code | - | origin=INITIAL\|ADDED |
+| `plan_task_changed` | task_id,ordinal,title,previous_fingerprint,new_fingerprint,reason_code | - | - |
+| `plan_task_superseded` | task_id,replacement_task_ids,previous_fingerprint,new_fingerprint,reason_code | - | - |
+| `task_dispatched` | task_id,dispatch_id,attempt,dispatch_kind | - | dispatch_kind=IMPLEMENTATION\|FIX\|TAKEOVER |
+| `task_implementation_completed` | task_id,status,commit_ids | - | status=DONE\|DONE_WITH_CONCERNS |
+| `task_test_result` | task_id,result,evidence_kind | passed,total | result=PASS\|FAIL\|UNKNOWN;evidence_kind=COUNTS\|EXIT_STATUS\|UNINTERPRETABLE |
+| `task_implementation_review_result` | task_id,review_id,reviewer_verdict,gate_verdict,cannot_verify_count,resolved_cannot_verify_count | - | reviewer_verdict=PASS\|FAIL\|CANNOT_VERIFY;gate_verdict=PASS\|FAIL |
+| `task_quality_review_result` | task_id,review_id,verdict | - | verdict=APPROVED\|NEEDS_FIXES |
+| `finding_raised` | finding_id,scope,category,severity,title | task_id,location | scope=TASK\|FINAL;category=SPEC\|QUALITY;severity=CRITICAL\|IMPORTANT\|MINOR |
+| `finding_resolved` | finding_id,resolution_code,fix_round | - | - |
+| `finding_parked` | finding_id,ruling_code,task_id | - | - |
+| `fix_round_started` | task_id,round,finding_ids,dispatch_id | - | - |
+| `fix_round_completed` | task_id,round,review_id,finding_results | - | finding_results[].verdict=ADDRESSED\|NOT_ADDRESSED |
+| `task_accepted` | task_id,acceptance_basis | - | - |
+| `task_blocked` | task_id,reason_code,required_human_input | - | - |
+| `human_intervention_required` | intervention_id,affected_task_ids,reason_code | - | - |
+| `human_intervention_completed` | intervention_id,resolution_code | - | - |
+| `final_review_result` | result,review_id,finding_ids | - | result=PASS\|FAIL |
+| `final_test_result` | result,evidence_kind | passed,total | result=PASS\|FAIL\|UNKNOWN;evidence_kind=COUNTS\|EXIT_STATUS\|UNINTERPRETABLE |
+| `run_passed` | basis | - | - |
+| `run_blocked` | reason_code | task_ids | - |
+| `run_incomplete` | reason_code | - | - |
+
 For `COUNTS`, emit `passed` and `total`, with `0 <= passed <= total`; for
 `EXIT_STATUS`/`UNINTERPRETABLE`, omit both. Omit optional fields; never emit
 placeholder prose or unknown fields.
 
-## Operational action map
+## Operational boundary matrix
+
+| boundary | owner | precondition | ordered events |
+|---|---|---|---|
+| new | task11 | new_run | run_started>plan_registered>task_registered>preflight_completed |
+| resume | task11 | blocked_or_incomplete | run_resumed |
+| amend | task11 | plan_change | plan_task_added\|plan_task_changed\|plan_task_superseded |
+| dispatch | task11 | preflight_PASS | task_dispatched |
+| report | task11 | implementer_report | task_implementation_completed>task_test_result |
+| review | task11 | one_reviewer | task_implementation_review_result>task_quality_review_result>finding_raised |
+| fix | task11 | open_finding | fix_round_started>fix_round_completed>finding_resolved\|finding_parked |
+| accept | task11 | paired_PASS_no_open_critical_or_important | task_accepted |
+| block | task11 | genuine_SDD_blocker_before_handoff | human_intervention_required>human_intervention_completed\|task_blocked>run_blocked\|run_incomplete |
+| final_handoff | task11_to_task12 | final_review_complete | finding_raised>final_review_result;task12:final_test_result>run_passed\|run_blocked |
 
 - New setup: create `run.json`, then append `run_started`, `plan_registered`,
   one `task_registered` per initial task, then `preflight_completed`; dispatch

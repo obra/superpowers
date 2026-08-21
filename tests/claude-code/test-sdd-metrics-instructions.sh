@@ -10,7 +10,7 @@ grep -q 'run_started' "$reference_file"
 grep -q 'task_implementation_review_result' "$reference_file"
 grep -q 'task_quality_review_result' "$reference_file"
 grep -q 'final_review_result' "$reference_file"
-grep -q '## Operational action map' "$reference_file"
+grep -q '## Operational boundary matrix' "$reference_file"
 grep -q 'Controller only writes metrics' "$reference_file"
 grep -q 'Never include prompts, source, diffs, secrets, command output' "$reference_file"
 grep -q 'For definite append failure before any bytes' "$reference_file"
@@ -23,44 +23,48 @@ node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { EVENT_TYPES } from './lib/metrics/constants.mjs';
+import { PAYLOAD_CONTRACTS } from './lib/metrics/schema-v1.mjs';
 
 const reference = await readFile('skills/subagent-driven-development/metrics-events.md', 'utf8');
-const schema = await readFile('lib/metrics/schema-v1.mjs', 'utf8');
 const table = reference.match(/^## Canonical event table\n([\s\S]*?)(?=^## |\Z)/m)?.[1];
 assert.ok(table, 'metrics-events.md must contain a Canonical event table');
 const documentedTypes = [...table.matchAll(/^\|\s*`([a-z_]+)`\s*\|/gm)].map(([, eventType]) => eventType);
 assert.deepEqual(documentedTypes, EVENT_TYPES, 'canonical event table must match EVENT_TYPES exactly');
 
-const rows = new Map([...table.matchAll(/^\|\s*`([a-z_]+)`\s*\|\s*(.*?)\s*\|$/gm)].map(([, eventType, row]) => [eventType, row]));
-const validators = new Map([...schema.matchAll(/(\w+): (validate\w+Payload)/g)].map(([, eventType, validator]) => [eventType, validator]));
-const quoted = source => [...source.matchAll(/'([^']+)'/g)].map(([, value]) => value);
-for (const eventType of EVENT_TYPES) {
-  const validator = validators.get(eventType);
-  assert.ok(validator, `schema must map ${eventType} to a payload validator`);
-  const start = schema.indexOf(`function ${validator}`);
-  const end = schema.indexOf('\nfunction ', start + 1) === -1 ? schema.indexOf('\nconst PAYLOAD_VALIDATORS', start) : schema.indexOf('\nfunction ', start + 1);
-  const body = schema.slice(start, end);
-  const keys = body.match(/exactKeys\(payload, \[([^\]]*)\], \[([^\]]*)\]/);
-  assert.ok(keys, `schema must declare payload keys for ${eventType}`);
-  for (const key of quoted(keys[2])) assert.ok(rows.get(eventType).includes(`"${key}"`), `${eventType} reference must document required ${key}`);
-  for (const key of quoted(keys[1])) assert.ok(rows.get(eventType).includes(`"${key}"`), `${eventType} reference must document allowed ${key}`);
-  for (const [, field, values] of body.matchAll(/enumField\(payload, '([^']+)', \[([^\]]*)\]/g)) {
-    assert.ok(rows.get(eventType).includes(`"${field}"`), `${eventType} reference must document enum field ${field}`);
-    for (const value of quoted(values)) assert.ok(rows.get(eventType).includes(value), `${eventType} reference must document ${field}=${value}`);
-  }
-}
-assert.ok(rows.get('fix_round_completed').includes('ADDRESSED') && rows.get('fix_round_completed').includes('NOT_ADDRESSED'), 'fix_round_completed must document finding result enums');
+const section = heading => reference.match(new RegExp(`^## ${heading}\\n([\\s\\S]*?)(?=^## |\\Z)`, 'm'))?.[1];
+const parseTable = heading => section(heading).split('\n').filter(line => line.startsWith('|') && !line.startsWith('|---')).map(line => line.slice(1, -1).split(/(?<!\\)\|/).map(cell => cell.trim().replaceAll('\\|', '|')));
+const list = cell => cell === '-' ? [] : cell.split(',');
+const enums = cell => cell === '-' ? {} : Object.fromEntries(cell.split(';').map(part => {
+  const [field, values] = part.split('=');
+  return [field, values.split('|')];
+}));
+const contractRows = parseTable('Canonical payload template matrix').slice(1);
+const documentedContracts = Object.fromEntries(contractRows.map(([eventType, required, optional, enumCell]) => {
+  const req = list(required), opt = list(optional);
+  return [eventType.replaceAll('`', ''), { allowed: [...req, ...opt], required: req, optional: opt, enums: enums(enumCell) }];
+}));
+assert.deepEqual(documentedContracts, PAYLOAD_CONTRACTS, 'canonical payload matrix must exactly match schema metadata');
 
-const actionMap = reference.match(/^## Operational action map\n([\s\S]*?)(?=^## |\Z)/m)?.[1];
-assert.ok(actionMap, 'metrics-events.md must contain operational action map');
-const task11Events = EVENT_TYPES.filter(eventType => !['final_test_result', 'run_passed'].includes(eventType));
-for (const eventType of task11Events) assert.ok(actionMap.includes(`\`${eventType}\``), `operational map must cover ${eventType}`);
-const compactMap = actionMap.replace(/\s+/g, ' ');
-assert.match(compactMap, /Task 11 owns `run_blocked` only for genuine SDD blockers before handoff/);
-assert.match(compactMap, /Task 12 owns `run_blocked` only for failures after handoff/);
+const boundaryMatrix = parseTable('Operational boundary matrix').slice(1);
+const BOUNDARY_ORACLE = [
+  ['new', 'task11', 'new_run', 'run_started>plan_registered>task_registered>preflight_completed'],
+  ['resume', 'task11', 'blocked_or_incomplete', 'run_resumed'],
+  ['amend', 'task11', 'plan_change', 'plan_task_added|plan_task_changed|plan_task_superseded'],
+  ['dispatch', 'task11', 'preflight_PASS', 'task_dispatched'],
+  ['report', 'task11', 'implementer_report', 'task_implementation_completed>task_test_result'],
+  ['review', 'task11', 'one_reviewer', 'task_implementation_review_result>task_quality_review_result>finding_raised'],
+  ['fix', 'task11', 'open_finding', 'fix_round_started>fix_round_completed>finding_resolved|finding_parked'],
+  ['accept', 'task11', 'paired_PASS_no_open_critical_or_important', 'task_accepted'],
+  ['block', 'task11', 'genuine_SDD_blocker_before_handoff', 'human_intervention_required>human_intervention_completed|task_blocked>run_blocked|run_incomplete'],
+  ['final_handoff', 'task11_to_task12', 'final_review_complete', 'finding_raised>final_review_result;task12:final_test_result>run_passed|run_blocked'],
+];
+assert.deepEqual(boundaryMatrix, BOUNDARY_ORACLE, 'operational boundary matrix must match workflow oracle');
 
-const requires = (text, token) => assert.ok(text.includes(token), `missing ${token}`);
-assert.throws(() => requires(rows.get('run_started').replace('NEW_PLAN', 'BROKEN'), 'NEW_PLAN'), /NEW_PLAN/);
-assert.throws(() => requires(rows.get('run_started').replaceAll('trigger', 'broken'), 'trigger'), /trigger/);
-assert.throws(() => requires(actionMap.replace('`run_started`', '`broken`'), '`run_started`'), /run_started/);
+const compareContracts = candidate => assert.deepEqual(candidate, PAYLOAD_CONTRACTS);
+const clonedContracts = () => structuredClone(documentedContracts);
+let planted = clonedContracts(); planted.run_started.allowed = []; assert.throws(() => compareContracts(planted));
+planted = clonedContracts(); planted.task_test_result.required.push('passed'); planted.task_test_result.optional = ['total']; assert.throws(() => compareContracts(planted));
+planted = clonedContracts(); planted.run_started.enums.trigger = ['NEW_PLAN']; assert.throws(() => compareContracts(planted));
+planted = clonedContracts(); planted.fix_round_completed.enums['finding_results[].verdict'].push('UNKNOWN'); assert.throws(() => compareContracts(planted));
+const reorderedMatrix = structuredClone(boundaryMatrix); reorderedMatrix[0][3] = 'plan_registered>run_started>task_registered>preflight_completed'; assert.throws(() => assert.deepEqual(reorderedMatrix, BOUNDARY_ORACLE));
 NODE
