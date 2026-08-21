@@ -3,6 +3,17 @@
 set -u
 
 probe='.superpowers/metrics/.ignore-probe'
+lock_attempts=20
+
+if ! repo_root=$(git rev-parse --show-toplevel); then
+  echo 'SDD metrics: cannot resolve repository root.' >&2
+  exit 1
+fi
+
+if ! cd "$repo_root"; then
+  echo "SDD metrics: cannot enter repository root: $repo_root" >&2
+  exit 1
+fi
 
 if git check-ignore -q -- "$probe"; then
   exit 0
@@ -16,6 +27,46 @@ fi
 if ! mkdir -p "$(dirname "$exclude_path")"; then
   echo "SDD metrics: cannot create local Git exclude directory: $exclude_path" >&2
   exit 1
+fi
+
+lock_path="$exclude_path.sdd-metrics-ignore.lock"
+lock_acquired=false
+for ((attempt = 1; attempt <= lock_attempts; attempt++)); do
+  if mkdir "$lock_path" 2>/dev/null; then
+    lock_acquired=true
+    break
+  fi
+
+  if git check-ignore -q -- "$probe"; then
+    exit 0
+  fi
+
+  sleep 1
+done
+
+if [[ "$lock_acquired" != true ]]; then
+  if git check-ignore -q -- "$probe"; then
+    exit 0
+  fi
+  echo "SDD metrics: timed out waiting for local ignore setup: $lock_path" >&2
+  exit 1
+fi
+
+release_lock() {
+  rmdir "$lock_path" 2>/dev/null || true
+}
+trap release_lock EXIT
+
+if git check-ignore -q -- "$probe"; then
+  exit 0
+fi
+
+if [[ -s "$exclude_path" ]]; then
+  last_byte=$(tail -c 1 "$exclude_path" | od -An -t x1 | tr -d '[:space:]')
+  if [[ "$last_byte" != 0a ]] && ! printf '\n' >> "$exclude_path"; then
+    echo "SDD metrics: cannot separate local Git exclude rule: $exclude_path" >&2
+    exit 1
+  fi
 fi
 
 if ! printf '/.superpowers/metrics/\n' >> "$exclude_path"; then

@@ -10,6 +10,8 @@ It uses `git rev-parse --git-path info/exclude`, returns immediately when
 exact `/.superpowers/metrics/` line and verifies it. It never changes tracked
 `.gitignore`. If setup fails, surface its error and continue SDD/event recording;
 do not halt the run or skip metrics events.
+The repository-local exclude is shared across linked worktrees; this shared scope
+is intended.
 
 ```bash
 if ! <path-to-this-skill>/scripts/ensure-metrics-ignore; then
