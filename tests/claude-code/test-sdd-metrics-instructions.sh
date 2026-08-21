@@ -19,6 +19,38 @@ grep -q 'node <plugin-root>/bin/superpowers.mjs metrics <plan-path>' "$reference
 grep -q 'Retain workspace, hand plan path and active run identity to finishing' "$reference_file"
 ! grep -q 'Delete this plan.s workspace' "$skill_file"
 
+finishing_file='skills/finishing-a-development-branch/SKILL.md'
+
+grep -q 'active SDD metrics run' "$finishing_file"
+grep -q 'final_test_result' "$finishing_file"
+grep -q 'run_passed' "$finishing_file"
+grep -q -- '--write --json' "$finishing_file"
+grep -q 'git add -- <report>' "$finishing_file"
+grep -q 'git commit --only' "$finishing_file"
+grep -q 'SDD workspace removal' "$finishing_file"
+grep -q 'run_blocked' "$finishing_file"
+grep -q 'report uncommitted' "$finishing_file"
+grep -qi 'preserve the SDD workspace' "$finishing_file"
+
+line_number() {
+  grep -n -m 1 -F -- "$1" "$finishing_file" | cut -d: -f1
+}
+
+final_test_result_line=$(line_number 'final_test_result')
+run_passed_line=$(line_number 'run_passed')
+report_write_line=$(line_number '--write --json')
+report_stage_line=$(line_number 'git add -- <report>')
+report_commit_line=$(line_number 'git commit --only')
+workspace_removal_line=$(line_number 'SDD workspace removal')
+present_options_line=$(line_number 'Present Options')
+
+(( final_test_result_line < run_passed_line ))
+(( run_passed_line < report_write_line ))
+(( report_write_line < report_stage_line ))
+(( report_stage_line < report_commit_line ))
+(( report_commit_line < workspace_removal_line ))
+(( workspace_removal_line < present_options_line ))
+
 node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';

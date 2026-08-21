@@ -25,6 +25,52 @@ Tests failing (<N> failures). Must fix before completing:
 
 **If tests pass:** continue to Step 2.
 
+## Step 1a: Finalize an active SDD metrics run
+
+Use this branch only when SDD handed finishing an active metrics plan path, run
+identity, named SDD workspace, and final-review result. Routine non-SDD
+finishing has no metrics branch and follows the current steps unchanged.
+
+After the full test command, append `final_test_result` to that active run.
+Use `COUNTS` with `passed` and `total` only when those counts are reliable;
+otherwise use `EXIT_STATUS` for a clear command result, or `UNINTERPRETABLE`
+with `UNKNOWN` when it is not. Never put test output in the event.
+
+**If final tests fail:** append `run_blocked` with
+`FINAL_TEST_FAILED`, then attempt report persistence:
+
+```bash
+node <plugin-root>/bin/superpowers.mjs metrics <plan-path> --write
+```
+
+Keep the report uncommitted. Preserve the SDD workspace. Report a write or
+Node failure visibly, then stop under the current failed-test rules; do not
+show the integration menu.
+
+**If final tests pass and final review is `PASS`:** append `run_passed` with
+`FINAL_TEST_AND_REVIEW_PASS`, then write the report:
+
+```bash
+node <plugin-root>/bin/superpowers.mjs metrics <plan-path> --write --json
+```
+
+Read the JSON outcome. If it is `PASS` and the generated report changed,
+commit only that report; unrelated staged and unstaged work must remain:
+
+```bash
+git add -- <report>
+git commit --only -m "docs(metrics): update <feature> report" -- <report>
+```
+
+If report writing, Node, or this commit fails, show the failure and leave the
+report in place. Do not suppress the existing integration menu after a
+successful final test because report persistence failed.
+
+After event persistence and the report attempt, when development itself is
+complete, remove only the named SDD workspace for this plan. Perform SDD workspace removal before Step 2.
+Never remove another plan workspace or the
+`.superpowers/sdd/.gitignore` file.
+
 ## Step 2: Detect Environment
 
 ```bash
