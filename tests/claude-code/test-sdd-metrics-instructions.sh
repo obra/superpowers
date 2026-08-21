@@ -25,7 +25,8 @@ grep -q 'active SDD metrics run' "$finishing_file"
 grep -q 'final_test_result' "$finishing_file"
 grep -q 'run_passed' "$finishing_file"
 grep -q -- '--write --json' "$finishing_file"
-grep -q 'git add -- <report>' "$finishing_file"
+grep -q 'git status --porcelain -- "<report>"' "$finishing_file"
+grep -q 'git add -- "<report>"' "$finishing_file"
 grep -q 'git commit --only' "$finishing_file"
 grep -q 'SDD workspace removal' "$finishing_file"
 grep -q 'run_blocked' "$finishing_file"
@@ -39,7 +40,7 @@ line_number() {
 final_test_result_line=$(line_number 'final_test_result')
 run_passed_line=$(line_number 'run_passed')
 report_write_line=$(line_number '--write --json')
-report_stage_line=$(line_number 'git add -- <report>')
+report_stage_line=$(line_number 'git add -- "<report>"')
 report_commit_line=$(line_number 'git commit --only')
 workspace_removal_line=$(line_number 'SDD workspace removal')
 present_options_line=$(line_number 'Present Options')
@@ -50,6 +51,73 @@ present_options_line=$(line_number 'Present Options')
 (( report_stage_line < report_commit_line ))
 (( report_commit_line < workspace_removal_line ))
 (( workspace_removal_line < present_options_line ))
+
+step1_start=$(grep -n -m 1 -F -- '## Step 1: Verify Tests' "$finishing_file" | cut -d: -f1)
+step1_end=$(grep -n -m 1 -F -- '## Step 1a: Finalize an active SDD metrics run' "$finishing_file" | cut -d: -f1)
+
+require_step1_marker() {
+  local marker
+  marker=$1
+  awk -v start="$step1_start" -v end="$step1_end" -v marker="$marker" 'NR > start && NR < end && index($0, marker) { found = 1 } END { exit found ? 0 : 1 }' "$finishing_file"
+}
+
+require_step1_marker 'active SDD metrics run, execute the Step 1a `final tests FAIL` terminal branch before stopping.'
+require_step1_marker 'Routine non-SDD finishing retains this report-and-stop behavior.'
+
+branch_start() {
+  grep -n -m 1 -F -- "### Terminal branch: $1" "$finishing_file" | cut -d: -f1
+}
+
+branch_end() {
+  awk -v start="$1" 'NR > start && /^### Terminal branch:/ { found = 1; print NR; exit } END { if (!found) print NR + 1 }' "$finishing_file"
+}
+
+branch_line() {
+  awk -v start="$1" -v end="$2" -v marker="$3" 'NR > start && NR < end && index($0, marker) { print NR; exit }' "$finishing_file"
+}
+
+require_branch_marker() {
+  local start end line
+  start=$(branch_start "$1")
+  end=$(branch_end "$start")
+  line=$(branch_line "$start" "$end" "$2")
+  [[ -n "$line" ]]
+}
+
+require_branch_marker 'final tests FAIL' 'final_test_result'
+require_branch_marker 'final tests FAIL' 'run_blocked'
+require_branch_marker 'final tests FAIL' 'report uncommitted'
+require_branch_marker 'final tests FAIL' 'Preserve the SDD workspace'
+require_branch_marker 'final tests FAIL' 'do not show the integration menu'
+
+require_branch_marker 'final tests UNKNOWN' 'final_test_result'
+require_branch_marker 'final tests UNKNOWN' 'run_incomplete'
+require_branch_marker 'final tests UNKNOWN' 'report uncommitted'
+require_branch_marker 'final tests UNKNOWN' 'Preserve the SDD workspace'
+require_branch_marker 'final tests UNKNOWN' 'do not show the integration menu'
+
+require_branch_marker 'final tests PASS, final review FAIL' 'run_blocked'
+require_branch_marker 'final tests PASS, final review FAIL' 'final_test_result'
+require_branch_marker 'final tests PASS, final review FAIL' 'final_review_result'
+require_branch_marker 'final tests PASS, final review FAIL' 'report uncommitted'
+require_branch_marker 'final tests PASS, final review FAIL' 'Preserve the SDD workspace'
+require_branch_marker 'final tests PASS, final review FAIL' 'do not show the integration menu'
+
+require_branch_marker 'final tests PASS, final review NOT_RUN' 'run_incomplete'
+require_branch_marker 'final tests PASS, final review NOT_RUN' 'final_test_result'
+require_branch_marker 'final tests PASS, final review NOT_RUN' 'report uncommitted'
+require_branch_marker 'final tests PASS, final review NOT_RUN' 'Preserve the SDD workspace'
+require_branch_marker 'final tests PASS, final review NOT_RUN' 'do not show the integration menu'
+
+require_branch_marker 'final tests PASS, final review PASS' 'run_passed'
+require_branch_marker 'final tests PASS, final review PASS' 'final_test_result'
+require_branch_marker 'final tests PASS, final review PASS' 'final_review_result'
+require_branch_marker 'final tests PASS, final review PASS' '--write --json'
+require_branch_marker 'final tests PASS, final review PASS' 'git status --porcelain -- "<report>"'
+require_branch_marker 'final tests PASS, final review PASS' 'git add -- "<report>"'
+require_branch_marker 'final tests PASS, final review PASS' 'git commit --only'
+require_branch_marker 'final tests PASS, final review PASS' 'SDD workspace removal'
+grep -q 'Only final tests PASS and final review PASS may continue to Step 2' "$finishing_file"
 
 node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';

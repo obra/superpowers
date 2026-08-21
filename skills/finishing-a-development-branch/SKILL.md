@@ -15,7 +15,10 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
-**If tests fail**, report the failures and stop — the menu comes after a green suite:
+**If tests fail:**
+
+- For an active SDD metrics run, execute the Step 1a `final tests FAIL` terminal branch before stopping.
+- Routine non-SDD finishing retains this report-and-stop behavior.
 
 ```
 Tests failing (<N> failures). Must fix before completing:
@@ -23,7 +26,8 @@ Tests failing (<N> failures). Must fix before completing:
 [Show failures]
 ```
 
-**If tests pass:** continue to Step 2.
+For routine non-SDD finishing, stop after this report. **If tests pass:**
+continue to Step 2.
 
 ## Step 1a: Finalize an active SDD metrics run
 
@@ -36,40 +40,71 @@ Use `COUNTS` with `passed` and `total` only when those counts are reliable;
 otherwise use `EXIT_STATUS` for a clear command result, or `UNINTERPRETABLE`
 with `UNKNOWN` when it is not. Never put test output in the event.
 
-**If final tests fail:** append `run_blocked` with
+### Terminal branch: final tests FAIL
+
+The `final_test_result` is `FAIL`. Append `run_blocked` with
 `FINAL_TEST_FAILED`, then attempt report persistence:
 
 ```bash
-node <plugin-root>/bin/superpowers.mjs metrics <plan-path> --write
+node "<plugin-root>/bin/superpowers.mjs" metrics "<plan-path>" --write
 ```
 
 Keep the report uncommitted. Preserve the SDD workspace. Report a write or
-Node failure visibly, then stop under the current failed-test rules; do not
-show the integration menu.
+Node failure visibly, then stop under the current failed-test rules; do not show the integration menu.
 
-**If final tests pass and final review is `PASS`:** append `run_passed` with
-`FINAL_TEST_AND_REVIEW_PASS`, then write the report:
+### Terminal branch: final tests UNKNOWN
+
+The `final_test_result` is `UNKNOWN`. Append `run_incomplete` with
+`EVIDENCE_INVALID`, then attempt report
+persistence with the same `--write` command. Keep the report uncommitted.
+Preserve the SDD workspace, visibly report the unknown final-test evidence, and stop; do not show the integration menu.
+
+### Terminal branch: final tests PASS, final review FAIL
+
+The `final_test_result` is `PASS` and `final_review_result` is `FAIL`.
+Append `run_blocked` with `FINAL_REVIEW_FAILED`, then attempt report
+persistence with the same `--write` command. Keep the report uncommitted.
+Preserve the SDD workspace, visibly report the failed review, and stop; do not show the integration menu.
+
+### Terminal branch: final tests PASS, final review NOT_RUN
+
+The `final_test_result` is `PASS` and no `final_review_result` exists. Append
+`run_incomplete` with `FINAL_REVIEW_NOT_RUN`, then attempt report
+persistence with the same `--write` command. Keep the report uncommitted.
+Preserve the SDD workspace, visibly report the absent final review, and stop; do not show the integration menu.
+
+### Terminal branch: final tests PASS, final review PASS
+
+The `final_test_result` and `final_review_result` are both `PASS`. Append
+`run_passed` with `FINAL_TEST_AND_REVIEW_PASS`, then write the report:
 
 ```bash
-node <plugin-root>/bin/superpowers.mjs metrics <plan-path> --write --json
+node "<plugin-root>/bin/superpowers.mjs" metrics "<plan-path>" --write --json
 ```
 
-Read the JSON outcome. If it is `PASS` and the generated report changed,
-commit only that report; unrelated staged and unstaged work must remain:
+Read the JSON outcome. If it is `PASS`, check only the report path; porcelain
+reports both changed tracked files and an untracked first report:
 
 ```bash
-git add -- <report>
-git commit --only -m "docs(metrics): update <feature> report" -- <report>
+if [ -n "$(git status --porcelain -- "<report>")" ]; then
+  git add -- "<report>"
+  git commit --only -m "docs(metrics): update <feature> report" -- "<report>"
+fi
 ```
 
-If report writing, Node, or this commit fails, show the failure and leave the
-report in place. Do not suppress the existing integration menu after a
-successful final test because report persistence failed.
+An unchanged report skips the commit without warning. A changed report commits
+only that report; unrelated staged and unstaged work must remain. If report
+writing, Node, or this commit fails, show the failure and leave the report in
+place. Do not suppress the existing integration menu after a PASS/PASS result
+because report persistence failed.
 
 After event persistence and the report attempt, when development itself is
 complete, remove only the named SDD workspace for this plan. Perform SDD workspace removal before Step 2.
 Never remove another plan workspace or the
 `.superpowers/sdd/.gitignore` file.
+
+Only final tests PASS and final review PASS may continue to Step 2 and the
+existing integration menu.
 
 ## Step 2: Detect Environment
 

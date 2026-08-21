@@ -59,12 +59,29 @@ function commitReport(root) {
   git(root, ['commit', '--only', '-m', SUBJECT, '--', REPORT]);
 }
 
+function reportChanged(root) {
+  return git(root, ['status', '--porcelain', '--', REPORT]).trim() !== '';
+}
+
 function assertFailedCommitState(root) {
   assert.equal(existsSync(join(root, REPORT)), true);
   assert.deepEqual(stagedPaths(root).filter(path => path.startsWith('unrelated-')), ['unrelated-staged.txt']);
   assert.deepEqual(unstagedPaths(root).filter(path => path.startsWith('unrelated-')), ['unrelated-unstaged.txt']);
-  assert.notEqual(git(root, ['log', '--format=%s', '--all']), `${SUBJECT}\n`);
+  const subjects = git(root, ['log', '--format=%s', '--all']).split('\n').filter(Boolean);
+  assert.equal(subjects.includes(SUBJECT), false);
 }
+
+test('scoped porcelain detects untracked, unchanged, and modified reports', t => {
+  const root = createRepository(t);
+  assert.equal(reportChanged(root), true);
+
+  git(root, ['add', '--', REPORT]);
+  git(root, ['commit', '-m', 'fixture report']);
+  assert.equal(reportChanged(root), false);
+
+  writeFileSync(join(root, REPORT), '# Lifecycle report: changed\n');
+  assert.equal(reportChanged(root), true);
+});
 
 test('commits only generated lifecycle report without touching unrelated work', t => {
   const root = createRepository(t);
