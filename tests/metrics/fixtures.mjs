@@ -153,9 +153,14 @@ export function blockedRunEvents() {
 export function passingRunEvents() {
   const events = activeRunEvents();
   events.push(
-    makeEvent(5, 'final_review_result', { result: 'PASS', review_id: 'final-review-1', finding_ids: [] }),
-    makeEvent(6, 'final_test_result', { result: 'PASS', evidence_kind: 'COUNTS', passed: 1, total: 1 }),
-    makeEvent(7, 'run_passed', { basis: 'FINAL_TEST_AND_REVIEW_PASS' }),
+    makeEvent(5, 'task_dispatched', { task_id: 'task-1', dispatch_id: 'dispatch-1', attempt: 1, dispatch_kind: 'IMPLEMENTATION' }),
+    makeEvent(6, 'task_implementation_completed', { task_id: 'task-1', status: 'DONE', commit_ids: [] }),
+    makeEvent(7, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'PASS', gate_verdict: 'PASS', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }),
+    makeEvent(8, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'APPROVED' }),
+    makeEvent(9, 'task_accepted', { task_id: 'task-1', acceptance_basis: 'REVIEW_CLEAN' }),
+    makeEvent(10, 'final_review_result', { result: 'PASS', review_id: 'final-review-1', finding_ids: [] }),
+    makeEvent(11, 'final_test_result', { result: 'PASS', evidence_kind: 'COUNTS', passed: 1, total: 1 }),
+    makeEvent(12, 'run_passed', { basis: 'FINAL_TEST_AND_REVIEW_PASS' }),
   );
   return events;
 }
@@ -218,7 +223,7 @@ export function validAdjustedPlanEvents() {
     makeEvent(3, 'task_registered', task('task-1', 1)),
     makeEvent(4, 'task_registered', task('task-2', 2)),
     makeEvent(5, 'plan_task_added', { task_id: 'task-3', ordinal: 3, title: 'Added task', origin: 'ADDED', previous_fingerprint: FINGERPRINT, new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION' }),
-    makeEvent(6, 'plan_task_superseded', { task_id: 'task-1', replacement_task_ids: ['task-3'], previous_fingerprint: SECOND_FINGERPRINT, new_fingerprint: FINGERPRINT, reason_code: 'PLAN_CORRECTION' }),
+    makeEvent(6, 'plan_task_superseded', { task_id: 'task-1', replacement_task_ids: ['task-3'], previous_fingerprint: SECOND_FINGERPRINT, new_fingerprint: FINGERPRINT, reason_code: 'PLAN_CORRECTION' }, { plan_fingerprint: SECOND_FINGERPRINT }),
   ]);
 }
 
@@ -292,7 +297,7 @@ export function supersededAcceptedTask() {
     makeEvent(8, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'APPROVED' }),
     makeEvent(9, 'task_accepted', MINIMAL_PAYLOADS.task_accepted),
     makeEvent(10, 'plan_task_added', { task_id: 'task-2', ordinal: 2, title: 'Replacement', origin: 'ADDED', previous_fingerprint: FINGERPRINT, new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION' }),
-    makeEvent(11, 'plan_task_superseded', { task_id: 'task-1', replacement_task_ids: ['task-2'], previous_fingerprint: SECOND_FINGERPRINT, new_fingerprint: FINGERPRINT, reason_code: 'PLAN_CORRECTION' }),
+    makeEvent(11, 'plan_task_superseded', { task_id: 'task-1', replacement_task_ids: ['task-2'], previous_fingerprint: SECOND_FINGERPRINT, new_fingerprint: FINGERPRINT, reason_code: 'PLAN_CORRECTION' }, { plan_fingerprint: SECOND_FINGERPRINT }),
   ]));
 }
 
@@ -449,8 +454,8 @@ export function autonomousCompletionEvents() {
 export const outcomeEvents = {
   emptyEvidence: () => [makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), makeEvent(2, 'plan_registered', { task_count: 0 }), makeEvent(3, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] })],
   malformedBlocked: () => [makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }), { not: 'an event' }, makeEvent(2, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: [] })],
-  failedFinalTests: () => baseEvents(0).concat([makeEvent(4, 'final_review_result', { result: 'PASS', review_id: 'final-review', finding_ids: [] }), makeEvent(5, 'final_test_result', { result: 'FAIL', evidence_kind: 'COUNTS', passed: 1, total: 2 }), makeEvent(6, 'run_blocked', { reason_code: 'FINAL_TEST_FAILED', task_ids: [] })]),
-  failedFinalReview: () => baseEvents(0).concat([makeEvent(4, 'final_review_result', { result: 'FAIL', review_id: 'final-review', finding_ids: [] }), makeEvent(5, 'run_blocked', { reason_code: 'FINAL_REVIEW_FAILED', task_ids: [] })]),
+  failedFinalTests: () => baseEvents(1).concat([makeEvent(5, 'final_review_result', { result: 'PASS', review_id: 'final-review', finding_ids: [] }), makeEvent(6, 'final_test_result', { result: 'FAIL', evidence_kind: 'COUNTS', passed: 1, total: 2 }), makeEvent(7, 'run_blocked', { reason_code: 'FINAL_TEST_FAILED', task_ids: [] })]),
+  failedFinalReview: () => baseEvents(1).concat([makeEvent(5, 'final_review_result', { result: 'FAIL', review_id: 'final-review', finding_ids: [] }), makeEvent(6, 'run_blocked', { reason_code: 'FINAL_REVIEW_FAILED', task_ids: [] })]),
   unresolvedWorkflowBlocker: () => baseEvents(1).concat(makeEvent(5, 'run_blocked', { reason_code: 'IMPLEMENTATION_BLOCKED', task_ids: ['task-1'] })),
   absenceOfFailureOnly: () => baseEvents(1),
   findingsAndOrdering: () => baseEvents(2).concat([

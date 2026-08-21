@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test, { beforeEach } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
@@ -73,4 +74,26 @@ test('rejects repeated single-value flags', () => {
   const result = runCliProcess(root, ['metrics', PLAN_PATH, '--run', olderRun, '--run', olderRun]);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /--run.*once/i);
+});
+
+test('--write reports malformed, symlinked, and unclassifiable store children without corrupting JSON', () => {
+  const planRoot = join(root, '.superpowers/metrics/docs/superpowers/plans/foo');
+  const malformed = join(planRoot, 'malformed-child');
+  mkdirSync(malformed, { recursive: true });
+  writeFileSync(join(malformed, 'run.json'), '{bad json\n');
+  writeFileSync(join(malformed, 'events.jsonl'), '');
+  const target = join(root, 'outside-run');
+  mkdirSync(target);
+  symlinkSync(target, join(planRoot, 'symlink-child'), 'junction');
+  writeFileSync(join(planRoot, 'not-a-run-file'), 'keep me\n');
+
+  const result = runCliProcess(root, ['metrics', PLAN_PATH, '--json', '--write']);
+  assert.equal(result.status, 0);
+  assert.doesNotThrow(() => JSON.parse(result.stdout));
+  assert.match(result.stderr, /RETENTION_RUN_UNCLASSIFIABLE.*malformed-child/);
+  assert.match(result.stderr, /RETENTION_SYMLINK_REFUSED.*symlink-child/);
+  assert.match(result.stderr, /RETENTION_RUN_UNCLASSIFIABLE.*not-a-run-file/);
+  assert.equal(existsSync(malformed), true);
+  assert.equal(existsSync(join(planRoot, 'symlink-child')), true);
+  assert.equal(existsSync(join(planRoot, 'not-a-run-file')), true);
 });

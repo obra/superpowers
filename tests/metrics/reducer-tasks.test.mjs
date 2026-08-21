@@ -10,6 +10,7 @@ import {
   invalidTaskTransitions, invalidFixRoundCompletion, resumePreservesReviewState,
   mixedInterventionTasks,
 } from './fixtures.mjs';
+import { FINGERPRINT, SECOND_FINGERPRINT, makeEvent, toLines } from './fixtures.mjs';
 
 const effectiveIds = events => [...reduceRun(makeRun(), events).tasks.values()]
   .filter(task => task.effective)
@@ -98,4 +99,30 @@ test('rejects mixed known and unknown intervention tasks without partial attribu
   assert.equal(diagnosticCodes(mixedInterventionTasks()), 'INTERVENTION_TASK_UNKNOWN');
   assert.equal(reduced.interventions.size, 0);
   assert.equal(reduced.tasks.get('task-1').human_intervention_required, false);
+});
+
+test('rejects every task attribution after supersession without mutation', () => {
+  const adjustment = { previous_fingerprint: FINGERPRINT, new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION' };
+  const events = [
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'task_registered', { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' }),
+    makeEvent(4, 'plan_task_superseded', { task_id: 'task-1', replacement_task_ids: [], ...adjustment }),
+    makeEvent(5, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(6, 'task_dispatched', { task_id: 'task-1', dispatch_id: 'dispatch-1', attempt: 1, dispatch_kind: 'IMPLEMENTATION' }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(7, 'task_implementation_completed', { task_id: 'task-1', status: 'DONE', commit_ids: [] }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(8, 'task_implementation_review_result', { task_id: 'task-1', review_id: 'review-1', reviewer_verdict: 'PASS', gate_verdict: 'PASS', cannot_verify_count: 0, resolved_cannot_verify_count: 0 }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(9, 'task_quality_review_result', { task_id: 'task-1', review_id: 'review-1', verdict: 'APPROVED' }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(10, 'fix_round_started', { task_id: 'task-1', round: 1, finding_ids: [], dispatch_id: 'dispatch-fix-1' }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(11, 'task_blocked', { task_id: 'task-1', reason_code: 'IMPLEMENTATION_BLOCKED', required_human_input: false }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(12, 'finding_raised', { finding_id: 'F-001', scope: 'TASK', task_id: 'task-1', category: 'QUALITY', severity: 'IMPORTANT', title: 'Stale task' }, { plan_fingerprint: SECOND_FINGERPRINT }),
+    makeEvent(13, 'human_intervention_required', { intervention_id: 'intervention-1', affected_task_ids: ['task-1'], reason_code: 'SECURITY_SENSITIVE_ACTION' }, { plan_fingerprint: SECOND_FINGERPRINT }),
+  ];
+  const reduced = reduceRun(makeRun(), toLines(events));
+  assert.equal(reduced.tasks.get('task-1').state, 'SUPERSEDED');
+  assert.equal(reduced.tasks.get('task-1').dispatched, false);
+  assert.equal(reduced.findings.size, 0);
+  assert.equal(reduced.interventions.size, 0);
+  assert.equal(reduced.diagnostics.filter(diagnostic => diagnostic.code === 'TASK_SUPERSEDED_EXECUTION_INVALID').length, 6);
+  assert.equal(reduced.diagnostics.filter(diagnostic => diagnostic.code === 'TASK_SUPERSEDED_ATTRIBUTION_INVALID').length, 2);
 });

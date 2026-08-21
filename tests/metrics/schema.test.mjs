@@ -5,6 +5,12 @@ import { EVENT_TYPES } from '../../lib/metrics/constants.mjs';
 import { makeRun, makeEvent, MINIMAL_PAYLOADS } from './fixtures.mjs';
 
 test('accepts canonical run metadata', () => assert.deepEqual(validateRunMetadata(makeRun()).diagnostics, []));
+test('accepts SHA-1 and SHA-256 Git blob fingerprints consistently', () => {
+  for (const fingerprint of [`git-blob:${'a'.repeat(40)}`, `git-blob:${'b'.repeat(64)}`]) {
+    assert.deepEqual(validateRunMetadata(makeRun({ initial_plan_fingerprint: fingerprint })).diagnostics, [], fingerprint);
+    assert.deepEqual(validateEvent(makeEvent(1, 'run_started', MINIMAL_PAYLOADS.run_started, { plan_fingerprint: fingerprint }), 1).diagnostics, [], fingerprint);
+  }
+});
 test('rejects unknown run fields and unsafe run ids', () => {
   const result = validateRunMetadata(makeRun({ run_id: '../escape', extra: 1 }));
   assert.deepEqual(result.diagnostics.map(d => d.code), ['RUN_UNKNOWN_FIELD', 'RUN_ID_INVALID']);

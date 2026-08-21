@@ -22,6 +22,11 @@ grep -q 'ensure-metrics-ignore' "$reference_file"
 grep -q 'continue SDD/event recording' "$reference_file"
 grep -q 'if ! <path-to-this-skill>/scripts/ensure-metrics-ignore; then' "$reference_file"
 grep -q 'shared across linked worktrees; this shared scope' "$reference_file"
+grep -q 'task_count.*at least 1' "$reference_file"
+grep -q 'git-blob:<40 or 64 lowercase hex>' "$reference_file"
+grep -q 'plan_fingerprint.*previous_fingerprint' "$reference_file"
+grep -q 'accepted revision becomes.*new_fingerprint' "$reference_file"
+! grep -q 'git-blob:<40 lowercase hex>' "$reference_file"
 grep -q 'git rev-parse --git-path info/exclude' "$ignore_script"
 grep -q "probe='.superpowers/metrics/.ignore-probe'" "$ignore_script"
 grep -q 'git check-ignore -q -- "$probe"' "$ignore_script"
@@ -139,6 +144,10 @@ import { EVENT_TYPES } from './lib/metrics/constants.mjs';
 import { PAYLOAD_CONTRACTS } from './lib/metrics/schema-v1.mjs';
 
 const reference = await readFile('skills/subagent-driven-development/metrics-events.md', 'utf8');
+assert.match(reference, /\| `plan_registered` \| `\{"task_count":<integer at least 1>\}` \|/, 'plan_registered task_count must be positive');
+assert.match(reference, /git-blob:<40 or 64 lowercase hex>/, 'fingerprint templates must accept SHA-1 and SHA-256');
+assert.doesNotMatch(reference, /git-blob:<40 lowercase hex>/, 'fingerprint templates must not drift back to SHA-1 only');
+assert.match(reference, /plan-adjustment event envelope `plan_fingerprint` equals `previous_fingerprint`; then accepted revision becomes `new_fingerprint`\./, 'plan adjustments must bind envelope to the prior accepted revision');
 const table = reference.match(/^## Canonical event table\n([\s\S]*?)(?=^## |\Z)/m)?.[1];
 assert.ok(table, 'metrics-events.md must contain a Canonical event table');
 const documentedTypes = [...table.matchAll(/^\|\s*`([a-z_]+)`\s*\|/gm)].map(([, eventType]) => eventType);

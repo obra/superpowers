@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { reduceRun } from '../../lib/metrics/reducer.mjs';
+import { buildReducedModel } from '../../lib/metrics/model.mjs';
 import {
   RUN_ID, activeRunEvents, blockedRunEvents, makeEvent, makeRun, numberLines,
-  passingRunEvents, SECOND_FINGERPRINT, toLines, validTaskDispatchPayload,
+  passingRunEvents, SECOND_FINGERPRINT, FINGERPRINT, nineTaskPassEvents, toLines, validTaskDispatchPayload,
 } from './fixtures.mjs';
 
 const blockedPrefix = blockedRunEvents();
@@ -114,6 +115,35 @@ test('requires accepted passing preflight evidence before run_passed', () => {
   assert.equal(reduced.state.explicit_outcome, null);
 });
 
+test('rejects PASS when plan registration has no matching initial task evidence', () => {
+  const events = [
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }),
+    makeEvent(4, 'final_review_result', { result: 'PASS', review_id: 'final-review-1', finding_ids: [] }),
+    makeEvent(5, 'final_test_result', { result: 'PASS', evidence_kind: 'COUNTS', passed: 1, total: 1 }),
+    makeEvent(6, 'run_passed', { basis: 'FINAL_TEST_AND_REVIEW_PASS' }),
+  ];
+  const reduced = reduceRun(makeRun(), toLines(events));
+  assert.ok(reduced.diagnostics.some(diagnostic => diagnostic.code === 'INITIAL_TASK_COUNT_MISMATCH'));
+  assert.equal(reduced.state.explicit_outcome, null);
+  assert.equal(buildReducedModel(reduced).outcome, 'INCOMPLETE');
+});
+
+test('rejects duplicate plan registration and mismatched event identity before PASS', () => {
+  const duplicate = activeRunEvents();
+  duplicate.splice(2, 0, makeEvent(3, 'plan_registered', { task_count: 1 }));
+  duplicate[3] = makeEvent(4, 'task_registered', { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' });
+  duplicate[4] = makeEvent(5, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] });
+  assert.ok(reduceRun(makeRun(), toLines(duplicate)).diagnostics.some(diagnostic => diagnostic.code === 'PLAN_REGISTERED_DUPLICATE'));
+
+  const forged = nineTaskPassEvents().map(line => JSON.parse(line.text));
+  forged[3] = { ...forged[3], feature: 'other', plan_path: 'docs/superpowers/plans/other.md', plan_fingerprint: SECOND_FINGERPRINT };
+  const reduced = reduceRun(makeRun(), toLines(forged));
+  assert.deepEqual(reduced.diagnostics[0].code, 'EVENT_FEATURE_MISMATCH');
+  assert.equal(buildReducedModel(reduced).outcome, 'INCOMPLETE');
+});
+
 test('does not reduce passing events when run metadata is invalid', () => {
   const reduced = reduceRun(makeRun({ feature: '' }), toLines(passingRunEvents()));
   assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_FEATURE_INVALID']);
@@ -133,15 +163,27 @@ test('uses new plan fingerprints from accepted plan adjustments', () => {
     makeEvent(6, 'plan_task_changed', {
       task_id: 'task-1', ordinal: 1, title: 'Changed task',
       previous_fingerprint: SECOND_FINGERPRINT,
-      new_fingerprint: 'git-blob:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', reason_code: 'PLAN_CORRECTION',
-    }),
+      new_fingerprint: FINGERPRINT, reason_code: 'PLAN_CORRECTION',
+    }, { plan_fingerprint: SECOND_FINGERPRINT }),
     makeEvent(7, 'plan_task_superseded', {
       task_id: 'task-1', replacement_task_ids: ['task-2'],
-      previous_fingerprint: 'git-blob:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      previous_fingerprint: FINGERPRINT,
       new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION',
     }),
   );
   const reduced = reduceRun(makeRun(), toLines(events));
   assert.deepEqual(reduced.diagnostics, []);
   assert.equal(reduced.latestPlanFingerprint, SECOND_FINGERPRINT);
+});
+
+test('rejects a plan adjustment whose envelope does not attest its previous revision', () => {
+  const events = activeRunEvents();
+  events.push(makeEvent(5, 'plan_task_added', {
+    task_id: 'task-2', ordinal: 2, title: 'Added task', origin: 'ADDED',
+    previous_fingerprint: FINGERPRINT, new_fingerprint: SECOND_FINGERPRINT, reason_code: 'PLAN_CORRECTION',
+  }, { plan_fingerprint: SECOND_FINGERPRINT }));
+  const reduced = reduceRun(makeRun(), toLines(events));
+  assert.deepEqual(reduced.diagnostics.map(diagnostic => diagnostic.code), ['PLAN_ADJUSTMENT_ENVELOPE_FINGERPRINT_MISMATCH']);
+  assert.equal(reduced.latestPlanFingerprint, FINGERPRINT);
+  assert.equal(reduced.tasks.has('task-2'), false);
 });

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import test, { beforeEach } from 'node:test';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -229,4 +230,49 @@ test('writeReport does not replace byte-identical report', () => {
   assert.deepEqual(first, { reportPath, changed: true });
   assert.deepEqual(second, { reportPath, changed: false });
   assert.equal(statSync(reportPath).mtimeMs, firstMtime);
+});
+
+test('writeReport refuses symlinked report roots and nested components', t => {
+  const outsideRoot = mkdtempSync(join(tmpdir(), 'superpowers-metrics-outside-root-'));
+  t.after(() => rmSync(outsideRoot, { recursive: true, force: true }));
+  const reportRoot = join(root, 'docs/superpowers/reports');
+  symlinkSync(outsideRoot, reportRoot, 'junction');
+  assert.throws(() => writeReport(identity, '# blocked\n'), /symlink/i);
+  assert.equal(existsSync(join(outsideRoot, 'foo.md')), false);
+
+  rmSync(reportRoot, { force: true });
+  mkdirSync(join(root, 'docs/superpowers/plans/team'), { recursive: true });
+  writeFileSync(join(root, 'docs/superpowers/plans/team/foo.md'), '# Nested\n');
+  const nestedIdentity = resolvePlanIdentity('docs/superpowers/plans/team/foo.md', { cwd: root });
+  mkdirSync(join(root, 'docs/superpowers/reports'), { recursive: true });
+  const outsideNested = mkdtempSync(join(tmpdir(), 'superpowers-metrics-outside-nested-'));
+  t.after(() => rmSync(outsideNested, { recursive: true, force: true }));
+  symlinkSync(outsideNested, join(root, 'docs/superpowers/reports/team'), 'junction');
+  assert.throws(() => writeReport(nestedIdentity, '# blocked\n'), /symlink/i);
+  assert.equal(existsSync(join(outsideNested, 'foo.md')), false);
+
+  const outsideTarget = join(outsideRoot, 'target.md');
+  writeFileSync(outsideTarget, 'outside\n');
+  symlinkSync(outsideTarget, reportPath, 'file');
+  assert.throws(() => writeReport(identity, '# blocked\n'), /symlink/i);
+  assert.equal(readFileSync(outsideTarget, 'utf8'), 'outside\n');
+});
+
+test('retention restores an untrusted quarantine replacement injected before final deletion', () => {
+  const replaced = classifiedRun('final-window-1', '2026-08-18T11:00:00.000Z', 'PASS');
+  const companion = classifiedRun('final-window-companion', '2026-08-18T12:00:00.000Z', 'PASS');
+  identity.retentionHooks = {
+    beforeQuarantineDelete({ quarantinePath }) {
+      rmSync(quarantinePath, { recursive: true, force: true });
+      mkdirSync(quarantinePath);
+      writeFileSync(join(quarantinePath, 'run.json'), '{"replacement":true}\n');
+      writeFileSync(join(quarantinePath, 'events.jsonl'), '');
+    },
+  };
+
+  const result = applyRetention(identity, [replaced, companion], 0);
+  assert.equal(existsSync(replaced.run.runDir), true);
+  assert.equal(readFileSync(join(replaced.run.runDir, 'run.json'), 'utf8'), '{"replacement":true}\n');
+  assert(result.preserved.includes('final-window-1'));
+  assert(result.diagnostics.some(diagnostic => diagnostic.code === 'RETENTION_TARGET_CHANGED'));
 });

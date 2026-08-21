@@ -26,11 +26,11 @@ fi
 2. Create `run.json` once for new run:
 
 ```json
-{"schema_version":1,"run_id":"<run-id>","workflow":"sdd","feature":"<plan filename without final .md>","plan_path":"<repo-relative plan path>","initial_plan_fingerprint":"git-blob:<40 lowercase hex>","created_at":"<ISO-8601 timestamp>"}
+{"schema_version":1,"run_id":"<run-id>","workflow":"sdd","feature":"<plan filename without final .md>","plan_path":"<repo-relative plan path>","initial_plan_fingerprint":"git-blob:<40 or 64 lowercase hex>","created_at":"<ISO-8601 timestamp>"}
 ```
 
-Every fingerprint is exactly `git-blob:` plus 40 lowercase hexadecimal
-characters (`[a-f0-9]{40}`), from `git hash-object --no-filters`.
+Every fingerprint is exactly `git-blob:` plus 40 or 64 lowercase hexadecimal
+characters (`[a-f0-9]{40}` or `[a-f0-9]{64}`), from `git hash-object --no-filters`.
 
 3. Create/append only `events.jsonl`. Each physical UTF-8 line is one JSON
    object ending in newline. Never rewrite, reorder, truncate, repair, or
@@ -38,8 +38,10 @@ characters (`[a-f0-9]{40}`), from `git hash-object --no-filters`.
 4. Append each event with this envelope:
 
 ```json
-{"schema_version":1,"event_id":"<run-id>:<sequence>","run_id":"<run-id>","sequence":<positive integer>,"timestamp":"<ISO-8601 timestamp>","workflow":"sdd","event_type":"<canonical type>","feature":"<feature>","plan_path":"<repo-relative plan path>","plan_fingerprint":"git-blob:<40 lowercase hex>","payload":{}}
+{"schema_version":1,"event_id":"<run-id>:<sequence>","run_id":"<run-id>","sequence":<positive integer>,"timestamp":"<ISO-8601 timestamp>","workflow":"sdd","event_type":"<canonical type>","feature":"<feature>","plan_path":"<repo-relative plan path>","plan_fingerprint":"git-blob:<40 or 64 lowercase hex>","payload":{}}
 ```
+
+Every ordinary event uses the accepted current plan revision. For a plan-adjustment event envelope `plan_fingerprint` equals `previous_fingerprint`; then accepted revision becomes `new_fingerprint`.
 
 5. Resume: read `run.json` and final physical lines of `events.jsonl`; reuse
    run ID. For uncertain append, retry only byte-identical same event
@@ -59,12 +61,12 @@ rereview. One initial reviewer emits both review events with same `review_id`.
 |---|---|
 | `run_started` | `{"trigger":"NEW_PLAN"}` or `{"trigger":"MANUAL_START"}` |
 | `run_resumed` | `{"previous_outcome":"BLOCKED|INCOMPLETE","reason_code":"UPPER_SNAKE_CASE"}` |
-| `plan_registered` | `{"task_count":<non-negative integer>}` |
+| `plan_registered` | `{"task_count":<integer at least 1>}` |
 | `preflight_completed` | `{"result":"PASS|FAIL","diagnostic_codes":["<short code>"]}` |
 | `task_registered` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","origin":"INITIAL|ADDED"}` |
-| `plan_task_added` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","origin":"INITIAL|ADDED","previous_fingerprint":"git-blob:<40 lowercase hex>","new_fingerprint":"git-blob:<40 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
-| `plan_task_changed` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","previous_fingerprint":"git-blob:<40 lowercase hex>","new_fingerprint":"git-blob:<40 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
-| `plan_task_superseded` | `{"task_id":"task-N","replacement_task_ids":["task-M"],"previous_fingerprint":"git-blob:<40 lowercase hex>","new_fingerprint":"git-blob:<40 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
+| `plan_task_added` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","origin":"INITIAL|ADDED","previous_fingerprint":"git-blob:<40 or 64 lowercase hex>","new_fingerprint":"git-blob:<40 or 64 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
+| `plan_task_changed` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","previous_fingerprint":"git-blob:<40 or 64 lowercase hex>","new_fingerprint":"git-blob:<40 or 64 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
+| `plan_task_superseded` | `{"task_id":"task-N","replacement_task_ids":["task-M"],"previous_fingerprint":"git-blob:<40 or 64 lowercase hex>","new_fingerprint":"git-blob:<40 or 64 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
 | `task_dispatched` | `{"task_id":"task-N","dispatch_id":"<non-empty identifier, max 128 chars>","attempt":<non-negative integer>,"dispatch_kind":"IMPLEMENTATION|FIX|TAKEOVER"}` |
 | `task_implementation_completed` | `{"task_id":"task-N","status":"DONE|DONE_WITH_CONCERNS","commit_ids":["<commit id>"]}` |
 | `task_test_result` | `{"task_id":"task-N","result":"PASS|FAIL|UNKNOWN","evidence_kind":"COUNTS|EXIT_STATUS|UNINTERPRETABLE","passed":<optional non-negative integer>,"total":<optional non-negative integer>}` |
