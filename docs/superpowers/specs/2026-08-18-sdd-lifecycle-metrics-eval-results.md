@@ -30,7 +30,7 @@ prepended to `PATH` and `TMPDIR=/tmp`.
 
 | Command | Result | Evidence |
 | --- | --- | --- |
-| `node --test tests/metrics/*.test.mjs` | PASS | 84 tests, 84 pass, 0 fail. |
+| `node --test tests/metrics/*.test.mjs` | PASS | Final suite: 92 tests, 92 pass, 0 fail. |
 | `bash tests/claude-code/test-sdd-workspace.sh` | PASS | 13 assertions pass. |
 | `bash tests/claude-code/test-sdd-metrics-instructions.sh` | PASS | Exit 0; script is silent. |
 | `bash tests/codex/test-package-codex-plugin.sh` | FAIL under default locale | 31 pass, 1 fail: ZIP timestamp expected `(1980, 1, 1, 0, 0, 0)`, actual `(1980, 1, 1, 1, 0, 0)`. |
@@ -148,6 +148,21 @@ unverified. WSL POSIX path/report tests passed under Node v22.18.0.
 When Node is unavailable, lifecycle recording continues and reporting is
 deferred; the exact command is the one shown in the microtest section. No
 separate live Quorum run without Node was required or claimed.
+
+## Final whole-branch review
+
+The initial whole-branch review found false-PASS evidence gaps, report symlink
+escape, superseded-task mutation, SHA-256 fingerprint rejection, and retention
+classification/race gaps. Commits `e299f21` and `fc850bf` addressed or bounded
+them. Final re-review reported no Critical or Important findings; the final
+metrics suite passed 92/92.
+
+Version 1 rejects static report/store symlinks and quarantines retention targets
+before deletion. Cross-platform Node does not expose handle-rooted
+`openat`/`unlinkat` equivalents, so hostile same-user pathname replacement
+between validation and a filesystem syscall is explicitly outside the v1
+single-writer threat boundary. This is a documented limitation, not a claimed
+concurrent-adversary guarantee.
 
 ## Evidence boundary
 
