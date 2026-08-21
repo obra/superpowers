@@ -292,6 +292,8 @@ Before marking work complete:
 - [ ] Output pristine (no errors, warnings)
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered
+- [ ] **FULL SUITE PASSES BEFORE DECLARING DONE** — run the project's complete test command (e.g. `pytest`, `npm test`) on the WHOLE tree, not just the file you edited. A test that passes in isolation can still `NameError` on an undefined symbol when the full suite imports the module. If any test fails with `NameError`/`ImportError`/`undefined`, fix it NOW — do not declare done.
+- [ ] **No undefined symbols in any test** — every name referenced in a test (logger, fixtures, helpers) must be imported or defined in that test's scope.
 
 Can't check all boxes? You skipped TDD. Start over.
 
