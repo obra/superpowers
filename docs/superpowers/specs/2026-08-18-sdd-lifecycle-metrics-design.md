@@ -682,6 +682,21 @@ symlinks.
 The retention count is one named constant/configuration value in the storage
 module so a later configuration interface does not change reducer behavior.
 
+## V1 Filesystem Threat Boundary
+
+Repository path state is untrusted at operation start. Version 1 rejects static
+symlinks and unsafe components before report writes or retention operations.
+SDD and finishing have one writer; manual `--write` and retention callers must
+not concurrently mutate report or metrics-store paths while an operation runs.
+
+Hostile or uncooperative same-user replacement of a pathname between validation
+and a Node.js write/remove syscall is outside version 1's threat boundary.
+Cross-platform Node standard-library APIs do not provide the handle-rooted,
+no-follow create and recursive-delete primitives needed to close that interval.
+Quarantine plus two retention validations reduce accidental replacement exposure
+but are not claimed to provide handle-anchored deletion. A future native adapter
+may harden this boundary without changing lifecycle semantics.
+
 ## Failure Behavior
 
 | Failure | Behavior |
