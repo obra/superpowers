@@ -126,6 +126,8 @@ Expected: PASS
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
+
+**MANDATORY:** A plan is not done until it is committed. After the final task's tests pass, stage the feature files and commit. Do not leave the working tree with uncommitted feature work — an uncommitted branch is fragile (a crash, a clean, or a context reset loses the work). If `git status` still shows modified/untracked feature files after you believe you are done, you are NOT done — commit them (or explicitly tell your human partner why you are leaving them uncommitted).
 ````
 
 ## No Placeholders
