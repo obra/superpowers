@@ -4,6 +4,19 @@ Controller only writes metrics. Keep implementer and reviewer prompts/reports un
 
 ## Store and append recipe
 
+Before a new run or resume, run this skill's `scripts/ensure-metrics-ignore`.
+It uses `git rev-parse --git-path info/exclude`, returns immediately when
+`.superpowers/metrics/.ignore-probe` is already ignored, otherwise appends one
+exact `/.superpowers/metrics/` line and verifies it. It never changes tracked
+`.gitignore`. If setup fails, surface its error and continue SDD/event recording;
+do not halt the run or skip metrics events.
+
+```bash
+if ! <path-to-this-skill>/scripts/ensure-metrics-ignore; then
+  echo 'SDD metrics: local ignore setup failed; continuing event recording.' >&2
+fi
+```
+
 1. Resolve `<plan-path>` to repository-relative POSIX path. Remove only final
    `.md`, mirror below `.superpowers/metrics/`, then append `<run-id>`.
    `docs/superpowers/plans/team/foo.md` maps to

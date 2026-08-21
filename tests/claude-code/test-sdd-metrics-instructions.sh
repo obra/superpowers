@@ -3,6 +3,7 @@ set -euo pipefail
 
 skill_file='skills/subagent-driven-development/SKILL.md'
 reference_file='skills/subagent-driven-development/metrics-events.md'
+ignore_script='skills/subagent-driven-development/scripts/ensure-metrics-ignore'
 
 grep -q 'metrics-events.md' "$skill_file"
 grep -q 'Metrics run: <run-id>' "$skill_file"
@@ -17,6 +18,13 @@ grep -q 'For definite append failure before any bytes' "$reference_file"
 grep -q 'For uncertain write: inspect physical tail' "$reference_file"
 grep -q 'node <plugin-root>/bin/superpowers.mjs metrics <plan-path>' "$reference_file"
 grep -q 'Retain workspace, hand plan path and active run identity to finishing' "$reference_file"
+grep -q 'ensure-metrics-ignore' "$reference_file"
+grep -q 'continue SDD/event recording' "$reference_file"
+grep -q 'if ! <path-to-this-skill>/scripts/ensure-metrics-ignore; then' "$reference_file"
+grep -q 'git rev-parse --git-path info/exclude' "$ignore_script"
+grep -q "probe='.superpowers/metrics/.ignore-probe'" "$ignore_script"
+grep -q 'git check-ignore -q -- "$probe"' "$ignore_script"
+grep -q '/.superpowers/metrics/' "$ignore_script"
 ! grep -q 'Delete this plan.s workspace' "$skill_file"
 
 finishing_file='skills/finishing-a-development-branch/SKILL.md'

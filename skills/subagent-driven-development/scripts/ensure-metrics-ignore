@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Ensure one repository-local metrics ignore without changing tracked files.
+set -u
+
+probe='.superpowers/metrics/.ignore-probe'
+
+if git check-ignore -q -- "$probe"; then
+  exit 0
+fi
+
+if ! exclude_path=$(git rev-parse --git-path info/exclude); then
+  echo 'SDD metrics: cannot resolve local Git exclude path.' >&2
+  exit 1
+fi
+
+if ! mkdir -p "$(dirname "$exclude_path")"; then
+  echo "SDD metrics: cannot create local Git exclude directory: $exclude_path" >&2
+  exit 1
+fi
+
+if ! printf '/.superpowers/metrics/\n' >> "$exclude_path"; then
+  echo "SDD metrics: cannot update local Git exclude file: $exclude_path" >&2
+  exit 1
+fi
+
+if git check-ignore -q -- "$probe"; then
+  exit 0
+fi
+
+echo "SDD metrics: local ignore did not cover $probe" >&2
+exit 1
