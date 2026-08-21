@@ -42,3 +42,21 @@ test('rejects unknown versions, event types, payload fields, and prose overflow'
   const event = makeEvent(1, 'finding_raised', { finding_id: 'F-001', scope: 'TASK', task_id: 'task-1', category: 'QUALITY', severity: 'IMPORTANT', title: 'x'.repeat(241), surprise: true }, { schema_version: 2 });
   assert.deepEqual(validateEvent(event, 7).diagnostics.map(d => d.code), ['EVENT_SCHEMA_VERSION_UNSUPPORTED', 'PAYLOAD_UNKNOWN_FIELD', 'FINDING_TITLE_TOO_LONG']);
 });
+test('requires test counts exactly when evidence kind is COUNTS', () => {
+  for (const eventType of ['task_test_result', 'final_test_result']) {
+    const counts = eventType === 'task_test_result'
+      ? { task_id: 'task-1', result: 'PASS', evidence_kind: 'COUNTS' }
+      : { result: 'PASS', evidence_kind: 'COUNTS' };
+    assert.ok(validateEvent(makeEvent(1, eventType, counts), 1).diagnostics.some(d => d.code === 'PAYLOAD_COUNTS_REQUIRED'), eventType);
+  }
+});
+test('rejects test counts for non-COUNTS evidence kinds', () => {
+  for (const eventType of ['task_test_result', 'final_test_result']) {
+    for (const evidence_kind of ['EXIT_STATUS', 'UNINTERPRETABLE']) {
+      const payload = eventType === 'task_test_result'
+        ? { task_id: 'task-1', result: 'PASS', evidence_kind, passed: 1, total: 1 }
+        : { result: 'PASS', evidence_kind, passed: 1, total: 1 };
+      assert.ok(validateEvent(makeEvent(1, eventType, payload), 1).diagnostics.some(d => d.code === 'PAYLOAD_COUNTS_FORBIDDEN'), `${eventType}/${evidence_kind}`);
+    }
+  }
+});

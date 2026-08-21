@@ -10,6 +10,14 @@ grep -q 'run_started' "$reference_file"
 grep -q 'task_implementation_review_result' "$reference_file"
 grep -q 'task_quality_review_result' "$reference_file"
 grep -q 'final_review_result' "$reference_file"
+grep -q '## Operational action map' "$reference_file"
+grep -q 'Controller only writes metrics' "$reference_file"
+grep -q 'Never include prompts, source, diffs, secrets, command output' "$reference_file"
+grep -q 'For definite append failure before any bytes' "$reference_file"
+grep -q 'For uncertain write: inspect physical tail' "$reference_file"
+grep -q 'node <plugin-root>/bin/superpowers.mjs metrics <plan-path>' "$reference_file"
+grep -q 'Retain workspace, hand plan path and active run identity to finishing' "$reference_file"
+! grep -q 'Delete this plan.s workspace' "$skill_file"
 
 node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';

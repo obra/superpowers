@@ -50,19 +50,19 @@ rereview. One initial reviewer emits both review events with same `review_id`.
 | `plan_task_added` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","origin":"INITIAL|ADDED","previous_fingerprint":"git-blob:<40 lowercase hex>","new_fingerprint":"git-blob:<40 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
 | `plan_task_changed` | `{"task_id":"task-N","ordinal":<non-negative integer>,"title":"<short label>","previous_fingerprint":"git-blob:<40 lowercase hex>","new_fingerprint":"git-blob:<40 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
 | `plan_task_superseded` | `{"task_id":"task-N","replacement_task_ids":["task-M"],"previous_fingerprint":"git-blob:<40 lowercase hex>","new_fingerprint":"git-blob:<40 lowercase hex>","reason_code":"UPPER_SNAKE_CASE"}` |
-| `task_dispatched` | `{"task_id":"task-N","dispatch_id":"<safe id>","attempt":<non-negative integer>,"dispatch_kind":"IMPLEMENTATION|FIX|TAKEOVER"}` |
+| `task_dispatched` | `{"task_id":"task-N","dispatch_id":"<non-empty identifier, max 128 chars>","attempt":<non-negative integer>,"dispatch_kind":"IMPLEMENTATION|FIX|TAKEOVER"}` |
 | `task_implementation_completed` | `{"task_id":"task-N","status":"DONE|DONE_WITH_CONCERNS","commit_ids":["<commit id>"]}` |
 | `task_test_result` | `{"task_id":"task-N","result":"PASS|FAIL|UNKNOWN","evidence_kind":"COUNTS|EXIT_STATUS|UNINTERPRETABLE","passed":<optional non-negative integer>,"total":<optional non-negative integer>}` |
-| `task_implementation_review_result` | `{"task_id":"task-N","review_id":"<safe id>","reviewer_verdict":"PASS|FAIL|CANNOT_VERIFY","gate_verdict":"PASS|FAIL","cannot_verify_count":<non-negative integer>,"resolved_cannot_verify_count":<non-negative integer>}` |
-| `task_quality_review_result` | `{"task_id":"task-N","review_id":"<same review id>","verdict":"APPROVED|NEEDS_FIXES"}` |
+| `task_implementation_review_result` | `{"task_id":"task-N","review_id":"<non-empty identifier, max 128 chars>","reviewer_verdict":"PASS|FAIL|CANNOT_VERIFY","gate_verdict":"PASS|FAIL","cannot_verify_count":<non-negative integer>,"resolved_cannot_verify_count":<non-negative integer>}` |
+| `task_quality_review_result` | `{"task_id":"task-N","review_id":"<same identifier>","verdict":"APPROVED|NEEDS_FIXES"}` |
 | `finding_raised` | `{"finding_id":"F-001","scope":"TASK|FINAL","task_id":"task-N" optional,"category":"SPEC|QUALITY","severity":"CRITICAL|IMPORTANT|MINOR","title":"<sanitized short summary>","location":"<optional repo-relative path>"}` |
 | `finding_resolved` | `{"finding_id":"F-001","resolution_code":"UPPER_SNAKE_CASE","fix_round":<integer at least 1>}` |
 | `finding_parked` | `{"finding_id":"F-001","ruling_code":"UPPER_SNAKE_CASE","task_id":"task-N"}` |
-| `fix_round_started` | `{"task_id":"task-N","round":<integer at least 1>,"finding_ids":["F-001"],"dispatch_id":"<safe id>"}` |
-| `fix_round_completed` | `{"task_id":"task-N","round":<integer at least 1>,"review_id":"<safe id>","finding_results":[{"finding_id":"F-001","verdict":"ADDRESSED|NOT_ADDRESSED"}]}` |
+| `fix_round_started` | `{"task_id":"task-N","round":<integer at least 1>,"finding_ids":["F-001"],"dispatch_id":"<non-empty identifier, max 128 chars>"}` |
+| `fix_round_completed` | `{"task_id":"task-N","round":<integer at least 1>,"review_id":"<non-empty identifier, max 128 chars>","finding_results":[{"finding_id":"F-001","verdict":"ADDRESSED|NOT_ADDRESSED"}]}` |
 | `task_accepted` | `{"task_id":"task-N","acceptance_basis":"UPPER_SNAKE_CASE"}` |
 | `task_blocked` | `{"task_id":"task-N","reason_code":"UPPER_SNAKE_CASE","required_human_input":true|false}` |
-| `human_intervention_required` | `{"intervention_id":"<safe id>","affected_task_ids":["task-N"],"reason_code":"UPPER_SNAKE_CASE"}` |
+| `human_intervention_required` | `{"intervention_id":"<non-empty identifier, max 128 chars>","affected_task_ids":["task-N"],"reason_code":"UPPER_SNAKE_CASE"}` |
 | `human_intervention_completed` | `{"intervention_id":"<same id>","resolution_code":"UPPER_SNAKE_CASE"}` |
 | `final_review_result` | `{"result":"PASS|FAIL","review_id":"<safe id>","finding_ids":["F-001"]}` |
 | `final_test_result` | `{"result":"PASS|FAIL|UNKNOWN","evidence_kind":"COUNTS|EXIT_STATUS|UNINTERPRETABLE","passed":<optional non-negative integer>,"total":<optional non-negative integer>}` |
@@ -74,12 +74,36 @@ For `COUNTS`, emit `passed` and `total`, with `0 <= passed <= total`; for
 `EXIT_STATUS`/`UNINTERPRETABLE`, omit both. Omit optional fields; never emit
 placeholder prose or unknown fields.
 
+## Operational action map
+
+- New setup: create `run.json`, then append `run_started`, `plan_registered`,
+  one `task_registered` per initial task, then `preflight_completed`; dispatch
+  only after preflight `PASS`.
+- Resumed setup: read metadata/tail, append `run_resumed`, then record later
+  preflight/task work using next physical sequence.
+- Dispatch/report/test: before implementer append `task_dispatched`; on report
+  append `task_implementation_completed`; append `task_test_result` only for
+  task-scoped evidence.
+- Paired initial review: after one reviewer returns both verdicts, append
+  `task_implementation_review_result` then `task_quality_review_result` with
+  same `review_id`; resolve cannot-verify items before acceptance.
+- Findings/fix: append `finding_raised` once; each fix cycle appends
+  `fix_round_started`, `fix_round_completed`, then `finding_resolved` or
+  `finding_parked` using existing IDs.
+- Acceptance/blocking/intervention: accept only after passing paired review and
+  no open Critical/Important finding; append `task_accepted`. For genuine
+  blocker append `task_blocked` and `run_blocked`; append intervention required/
+  completed events only for input that determines execution.
+- Final review/handoff: append final findings and `final_review_result`. Retain workspace, hand plan path and active run identity to finishing. Task 12 owns
+  `final_test_result`, `run_passed`/`run_blocked`, report persistence, and
+  eventual workspace cleanup.
+
 ## Failure and data rules
 
-Payloads contain only IDs, allowed enums, counts, repository-relative paths,
-short sanitized finding titles, and reason codes. Never include prompts,
-source, diffs, secrets, command output, reviewer text, tool logs, transcripts,
-absolute paths, uncontrolled user text, or invented evidence.
+Payload templates are controller authoring contracts. Structural validator checks
+shape/bounds; it is not semantic secret or DLP detection. Payloads contain only
+IDs, allowed enums, counts, repository-relative paths,
+short sanitized finding titles, and reason codes. Never include prompts, source, diffs, secrets, command output, reviewer text, tool logs, transcripts, absolute paths, uncontrolled user text, or invented evidence.
 
 For definite append failure before any bytes: ledger/surface failure, consume no
 sequence, append no replacement event, continue SDD, and never fabricate PASS.

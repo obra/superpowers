@@ -588,7 +588,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Delete this plan's workspace — the record now lives in git]
+[Retain this plan's workspace; hand plan path + active metrics run identity to finishing]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```
