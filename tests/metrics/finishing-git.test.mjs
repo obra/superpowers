@@ -7,6 +7,7 @@ import test from 'node:test';
 
 const REPORT = 'docs/superpowers/reports/foo.md';
 const SUBJECT = 'docs(metrics): update foo report';
+const CANONICAL_REPORT = '# Lifecycle report: foo\n';
 
 const paths = output => output.split('\n').filter(Boolean).map(path => path.replaceAll('\\', '/')).sort();
 
@@ -50,7 +51,7 @@ function createRepository(t) {
   git(root, ['add', 'unrelated-staged.txt']);
   writeFileSync(join(root, 'unrelated-unstaged.txt'), 'changed\n');
   mkdirSync(join(root, 'docs/superpowers/reports'), { recursive: true });
-  writeFileSync(join(root, REPORT), '# Lifecycle report: foo\n');
+  writeFileSync(join(root, REPORT), CANONICAL_REPORT);
   return root;
 }
 
@@ -63,6 +64,12 @@ function reportChanged(root) {
   return git(root, ['status', '--porcelain', '--', REPORT]).trim() !== '';
 }
 
+function commitChangedReport(root) {
+  if (!reportChanged(root)) return false;
+  commitReport(root);
+  return true;
+}
+
 function assertFailedCommitState(root) {
   assert.equal(existsSync(join(root, REPORT)), true);
   assert.deepEqual(stagedPaths(root).filter(path => path.startsWith('unrelated-')), ['unrelated-staged.txt']);
@@ -71,16 +78,22 @@ function assertFailedCommitState(root) {
   assert.equal(subjects.includes(SUBJECT), false);
 }
 
-test('scoped porcelain detects untracked, unchanged, and modified reports', t => {
+test('scoped porcelain makes dirty canonical report candidate and clean canonical skips', t => {
   const root = createRepository(t);
   assert.equal(reportChanged(root), true);
 
   git(root, ['add', '--', REPORT]);
-  git(root, ['commit', '-m', 'fixture report']);
+  git(root, ['commit', '--only', '-m', 'fixture canonical report', '--', REPORT]);
   assert.equal(reportChanged(root), false);
+  assert.equal(commitChangedReport(root), false);
 
-  writeFileSync(join(root, REPORT), '# Lifecycle report: changed\n');
+  writeFileSync(join(root, REPORT), '# stale report\n');
+  git(root, ['add', '--', REPORT]);
+  git(root, ['commit', '--only', '-m', 'fixture stale report', '--', REPORT]);
+  writeFileSync(join(root, REPORT), CANONICAL_REPORT);
   assert.equal(reportChanged(root), true);
+  assert.equal(commitChangedReport(root), true);
+  assert.equal(reportChanged(root), false);
 });
 
 test('commits only generated lifecycle report without touching unrelated work', t => {

@@ -15,10 +15,10 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
-**If tests fail:**
+For an active SDD metrics run, continue to Step 1a after the full test command.
+Step 1a selects the terminal branch from final-test and final-review evidence.
 
-- For an active SDD metrics run, execute the Step 1a `final tests FAIL` terminal branch before stopping.
-- Routine non-SDD finishing retains this report-and-stop behavior.
+**If tests fail in routine non-SDD finishing:**
 
 ```
 Tests failing (<N> failures). Must fix before completing:
@@ -26,8 +26,7 @@ Tests failing (<N> failures). Must fix before completing:
 [Show failures]
 ```
 
-For routine non-SDD finishing, stop after this report. **If tests pass:**
-continue to Step 2.
+Routine non-SDD finishing stops after this report. Only routine non-SDD finishing with passing tests may continue directly to Step 2.
 
 ## Step 1a: Finalize an active SDD metrics run
 
@@ -84,6 +83,11 @@ node "<plugin-root>/bin/superpowers.mjs" metrics "<plan-path>" --write --json
 
 Read the JSON outcome. If it is `PASS`, check only the report path; porcelain
 reports both changed tracked files and an untracked first report:
+
+A successful `--write` guarantees the report path holds canonical renderer
+bytes: it overwrites differences and no-ops only for byte-identical content.
+Thus post-write porcelain is the candidate check against HEAD and index, not a
+before/after invocation hash.
 
 ```bash
 if [ -n "$(git status --porcelain -- "<report>")" ]; then

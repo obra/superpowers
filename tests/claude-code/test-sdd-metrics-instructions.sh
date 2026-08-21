@@ -61,8 +61,8 @@ require_step1_marker() {
   awk -v start="$step1_start" -v end="$step1_end" -v marker="$marker" 'NR > start && NR < end && index($0, marker) { found = 1 } END { exit found ? 0 : 1 }' "$finishing_file"
 }
 
-require_step1_marker 'active SDD metrics run, execute the Step 1a `final tests FAIL` terminal branch before stopping.'
-require_step1_marker 'Routine non-SDD finishing retains this report-and-stop behavior.'
+require_step1_marker 'For an active SDD metrics run, continue to Step 1a after the full test command.'
+require_step1_marker 'Only routine non-SDD finishing with passing tests may continue directly to Step 2.'
 
 branch_start() {
   grep -n -m 1 -F -- "### Terminal branch: $1" "$finishing_file" | cut -d: -f1
@@ -117,6 +117,7 @@ require_branch_marker 'final tests PASS, final review PASS' 'git status --porcel
 require_branch_marker 'final tests PASS, final review PASS' 'git add -- "<report>"'
 require_branch_marker 'final tests PASS, final review PASS' 'git commit --only'
 require_branch_marker 'final tests PASS, final review PASS' 'SDD workspace removal'
+require_branch_marker 'final tests PASS, final review PASS' 'post-write porcelain is the candidate check against HEAD and index'
 grep -q 'Only final tests PASS and final review PASS may continue to Step 2' "$finishing_file"
 
 node --input-type=module <<'NODE'
