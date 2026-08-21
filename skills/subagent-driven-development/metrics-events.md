@@ -81,6 +81,9 @@ placeholder prose or unknown fields.
   only after preflight `PASS`.
 - Resumed setup: read metadata/tail, append `run_resumed`, then record later
   preflight/task work using next physical sequence.
+- Plan amendment before/alongside execution: append `plan_task_added`,
+  `plan_task_changed`, or `plan_task_superseded` with old/new fingerprints;
+  register each added replacement before it can dispatch.
 - Dispatch/report/test: before implementer append `task_dispatched`; on report
   append `task_implementation_completed`; append `task_test_result` only for
   task-scoped evidence.
@@ -92,11 +95,15 @@ placeholder prose or unknown fields.
   `finding_parked` using existing IDs.
 - Acceptance/blocking/intervention: accept only after passing paired review and
   no open Critical/Important finding; append `task_accepted`. For genuine
-  blocker append `task_blocked` and `run_blocked`; append intervention required/
-  completed events only for input that determines execution.
-- Final review/handoff: append final findings and `final_review_result`. Retain workspace, hand plan path and active run identity to finishing. Task 12 owns
-  `final_test_result`, `run_passed`/`run_blocked`, report persistence, and
-  eventual workspace cleanup.
+  SDD blocker before handoff, Task 11 owns `run_blocked` only for genuine SDD
+  blockers before handoff: append `task_blocked` then `run_blocked`. Append
+  `human_intervention_required`/`human_intervention_completed` only for input
+  that determines execution. If required evidence is unavailable or contradictory, append
+  `run_incomplete` instead of inventing success.
+- Final review/handoff: append final findings and `final_review_result`. Retain workspace, hand plan path and active run identity to finishing. Task 12 owns `run_blocked` only for failures after handoff (for example failed final verification). It also owns
+  `final_test_result`, `run_passed`, report persistence, and
+  eventual workspace cleanup. Task 11 does not append a second `run_blocked`
+  after handoff.
 
 ## Failure and data rules
 
