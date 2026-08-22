@@ -9,6 +9,9 @@ Use this template when dispatching a spec document reviewer subagent.
 ```
 Subagent (general-purpose):
   description: "Review spec document"
+  model: [MODEL — REQUIRED: choose per subagent-driven-development SKILL.md
+         Model Selection; an omitted model silently inherits the session's
+         most expensive one]
   prompt: |
     You are a spec document reviewer. Verify this spec is complete and ready for planning.
 

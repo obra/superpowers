@@ -74,6 +74,11 @@ Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 ```
 
+Specify the model explicitly on each dispatch — an omitted model silently
+inherits your session's model, often the most capable and most expensive.
+Choose per subagent-driven-development's Model Selection section: mechanical
+single-file fixes take a cheap tier; multi-file integration work takes more.
+
 Multiple dispatch calls in one response = parallel execution. One per response = sequential.
 
 ### 4. Review and Integrate
