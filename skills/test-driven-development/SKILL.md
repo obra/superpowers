@@ -68,6 +68,23 @@ digraph tdd_cycle {
 }
 ```
 
+### Characterization Test for a Behavior-Preserving Refactor
+
+Normal RED applies when behavior should change. If observable behavior must
+remain unchanged, establish a characterization guard before refactoring:
+
+1. Name the behavior and a relevant production mutation that should make the
+   test fail.
+2. Write the test and observe the existing behavior pass.
+3. Make that mutation and verify the expected failure. If the test still
+   passes, strengthen or replace it and repeat.
+4. Restore the production source and verify green.
+5. Refactor while staying green.
+
+The mutation is only a temporary test of the guard. An initially passing test
+is expected only in this branch; it never permits tests-after for features or
+bug fixes, which require normal RED-GREEN.
+
 ### RED - Write Failing Test
 
 Write one minimal test showing what should happen.
