@@ -137,3 +137,9 @@ ${toolMapping}
     }
   };
 };
+
+// Default export required by OpenCode's plugin loader.
+// The loader iterates Object.values() and expects a callable default export.
+// Without this, the plugin fails silently when other plugins (e.g. omo-meta-governor)
+// are also registered, because the loader never finds a valid plugin function.
+export default SuperpowersPlugin;
