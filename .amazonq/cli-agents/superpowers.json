@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/aws/amazon-q-developer-cli/refs/heads/main/schemas/agent-v1.json",
+  "name": "superpowers",
+  "description": "Superpowers skills and workflow bootstrap (obra/superpowers)",
+  "prompt": null,
+  "mcpServers": {},
+  "tools": [
+    "@builtin"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "fs_read",
+    "execute_bash"
+  ],
+  "resources": [],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "AMAZON_Q_AGENT=1 bash \"${HOME}/.superpowers/hooks/session-start\""
+      }
+    ]
+  },
+  "toolsSettings": {}
+}

@@ -8,6 +8,7 @@ Superpowers is a complete software development methodology for your coding agent
 - [Commercial Services](#commercial-services)
 - [Getting Started](#installation)
   - [Claude Code](#claude-code)
+  - [Amazon Q Developer CLI](#amazon-q-developer-cli)
   - [Antigravity](#antigravity)
   - [Codex App](#codex-app)
   - [Codex CLI](#codex-cli)
@@ -88,6 +89,23 @@ agy plugin install https://github.com/obra/superpowers
 
 Antigravity runs the plugin's session-start hook, so Superpowers is active from
 the first message. Reinstall with the same command to update.
+
+### Amazon Q Developer CLI
+
+Clone Superpowers and register the bundled custom agent with Amazon Q:
+
+```bash
+git clone https://github.com/obra/superpowers ~/.superpowers
+mkdir -p .amazonq/cli-agents
+cp ~/.superpowers/.amazonq/cli-agents/superpowers.json .amazonq/cli-agents/
+q chat --agent superpowers
+```
+
+The custom agent's `agentSpawn` hook runs once per session start and injects
+the `using-superpowers` bootstrap as session context, so skills auto-trigger
+from the first message. Update by pulling the clone; the agent JSON references
+it in place. See `skills/using-superpowers/references/amazon-q-tools.md` for
+the tool mapping.
 
 ### Codex App
 
