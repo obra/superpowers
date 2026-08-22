@@ -35,7 +35,12 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 #
 # Uses printf instead of heredoc to work around bash 5.3+ heredoc hang.
 # See: https://github.com/obra/superpowers/issues/571
-if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+if [ -n "${AMAZON_Q_AGENT:-}" ]; then
+  # Amazon Q CLI agentSpawn hooks inject raw stdout as fixed session context.
+  # Emit the bootstrap as plain text — no JSON envelope, or the envelope
+  # itself would be injected literally.
+  printf '%s\n' "$session_context" | cat
+elif [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
   printf '{\n  "additional_context": "%s"\n}\n' "$session_context" | cat
 elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
