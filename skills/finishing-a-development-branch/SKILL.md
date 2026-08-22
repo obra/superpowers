@@ -123,6 +123,24 @@ tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
+**Before opening the PR, check for a repository PR template:**
+
+Look for GitHub-supported PR template files (case-insensitive):
+
+```
+pull_request_template.md / pull_request_template.txt
+docs/pull_request_template.md / docs/pull_request_template.txt
+.github/pull_request_template.md / .github/pull_request_template.txt
+PULL_REQUEST_TEMPLATE/*.md / PULL_REQUEST_TEMPLATE/*.txt
+docs/PULL_REQUEST_TEMPLATE/*.md / docs/PULL_REQUEST_TEMPLATE/*.txt
+.github/PULL_REQUEST_TEMPLATE/*.md / .github/PULL_REQUEST_TEMPLATE/*.txt
+```
+
+- **Template found (single):** Read it and use it as the PR body. Fill every required section with real information — no placeholders.
+- **Multiple templates found:** Stop and ask the user which one applies before proceeding.
+- **Required information missing:** Stop and ask the user before opening the PR.
+- **No template found:** Fall back to a generic PR body.
+
 Keep the worktree — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
@@ -223,3 +241,4 @@ place. If your platform provides a workspace-exit tool, use it.
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
+| "Skipping the PR template check is faster" | The PR body ends up missing fields the repo's process requires. Always check the template locations before drafting the body. |
