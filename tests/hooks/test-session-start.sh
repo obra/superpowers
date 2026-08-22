@@ -147,6 +147,12 @@ echo "SessionStart hook output tests"
 # Windows dispatches via Git Bash (or fails with an actionable error) instead
 # of PowerShell/cmd.exe, whose parsers break on the quoted command string
 # (PowerShell ParserError; cmd.exe quote-stripping on paths with metacharacters).
+#
+# VS Code Copilot ignores shell:"bash" and runs the `command` string through
+# PowerShell regardless (#2189). The optional `powershell` key supplies a
+# PowerShell-native form of the same dispatch: the `&` call operator makes the
+# quoted plugin-root path parse as a command invocation instead of a string
+# expression followed by the bareword `session-start`.
 if node -e '
 const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
 const entry = hooks.hooks.SessionStart[0].hooks[0];
@@ -156,6 +162,14 @@ if (entry.shell !== "bash") {
 }
 if (!/run-hook\.cmd" session-start$/.test(entry.command)) {
   console.error(`unexpected SessionStart command shape: ${entry.command}`);
+  process.exit(1);
+}
+if (typeof entry.powershell !== "string") {
+  console.error(`SessionStart hook missing powershell key for VS Code Copilot (#2189)`);
+  process.exit(1);
+}
+if (!/^& "/.test(entry.powershell) || !/run-hook\.cmd" session-start$/.test(entry.powershell)) {
+  console.error(`unexpected SessionStart powershell shape: ${entry.powershell}`);
   process.exit(1);
 }
 ' "$REPO_ROOT/hooks/hooks.json"; then
