@@ -117,6 +117,22 @@ You MUST complete each phase before proceeding to the next.
    - Keep tracing up until you find the source
    - Fix at source, not at symptom
 
+6. **Trace Displayed/Stored Data To Its Producer**
+
+   If a WRONG value is displayed or stored (bad label, wrong format, stale field),
+   locate WHO WRITES it (SQL writer, service, seed script) and its schema BEFORE
+   proposing any fix. A display bug is a data bug until proven otherwise.
+
+   NEVER compensate downstream: a UI formatter/parser that masks badly stored
+   data hides the bug instead of fixing it. The complete fix has three parts:
+   1. Fix generation at the producer (single canonical generator)
+   2. Idempotently migrate existing rows (startup migration pattern)
+   3. Align seed/test fixtures with production format
+
+   **Example:** "Mensualité 11" shown in an invoice cart was first "fixed" with
+   a display formatter. Wrong. The real fix: canonical generator used by every
+   producer + idempotent migration of existing rows + delete the band-aid formatter.
+
 ### Phase 2: Pattern Analysis
 
 **Find the pattern before fixing:**
@@ -177,7 +193,9 @@ You MUST complete each phase before proceeding to the next.
    - Use the `superpowers:test-driven-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
-   - Address the root cause identified
+   - Address the root cause identified — the PRODUCER of the bad data, not a
+     downstream consumer. If existing data is wrong, the fix includes an
+     idempotent migration; seeds/fixtures are aligned with production.
    - ONE change at a time
    - No "while I'm here" improvements
    - No bundled refactoring
@@ -223,6 +241,7 @@ If you catch yourself thinking:
 - "Pattern says X but I'll adapt it differently"
 - "Here are the main problems: [lists fixes without investigation]"
 - Proposing solutions before tracing data flow
+- **"It's just a display issue, a formatter/parser will do"** — masking bad data downstream hides the bug. Trace it to the producer first; fix source + migrate existing rows.
 - **"One more fix attempt" (when already tried 2+)**
 - **Each fix reveals new problem in different place**
 
@@ -252,6 +271,7 @@ If you catch yourself thinking:
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
+| "A downstream formatter fixes the bad value" | It masks the bug. Find the producer; fix generation + migrate existing data. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
 
 ## Quick Reference
