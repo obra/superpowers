@@ -21,6 +21,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [OpenCode](#opencode)
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
+  - [ZCode](#zcode)
 - [The Basic Workflow](#the-basic-workflow)
 - [Community](#community)
 - [What's Inside](#whats-inside)
@@ -257,6 +258,22 @@ hermes plugins install obra/superpowers --enable
 Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
+
+### ZCode
+
+Superpowers ships as a first-class ZCode plugin with skills and a
+session-start hook.
+
+- In ZCode, open `Settings` > `Plugins`, add this repository as a marketplace
+  source, and install Superpowers:
+
+  ```text
+  https://github.com/obra/superpowers
+  ```
+
+- Restart ZCode after installing so the session-start hook takes effect.
+
+- Detailed docs: [docs/README.zcode.md](docs/README.zcode.md)
 
 ## The Basic Workflow
 
