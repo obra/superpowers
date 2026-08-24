@@ -50,6 +50,11 @@ guide ("when this guide and the code disagree, the code wins"):
 8. **Subagents:** built-in agent types include literally `general-purpose`
    and `Explore`. Skills system: native (`skillsService`; personal dir
    `~/.zcode/skills/`, plugin-contributed `skills/` dirs).
+9. **Tool surface (live probe):** `Read`, `Write`, `Edit`, `Bash`,
+   `WebFetch`, `WebSearch`, `TodoWrite`/`TodoRead`, `Skill`,
+   `AskUserQuestion` match Claude vocabulary; deltas are subagent dispatch
+   via an `Agent` tool and **no dedicated Grep/Glob tools** (content/name
+   search rides `Bash`). A mapping file is therefore required.
 
 ## Design
 
@@ -77,7 +82,7 @@ ZCode new session (SessionStart)
 | 1 | `.zcode-plugin/plugin.json` | NEW | First-class manifest: identity fields + `"skills": "skills"` + `"hooks": "./hooks/hooks-zcode.json"`. Declaring hooks explicitly is mandatory here (see finding 4): standard-path autoload would feed our Claude-format `hooks.json` into ZCode's strict `events:` schema and fail |
 | 2 | `hooks/hooks-zcode.json` | NEW | ZCode schema: `{"events":{"SessionStart":[{"hooks":[{"type":"command","command":"\"${ZCODE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start","shell":"bash","async":false}]}]}}` |
 | 3 | `hooks/session-start` | EDIT | New `elif [ -n "${ZCODE_PLUGIN_ROOT:-}" ]` branch placed BEFORE the `CLAUDE_PLUGIN_ROOT` branch, emitting the native top-level shape. Native-first beats compat-path reliance (survives compat-var removal; independently testable) |
-| 4 | Tool mapping | NONE (expected) | Subagent types are literally `general-purpose`/`Explore`; skill system is native; file/shell tools assumed Claude-like — verify live during acceptance run. Ship `references/zcode-tools.md` only if probes show deltas (then also one Platform Adaptation pointer line — the only permitted SKILL.md edit) |
+| 4 | `skills/using-superpowers/references/zcode-tools.md` | NEW | Live probe showed two deltas: subagent dispatch is the `Agent` tool (types `general-purpose`/`Explore`), and there is no dedicated Grep/Glob (search rides `Bash`). Standard-shape mapping file + the one sanctioned pointer line in SKILL.md's Platform Adaptation list |
 | 5 | `tests/zcode/` | NEW | `run-tests.sh` + manifest validity test (fields, version-bump registration, no stale references) + hook-shape test (with `ZCODE_PLUGIN_ROOT` set: valid JSON, top-level `hookEventName=="SessionStart"`, non-empty `additionalContext` containing the bootstrap, NO `additional_context`, NO nested `hookSpecificOutput`) |
 | 6 | `.version-bump.json` | EDIT | Register `.zcode-plugin/plugin.json` → `version` (unregistered manifests ship stale) |
 | 7 | `scripts/sync-to-codex-plugin.sh` | EDIT | Add `"/.zcode-plugin/"` to EXCLUDES so the dotdir doesn't leak into the Codex distribution |

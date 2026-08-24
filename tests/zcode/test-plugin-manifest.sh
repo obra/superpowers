@@ -79,5 +79,22 @@ if not any(
         ".version-bump.json must update .zcode-plugin/plugin.json version"
     )
 
+# Tool mapping: ZCode's surface is mostly Claude-compatible but dispatches
+# subagents via `Agent` and has no dedicated Grep/Glob tools.
+tools_mapping = (manifest_path.parents[1] / "skills/using-superpowers/references/zcode-tools.md").read_text(
+    encoding="utf-8"
+)
+for token in ("ZCode Tool Mapping", "`Agent`", "`TodoWrite`", "`Skill`", "no dedicated Grep"):
+    if token not in tools_mapping:
+        raise AssertionError(f"zcode-tools.md missing expected content: {token!r}")
+
+skill_md = (manifest_path.parents[1] / "skills/using-superpowers/SKILL.md").read_text(
+    encoding="utf-8"
+)
+if "- ZCode: `references/zcode-tools.md`" not in skill_md:
+    raise AssertionError(
+        "SKILL.md Platform Adaptation list must point at references/zcode-tools.md"
+    )
+
 print("ZCode plugin manifest looks good")
 PY
