@@ -144,6 +144,131 @@ test('rejects duplicate plan registration and mismatched event identity before P
   assert.equal(buildReducedModel(reduced).outcome, 'INCOMPLETE');
 });
 
+test('rejects each event identity mismatch without applying the event', () => {
+  const cases = [
+    ['feature', 'other', 'EVENT_FEATURE_MISMATCH'],
+    ['plan_path', 'docs/superpowers/plans/other.md', 'EVENT_PLAN_PATH_MISMATCH'],
+    ['plan_fingerprint', SECOND_FINGERPRINT, 'EVENT_PLAN_FINGERPRINT_MISMATCH'],
+  ];
+
+  for (const [field, value, expectedCode] of cases) {
+    const events = activeRunEvents();
+    const preflightIndex = events.findIndex(event => event.event_type === 'preflight_completed');
+    events[preflightIndex] = { ...events[preflightIndex], [field]: value };
+    events.push(makeEvent(4, 'task_dispatched', validTaskDispatchPayload()));
+    const reduced = reduceRun(makeRun(), toLines(events));
+
+    assert.deepEqual(reduced.diagnostics.map(diagnostic => diagnostic.code), [expectedCode, 'PREFLIGHT_PASS_REQUIRED'], field);
+    assert.equal(reduced.events.length, 4, field);
+    assert.equal(reduced.tasks.get('task-1').dispatched, false, field);
+  }
+});
+
+test('rejects a plan adjustment that does not extend the accepted revision', () => {
+  const events = activeRunEvents();
+  events.push(makeEvent(5, 'plan_task_added', {
+    task_id: 'task-2', ordinal: 2, title: 'Added task', origin: 'ADDED',
+    previous_fingerprint: SECOND_FINGERPRINT, new_fingerprint: FINGERPRINT, reason_code: 'PLAN_CORRECTION',
+  }, { plan_fingerprint: SECOND_FINGERPRINT }));
+  const reduced = reduceRun(makeRun(), toLines(events));
+
+  assert.deepEqual(reduced.diagnostics.map(diagnostic => diagnostic.code), ['PLAN_ADJUSTMENT_PREVIOUS_FINGERPRINT_MISMATCH']);
+  assert.equal(reduced.latestPlanFingerprint, FINGERPRINT);
+  assert.equal(reduced.tasks.has('task-2'), false);
+});
+
+test('requires plan registration before initial task registration', () => {
+  const task = { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' };
+  const beforePlan = reduceRun(makeRun(), toLines([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'task_registered', task),
+  ]));
+  assert.deepEqual(beforePlan.diagnostics.map(diagnostic => diagnostic.code), ['INITIAL_TASK_REGISTRATION_PLAN_REQUIRED']);
+  assert.equal(beforePlan.tasks.size, 0);
+});
+
+test('rejects plan registration after preflight without retaining it', () => {
+  const task = { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' };
+  const latePlan = reduceRun(makeRun(), toLines([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }),
+    makeEvent(3, 'plan_registered', { task_count: 1 }),
+    makeEvent(4, 'task_registered', task),
+  ]));
+  assert.deepEqual(latePlan.diagnostics.map(diagnostic => diagnostic.code), [
+    'PLAN_REGISTERED_REQUIRED',
+    'PLAN_REGISTERED_ORDER_INVALID',
+    'INITIAL_TASK_REGISTRATION_PLAN_REQUIRED',
+  ]);
+  assert.equal(latePlan.tasks.size, 0);
+});
+
+test('rejects ADDED origin for initial task registration without mutation', () => {
+  const task = { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' };
+  const wrongOrigin = reduceRun(makeRun(), toLines([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'task_registered', { ...task, origin: 'ADDED' }),
+  ]));
+  assert.deepEqual(wrongOrigin.diagnostics.map(diagnostic => diagnostic.code), ['INITIAL_TASK_ORIGIN_INVALID']);
+  assert.equal(wrongOrigin.tasks.size, 0);
+});
+
+test('rejects duplicate initial task registration without replacing the task', () => {
+  const task = { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' };
+  const duplicate = reduceRun(makeRun(), toLines([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'task_registered', task),
+    makeEvent(4, 'task_registered', task),
+  ]));
+  assert.deepEqual(duplicate.diagnostics.map(diagnostic => diagnostic.code), ['TASK_REGISTERED_DUPLICATE']);
+  assert.equal(duplicate.tasks.size, 1);
+  assert.equal(duplicate.tasks.get('task-1').title, 'First task');
+});
+
+test('rejects initial task registration after preflight without mutation', () => {
+  const task = { task_id: 'task-1', ordinal: 1, title: 'First task', origin: 'INITIAL' };
+  const tooLate = reduceRun(makeRun(), toLines([
+    makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' }),
+    makeEvent(2, 'plan_registered', { task_count: 1 }),
+    makeEvent(3, 'task_registered', task),
+    makeEvent(4, 'preflight_completed', { result: 'PASS', diagnostic_codes: [] }),
+    makeEvent(5, 'task_registered', { ...task, task_id: 'task-2', ordinal: 2 }),
+  ]));
+  assert.deepEqual(tooLate.diagnostics.map(diagnostic => diagnostic.code), ['INITIAL_TASK_REGISTRATION_TOO_LATE']);
+  assert.deepEqual([...tooLate.tasks.keys()], ['task-1']);
+});
+
+test('run_incomplete makes the run resumable and rejects later events', () => {
+  const events = activeRunEvents();
+  events.push(
+    makeEvent(5, 'run_incomplete', { reason_code: 'EVIDENCE_GAP' }),
+    makeEvent(6, 'task_dispatched', validTaskDispatchPayload()),
+  );
+  const reduced = reduceRun(makeRun(), toLines(events));
+
+  assert.deepEqual(reduced.diagnostics.map(diagnostic => diagnostic.code), ['RUN_RESUME_REQUIRED']);
+  assert.equal(reduced.state.lifecycle_state, 'RESUMABLE');
+  assert.equal(reduced.state.explicit_outcome, 'INCOMPLETE');
+  assert.equal(reduced.tasks.get('task-1').dispatched, false);
+});
+
+test('run_resumed reopens an incomplete run and allows task dispatch', () => {
+  const events = activeRunEvents();
+  events.push(
+    makeEvent(5, 'run_incomplete', { reason_code: 'EVIDENCE_GAP' }),
+    makeEvent(6, 'run_resumed', { previous_outcome: 'INCOMPLETE', reason_code: 'WORKFLOW_RESUMED' }),
+    makeEvent(7, 'task_dispatched', validTaskDispatchPayload()),
+  );
+  const reduced = reduceRun(makeRun(), toLines(events));
+
+  assert.deepEqual(reduced.diagnostics, []);
+  assert.equal(reduced.state.lifecycle_state, 'ACTIVE');
+  assert.equal(reduced.state.explicit_outcome, null);
+  assert.equal(reduced.tasks.get('task-1').dispatched, true);
+});
+
 test('does not reduce passing events when run metadata is invalid', () => {
   const reduced = reduceRun(makeRun({ feature: '' }), toLines(passingRunEvents()));
   assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_FEATURE_INVALID']);
