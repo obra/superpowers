@@ -38,7 +38,12 @@ if not isinstance(events, dict) or "hooks" in hooks_config:
 entries = events.get("SessionStart")
 if not isinstance(entries, list) or not entries:
     raise AssertionError("hooks-zcode.json missing SessionStart entry")
-hook = entries[0].get("hooks", [])[0]
+
+hooks = entries[0].get("hooks")
+if not isinstance(hooks, list) or not hooks:
+    raise AssertionError("hooks-zcode.json SessionStart entry must contain a non-empty hooks list")
+
+hook = hooks[0]
 assert_equal(hook.get("type"), "command", "hook type")
 assert_equal(hook.get("shell"), "bash", "hook shell")
 assert_equal(hook.get("async"), False, "hook async")
