@@ -111,8 +111,13 @@ if [ -f package.json ]; then npm install; fi
 if [ -f Cargo.toml ]; then cargo build; fi
 
 # Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+if [ -f uv.lock ]; then
+  uv sync
+elif [ -f poetry.lock ] || grep -q '\[tool\.poetry\]' pyproject.toml 2>/dev/null; then
+  poetry install
+elif [ -f requirements.txt ]; then
+  pip install -r requirements.txt
+fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi
