@@ -9,36 +9,53 @@ multi_agent = true
 
 This enables the multi-agent tools that skills like
 `dispatching-parallel-agents` and `subagent-driven-development` use.
-Which tools you get depends on the multi-agent version your model
-preset selects (current presets run V2; older ones run V1). Trust your
-actual tool list over any table — including this one — when they
-disagree.
+The exact multi-agent contract can depend on the current model preset
+and configuration. Trust the live tool declaration and current-session
+usage hints over version numbers, old sessions, and this reference.
+`codex --version` alone is not capability detection.
 
-- **Spawning:** give children a clean context with
-  `spawn_agent {fork_turns: "none"}`; the default `"all"` copies your
-  entire transcript into the child. Under MultiAgent V2 on Codex
-  0.148+, role files under `~/.codex/agents/` attach via `agent_type`
-  regardless of how much parent history is inherited. In Codex
-  0.149.1's live V2 contract, full-history forks (`fork_turns: "all"` or
-  omitted) inherit the parent model and reasoning effort by default and
-  do not accept per-call `model` or `reasoning_effort` overrides. To
-  select either explicitly, use `fork_turns: "none"` or a positive
-  integer string. Isolated forks remain the SDD default for context
-  hygiene.
-- **Fix rounds:** resume the implementer with `followup_task` — it
-  delivers your message, triggers a turn, and transparently reloads a
-  child the harness evicted. Never dispatch a fresh implementer on the
-  theory that a spawned agent cannot be messaged again; on V2 it
-  always can.
-- **Lifecycle:** V2 has no `close_agent`. Finished children are
-  evicted automatically when slots are needed; leaving them unclosed
-  costs nothing. Only V1 sessions have `close_agent` — there, close
-  reviewers when their review returns, and close each implementer
-  after its task's review passes.
+- **Spawning:** prefer a clean context with the no-history form exposed
+  by the live spawn tool (for example, `fork_turns: "none"` when that
+  value is listed). If no context control is exposed, follow the tool's
+  fixed semantics and the unavailable-mode rule below.
+  Use partial or full-history forks only when the task needs inherited
+  context, then add role and routing fields only when the live contract
+  permits that combination. Isolated forks remain the SDD default for
+  context hygiene.
+- **Fix rounds:** when the live tools expose `followup_task` with
+  turn-triggering or reload behavior, use it to resume the implementer.
+  Do not dispatch a replacement merely because a child is no longer
+  resident; follow the live tool description for resumption behavior.
+- **Lifecycle:** use only the lifecycle controls in the live tool list.
+  Do not invent `close_agent` when it is absent. When it is exposed,
+  follow its current description and close completed agents at the
+  documented point.
 - **Model names:** never copy a model name from a skill, table, or old
   session into `spawn_agent` without checking it against your current
-  spawn allowlist — V2 accepts only V2-capable presets and hard-errors
-  on the rest.
+  spawn allowlist. Unlisted names may hard-error.
+
+## Constructing spawns from live capabilities
+
+Before every spawn, read the live `spawn_agent` fields and values plus
+any current-session usage hint and selected-role constraints. The tool
+declaration says which fields exist; the hints and role descriptions
+may impose stricter cross-field rules. Never invent an absent field or
+override a declared fixed role setting.
+
+| Requirement | Call shape |
+|---|---|
+| Clean context | If exposed, use the live no-history form. Add role/model/effort only if exposed and compatible. Otherwise apply the unavailable-mode rule. |
+| Limited recent context | Use a positive turn count only if the live fork field supports it. Choose the actual bounded count needed; never use a guessed huge number as a surrogate for full history. Otherwise apply the unavailable-mode rule. |
+| Full history | If exposed, use the live full-history form. Add `agent_type`, `model`, or `reasoning_effort` only if the live contract explicitly permits each with full history. Otherwise apply the unavailable-mode rule. |
+| Full history plus an incompatible role or routing override | One call cannot satisfy both requirements. Keep full history and omit the incompatible override, or use a clean/partial fork and put the required context in the exposed task-instruction field (`message` in the current contract). Use partial history only when the needed bounded turn count is known; otherwise use a clean fork with self-contained instructions. Follow the task's stated priority; if none is stated, ask rather than silently changing it. |
+| Requested context mode unavailable | Use only the exposed or fixed context semantics. Put needed context in the exposed task-instruction field (`message` in the current contract) when self-contained instructions preserve the requirements. If the available mode would violate a required isolation or inheritance boundary, follow the task's stated priority; if none is stated, ask. |
+
+Only treat a rejection as newer capability evidence when the error
+explicitly identifies an unsupported field, value, or cross-field
+combination. Rebuild that payload instead of retrying it or inferring a
+rule from the version string. Slot exhaustion, task-name errors, and
+other operational failures are not capability evidence; handle them by
+their own documented semantics.
 
 ## Waiting on children
 
@@ -65,21 +82,19 @@ two-thirds of all wait calls were short polls that timed out.
 
 ## Model routing on spawns
 
-Whenever a `spawn_agent` explicitly selects a model — including when
-you are yourself a spawned child running a fan-out — set `model` AND
-`reasoning_effort`, per the Model Selection rules of the skill you are
-executing. Setting `model` alone is a trap: the child's effort silently
-resets to that model's default, not to yours, unless a machine-level
-subagent-effort default or selected role supplies different routing.
-Under the verified Codex 0.149.1 live V2 contract, model and effort
-overrides in the call require `fork_turns: "none"` or a positive integer
-string; full-history calls must omit both. Without machine-level
-subagent defaults or role-specific routing, those full-history children
-inherit the parent's routing.
+When the live contract permits explicit model routing — including from
+a spawned child running a fan-out — choose a model from its current
+allowlist. If `reasoning_effort` is exposed, not fixed by the selected
+role, and permitted with that model by the live cross-field rules, set
+it explicitly with `model`; do not assume an omitted effort inherits
+yours. If any of those conditions fails, omit the conflicting override
+and follow the declared effective route.
+This Codex-specific rule overrides generic skill text or spawn templates
+that require an explicit model on every call.
 
-If otherwise-unrouted children should use a deliberate default tier
-instead of silently inheriting the session's model, ask your human
-partner to add this to `~/.codex/config.toml`:
+If the current Codex config reference still exposes these keys and
+otherwise-unrouted children should use a deliberate default tier, ask
+your human partner to add this to `~/.codex/config.toml`:
 
 ```toml
 [agents]
@@ -87,10 +102,11 @@ default_subagent_model = "<a mid-tier model from your spawn allowlist>"
 default_subagent_reasoning_effort = "medium"
 ```
 
-These defaults also apply when a full-history call omits `model` and
-`reasoning_effort`, although a selected role can replace them. When a
-full-history child must truly inherit the parent's model and effort, do
-not set these defaults or select a role that changes routing.
+Machine defaults may affect calls that omit routing, and a selected
+role may replace them. Confirm precedence against the current config
+and role descriptions. When a child must truly inherit the parent's
+model and effort, do not configure child-routing defaults or select a
+role that changes routing.
 
 ## Environment Detection
 
