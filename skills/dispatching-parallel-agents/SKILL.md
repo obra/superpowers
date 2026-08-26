@@ -60,6 +60,7 @@ Each domain is independent - fixing tool approval doesn't affect abort tests.
 Each agent gets:
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
+- **Explicit role:** Terminal worker (do not re-delegate or spawn subagents)
 - **Constraints:** Don't change other code
 - **Expected output:** Summary of what you found and fixed
 
@@ -79,6 +80,7 @@ Multiple dispatch calls in one response = parallel execution. One per response =
 ### 4. Review and Integrate
 
 When agents return:
+- **Validate deliverable receipt:** Ensure each lane returned actual results rather than a status promise (e.g. "running in the background", "will report back once complete"). Re-dispatch any lane that returned a deferred promise.
 - Read each summary
 - Verify fixes don't conflict
 - Run full test suite
@@ -89,7 +91,8 @@ When agents return:
 Good agent prompts are:
 1. **Focused** - One clear problem domain
 2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
+3. **Explicit about role** - State that the agent is a terminal worker that must deliver in this turn
+4. **Specific about output** - What should the agent return?
 
 ```markdown
 Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
@@ -108,6 +111,7 @@ These are timing/race condition issues. Your task:
    - Adjusting test expectations if testing changed behavior
 
 Do NOT just increase timeouts - find the real issue.
+You are a terminal agent. Do not spawn subagents. Your response in THIS turn is the entire deliverable.
 
 Return: Summary of what you found and what you fixed.
 ```
@@ -161,7 +165,8 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 ## Verification
 
 After agents return:
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
+1. **Validate deliverable receipt** - Verify each agent returned completed artifacts/answers rather than background delegation promises or status placeholders
+2. **Review each summary** - Understand what changed
+3. **Check for conflicts** - Did agents edit same code?
+4. **Run full suite** - Verify all fixes work together
+5. **Spot check** - Agents can make systematic errors
