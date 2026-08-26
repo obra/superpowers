@@ -16,11 +16,15 @@ disagree.
 
 - **Spawning:** give children a clean context with
   `spawn_agent {fork_turns: "none"}`; the default `"all"` copies your
-  entire transcript into the child. On Codex 0.145+, role files under
-  `~/.codex/agents/` attach to isolated forks via `agent_type`.
-  Full-history forks accept `model` and `reasoning_effort` overrides
-  (only `agent_type` is refused there) — isolated forks are the SDD
-  default for context hygiene, not because overrides require them.
+  entire transcript into the child. Under MultiAgent V2 on Codex
+  0.148+, role files under `~/.codex/agents/` attach via `agent_type`
+  regardless of how much parent history is inherited. In Codex
+  0.149.1's live V2 contract, full-history forks (`fork_turns: "all"` or
+  omitted) inherit the parent model and reasoning effort by default and
+  do not accept per-call `model` or `reasoning_effort` overrides. To
+  select either explicitly, use `fork_turns: "none"` or a positive
+  integer string. Isolated forks remain the SDD default for context
+  hygiene.
 - **Fix rounds:** resume the implementer with `followup_task` — it
   delivers your message, triggers a turn, and transparently reloads a
   child the harness evicted. Never dispatch a fresh implementer on the
@@ -61,22 +65,32 @@ two-thirds of all wait calls were short polls that timed out.
 
 ## Model routing on spawns
 
-Every `spawn_agent` you issue — including when you are yourself a
-spawned child running a fan-out — sets `model` AND `reasoning_effort`
-explicitly, per the Model Selection rules of the skill you are
-executing. Setting `model` alone is a trap: the child's effort
-silently resets to that model's default, not to yours.
+Whenever a `spawn_agent` explicitly selects a model — including when
+you are yourself a spawned child running a fan-out — set `model` AND
+`reasoning_effort`, per the Model Selection rules of the skill you are
+executing. Setting `model` alone is a trap: the child's effort silently
+resets to that model's default, not to yours, unless a machine-level
+subagent-effort default or selected role supplies different routing.
+Under the verified Codex 0.149.1 live V2 contract, model and effort
+overrides in the call require `fork_turns: "none"` or a positive integer
+string; full-history calls must omit both. Without machine-level
+subagent defaults or role-specific routing, those full-history children
+inherit the parent's routing.
 
-Ask your human partner to add a machine-level backstop to
-`~/.codex/config.toml` so any spawn that slips through still routes to
-a deliberate tier instead of silently inheriting the session's most
-expensive model:
+If otherwise-unrouted children should use a deliberate default tier
+instead of silently inheriting the session's model, ask your human
+partner to add this to `~/.codex/config.toml`:
 
 ```toml
 [agents]
 default_subagent_model = "<a mid-tier model from your spawn allowlist>"
 default_subagent_reasoning_effort = "medium"
 ```
+
+These defaults also apply when a full-history call omits `model` and
+`reasoning_effort`, although a selected role can replace them. When a
+full-history child must truly inherit the parent's model and effort, do
+not set these defaults or select a role that changes routing.
 
 ## Environment Detection
 
