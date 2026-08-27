@@ -123,17 +123,27 @@ ${toolMapping}
     // repeated disk work.
     'experimental.chat.messages.transform': async (_input, output) => {
       const bootstrap = getBootstrapContent();
-      if (!bootstrap || !output.messages.length) return;
-      const firstUser = output.messages.find(m => m.info.role === 'user');
-      if (!firstUser || !firstUser.parts.length) return;
+      if (!bootstrap || !output || !Array.isArray(output.messages) || !output.messages.length) return;
+      const firstUser = output.messages.find(m => (m.info?.role === 'user' || m.role === 'user'));
+      if (!firstUser) return;
 
-      // Guard: skip if first user message already contains bootstrap.
-      // This prevents double injection when OpenCode passes an already
-      // transformed in-memory message array through the hook again.
-      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      if (Array.isArray(firstUser.parts) && firstUser.parts.length > 0) {
+        // Guard: skip if first user message already contains bootstrap.
+        // This prevents double injection when OpenCode passes an already
+        // transformed in-memory message array through the hook again.
+        if (firstUser.parts.some(p => (p.type === 'text' && p.text?.includes('EXTREMELY_IMPORTANT')) || (typeof p === 'string' && p.includes('EXTREMELY_IMPORTANT')))) return;
 
-      const ref = firstUser.parts[0];
-      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
+        const ref = typeof firstUser.parts[0] === 'object' && firstUser.parts[0] !== null ? firstUser.parts[0] : {};
+        firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
+      } else if (typeof firstUser.content === 'string') {
+        if (firstUser.content.includes('EXTREMELY_IMPORTANT')) return;
+        firstUser.content = bootstrap + '\n\n' + firstUser.content;
+      } else if (Array.isArray(firstUser.content) && firstUser.content.length > 0) {
+        if (firstUser.content.some(p => (p.type === 'text' && p.text?.includes('EXTREMELY_IMPORTANT')) || (typeof p === 'string' && p.includes('EXTREMELY_IMPORTANT')))) return;
+        firstUser.content.unshift({ type: 'text', text: bootstrap });
+      } else {
+        firstUser.parts = [{ type: 'text', text: bootstrap }];
+      }
     }
   };
 };
