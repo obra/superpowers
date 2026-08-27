@@ -295,6 +295,9 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
+**Verification**
+- **proving-it-works-with-a-movie** - Record a demo, screencast, or proof video of software actually running, and catch the silent defects (frozen picture, narration over a dead screen, dropped words) before handing it over
+
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans

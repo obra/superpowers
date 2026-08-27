@@ -1,0 +1,284 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["pyyaml", "piper-tts"]
+# ///
+"""Render one narration clip per scene, and prove it says what you wrote.
+
+Engine selection is automatic: a cloud voice when a key is available, a
+local neural voice (Piper) when there isn't one. The local path needs no
+key, no network after the first voice download, and runs on macOS and
+Linux alike - so a container with no secrets in it can still narrate.
+
+Input is a scenes file: a YAML list of scenes, each with `id` and
+`narration`. Output is OUTDIR/<id>.wav plus OUTDIR/manifest.json carrying
+the exact text and measured duration of each clip, which is what
+make-subtitles and the assembly step both read.
+
+Usage:
+  narrate SCENES.yaml OUTDIR [--engine auto|openai|openai-chat|piper]
+                             [--voice NAME] [--force]
+"""
+
+import argparse
+import base64
+import difflib
+import json
+import os
+import re
+import subprocess
+import sys
+import urllib.request
+import wave
+from pathlib import Path
+
+import yaml
+
+OPENAI_TTS_MODEL = "gpt-4o-mini-tts"      # deterministic: reads what you send
+OPENAI_CHAT_MODEL = "gpt-audio-1.5"       # better prosody, will ad-lib; gated
+PIPER_VOICE = "en_US-lessac-medium"
+
+
+def die(msg):
+    print(f"narrate: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def openai_key():
+    key = os.environ.get("OPENAI_API_KEY")
+    if key:
+        return key.strip()
+    try:
+        out = subprocess.run(["llm", "keys", "get", "openai"],
+                             capture_output=True, text=True, timeout=15)
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except Exception:  # noqa: BLE001 - llm not installed is a normal outcome
+        pass
+    return None
+
+
+def norm(s):
+    return re.sub(r"[^a-z0-9 ]+", "", s.lower()).split()
+
+
+ASR_SNIPPET = """
+import sys
+from faster_whisper import WhisperModel
+m = WhisperModel(sys.argv[2], device="cpu", compute_type="int8")
+segs, _ = m.transcribe(sys.argv[1])
+print(" ".join(s.text.strip() for s in segs))
+"""
+
+
+def transcribe_local(wav, model="base.en"):
+    """Transcribe with a local ASR, in its own uv env so narrate stays light.
+    Returns None when faster-whisper isn't available."""
+    try:
+        out = subprocess.run(
+            ["uv", "run", "--quiet", "--with", "faster-whisper", "python3",
+             "-c", ASR_SNIPPET, str(wav), model],
+            capture_output=True, text=True, timeout=900)
+    except Exception:  # noqa: BLE001 - no uv, no network: gate simply unavailable
+        return None
+    return out.stdout.strip() if out.returncode == 0 and out.stdout.strip() else None
+
+
+def structural_drift(text, heard):
+    """How far a transcript diverges from the script, ignoring the noise an
+    ASR always makes.
+
+    Exact word-matching is the wrong tool here: a small model mangles
+    unusual names ("smevals" -> "Mevil"), and - worse - a *dropped* word
+    scores as more similar than two mispronounced ones. What is detectable,
+    and what actually matters, is missing or invented CONTENT: a sentence
+    the voice skipped, or a preamble it invented. Returns
+    (length_delta_fraction, longest_run_of_missing_or_changed_words).
+    """
+    want, got = norm(text), norm(heard)
+    delta = abs(len(got) - len(want)) / max(1, len(want))
+    ops = difflib.SequenceMatcher(a=want, b=got).get_opcodes()
+    worst = max((i2 - i1 for tag, i1, i2, _, _ in ops if tag in ("delete", "replace")),
+                default=0)
+    return delta, worst
+
+
+def post(url, key, body, want_json=True):
+    req = urllib.request.Request(
+        url, data=json.dumps(body).encode(),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=180) as r:
+        return json.load(r) if want_json else r.read()
+
+
+def say_openai(key, text, out_wav, voice):
+    data = post("https://api.openai.com/v1/audio/speech", key,
+                {"model": OPENAI_TTS_MODEL, "voice": voice or "nova",
+                 "input": text, "response_format": "wav"}, want_json=False)
+    out_wav.write_bytes(data)
+    return None                       # deterministic engine: nothing to gate
+
+
+def say_openai_chat(key, text, out_wav, voice):
+    doc = post("https://api.openai.com/v1/chat/completions", key, {
+        "model": OPENAI_CHAT_MODEL,
+        "modalities": ["text", "audio"],
+        "audio": {"voice": voice or "nova", "format": "wav"},
+        "messages": [{"role": "user", "content":
+                      "Read this narration aloud, warm and clear, verbatim, "
+                      "and say nothing else:\n\n" + text}],
+    })
+    audio = doc["choices"][0]["message"]["audio"]
+    out_wav.write_bytes(base64.b64decode(audio["data"]))
+    return audio.get("transcript", "")
+
+
+def say_piper(text, out_wav, voice):
+    from piper import PiperVoice
+    from piper.download_voices import download_voice
+    home = Path(os.environ.get("PIPER_VOICE_DIR",
+                               Path.home() / ".cache" / "piper-voices"))
+    home.mkdir(parents=True, exist_ok=True)
+    name = voice or PIPER_VOICE
+    onnx = home / f"{name}.onnx"
+    if not onnx.exists():
+        print(f"  downloading local voice {name} (one time)…")
+        download_voice(name, home)
+    v = PiperVoice.load(str(onnx))
+    with wave.open(str(out_wav), "wb") as w:
+        v.synthesize_wav(text, w)
+    return None
+
+
+def duration(path):
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "csv=p=0", str(path)], capture_output=True, text=True)
+    return round(float(out.stdout.strip()), 3)
+
+
+def main():
+    if len(sys.argv) == 4 and sys.argv[1] == "--drift-check":
+        script = Path(sys.argv[2]).read_text()
+        heard = Path(sys.argv[3]).read_text()
+        delta, worst = structural_drift(script, heard)
+        bad = delta > 0.15 or worst >= 4
+        print(f"length change {delta:.0%}, worst run {worst} -> "
+              f"{'MISMATCH' if bad else 'ok'}")
+        return 1 if bad else 0
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("scenes", type=Path)
+    ap.add_argument("outdir", type=Path)
+    ap.add_argument("--engine", default="auto",
+                    choices=["auto", "openai", "openai-chat", "piper"])
+    ap.add_argument("--voice", default=None)
+    ap.add_argument("--force", action="store_true")
+    ap.add_argument("--verify", default="auto", choices=["auto", "on", "off"],
+                    help="listen back to each clip with a local ASR and flag "
+                         "missing or invented content (default: on when the "
+                         "engine can't tell you what it said)")
+    ap.add_argument("--asr-model", default="base.en")
+    args = ap.parse_args()
+
+    doc = yaml.safe_load(args.scenes.read_text())
+    scenes = [s for s in doc.get("scenes", []) if (s.get("narration") or "").strip()]
+    if not scenes:
+        die("no scenes with narration")
+
+    key = openai_key()
+    engine = args.engine
+    if engine == "auto":
+        engine = "openai" if key else "piper"
+    if engine.startswith("openai") and not key:
+        die("no OPENAI_API_KEY (and `llm keys get openai` found nothing). "
+            "Use --engine piper for a local voice.")
+    print(f"engine: {engine}" + ("" if key or engine == "piper" else ""))
+
+    # a deterministic cloud endpoint reads exactly what you send it, so the
+    # ear-check is optional there; anything else gets listened to by default
+    verify = args.verify == "on" or (args.verify == "auto" and engine != "openai")
+
+    args.outdir.mkdir(parents=True, exist_ok=True)
+    # what the cached clips were rendered FROM: editing a line and keeping
+    # its old audio is a silent lie, and the movie will contradict itself
+    prior = {}
+    prior_path = args.outdir / "manifest.json"
+    if prior_path.exists():
+        try:
+            prior = {e["id"]: e.get("text", "") for e in
+                     json.loads(prior_path.read_text())}
+        except Exception:  # noqa: BLE001 - a corrupt manifest just means no cache
+            prior = {}
+    manifest, failures = [], []
+
+    for sc in scenes:
+        sid = sc["id"]
+        text = " ".join((sc["narration"] or "").split())
+        wav = args.outdir / f"{sid}.wav"
+        if wav.exists() and not args.force and prior.get(sid) == text:
+            print(f"{sid}: cached")
+        elif wav.exists() and not args.force and sid in prior:
+            print(f"{sid}: text changed since this clip was rendered - redoing")
+            args.force = True
+        else:
+            for attempt in (1, 2):
+                if engine == "openai":
+                    claimed = say_openai(key, text, wav, args.voice)
+                elif engine == "openai-chat":
+                    claimed = say_openai_chat(key, text, wav, args.voice)
+                else:
+                    claimed = say_piper(text, wav, args.voice)
+
+                # a chat model reports what it said: hold it to that exactly,
+                # because "Sure, here it is:" is the failure it introduces
+                if claimed is not None:
+                    want, got = norm(text), norm(claimed)
+                    drift = abs(len(want) - len(got)) + sum(
+                        1 for a, b in zip(want, got) if a != b)
+                    if drift > max(2, len(want) // 25):
+                        print(f"{sid}: engine ad-libbed (attempt {attempt}, "
+                              f"drift {drift})")
+                        continue
+
+                # every engine: listen back. An ASR mangles unusual names, so
+                # only missing or invented CONTENT counts as a failure here.
+                if verify:
+                    heard = transcribe_local(wav, args.asr_model)
+                    if heard is None:
+                        print(f"{sid}: ok (no local ASR available - gate skipped)")
+                        break
+                    delta, worst = structural_drift(text, heard)
+                    if delta > 0.15 or worst >= 4:
+                        print(f"{sid}: what came out does not match the script "
+                              f"(attempt {attempt}: {delta:.0%} length change, "
+                              f"{worst} words in a row wrong)")
+                        print(f"       heard: {heard[:120]}")
+                        continue
+                    print(f"{sid}: ok (verified by ear: {delta:.0%} length "
+                          f"change, worst run {worst})")
+                    break
+                print(f"{sid}: ok")
+                break
+            else:
+                failures.append(sid)
+        manifest.append({"id": sid, "text": text, "wav": wav.name,
+                         "duration": duration(wav)})
+
+    (args.outdir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    total = sum(m["duration"] for m in manifest)
+    print(f"\n{len(manifest)} clips, {total:.1f}s total -> {args.outdir}/manifest.json")
+    if engine == "piper":
+        print("local voice: it mispronounces unusual names rather than dropping "
+              "them - listen to one clip before you commit to a voice.")
+    if verify:
+        print("the ear-check catches missing or invented sentences, not "
+              "pronunciation: an ASR mangles jargon too.")
+    if failures:
+        print(f"FAILED verbatim delivery: {failures}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

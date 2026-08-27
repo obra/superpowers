@@ -1,0 +1,261 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["pillow"]
+# ///
+"""Mechanical gate for a proof/demo movie: catches the silent defects that
+per-frame inspection structurally cannot see.
+
+A movie can pass every frame check and still be unwatchable, because the
+defects live *between* frames: action crammed into the first seconds, a
+narrator talking over a picture that died, a silent audio track. This
+samples the picture and the sound on the same timeline and compares them.
+
+Thresholds are heuristics tuned against real good and bad movies. They
+catch the egregious cases; they cannot tell you a movie is *right*. That is
+what the contact sheet is for, and you have to actually look at it.
+
+Known blind spot: the picture is sampled at 1 Hz, so a visual beat shorter
+than a second (a flash, a blank frame during a reload) falls between samples
+and reads as "no change". Hold anything that matters for >1s.
+
+Usage:
+  check-movie MOVIE [--out DIR] [--no-expect-audio]
+                    [--no-expect-subtitles] [--subs FILE] [--json]
+"""
+
+import argparse
+import array
+import json
+import math
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+THUMB_W = 320          # sampling width; the metric is a pixel fraction, so scale-free
+PIXEL_DELTA = 8        # per-pixel grey delta that counts as "this pixel moved"
+CHANGE_FRAC = 0.002    # >0.2% of pixels moved => the picture reached a new state
+SPEECH_DB = -45.0      # windowed RMS above this counts as "someone is talking"
+EARLY_ACTION = 0.40    # last change before this fraction of runtime => front-loaded
+TAIL_TALK_S = 5.0      # ...and this many seconds of narration after it => broken
+WARN_TAIL_S = 15.0     # frozen tail worth mentioning even when it passes
+WARN_GAP_S = 30.0      # hold this long mid-movie and a viewer wonders if it froze
+
+
+def die(msg):
+    print(f"FAIL  {msg}")
+    sys.exit(2)
+
+
+def grey(path):
+    with Image.open(path) as im:
+        return list(im.convert("L").tobytes())
+
+
+def sample_picture(movie, workdir):
+    """Per-second: fraction of pixels that moved since the previous second."""
+    frames = workdir / "samples"
+    frames.mkdir(parents=True, exist_ok=True)
+    for old in frames.glob("*.png"):
+        old.unlink()
+    out = subprocess.run(
+        ["ffmpeg", "-nostdin", "-v", "error", "-i", str(movie),
+         "-vf", f"fps=1,scale={THUMB_W}:-1", "-f", "image2", str(frames / "s%05d.png")],
+        capture_output=True, text=True)
+    if out.returncode != 0:
+        die(f"frame sampling failed: {out.stderr.strip()[:200]}")
+    paths = sorted(frames.glob("s*.png"))
+    if not paths:
+        die("no video frames could be sampled")
+    fracs, prev = [], None
+    for p in paths:
+        px = grey(p)
+        if prev is not None:
+            n = min(len(px), len(prev))
+            moved = sum(1 for i in range(n) if abs(px[i] - prev[i]) > PIXEL_DELTA)
+            fracs.append(moved / n)
+        prev = px
+    return paths, fracs
+
+
+def sample_sound(movie, has_audio):
+    """Per-second RMS in dBFS."""
+    if not has_audio:
+        return []
+    out = subprocess.run(
+        ["ffmpeg", "-nostdin", "-v", "error", "-i", str(movie),
+         "-map", "0:a:0", "-ac", "1", "-ar", "8000", "-f", "s16le", "-"],
+        capture_output=True)
+    if out.returncode != 0 or not out.stdout:
+        die(f"audio decode failed: {out.stderr.decode()[:200]}")
+    pcm = array.array("h")
+    pcm.frombytes(out.stdout[: len(out.stdout) // 2 * 2])
+    levels = []
+    for start in range(0, len(pcm), 8000):
+        chunk = pcm[start:start + 8000]
+        if not chunk:
+            break
+        rms = math.sqrt(sum(float(s) * s for s in chunk) / len(chunk))
+        levels.append(20 * math.log10(rms / 32768.0) if rms > 0 else -120.0)
+    return levels
+
+
+def contact_sheet(paths, out_path, count=12):
+    picks = paths if len(paths) <= count else [
+        paths[round(i * (len(paths) - 1) / (count - 1))] for i in range(count)]
+    thumbs = [Image.open(p).convert("RGB") for p in picks]
+    w, h = thumbs[0].size
+    # pick a column count that fills the grid exactly where possible: an
+    # empty cell reads as a black *frame*, which is a defect signal, and a
+    # sheet that lies about the movie defeats the point of the sheet
+    n = len(thumbs)
+    cols = next((c for c in (4, 3, 5, 2) if n % c == 0), min(4, n))
+    rows = math.ceil(n / cols)
+    sheet = Image.new("RGB", (cols * w, rows * h), (48, 48, 52))
+    for i, t in enumerate(thumbs):
+        sheet.paste(t, ((i % cols) * w, (i // cols) * h))
+    sheet.save(out_path)
+    return [paths.index(p) for p in picks]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("movie", type=Path)
+    ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--no-expect-audio", dest="expect_audio",
+                    action="store_false", default=True)
+    ap.add_argument("--no-expect-subtitles", dest="expect_subs",
+                    action="store_false", default=True)
+    ap.add_argument("--subs", type=Path, default=None,
+                    help="sidecar .srt (default: MOVIE.srt beside the movie)")
+    ap.add_argument("--json", action="store_true")
+    args = ap.parse_args()
+
+    if not args.movie.exists():
+        die(f"no such movie: {args.movie}")
+    for tool in ("ffmpeg", "ffprobe"):
+        if not shutil.which(tool):
+            die(f"{tool} not on PATH")
+
+    workdir = args.out or args.movie.parent / f"{args.movie.stem}-check"
+    workdir.mkdir(parents=True, exist_ok=True)
+
+    meta = subprocess.run(
+        ["ffprobe", "-v", "error", "-print_format", "json",
+         "-show_format", "-show_streams", str(args.movie)],
+        capture_output=True, text=True)
+    if meta.returncode != 0:
+        die(f"ffprobe failed: {meta.stderr.strip()[:200]}")
+    info = json.loads(meta.stdout)
+    vs = [s for s in info["streams"] if s["codec_type"] == "video"]
+    as_ = [s for s in info["streams"] if s["codec_type"] == "audio"]
+    if not vs:
+        die("no video stream")
+    duration = float(info["format"].get("duration", 0))
+
+    paths, fracs = sample_picture(args.movie, workdir)
+    levels = sample_sound(args.movie, bool(as_))
+    changes = [i for i, f in enumerate(fracs) if f > CHANGE_FRAC]
+    talking = [i for i, lv in enumerate(levels) if lv >= SPEECH_DB]
+    span = len(fracs) or 1
+    last_change = changes[-1] if changes else None
+    last_talk = talking[-1] if talking else None
+
+    print(f"container  {vs[0]['codec_name']} {vs[0]['width']}x{vs[0]['height']}, "
+          f"{duration:.1f}s, audio={'yes' if as_ else 'no'}")
+    print(f"picture    reaches a new state in {len(changes)} of {span} seconds"
+          + (f"; last at {last_change}s" if last_change is not None else ""))
+    if levels:
+        print(f"sound      audible in {len(talking)} of {len(levels)} seconds"
+              + (f"; last at {last_talk}s" if last_talk is not None else ""))
+
+    failures, warnings = [], []
+    if duration < 1:
+        failures.append(f"duration is {duration:.2f}s - that is not a movie")
+    if args.expect_audio and not as_:
+        failures.append("expected narration but there is no audio stream")
+    if levels and not talking:
+        failures.append("the audio track is silent end to end")
+
+    # a narrated movie with no subtitles fails for everyone watching it muted
+    if as_ and args.expect_subs:
+        srt = args.subs or args.movie.with_suffix(".srt")
+        embedded = any(s["codec_type"] == "subtitle" for s in info["streams"])
+        if srt.exists():
+            last = 0.0
+            for line in srt.read_text(errors="replace").splitlines():
+                if "-->" in line:
+                    end = line.split("-->")[1].strip().split()[0]
+                    hh, mm, rest = end.split(":")
+                    ss, _, ms = rest.partition(",")
+                    last = max(last, int(hh) * 3600 + int(mm) * 60 + int(ss)
+                               + int(ms or 0) / 1000)
+            # compare against where the narration ends, not the runtime: a
+            # silent end card is normal and must not read as missing subtitles
+            speech_end = float(last_talk + 1) if last_talk is not None else duration
+            print(f"subtitles   {srt.name}, last cue ends at {last:.1f}s "
+                  f"(narration ends {speech_end:.0f}s)")
+            if last < speech_end - 3.0:
+                failures.append(
+                    f"subtitles stop at {last:.0f}s but the narration runs to "
+                    f"{speech_end:.0f}s - {speech_end - last:.0f}s of speech "
+                    f"has no subtitles")
+        elif embedded:
+            print("subtitles   embedded subtitle stream present")
+        else:
+            failures.append(
+                f"narrated, but no subtitles: expected {srt.name} beside the "
+                f"movie (or an embedded track). Run make-subtitles and burn "
+                f"them in; pass --no-expect-subtitles only for a movie nobody "
+                f"will ever watch muted.")
+    if not changes:
+        failures.append("the picture never reaches a new state - this is a still, "
+                        "not a movie")
+    else:
+        tail_talk = (last_talk - last_change) if last_talk is not None else 0
+        frozen_frac = (span - last_change) / span
+        if last_change < EARLY_ACTION * span and tail_talk > TAIL_TALK_S:
+            failures.append(
+                f"every visible change happens in the first {last_change}s "
+                f"({100*last_change/span:.0f}% of runtime), then the picture is "
+                f"frozen for {span - last_change}s while narration keeps talking "
+                f"for {tail_talk:.0f}s of it. The demo is over before the "
+                f"explanation starts: pace the action to the narration.")
+        elif tail_talk > WARN_TAIL_S:
+            warnings.append(f"{tail_talk:.0f}s of narration after the last visible "
+                            f"change ({100*frozen_frac:.0f}% of runtime frozen)")
+        gaps = [changes[i + 1] - changes[i] for i in range(len(changes) - 1)]
+        if gaps and max(gaps) > WARN_GAP_S:
+            warnings.append(f"{max(gaps)}s with no visible change mid-movie - "
+                            f"intentional hold, or did something hang?")
+
+    sheet = workdir / "contact-sheet.png"
+    idxs = contact_sheet(paths, sheet)
+    print(f"sheet      {sheet}")
+    print(f"           sampled at {', '.join(str(i) + 's' for i in idxs)}")
+
+    for w in warnings:
+        print(f"WARN       {w}")
+    for f in failures:
+        print(f"FAIL       {f}")
+
+    if args.json:
+        (workdir / "check.json").write_text(json.dumps(
+            {"duration": duration, "change_seconds": changes,
+             "talk_seconds": talking, "failures": failures,
+             "warnings": warnings}, indent=2))
+
+    if failures:
+        print("\nNOT SHIPPABLE. Fix, regenerate, re-run.")
+        return 1
+    print("\nMechanical checks pass. NOW OPEN THE CONTACT SHEET AND LOOK AT IT: "
+          "this script cannot see wrong content, unreadable text, a missing "
+          "cursor, or narration that says something the picture contradicts.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

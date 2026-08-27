@@ -1,0 +1,204 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["pyyaml"]
+# ///
+"""Assemble scenes into one movie, each segment held to max(narration, visuals).
+
+Reads the same scenes file narrate does, so the narration you rendered and
+the picture you recorded stay in step by construction: a segment lasts as
+long as whichever of its two halves is longer, and the short one is padded
+(video freezes its last frame, audio pads with silence).
+
+It also writes segments/offsets.json — where each scene starts in the final
+cut — which make-subtitles consumes. Hand-computing those offsets is the
+step that silently breaks every time you insert or reorder a scene.
+
+Scene kinds:
+  card    title/caption rendered as HTML and screenshotted (needs a browser)
+  image   a still you already have (a contact sheet, a diagram)
+  frames  a directory of PNGs, played at `rate` fps
+  movie   an existing movie, played as itself with its own audio
+
+Usage:
+  assemble SCENES.yaml OUT.mp4 [--narration DIR] [--work DIR] [--browser PATH]
+"""
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import urllib.parse
+from pathlib import Path
+
+import yaml
+
+BROWSERS = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
+]
+
+CARD_HTML = """<!doctype html><meta charset="utf-8">
+<style>
+ html,body{{margin:0;width:{w}px;height:{h}px;background:{bg};color:#e8e6e1;
+  font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;overflow:hidden}}
+ .w{{height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:{gap}px;text-align:center;padding:0 8%}}
+ h1{{margin:0;font-size:{title}px;font-weight:650;letter-spacing:-.02em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#f2f2f5}}
+ p{{margin:0;font-size:{sub}px;color:#9a9aa6;line-height:1.35}}
+</style><div class="w"><h1>{TITLE}</h1><p>{SUB}</p></div>
+"""
+
+
+def die(msg):
+    print(f"assemble: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def run(cmd):
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        die(f"{' '.join(map(str, cmd))}\n{r.stderr.strip()[:500]}")
+    return r
+
+
+def dur(path):
+    r = run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(path)])
+    return float(r.stdout.strip())
+
+
+def find_browser(explicit):
+    for cand in ([explicit] if explicit else []) + BROWSERS:
+        if not cand:
+            continue
+        if os.path.sep in cand and Path(cand).exists():
+            return cand
+        found = shutil.which(cand)
+        if found:
+            return found
+    return None
+
+
+def make_card(scene, png, w, h, browser):
+    if not browser:
+        die("a `card` scene needs a browser (Chrome/Chromium) to render text; "
+            "pass --browser, or use an `image` scene you rendered yourself")
+    html = CARD_HTML.format(
+        w=w, h=h, bg=scene.get("background", "#101014"),
+        gap=max(16, h // 44), title=scene.get("title_size", max(28, h // 14)),
+        sub=scene.get("subtitle_size", max(16, h // 32)),
+        TITLE=scene.get("title", ""), SUB=scene.get("subtitle", ""))
+    tmp = png.with_suffix(".html")
+    tmp.write_text(html)
+    run([browser, "--headless=new", "--disable-gpu", "--hide-scrollbars",
+         f"--screenshot={png}", f"--window-size={w},{h}",
+         "--force-device-scale-factor=1", "file://" + urllib.parse.quote(str(tmp))])
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("scenes", type=Path)
+    ap.add_argument("out", type=Path)
+    ap.add_argument("--narration", type=Path, default=None)
+    ap.add_argument("--work", type=Path, default=None)
+    ap.add_argument("--browser", default=None)
+    args = ap.parse_args()
+
+    for tool in ("ffmpeg", "ffprobe"):
+        if not shutil.which(tool):
+            die(f"{tool} not on PATH")
+
+    doc = yaml.safe_load(args.scenes.read_text())
+    base = args.scenes.parent
+    res = doc.get("resolution", {}) or {}
+    W, H = int(res.get("width", 1920)), int(res.get("height", 1080))
+    FPS = int(doc.get("fps", 30))
+    narration = args.narration or (base / "narration")
+    work = args.work or (base / "segments")
+    work.mkdir(parents=True, exist_ok=True)
+    browser = find_browser(args.browser)
+
+    fit = (f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
+           f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=#101014,setsar=1")
+
+    offsets, clock, concat_lines = {}, 0.0, []
+    for sc in doc["scenes"]:
+        sid = sc["id"]
+        kind = sc.get("kind", "frames")
+        seg = work / f"{sid}.mp4"
+        nar = narration / f"{sid}.wav"
+        nard = dur(nar) if nar.exists() else 0.0
+
+        if kind == "movie":
+            src = base / sc["src"]
+            target = dur(src)
+            inner_h = int(sc.get("height", int(H * 0.82)))
+            run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", str(src),
+                 "-vf", f"scale=-2:{inner_h},pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:"
+                        f"color=#101014,setsar=1",
+                 "-af", f"volume={sc.get('gain_db', 0)}dB,apad",
+                 "-r", str(FPS), "-t", f"{target:.3f}",
+                 "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+                 "-c:a", "aac", "-ar", "44100", "-ac", "2", str(seg)])
+        else:
+            if kind == "frames":
+                src = base / sc["src"]
+                n = len(list(Path(src).glob("*.png")))
+                if not n:
+                    die(f"scene {sid}: no PNGs in {src}")
+                rate = float(sc.get("rate", FPS))
+                vis = n / rate
+                target = max(nard, vis)
+                vin = ["-framerate", str(rate), "-pattern_type", "glob",
+                       "-i", str(Path(src) / "*.png")]
+                # freeze the last frame when narration outlasts the action
+                vf = fit + f",tpad=stop_mode=clone:stop_duration={max(0.0, target - vis):.3f}"
+            else:
+                if kind == "card":
+                    img = work / f"card-{sid}.png"
+                    make_card(sc, img, W, H, browser)
+                elif kind == "image":
+                    img = base / sc["src"]
+                    if not img.exists():
+                        die(f"scene {sid}: no such image {img}")
+                else:
+                    die(f"scene {sid}: unknown kind {kind!r}")
+                target = max(nard, float(sc.get("duration", 3)))
+                vin = ["-loop", "1", "-i", str(img)]
+                vf = fit
+
+            ain = (["-i", str(nar)] if nar.exists()
+                   else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
+            run(["ffmpeg", "-nostdin", "-y", "-v", "error", *vin, *ain,
+                 "-vf", vf, "-af", "apad", "-r", str(FPS), "-t", f"{target:.3f}",
+                 "-map", "0:v:0", "-map", "1:a:0",
+                 "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+                 "-c:a", "aac", "-ar", "44100", "-ac", "2", str(seg)])
+
+        actual = dur(seg)
+        # only scenes that speak get a subtitle offset; a movie played as
+        # itself carries its own subtitles already
+        if nar.exists() and kind != "movie":
+            offsets[sid] = round(clock, 3)
+        clock += actual
+        concat_lines.append(f"file '{seg.resolve()}'")
+        print(f"{sid}: {actual:.1f}s{' (own audio)' if kind == 'movie' else ''}")
+
+    listing = work / "concat.txt"
+    listing.write_text("\n".join(concat_lines) + "\n")
+    run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+         "-i", str(listing), "-c", "copy", str(args.out)])
+    (work / "offsets.json").write_text(json.dumps(offsets, indent=2))
+    print(f"\nassembled {args.out} ({dur(args.out):.1f}s)")
+    print(f"scene offsets -> {work / 'offsets.json'} "
+          f"(feed to make-subtitles --offsets-json)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

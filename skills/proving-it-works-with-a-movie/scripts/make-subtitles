@@ -1,0 +1,125 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# ///
+"""Build an SRT from narrate's manifest, timed to the measured clips.
+
+Subtitles are not decoration. A movie gets watched muted - in a PR, on a
+phone, in an open-plan office, by someone who is deaf - and an unsubtitled
+narrated movie simply doesn't communicate to those viewers. They also make
+the movie searchable and let a reviewer check what was said without
+listening.
+
+Cue timing is proportional to character count within each scene's measured
+audio, which tracks speech closely enough for reading. If you need
+word-exact timing, transcribe the rendered audio with a word-timestamp API
+and use those offsets instead.
+
+Usage:
+  make-subtitles MANIFEST.json OUT.srt [--offsets SCENE=SECONDS ...]
+                                       [--max-chars N] [--max-secs S]
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+MAX_CHARS = 84          # two comfortable lines
+MAX_SECS = 5.5
+MIN_SECS = 1.0
+
+
+def cue_chunks(text, max_chars):
+    """Split into cue-sized pieces on sentence, then clause, then word."""
+    words, chunks, cur = text.split(), [], ""
+    for w in words:
+        candidate = f"{cur} {w}".strip()
+        if len(candidate) > max_chars and cur:
+            chunks.append(cur)
+            cur = w
+        else:
+            cur = candidate
+            if cur.endswith((".", "!", "?")) and len(cur) > max_chars * 0.45:
+                chunks.append(cur)
+                cur = ""
+    if cur:
+        chunks.append(cur)
+    return chunks or [text]
+
+
+def wrap(line, width=42):
+    words, out, cur = line.split(), [], ""
+    for w in words:
+        if len(f"{cur} {w}".strip()) > width and cur:
+            out.append(cur)
+            cur = w
+        else:
+            cur = f"{cur} {w}".strip()
+    if cur:
+        out.append(cur)
+    return "\n".join(out[:2]) if len(out) <= 2 else "\n".join(
+        [" ".join(out[:len(out) // 2]), " ".join(out[len(out) // 2:])])
+
+
+def ts(seconds):
+    ms = int(round(seconds * 1000))
+    h, ms = divmod(ms, 3600000)
+    m, ms = divmod(ms, 60000)
+    s, ms = divmod(ms, 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("manifest", type=Path)
+    ap.add_argument("out", type=Path)
+    ap.add_argument("--offsets", nargs="*", default=[],
+                    help="SCENE=SECONDS start overrides; without these, scenes "
+                         "are assumed to run back to back in manifest order")
+    ap.add_argument("--offsets-json", type=Path, default=None,
+                    help="segments/offsets.json from assemble - the reliable "
+                         "way to time cues against the finished cut")
+    ap.add_argument("--max-chars", type=int, default=MAX_CHARS)
+    ap.add_argument("--max-secs", type=float, default=MAX_SECS)
+    args = ap.parse_args()
+
+    manifest = json.loads(args.manifest.read_text())
+    overrides = {}
+    if args.offsets_json:
+        overrides.update({k: float(v) for k, v in
+                          json.loads(args.offsets_json.read_text()).items()})
+    for spec in args.offsets:
+        k, _, v = spec.partition("=")
+        overrides[k] = float(v)
+
+    # a scene with no offset and no place in the cut would silently land at
+    # the wrong time; skip it rather than mistime it
+    if overrides:
+        manifest = [e for e in manifest if e["id"] in overrides]
+    cues, clock = [], 0.0
+    for entry in manifest:
+        start = overrides.get(entry["id"], clock)
+        dur = float(entry["duration"])
+        chunks = cue_chunks(entry["text"], args.max_chars)
+        total_chars = sum(len(c) for c in chunks) or 1
+        t = start
+        for chunk in chunks:
+            share = dur * (len(chunk) / total_chars)
+            share = max(MIN_SECS, min(share, args.max_secs))
+            cues.append((t, min(t + share, start + dur), wrap(chunk)))
+            t += share
+        clock = start + dur
+
+    lines = []
+    for i, (a, b, text) in enumerate(cues, 1):
+        if b <= a:
+            b = a + MIN_SECS
+        lines += [str(i), f"{ts(a)} --> {ts(b)}", text, ""]
+    args.out.write_text("\n".join(lines))
+    print(f"{len(cues)} cues, ends at {ts(cues[-1][1])} -> {args.out}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

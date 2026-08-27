@@ -1,0 +1,99 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# ///
+"""Put subtitles on a movie, by whichever route this ffmpeg supports.
+
+Burning them into the picture is what you want: subtitles survive Slack,
+PR previews, phones, and anything that plays video without a subtitle UI.
+That needs an ffmpeg built with libass, which many are not — Homebrew's
+default macOS build has no `subtitles` filter at all, while Debian's does.
+Rather than emit a command that works on half of machines, this checks and
+falls back to an embedded soft-subtitle track, telling you which you got.
+
+Usage:
+  burn-subtitles IN.mp4 SUBS.srt OUT.mp4 [--font NAME] [--size N]
+                                         [--soft] [--margin PX]
+"""
+
+import argparse
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+def has_libass():
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-filters"],
+                         capture_output=True, text=True)
+    return any(line.split()[1:2] == ["subtitles"]
+               for line in out.stdout.splitlines() if line.strip())
+
+
+def run(cmd):
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        print(" ".join(map(str, cmd)), file=sys.stderr)
+        print(r.stderr.strip()[:600], file=sys.stderr)
+    return r.returncode == 0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("movie", type=Path)
+    ap.add_argument("subs", type=Path)
+    ap.add_argument("out", type=Path)
+    ap.add_argument("--font", default="DejaVu Sans")
+    ap.add_argument("--size", type=int, default=16)
+    ap.add_argument("--margin", type=int, default=30)
+    ap.add_argument("--soft", action="store_true",
+                    help="embed a soft track even if burning is available")
+    args = ap.parse_args()
+
+    if not shutil.which("ffmpeg"):
+        sys.exit("ffmpeg not on PATH")
+    for f in (args.movie, args.subs):
+        if not f.exists():
+            sys.exit(f"no such file: {f}")
+
+    if not args.soft and has_libass():
+        # ffmpeg 8 dropped positional filter options, so name it explicitly:
+        # `subtitles=movie.srt` parses on 5.x and fails on 8.x, but
+        # `subtitles=filename=movie.srt` works on both
+        # BorderStyle=3 draws a filled box behind the text. Outline-only
+        # subtitles are legible over a dark terminal and marginal over a
+        # white app screenshot; a demo movie cuts between both.
+        style = (f"FontName={args.font},Fontsize={args.size},"
+                 f"BorderStyle=3,Outline=1,Shadow=0,MarginV={args.margin},"
+                 f"PrimaryColour=&H00FFFFFF&,OutlineColour=&HB0101014&,"
+                 f"BackColour=&HB0101014&")
+        # run from the subtitle's directory: the filter treats ':' and '\' in
+        # paths as its own syntax, and quoting around that is a losing game
+        ok = run(["ffmpeg", "-nostdin", "-y", "-v", "error",
+                  "-i", str(args.movie.resolve()),
+                  "-vf", f"subtitles=filename={args.subs.name}:"
+                         f"force_style='{style}'",
+                  "-c:a", "copy", "-c:v", "libx264", "-preset", "medium",
+                  "-pix_fmt", "yuv420p", str(args.out.resolve())])
+        if ok:
+            print(f"burned into the picture -> {args.out}")
+            return 0
+        print("burn failed; falling back to a soft track", file=sys.stderr)
+
+    ok = run(["ffmpeg", "-nostdin", "-y", "-v", "error",
+              "-i", str(args.movie), "-i", str(args.subs),
+              "-c", "copy", "-c:s", "mov_text",
+              "-metadata:s:s:0", "language=eng", str(args.out)])
+    if not ok:
+        return 1
+    print(f"embedded a soft subtitle track -> {args.out}")
+    if not args.soft:
+        print("NOTE: this ffmpeg has no libass, so the subtitles are a track a "
+              "player must choose to show, not pixels. Anything that autoplays "
+              "without subtitle UI (Slack, PR previews) will show none. Install "
+              "an ffmpeg with libass to burn them in.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
