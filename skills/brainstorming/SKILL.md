@@ -169,6 +169,7 @@ is the whole process.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
+- A request for more context is not an answer: if the user asks for context, implications, examples, or trade-offs about the current question, answer the clarification request and re-ask the same decision. Do not advance to the next design question until the current one is explicitly answered.
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
