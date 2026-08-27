@@ -199,6 +199,14 @@ is the whole process.
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
 
+## After the Design (bounded path)
+
+Once the short design is approved:
+
+- **Preserve main session context:** If the bounded implementation involves exploring multiple files, creating tests, debugging, or running multi-step edits, dispatch a fresh subagent with the approved design as the brief rather than performing all implementation in the main controller session.
+- **Verification:** The subagent implements and validates; the main session reviews the outcome and verifies with the user.
+- **Trivial edits:** Very small one-line tweaks can proceed directly in the current session.
+
 ## After the Design (architectural path)
 
 **Documentation:**
