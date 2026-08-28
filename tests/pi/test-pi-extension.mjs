@@ -54,7 +54,7 @@ test('package.json declares a pi package with skills and extension resources', a
 test('extension registers lifecycle hooks without pre-compaction injection', async () => {
   const { handlers } = await loadExtension();
 
-  for (const event of ['resources_discover', 'session_start', 'session_compact', 'context', 'agent_end']) {
+  for (const event of ['resources_discover', 'session_start', 'session_compact', 'context', 'agent_start']) {
     assert.equal((handlers.get(event) ?? []).length, 1, `missing ${event} handler`);
   }
   assert.equal((handlers.get('session_before_compact') ?? []).length, 0);
@@ -69,17 +69,28 @@ test('resources_discover contributes the bundled skills directory', async () => 
   assert.deepEqual(result.skillPaths, [resolve(repoRoot, 'skills')]);
 });
 
-test('startup context injects the bootstrap as one user message until agent_end', async () => {
+test('startup context injects the bootstrap on each turn without disarming on agent_end', async () => {
   const { handlers } = await loadExtension();
   const sessionStart = firstHandler(handlers, 'session_start');
+  const agentStart = firstHandler(handlers, 'agent_start');
   const context = firstHandler(handlers, 'context');
-  const agentEnd = firstHandler(handlers, 'agent_end');
+
+  // No agent_end handler should be registered: pi fires it per-run, so
+  // disarming on it would silently drop the bootstrap after turn 1.
+  assert.equal(
+    (handlers.get('agent_end') ?? []).length,
+    0,
+    'extension must not disarm bootstrap on agent_end (per-run, not per-session)',
+  );
 
   await sessionStart({ type: 'session_start', reason: 'startup' }, {});
 
   const originalMessages = [
     { role: 'user', content: [{ type: 'text', text: 'Let us make a react todo list' }], timestamp: 1 },
   ];
+
+  // Turn 1: bootstrap is injected.
+  await agentStart({ type: 'agent_start' }, {});
   const result = await context({ type: 'context', messages: originalMessages }, {});
 
   assert.equal(result.messages.length, 2);
@@ -88,16 +99,35 @@ test('startup context injects the bootstrap as one user message until agent_end'
   assert.match(textOf(result.messages[0]), /Pi tool mapping/);
   assert.equal(result.messages[1], originalMessages[0]);
 
+  // Within the same turn, repeated context calls (multi-tool-call loops) must not re-inject.
+  // The extension injects at most once per turn; the persisted messages still carry the
+  // bootstrap from the first call, so pi will send them on subsequent LLM calls.
   const repeatedProviderRequest = await context({ type: 'context', messages: originalMessages }, {});
-  assert.equal(repeatedProviderRequest.messages.length, 2);
-  assert.match(textOf(repeatedProviderRequest.messages[0]), /You have superpowers/);
+  assert.equal(
+    repeatedProviderRequest,
+    undefined,
+    'bootstrap should inject at most once per turn (latch prevents duplicate provider requests)',
+  );
 
+  // Already-present dedupe still works when the persisted messages include the bootstrap.
   const alreadyInjected = await context({ type: 'context', messages: result.messages }, {});
   assert.equal(alreadyInjected, undefined, 'bootstrap should not duplicate when already present');
 
-  await agentEnd({ type: 'agent_end', messages: [] }, {});
-  const afterEnd = await context({ type: 'context', messages: originalMessages }, {});
-  assert.equal(afterEnd, undefined, 'startup bootstrap should clear after agent_end');
+  // Turn 1 ends — pi emits agent_end here, but the extension must not disarm
+  // the bootstrap in response. We verify this implicitly by checking the
+  // second-turn injection below; if the extension re-armed on agent_end
+  // (the old bug) the assertion would fail.
+
+  // Turn 2: bootstrap must be injected again for the new turn.
+  await agentStart({ type: 'agent_start' }, {});
+  const secondTurnMessages = [
+    { role: 'user', content: [{ type: 'text', text: 'now write tests' }], timestamp: 2 },
+  ];
+  const secondTurn = await context({ type: 'context', messages: secondTurnMessages }, {});
+  assert.ok(secondTurn, 'bootstrap should still inject on the second turn');
+  assert.equal(secondTurn.messages.length, 2);
+  assert.match(textOf(secondTurn.messages[0]), /You have superpowers/);
+  assert.equal(secondTurn.messages[1], secondTurnMessages[0]);
 });
 
 test('session_compact injects bootstrap after compaction summaries, not before compaction', async () => {

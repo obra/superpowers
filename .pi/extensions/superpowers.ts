@@ -15,6 +15,13 @@ let cachedBootstrap: string | null | undefined;
 
 export default function superpowersPiExtension(pi: ExtensionAPI) {
 	let injectBootstrap = true;
+	// Pi fires `agent_end` once per run (i.e. once per user message), not once
+	// per session, so disarming on it would silently drop the bootstrap after
+	// the first turn. Instead, track injection per turn: `agent_start` resets
+	// the latch, `context` sets it once the bootstrap is injected, and the
+	// existing `messageContainsBootstrap` dedupe handles repeat `context`
+	// calls within the same turn (e.g. tool-call loops).
+	let injectedThisTurn = false;
 
 	pi.on("resources_discover", async () => ({
 		skillPaths: [skillsDir],
@@ -26,15 +33,18 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 
 	pi.on("session_compact", async () => {
 		injectBootstrap = true;
+		injectedThisTurn = false;
 	});
 
-	pi.on("agent_end", async () => {
-		injectBootstrap = false;
+	pi.on("agent_start", async () => {
+		injectedThisTurn = false;
 	});
 
 	pi.on("context", async (event) => {
-		if (!injectBootstrap) return;
+		if (!injectBootstrap || injectedThisTurn) return;
 		if (event.messages.some(messageContainsBootstrap)) return;
+
+		injectedThisTurn = true;
 
 		const bootstrap = getBootstrapContent();
 		if (!bootstrap) return;
