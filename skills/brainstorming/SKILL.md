@@ -5,153 +5,192 @@ description: "You MUST use this before any creative work - creating features, bu
 
 # Brainstorming Ideas Into Designs
 
-Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
+Help turn ideas into an understood outcome and the lightest responsible
+way to build it.
 
-Start by classifying how much process the request needs, then work
-through your path: understand the context, refine the idea, present a
-design, and get your human partner's approval.
+Calibrate rigor before creating any artifact. The project shape controls
+how deeply to explore the design; actual claims and risks control whether
+specs, plans, tests, reviews, or approval gates exist at all.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any
-project, or take any implementation action until you have told your
-human partner what you intend and they have approved it. This applies
-to EVERY task on EVERY path below — the ceremony scales with the task;
-the approval gate never does.
+Do NOT invoke an implementation skill, write code, scaffold a project, or
+create a spec, plan, test harness, or review workflow until you complete
+the preflight reflection below. Do not manufacture machinery merely to
+justify a downstream skill.
 </HARD-GATE>
+
+## Preflight Reflection
+
+Before writing anything, determine:
+
+1. **Deliverable** — what the user actually wants to exist.
+2. **Claims** — what must be true for that deliverable to be credible.
+3. **Risks** — concrete security, compatibility, irreversible, external,
+   or coordination failures that matter here.
+4. **Evidence** — the cheapest reliable evidence for each claim or risk.
+5. **Process** — which artifacts and gates earn their cost, and the named
+   claim, risk, or decision each one serves.
+6. **Omissions** — what you will deliberately not create.
+
+Reflection selects the evidence; it never substitutes for it. Keep the
+cheapest evidence that actually supports the product's claims, and remove
+only machinery with no such job.
+
+Surface the result in one compact sentence so your human partner can
+correct it. Example: "This is a reversible prompt-only package; I will
+write the skills and run a few realistic pressure scenarios, but I will
+not create runtime code, a unit-test framework, or per-file reviewers."
+
+Apply this counterfactual before retaining any process item:
+
+> If this artifact, test, or reviewer did not already exist, would this
+> task's claims or risks make me create it now?
+
+If the answer is no, do not create it. Existing checklists, path labels,
+and available skills are not independent justification.
+
+### What earns machinery
+
+| Process item | Create it only when |
+|---|---|
+| Written spec | A durable interface, multi-party agreement, or likely context loss needs a stable source of truth |
+| Implementation plan | Work must cross contributors or contexts, or dependencies cannot be executed reliably in one context; ordinary sequential steps do not qualify |
+| Automated test | Retained executable behavior has a regression claim worth rechecking |
+| Pressure scenario | Prompt, policy, or skill behavior must hold under realistic use |
+| Reviewer | Independent judgment addresses a named security boundary, untrusted-input path, protocol contract, irreversible effect, data-loss risk, or consequential decision |
+| Human approval gate | A material design choice remains open, or work is destructive, irreversible, security-sensitive, or externally visible |
+
+Use existing lightweight validation when it already proves a claim. Never
+add runtime code solely to make prose, prompts, templates, or skills unit
+testable.
+
+An explicit containment or protocol promise in the brief — for example,
+"must not follow symlinks outside the root," secret redaction, network
+request replay, or safe response headers — retains one focused boundary or
+final review unless the same independent judgment is already supplied.
+Conversely, prompt-only, local, reversible, and static work does not acquire
+a reviewer merely because one is available.
+
+The preflight decision governs downstream skills. A downstream default may
+not recreate a plan, test harness, review loop, or approval gate that was
+deliberately omitted here.
 
 ## Three Paths
 
-Before your first question, classify the request and say the
-classification out loud — "this looks bounded, so I'll present a short
-design here rather than write a spec" — so your human partner can
-override it:
+After the preflight, classify the design shape. Say it briefly so your
+human partner can override it. A path selects exploration depth, not a
+mandatory bundle of artifacts:
 
 - **Spike** — a feasibility question ("can we...", "is it possible...",
   "quick and dirty is fine") whose output is an answer, not code you
-  keep. Present the question and what you'll try in 2-3 sentences, get
-  a nod, then find out as cheaply as correctness allows. No design
-  doc, no spec file. Report findings as a recommendation; anything you
-  built stays labeled throwaway.
+  keep. Present the question and what you'll try in 2-3 sentences, then
+  find out as cheaply as correctness allows. Report findings as a
+  recommendation; anything you built stays labeled throwaway.
 - **Bounded** — a well-scoped change to code that already exists in
   this repo: a new flag, a small endpoint, a one-file fix.
   Understanding the kind of app is not enough — bounded means the flow
   you are changing is already here to read. If there is no existing
   flow to change, the task is not bounded. Ask the clarifying
   questions that matter, present a short design IN CHAT (a few
-  sentences to a few short paragraphs), and STOP. Implementation
-  starts only after your human partner says yes to that design — a
-  bounded task's approval is as hard a gate as an architectural
-  one. No spec file, no implementation plan document.
+  sentences to a few short paragraphs). Ask for approval only when the
+  preflight identified a real approval condition; otherwise state the
+  intent and proceed with reversible in-worktree implementation.
 - **Architectural** — new projects, new subsystems, changes that
   restructure how components fit together or alter interfaces others
-  depend on. Follow the full process: questions, approaches, sectioned
-  design, written spec, then the writing-plans skill.
+  depend on. Explore questions, approaches, and design in appropriate
+  depth. Architecture does not automatically require a spec file,
+  implementation plan, TDD, subagents, or staged review.
 
-When in doubt between two paths, take the heavier one. The ratchet is
-one-way: hidden complexity discovered mid-task upgrades the path —
-stop, say so, and step up. Nothing downgrades mid-task.
+When evidence changes, re-run the preflight. Increase rigor when a new
+claim or risk earns it; reduce rigor when the justification disappears.
+Do this before creating the next artifact, not after building a process
+that should never have existed.
 
-## Anti-Pattern: "Too Simple To Need Approval"
+## Approval Is Risk-Bound
 
-Every path ends with your human partner approving your intent before
-implementation. A todo list, a single-function utility, a config
-change — the design may be two sentences in chat, but you MUST present
-it and get approval. "Simple" tasks are where unexamined assumptions
-cause the most wasted work. What scales with simplicity is the
-artifact, never the approval.
+Always stop for an unresolved material design decision and before a
+destructive, irreversible, security-sensitive, or externally visible
+action. Also stop when the user explicitly asks to review first. For a
+clear, reversible, in-worktree request, the compact preflight statement is
+enough; do not turn acknowledgement into a ritual approval round.
 
 ## Red Flags
 
 | Thought | Reality |
 |---------|---------|
-| "This is too simple to need a design" | Simple means a short design, not no design. Two sentences in chat, then approval. |
-| "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
-| "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
+| "Architectural means full ceremony" | Architectural describes product shape. Claims and risks determine process weight. |
+| "A feature means TDD" | Only retained executable behavior with a regression claim earns automated tests. |
+| "A skill exists, so I must produce its input" | Skills serve the task. Never create a spec or plan merely to trigger another skill. |
 | "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
-| "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
-| "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
+| "More review is always safer" | A reviewer without a named risk or decision adds confidence theater, not evidence. |
+| "I can trim unnecessary machinery later" | Late deletion is recovery. The preflight exists to prevent creating it. |
 
 ## Checklist
 
-Classify first, announce the path, then create a task for each item on
-your path and complete them in order.
+Complete the preflight, announce the path and retained process, then use
+only the applicable items below.
 
 **Spike:**
 1. **Explore project context** — enough to frame the probe
 2. **Present question + probe plan** — 2-3 sentences
-3. **Get approval** — a nod is enough
-4. **Investigate** — as cheaply as correctness allows
-5. **Report findings** — a recommendation; label anything built as throwaway
+3. **Investigate** — as cheaply as correctness allows
+4. **Report findings** — a recommendation; label anything built as throwaway
 
 **Bounded:**
 1. **Explore project context** — check files, docs, recent commits
 2. **Ask clarifying questions** — one at a time, the ones that matter
-3. **Present short design in chat** — approach, files touched, testing
-4. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate
-5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
+3. **Present short design in chat** — approach, files touched, retained evidence
+4. **Resolve approval condition if preflight named one**
+5. **Implement** — use only the validation and workflow retained by preflight
 
 **Architectural:**
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Present design** — in sections scaled to their complexity
+6. **Resolve approval condition if preflight named one**
+7. **Transition directly to implementation unless a written spec or plan earned its cost**
+8. **If retained, write and review only the justified artifact, then invoke the matching skill**
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
-    "Classify: spike / bounded / architectural" [shape=diamond];
-    "Present question + probe (2-3 sentences)" [shape=box];
-    "Ask clarifying questions (bounded)" [shape=box];
-    "Present short design in chat" [shape=box];
-    "Human approves?" [shape=diamond];
-    "Investigate; report recommendation" [shape=doublecircle];
-    "Implement via normal workflow (no plan doc)" [shape=doublecircle];
-    "Explore project context" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
-    "Hidden complexity? Upgrade path" [shape=box];
+    "Preflight: deliverable, claims, risks, evidence" [shape=box];
+    "Name retained process and omissions" [shape=box];
+    "Classify design shape" [shape=diamond];
+    "Probe and report" [shape=doublecircle];
+    "Short in-chat design" [shape=box];
+    "Explore architecture and approaches" [shape=box];
+    "Approval condition?" [shape=diamond];
+    "Get explicit approval" [shape=box];
+    "Spec or plan justified?" [shape=diamond];
+    "Create only justified artifact" [shape=box];
+    "Implement with retained evidence" [shape=doublecircle];
 
-    "Classify: spike / bounded / architectural" -> "Present question + probe (2-3 sentences)" [label="spike"];
-    "Classify: spike / bounded / architectural" -> "Ask clarifying questions (bounded)" [label="bounded"];
-    "Classify: spike / bounded / architectural" -> "Explore project context" [label="architectural"];
-    "Present question + probe (2-3 sentences)" -> "Human approves?";
-    "Ask clarifying questions (bounded)" -> "Present short design in chat";
-    "Present short design in chat" -> "Human approves?";
-    "Human approves?" -> "Investigate; report recommendation" [label="spike: yes"];
-    "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
-    "Hidden complexity? Upgrade path" -> "Classify: spike / bounded / architectural";
-    "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "Preflight: deliverable, claims, risks, evidence" -> "Name retained process and omissions";
+    "Name retained process and omissions" -> "Classify design shape";
+    "Classify design shape" -> "Probe and report" [label="spike"];
+    "Classify design shape" -> "Short in-chat design" [label="bounded"];
+    "Classify design shape" -> "Explore architecture and approaches" [label="architectural"];
+    "Short in-chat design" -> "Approval condition?";
+    "Explore architecture and approaches" -> "Approval condition?";
+    "Approval condition?" -> "Get explicit approval" [label="yes"];
+    "Approval condition?" -> "Spec or plan justified?" [label="no"];
+    "Get explicit approval" -> "Spec or plan justified?";
+    "Spec or plan justified?" -> "Create only justified artifact" [label="yes"];
+    "Spec or plan justified?" -> "Implement with retained evidence" [label="no"];
+    "Create only justified artifact" -> "Implement with retained evidence";
 }
 ```
 
-**Terminal states are path-bound.** Architectural: the ONLY skill you
-invoke after brainstorming is writing-plans — never frontend-design,
-mcp-builder, or any other implementation skill. Bounded: after
-approval, implementation proceeds directly through the normal
-development workflow; no plan document. Spike: the terminal state is a
-reported recommendation.
+**Terminal states are justification-bound.** Invoke writing-plans only when
+the preflight retained a plan. Invoke TDD only when it retained automated
+regression evidence. Invoke a review workflow only when it retained an
+independent review. Otherwise transition directly to the appropriate
+implementation skill. A spike ends with a reported recommendation.
 
 ## The Process
 
@@ -165,7 +204,7 @@ is the whole process.
 
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
-- If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
+- If the project has multiple independent subsystems, help the user decompose them and design the first useful slice. Do not automatically create a separate spec and plan for every slice; apply the preflight to each.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
@@ -182,8 +221,8 @@ is the whole process.
 
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
+- Ask after each section only when an unresolved decision needs the user's judgment; otherwise present a compact coherent design
+- Cover the relevant architecture, components, data flow, failure handling, and retained evidence
 - Be ready to go back and clarify if something doesn't make sense
 
 **Design for isolation and clarity:**
@@ -199,11 +238,14 @@ is the whole process.
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
 
-## After the Design (architectural path)
+## After the Design (when artifacts were retained)
 
-**Documentation:**
+Skip this entire section when the preflight did not justify a written spec
+or plan.
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+**Written spec:**
+
+- When a durable source of truth was justified, write it to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
@@ -218,17 +260,17 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
-**User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+**User review (conditional):**
+When the preflight retained a human review gate, ask the user to review the written spec before proceeding:
 
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Wait for the user's response. If they request changes, make them and re-run the self-review. Proceed once the user approves. If no review gate was retained, continue without manufacturing one.
 
 **Implementation:**
 
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- If sequencing or handoff justified a plan, invoke writing-plans.
+- Otherwise invoke the implementation skill that directly serves the deliverable.
 
 ## Visual Companion
 
