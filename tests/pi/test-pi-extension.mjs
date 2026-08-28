@@ -9,6 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
 const packageJsonPath = resolve(repoRoot, 'package.json');
 const extensionPath = resolve(repoRoot, '.pi/extensions/superpowers.ts');
+const personalExtensionPath = resolve(process.env.HOME, '.pi/agent/extensions/superpowers.ts');
 const piToolsPath = resolve(repoRoot, 'skills/using-superpowers/references/pi-tools.md');
 
 async function readPackageJson() {
@@ -146,6 +147,22 @@ test('session_compact injects bootstrap after compaction summaries, not before c
   assert.equal(result.messages[1].role, 'user');
   assert.match(textOf(result.messages[1]), /You have superpowers/);
   assert.equal(result.messages[2], user);
+});
+
+test('personal-area extension (if present) stays in sync with the repo fix', async (t) => {
+  if (!existsSync(personalExtensionPath)) {
+    t.skip(`no personal override at ${personalExtensionPath}`);
+    return;
+  }
+
+  const repoText = await readFile(extensionPath, 'utf8');
+  const personalText = await readFile(personalExtensionPath, 'utf8');
+
+  // The personal-area copy must mirror the repo fix. If the package extension
+  // is later neutered (e.g. by an upstream fix), the user can delete the
+  // personal copy; until then, the dedupe-safe per-turn fix should run from
+  // ~/.pi/agent/extensions/ where pi updates cannot overwrite it.
+  assert.equal(personalText, repoText, 'personal-area superpowers.ts is out of sync with the repo fix');
 });
 
 test('pi tools reference documents pi-specific mappings', async () => {
