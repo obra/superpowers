@@ -183,6 +183,11 @@ implementation.
 
 ## Model Selection
 
+**Codex model pool:** map the cheap tier to `gpt-5.6-luna` with
+`reasoning_effort: "xhigh"`; map the standard and most-capable tiers to
+`gpt-5.6-terra` with `reasoning_effort: "xhigh"`. Every Codex subagent
+dispatch must explicitly set both fields to one of these two combinations.
+
 Use the least powerful model that can handle each role to conserve cost and increase speed.
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
