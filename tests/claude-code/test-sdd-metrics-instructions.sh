@@ -32,8 +32,6 @@ grep -q "probe='.superpowers/metrics/.ignore-probe'" "$ignore_script"
 grep -q 'git check-ignore -q -- "$probe"' "$ignore_script"
 grep -q '/.superpowers/metrics/' "$ignore_script"
 grep -q 'git rev-parse --show-toplevel' "$ignore_script"
-grep -q 'lock_path="$exclude_path.sdd-metrics-ignore.lock"' "$ignore_script"
-grep -q 'last_byte=$(tail -c 1 "$exclude_path"' "$ignore_script"
 ! grep -q 'Delete this plan.s workspace' "$skill_file"
 
 finishing_file='skills/finishing-a-development-branch/SKILL.md'

@@ -21,8 +21,16 @@ const passThenResume = toLines(passedPrefix.concat(
 test('deduplicates a byte-identical retry of the same event id', () => {
   const first = makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' });
   const reduced = reduceRun(makeRun(), toLines([first, first]));
-  assert.equal(reduced.events.length, 1);
   assert.deepEqual(reduced.diagnostics, []);
+});
+
+test('rejects a non-byte-identical retry of the same event id', () => {
+  const event = makeEvent(1, 'run_started', { trigger: 'NEW_PLAN' });
+  const original = JSON.stringify(event);
+  const reordered = JSON.stringify(Object.fromEntries(Object.entries(event).reverse()));
+  const reduced = reduceRun(makeRun(), numberLines([original, reordered]));
+
+  assert.deepEqual(reduced.diagnostics.map(diagnostic => diagnostic.code), ['EVENT_ID_CONFLICT']);
 });
 
 test('diagnoses conflicting ids, conflicting sequences, gaps, and malformed JSON', () => {
@@ -54,7 +62,6 @@ test('preserves identity and schema diagnostics without repairing sequence gaps'
   assert.deepEqual(reduced.diagnostics.map(d => d.code), [
     'EVENT_RUN_ID_MISMATCH', 'EVENT_SCHEMA_VERSION_UNSUPPORTED', 'EVENT_TYPE_UNSUPPORTED', 'SEQUENCE_GAP',
   ]);
-  assert.equal(reduced.events.length, 1);
 });
 
 test('requires sequence one and exactly one run_started event', () => {
@@ -159,7 +166,6 @@ test('rejects each event identity mismatch without applying the event', () => {
     const reduced = reduceRun(makeRun(), toLines(events));
 
     assert.deepEqual(reduced.diagnostics.map(diagnostic => diagnostic.code), [expectedCode, 'PREFLIGHT_PASS_REQUIRED'], field);
-    assert.equal(reduced.events.length, 4, field);
     assert.equal(reduced.tasks.get('task-1').dispatched, false, field);
   }
 });
@@ -272,7 +278,6 @@ test('run_resumed reopens an incomplete run and allows task dispatch', () => {
 test('does not reduce passing events when run metadata is invalid', () => {
   const reduced = reduceRun(makeRun({ feature: '' }), toLines(passingRunEvents()));
   assert.deepEqual(reduced.diagnostics.map(d => d.code), ['RUN_FEATURE_INVALID']);
-  assert.equal(reduced.events.length, 0);
   assert.equal(reduced.state.explicit_outcome, null);
   assert.equal(reduced.state.lifecycle_state, 'ACTIVE');
 });

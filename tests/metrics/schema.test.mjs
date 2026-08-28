@@ -34,6 +34,22 @@ test('rejects payload fields outside each event contract', () => {
   const result = validateEvent(makeEvent(1, 'run_started', { trigger: 'NEW_PLAN', task_id: 'task-1' }), 1);
   assert.deepEqual(result.diagnostics.map(d => d.code), ['PAYLOAD_UNKNOWN_FIELD']);
 });
+test('keeps contract diagnostics before event-specific field diagnostics', () => {
+  const payload = {
+    task_id: 'bad-task',
+    result: 'NOPE',
+    evidence_kind: 'COUNTS',
+    unrelated_field: true,
+  };
+  const result = validateEvent(makeEvent(1, 'task_test_result', payload), 1);
+
+  assert.deepEqual(result.diagnostics.map(diagnostic => diagnostic.code), [
+    'PAYLOAD_UNKNOWN_FIELD',
+    'RESULT_INVALID',
+    'PAYLOAD_TASK_ID_INVALID',
+    'PAYLOAD_COUNTS_REQUIRED',
+  ]);
+});
 test('requires event id to bind run id and sequence', () => {
   const result = validateEvent(makeEvent(1, 'run_started', MINIMAL_PAYLOADS.run_started, { event_id: 'other-run:9' }), 1);
   assert.deepEqual(result.diagnostics.map(d => d.code), ['EVENT_ID_INVALID']);

@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# Ensure one repository-local metrics ignore without changing tracked files.
+# Ensure repository-local metrics data is ignored without changing tracked files.
 set -u
 
 probe='.superpowers/metrics/.ignore-probe'
-lock_attempts=8
-dead_owner_min_age=2
-expired_lock_age=60
 
 if ! repo_root=$(git rev-parse --show-toplevel); then
   echo 'SDD metrics: cannot resolve repository root.' >&2
@@ -31,116 +28,8 @@ if ! mkdir -p "$(dirname "$exclude_path")"; then
   exit 1
 fi
 
-lock_path="$exclude_path.sdd-metrics-ignore.lock"
-
-lock_is_expected() {
-  local path=$1 extra_entry
-  [[ -d "$path" && -f "$path/owner.pid" && -f "$path/created_at" ]] || return 1
-  extra_entry=$(find "$path" -mindepth 1 -maxdepth 1 ! -name owner.pid ! -name created_at -print -quit)
-  [[ -z "$extra_entry" ]]
-}
-
-reclaim_stale_lock() {
-  local owner created_at now age owner_alive=false reclaim_path
-  if ! lock_is_expected "$lock_path"; then
-    return 2
-  fi
-
-  owner=$(<"$lock_path/owner.pid")
-  created_at=$(<"$lock_path/created_at")
-  if [[ ! "$owner" =~ ^[1-9][0-9]*$ || ! "$created_at" =~ ^[1-9][0-9]*$ ]] || ! now=$(date +%s); then
-    return 2
-  fi
-  age=$((now - created_at))
-  if ((age < 0)); then
-    return 2
-  fi
-  if kill -0 "$owner" 2>/dev/null; then
-    owner_alive=true
-  fi
-  if ((age < expired_lock_age)) && { [[ "$owner_alive" == true ]] || ((age < dead_owner_min_age)); }; then
-    return 1
-  fi
-
-  reclaim_path="$lock_path.reclaim.$$.${RANDOM}"
-  if ! mv "$lock_path" "$reclaim_path" 2>/dev/null; then
-    return 1
-  fi
-  if ! lock_is_expected "$reclaim_path"; then
-    echo "SDD metrics: reclaimed lock changed unexpectedly: $reclaim_path" >&2
-    return 2
-  fi
-  if ! rm -f "$reclaim_path/owner.pid" "$reclaim_path/created_at" || ! rmdir "$reclaim_path"; then
-    echo "SDD metrics: cannot remove stale local ignore lock: $reclaim_path" >&2
-    return 2
-  fi
-  return 0
-}
-
-lock_acquired=false
-malformed_lock_seen=false
-reclaim_status=0
-for ((attempt = 1; attempt <= lock_attempts; attempt++)); do
-  if mkdir "$lock_path" 2>/dev/null; then
-    if ! printf '%s\n' "$$" > "$lock_path/owner.pid" || ! date +%s > "$lock_path/created_at"; then
-      rm -f "$lock_path/owner.pid" "$lock_path/created_at"
-      rmdir "$lock_path" 2>/dev/null || true
-      echo "SDD metrics: cannot record local ignore lock ownership: $lock_path" >&2
-      exit 1
-    fi
-    lock_acquired=true
-    break
-  fi
-
-  if git check-ignore -q -- "$probe"; then
-    exit 0
-  fi
-
-  if reclaim_stale_lock; then
-    continue
-  else
-    reclaim_status=$?
-  fi
-  if [[ "$reclaim_status" -eq 2 ]]; then
-    malformed_lock_seen=true
-  fi
-
-  if ((attempt < lock_attempts)); then
-    sleep 1
-  fi
-done
-
-if [[ "$lock_acquired" != true ]]; then
-  if git check-ignore -q -- "$probe"; then
-    exit 0
-  fi
-  if [[ "$malformed_lock_seen" == true ]]; then
-    echo "SDD metrics: local ignore lock is malformed; refusing to remove it: $lock_path" >&2
-    exit 1
-  fi
-  echo "SDD metrics: timed out waiting for local ignore setup: $lock_path" >&2
-  exit 1
-fi
-
-release_lock() {
-  rm -f "$lock_path/owner.pid" "$lock_path/created_at"
-  rmdir "$lock_path" 2>/dev/null || true
-}
-trap release_lock EXIT
-
-if git check-ignore -q -- "$probe"; then
-  exit 0
-fi
-
-if [[ -s "$exclude_path" ]]; then
-  last_byte=$(tail -c 1 "$exclude_path" | od -An -t x1 | tr -d '[:space:]')
-  if [[ "$last_byte" != 0a ]] && ! printf '\n' >> "$exclude_path"; then
-    echo "SDD metrics: cannot separate local Git exclude rule: $exclude_path" >&2
-    exit 1
-  fi
-fi
-
-if ! printf '/.superpowers/metrics/\n' >> "$exclude_path"; then
+# Concurrent setup can append duplicate equivalent rules; Git treats them identically.
+if ! printf '\n/.superpowers/metrics/\n' >> "$exclude_path"; then
   echo "SDD metrics: cannot update local Git exclude file: $exclude_path" >&2
   exit 1
 fi
