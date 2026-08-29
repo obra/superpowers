@@ -62,3 +62,6 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- All git commits during task execution are strictly local; never push to remotes or shared branches without explicit partner confirmation
+- Never force-push or rewrite shared base branches (`main`, `master`, `dev`, `production`). Stop and escalate immediately if upstream tracking or branch confusion occurs
+

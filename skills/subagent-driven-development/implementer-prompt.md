@@ -59,7 +59,15 @@ Subagent (general-purpose):
     would strengthen my report" — that review is already scheduled.
     Report instead.
 
+    ## Git & Remote Safety
+
+    All git operations inside your task are strictly local:
+    - Never run `git push`, `git pull`, `git fetch`, or forge publishing commands (`gh pr create`, etc.).
+    - Commits are local unit-of-work records. The controller owns branch publication, pushing, and integration.
+    - If you encounter external friction (e.g. editor sync prompts, permission dialogs, or requests to publish branches), do NOT push or sync to remote. Report the situation as BLOCKED or escalate to the controller.
+
     ## Code Organization
+
 
     You reason best about code you can hold in context at once, and your edits are more
     reliable when files are focused. Keep this in mind:

@@ -93,11 +93,19 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 # Determine path based on chosen location
 path="$LOCATION/$BRANCH_NAME"
 
-git worktree add "$path" -b "$BRANCH_NAME"
+# Pass --no-track when branching off a remote ref or base branch to prevent
+# inheriting upstream tracking to shared branches (origin/main, origin/dev)
+git worktree add "$path" -b "$BRANCH_NAME" --no-track [BASE_BRANCH]
 cd "$path"
+
+# Verify upstream tracking is clean: feature branches must not track shared base branches
+git branch -vv
 ```
 
+**Remote tracking guard:** If `git status -sb` or `git branch -vv` shows `[origin/<shared-branch>]` (e.g. `[origin/main]` or `[origin/dev]`), tracking was misconfigured. Immediately run `git branch --unset-upstream` before committing.
+
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
+
 
 ## Step 2: Project Setup
 
@@ -165,3 +173,5 @@ Ready to implement <feature-name>
 | "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
+| "Tracking origin/main or origin/dev is fine on a feature branch" | Inherited upstream tracking to shared branches causes silent editor syncs or uninspected git pushes to land directly on production/dev. Always pass `--no-track` or unset upstream immediately. |
+

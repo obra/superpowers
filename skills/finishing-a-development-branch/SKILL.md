@@ -223,3 +223,5 @@ place. If your platform provides a workspace-exit tool, use it.
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
+| "A commit landed on dev/main — force-pushing or rewinding with --force-with-lease will fix it" | Rewriting or force-pushing shared base branches (`main`, `master`, `dev`, `production`, `release/*`) is strictly forbidden. If a push is rejected or commits landed on the wrong branch, STOP immediately and escalate to your human partner. |
+
