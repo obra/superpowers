@@ -92,6 +92,44 @@ ${toolMapping}
   return _bootstrapCache;
 };
 
+// --- Task-subagent (child session) detection --------------------------------
+//
+// #2160: the bootstrap drives controller workflows (brainstorming, planning,
+// approval cycles). Injecting it into task subagent sessions makes workers
+// restart design/approval cycles for work the parent already authorised; the
+// <SUBAGENT-STOP> note inside the bootstrap relies on model compliance, which
+// is not reliable. Detect child sessions structurally instead: OpenCode task
+// sessions are created with a parentID, so when the session carrying the
+// message has a parentID we skip bootstrap injection. Skills stay registered
+// for every session — workers keep explicit access to execution skills.
+
+// sessionID -> is-child decision. parentID never changes for a session, so
+// the result is cached for life and the injection hook (which fires on every
+// agent step) pays only one client roundtrip per session.
+const _childSessionCache = new Map();
+
+const isChildSession = async (fetchSession, sessionID) => {
+  if (!sessionID) return false; // unknown session: keep current behavior
+  if (_childSessionCache.has(sessionID)) return _childSessionCache.get(sessionID);
+
+  let isChild = false;
+  try {
+    const result = await fetchSession(sessionID);
+    // V1's SDK returns { data: Session }; V2's ctx returns the record itself.
+    const session = result && typeof result === 'object' && result.data && typeof result.data === 'object' && !('parentID' in result)
+      ? result.data
+      : result;
+    isChild = Boolean(session && typeof session === 'object' && session.parentID);
+  } catch (err) {
+    // Fail open: on lookup errors keep injecting (previous behavior) and do
+    // not cache, so a transient failure can recover on the next step.
+    console.error('[superpowers] session lookup failed, treating session as top-level:', err);
+    return false;
+  }
+  _childSessionCache.set(sessionID, isChild);
+  return isChild;
+};
+
 /**
  * V1 Plugin Function (named export + default.server)
  *
@@ -115,7 +153,7 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
       }
     },
 
-    // Inject bootstrap into the first user message of each session.
+    // Inject bootstrap into the first user message of each top-level session.
     // Using a user message instead of a system message avoids:
     //   1. Token bloat from system messages repeated every turn (#750)
     //   2. Multiple system messages breaking Qwen and other models (#894)
@@ -132,6 +170,15 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
 
       // Guard: skip if first user message already contains bootstrap.
       if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
+      // #2160: never restart the controller workflow inside task subagent
+      // (child) sessions. V1 passes no input to this hook (verified in the
+      // 1.18.x bundle: trigger(..., {}, {messages})), so take the sessionID
+      // from the message record itself.
+      if (client && await isChildSession(
+        (id) => client.session.get({ path: { id } }),
+        firstUser.info.sessionID,
+      )) return;
 
       const ref = firstUser.parts[0];
       firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
@@ -191,13 +238,22 @@ async function setup(ctx) {
 
   // 2. Inject bootstrap into first user message via V2 session context hook
   try {
-    await ctx.session.hook('context', (event) => {
+    await ctx.session.hook('context', async (event) => {
       try {
         const bootstrap = getBootstrapContent();
         if (!bootstrap || !event.messages || !event.messages.length) return;
         const firstUser = event.messages.find(m => m.role === 'user');
         if (!firstUser || !firstUser.content || !firstUser.content.length) return;
         if (firstUser.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
+        // #2160: the context event carries the sessionID directly. Skip the
+        // controller bootstrap when this prompt belongs to a task subagent
+        // (child) session. Skills registered above stay available to workers.
+        if (typeof ctx.session.get === 'function' && await isChildSession(
+          (id) => ctx.session.get({ sessionID: id }),
+          event.sessionID,
+        )) return;
+
         firstUser.content.unshift({ type: 'text', text: bootstrap });
       } catch (err) {
         // Never let hook callback errors break the request pipeline.
