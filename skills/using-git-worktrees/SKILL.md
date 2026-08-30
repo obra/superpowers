@@ -93,9 +93,18 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 # Determine path based on chosen location
 path="$LOCATION/$BRANCH_NAME"
 
+# Basing on current HEAD:
 git worktree add "$path" -b "$BRANCH_NAME"
+# Basing on any other ref (origin/main, origin/production, a tag) —
+# --no-track is REQUIRED, not optional:
+git worktree add "$path" -b "$BRANCH_NAME" --no-track <base-ref>
 cd "$path"
+
+# REQUIRED final check: the new branch must track no shared branch
+git branch -vv | grep -F "$BRANCH_NAME"
 ```
+
+**If that check shows `[origin/<shared branch>]`** (e.g. `[origin/main]`, `[origin/production]`): run `git branch --unset-upstream` now, before any commit. Inherited upstream is a git default, not anyone's intent — a later plain `git push`, an editor auto-sync, or a future session will land this work directly on that shared branch. A feature branch tracking a shared branch is never the correct end state, and mentioning it in your report while leaving it set does not count as handling it.
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
@@ -152,6 +161,7 @@ Ready to implement <feature-name>
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
 | Directory not ignored | Add to .gitignore + commit |
+| New branch tracks a shared remote branch | `git branch --unset-upstream` before committing (Step 1b) |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -165,3 +175,5 @@ Ready to implement <feature-name>
 | "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
+| "It tracks origin/production, but nobody is pushing today" | The trap outlives today: the next plain `git push`, editor auto-sync, or session lands work on the shared branch. `git branch --unset-upstream` now — a warning note in your report doesn't disarm it. |
+| "Tracking the base ref is expected — I branched from it" | Inherited upstream is a git default, not an intent. Pass `--no-track` at creation, or `--unset-upstream` the moment the check shows a shared branch. |
