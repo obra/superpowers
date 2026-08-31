@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes - including when you say \"systematic debug\", \"debug this properly\", or \"find the root cause first\"; for driving new behavior test-first, use test-driven-development instead"
 ---
 
 # Systematic Debugging

@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: "Use when implementing any feature or bugfix, before writing implementation code - including when you say \"tdd\", \"tdd workflow\", \"write the test first\", or \"red green refactor\"; for diagnosing an existing defect, use systematic-debugging instead"
 ---
 
 # Test-Driven Development (TDD)
