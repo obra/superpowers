@@ -28,7 +28,11 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. Mark as completed — the todo **and** the plan file: edit it and flip this
+   task's steps from `- [ ]` to `- [x]`. The plan is the artifact a human
+   reads to see where things stand, and nothing else in this skill writes
+   back to it. Leave a step unticked only when its deliverable does not exist
+   yet; never tick one you skipped.
 
 ### Step 3: Complete Development
 

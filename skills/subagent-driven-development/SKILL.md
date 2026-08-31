@@ -438,6 +438,18 @@ message as your other bookkeeping:
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
   tripped breaker
 
+In the same message, **edit the plan file and flip this task's steps from
+`- [ ]` to `- [x]`**. The plan is what a human reads to see where the work
+stands; the ledger is yours. Tie the two to this one event so they cannot
+drift — a plan left at 0 while its tasks are done and deployed reads as
+"nothing happened", and nothing downstream will catch it: the task reviewer
+sees a diff, the re-review sees findings, the final review sees the ledger.
+None of them ever opens the plan.
+
+Leave a step unticked only when its deliverable does not exist yet — a step
+that waits on someone else, or on an event that has not happened. Never tick
+a step you skipped.
+
 Then mark the todo complete and move on. Never move to the next task while
 the review has open Critical/Important issues that are neither fixed nor
 parked-with-ruling at the cap.
