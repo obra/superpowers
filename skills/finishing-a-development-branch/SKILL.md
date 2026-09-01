@@ -7,7 +7,9 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Overview
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Detect environment and version-control backend → Present options → Execute choice → Clean up.
+
+Before any branch, pull, merge, push, delete, or worktree-removal write, load `gitbutler` and preserve one owner. A GitButler-managed checkout uses `but`; a Coding Agent/Orca/Conductor worktree or plain checkout rejected by `but` uses native Git and remains owned by its harness. A `gh stack` stack keeps the full `gh stack` protocol. Do not translate commands midway through an operation.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -82,6 +84,8 @@ discard the work" below). Wait for their answer; the integration decision
 is theirs.
 
 ## Step 5: Execute Choice
+
+The command blocks below are the native-Git implementation. When Step 2 selected GitButler, use the equivalent `but pull`, `but push`, `but pr`, `but land`, and `but branch delete` operations from the `gitbutler` skill. `but land` is allowed only when the user chose direct integration and repository policy permits bypassing a PR. A `gh stack` branch uses `gh stack submit/merge/sync`, never `but` or ordinary `gh pr create`.
 
 ### Option 1: Merge Locally
 

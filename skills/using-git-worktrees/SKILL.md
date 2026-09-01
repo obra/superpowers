@@ -7,9 +7,11 @@ description: Use when starting feature work that needs isolation from current wo
 
 ## Overview
 
-Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available.
+Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual worktrees only when no native tool is available and after selecting the version-control backend with the `gitbutler` skill.
 
-**Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
+**Core principle:** Detect existing isolation first. Then use native tools. Then preserve the selected backend. Never fight the harness.
+
+**Local ownership rule:** Coding Agent, Orca, Conductor, and IDE-created worktrees stay owned by that harness and use native Git inside the linked worktree when GitButler rejects it. In a normal GitButler-managed checkout, do not create a parallel raw-Git worktree; use GitButler's supported branch/worktree surface or ask the operator before converting the workspace. Never run `but setup` inside a harness-owned worktree.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
@@ -56,9 +58,15 @@ Native tools handle directory placement, branch creation, and cleanup automatica
 
 Only proceed to Step 1b if you have no native worktree tool available.
 
-### 1b. Git Worktree Fallback
+### 1b. Selected-backend fallback
 
-**Only use this if Step 1a does not apply** — you have no native worktree tool available. Create a worktree manually using git.
+**Only use this if Step 1a does not apply** — there is no native worktree tool. Load `gitbutler` before writing state:
+
+- GitButler-managed normal checkout: use GitButler's supported branch/worktree mechanism; do not run raw `git worktree add` against the managed workspace.
+- Plain Git checkout: use the native Git worktree procedure below.
+- Harness-owned linked worktree: do not create a nested worktree; continue in the current harness workspace.
+
+The remaining manual procedure applies only to the plain-Git branch above.
 
 #### Directory Selection
 

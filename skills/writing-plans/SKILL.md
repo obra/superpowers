@@ -5,6 +5,10 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 # Writing Plans
 
+## Version-control examples
+
+When a plan includes branch, commit, push, conflict, or PR-creation commands, make backend selection an explicit prerequisite: load `gitbutler`, preserve a harness-owned worktree, and use exactly one writer. Git examples in this skill are the native-Git form only; a GitButler-managed checkout must use equivalent `but` commands, while a `gh stack` stack keeps its own protocol.
+
 ## Overview
 
 Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.

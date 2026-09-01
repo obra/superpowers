@@ -5,6 +5,10 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
+## Version-control backend
+
+Before an implementer commits, pushes, creates a branch/PR, or rewrites history, load `gitbutler` and keep one writer for the workspace. Coding Agent, Orca, Conductor, and IDE-owned linked worktrees use native Git when GitButler rejects them; normal GitButler-managed checkouts use `but`; `gh stack` stacks keep their own complete protocol. Any `git add`/`git commit` examples below are the native-Git form only.
+
 Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
