@@ -4,11 +4,6 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 
 ## Installation
 
-Installation differs between OpenCode V1 (`opencode`) and V2 (`opencode2`).
-Install Superpowers separately for each version if you use both.
-
-### OpenCode V1 (`opencode`)
-
 Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
 
 ```json
@@ -17,65 +12,10 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 }
 ```
 
-Restart OpenCode. The plugin installs through OpenCode's plugin manager and
-registers all skills.
+Restart OpenCode (`opencode2 service restart` on V2). The plugin installs
+through OpenCode's plugin manager and registers all skills.
 
 Verify by asking: "Tell me about your superpowers"
-
-### OpenCode V2 (`opencode2`)
-
-V2 does not support `git+https://` plugin installation. Use a local clone with
-a path reference instead.
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/obra/superpowers.git ~/superpowers
-```
-
-2. Add the plugin using the `plugin` field (singular) with an absolute path:
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "/home/your-username/superpowers/.opencode/plugins/superpowers.js"
-  ]
-}
-```
-
-> **Note:** V2 does not expand `~` in local plugin paths. Use an absolute path
-> or a relative path (`./` or `../`) resolved from the config file directory.
-
-3. Restart and verify:
-
-```bash
-opencode2 service restart
-```
-
-Ask: "Tell me about your superpowers"
-
-### Running V1 and V2 Side by Side
-
-V1 (`opencode`) and V2 (`opencode2`) share the same default config directory
-(`~/.config/opencode/`). Since V2 normalizes V1's `plugin` field into its own
-loading pipeline, putting a `git+https://` spec (which V2 cannot install) in
-the shared config causes V2 to silently fail loading it.
-
-To use different plugin sources for each version, point V2 at a separate
-config directory via the `OPENCODE_CONFIG_DIR` environment variable:
-
-```bash
-# In ~/.bashrc (or equivalent shell config)
-export OPENCODE_CONFIG_DIR="$HOME/.config/opencode2"
-```
-
-Then maintain two config files:
-
-- `~/.config/opencode/opencode.json` — V1 config, using `git+https://` sources
-- `~/.config/opencode2/opencode.json` — V2 config, using local path sources
-
-Both versions can now run independently without interfering with each other.
 
 ### Migrating from the old symlink-based install (V1)
 
@@ -152,13 +92,6 @@ To pin a specific version, use a branch or tag:
 {
   "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
 }
-```
-
-### V2 (`opencode2`)
-
-```bash
-cd ~/superpowers && git pull
-opencode2 service restart
 ```
 
 ## How It Works
