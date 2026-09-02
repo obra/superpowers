@@ -6,7 +6,7 @@ Superpowers Rails brings [Superpowers](https://github.com/obra/superpowers) — 
 - **A Rails review stage** in the subagent review pipeline (task review covering spec compliance + code quality, then Rails conventions), plus a `/codereview` command that runs the full pipeline on demand
 - **A different planning philosophy**: plans are vertical slices — every slice ships a user-visible capability — written at intent level, with exact code reserved for fragile operations
 
-The full delta against upstream is documented in [docs/fork-changes.md](docs/fork-changes.md); release history is in [RELEASE-NOTES.md](RELEASE-NOTES.md). Report issues at [fryga-io/superpowers-rails](https://github.com/fryga-io/superpowers-rails/issues), not upstream. Superpowers Rails is funded by [fryga](https://fryga.io).
+The full delta against upstream is documented in [docs/fork-changes.md](docs/fork-changes.md); release history is in [RELEASE-NOTES.md](RELEASE-NOTES.md). Report issues at [fryga-io/superpowers-rails](https://github.com/fryga-io/superpowers-rails/issues), not upstream. Superpowers Rails is funded by [fryga](https://fryga.io). Marcin Ostrowski writes about building and using it — the Rails AI Harness — on real Rails work at [rubyonai.com](https://rubyonai.com).
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
