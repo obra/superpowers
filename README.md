@@ -325,9 +325,9 @@ Restart any active Muse sessions after installing so the `SessionStart` hook tak
 
 ## Customizing output paths
 
-By default, brainstorming writes design specs to `docs/superpowers/specs/` and writing-plans writes implementation plans to `docs/superpowers/plans/`.
+By default, brainstorming writes design specs to `docs/superpowers/specs/` and writing-plans writes implementation plans to `docs/superpowers/plans/`. Both skills defer to your stated preference for where those files go.
 
-To use different locations, put **both** an Output Paths table and a direct instruction in the project file your harness loads at session start (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`). A table alone is not enough — agents follow the concrete path in the skill unless the override is also stated as an imperative.
+To move them, state the override as a direct instruction in the project file your harness loads at session start (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`). A table on its own is sometimes honored and sometimes lost — the skill hands the agent a concrete path to copy, so the reliable form is an imperative that names both the new location and the default it replaces:
 
 ```markdown
 ## Output Paths
@@ -339,6 +339,8 @@ To use different locations, put **both** an Output Paths table and a direct inst
 
 **Design specs MUST be saved to `docs/design-docs/`, NOT `docs/superpowers/specs/`. Implementation plans MUST be saved to `docs/exec-plans/`, NOT `docs/superpowers/plans/`.**
 ```
+
+The table keeps the choice readable for humans; the imperative is what the agent acts on.
 
 ## When Something Goes Wrong
 
