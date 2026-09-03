@@ -10,12 +10,13 @@ const repoRoot = resolve(__dirname, '../..');
 const packageJsonPath = resolve(repoRoot, 'package.json');
 const extensionPath = resolve(repoRoot, '.pi/extensions/superpowers.ts');
 const piToolsPath = resolve(repoRoot, 'skills/using-superpowers/references/pi-tools.md');
+const primeAgentToolsPath = resolve(repoRoot, 'skills/using-superpowers/references/prime-agent-tools.md');
 
 async function readPackageJson() {
   return JSON.parse(await readFile(packageJsonPath, 'utf8'));
 }
 
-async function loadExtension() {
+async function loadExtension({ processTitle = 'pi' } = {}) {
   const handlers = new Map();
   const pi = {
     on(event, handler) {
@@ -24,7 +25,13 @@ async function loadExtension() {
     },
   };
   const mod = await import(pathToFileURL(extensionPath).href + `?cachebust=${Date.now()}-${Math.random()}`);
-  mod.default(pi);
+  const originalTitle = process.title;
+  try {
+    process.title = processTitle;
+    mod.default(pi);
+  } finally {
+    process.title = originalTitle;
+  }
   return { handlers };
 }
 
@@ -86,6 +93,7 @@ test('startup context injects the bootstrap as one user message until agent_end'
   assert.equal(result.messages[0].role, 'user');
   assert.match(textOf(result.messages[0]), /You have superpowers/);
   assert.match(textOf(result.messages[0]), /Pi tool mapping/);
+  assert.doesNotMatch(textOf(result.messages[0]), /Prime Agent tool mapping/);
   assert.equal(result.messages[1], originalMessages[0]);
 
   const repeatedProviderRequest = await context({ type: 'context', messages: originalMessages }, {});
@@ -134,4 +142,41 @@ test('pi tools reference documents pi-specific mappings', async () => {
     rows.some((row) => /todo|task/i.test(row)),
     'mapping table documents task tracking',
   );
+});
+
+test('Prime Agent receives its native tool mapping instead of the Pi mapping', async () => {
+  const { handlers } = await loadExtension({ processTitle: 'prime-agent' });
+  const sessionStart = firstHandler(handlers, 'session_start');
+  const context = firstHandler(handlers, 'context');
+
+  await sessionStart({ type: 'session_start', reason: 'startup' }, {});
+  const originalMessages = [
+    { role: 'user', content: [{ type: 'text', text: 'Let us make a react todo list' }], timestamp: 1 },
+  ];
+  const result = await context({ type: 'context', messages: originalMessages }, {});
+  const bootstrap = textOf(result.messages[0]);
+
+  assert.match(bootstrap, /already loaded for this Prime Agent session/);
+  assert.match(bootstrap, /Prime Agent tool mapping/);
+  assert.match(bootstrap, /await rlm\(/);
+  assert.match(bootstrap, /agent_message/);
+  assert.doesNotMatch(bootstrap, /Pi does not ship a standard subagent tool/);
+});
+
+test('Prime Agent tools reference documents native skills, shell, editing, subagents, and task tracking', async () => {
+  assert.equal(existsSync(primeAgentToolsPath), true, 'prime-agent-tools.md should exist');
+  const text = await readFile(primeAgentToolsPath, 'utf8');
+  const rows = text.split('\n').filter((line) => line.startsWith('|'));
+
+  for (const [description, pattern] of [
+    ['skill invocation', /Invoke a skill.*SKILL\.md.*\/skill:/],
+    ['workspace operations', /Read, create, search, or edit files.*ipython.*await edit.*bash/],
+    ['subagent dispatch', /Dispatch a subagent.*await rlm.*agent_message/],
+    ['task tracking', /Task tracking.*plan.*ledger.*TODO\.md/],
+  ]) {
+    assert.ok(rows.some((row) => pattern.test(row)), `mapping table documents ${description}`);
+  }
+  assert.match(text, /rlm.*returns a handle immediately; it never returns the child's eventual answer/);
+  assert.match(text, /Never poll with `sleep` or a long blocking await/);
+  assert.match(text, /agent_observe/);
 });
