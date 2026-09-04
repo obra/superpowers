@@ -12,8 +12,8 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Run a shell command | `terminal` |
 | Search file contents | `search_files` |
 | Find files by name | `terminal` with `find` |
-| Fetch a URL / read a webpage | use the web capability exposed in the current session |
-| Search the web | use the search capability exposed in the current session |
+| Fetch a URL / read a webpage | `web_extract` (only if exposed by the current session) |
+| Search the web | `web_search` (only if exposed by the current session) |
 | Dispatch a subagent | `delegate_task(goal=..., context=..., role="leaf")` |
 | Task tracking | `todo` tool |
 | Invoke a skill | `skill_view("superpowers:skill-name")` |

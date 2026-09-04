@@ -37,5 +37,10 @@ class TestHermesToolMapping:
 
     def test_web_guidance_is_capability_aware(self, mapping_text):
         # Web/search tools depend on the session's enabled toolsets and
-        # providers; the mapping must not instruct unconditional tool calls.
-        assert "do not invent a tool call" in mapping_text
+        # providers. The mapping must still name the real tools (so a
+        # session that does expose them has a tool to call) but must never
+        # instruct an unconditional call to either one.
+        assert "web_extract" in mapping_text
+        assert "web_search" in mapping_text
+        assert "web_extract(" not in mapping_text
+        assert "web_search(" not in mapping_text
