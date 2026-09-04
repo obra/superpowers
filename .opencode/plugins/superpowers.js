@@ -68,23 +68,56 @@ let _bootstrapCache = undefined; // undefined = not yet loaded, null = file miss
 // agent step) pays only one client roundtrip per session.
 const _childSessionCache = new Map();
 
+// sessionIDs whose lookup failure has already been logged. Failed lookups are
+// deliberately not cached (so they can recover), which means the hook retries
+// every step; without this guard a persistently failing session would log an
+// error on every single step.
+const _lookupFailureLogged = new Set();
+
+const logLookupFailure = (sessionID, reason) => {
+  if (_lookupFailureLogged.has(sessionID)) return;
+  _lookupFailureLogged.add(sessionID);
+  console.error('[superpowers] session lookup failed, treating session as top-level:', reason);
+};
+
 const isChildSession = async (fetchSession, sessionID) => {
   if (!sessionID) return false; // unknown session: keep current behavior
   if (_childSessionCache.has(sessionID)) return _childSessionCache.get(sessionID);
 
-  let isChild = false;
+  let result;
   try {
-    const result = await fetchSession(sessionID);
-    // The V1 SDK returns { data: Session } rather than the record itself.
-    const session = result && typeof result === 'object' && result.data && typeof result.data === 'object' && !('parentID' in result)
-      ? result.data
-      : result;
-    isChild = Boolean(session && typeof session === 'object' && session.parentID);
+    result = await fetchSession(sessionID);
   } catch (err) {
     // Fail open: on lookup errors keep injecting (previous behavior) and do
     // not cache, so a transient failure can recover on the next step.
-    console.error('[superpowers] session lookup failed, treating session as top-level:', err);
+    logLookupFailure(sessionID, err);
     return false;
+  }
+
+  // The V1 SDK only throws on non-2xx when called with { throwOnError: true }
+  // (sdk error-interceptor.ts); without it an error resolves as
+  // { data: undefined, error, response } and never reaches the catch above.
+  // Treat that shape as a lookup failure too and never cache it — otherwise
+  // one transient error would pin a child session as top-level for its whole
+  // life and re-inject the controller bootstrap every step (#2160).
+  if (!result || (typeof result === 'object' && result.error)) {
+    logLookupFailure(sessionID, result && result.error ? result.error : result);
+    return false;
+  }
+
+  // The V1 SDK returns { data: Session }; V2's ctx returns the record itself.
+  // Prefer .data whenever it is a non-null object — Session records have no
+  // `data` field, so the shapes stay unambiguous even if the envelope happens
+  // to carry its own parentID key.
+  const session = result && typeof result === 'object' && result.data && typeof result.data === 'object'
+    ? result.data
+    : result;
+  const isChild = Boolean(session && typeof session === 'object' && session.parentID);
+
+  if (isChild) {
+    // One-time visibility: a missing bootstrap in a subagent session should
+    // be explainable from the logs instead of failing silently.
+    console.log('[superpowers] skipping controller bootstrap for task subagent session:', sessionID);
   }
   _childSessionCache.set(sessionID, isChild);
   return isChild;
@@ -175,7 +208,10 @@ ${toolMapping}
       // 1.18.x bundle: trigger(..., {}, {messages})), so take the sessionID
       // from the message record itself.
       if (client && await isChildSession(
-        (id) => client.session.get({ path: { id } }),
+        // throwOnError makes the SDK throw on non-2xx so HTTP errors reach
+        // the catch path; isChildSession's result.error check still covers
+        // versions/callers that ignore the flag.
+        (id) => client.session.get({ path: { id } }, { throwOnError: true }),
         firstUser.info.sessionID,
       )) return;
 
