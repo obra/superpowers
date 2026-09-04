@@ -96,7 +96,9 @@ one non-negotiable capability. It can take any form:
 - an **instructions-file** convention where the harness loads a context file that
   *your installed extension ships and declares* (e.g. Gemini's `contextFileName`
   pointing at the extension's own `GEMINI.md`) — not a file you edit in the user's
-  home.
+  home. Shipping and declaring the file are necessary but not sufficient: the
+  harness must actually load it at session start, and you only know that from a
+  unique-marker test.
 
 If the only way to get Superpowers in front of the model is for your human
 partner to opt in each session (paste a prompt, run a command, enable a mode),
@@ -797,6 +799,17 @@ Use this as the live index; when in doubt, read the files, not this table.
 
 - **Opt-in isn't a port.** If your human partner has to do anything per session
   to get Superpowers, the acceptance test fails. Re-read Part 2.
+- **Two tiers of always-on context, only one of which auto-loads.** A harness
+  can load *package-bundled* steering only on demand, while auto-loading the
+  same kind of file from the *user's own config directory* every session. Kiro
+  does this: Power-bundled steering under
+  `~/.kiro/powers/installed/<power>/steering/` is reachable only via an explicit
+  read call; `~/.kiro/steering/` is in context at startup. Shipping into the
+  bundled tier looks right — right directory, right frontmatter, declared by your
+  manifest — and still never reaches the model, while the only tier that does
+  auto-load is the user's own config directory, which rule 2 forbids you to
+  write to (#618, #503 — a working Kiro port takes a different mechanism).
+  Marker-test the exact tier you ship into (Part 2).
 - **Wrong JSON field → silent failure or double injection.** Shape A only.
   Confirm the exact field/nesting; Claude Code reads two fields without dedup.
 - **Hook-config schema varies per harness.** Shape A. Cursor's `hooks-cursor.json`
