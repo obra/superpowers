@@ -169,6 +169,7 @@ is the whole process.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
+- A request for context is not an answer - if the user asks for trade-offs, implications, or examples instead of choosing, give them that and then re-ask the same question. It stays the only open question until they decide; don't pair it with a new one
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
