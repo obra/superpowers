@@ -170,8 +170,8 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 ### GitHub Copilot App
 
-- In the GitHub Copilot app, click on **Plugins** in the sidebar.
-- Click **+ Install** > **+ Add marketplace** and enter `obra/superpowers-marketplace`.
+- In the GitHub Copilot app, click on **Settings** in the sidebar.
+- Click **Plugins** > **+ Install** > **+ Add marketplace** and enter `obra/superpowers-marketplace`.
 - Find `superpowers` in the list and click **Install**.
 
 ### GitHub Copilot CLI
