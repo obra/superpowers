@@ -87,8 +87,9 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use superpowers:finishing-a-development-branch" [shape=box];
+    "Finish path resolved: export deferred findings to its durable artifact" [shape=box];
+    "Delete this plan's workspace (only after the export; keep-as-is keeps it)" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
@@ -116,8 +117,9 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Use superpowers:finishing-a-development-branch";
+    "Use superpowers:finishing-a-development-branch" -> "Finish path resolved: export deferred findings to its durable artifact";
+    "Finish path resolved: export deferred findings to its durable artifact" -> "Delete this plan's workspace (only after the export; keep-as-is keeps it)";
 }
 ```
 
@@ -479,12 +481,42 @@ took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
-When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
-the record now. Sibling directories belong to other plans; leave them
-alone.
+Rulings are not the only content that dies with the workspace. Findings you
+chose not to fix are the record of what was *not* done — git history cannot
+carry them, because git records what was done. So export them before
+anything is deleted: grep the progress ledger for its three finding tags
+
+```bash
+grep -E '^(Task [0-9]+: )?(minor \(deferred\)|parked|Ruling:)' <workspace>/progress.md
+```
+
+and carry every matching line, verbatim, into a durable, human-reachable
+artifact. The chat roll-up does not satisfy this — scrollback, compaction,
+and session end all eat it. Where the artifact lives depends on how
+finishing-a-development-branch resolves (it carries the same obligation from
+its side):
+
+- **Option 2 (push and create PR):** append the lines to the PR description
+  under a "Deferred items" checklist. That is where your human partner
+  reviews, and checkboxes survive the merge.
+- **Option 1 (merge locally):** write them to
+  `docs/superpowers/follow-ups/<plan-basename>.md` — append under a dated
+  heading if a re-run under the same basename already created the file — and
+  commit the file to the branch before the merge so it survives the branch
+  deletion.
+- **Option 3 (keep as-is):** the workspace stays, so there is nothing to
+  export.
+- **Explicit discard:** your human partner asked to throw the work away, so
+  no export is required.
 
 Use superpowers:finishing-a-development-branch.
+
+When the finish path has resolved and its export exists — the checklist in
+the PR description, or the committed follow-ups file — delete this plan's
+workspace (`rm -rf <workspace>`), provided the final whole-branch review was
+clean and its fixes are merged. The export, not git history, is the record
+of the deferred findings. Sibling directories belong to other plans; leave
+them alone.
 
 ## Common Rationalizations
 
@@ -562,7 +594,9 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Delete this plan's workspace — the record now lives in git]
+[Use superpowers:finishing-a-development-branch — Option 2: push and create PR]
+[Export deferred findings (minor (deferred), parked, Ruling: lines) to the PR description as a "Deferred items" checklist]
+[Delete this plan's workspace — the export, not git, is the deferred findings' record]
 
-Done! Using superpowers:finishing-a-development-branch.
+Done!
 ```
