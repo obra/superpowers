@@ -487,7 +487,7 @@ carry them, because git records what was done. So export them before
 anything is deleted: grep the progress ledger for its three finding tags
 
 ```bash
-grep -E '^(Task [0-9]+: )?(minor \(deferred\)|parked|Ruling:)' <workspace>/progress.md
+grep -E 'Ruling:|^(Task [0-9]+: )?(minor \(deferred\)|parked)' <workspace>/progress.md
 ```
 
 and carry every matching line, verbatim, into a durable, human-reachable
@@ -516,7 +516,9 @@ the PR description, or the committed follow-ups file — delete this plan's
 workspace (`rm -rf <workspace>`), provided the final whole-branch review was
 clean and its fixes are merged. The export, not git history, is the record
 of the deferred findings. Sibling directories belong to other plans; leave
-them alone.
+them alone. On an explicit discard there is no export, but the workspace is
+deleted together with the branch — a ledger describing thrown-away work is
+a false record.
 
 ## Common Rationalizations
 
