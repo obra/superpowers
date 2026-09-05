@@ -23,8 +23,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR=""
 FOREGROUND="false"
 FORCE_BACKGROUND="false"
-BIND_HOST="127.0.0.1"
-URL_HOST=""
+BIND_HOST="${BRAINSTORM_HOST:-127.0.0.1}"
+URL_HOST="${BRAINSTORM_URL_HOST:-}"
 IDLE_TIMEOUT_MINUTES=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
