@@ -31,8 +31,19 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 0
 fi
 
-STAGING="$(mktemp -d)"
-trap 'mavis-trash "$STAGING"' EXIT
+# Staging directory in a path Node can resolve on every platform.
+# `mktemp -d` on macOS/Linux produces a /tmp/... path; on Windows MSYS bash
+# it produces a /tmp/... path that Node rejects. Going through Node's
+# os.tmpdir() gives us a path Node knows about on every host.
+# `process.stdout.write` (not bare expression) is required because Node
+# in `-e` mode does not echo return values to stdout the way the REPL does.
+STAGING="$(node -e "process.stdout.write(require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), 'dsh-prtest-')))")"
+# Cleanup: prefer mavis-trash when available (faster, traces deletion),
+# fall back to portable `rm -rf` on machines that don't have it (CI,
+# contributor machines, Windows MSYS bash). The trap is defensive — the
+# `[ -n "$STAGING" ] &&` guard prevents an empty arg if mkdtemp failed
+# before the trap fires.
+trap '[ -n "$STAGING" ] && (command -v mavis-trash >/dev/null 2>&1 && mavis-trash "$STAGING" || rm -rf "$STAGING")' EXIT
 
 TARBALL="$(cd "$REPO_ROOT" && npm pack --silent --pack-destination "$STAGING")"
 [ -n "$TARBALL" ] || fail "npm pack produced no tarball"
