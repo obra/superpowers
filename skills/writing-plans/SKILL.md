@@ -152,15 +152,20 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, offer the execution choice — and make an actual recommendation for THIS plan, don't hardcode one.
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+**1. Subagent-Driven** - fresh subagent per task, review between tasks, fast iteration
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+**2. Inline Execution** - tasks in a session via executing-plans, batched with checkpoints
 
-**Which approach?"**
+**Recommended for this plan: [pick one] — [one-line why].** Then: **Which approach?"**
+
+Pick the recommendation from the plan in front of you:
+- **Subagent-driven** when tasks are largely independent, the plan is short-to-medium, and a cold executor could pick up each task from its own task block alone.
+- **Inline** when tasks share interfaces/state, build heavily on each other, the plan is long, or you (the parent) already hold the spec/architecture context that a cold subagent would spend a spawn re-deriving each time.
+Say which and why. Never default to one without looking.
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
