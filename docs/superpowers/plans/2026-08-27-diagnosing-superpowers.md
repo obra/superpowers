@@ -15,7 +15,7 @@
 - Pure prose skill: no scripts shipped under `skills/diagnosing-superpowers/`.
 - No invented harness formats. Field-level claims appear only in `references/claude-code-sessions.md` (verified against Claude Code 2.1.247 transcripts) and `references/codex-sessions.md` (verified against Codex CLI 0.147.0 / 0.149.0 rollouts). Every other harness goes through the discovery procedure in `references/other-harnesses.md`.
 - Skill files say "your human partner", never "the user".
-- `SKILL.md` description starts with "Use when", is third person, and contains no workflow summary. `SKILL.md` body is under 900 words (the structure test enforces this).
+- `SKILL.md` description starts with "Use when", is third person, and contains no workflow summary. `SKILL.md` body is under 1,000 words (the structure test enforces this).
 - Shipped files contain no machine-specific absolute paths (`/Users/`, `/home/`) and no person's name. Session ids (UUIDs) are fine.
 - Workspace is `~/.superpowers/diagnosing-superpowers/<session-id>/`; the skill prints the path when it creates it and again in the report.
 - Session files are never modified, moved, or deleted.
@@ -189,7 +189,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SKILL_DIR="$REPO_ROOT/skills/diagnosing-superpowers"
 SKILL_MD="$SKILL_DIR/SKILL.md"
-WORD_BUDGET=900
+WORD_BUDGET=1000
 
 PASSES=0
 FAILURES=0

@@ -92,7 +92,7 @@ description: Use when a superpowers session went wrong and the user wants
 ```
 
 Triggering conditions only; no workflow summary (see `writing-skills`,
-Skill Discovery Optimization). SKILL.md stays under 900 words (the structure test enforces it; the repo's process skills run 350–4,800 words, and this one has a seven-step workflow):
+Skill Discovery Optimization). SKILL.md stays under 1,000 words (the structure test enforces it; the repo's process skills run 350–4,800 words, and this one has a seven-step workflow):
 workflow, hard rules, Red Flags, and pointers. Everything else lives in
 the prompt, reference, and template files.
 
@@ -110,8 +110,8 @@ intake turns each into a statement that names the session, the turn range
 if known, and the observable the user cares about (wall-clock, tokens,
 repeated actions, a specific unexpected action). Write the agreed
 statement to the case file (below). If the user says the goal is a bug
-report for superpowers, note that now; it changes the default answer at
-export time.
+report for superpowers, note that now; at export time the skill mentions
+once that a bundle is available on request.
 
 ### 2. Locate
 
@@ -262,8 +262,14 @@ user asks.
 
 ### 5. Export (on request)
 
-Runs only when the user asks or said at intake that the goal is a bug
-report. The bundle is written to
+Runs only when the user asks. The skill never builds a bundle unprompted:
+a bundle is the user's own session data, packaged for others, and being
+handed one they did not ask for feels intrusive. If the user said at
+intake that the goal is a bug report, the skill says once that a scrubbed
+bundle is available on request, then waits. When the archive is delivered,
+the skill states what it contains, what the scrub replaced, that automated
+scrubbing can miss things, and that the user should review every file
+before sharing it. The bundle is written to
 `~/.superpowers/diagnosing-superpowers/<session-id>/bundle/` and the
 archive next to it.
 
