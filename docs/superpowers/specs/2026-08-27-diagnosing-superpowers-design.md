@@ -248,27 +248,24 @@ user asks.
 
 1. **Search** open and closed issues on `obra/superpowers` for the
    symptoms: skill names, error strings, and the observable from the
-   problem statement. Use the public search API
-   (`https://api.github.com/search/issues`) via curl, which needs no
-   token and allows 10 requests a minute; otherwise give the user a
-   search URL and stop. The skill never uses `gh`: a default `gh` login
-   carries the `repo` scope, which is write access to every repository
-   the user can reach, far more than this step needs.
+   problem statement. Use `gh` if it is installed; otherwise the public
+   search API (`https://api.github.com/search/issues`) via curl;
+   otherwise give the user a search URL and stop.
 2. **Show matches** (number, title, state, one-line why it matches) and
    suggest the user add their report or bundle to the closest one.
 3. **If nothing matches**, draft an issue from `templates/issue.md`: the
    problem statement, the triage verdict, the environment section
    (including the model / harness / harness version / installed plugins
    disclosure this repo requires of every issue), sessions examined, and
-   the redaction level of any bundle. Write the draft to the workspace,
-   show it, and hand the user a prefilled new-issue link using the repo's
-   `diagnosis_report.md` issue template, which applies the `bug` and
-   `automated-issue-report` labels regardless of the reporter's
-   permissions (the `labels` URL parameter only works for people with
-   triage rights). GitHub caps the URL near 8,000 characters; past that
-   the link carries the title only and the user pastes the body from the
-   file. The user submits the issue and attaches any bundle in the form.
-   The skill never posts to GitHub.
+   the redaction level of any bundle. Show the exact text; create the
+   issue with `gh issue create` only after the user approves it, with the
+   `bug` and `automated-issue-report` labels. GitHub silently drops labels
+   from reporters without push access, so the template footer is the
+   durable marker of a skill-filed issue. `gh` cannot attach files, so the
+   skill tells the user the bundle path to attach through the web UI.
+   Without `gh`, the skill hands over a prefilled new-issue link on the
+   `diagnosis_report.md` template, which applies both labels for any
+   reporter; GitHub caps that URL near 8,000 characters.
 4. Nothing is posted anywhere without the user approving the exact text.
 
 ### 5. Export (on request)
