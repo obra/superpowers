@@ -10,11 +10,14 @@ Find work the session did more than once.
    trailing whitespace; keep the whole command); the `description` plus the
    first 80 characters of the prompt for subagent dispatches; the query for
    searches.
-2. Group by `(tool, key)`. Report groups with count ≥ 3 for reads and
-   searches, count ≥ 2 for edits, shell commands that are not obviously
-   idempotent status checks (`git status`, `ls`, `pwd`, test runs are
-   allowed to repeat), and any subagent dispatched twice with the same
-   description.
+2. Group by `(tool, key)` and report the groups at or over threshold:
+
+   | Category | Threshold | Exempt |
+   |---|---|---|
+   | reads, searches | 3 | |
+   | edits | 2 | |
+   | shell commands | 2 | status checks and test runs (`git status`, `ls`, `pwd`, test runners) |
+   | subagent dispatches | 2 with the same description | |
 3. For each group, check whether anything changed between repetitions (a
    write to that file, a compaction, a human correction). Say which case
    it is; a re-read after an edit is not a finding, a re-read after a

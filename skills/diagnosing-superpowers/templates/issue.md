@@ -1,3 +1,5 @@
+Title: <skill or symptom>: <one-line observable> (<harness>)
+
 - [x] I searched existing issues and this is not a duplicate (searched: <query terms>; closest: <#n title, or "none">)
 
 ## Environment (required)
@@ -15,8 +17,8 @@
 
 - [ ] I confirmed this issue does not occur without Superpowers installed
 
-Not reproduced without superpowers. Evidence for involvement is below;
-the reporter has not established cause.
+The reporter has not tried reproducing without superpowers. Evidence for
+involvement is below; it does not establish cause.
 
 ## What happened?
 
@@ -39,8 +41,8 @@ rewritten as `transcript line <n>`.>
 
 ## Debug log or conversation transcript
 
-Session id(s): <ids>. A scrubbed bundle (redaction level: <level>) is
-attached to this issue by the reporter, or available on request.
+Session id(s): <ids>. Bundle: <attached, redaction level <level> | none
+built>.
 Superpowers involvement per the diagnosis report: <possible | likely>, with
 evidence at <transcript lines>. This report does not propose a fix.
 

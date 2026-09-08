@@ -3,10 +3,6 @@ context-safety rules, and the return format. This file adds the dimension.
 
 Dimension: Request conflicts
 
-Only human-typed prompts count. Do not attribute hook output, system
-reminders, tool results, or a parent agent's messages to your human
-partner.
-
 1. List every human prompt with line and turn. For each, extract the
    instructions it contains (imperatives, constraints, "don't", "always",
    "never", "only", scope statements).

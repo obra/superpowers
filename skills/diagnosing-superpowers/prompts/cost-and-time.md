@@ -24,6 +24,6 @@ Account for where tokens and wall-clock went.
    available, and what the session was doing when each fired.
 5. Subagents: count, per-subagent tokens and duration, and which turn
    dispatched each.
-6. Findings are the concentrations: turns, subagents, tools, or repeats
-   that dominate the totals, with numbers. Do not speculate about why a
+6. Report the turns, subagents, tools, or repeats that dominate the
+   totals, with numbers. Do not speculate about why a
    turn was expensive beyond what the transcript shows.

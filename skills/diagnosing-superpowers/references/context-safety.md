@@ -1,8 +1,8 @@
 # Context safety for session transcripts
 
 One transcript line can exceed a megabyte; a Codex `compacted` line can
-embed a whole history. Printing one whole line can end the session doing
-the diagnosis. Every reader of a session file, controller or subagent,
+embed a whole history. Printing one whole line can overflow the context of
+the session doing the diagnosis. Every reader of a session file, controller or subagent,
 follows these rules for every file, every time.
 
 1. **Measure before reading.**

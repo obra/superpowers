@@ -17,7 +17,7 @@ The most recently modified rollout whose `session_meta.payload.cwd` is the
 current working directory and whose `thread_source` is `user`. Confirm by
 matching the first `user_message` event to what your human partner
 remembers. Newer rollouts may carry no `user_message` event at all: when
-that command returns nothing, fall back to `response_item` messages with
+the human-prompts query under Safe extraction returns nothing, fall back to `response_item` messages with
 `role:"user"` (see Human-typed prompt below) and confirm against the first
 of those instead.
 
