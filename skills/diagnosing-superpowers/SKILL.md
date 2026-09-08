@@ -51,15 +51,19 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    else hand over a search URL). Show matches and suggest adding the
    report to the closest. If none match, draft `templates/issue.md`, show
    the exact text, and create it only after approval. `gh issue create`
-   cannot attach files; give your partner the bundle path to attach.
-6. **Export** — when asked, or the intake goal was a bug report. Ask the
-   redaction level: skeleton, evidence, or full. Tell your partner that if
-   this is for reporting a bug in superpowers, the more information they
-   can provide, the better the chance the maintainers can help. Build the
-   bundle per `templates/bundle-README.md`, dispatch `prompts/scrub.md`, then
+   cannot attach files; if a bundle exists, give your partner its path to
+   attach.
+6. **Export** — only when your partner asks for a bundle; never build one
+   unprompted. If the intake goal was a bug report, say once that a
+   scrubbed bundle is available on request, then wait. Ask the redaction
+   level: skeleton, evidence, or full; more information gives the
+   maintainers a better chance to help. Build the bundle per
+   `templates/bundle-README.md`, dispatch `prompts/scrub.md`, then
    `prompts/scrub-audit.md`, repeating both until the audit returns CLEAN.
    Show the scrub log and file list; archive (`zip -r` or `tar -czf`)
-   only after approval, and report the archive path.
+   only after approval. With the archive path, state what it contains,
+   point at the scrub log for what was replaced, and say scrubbing can
+   miss things: they must review every file before sharing it.
 7. **Similar sessions** — when asked. Turn confirmed findings into a
    signature, list candidates by mtime and size, find marker line numbers,
    dispatch `prompts/similar-session.md` per candidate in parallel, and
@@ -89,8 +93,8 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
   parent agent.
 - **No superpowers diagnosis.** Report §7 states involvement and stops.
   Never name a defect in a skill or propose a change. Pushing does not
-  waive this; point at the issue step and offer the bundle. No advice to
-  your partner either.
+  waive this; point at the issue step and mention that a bundle is
+  available on request. No advice to your partner either.
 - **Approval gates.** No archive before your partner has seen the scrub
   log and file list. No issue or comment before they approve the exact
   text.
@@ -108,5 +112,6 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
 | "The problem is obvious, skip intake" | The problem statement scopes everything. Ask. |
 | "They're away, so I'll reconstruct the statement" | You cannot reconstruct what they wanted. Write the questions and stop. |
 | "I'll sweep everything now and ask at the end" | An unscoped sweep spends their budget on the wrong question. Ask first. |
+| "They want a bug report, so I'll build the bundle now" | The bundle is their session data, packaged. Build it only when they ask for it. |
 | "Small, targeted edit, no restructuring needed" | Not your call, however small. Report the evidence; the triager decides. |
 | "The price per token is well known" | Numbers you did not compute from the transcript are invented. Cite or drop. |

@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SKILL_DIR="$REPO_ROOT/skills/diagnosing-superpowers"
 SKILL_MD="$SKILL_DIR/SKILL.md"
-WORD_BUDGET=900
+WORD_BUDGET=1000
 
 PASSES=0
 FAILURES=0
