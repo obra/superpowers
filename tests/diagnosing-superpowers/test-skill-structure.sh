@@ -81,6 +81,8 @@ expected_files=(
   references/claude-code-sessions.md
   references/codex-sessions.md
   references/other-harnesses.md
+  references/context-safety.md
+  prompts/analyst-common.md
   prompts/skill-timeline.md
   prompts/plan-adherence.md
   prompts/repeated-work.md

@@ -55,7 +55,9 @@ skills/diagnosing-superpowers/
     claude-code-sessions.md
     codex-sessions.md
     other-harnesses.md
+    context-safety.md
   prompts/
+    analyst-common.md
     skill-timeline.md
     plan-adherence.md
     repeated-work.md

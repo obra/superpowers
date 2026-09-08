@@ -54,12 +54,10 @@ Common envelope on `user`/`assistant`/`attachment`/`system` lines:
 
 ## Safe extraction
 
-Lines can exceed a megabyte. Never print a whole line. Check size first:
+Lines can exceed a megabyte. Apply `context-safety.md` first, with:
 
 ```bash
 F=~/.claude/projects/<slug>/<id>.jsonl
-wc -lc "$F"
-awk '{ if (length($0) > 100000) print NR, length($0) }' "$F"   # long lines
 ```
 
 With `jq` (preferred):

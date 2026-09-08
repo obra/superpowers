@@ -15,7 +15,7 @@ Inputs:
   - `free: <one-line description>` (use only the transcript to judge)
 
 Procedure:
-1. `wc -lc` and the long-line check on CANDIDATE. Extract its identity
+1. Apply `references/context-safety.md` to CANDIDATE. Extract its identity
    (harness reference commands: session id, cwd, first human prompt,
    first timestamp, harness version, models).
 2. For each marker, locate evidence with line-number-first commands; then

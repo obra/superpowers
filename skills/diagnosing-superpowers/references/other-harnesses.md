@@ -16,9 +16,9 @@ judge it.
    or `.json` files.
 3. **Confirm a candidate** by extracting its first human message with a
    size-safe command (`head -c 2000`, or `jq` on the first record) and
-   matching it to what your human partner remembers. Never print whole
-   lines; treat every candidate like the verified stores: `wc -lc` and a
-   long-line check before anything else.
+   matching it to what your human partner remembers. Treat every candidate
+   like the verified stores: apply `context-safety.md` before anything
+   else.
 4. **Map the fields you need** by reading a handful of records with `jq -c
    'keys'` or `head -c`: human prompt, assistant text, tool call and result,
    model, harness version, timestamps, subagent linkage, compaction.
