@@ -183,7 +183,7 @@ Dimensions and what each looks for:
   late triggers. Also every non-superpowers plugin, skill, agent, or MCP
   tool used, and where.
 - **Plan adherence.** Recover the plan, spec, design, or todo list the
-  session committed to; map each step to what happened; flag skipped,
+  session agreed to; map each step to what happened; flag skipped,
   reordered, silently changed, or invented steps. Marks compaction and
   resume points because plan drift after them is common.
 - **Repeated work.** Same file read or edited many times, same command
