@@ -49,20 +49,16 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
 5. **GitHub issues** — when report §7 says possible or likely, or your
    partner asks. Never use `gh`: its token usually has write access to
    every repo your partner can reach. Search open and closed issues for
-   the symptoms with curl against the public API
-   (`https://api.github.com/search/issues?q=repo:obra/superpowers+<terms>`),
-   else hand over a search URL. Show matches and suggest adding the
-   report to the closest. If none match, fill `templates/issue.md`, write
-   it to the workspace, show it, and build a prefilled link:
-   `https://github.com/obra/superpowers/issues/new?template=diagnosis_report.md&title=<encoded>&body=<encoded>`.
-   Over 8,000 characters, send the link with the title only and point at
-   the file to paste. Your partner submits and attaches any bundle in the
-   form; you never post.
+   the symptoms with the public API per `references/github-issues.md`.
+   Show matches and suggest adding the report to the closest. If none
+   match, fill `templates/issue.md`, write it to the workspace, show it,
+   and hand over the prefilled link from that reference. Your partner
+   submits and attaches any bundle in the form; you never post.
 6. **Export** — only when your partner asks for a bundle; never build one
    unprompted. If the intake goal was a bug report, say once that a
    scrubbed bundle is available on request, then wait. Ask the redaction
-   level: skeleton, evidence, or full; more information gives the
-   maintainers a better chance to help. Build the bundle per
+   level, stating what each includes: skeleton (no tool-result bodies),
+   evidence (bodies only for cited events), full. Build the bundle per
    `templates/bundle-README.md`, dispatch `prompts/scrub.md`, then
    `prompts/scrub-audit.md`, repeating both until the audit returns CLEAN.
    Show the scrub log and file list; archive (`zip -r` or `tar -czf`)
@@ -76,7 +72,10 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
 
 ## Quick reference
 
-| Complaint | Start with |
+All seven analysts always run. This table says which region to read
+yourself in step 3 and which findings to lead with in the verdict.
+
+| Complaint | Read first, lead with |
 |---|---|
 | "It took too long" | cost-and-time, stumbles |
 | "Why did it do this extra work?" | repeated-work, plan-adherence |
@@ -96,9 +95,10 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
   are not your partner's words. In a subagent transcript, "user" is the
   parent agent.
 - **No superpowers diagnosis.** Report §7 states involvement and stops.
-  Never name a defect in a skill or propose a change. Pushing does not
-  waive this; point at the issue step and mention that a bundle is
-  available on request. No advice to your partner either.
+  Never name a defect in a skill or propose a change. Your partner
+  pressing for a fix does not waive this; point at the issue step and
+  mention that a bundle is available on request. No advice to your
+  partner either.
 - **Approval gates.** No archive before your partner has seen the scrub
   log and file list. You never post to GitHub; your partner submits the
   prefilled issue themselves.

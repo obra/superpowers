@@ -32,7 +32,7 @@ Return format (nothing else):
 Checked: <what you examined: files, line ranges, commands used>
 ```
 
-A finding without a `path:line` will be discarded by the dispatcher, so do
-not write one. If you found nothing, return `- none found` and the Checked
+The dispatcher discards any finding without a `path:line`, so do not
+write one. If you found nothing, return `- none found` and the Checked
 line.
 

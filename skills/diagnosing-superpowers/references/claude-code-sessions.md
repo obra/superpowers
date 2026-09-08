@@ -14,7 +14,7 @@ and say so in coverage notes.
   (`agentType`, `description`, `toolUseId`, `spawnDepth`, optional `model`).
 - Plugin registry: `~/.claude/plugins/installed_plugins.json` — per plugin:
   `installPath`, `version`, `installedAt`, `lastUpdated`, `gitCommitSha`.
-- The superpowers bootstrap actually injected into a session is in the
+- The superpowers bootstrap injected into a session is in the
   `SessionStart` hook attachment (below); its `command` shows the plugin
   root variable used. A dev checkout loaded with `--plugin-dir` will not be
   in the registry, so report both the registry entry and the hook evidence.

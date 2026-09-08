@@ -56,6 +56,7 @@ skills/diagnosing-superpowers/
     codex-sessions.md
     other-harnesses.md
     context-safety.md
+    github-issues.md
   prompts/
     analyst-common.md
     skill-timeline.md

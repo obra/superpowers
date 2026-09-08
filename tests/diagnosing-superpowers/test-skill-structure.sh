@@ -82,6 +82,7 @@ expected_files=(
   references/codex-sessions.md
   references/other-harnesses.md
   references/context-safety.md
+  references/github-issues.md
   prompts/analyst-common.md
   prompts/skill-timeline.md
   prompts/plan-adherence.md

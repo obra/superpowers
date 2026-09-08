@@ -7,12 +7,12 @@ Built: <ISO timestamp>
 
 ## What this is
 
-A scrubbed record of a coding-agent session in which superpowers was
-installed and something went wrong, prepared so that an agent or person
-who was not present can decide whether superpowers contributed and, if so,
-what to change. The report inside states what happened with `path:line`
-evidence. By design it contains no diagnosis of superpowers and no proposed
-fix; that is the reader's job.
+A scrubbed record of a coding-agent session that had superpowers installed
+and went wrong. It lets an agent or person who was not present decide
+whether superpowers contributed and, if so, what to change. The report
+inside states what happened with `path:line` evidence. By design it
+contains no diagnosis of superpowers and no proposed fix; that is the
+reader's job.
 
 ## Files
 
@@ -23,10 +23,13 @@ fix; that is the reader's job.
 - `timeline.md` — the per-turn timeline.
 - `findings/<dimension>.md` — raw analyst findings per dimension.
 - `transcripts/<session-id>.md` — condensed per-turn rendering of each
-  examined session (never the raw JSONL). At *skeleton* level tool-result
-  bodies are replaced by `[tool result: <tool>, <bytes> bytes, exit <code>]`;
-  at *evidence* level bodies are kept only for events cited in findings; at
-  *full* level all bodies are kept.
+  examined session (never the raw JSONL). Tool-result bodies by level:
+
+  | Level | Tool-result bodies |
+  |---|---|
+  | skeleton | replaced by `[tool result: <tool>, <bytes> bytes, exit <code>]` |
+  | evidence | kept only for events cited in findings |
+  | full | all kept |
 - `scrub-log.md` — every placeholder used and its category (never the
   original value).
 
