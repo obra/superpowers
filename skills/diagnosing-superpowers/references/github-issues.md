@@ -1,12 +1,17 @@
-# GitHub issues without `gh`
+# GitHub issues
 
-A default `gh` login carries the `repo` scope: write access to every
-repository your human partner can reach. This step needs none of that, so
-it uses the public API and the browser.
+Use `gh` when it is installed and authenticated; it handles auth, rate
+limits, and JSON. Fall back to the public API with curl, then to a URL
+your partner opens.
 
 ## Search
 
-Unauthenticated, 10 requests a minute. Search open and closed issues:
+```bash
+gh search issues --repo obra/superpowers --limit 10 "<terms>" \
+  --json number,state,title --jq '.[] | "\(.number)\t\(.state)\t\(.title)"'
+```
+
+Without `gh` (unauthenticated, 10 requests a minute):
 
 ```bash
 curl -s -H "Accept: application/vnd.github+json" \
@@ -14,21 +19,29 @@ curl -s -H "Accept: application/vnd.github+json" \
   | jq -r '.items[] | "\(.number)\t\(.state)\t\(.title)"'
 ```
 
-If curl is unavailable, hand over the search URL instead:
-`https://github.com/obra/superpowers/issues?q=<terms>`.
+Without curl, hand over `https://github.com/obra/superpowers/issues?q=<terms>`.
 
 ## File
 
-Write the filled `templates/issue.md` to the workspace, then build the
-link. The `diagnosis_report.md` template applies the `bug` and
-`automated-issue-report` labels for any reporter; the `labels=` parameter
-would not.
+Write the filled `templates/issue.md` to the workspace and show the exact
+text. After approval:
+
+```bash
+gh issue create --repo obra/superpowers --title "<title>" --body-file <path> \
+  --label bug --label automated-issue-report
+```
+
+GitHub drops labels silently when the reporter lacks push access, so the
+labels land only for collaborators; the template footer still marks the
+issue as skill-filed. `gh` cannot attach files: give your partner the
+bundle path to attach through the browser after the issue exists.
+
+Without `gh`, hand over a prefilled link on the `diagnosis_report.md`
+template, which applies both labels for any reporter:
 
 ```
 https://github.com/obra/superpowers/issues/new?template=diagnosis_report.md&title=<url-encoded title>&body=<url-encoded body>
 ```
 
-GitHub rejects URLs over about 8,000 characters. If the link exceeds
-that, send it with the title only and tell your partner to paste the body
-from the file. Your partner submits the issue and attaches any bundle in
-the form.
+GitHub rejects URLs over about 8,000 characters; past that, send the link
+with the title only and tell your partner to paste the body from the file.
