@@ -22,6 +22,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
 - [The Basic Workflow](#the-basic-workflow)
+- [Customizing output paths](#customizing-output-paths)
 - [Community](#community)
 - [What's Inside](#whats-inside)
 - [Philosophy](#philosophy)
@@ -275,6 +276,25 @@ turn loses the bootstrap — start a fresh session if skills stop triggering.
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+
+## Customizing output paths
+
+By default, brainstorming writes design specs (on its architectural path) to `docs/superpowers/specs/` and writing-plans writes implementation plans to `docs/superpowers/plans/`. Both skills state that a preference you set overrides those defaults.
+
+To move them, put the override in the project file your harness loads at session start (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or your harness's equivalent). A table on its own is sometimes honored and sometimes lost — the skill hands the agent a concrete path to copy. Adding an imperative that names both the new location and the default it replaces is what worked in the case reported in [#939](https://github.com/obra/superpowers/issues/939):
+
+```markdown
+## Output Paths
+
+| Artifact | Location |
+|---|---|
+| Design specs | `docs/design-docs/` |
+| Implementation plans | `docs/exec-plans/` |
+
+**IMPORTANT: Design specs MUST be saved to `docs/design-docs/`, NOT `docs/superpowers/specs/`. Implementation plans MUST be saved to `docs/exec-plans/`, NOT `docs/superpowers/plans/`.**
+```
+
+The table keeps the choice readable for humans; the imperative is the part that carries the override.
 
 ## Community
 
