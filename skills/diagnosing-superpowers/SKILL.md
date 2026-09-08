@@ -47,13 +47,17 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
 4. **Report.** Fill every section of `templates/report.md` in order, write
    it to the workspace, show it, and give the path.
 5. **GitHub issues** — when report §7 says possible or likely, or your
-   partner asks. Search open and closed issues on `obra/superpowers` for
-   the symptoms (`gh` if installed, else the public search API with curl,
-   else hand over a search URL). Show matches and suggest adding the
-   report to the closest. If none match, draft `templates/issue.md`, show
-   the exact text, and create it only after approval. `gh issue create`
-   cannot attach files; if a bundle exists, give your partner its path to
-   attach.
+   partner asks. Never use `gh`: its token usually has write access to
+   every repo your partner can reach. Search open and closed issues for
+   the symptoms with curl against the public API
+   (`https://api.github.com/search/issues?q=repo:obra/superpowers+<terms>`),
+   else hand over a search URL. Show matches and suggest adding the
+   report to the closest. If none match, fill `templates/issue.md`, write
+   it to the workspace, show it, and build a prefilled link:
+   `https://github.com/obra/superpowers/issues/new?template=diagnosis_report.md&title=<encoded>&body=<encoded>`.
+   Over 8,000 characters, send the link with the title only and point at
+   the file to paste. Your partner submits and attaches any bundle in the
+   form; you never post.
 6. **Export** — only when your partner asks for a bundle; never build one
    unprompted. If the intake goal was a bug report, say once that a
    scrubbed bundle is available on request, then wait. Ask the redaction
@@ -96,8 +100,8 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
   waive this; point at the issue step and mention that a bundle is
   available on request. No advice to your partner either.
 - **Approval gates.** No archive before your partner has seen the scrub
-  log and file list. No issue or comment before they approve the exact
-  text.
+  log and file list. You never post to GitHub; your partner submits the
+  prefilled issue themselves.
 - **Intake before analysis.** Nothing in steps 2–7 starts until your
   partner has answered. If they are away, write the questions and stop.
   A statement you reconstructed for them is not an answer. An
