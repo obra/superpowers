@@ -31,8 +31,8 @@ job, and the skill says so if asked.
 - **Problem intake first.** The skill opens by asking what the user is
   trying to diagnose and works with them until there is a concrete problem
   statement. Sweeps run in service of that statement.
-- **Quality is judged as process evidence**, against the session's own
-  commitments (design, plan, acceptance criteria, spec/plan files) and
+- **Quality is judged as process evidence**, against the plan the session
+  agreed to (design, plan, acceptance criteria, spec/plan files) and
   against what the transcript proves (tests run, verification behind
   claims, commits matching claims, review feedback handled). It is not a
   code review of the resulting diff.
