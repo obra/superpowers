@@ -38,7 +38,8 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    file the session read or had injected.
 3. **Triage.** Read the region around the reported problem yourself. Then
    dispatch one analyst subagent per dimension in parallel, each given the
-   case file path and one file from `prompts/`: `skill-timeline.md`,
+   case file path, `prompts/analyst-common.md`, and one dimension file from
+   `prompts/`: `skill-timeline.md`,
    `plan-adherence.md`, `repeated-work.md`, `stumbles.md`,
    `quality-evidence.md`, `request-conflicts.md`, `cost-and-time.md`.
    Split a dimension by turn range when the transcript is long. Discard
@@ -82,9 +83,8 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
 
 ## Hard rules
 
-- **Context safety.** One transcript line can be a megabyte. Check
-  `wc -lc` and long lines first. Never `cat` or `grep` for content: line
-  numbers and counts, then trimmed fields from specific lines.
+- **Context safety.** One transcript line can be a megabyte. Follow
+  `references/context-safety.md` on every session file, every time.
 - **Read-only.** Never modify, move, or delete a session file.
 - **Exact paths to subagents.** A subagent's "current session" is its
   own. Pass absolute paths and ids.

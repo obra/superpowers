@@ -38,11 +38,7 @@ Session still running at read time: yes | no (mtime <ISO>, lines <N>)
 
 ## Context-safety rules for every reader of these files
 
-- Check `wc -lc` and long lines (`awk '{ if (length($0) > 100000) print NR, length($0) }'`) before reading.
-- Never `cat` or `grep` for content. Line numbers and counts first
-  (`grep -n … | cut -d: -f1`), then small fields from specific lines
-  (`sed -n Np | jq -c '{…}'` or `| cut -c1-500`).
-- Read-only: never modify, move, or delete a session file.
+- Follow `references/context-safety.md` before reading any file listed here.
 - In a subagent transcript, "user" is the parent agent.
 
 ## Harness reference to use

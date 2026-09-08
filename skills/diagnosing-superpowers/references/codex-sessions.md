@@ -44,12 +44,10 @@ Every line is `{timestamp, type, payload}` (some also carry `ordinal`).
 ## Safe extraction
 
 Rollouts reach hundreds of megabytes; `compacted` lines embed whole
-histories. Never print a whole line. Check size first:
+histories. Apply `context-safety.md` first, with:
 
 ```bash
 F=~/.codex/sessions/YYYY/MM/DD/rollout-....jsonl
-wc -lc "$F"
-awk '{ if (length($0) > 100000) print NR, length($0) }' "$F"
 ```
 
 With `jq`:
