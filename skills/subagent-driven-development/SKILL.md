@@ -173,6 +173,14 @@ its own text agrees with itself — the tests it specifies against the code it
 specifies, the files it creates against the files it later touches. "The scan
 is clean" without those rows is not a scan you ran.
 
+**When the plan's header declares `Plan shape: skeleton-first`,** the
+table gets a final section: the DISPATCH PLAN — group the pending tasks
+into waves. Tasks in the same wave are mutually file-disjoint and consume
+no interface still under construction — dispatch each wave's implementers
+concurrently, one worktree per task, and integrate before the next wave;
+tasks that fail those conditions serialize. On a skeleton-first plan, a
+scan without a dispatch plan is not a scan you ran.
+
 Write the table to the ledger. Rule on everything you find before execution
 begins — each finding against the plan text that mandates it — and record
 each ruling in the ledger. If the scan is clean, proceed without comment.
@@ -186,6 +194,10 @@ implementation.
 Use the least powerful model that can handle each role to conserve cost and increase speed.
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+
+When a task carries a **Tier:** field, follow it — the planner already
+ruled: mechanical → the cheapest available model; judgment → a standard
+model. Do not re-litigate the tier at dispatch.
 
 **Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
 
@@ -208,7 +220,10 @@ most expensive — which silently defeats this section.
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the
 turns on multi-step work — costing more overall. Use a mid-tier model as the
-floor for reviewers and for implementers working from prose descriptions.
+floor for reviewers and for implementers working from task contracts or
+prose descriptions — unless the task's Tier line says mechanical: the
+planner has already ruled the deliverable fully specified, so treat a
+mechanical-tier contract like spelled-out content.
 When the task's plan text contains the complete code to write, the
 implementation is transcription plus testing: use the cheapest tier for
 that implementer. Single-file mechanical fixes also take the cheapest tier.
@@ -259,7 +274,13 @@ and fix-round diffs need it.
   know; (4) your resolution of any ambiguity you noticed in the brief;
   (5) the report-file path and report contract. Exact values (numbers,
   magic strings, signatures, test cases) appear only in the brief. Never
-  make a subagent read the whole plan file.
+  make a subagent read the whole plan file. When the brief is a contract
+  (goal, success criteria, interfaces) rather than written-out code, item
+  (3) also carries the elaboration the contract leaves to dispatch time:
+  the interfaces as actually built by completed tasks, environment facts
+  and discoveries from earlier reports, and any amendment rulings. There
+  the success criteria name the cases the tests must cover, and the
+  implementer designs its own code and tests within the contract.
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
@@ -280,6 +301,26 @@ and fix-round diffs need it.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-3 resume this agent.
 - Never dispatch multiple implementation subagents in parallel (conflicts).
+  The one exception is a skeleton-first plan whose dispatch plan shows two
+  or more pending tasks mutually file-disjoint with none consuming an
+  interface still under construction. Dispatch those implementers
+  concurrently, each in its own worktree:
+  - Record the integration base commit in the ledger before the first
+    concurrent dispatch.
+  - Create one worktree per concurrent task off that base
+    (`git worktree add <repo-root>/.worktrees/task-<N> -b task-<N>
+    <base>`); each dispatch's `Work from:` is its own worktree, and its
+    BASE is that worktree's HEAD.
+  - Review each task's diff as usual when it reports. Integrate reviewed
+    branches in plan order: merge each into the integration branch
+    (`git merge --no-ff task-<N>`), and run that task's verification
+    commands after each merge.
+  - A merge conflict or post-merge verification failure is that task's
+    fix-loop round 1: rebase the task branch onto the current
+    integration head in its worktree, then resume its implementer
+    there. Never resolve conflicts yourself.
+  - Remove each worktree (`git worktree remove`) once its branch is
+    integrated, and record the integrated range in the ledger as usual.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -437,6 +478,16 @@ message as your other bookkeeping:
 - `Task <N>: complete (commits <base7>..<head7>, review clean)`
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
   tripped breaker
+
+**On a skeleton-first plan,** write one plan-check line with the
+completion line. Re-read the remaining tasks against what this task
+actually established — interfaces as built, environment facts,
+discoveries in the report — and append either `Plan holds` or
+`Amendment: Task <M>: <what changes and why>` to the ledger. An
+amendment is plan authority applied at the plan layer: from then on the
+amended text IS the plan's text, and it rides into every affected task's
+dispatch under item (3). Never dispatch a task whose brief a completed
+task's report has already invalidated.
 
 Then mark the todo complete and move on. Never move to the next task while
 the review has open Critical/Important issues that are neither fixed nor
