@@ -17,10 +17,10 @@ not evaluate the code the session produced.
 3. Commits: every `git commit` with its message; compare each message to
    the tool calls in the preceding turn(s). Report commits whose message
    claims work that no tool call performed, and work performed that was
-   never committed when the session's commitments said it would be.
+   never committed when the agreed plan said it would be.
 4. Review feedback: where a reviewer (human or subagent) raised points,
    find the response. Report points acknowledged but not acted on, and
    points dismissed without a stated reason.
 5. Acceptance criteria: if the case file's problem statement or the
-   session's commitments state criteria, report each as met / not met /
+   agreed plan states criteria, report each as met / not met /
    not checked with the evidence line.
