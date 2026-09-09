@@ -942,69 +942,124 @@ class Supervisor:
             if self.report.get("browser_loss_requested"):
                 self.report["checks"]["browser_loss"] = {"status": "passed", "continuity": False, "outcome": "interrupted", "observed_error": failure}
         finally:
-            self.cleanup(failure)
-        return 1 if failure and not self.report.get("browser_loss_requested") else 0
+            cleanup_ok = self.cleanup(failure)
+        return 1 if not cleanup_ok or (failure and not self.report.get("browser_loss_requested")) else 0
 
     def cleanup(self, failure):
         terminal, job = self.terminal, self.terminal.job
         started = time.monotonic()
-        handles = job.snapshot()
-        before_heartbeats = heartbeats(self.args.directory / "heartbeats")
-        if self.pending is not None:
-            result = {"outcome": "interrupted" if failure or self.report.get("close_operation") else "unknown",
-                      "shell_success": None, "native_exit_code": None, "shell_error": failure,
-                      "command": self.pending["command"]}
-            self.results[str(self.pending["id"])] = result
-            self.reply(self.pending["id"], result)
+        mode = "cancel_cleanup" if self.report.get("close_operation") == "cancel" else "normal_cleanup"
+        self.report["checks"][mode] = {"status": "failed"}
+        diagnostics = self.report["cleanup_diagnostics"] = []
+        handles = before = after = stable = None
+        remaining, sentinel_alive = None, False
+
+        def attempt(stage, operation):
+            try:
+                return operation()
+            except BaseException as error:
+                diagnostic = {"stage": stage, "error": repr(error), "traceback": traceback.format_exc()}
+                diagnostics.append(diagnostic)
+                # Preserve diagnostics even when the evidence directory is unwritable.
+                try:
+                    print(json.dumps({"cleanup_error": diagnostic}), file=sys.stderr, flush=True)
+                except (OSError, ValueError):
+                    pass
+                return None
+
         try:
-            if terminal.cdp and not failure:
-                if terminal.take:
-                    terminal.end_take()
-                terminal.key("CTRL_C")
-                deadline = time.monotonic() + 1.5
-                while time.monotonic() < deadline:
-                    terminal.cdp.pump()
-                terminal.type("exit")
-                deadline = time.monotonic() + 1.5
-                while time.monotonic() < deadline and not terminal.closed:
-                    terminal.cdp.pump()
-        except Exception as error:
-            self.report["graceful_shutdown_diagnostic"] = repr(error)
-        try:
-            terminal.close()
-            # Job membership can reach zero before Windows signals every exiting
-            # process handle. Retain and wait the verified handles as well.
-            self.report["initial_unsignaled_handles"] = [item["pid"] for item in handles if job.k.WaitForSingleObject(item["handle"], 0) != 0]
-            deadline = started + 8
-            while time.monotonic() < deadline and any(job.k.WaitForSingleObject(item["handle"], 0) != 0 for item in handles):
-                time.sleep(0.05)
-            remaining = [item["pid"] for item in handles if job.k.WaitForSingleObject(item["handle"], 0) != 0]
-            self.report["owned_children_remaining"] = remaining
-            self.report["unrelated_sentinel_alive"] = self.sentinel is not None and self.sentinel.poll() is None
-            self.report["shutdown_seconds"] = time.monotonic() - started
-            after_heartbeats = heartbeats(self.args.directory / "heartbeats")
-            time.sleep(0.4)
-            stopped = after_heartbeats == heartbeats(self.args.directory / "heartbeats")
-            self.report["cleanup"] = {"before": before_heartbeats, "after": after_heartbeats,
-                                      "heartbeats_stopped": stopped,
-                                      "owned_handles": [{k: v for k, v in item.items() if k != "handle"} for item in handles]}
-            mode = "cancel_cleanup" if self.report.get("close_operation") == "cancel" else "normal_cleanup"
-            passed = not remaining and self.report["unrelated_sentinel_alive"] and stopped and set(before_heartbeats) == {"parent", "child", "grandchild"} and self.report["shutdown_seconds"] < 10
-            self.report["checks"][mode] = {"status": "passed" if passed else "failed"}
+            handles = attempt("snapshot", job.snapshot)
+            before = attempt("heartbeats_before", lambda: heartbeats(self.args.directory / "heartbeats"))
+            if self.pending is not None:
+                result = {"outcome": "interrupted" if failure or self.report.get("close_operation") else "unknown",
+                          "shell_success": None, "native_exit_code": None, "shell_error": failure,
+                          "command": self.pending["command"]}
+                self.results[str(self.pending["id"])] = result
+                attempt("pending_reply", lambda: self.reply(self.pending["id"], result))
+
+            def graceful_shutdown():
+                if terminal.cdp and not failure:
+                    if terminal.take:
+                        terminal.end_take()
+                    terminal.key("CTRL_C")
+                    deadline = time.monotonic() + 1.5
+                    while time.monotonic() < deadline:
+                        terminal.cdp.pump()
+                    terminal.type("exit")
+                    deadline = time.monotonic() + 1.5
+                    while time.monotonic() < deadline and not terminal.closed:
+                        terminal.cdp.pump()
+
+            attempt("graceful_shutdown", graceful_shutdown)
         finally:
-            for item in handles:
-                job.k.CloseHandle(item["handle"])
-            if self.sentinel:
-                self.sentinel.terminate()
-                self.sentinel.wait(timeout=5)
-            self.report.update(terminal_client_count=len(terminal.socket_ids), observed_session_id=terminal.session,
-                               filmed_session_id=self.takes[0]["session"] if self.takes else None,
-                               socket_ids=terminal.socket_ids, observed_frames=terminal.frames,
-                               terminal_sizes=terminal.terminal_sizes, framing_chunk_columns=60,
-                               framing_scope="Observed dimensions only; arbitrary resizing/redraw is unverified",
-                               job_structure_sizes=job.sizes, launches=terminal.launches)
-            write_json(self.args.directory / "probe.json", self.report)
-            print(json.dumps({"finished": str(self.args.directory), "checks": self.report["checks"], "failure": failure}), flush=True)
+            try:
+                try:
+                    attempt("terminal_close", terminal.close)
+                finally:
+                    # Terminal.close may fail before reaching the job. Job.close
+                    # releases its kill-on-close handle even if termination fails.
+                    if job.handle:
+                        attempt("job_close", job.close)
+                    for name, resource in (("terminal_output", terminal.output), ("network_log", terminal.raw)):
+                        attempt(name + "_close", resource.close)
+                    if terminal.cdp:
+                        attempt("cdp_close", terminal.cdp.ws.close)
+                        attempt("cdp_trace_close", terminal.cdp.trace.close)
+                if handles is not None:
+                    def wait_handles():
+                        self.report["initial_unsignaled_handles"] = [p["pid"] for p in handles if job.k.WaitForSingleObject(p["handle"], 0) != 0]
+                        deadline = started + 8
+                        while time.monotonic() < deadline and any(job.k.WaitForSingleObject(p["handle"], 0) != 0 for p in handles):
+                            time.sleep(0.05)
+                        return [p["pid"] for p in handles if job.k.WaitForSingleObject(p["handle"], 0) != 0]
+
+                    remaining = attempt("owned_handle_wait", wait_handles)
+                sentinel_alive = attempt("sentinel_status", lambda: self.sentinel is not None and self.sentinel.poll() is None)
+                after = attempt("heartbeats_after", lambda: heartbeats(self.args.directory / "heartbeats"))
+                time.sleep(0.4)
+                stable = attempt("heartbeats_verify", lambda: heartbeats(self.args.directory / "heartbeats"))
+            finally:
+                try:
+                    for item in handles or []:
+                        def release_handle(item=item):
+                            if not job.k.CloseHandle(item["handle"]):
+                                raise ctypes.WinError(ctypes.get_last_error())
+                        attempt("owned_handle_close", release_handle)
+                finally:
+                    # Sentinel cleanup is independent of every job/terminal step.
+                    try:
+                        if self.sentinel:
+                            attempt("sentinel_terminate", self.sentinel.terminate)
+                    finally:
+                        if self.sentinel:
+                            attempt("sentinel_wait", lambda: self.sentinel.wait(timeout=1))
+
+        stopped = after is not None and stable is not None and after == stable
+        self.report.update(owned_children_remaining=remaining, unrelated_sentinel_alive=sentinel_alive,
+                           shutdown_seconds=time.monotonic() - started)
+        self.report["cleanup"] = {"before": before, "after": after, "heartbeats_stopped": stopped,
+                                  "owned_handles": None if handles is None else
+                                  [{k: v for k, v in item.items() if k != "handle"} for item in handles]}
+        passed = (not diagnostics and remaining == [] and sentinel_alive is True and stopped
+                  and before is not None and set(before) == {"parent", "child", "grandchild"}
+                  and self.report["shutdown_seconds"] < 10)
+        self.report["checks"][mode] = {"status": "passed" if passed else "failed"}
+        self.report.update(terminal_client_count=len(terminal.socket_ids), observed_session_id=terminal.session,
+                           filmed_session_id=self.takes[0]["session"] if self.takes else None,
+                           socket_ids=terminal.socket_ids, observed_frames=terminal.frames,
+                           terminal_sizes=terminal.terminal_sizes, framing_chunk_columns=60,
+                           framing_scope="Observed dimensions only; arbitrary resizing/redraw is unverified",
+                           job_structure_sizes=job.sizes, launches=terminal.launches)
+        attempt("report_write", lambda: write_json(self.args.directory / "probe.json", self.report))
+        if diagnostics:
+            self.report["checks"][mode] = {"status": "failed"}
+        prior_errors = len(diagnostics)
+        attempt("summary_write", lambda: print(json.dumps({"finished": str(self.args.directory),
+                "checks": self.report["checks"], "failure": failure, "cleanup_diagnostics": diagnostics}), flush=True))
+        if len(diagnostics) != prior_errors:
+            self.report["checks"][mode] = {"status": "failed"}
+            attempt("report_write", lambda: write_json(self.args.directory / "probe.json", self.report))
+        return passed and not diagnostics
 
 
 def submit_request(args):
