@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-09
 
-**Status:** Draft for Drew review
+**Status:** Adversarial review complete; ready for implementation planning
 
 **Scope:** Platform compatibility for the movie skill proposed in [PR #2214](https://github.com/obra/superpowers/pull/2214). Implementation depends on that import or its final equivalent.
 
@@ -44,6 +44,9 @@ The companion's current implementation establishes these distinctions:
 These sources identify the required OS families. They do not establish an
 exhaustive promise covering every OS release, CPU architecture, Linux
 distribution, or desktop capture backend.
+
+An independent review of the platform contract and terminal design is recorded
+in the [adversarial review](2026-09-09-proof-movie-os-compatibility-review.md).
 
 For the imported movie skill, all three shell regression suites were run on
 macOS during this investigation: assembly 4/4, checker 9/9, narration drift 5/5.
@@ -145,6 +148,14 @@ recording service, TTS service, global Node dependency, or Windows-only package
 manager requirement. The import's dependency-policy exception remains a
 maintainer decision associated with PR #2214; this spec does not grant one.
 
+Nested helper invocations must also be independent of the project being filmed.
+In particular, launch the local ASR environment with uv project discovery disabled
+(`--no-project`) and a compatible interpreter selected by uv. The current nested
+`uv run --with faster-whisper ...` can otherwise inherit an unrelated
+`pyproject.toml`. A fixture with an incompatible project Python requirement must
+not change the helper's resolution, modify the project's environment/lockfile,
+or turn an available ASR into a reported dependency failure.
+
 ### Paths, encoding, and process arguments
 
 - Resolve assets relative to the scene file and generated assets relative to
@@ -154,6 +165,11 @@ maintainer decision associated with PR #2214; this spec does not grant one.
   Edge on Windows and Chrome/Chromium on macOS and Linux.
 - Use explicit UTF-8 for YAML, JSON, HTML, SRT, concat lists, and text evidence.
   Accept ordinary LF and CRLF text inputs and diagnose unreadable encodings.
+  Give owned Python helper pipes an explicit UTF-8 contract as well. Preserve
+  raw output from recorded external commands and record the encoding used to
+  decode it; do not assume every native Windows program emits UTF-8 or silently
+  replace undecodable evidence. Test redirected output under a non-UTF-8 Windows
+  console/code-page configuration.
 - Pass external executable arguments as arrays. Avoid shell command strings for
   FFmpeg, browsers, or opening an artifact. User-requested shell commands belong
   only in the selected recorded shell.
@@ -174,8 +190,10 @@ by the current build and preserve source screenshots.
 
 Write concat entries with FFmpeg-specific escaping and test native Windows
 drive paths. File list syntax and filter syntax are separate from shell quoting.
-Preserve the segment rule `max(narration duration, visual duration)` and measured
-offsets; the port must not change timing or drop frames.
+Preserve measured offsets and the existing timing rules: `card`, `image`, and
+`frames` segments use `max(narration duration, visual duration)`; `movie` segments
+retain the source movie's duration and own audio. The port must not change timing
+or drop frames.
 
 For subtitle burning, stage the SRT under a safe fixed basename in a temporary
 directory and execute FFmpeg from that directory, with resolved input/output
@@ -238,14 +256,63 @@ files; replace it with an included, tested example or a correct included-file
 reference. The standalone example is specific to a Docker/tmux demo and must
 not be presented as a working native Windows recorder unchanged.
 
-Command completion is a shell adapter responsibility. For scripted shell beats,
-install a session-local completion marker containing a sequence identifier and
-the real exit status, emitted only after the command returns. Observe the
-terminal output stream, not OCR or guessed sleeps, for that marker, and distinguish
-actual marker output from echoed command text. Keep instrumentation in the
-recorded session; do not edit the human partner's shell profiles. Treat a failed
-command as failed evidence even when logging succeeds. Preserve the shell's
-normal semantics and record the exact command.
+One persistent Python supervisor owns the browser/CDP page, capture state, and
+terminal session. Start ttyd in writable mode and allow one terminal client.
+Subscribe through CDP to the existing page's ttyd WebSocket events before that
+page connects. Decode ttyd's output-message framing and incrementally parse
+output across message boundaries. A second CDP connection may observe that page;
+a second ttyd WebSocket must not be opened, because ttyd creates another shell
+for another terminal client. The browser input, command observer, and recorded
+pixels must all refer to the same session.
+
+For the reference recorder, later harness calls submit ordered JSON control
+files to a session-owned directory. A request has a unique monotonically
+increasing id and an operation (`run`, `key`, `begin-take`, `end-take`, or `close`).
+Write requests atomically; the supervisor dispatches them in order and writes
+matching acknowledgments and eventual results. A `run` acknowledgment does not
+wait for the command to finish: the command remains in flight while capture
+operations and `close` can proceed. Another `run` is accepted only at a known
+shell prompt; `key` can drive an expected interactive state. Startup reports the
+control directory and session id, and request ids prevent replay. No HTTP
+control service or additional terminal client is needed.
+
+Readiness requires a round trip through the filmed terminal: execute a probe
+that returns a session nonce, shell identity, and working directory, observe its
+completion, and inspect a screenshot from that same page. Do not declare the
+recorder ready based only on a listening port or a loaded page.
+
+Command completion is a shell adapter responsibility. Each scripted beat emits
+a framed completion record after it returns, containing session/request ids and
+an outcome. Its complete framing must not appear in echoed command text. Keep
+instrumentation inside the recorded session; do not edit the human partner's
+shell profiles or change its error preferences. A missing completion record is
+an interruption or timeout, never success.
+
+The outcome distinguishes `completed`, `interrupted`, and `unknown`; a completed
+beat has `shell_success`, a nullable native exit code, and a nullable shell error.
+For Bash, preserve the command status and any producer pipeline statuses before
+instrumentation overwrites them. For PowerShell, capture `$?` immediately after
+the submitted statement and distinguish it from `$LASTEXITCODE`. Attribute a
+native exit code only when the beat identifies its native executable producer;
+a cmdlet's outcome must not inherit an earlier native command's exit code.
+Terminating exceptions and parse failures produce explicit error outcomes when
+observable, or `unknown` when the session no longer permits reliable attribution.
+
+The first implementation accepts atomic command/statement beats. Multi-statement
+scripts remain opaque commands whose own documented status is recorded; the
+recorder does not claim to detect every internally ignored error. Logging and
+formatting are observer operations after status capture. If the command being
+proved is itself a producer/logging pipeline, its adapter must retain the
+producer's outcome separately, or require separate beats rather than label a
+successful logger as a successful producer. Evidence includes the exact command
+and attribution, so a successful recording can honestly show a failed command.
+
+Record PowerShell 5.1 and 7, not only launch the pipeline from each. Test a
+successful native executable followed by a failing cmdlet, a failing native
+executable followed by a successful cmdlet, terminating and non-terminating
+errors, an explicit script exit, parse failure, and failure through logging.
+Tests must detect status changes introduced by instrumentation, including the
+PowerShell 5.1 expression-wrapper behavior.
 
 For interactive TUI beats, use explicit application state and key actions; do
 not send another shell command while the TUI still owns input. Unknown state or
@@ -258,6 +325,10 @@ take pauses capture without killing a long-running command; the same browser
 connection and shell persist until the recording session ends. Browser
 disconnect/reconnect persistence is not assumed. If the connection is lost and
 the shell cannot be proven to survive, mark the take interrupted and report it.
+Verify a nonce, shell identity, and persistent shell variable across two takes,
+a running command between those takes, and a real harness tool-call boundary.
+Include negative tests where an extra terminal client or lost connection must
+not produce a successful session-continuity result.
 
 ### Desktop capture and real-run logs
 
@@ -293,6 +364,26 @@ Readiness and command waits have explicit timeouts. On finish, interrupt, or
 failure, stop and wait for owned processes and release resources; do not kill by
 generic executable name or unverified stale PID. Ordinary users must be able to
 run the workflow without elevated privileges.
+
+Session ownership includes the recorded command's local children and
+grandchildren, even when they stop using the terminal. On Windows, assign ttyd
+and the isolated browser root to a session-owned Job Object before their threads
+run, using suspended creation and Win32 calls through Python's `ctypes`. Disable
+breakaway and use kill-on-job-close so descendants cannot outlive the recorder.
+Keep the supervisor outside its child job, and detect failure to establish the
+job before starting a take. On Unix, track the recorder's own sessions/process
+groups, including ttyd's PTY process group; do not assume killing the ttyd parent
+terminates its shell group. Session persistence ends at `close`; this workflow
+does not launch local services intended to survive it.
+
+On normal close, keep reading terminal output while requesting graceful
+shutdown, then terminate remaining owned processes after a bounded timeout and
+wait for their exit. Drain/close output in an order that does not block older
+ConPTY implementations. On supervisor failure, Windows job closure must still
+terminate owned descendants. Test both success and cancellation with a child and
+grandchild that continue writing heartbeat files, plus an unrelated sentinel
+process. Owned heartbeats must cease, owned processes must disappear, the
+sentinel must survive, and no shutdown operation may hang indefinitely.
 
 Use the same distinction as the companion between a renderer and opening a
 browser for the human partner. If a recorder needs to open a URL, use the OS
@@ -330,17 +421,17 @@ without depending on a particular CI provider.
 | Launch shells | Bash and zsh on macOS, Bash on Linux/WSL, Windows PowerShell 5.1, PowerShell 7, and Git Bash on native Windows |
 | Shared pipeline | All scene kinds; measured scene offsets; hard and soft subtitles; checker verdicts and contact sheets |
 | Paths | Spaces, apostrophes, Unicode, metacharacters, Windows drive paths, relative/absolute work directories, nested SRT files, LF/CRLF |
-| Windows terminal | Both recorded shells; at least one crossed launch/record-shell combination; delayed command, failed command, TUI input, and retained session between takes |
+| Windows terminal | Git Bash and recorded PowerShell 5.1/7; a crossed launch/record-shell combination; cmdlet/native status attribution, delayed command, TUI input, and same-session proof between takes |
 | Native independence | PowerShell movie tools run with Git Bash and WSL unavailable to them; Git Bash native tests use Windows binaries |
-| Local voice | Real no-key Piper synthesis and local ASR on macOS, Linux, and native Windows; repeat with cached models and network disabled |
+| Local voice | Real no-key Piper synthesis and local ASR in every required OS environment, including WSL; repeat with cached models and network disabled; test nested helper isolation from the filmed project |
 | Capture failure | Blank frame, missing display, permission refusal, browser loss, and timeout produce accurate outcomes and no fabricated proof |
-| Lifecycle | Survives a harness turn boundary; bounded shutdown after success, error, and interruption; unrelated sentinel process survives cleanup |
+| Lifecycle | Survives a harness turn boundary; bounded shutdown after success, error, and interruption; owned children/grandchildren terminate while an unrelated sentinel survives |
 | Evidence integrity | Failed command remains failed through logging; missing required speech verification is reported; rendered content matches real actions |
 
 The end-to-end fixture includes a small real browser app with a persistent state
 change and a terminal sequence that prints Unicode, runs a delayed command, and
 returns a nonzero status. Capture those actions, generate real local narration,
-assemble title/image/frame/movie scenes, burn subtitles, run the checker, and
+assemble `card`/`image`/`frames`/`movie` scenes, burn subtitles, run the checker, and
 inspect the finished output. Include a terminal TUI take and an unnarrated
 log-reel case. An intentionally failing command may be part of a successful
 recording test: its logged status and narration must accurately show that failure.
@@ -354,6 +445,36 @@ only with a recorded reason and a separate result for the fallback route. A
 missing prerequisite in a required acceptance job is a failure of that job's
 setup, not a green compatibility result.
 
+OS and feature coverage must be joined. Define fixture groups: **P** is the full
+processing fixture (all scene kinds, offsets, hard/soft subtitles, checker and
+negative cases); **B** is real browser capture; **T** is real terminal/TUI capture
+and lifecycle; **V** is no-key synthesis/transcription plus a cached offline
+rerun; **L** is the real-run log reel with preserved status.
+
+| Required environment | Minimum successful groups | Additional proof |
+| --- | --- | --- |
+| macOS arm64 | P, B, T, V, L | Bash and zsh invocation |
+| macOS x64 | P, B, T, V, L | Exact interpreter and model package versions |
+| Linux x64 desktop | P, B, T, V, L | Display type and browser backend |
+| Linux x64 with DISPLAY/WAYLAND_DISPLAY unset and no desktop session | P, B, T, V, L | Positive headless browser and terminal takes, not just a missing-display diagnostic |
+| Native Windows x64 | P, B, T, V, L | Full pipeline from PowerShell and Git Bash; real launch and recorded-shell coverage for PowerShell 5.1/7; native binaries proven |
+| WSL Linux x64 | P, B, T, V, L | Linux binaries proven; local voice runs inside WSL; no hidden Windows-file-path dependency |
+
+Do not multiply the full fixture by every launch-shell permutation: thin
+invocation tests cover remaining permutations, while the explicit Windows
+end-to-end requirements above still apply. Remote/harness continuity requires
+at least one real remote session for browser and terminal recording, with
+artifacts retrieved and the launch/recording hosts identified.
+
+To advertise a desktop backend as verified, retain one successful real desktop
+take on an actual macOS desktop, a Windows desktop using `gdigrab`, or a Linux
+X11 desktop using the documented backend, respectively. A skipped test leaves
+that backend conditional/unverified even if the OS's P/B/T/V/L groups pass.
+Wayland support in this scope means correct detection and an honest route
+decision; a Wayland desktop backend needs its own successful take before a
+stronger claim is published. This does not require every compositor or remote
+desktop configuration to support desktop capture.
+
 Skill instruction changes require `superpowers:writing-skills` and before/after
 pressure testing across multiple agent sessions. Scenarios include a PowerShell
 harness, a Git Bash harness, no cloud key, a path containing spaces, missing
@@ -361,13 +482,31 @@ libass, and headless/blocked capture. Check that agents select valid commands,
 keep failures visible, and inspect the artifact. Store evals and transcripts in
 the project's external eval repository; it is absent from this checkout, so
 record its actual path and commit rather than assuming `evals/` is present.
+The external checkout found during review is
+`/Users/drewritter/prime-rad/superpowers-evals` at `66f08529`; this is an evidence
+location, not a path to hard-code into tests. Its Windows guest launcher proves
+where the agent runs, not which shell its tools use. For each shell-specific
+agent eval, capture the actual agent tool invocation and shell identity; launching
+an agent from PowerShell while all its commands execute in Bash does not satisfy
+the PowerShell-harness scenario.
 
 Evidence records must include OS/architecture, shell, Python/uv, FFmpeg build,
 browser, TTS/ASR versions, harness/model, command, return code, and artifact or
 transcript location. Generated media need not be committed to core, but the
 fixture and reproduction commands must be retained.
 
-The design is ready for implementation after review. Compatibility is complete
+### First implementation task: native Windows feasibility
+
+Before the bulk port, run a bounded probe of the chosen ttyd build with native
+PowerShell and Git Bash: one filmed/observed terminal, a command completion
+record, two takes preserving shell state across a harness boundary, and Job
+Object cleanup of a nested worker. Record executable versions and the observed
+ttyd message format. This is runtime validation of the specified design, not
+evidence already gathered by this spec review. A failure revisits the relevant
+adapter design before depending on it; it does not silently remove an agreed
+platform or shell from the contract.
+
+The design is ready for implementation planning after review. Compatibility is complete
 only when the required matrix has evidence, the updated skill has behavior evals,
 and the support documentation accurately distinguishes verified combinations
 from dependency or display limitations.
@@ -388,3 +527,13 @@ from dependency or display limitations.
 - [Piper package files](https://pypi.org/project/piper-tts/#files)
   include Windows x64 builds; package availability alone is not a completed
   synthesis or transcription test.
+- [PowerShell automatic variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables)
+  distinguish command success from native process exit status.
+- [ttyd protocol implementation](https://github.com/tsl0922/ttyd/blob/main/src/protocol.c)
+  associates a terminal process with each initialized client connection.
+- [CDP WebSocket receive events](https://chromedevtools.github.io/devtools-protocol/tot/Network/#event-webSocketFrameReceived)
+  expose messages from the browser's existing socket, including encoded binary payloads.
+- [Windows Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects)
+  provide a process-ownership boundary for session cleanup.
+- [ConPTY close behavior](https://learn.microsoft.com/en-us/windows/console/closepseudoconsole)
+  informs output draining and bounded shutdown on older Windows versions.
