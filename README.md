@@ -21,6 +21,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [OpenCode](#opencode)
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
+  - [MiniMax Code (MCode)](#minimax-code-mcode)
 - [The Basic Workflow](#the-basic-workflow)
 - [Community](#community)
 - [What's Inside](#whats-inside)
@@ -217,28 +218,6 @@ Superpowers is available in Kimi Code's plugin marketplace.
 
 - Detailed docs: [docs/README.kimi.md](docs/README.kimi.md)
 
-### MiniMax Code (MCode)
-
-MCode 0.2.7 can load Superpowers as a local plugin, including its session-start
-hook. Install it with Git and the `mcode` CLI:
-
-```bash
-superpowers_data_dir="${MINIMAX_DATA_DIR:-${MAVIS_DATA_DIR:-$HOME/.minimax}}"
-mkdir -p "$superpowers_data_dir/plugins"
-git clone -c core.symlinks=false https://github.com/obra/superpowers.git "$superpowers_data_dir/plugins/superpowers"
-mcode plugin enable superpowers@local
-```
-
-`core.symlinks=false` is required because MCode rejects plugin directories that
-contain symlinks. Local plugins are discovered from the data directory, so they
-use `plugin enable` rather than `plugin add`.
-
-Start a new MCode session. The existing hook loads `using-superpowers` at session
-start, and MCode discovers the plugin's skills automatically.
-
-To update, run `git -C "${MINIMAX_DATA_DIR:-${MAVIS_DATA_DIR:-$HOME/.minimax}}/plugins/superpowers" pull --ff-only`
-and start a new session.
-
 ### OpenCode
 
 OpenCode uses its own plugin install; install Superpowers separately even if you
@@ -279,6 +258,27 @@ hermes plugins install obra/superpowers --enable
 Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
+
+### MiniMax Code (MCode)
+
+Superpowers is available in MCode's plugin marketplace.
+
+- Open MCode's plugin manager:
+
+  ```text
+  /plugins
+  ```
+
+- Search for `Superpowers` and press `Enter` to install it. If disabled, press `Space` to enable it.
+
+- Or install from the command line:
+
+  ```bash
+  mcode plugin add superpowers@official
+  mcode plugin enable superpowers@official
+  ```
+
+Start a new MCode session after installing.
 
 ## The Basic Workflow
 
