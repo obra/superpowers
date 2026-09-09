@@ -47,10 +47,11 @@ const SKILLS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 
 const BOOTSTRAP_SKILL = 'using-superpowers';
 
 /**
- * Prompt order of the bootstrap section. dsh reserves -100 for the
- * harness identity, 0 for the deployment persona, and 100-199 for tool
- * guidance — 50 puts the methodology after the persona and before the
- * tools it governs.
+ * Prompt order of the bootstrap section. dsh reserves -1000 for the
+ * harness identity, 0 for the deployment persona, and 1000-2900 for
+ * tool guidance (TOOL_BASH starts at 1000, TOOL_REPORT at 2900; non-tool
+ * `CONTEXT_ORDERS` occupy 110-120) — 50 puts the methodology after the
+ * persona and before the contexts and tools it governs.
  */
 const BOOTSTRAP_ORDER = 50;
 

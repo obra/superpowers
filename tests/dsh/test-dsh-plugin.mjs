@@ -115,8 +115,8 @@ test('apply registers one bootstrap section carrying using-superpowers', async (
   assert.equal(sections.length, 1);
   const [section] = sections;
   assert.equal(section.name, 'superpowers:bootstrap');
-  // After the deployment persona (0), before tool guidance (100-199).
-  assert.ok(section.order > 0 && section.order < 100, `order ${section.order} is out of range`);
+  // After the deployment persona (0), before CONTEXT_ORDERS (110-120) and tool guidance (1000-2900).
+  assert.ok(section.order > 0 && section.order < 110, `order ${section.order} is out of range`);
   assert.match(section.text, /^<EXTREMELY_IMPORTANT>/);
   assert.match(section.text, /<\/EXTREMELY_IMPORTANT>$/);
   assert.match(section.text, /You have superpowers\./);
