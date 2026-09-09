@@ -27,11 +27,9 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    too long" is a complaint, not a problem statement. Note whether the
    goal is a superpowers bug report.
 2. **Locate.** Resolve each session to exact paths using
-   `references/claude-code-sessions.md`, `references/codex-sessions.md`,
-   or `references/other-harnesses.md` for any other harness. Confirm a
-   past session by quoting its first prompt and timestamp, and list every
-   candidate you rejected with the reason, or "none". Enumerate subagent
-   transcripts. Create
+   `references/session-discovery.md`. Confirm a past session by quoting its
+   first prompt and timestamp, and list every candidate you rejected with the
+   reason, or "none". Enumerate subagent transcripts. Create
    `~/.superpowers/diagnosing-superpowers/<session-id>/`, tell your
    partner the path, and fill `templates/case.md` there, including the
    superpowers install root, version, git sha, and a sha1 for every skill

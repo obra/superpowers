@@ -5,10 +5,9 @@ Dimension: Stumbles
 
 Find every point where the session stopped going forward.
 
-Sources, each with the harness-reference command to locate line numbers:
-- tool results marked as errors (Claude Code `"is_error":true`; Codex
-  outputs containing a non-zero exit or an error message; `patch_apply_end`
-  with `success:false`);
+Sources, each using the case file's evidenced record meanings and extraction
+commands to locate line numbers:
+- tool results marked as errors, non-zero exits, or explicit failure records;
 - shell commands that failed (non-zero exit in the result, "command not
   found", "No such file");
 - retries: the same tool call re-issued within the same turn after an
@@ -20,9 +19,8 @@ Sources, each with the harness-reference command to locate line numbers:
   wrong", "I misread");
 - human corrections: a human prompt that contradicts or corrects the
   assistant's immediately preceding action;
-- permission denials, hook failures (`hook_failure` attachments), API
-  errors, rate limits, aborted turns (Codex `turn_aborted`), and context
-  overflow or compaction triggered mid-task.
+- permission denials, hook failures, API errors, rate limits, aborted turns,
+  and context overflow or compaction triggered mid-task.
 
 For each stumble report the line, the turn, what failed, and what happened
 next (recovered in the same turn / recovered later at line N / never

@@ -78,9 +78,7 @@ fi
 
 # --- expected files -------------------------------------------------------
 expected_files=(
-  references/claude-code-sessions.md
-  references/codex-sessions.md
-  references/other-harnesses.md
+  references/session-discovery.md
   references/context-safety.md
   references/github-issues.md
   prompts/analyst-common.md
@@ -106,6 +104,28 @@ for rel in "${expected_files[@]}"; do
     fail "expected file present: $rel"
   fi
 done
+
+# --- removed harness recipes stay removed --------------------------------
+removed_files=(
+  references/claude-code-sessions.md
+  references/codex-sessions.md
+  references/other-harnesses.md
+)
+for rel in "${removed_files[@]}"; do
+  if [ ! -e "$SKILL_DIR/$rel" ]; then
+    pass "removed reference absent: $rel"
+  else
+    fail "removed reference absent: $rel"
+  fi
+done
+
+removed_reference_hits="$(grep -rn -E 'references/(claude-code-sessions|codex-sessions|other-harnesses)\.md' "$SKILL_DIR" --include='*.md' 2>/dev/null || true)"
+if [ -z "$removed_reference_hits" ]; then
+  pass "active skill prose has no references to removed harness recipes"
+else
+  fail "active skill prose has no references to removed harness recipes"
+  printf '%s\n' "$removed_reference_hits" | head -10 | sed 's/^/    /'
+fi
 
 # --- no local paths or names in shipped files ----------------------------
 leaks="$(grep -rn -E '/Users/|/home/|jesse' "$SKILL_DIR" "$SCRIPT_DIR" --exclude=test-skill-structure.sh 2>/dev/null || true)"
