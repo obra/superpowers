@@ -70,20 +70,24 @@ digraph tdd_cycle {
 
 ### Characterization Test for a Behavior-Preserving Refactor
 
+This extends the [upstream characterization guidance](writing-good-tests.md#principle-1-name-the-break)
+to behavior-preserving refactors of your own code.
+
 Normal RED applies when behavior should change. If observable behavior must
 remain unchanged, establish a characterization guard before refactoring:
 
 1. Name the behavior and a relevant production mutation that should make the
    test fail.
 2. Write the test and observe the existing behavior pass.
-3. Make that mutation and verify the expected failure. If the test still
+3. Require `git diff HEAD -- <production-paths>` to be empty before mutating.
+   If those paths have existing changes, stop without discarding them.
+   Make the mutation and verify the expected failure. If the test still
    passes, strengthen or replace it and repeat.
-4. Restore the production source and verify green.
+4. Restore only the mutated production paths from VCS with
+   `git restore --source=HEAD --worktree -- <production-paths>`. Require
+   `git diff --exit-code HEAD -- <production-paths>` to succeed with an empty
+   diff, then verify green with the characterization test retained.
 5. Refactor while staying green.
-
-The mutation is only a temporary test of the guard. An initially passing test
-is expected only in this branch; it never permits tests-after for features or
-bug fixes, which require normal RED-GREEN.
 
 ### RED - Write Failing Test
 
@@ -140,7 +144,10 @@ Confirm:
 - Failure message is expected
 - Fails because feature missing (not typos)
 
-**Test passes?** You're testing existing behavior. Fix test.
+**Test passes?** If observable behavior must remain unchanged, follow the
+[characterization guard](#characterization-test-for-a-behavior-preserving-refactor)
+before refactoring. If behavior should change, you're testing existing
+behavior. Fix test.
 
 **Test errors?** Fix error, re-run until it fails correctly.
 
@@ -246,7 +253,7 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 
 - Code before test
 - Test after implementation
-- Test passes immediately
+- Test for new or changed behavior passes immediately
 - Can't explain why test failed
 - Tests added "later"
 - Rationalizing "just this once"

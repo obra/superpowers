@@ -62,6 +62,10 @@ getters, constants, and trivial forwarding earn tests only when they
 validate, normalize, default, derive, enforce, or cause side effects —
 otherwise assert the first consumer-visible result that depends on them.
 
+For a behavior-preserving refactor of your own code, establish the
+[characterization guard](SKILL.md#characterization-test-for-a-behavior-preserving-refactor)
+before changing production structure.
+
 ### Gate Function
 
 ```
@@ -155,6 +159,9 @@ trivial code and human prose earn none, and a test written to satisfy
 process costs maintenance forever.
 
 ## The Mutation Check
+
+For a pre-refactor characterization guard, run the actual mutation and
+VCS restoration procedure in the TDD skill, including its empty-diff check.
 
 Before finishing, mentally mutate the production code; at least one test
 should fail for each realistic mutation:
