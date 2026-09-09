@@ -20,15 +20,15 @@ Load plan, review critically, execute all tasks, report when complete.
 2. Read plan file
 3. Review critically - identify any questions or concerns about the plan
 4. If concerns: Raise them with your human partner before starting
-5. If no concerns: Create todos for the plan items and proceed
+5. If no concerns: Create todos for the plan items when task tracking is available; otherwise work directly from the written plan. Then proceed.
 
 ### Step 2: Execute Tasks
 
 For each task:
-1. Mark as in_progress
+1. When task tracking is available, mark the task as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. When task tracking is available, mark the task as completed
 
 ### Step 3: Complete Development
 
