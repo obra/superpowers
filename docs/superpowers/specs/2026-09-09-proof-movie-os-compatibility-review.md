@@ -65,9 +65,11 @@ for the proposed observer. No independent review finding remains open.
 Runtime validation remains implementation work: the first planned task is a
 bounded native Windows probe of same-session ttyd observation, PowerShell/Git Bash
 completion, persistent takes, and descendant cleanup. Its result determines
-whether the specified adapters can proceed unchanged. The next design deliverable
-is the implementation plan; the runtime probe is a prerequisite within that plan,
-not a test claimed to have passed during specification review.
+whether the specified adapters can proceed unchanged. The
+[implementation plan](../plans/2026-09-09-proof-movie-os-compatibility.md) is now
+written for review and records the available Windows validation host. The runtime
+probe is a prerequisite within that plan, not a test claimed to have passed
+during specification review.
 
 The eventual skill changes still require before/after pressure tests and the
 OS acceptance matrix. This review must not be cited as that evidence.

@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-09
 
-**Status:** Adversarial review complete; ready for implementation planning
+**Status:** Adversarial review complete; implementation plan written for review
 
 **Scope:** Platform compatibility for the movie skill proposed in [PR #2214](https://github.com/obra/superpowers/pull/2214). Implementation depends on that import or its final equivalent.
 
@@ -506,7 +506,16 @@ evidence already gathered by this spec review. A failure revisits the relevant
 adapter design before depending on it; it does not silently remove an agreed
 platform or shell from the contract.
 
-The design is ready for implementation planning after review. Compatibility is complete
+The human partner has provided `drew@ballmer.local` for SSH or Paseo access.
+A read-only SSH inventory succeeded on 2026-09-09: Windows 11 Pro, PowerShell
+5.1, Git Bash, Chrome, and Edge were found. PowerShell 7, uv, FFmpeg/ffprobe,
+and ttyd were not resolved on that session's PATH; their installation status
+needs checking before provisioning. This establishes an available native
+validation host, not a passed recording test or verified desktop access.
+The [implementation plan](../plans/2026-09-09-proof-movie-os-compatibility.md)
+records the observed paths, prerequisite checks, and Ballmer-first probe.
+
+The design has an implementation plan ready for review. Compatibility is complete
 only when the required matrix has evidence, the updated skill has behavior evals,
 and the support documentation accurately distinguishes verified combinations
 from dependency or display limitations.
