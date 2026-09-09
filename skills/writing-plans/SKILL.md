@@ -81,13 +81,16 @@ include this section.]
 
 ## Task Structure
 
+Every existing-file entry pairs the path with a stable code anchor: a function,
+class, method, test, or distinctive scoped behavior that survives line shifts.
+
 ````markdown
 ### Task N: [Component Name]
 
 **Files:**
 - Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
+- Modify: `exact/path/to/existing.py` — `function_name`
+- Test: `tests/exact/path/to/test.py` — `test_specific_behavior`
 
 **Interfaces:**
 - Consumes: [what this task uses from earlier tasks — exact signatures]
