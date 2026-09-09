@@ -121,15 +121,16 @@ $env:PYTHONIOENCODING = 'utf-8'
 & $uv run --python $python --script $probe --serve --ttyd "$taskRoot\tools\ttyd.exe" --browser 'C:\Program Files\Google\Chrome\Application\chrome.exe' --shell 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' --shell-kind powershell51 --directory "$taskRoot\evidence\session-reproduction" --launch-host workerbee
 ```
 
-Keep `--serve` alive. In separate harness calls with the same task environment, run the phases below against that directory. `first` returns while its command is still pending; invoke `second` before the 45 seconds elapse. For PS7 or Git Bash use their absolute executable above and matching `--shell-kind powershell7` or `gitbash` on every invocation. `interactive` exercises the approved snapshot checkpoint. Separate fresh sessions exercise `cancel` and `browser-loss` instead of `close`.
+Keep `--serve` alive. In separate harness calls with the same task environment, run the phases below against that directory. `first` returns while its command is still pending; invoke `second` before the 45 seconds elapse. For PS7 or Git Bash use their absolute executable above and matching `--shell-kind powershell7` or `gitbash` on every invocation. `second` also completes the interactive take, including the approved snapshot checkpoint. Separate fresh sessions exercise `cancel` and `browser-loss` instead of `close`.
 
 ```powershell
 & $uv run --python $python --script $probe --phase first --shell-kind powershell51 --directory "$taskRoot\evidence\session-reproduction"
 & $uv run --python $python --script $probe --phase second --shell-kind powershell51 --directory "$taskRoot\evidence\session-reproduction"
-& $uv run --python $python --script $probe --phase interactive --shell-kind powershell51 --directory "$taskRoot\evidence\session-reproduction"
 & $uv run --python $python --script $probe --phase prepare-cleanup --shell-kind powershell51 --directory "$taskRoot\evidence\session-reproduction"
 & $uv run --python $python --script $probe --phase close --shell-kind powershell51 --directory "$taskRoot\evidence\session-reproduction"
 ```
+
+For standalone TUI reproduction, start a fresh `--serve` session using a new directory such as `$taskRoot\evidence\interactive-reproduction`. In a separate harness call, invoke `--phase interactive` with that directory and the matching shell kind, then run `prepare-cleanup` and `close` against the same fresh session. Do not invoke `interactive` after `second` in an existing session: both create the take named `interactive`, and the probe refuses to reuse its directory.
 
 Actual Medium launch commands were submitted through the already installed matching CLI, `C:\Users\drew\AppData\Local\Programs\Paseo\resources\bin\paseo.cmd terminal send-keys 1496200b-5545-4d85-af31-d01df72a3c11 '<encoded PowerShell command>' Enter --json`. SSH transport remained High; the daemon-owned terminal supplied the Medium token. The exact UTF16LE commands, launch scripts, subprocess argv and outputs are preserved as `*-submit-command.json`, `*-launch.ps1`, `*-launcher.json` and named stdout/stderr files, not inferred from this example.
 
