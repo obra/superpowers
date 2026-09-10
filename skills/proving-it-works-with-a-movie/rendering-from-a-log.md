@@ -88,3 +88,43 @@ log is a lie.
 silent (`$SKILL_DIR` = this skill's own directory; see SKILL.md). Then open
 the contact sheet and confirm the panels are legible at full size: a reel
 nobody can read proves nothing.
+
+## Preserve native producer status on Windows
+
+PowerShell must save a native program's exit status before logging can hide
+it. With a direct capture followed by `Tee-Object`:
+
+```powershell
+$lines = & $producer @producerArguments 2>&1
+$producerOK = $?
+$producerExit = $LASTEXITCODE
+$lines | Tee-Object -FilePath $log
+if (-not $producerOK -or $producerExit -ne 0) {
+    throw "Producer failed: native exit $producerExit"
+}
+```
+
+For cmdlets, `$?` and caught errors are the relevant outcomes; a stale
+`$LASTEXITCODE` from an earlier native program is not their status. Inside
+the Windows recorder, explicitly name a direct or first-pipeline native
+`native_producer` and let `result` check the recorded producer status.
+
+Git Bash must save `PIPESTATUS` immediately, before another command replaces
+it. Temporarily disabling `errexit` allows the status capture to run even
+when the producer fails:
+
+```bash
+set -o pipefail
+set +e
+"$producer" "${producer_arguments[@]}" 2>&1 | tee "$log"
+statuses=("${PIPESTATUS[@]}")
+set -e
+if (( statuses[0] != 0 || statuses[1] != 0 )); then
+    printf 'Producer exit %s; logger exit %s\n' "${statuses[0]}" "${statuses[1]}" >&2
+    exit 1
+fi
+```
+
+A log reel proves the recorded run and its observed result. If desktop
+capture was unavailable, it does not prove unseen GUI behavior. Assemble,
+narrate, subtitle, and check it using the native commands in assembling.md.

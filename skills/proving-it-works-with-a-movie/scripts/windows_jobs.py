@@ -167,9 +167,12 @@ class WindowsJob:
         handle = self.k.OpenProcess(0x100000 | 0x1000 | int(terminate), False, pid)
         if not handle:
             raise ctypes.WinError(ctypes.get_last_error())
-        if creation is not None and self.process_time(handle) != creation:
+        try:
+            if creation is not None and self.process_time(handle) != creation:
+                raise RuntimeError("Process creation time changed; refusing stale PID")
+        except BaseException:
             self.k.CloseHandle(handle)
-            raise RuntimeError("Process creation time changed; refusing stale PID")
+            raise
         return handle
 
     def snapshot(self):
@@ -185,11 +188,15 @@ class WindowsJob:
                     if error.winerror == 87:  # Exited between enumeration and open.
                         continue
                     raise
-                owned = W.BOOL()
-                if not self.k.IsProcessInJob(handle, self.handle, ctypes.byref(owned)) or not owned.value:
+                try:
+                    owned = W.BOOL()
+                    if not self.k.IsProcessInJob(handle, self.handle, ctypes.byref(owned)) or not owned.value:
+                        raise RuntimeError("Process is no longer a member of the owned job")
+                    creation = self.process_time(handle)
+                except BaseException:
                     self.k.CloseHandle(handle)
-                    raise RuntimeError("Process is no longer a member of the owned job")
-                processes.append({"pid": pid, "handle": handle, "creation": self.process_time(handle)})
+                    raise
+                processes.append({"pid": pid, "handle": handle, "creation": creation})
             return processes
         except BaseException:
             for process in processes:

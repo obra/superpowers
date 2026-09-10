@@ -160,3 +160,127 @@ python3 tests/proving-it-works-with-a-movie/probe-windows.py --assert-result .su
 ## Required production follow-through
 
 General screencast freshness is a **required production fix and test in Tasks 8–9**; stalled takes must not pass. Resizing requires a production shell adapter/supervisor that handles completion framing through resize/redraw, with damaged/missing framing remaining unknown/interrupted. Further work includes broader ownership failure injection, the full OS support matrix, and assembly/narration/verification portability. This probe does not establish those results. The Task 1 mechanism gate and independent review must finish before the bulk port begins.
+
+
+## Reviewed Windows completion — final results
+
+The earlier sections record historical feasibility work, not the current
+acceptance gate. The reviewed three-milestone implementation is now present.
+The final native workflows passed; the four-session instruction comparison
+has two explicitly incomplete verification outcomes below. No PR, push,
+merge, further OS provisioning, or additional eval platform was performed.
+
+Ballmer: native Windows build 26200, x64, ordinary Medium token
+`S-1-16-8192`, prepared CPython 3.12.14. Actual invoking-shell transcripts
+identify PS5.1 `5.1.26100.9168`, PS7 `7.6.6`, and Git Bash
+`5.3.9(1)-release`, with executable/PID before uv. This is evidence for that
+tested host, not every Windows release or architecture.
+
+| Invoking → recorded shell | Five tools + checker + rendered audio | Duration | Retained artifacts |
+|---|---|---:|---|
+| PS5.1 → PS5.1 | PASS | 27.000 s | [Movie](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/powershell51/movie O'Brien λ & [take]/movie.mp4>), [contact sheet](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/powershell51/movie O'Brien λ & [take]/evidence/checker/contact-sheet.png>), [rendered audio](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/powershell51/movie O'Brien λ & [take]/evidence/rendered-audio.json>) |
+| PS7 → PS7 | PASS | 26.878 s | [Movie](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/powershell7/movie O'Brien λ & [take]/movie.mp4>), [contact sheet](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/powershell7/movie O'Brien λ & [take]/evidence/checker/contact-sheet.png>), [rendered audio](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/powershell7/movie O'Brien λ & [take]/evidence/rendered-audio.json>) |
+| Git Bash → Git Bash | PASS | 27.167 s | [Movie](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/gitbash/movie O'Brien λ & [take]/movie.mp4>), [contact sheet](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/gitbash/movie O'Brien λ & [take]/evidence/checker/contact-sheet.png>), [rendered audio](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/gitbash/movie O'Brien λ & [take]/evidence/rendered-audio.json>) |
+
+All movies are 1600×900 H.264/AAC. Each combines a card, still, real CDP
+counter clicks, two native terminal takes, and a labeled existing movie
+segment retaining its own 440 Hz stereo tone. Inputs exercise the path
+`movie O'Brien λ & [take]`, UTF-8 BOM/CRLF scenes, and separate assembly work.
+Title narration lasts 3.855–3.971 s against one second of visuals; still
+visuals last four seconds against 1.498–1.695 s of narration.
+
+Each workflow used real local Piper synthesis with verification, then a new
+output directory reusing downloaded model caches. The process PATH excludes
+`llm`, and cloud keys were removed only from that process. All 15 narrated
+final-movie intervals passed local ASR comparison (0% length drift, worst
+changed-word run at most two). Each source-tone interval separately passed
+frequency/amplitude comparison with its own source reference. Fresh/cached
+WAV verification is not substituted for final-movie transcription.
+
+The exported terminal samples show red→green→blue in order and visible
+command completion after the second take's exit key. Six take duration
+errors are 0.028–0.094 s; maximum completed-screenshot gaps are
+0.625–1.109 s. Frame hashes confirm the documented completed-sample grid,
+with no future sample used. Contact sheets and decoded movie frames were
+inspected; short color states missed by the contact-sheet selection are
+present in the actual movies.
+
+Evidence index: [timing/frame inspection](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/timing-and-frame-inspection.json>),
+[controller final-movie inspection](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/controller-final-movies.json>),
+[final source SHA-256 manifest](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/final-source-sha256.json>).
+The manifest pins the tested recorder, helpers, five tools, and fixture;
+Task 3 applies to base `ce9b3fcf`, following media `5621d1d6` and recorder
+`ce9b3fcf`. The retained source hashes, commands, and source-labeled earlier
+results establish provenance without claiming an older artifact tested a
+later failure-path change. Remote artifacts remain at
+`C:\Users\drew\movie-windows-completion\final-task3`.
+
+### Capture targets and reused regression evidence
+
+Named-window `gdigrab` captured readable pixels from the task-owned Windows
+application: [window image](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/desktop-target/title.png>) and
+[commands/results](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/desktop-target/result.json>). Visible padding and
+capture dimensions are retained; no DPI/root-cause claim is inferred.
+Full-desktop capture returned zero but showed wallpaper only, including a
+late frame: [desktop image](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/desktop-target/capture-check.png>).
+That target remains **unverified for application capture in this session**.
+Read-only evidence showed WinSta0/Default and an active console session;
+no lock, service, credential, or machine-setting changes were made.
+
+Chrome and Edge title-card checks and the unchanged media regressions reuse
+`.superpowers/evidence/windows-completion/media-5621d1d6`. The Mac and Linux
+portable assertions passed 35 per host; native-only Job tests are excluded
+from that portable result. Final strict browser/narration checks passed
+4/4 and 9/9 per host. Real fresh and cached-model voice checks on both hosts
+reuse `.superpowers/evidence/windows-completion/{macos,linux}-voice`.
+The narration/browser/subtitle code exercised there is unchanged.
+
+The existing terminal capture gate, native outcome/control/ownership
+regressions (57 tests), and finalization corrections (7 focused tests) retain
+their source labels under `capture-gate`, `terminal-b8a723f4`, and
+`terminal-ce9b3fcf`. Task 3 adds the demonstrated Unicode-cwd startup fix and
+the previously reviewed identity-error handle cleanup. Focused native tests
+passed 4/4. Local changed-policy suites passed 12 terminal and two ownership
+assertions; their 13 and two native-only skips do not establish native
+coverage. The native final workflows separately exercise all three shells.
+
+### Four instruction sessions — comparison complete, full compliance partial
+
+All four loaded the explicit candidate plugin and successful
+`using-superpowers` SessionStart bootstrap, invoked the movie Skill, and used
+actual PowerShell or Bash tools. The scenario, model (`claude-sonnet-5`,
+existing `sonnet` alias), low effort, supplied tools/caches, product code, and
+stop-at-first-instruction-gap criterion were held constant. Only the candidate
+Markdown changed. No diagnostic safe mode or extra implementation agent was
+used. Permissions/context were scoped to the task plugin, fixtures,
+artifacts, and owned processes.
+
+| Session | Observed result |
+|---|---|
+| PowerShell baseline | Demonstrated documentation failure: inferred the native route from source, failed special-path `Start-Process` quoting, BOM request input, and guessed an `operation: result` request. Stopped through owned cleanup after the gap; not a completed workflow. |
+| Git Bash baseline | Demonstrated documentation failure: inferred the native route from source and passed `/c/...` to native Python, producing `C:\c\...`/file-not-found. Stopped through the launcher's Job cleanup after the gap; not a completed workflow. |
+| PowerShell candidate | **Partial.** New foreground-task, UTF-8 request, consecutive-ID, two-take, wait-only result, local voice, five-tool, caption/contact-sheet, cleanup, and honest capture-boundary instructions worked. It claimed complete verification but omitted transcription of the rendered final audio. |
+| Git Bash candidate | **Incomplete due to harness turn cap.** Built a movie and ran media/checker/evidence steps, then returned `error_max_turns` (41 reported turns, exit 1) before a final response or rendered-final-audio transcription. This is not a full skill pass or an inferred instruction failure. |
+
+Launch limits were $4, 40 turns, and 900 seconds per session. The PowerShell
+baseline's interrupted result reported 54 turns/$1.4456, and the completed
+PowerShell candidate reported 44 turns; the requested cap must not be
+mistaken for the harness's actual reported count. Git Bash candidate cost
+was $0.832 and elapsed time 223.6 s. No limit was silently scored as success.
+Transcripts and launcher result records are retained under
+[the stable instruction evidence](</Users/drewritter/.paseo/worktrees/2mmrq9t5/movie-os-compatibility/.superpowers/evidence/windows-completion/final-task3/instructions/>). Further corrective
+instruction work is left to review; no extra sessions were launched.
+
+### Acceptance disposition
+
+| Reviewed acceptance area | Disposition |
+|---|---|
+| Three native invoking/recorded-shell workflows | PASS on the recorded host |
+| Repeatable mixed fixture, paths, encodings, timing | PASS |
+| Terminal control, continuity, native outcomes, ordered automatic states | PASS with retained focused regression evidence |
+| Fresh/cached-model local voice per workflow | PASS |
+| Finished picture, hard captions, checker and rendered audio | PASS for all three independent acceptance movies |
+| Browser cards / capture targets | PASS Chrome, Edge, and named-window pixels; full-desktop target explicitly unverified |
+| Focused negative cases and ownership | PASS with source-labeled earlier evidence plus Task 3 focused corrections |
+| Existing Mac/Linux behavior | PASS reused unchanged portable/media/voice evidence |
+| Four instruction comparisons | Executed; **full candidate skill compliance remains INCOMPLETE** for the two specific outcomes above |

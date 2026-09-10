@@ -6,6 +6,41 @@ from pathlib import Path
 import fixtures
 
 
+class IdentityFailureTests(unittest.TestCase):
+    def job(self):
+        import ctypes
+        from unittest.mock import Mock
+        module = fixtures.load_script("windows_jobs")
+        job = module.WindowsJob.__new__(module.WindowsJob)
+        job.ctypes = ctypes
+        job.k = Mock()
+        job.handle = 10
+        return job
+
+    def test_open_identity_failure_closes_current_handle(self):
+        from unittest.mock import Mock
+        job = self.job()
+        job.k.OpenProcess.return_value = 21
+        job.process_time = Mock(side_effect=RuntimeError("identity unavailable"))
+        with self.assertRaisesRegex(RuntimeError, "identity unavailable"):
+            job.open_process(3, creation=123)
+        job.k.CloseHandle.assert_called_once_with(21)
+
+    def test_snapshot_identity_failure_closes_current_and_previous_handles(self):
+        from unittest.mock import Mock, call
+        job = self.job()
+        job.pids = Mock(return_value=[1, 2])
+        job.open_process = Mock(side_effect=[21, 22])
+        def owned(handle, parent, output):
+            output._obj.value = True
+            return True
+        job.k.IsProcessInJob.side_effect = owned
+        job.process_time = Mock(side_effect=[123, RuntimeError("identity unavailable")])
+        with self.assertRaisesRegex(RuntimeError, "identity unavailable"):
+            job.snapshot()
+        self.assertCountEqual(job.k.CloseHandle.call_args_list, [call(21), call(22)])
+
+
 @unittest.skipUnless(os.name == "nt", "Windows Job ownership is native Windows only")
 class WindowsJobRegression(unittest.TestCase):
     def test_job_wait_and_close_own_child_process(self):

@@ -1,10 +1,10 @@
 # Finish Windows support for the movie skill
 
-**Status:** Adversarial review complete; revised design ready for human review. Implementation remains stopped. See the [findings and scoped recheck](2026-09-09-proof-movie-windows-completion-review.md).
+**Status:** Reviewed execution completed through the three implementation milestones. Native workflow results and the remaining candidate-instruction verification gaps are recorded in the [results report](../reports/2026-09-09-proof-movie-os-compatibility.md#reviewed-windows-completion--final-results).
 
 **Baseline:** `feat/movie-os-compatibility` at `442a48d9`, based on the movie import at `f6617db1`.
 
-**Implementation plan:** [Three-milestone completion plan](../plans/2026-09-09-proof-movie-windows-completion.md), written for review. Execution has not resumed.
+**Implementation plan:** [Three-milestone completion plan](../plans/2026-09-09-proof-movie-windows-completion.md). Execution was authorized and resumed.
 
 This replaces the remaining scope of the [earlier OS compatibility design](2026-09-09-proof-movie-os-compatibility-design.md) and its [12-task implementation plan](../plans/2026-09-09-proof-movie-os-compatibility.md). Completed fixes and retained evidence remain useful. Unfinished tasks in that plan are not instructions to resume work.
 
@@ -122,4 +122,4 @@ Expected edits are the existing five scripts, at most the browser/Windows owners
 
 Done means the three native Windows workflow runs and this checklist have concrete results, documented limitations are visible, and the user has a complete diff to review. Missing Windows route evidence remains unfinished work. Pushing, opening a PR, and merging are separate from this specification request.
 
-This drafting step starts no agents, installs no tools, and changes no implementation. The earlier agents remain stopped. Review this scope before any execution resumes.
+Execution resumed under this reviewed scope. The results report records each acceptance disposition, including incomplete candidate-instruction verification; the superseded plan and earlier workers were not resumed.

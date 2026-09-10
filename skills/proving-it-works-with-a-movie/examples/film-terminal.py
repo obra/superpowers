@@ -36,6 +36,7 @@ import json
 import os
 import re
 import shutil
+import shlex
 import socket
 import sys
 import time
@@ -201,15 +202,17 @@ class Terminal:
         port, debug_port = free_port(), free_port()
         self.terminal_url = f"http://127.0.0.1:{port}/"
         shell_argv = [str(self.args.shell_exe)] + (["--noprofile", "--norc", "-i"] if self.args.shell_kind == "gitbash" else ["-NoLogo", "-NoProfile", "-NoExit"])
-        # ttyd 1.7.7 leaves its ConPTY cwd pointer uninitialized without -w.
+        # ttyd 1.7.7 needs -w but decodes its argv using the ANSI code page.
+        # Inherit the Unicode cwd through CreateProcessW, then use a relative -w.
         ttyd_argv = [str(self.args.ttyd), "-i", "127.0.0.1", "-p", str(port), "-W", "-m", "1",
-                     "-w", str(self.args.cwd)] + shell_argv
+                     "-w", "."] + shell_argv
         browser_argv = [str(self.args.browser), "--headless=new", "--no-first-run", "--no-default-browser-check",
                         "--disable-background-networking", "--remote-debugging-address=127.0.0.1",
                         f"--remote-debugging-port={debug_port}", f"--user-data-dir={self.directory / 'profile'}",
                         "--window-size=1600,900", "about:blank"]
         for name, argv in (("ttyd", ttyd_argv), ("browser", browser_argv)):
-            pid = self.job.spawn(argv, self.directory, self.directory / f"{name}.log")
+            cwd = self.args.cwd if name == "ttyd" else self.directory
+            pid = self.job.spawn(argv, cwd, self.directory / f"{name}.log")
             self.launches.append({"name": name, "argv": argv, "pid": pid})
         write_json(self.directory / "launches.json", self.launches)
         deadline = time.monotonic() + 20
@@ -258,9 +261,9 @@ class Terminal:
             code = "import base64,json,os;print('[MOVIE|'+base64.b64encode(json.dumps(dict(session=os.environ['MOVIE_SESSION'],pid=os.environ['MOVIE_SHELL_PID'],shell='gitbash',cwd=os.getcwd())).encode()).decode()+'|END]')"
             # Encode the Python payload to keep the complete framing out of input echo.
             payload = base64.b64encode(code.encode()).decode()
-            command = f"export MOVIE_SESSION={self.session} MOVIE_SHELL_PID=$$; '{python}' -c \"import base64;exec(base64.b64decode('{payload}'))\""
+            command = "cd -- " + shlex.quote(str(self.args.cwd).replace("\\", "/")) + " && " + f"export MOVIE_SESSION={self.session} MOVIE_SHELL_PID=$$; '{python}' -c \"import base64;exec(base64.b64decode('{payload}'))\""
         else:
-            script = "$global:MovieSession='" + self.session + "'; $r=@{session=$MovieSession;pid=$PID;shell=$PSVersionTable.PSVersion.ToString();cwd=(Get-Location).Path}; [Console]::WriteLine('[MOVIE|'+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($r|ConvertTo-Json -Compress)))+'|END]')"
+            script = "Set-Location -LiteralPath '" + str(self.args.cwd).replace("'", "''") + "' -ErrorAction Stop; $global:MovieSession='" + self.session + "'; $r=@{session=$MovieSession;pid=$PID;shell=$PSVersionTable.PSVersion.ToString();cwd=(Get-Location).Path}; [Console]::WriteLine('[MOVIE|'+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($r|ConvertTo-Json -Compress)))+'|END]')"
             payload = base64.b64encode(script.encode("utf-8")).decode()
             command = ". ([scriptblock]::Create([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + payload + "'))))"
         write_json(self.directory / "readiness-command.json", {"command": command, "session": self.session})
@@ -270,6 +273,8 @@ class Terminal:
             self.cdp.pump()
             matches = [r for r in self.parser.records if r.get("session") == self.session]
             if matches:
+                if os.path.normcase(os.path.abspath(matches[-1].get("cwd", ""))) != os.path.normcase(str(self.args.cwd.resolve())):
+                    raise RuntimeError("Recorded shell did not enter the requested cwd")
                 self.screenshot("ready.png")
                 return matches[-1]
             if self.closed:

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Plan for review. Writing this plan does not restart implementation or authorize agent dispatch.
+**Status:** Execution authorized and the three implementation milestones delivered. Final workflow evidence and the remaining candidate-instruction verification gaps are recorded in the [results report](../reports/2026-09-09-proof-movie-os-compatibility.md#reviewed-windows-completion--final-results).
 
 **Goal:** Finish the existing movie workflow on native Windows through PowerShell 5.1, PowerShell 7, and Git Bash.
 
@@ -250,4 +250,4 @@ On the native Mac and existing Linux runner, run only the portable suites `assem
 
 At execution, retain focused RED/GREEN evidence and review each of these three milestones. Rerun only checks affected by a fix; final integration must use final product code. If a genuine blocker requires changing an approved interface, dependency, supported route, or validation scope, present that concrete issue before expanding work.
 
-This plan was written and self-reviewed without starting implementation, remote tests, or agents. The next action is human review of the plan and execution choice; the old controller and workers remain canceled.
+Execution resumed under the reviewed three-milestone scope. Implementation and finite test outcomes are recorded in the results report; the earlier superseded controller/workers were not resumed. Review the documented candidate-instruction gaps before claiming full skill compliance.

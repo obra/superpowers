@@ -88,3 +88,25 @@ Check the sample for your own jargon before committing to a voice. If a good
 voice mangles one term, spell it phonetically **in the TTS input only**
 ("S M evals"), never in the script file a human reads. Keep that
 substitution in the narrate step so the source text stays clean.
+
+## Native Windows local voice
+
+Use `uv run --script` with the complete commands in assembling.md, selecting
+`--engine piper --verify on`. The local voice and transcription models can
+be downloaded during setup and reused from their caches. A cached-model
+repeat means synthesizing into a **new output directory**, not reusing the
+same WAV. `--verify on` also transcribes reused WAVs: an earlier `--verify off`
+manifest does not establish verification. An unavailable or failed
+transcription is a failed verification, not a pass.
+
+For a no-cloud-key check, remove the key only from the test process and use
+a process-local PATH without `llm` credential lookup. Leave saved credentials
+untouched. PowerShell: `Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue`;
+Git Bash: `unset OPENAI_API_KEY`. Set local Piper explicitly in either shell.
+
+After assembly, extract and transcribe each narrated interval from the final
+movie, using the actual segment offsets and durations. Compare each interval
+with its own script. A `kind: movie` segment retains its source audio; check
+that interval against the source's reference, not the TTS script. Keep any
+source speech's accurate captions. A known non-speech source tone should be
+labeled as such, and should not be described as verified narration.

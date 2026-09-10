@@ -33,12 +33,55 @@ class TerminalPolicyTests(unittest.TestCase):
             with self.subTest(change=change):self.assertFalse(m.command_succeeded(good|change))
         self.assertTrue(m.command_succeeded(good|dict(native_producer=None,producer_exit_code=None)))
 
+class ReadinessDirectoryTests(unittest.TestCase):
+    def test_readiness_requires_requested_directory(self):
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        module = TerminalPolicyTests().recorder()
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = (Path(tmp) / "movie O'Brien λ & [take]").resolve()
+            cwd.mkdir()
+            for shell in ['powershell51', 'powershell7', 'gitbash']:
+                for actual in [cwd, Path(tmp)]:
+                    with self.subTest(shell=shell, actual=actual):
+                        terminal = module.Terminal.__new__(module.Terminal)
+                        terminal.args = SimpleNamespace(shell_kind=shell, cwd=cwd)
+                        terminal.session = 'session'
+                        terminal.directory = Path(tmp)
+                        terminal.closed = False
+                        terminal.parser = SimpleNamespace(records=[{'session':'session', 'cwd':str(actual)}])
+                        terminal.cdp = SimpleNamespace(pump=Mock())
+                        terminal.type = Mock()
+                        terminal.screenshot = Mock()
+                        if actual == cwd:
+                            self.assertEqual(terminal.readiness()['cwd'], str(cwd))
+                            terminal.screenshot.assert_called_once_with('ready.png')
+                        else:
+                            with self.assertRaisesRegex(RuntimeError, 'requested cwd'):
+                                terminal.readiness()
+                            terminal.screenshot.assert_not_called()
+
+
 import json
 import os
 import subprocess
 import sys
 import tempfile
 import time
+
+@unittest.skipUnless(sys.platform == 'win32', 'native Windows required')
+class NativeCwdFailureTests(unittest.TestCase):
+    def test_missing_cwd_fails_before_launch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / 'session'
+            result = subprocess.run([sys.executable, str(SCRIPT), 'serve', '--shell',
+                'powershell51', '--directory', str(directory), '--cwd', str(Path(tmp) / 'missing')],
+                capture_output=True, timeout=10)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((directory / 'launches.json').exists())
+            self.assertFalse((directory / 'control/ready.json').exists())
+
 
 @unittest.skipUnless(sys.platform=='win32', 'native Windows terminal required')
 class NativeTerminalTests(unittest.TestCase):

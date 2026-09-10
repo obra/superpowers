@@ -44,3 +44,37 @@ inputs exercise text comparison only. Neither is speech/ASR acceptance.
 The portable subtitle assertion intentionally strengthens the Bash suite's
 whole-file regex: it parses the first cue start and compares it with the actual
 assembly offset at SRT's millisecond precision.
+
+### Final native Windows workflow fixture
+
+With native uv, Python 3.12+, FFmpeg/ffprobe (libass), Chrome or Edge, and ttyd
+prepared, run from each invoking shell and record that same shell. Record
+its version/PID before invoking uv; `--shell` alone is not invocation evidence.
+
+```text
+uv run --script tests/proving-it-works-with-a-movie/run-windows-acceptance.py --work "PATH/movie O'Brien λ & [take]" --shell powershell51 --phase prepare
+```
+
+Repeat with `powershell7` or `gitbash` in a separate work directory. The
+fixture clicks a real local browser counter through CDP, captures its states,
+and prepares BOM-bearing UTF-8/CRLF scenes with a card, image, frames, and a
+stereo source-tone movie. Use the native recording-a-terminal.md recipe with
+`fixtures/terminal_app.py`, keeping its command alive across two separate
+control calls/takes. Keep the second take running through `q`, the command's
+successful result, and a readable completion hold.
+
+```text
+uv run --script tests/proving-it-works-with-a-movie/run-windows-acceptance.py --work "PATH/movie O'Brien λ & [take]" --shell powershell51 --phase finish --take-one "PATH/session/take-one" --take-two "PATH/session/take-two"
+```
+
+Pass exported frame directories, not `samples/`. `finish` runs all five
+public tools, fresh local narration and a new-output cached-model repeat,
+then checks each final audio interval against its narration or known source
+tone. Tool stdout/stderr, arguments/statuses, source hashes, the contact
+sheet, and rendered-audio results go under `work/evidence`. Inspect actual
+pixels, hard captions, timing, and sound before declaring acceptance. The
+source tone is a labeled non-speech fixture, not TTS evidence.
+
+Use the native quoting/path recipes in the skill, remove cloud keys only
+from the test process, and exclude `llm` from its PATH. Retain final media
+outside disposable SDD scratch; do not commit large generated artifacts.

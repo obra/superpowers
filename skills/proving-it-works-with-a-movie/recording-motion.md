@@ -116,3 +116,42 @@ scene depends on a job outliving the process that started it.
   only; tagging every navigation forces reloads and breaks hash routing.
 - **Typed fields with parsers**: a value like `Yes`/`No`/`On`/`Off` in a
   YAML-backed form field saves as a boolean and can crash the app on camera.
+
+## Native Windows desktop preflight
+
+From an ordinary-user interactive desktop, capture two seconds into a scratch
+path with an argument array, then inspect application pixels in the image:
+
+```powershell
+$check = "$HOME/movie capture check"
+[IO.Directory]::CreateDirectory($check) | Out-Null
+$arguments = @('-nostdin','-y','-f','gdigrab','-framerate','5','-i','desktop',
+    '-t','2',"$check/capture-check.mp4")
+& ffmpeg @arguments
+if ($LASTEXITCODE -ne 0) { throw 'Desktop capture unavailable' }
+$arguments = @('-nostdin','-y','-i',"$check/capture-check.mp4",
+    '-frames:v','1',"$check/capture-check.png")
+& ffmpeg @arguments
+if ($LASTEXITCODE -ne 0) { throw 'Capture image unavailable' }
+```
+
+A zero exit with wallpaper, a blank window, or missing application pixels
+is **not** a successful GUI preflight. Inspect a late frame too if startup
+may be involved. Do not change machine permissions or unlock a session to
+turn an unavailable result into a claim of success.
+
+For one specific application window, the same backend accepts its exact
+window title. Replace the input argument in the capture array with:
+
+```powershell
+$arguments = @('-nostdin','-y','-f','gdigrab','-framerate','5','-i',
+    'title=Your application window title','-t','2',"$check/window-check.mp4")
+& ffmpeg @arguments
+if ($LASTEXITCODE -ne 0) { throw 'Window capture unavailable' }
+```
+
+Inspect that movie's actual application pixels and dimensions. A verified
+named-window capture proves that window was captured; it does not establish
+that the full-desktop target worked. If neither target shows the app, use
+real browser captures or the run's log and state which GUI behavior remains
+unproven. Keep using the same five media tools in assembling.md.
