@@ -40,9 +40,21 @@ class AssemblyRegression(unittest.TestCase):
             self.assertEqual(
                 subtitles.returncode, 0, fixtures.output_text(subtitles)
             )
-            self.assertRegex(
-                (work / "out.srt").read_text(encoding="utf-8"),
-                r"00:00:0[2-9]",
+            srt = (work / "out.srt").read_text(encoding="utf-8")
+            timing_line = next(line for line in srt.splitlines() if "-->" in line)
+            start = timing_line.partition("-->")[0].strip()
+            hours, minutes, seconds_millis = start.split(":")
+            seconds, millis = seconds_millis.split(",")
+            first_cue_start = (
+                int(hours) * 3600
+                + int(minutes) * 60
+                + int(seconds)
+                + int(millis) / 1000
+            )
+            self.assertAlmostEqual(
+                first_cue_start,
+                offsets["body"],
+                delta=0.001,
             )
 
 

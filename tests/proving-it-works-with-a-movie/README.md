@@ -25,7 +25,7 @@ inputs exercise text comparison only. Neither is speech/ASR acceptance.
 | `test-assemble.sh` | `assemble runs` | `AssemblyRegression.test_narration_padding_and_offsets` |
 | `test-assemble.sh` | `segment = max(narration, visuals)` (8s +/- 0.4s) | `AssemblyRegression.test_narration_padding_and_offsets` |
 | `test-assemble.sh` | `offsets.json places the narrated scene` (2s +/- 0.3s) | `AssemblyRegression.test_narration_padding_and_offsets` |
-| `test-assemble.sh` | `cues start at the scene's real offset, not zero` | `AssemblyRegression.test_narration_padding_and_offsets` |
+| `test-assemble.sh` | `cues start at the scene's real offset, not zero` (first cue start equals the measured body offset within 1ms) | `AssemblyRegression.test_narration_padding_and_offsets` |
 | `test-check-movie.sh` | `front-loaded action is rejected` | `CheckerRegression.test_front_loaded_action_is_rejected` |
 | `test-check-movie.sh` | `paced + subtitles is accepted` | `CheckerRegression.test_paced_with_subtitles_is_accepted` |
 | `test-check-movie.sh` | `narrated without subtitles rejected` | `CheckerRegression.test_narrated_without_subtitles_is_rejected` |
@@ -40,3 +40,7 @@ inputs exercise text comparison only. Neither is speech/ASR acceptance.
 | `test-narrate.sh` | `a dropped clause fails` | `NarrationDriftRegression.test_dropped_clause_fails` |
 | `test-narrate.sh` | `an invented preamble fails` | `NarrationDriftRegression.test_invented_preamble_fails` |
 | `test-narrate.sh` | `an empty clip fails` | `NarrationDriftRegression.test_empty_clip_fails` |
+
+The portable subtitle assertion intentionally strengthens the Bash suite's
+whole-file regex: it parses the first cue start and compares it with the actual
+assembly offset at SRT's millisecond precision.
