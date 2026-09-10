@@ -64,7 +64,7 @@ def sample_picture(movie, workdir):
     out = subprocess.run(
         ["ffmpeg", "-nostdin", "-v", "error", "-i", str(movie),
          "-vf", f"fps=1,scale={THUMB_W}:-1", "-f", "image2", str(frames / "s%05d.png")],
-        capture_output=True, text=True)
+        capture_output=True, text=True, encoding="utf-8", errors="replace")
     if out.returncode != 0:
         die(f"frame sampling failed: {out.stderr.strip()[:200]}")
     paths = sorted(frames.glob("s*.png"))
@@ -122,6 +122,9 @@ def contact_sheet(paths, out_path, count=12):
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("movie", type=Path)
     ap.add_argument("--out", type=Path, default=None)
@@ -146,7 +149,7 @@ def main():
     meta = subprocess.run(
         ["ffprobe", "-v", "error", "-print_format", "json",
          "-show_format", "-show_streams", str(args.movie)],
-        capture_output=True, text=True)
+        capture_output=True, text=True, encoding="utf-8", errors="replace")
     if meta.returncode != 0:
         die(f"ffprobe failed: {meta.stderr.strip()[:200]}")
     info = json.loads(meta.stdout)
@@ -186,7 +189,7 @@ def main():
         embedded = any(s["codec_type"] == "subtitle" for s in info["streams"])
         if srt.exists():
             last = 0.0
-            for line in srt.read_text(errors="replace").splitlines():
+            for line in srt.read_text(encoding="utf-8-sig", errors="replace").splitlines():
                 if "-->" in line:
                     end = line.split("-->")[1].strip().split()[0]
                     hh, mm, rest = end.split(":")
@@ -246,7 +249,7 @@ def main():
         (workdir / "check.json").write_text(json.dumps(
             {"duration": duration, "change_seconds": changes,
              "talk_seconds": talking, "failures": failures,
-             "warnings": warnings}, indent=2))
+             "warnings": warnings}, indent=2), encoding="utf-8")
 
     if failures:
         print("\nNOT SHIPPABLE. Fix, regenerate, re-run.")

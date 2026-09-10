@@ -71,6 +71,9 @@ def ts(seconds):
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("manifest", type=Path)
     ap.add_argument("out", type=Path)
@@ -84,11 +87,11 @@ def main():
     ap.add_argument("--max-secs", type=float, default=MAX_SECS)
     args = ap.parse_args()
 
-    manifest = json.loads(args.manifest.read_text())
+    manifest = json.loads(args.manifest.read_text(encoding="utf-8-sig"))
     overrides = {}
     if args.offsets_json:
         overrides.update({k: float(v) for k, v in
-                          json.loads(args.offsets_json.read_text()).items()})
+                          json.loads(args.offsets_json.read_text(encoding="utf-8-sig")).items()})
     for spec in args.offsets:
         k, _, v = spec.partition("=")
         overrides[k] = float(v)
@@ -116,7 +119,7 @@ def main():
         if b <= a:
             b = a + MIN_SECS
         lines += [str(i), f"{ts(a)} --> {ts(b)}", text, ""]
-    args.out.write_text("\n".join(lines))
+    args.out.write_text("\n".join(lines), encoding="utf-8")
     print(f"{len(cues)} cues, ends at {ts(cues[-1][1])} -> {args.out}")
     return 0
 

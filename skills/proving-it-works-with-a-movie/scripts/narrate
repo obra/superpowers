@@ -28,6 +28,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import urllib.request
 import wave
 from pathlib import Path
@@ -67,7 +68,9 @@ import sys
 from faster_whisper import WhisperModel
 m = WhisperModel(sys.argv[2], device="cpu", compute_type="int8")
 segs, _ = m.transcribe(sys.argv[1])
-print(" ".join(s.text.strip() for s in segs))
+from pathlib import Path
+import json
+Path(sys.argv[3]).write_text(json.dumps({"text": " ".join(s.text.strip() for s in segs)}), encoding="utf-8")
 """
 
 
@@ -75,13 +78,26 @@ def transcribe_local(wav, model="base.en"):
     """Transcribe with a local ASR, in its own uv env so narrate stays light.
     Returns None when faster-whisper isn't available."""
     try:
-        out = subprocess.run(
-            ["uv", "run", "--quiet", "--with", "faster-whisper", "python3",
-             "-c", ASR_SNIPPET, str(wav), model],
-            capture_output=True, text=True, timeout=900)
-    except Exception:  # noqa: BLE001 - no uv, no network: gate simply unavailable
+        with tempfile.TemporaryDirectory(prefix="movie-asr-") as temporary:
+            result_path = Path(temporary) / "transcript.json"
+            out = subprocess.run(
+                ["uv", "run", "--no-config", "--no-project", "--isolated",
+                 "--python", sys.executable, "--with", "faster-whisper", "python",
+                 "-c", ASR_SNIPPET, str(wav.resolve()), model, str(result_path)],
+                cwd=temporary, capture_output=True, text=True,
+                encoding="utf-8", errors="replace", timeout=900)
+            for diagnostic in (out.stdout, out.stderr):
+                if diagnostic.strip():
+                    print(f"local ASR: {diagnostic.strip()[-600:]}", file=sys.stderr)
+            if out.returncode != 0:
+                print(f"local ASR exited with status {out.returncode}", file=sys.stderr)
+                return None
+            data = json.loads(result_path.read_text(encoding="utf-8"))
+            text = data.get("text") if isinstance(data, dict) else None
+            return text.strip() if isinstance(text, str) and text.strip() else None
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        print(f"local ASR unavailable: {error}", file=sys.stderr)
         return None
-    return out.stdout.strip() if out.returncode == 0 and out.stdout.strip() else None
 
 
 def structural_drift(text, heard):
@@ -153,14 +169,17 @@ def say_piper(text, out_wav, voice):
 def duration(path):
     out = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "csv=p=0", str(path)], capture_output=True, text=True)
+         "-of", "csv=p=0", str(path)], capture_output=True, text=True, encoding="utf-8", errors="replace")
     return round(float(out.stdout.strip()), 3)
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     if len(sys.argv) == 4 and sys.argv[1] == "--drift-check":
-        script = Path(sys.argv[2]).read_text()
-        heard = Path(sys.argv[3]).read_text()
+        script = Path(sys.argv[2]).read_text(encoding="utf-8-sig")
+        heard = Path(sys.argv[3]).read_text(encoding="utf-8-sig")
         delta, worst = structural_drift(script, heard)
         bad = delta > 0.15 or worst >= 4
         print(f"length change {delta:.0%}, worst run {worst} -> "
@@ -181,7 +200,7 @@ def main():
     ap.add_argument("--asr-model", default="base.en")
     args = ap.parse_args()
 
-    doc = yaml.safe_load(args.scenes.read_text())
+    doc = yaml.safe_load(args.scenes.read_text(encoding="utf-8-sig"))
     scenes = [s for s in doc.get("scenes", []) if (s.get("narration") or "").strip()]
     if not scenes:
         die("no scenes with narration")
@@ -207,7 +226,7 @@ def main():
     if prior_path.exists():
         try:
             prior = {e["id"]: e.get("text", "") for e in
-                     json.loads(prior_path.read_text())}
+                     json.loads(prior_path.read_text(encoding="utf-8-sig"))}
         except Exception:  # noqa: BLE001 - a corrupt manifest just means no cache
             prior = {}
     manifest, failures = [], []
@@ -216,13 +235,14 @@ def main():
         sid = sc["id"]
         text = " ".join((sc["narration"] or "").split())
         wav = args.outdir / f"{sid}.wav"
-        if wav.exists() and not args.force and prior.get(sid) == text:
+        cached = wav.exists() and not args.force and prior.get(sid) == text
+        if cached:
             print(f"{sid}: cached")
         elif wav.exists() and not args.force and sid in prior:
             print(f"{sid}: text changed since this clip was rendered - redoing")
-            args.force = True
-        else:
-            for attempt in (1, 2):
+        for attempt in ((1,) if cached else (1, 2)):
+            claimed = None
+            if not cached:
                 if engine == "openai":
                     claimed = say_openai(key, text, wav, args.voice)
                 elif engine == "openai-chat":
@@ -230,42 +250,41 @@ def main():
                 else:
                     claimed = say_piper(text, wav, args.voice)
 
-                # a chat model reports what it said: hold it to that exactly,
-                # because "Sure, here it is:" is the failure it introduces
-                if claimed is not None:
-                    want, got = norm(text), norm(claimed)
-                    drift = abs(len(want) - len(got)) + sum(
-                        1 for a, b in zip(want, got) if a != b)
-                    if drift > max(2, len(want) // 25):
-                        print(f"{sid}: engine ad-libbed (attempt {attempt}, "
-                              f"drift {drift})")
-                        continue
-
-                # every engine: listen back. An ASR mangles unusual names, so
-                # only missing or invented CONTENT counts as a failure here.
-                if verify:
-                    heard = transcribe_local(wav, args.asr_model)
-                    if heard is None:
-                        print(f"{sid}: ok (no local ASR available - gate skipped)")
-                        break
-                    delta, worst = structural_drift(text, heard)
-                    if delta > 0.15 or worst >= 4:
-                        print(f"{sid}: what came out does not match the script "
-                              f"(attempt {attempt}: {delta:.0%} length change, "
-                              f"{worst} words in a row wrong)")
-                        print(f"       heard: {heard[:120]}")
-                        continue
-                    print(f"{sid}: ok (verified by ear: {delta:.0%} length "
-                          f"change, worst run {worst})")
+            # Preserve the engine transcript gate and the ASR drift thresholds.
+            if claimed is not None:
+                want, got = norm(text), norm(claimed)
+                drift = abs(len(want) - len(got)) + sum(
+                    1 for a, b in zip(want, got) if a != b)
+                if drift > max(2, len(want) // 25):
+                    print(f"{sid}: engine ad-libbed (attempt {attempt}, drift {drift})")
+                    continue
+            if verify:
+                heard = transcribe_local(wav, args.asr_model)
+                if heard is None:
+                    if args.verify == "on":
+                        print(f"{sid}: required verification unavailable", file=sys.stderr)
+                        failures.append(sid)
+                    else:
+                        print(f"{sid}: verification unavailable (no local ASR)")
                     break
-                print(f"{sid}: ok")
+                delta, worst = structural_drift(text, heard)
+                if delta > 0.15 or worst >= 4:
+                    print(f"{sid}: what came out does not match the script "
+                          f"(attempt {attempt}: {delta:.0%} length change, "
+                          f"{worst} words in a row wrong)")
+                    print(f"       heard: {heard[:120]}")
+                    continue
+                print(f"{sid}: ok (verified by ear: {delta:.0%} length "
+                      f"change, worst run {worst})")
                 break
-            else:
-                failures.append(sid)
+            print(f"{sid}: ok")
+            break
+        else:
+            failures.append(sid)
         manifest.append({"id": sid, "text": text, "wav": wav.name,
                          "duration": duration(wav)})
 
-    (args.outdir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    (args.outdir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     total = sum(m["duration"] for m in manifest)
     print(f"\n{len(manifest)} clips, {total:.1f}s total -> {args.outdir}/manifest.json")
     if engine == "piper":

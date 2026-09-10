@@ -31,17 +31,11 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.parse
 from pathlib import Path
 
 import yaml
+from browser_tools import find_browser, render_card
 from media_paths import ffconcat_entry, stage_frames
-
-BROWSERS = [
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Chromium.app/Contents/MacOS/Chromium",
-    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
-]
 
 CARD_HTML = """<!doctype html><meta charset="utf-8">
 <style>
@@ -61,8 +55,9 @@ def die(msg):
     sys.exit(1)
 
 
-def run(cmd):
-    r = subprocess.run(cmd, capture_output=True, text=True)
+def run(cmd, *, cwd=None):
+    r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     if r.returncode != 0:
         die(f"{' '.join(map(str, cmd))}\n{r.stderr.strip()[:500]}")
     return r
@@ -72,18 +67,6 @@ def dur(path):
     r = run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "csv=p=0", str(path)])
     return float(r.stdout.strip())
-
-
-def find_browser(explicit):
-    for cand in ([explicit] if explicit else []) + BROWSERS:
-        if not cand:
-            continue
-        if os.path.sep in cand and Path(cand).exists():
-            return cand
-        found = shutil.which(cand)
-        if found:
-            return found
-    return None
 
 
 def make_card(scene, png, w, h, browser):
@@ -97,12 +80,16 @@ def make_card(scene, png, w, h, browser):
         TITLE=scene.get("title", ""), SUB=scene.get("subtitle", ""))
     tmp = png.with_suffix(".html")
     tmp.write_text(html, encoding="utf-8")
-    run([browser, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-         f"--screenshot={png}", f"--window-size={w},{h}",
-         "--force-device-scale-factor=1", "file://" + urllib.parse.quote(str(tmp))])
+    try:
+        render_card(tmp, png, browser=browser, width=w, height=h)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("scenes", type=Path)
     ap.add_argument("out", type=Path)
@@ -115,7 +102,7 @@ def main():
         if not shutil.which(tool):
             die(f"{tool} not on PATH")
 
-    doc = yaml.safe_load(args.scenes.read_text(encoding="utf-8"))
+    doc = yaml.safe_load(args.scenes.read_text(encoding="utf-8-sig"))
     base = args.scenes.parent
     res = doc.get("resolution", {}) or {}
     W, H = int(res.get("width", 1920)), int(res.get("height", 1080))

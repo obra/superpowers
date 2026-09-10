@@ -20,18 +20,19 @@ import argparse
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
 def has_libass():
     out = subprocess.run(["ffmpeg", "-hide_banner", "-filters"],
-                         capture_output=True, text=True)
+                         capture_output=True, text=True, encoding="utf-8", errors="replace")
     return any(line.split()[1:2] == ["subtitles"]
                for line in out.stdout.splitlines() if line.strip())
 
 
-def run(cmd):
-    r = subprocess.run(cmd, capture_output=True, text=True)
+def run(cmd, *, cwd=None):
+    r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         print(" ".join(map(str, cmd)), file=sys.stderr)
         print(r.stderr.strip()[:600], file=sys.stderr)
@@ -39,6 +40,9 @@ def run(cmd):
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("movie", type=Path)
     ap.add_argument("subs", type=Path)
@@ -56,7 +60,10 @@ def main():
         if not f.exists():
             sys.exit(f"no such file: {f}")
 
-    if not args.soft and has_libass():
+    args.movie, args.subs, args.out = (path.resolve() for path in
+                                       (args.movie, args.subs, args.out))
+    libass = has_libass() if not args.soft else False
+    if not args.soft and libass:
         # ffmpeg 8 dropped positional filter options, so name it explicitly:
         # `subtitles=movie.srt` parses on 5.x and fails on 8.x, but
         # `subtitles=filename=movie.srt` works on both
@@ -67,14 +74,16 @@ def main():
                  f"BorderStyle=3,Outline=1,Shadow=0,MarginV={args.margin},"
                  f"PrimaryColour=&H00FFFFFF&,OutlineColour=&HB0101014&,"
                  f"BackColour=&HB0101014&")
-        # run from the subtitle's directory: the filter treats ':' and '\' in
-        # paths as its own syntax, and quoting around that is a losing game
-        ok = run(["ffmpeg", "-nostdin", "-y", "-v", "error",
-                  "-i", str(args.movie.resolve()),
-                  "-vf", f"subtitles=filename={args.subs.name}:"
-                         f"force_style='{style}'",
-                  "-c:a", "copy", "-c:v", "libx264", "-preset", "medium",
-                  "-pix_fmt", "yuv420p", str(args.out.resolve())])
+        # Only the safe basename enters filter syntax; media paths stay absolute.
+        with tempfile.TemporaryDirectory(prefix="movie-subtitles-") as temporary:
+            directory = Path(temporary)
+            shutil.copyfile(args.subs, directory / "captions.srt")
+            ok = run(["ffmpeg", "-nostdin", "-y", "-v", "error",
+                      "-i", str(args.movie),
+                      "-vf", "subtitles=filename=captions.srt:"
+                             f"force_style='{style}'",
+                      "-c:a", "copy", "-c:v", "libx264", "-preset", "medium",
+                      "-pix_fmt", "yuv420p", str(args.out)], cwd=directory)
         if ok:
             print(f"burned into the picture -> {args.out}")
             return 0
@@ -87,7 +96,7 @@ def main():
     if not ok:
         return 1
     print(f"embedded a soft subtitle track -> {args.out}")
-    if not args.soft:
+    if not args.soft and not libass:
         print("NOTE: this ffmpeg has no libass, so the subtitles are a track a "
               "player must choose to show, not pixels. Anything that autoplays "
               "without subtitle UI (Slack, PR previews) will show none. Install "

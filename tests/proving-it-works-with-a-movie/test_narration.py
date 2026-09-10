@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import fixtures
 
@@ -55,6 +56,85 @@ class NarrationDriftRegression(unittest.TestCase):
 
     def test_empty_clip_fails(self):
         self.drift(1, "you")
+
+    def test_cached_audio_requires_requested_verification(self):
+        import json
+        import sys
+        module = fixtures.load_script("narrate")
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            output = work / "voice"
+            output.mkdir()
+            (output / "clip.wav").write_bytes(b"cached audio fixture")
+            (output / "manifest.json").write_text(json.dumps([
+                {"id": "clip", "text": "Read this sentence.", "wav": "clip.wav",
+                 "duration": 1.0}
+            ]), encoding="utf-8")
+            scenes = work / "scenes.yaml"
+            scenes.write_text(json.dumps({"scenes": [
+                {"id": "clip", "narration": "Read this sentence."}
+            ]}), encoding="utf-8")
+            argv = ["narrate", str(scenes), str(output),
+                    "--engine", "piper", "--verify", "on"]
+            with patch.object(sys, "argv", argv), \
+                 patch.object(module, "openai_key", return_value=None), \
+                 patch.object(module, "duration", return_value=1.0), \
+                 patch.object(module, "transcribe_local", return_value=None):
+                self.assertNotEqual(module.main(), 0)
+
+class TranscriptionProtocolRegression(unittest.TestCase):
+    def test_owned_json_is_used_instead_of_library_stdout(self):
+        import json
+        import subprocess
+        import sys
+        import io
+        from contextlib import redirect_stderr
+        module = fixtures.load_script("narrate")
+        def child(argv, **kwargs):
+            self.assertIn("--isolated", argv)
+            self.assertIn("--no-project", argv)
+            self.assertIn("--no-config", argv)
+            self.assertEqual(argv[argv.index("--python") + 1], sys.executable)
+            self.assertNotEqual(Path(kwargs["cwd"]), Path.cwd())
+            Path(argv[-1]).write_text(json.dumps({"text": "Correct λ transcript"}), encoding="utf-8")
+            return subprocess.CompletedProcess(argv, 0, "native library warning", "diagnostic")
+        diagnostics = io.StringIO()
+        with patch.object(module.subprocess, "run", side_effect=child), redirect_stderr(diagnostics):
+            self.assertEqual(module.transcribe_local(Path("clip.wav")), "Correct λ transcript")
+        self.assertIn("native library warning", diagnostics.getvalue())
+        self.assertIn("diagnostic", diagnostics.getvalue())
+
+    def test_failed_absent_and_malformed_child_results_are_unavailable(self):
+        import subprocess
+        module = fixtures.load_script("narrate")
+        for payload, code in ((None, 0), ("garbage", 0), ('{"text": 7}', 0), ('{"text": ""}', 0), ('{"text": "words"}', 1)):
+            with self.subTest(payload=payload, code=code):
+                def child(argv, **kwargs):
+                    if payload is not None and "--isolated" in argv:
+                        Path(argv[-1]).write_text(payload, encoding="utf-8")
+                    return subprocess.CompletedProcess(argv, code, "misleading stdout", "error")
+                with patch.object(module.subprocess, "run", side_effect=child):
+                    self.assertIsNone(module.transcribe_local(Path("clip.wav")))
+
+    def test_fresh_and_off_then_on_clips_require_asr(self):
+        import json
+        import sys
+        module = fixtures.load_script("narrate")
+        for cached in (False, True):
+            with self.subTest(cached=cached), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                scenes = root / "scenes.yaml"
+                scenes.write_text(json.dumps({"scenes": [{"id": "clip", "narration": "Read this sentence."}]}), encoding="utf-8-sig")
+                output = root / "voice"
+                def synthesize(text, wav, voice):
+                    wav.write_bytes(b"branch policy fixture")
+                argv = ["narrate", str(scenes), str(output), "--engine", "piper", "--verify"]
+                with patch.object(module, "openai_key", return_value=None), patch.object(module, "say_piper", side_effect=synthesize), patch.object(module, "duration", return_value=1.0), patch.object(module, "transcribe_local", return_value=None):
+                    if cached:
+                        with patch.object(sys, "argv", [*argv, "off"]):
+                            self.assertEqual(module.main(), 0)
+                    with patch.object(sys, "argv", [*argv, "on"]):
+                        self.assertNotEqual(module.main(), 0)
 
 
 if __name__ == "__main__":

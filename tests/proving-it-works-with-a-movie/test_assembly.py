@@ -129,21 +129,7 @@ def decoded_frequency(path: Path, *, cwd: Path) -> float:
 
 
 def available_browser() -> str | None:
-    candidates = [
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "/Applications/Chromium.app/Contents/MacOS/Chromium",
-        "chromium",
-        "chromium-browser",
-        "google-chrome",
-        "google-chrome-stable",
-    ]
-    for candidate in candidates:
-        if Path(candidate).is_file():
-            return candidate
-        found = shutil.which(candidate)
-        if found:
-            return found
-    return None
+    return fixtures.load_script("browser_tools").find_browser(os.environ.get("MOVIE_BROWSER"))
 
 
 class AssemblyRegression(unittest.TestCase):
@@ -328,10 +314,6 @@ scenes:
             self.assertTrue(subtitled.is_file())
 
     def test_card_uses_longer_narration_duration(self):
-        if sys.platform == "win32":
-            self.skipTest(
-                "native Windows card completion is pending Task5 browser discovery/file-URI work"
-            )
         missing = fixtures.missing_executables("uv", "ffmpeg", "ffprobe")
         if missing:
             self.skipTest(f"required executable(s) not on PATH: {', '.join(missing)}")
@@ -346,7 +328,7 @@ scenes:
             make_tone(narration / "card.wav", 0.8, 550, cwd=root)
             scenes = root / "scenes.yaml"
             scenes.write_bytes(
-                b"resolution: { width: 160, height: 90 }\r\n"
+                b"\xef\xbb\xbfresolution: { width: 160, height: 90 }\r\n"
                 b"fps: 10\r\n"
                 b"scenes:\r\n"
                 b"  - id: card\r\n"

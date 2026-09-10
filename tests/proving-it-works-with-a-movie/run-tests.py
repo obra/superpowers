@@ -13,14 +13,14 @@ from pathlib import Path
 
 IMPLEMENTED_SUITES = {
     "assembly": "test_assembly.py",
+    "browser": "test_browser.py",
     "checker": "test_checker.py",
     "narration": "test_narration.py",
     "paths": "test_paths.py",
+    "processes": "test_processes.py",
+    "subtitles": "test_subtitles.py",
 }
 RESERVED_SUITES = {
-    "browser",
-    "subtitles",
-    "processes",
     "shells",
     "terminal",
     "routes",
