@@ -1,25 +1,30 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when an independent code review has been explicitly approved or is already included in an approved bounded phase
 ---
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
+Request an explicitly approved independent review against a fixed git range.
+The reviewer gets precisely crafted context for evaluation, never the
+controller's session history.
 
 **Core principle:** Review early, review often.
 
 ## When to Request Review
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+**Use without a new approval only when:**
+- The current approved `subagent-driven-development` phase already disclosed
+  the persistent reviewer, model/provider, reasoning effort, context tier,
+  scope, fixed range protocol, and review-pass cap.
 
-**Optional but valuable:**
+**Potential additional review — new approval required:**
 - When stuck (fresh perspective)
 - Before refactoring (baseline check)
 - After fixing complex bug
+- After the approved phase
+- Before merge
+- A second reviewer, final reviewer, review swarm, or Rubber Duck pass
 
 ## How to Request
 
@@ -29,9 +34,17 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Confirm approval:**
 
-Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
+If this reviewer was not already disclosed in the active phase approval,
+disclose the agent, exact model/provider, reasoning effort, context tier,
+scope, fixed `BASE_SHA..HEAD_SHA` range, and maximum passes. Wait for approval.
+
+**3. Dispatch or resume the approved reviewer:**
+
+Fill the template at [code-reviewer.md](code-reviewer.md). In bounded
+subagent-driven development, resume the phase's same persistent reviewer
+instead of creating another reviewer.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
@@ -39,44 +52,19 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
-**3. Act on feedback:**
+**4. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
-
-## Example
-
-```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch code reviewer subagent]
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
+- Return fixes to the same approved implementer when a bounded phase is active
 
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
-| "I'll just review the diff myself instead of dispatching a reviewer" | You're the coordinator — reviewing the diff inline burns the context window you need to keep driving the work. Dispatch a reviewer subagent: the diff and the evaluation live in its context, and only the findings come back to you. |
+| "A final review is standard, so it is already approved." | Additional review outside the disclosed phase topology requires new approval. |
+| "A fresh reviewer will be more independent." | The approved persistent reviewer is already independent; a replacement is a new agent requiring approval. |
 | "The reviewer needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the reviewer on the work product, not your thought process. |
 
 ## Red Flags
@@ -85,6 +73,8 @@ You: [Fix progress indicators]
 - Skip review because "it's simple"
 - Ignore Critical issues
 - Proceed with unfixed Important issues
+- Create an undisclosed reviewer
+- Broaden the approved fixed range
 - Argue with valid technical feedback
 
 **If reviewer wrong:**

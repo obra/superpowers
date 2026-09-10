@@ -25,6 +25,10 @@ Tests failing (<N> failures). Must fix before completing:
 
 **If tests pass:** continue to Step 2.
 
+Do not automatically create a reviewer, Rubber Duck pass, review swarm, or
+final whole-branch review before this step. Any additional review requires a
+separate disclosed approval.
+
 ## Step 2: Detect Environment
 
 ```bash

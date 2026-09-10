@@ -61,3 +61,11 @@ If your harness appears here, read its reference file for special instructions:
 ## User Instructions
 
 User instructions (CLAUDE.md, AGENTS.md, GEMINI.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
+
+## Delegation Gate
+
+Do not create agents, sessions, factories, or review swarms merely because a
+skill recommends delegation. Delegated implementation requires the bounded
+phase approval defined by `subagent-driven-development`: disclosed children,
+exact models, reasoning effort, context tier, scope, validation, limits, and
+stop boundary. A general request to implement is not that approval.

@@ -43,13 +43,19 @@ This fallback is the same mechanism used by other harnesses without native skill
 
 ## Subagent dispatch
 
-Use `delegate_task` to spawn isolated subagents for parallel or sequential workstreams:
+Use `delegate_task` to spawn an isolated child only after the skill's approval
+gate:
 
 ```
 delegate_task(goal="...", context="...", toolsets=[...], role="leaf")
 ```
 
 If `delegate_task` is unavailable, do the work inline rather than inventing tool calls.
+
+Bounded `subagent-driven-development` also requires resuming the same
+implementer and reviewer for the whole phase. If the installed Hermes version
+cannot resume both children, execute the phase inline. Do not emulate the pair
+with fresh children, parallel workstreams, or a multi-agent task board.
 
 ## Task tracking
 

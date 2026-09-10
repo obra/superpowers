@@ -43,9 +43,15 @@ Skills dispatch with `Subagent (general-purpose):` and either reference a prompt
 
 Skills provide prompt templates with placeholders like `{WHAT_WAS_IMPLEMENTED}` or `[FULL TEXT of task]`. Fill all placeholders before passing the complete prompt to `invoke_agent`. The prompt template itself contains the agent's role, review criteria, and expected output format — the subagent will follow it.
 
-### Parallel dispatch
+### Dispatch ordering
 
 Gemini CLI supports parallel subagent dispatch. Issue multiple `invoke_agent` calls in the same response (or multiple `@generalist` invocations in one prompt) to run independent subagent work in parallel. Keep dependent tasks sequential, but do not serialize independent subagent tasks just to preserve a simpler history.
+
+That general capability does not override a skill's topology. Bounded
+`subagent-driven-development` requires one persistent implementer and one
+persistent reviewer, with at most one active delegated agent. If the installed
+Gemini agent interface cannot resume both children across the phase, execute
+the phase inline rather than replacing them with fresh agents.
 
 ## Additional Gemini CLI tools
 

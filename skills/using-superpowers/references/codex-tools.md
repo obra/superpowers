@@ -28,9 +28,9 @@ disagree.
   always can.
 - **Lifecycle:** V2 has no `close_agent`. Finished children are
   evicted automatically when slots are needed; leaving them unclosed
-  costs nothing. Only V1 sessions have `close_agent` — there, close
-  reviewers when their review returns, and close each implementer
-  after its task's review passes.
+  costs nothing. Only V1 sessions have `close_agent`. During bounded
+  subagent-driven development, keep the approved implementer and reviewer
+  reusable for the whole phase and close them only after the phase stops.
 - **Model names:** never copy a model name from a skill, table, or old
   session into `spawn_agent` without checking it against your current
   spawn allowlist — V2 accepts only V2-capable presets and hard-errors
@@ -61,11 +61,10 @@ two-thirds of all wait calls were short polls that timed out.
 
 ## Model routing on spawns
 
-Every `spawn_agent` you issue — including when you are yourself a
-spawned child running a fan-out — sets `model` AND `reasoning_effort`
-explicitly, per the Model Selection rules of the skill you are
-executing. Setting `model` alone is a trap: the child's effort
-silently resets to that model's default, not to yours.
+Every approved `spawn_agent` sets `model` AND `reasoning_effort` explicitly,
+per the Model Selection rules of the skill you are executing. Spawned children
+must not fan out or create nested agents. Setting `model` alone is a trap: the
+child's effort silently resets to that model's default, not to yours.
 
 Ask your human partner to add a machine-level backstop to
 `~/.codex/config.toml` so any spawn that slips through still routes to

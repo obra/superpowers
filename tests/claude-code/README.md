@@ -82,15 +82,20 @@ echo "=== All tests passed ==="
 
 ### Fast Tests (run by default)
 
+#### test-bounded-delegation-contract.sh
+Statically verifies the bounded phase/pair contract across the core delegation
+skills, prompt templates, and user documentation.
+
 #### test-subagent-driven-development.sh
 Tests skill content and requirements (~2 minutes):
 - Skill loading and accessibility
-- Workflow ordering (spec compliance before code quality)
+- Persistent implementer/reviewer pair
 - Self-review requirements documented
-- Plan reading efficiency documented
+- Bounded phase size documented
 - Spec compliance reviewer skepticism documented
-- Review loops documented
-- Task context provision documented
+- Three-pass review cap documented
+- Nested delegation prohibition documented
+- Phase stop boundary documented
 
 ### Integration Tests (use --integration flag)
 
@@ -98,16 +103,16 @@ Tests skill content and requirements (~2 minutes):
 Full workflow execution test (~10-30 minutes):
 - Creates real test project with Node.js setup
 - Creates implementation plan with 2 tasks
-- Executes plan using subagent-driven-development
+- Executes one two-milestone phase using subagent-driven-development
 - Verifies actual behaviors:
-  - Plan read once at start (not per task)
-  - Full task text provided in subagent prompts
-  - Subagents perform self-review before reporting
-  - Spec compliance review happens before code quality
-  - Spec reviewer reads code independently
+  - One persistent implementer and reviewer are reused
+  - Delegated work is sequential
+  - Reviewer stays read-only
+  - Findings return to the same implementer
+  - Execution stops at the approved phase boundary
   - Working implementation is produced
   - Tests pass
-  - Proper git commits created
+  - Milestone commits are created
 
 **What it tests:**
 - The workflow actually works end-to-end

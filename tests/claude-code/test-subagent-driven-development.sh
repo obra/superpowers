@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Test: subagent-driven-development skill
-# Verifies that the skill is loaded and follows correct workflow
+# Verifies that the skill is loaded and describes the bounded workflow
 #
 # No drill coverage: this test asks the agent to *describe* SDD (string-
 # matches its verbal explanation against expected keywords like
-# "self-review", "skeptical", "worktree", "Step 1", "loop"). Drill scenarios
+# "persistent", "read-only", "worktree", "phase", "loop"). Drill scenarios
 # test behavior (real subagent dispatch, plan-following, review loops),
 # not description-recall. Kept by design.
 set -euo pipefail
@@ -36,14 +36,20 @@ fi
 
 echo ""
 
-# Test 2: Verify skill describes correct workflow order
-echo "Test 2: Workflow ordering..."
+# Test 2: Verify the persistent pair
+echo "Test 2: Persistent pair..."
 
-output=$(run_claude "In the subagent-driven-development skill, what comes first: spec compliance review or code quality review? Answer using exactly this structure:
-First: <review type>
-Second: <review type>" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In the subagent-driven-development skill, are new implementers and reviewers created for every milestone? Answer using exactly this structure:
+Implementer: <persistent or fresh>
+Reviewer: <persistent or fresh>" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_order "$output" "First:.*spec.*compliance" "Second:.*code.*quality" "Spec compliance before code quality"; then
+if assert_contains "$output" "Implementer:.*persistent" "Persistent implementer"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "Reviewer:.*persistent" "Persistent reviewer"; then
     : # pass
 else
     exit 1
@@ -72,18 +78,12 @@ fi
 
 echo ""
 
-# Test 4: Verify plan is read once
-echo "Test 4: Plan reading efficiency..."
+# Test 4: Verify phase size
+echo "Test 4: Phase size..."
 
-output=$(run_claude "In subagent-driven-development, how many times should the controller read the plan file? When does this happen?" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "How many milestones may one approved phase contain in subagent-driven-development?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "once\|one time\|single" "Read plan once"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "Step 1\|beginning\|start\|Load Plan" "Read at beginning"; then
+if assert_contains "$output" "2-3\|two.*three\|at most three" "Phase contains at most 2-3 milestones"; then
     : # pass
 else
     exit 1
@@ -110,10 +110,10 @@ fi
 
 echo ""
 
-# Test 6: Verify review loops
-echo "Test 6: Review loop requirements..."
+# Test 6: Verify bounded review loops
+echo "Test 6: Bounded review loop requirements..."
 
-output=$(run_claude "In subagent-driven-development, what happens if a reviewer finds issues? Is it a one-time review or a loop?" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In subagent-driven-development, what happens if a reviewer finds Critical or Important issues, and what is the review-pass cap?" "$CLAUDE_PROMPT_TIMEOUT")
 
 if assert_contains "$output" "loop\|again\|repeat\|until.*approved\|until.*compliant" "Review loops mentioned"; then
     : # pass
@@ -121,7 +121,13 @@ else
     exit 1
 fi
 
-if assert_contains "$output" "implementer.*fix\|fix.*issues" "Implementer fixes issues"; then
+if assert_contains "$output" "same.*implementer\|implementer.*same" "Same implementer fixes issues"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "three\|3" "Review is capped at three passes"; then
     : # pass
 else
     exit 1
@@ -129,20 +135,12 @@ fi
 
 echo ""
 
-# Test 7: Verify full task text is provided
-echo "Test 7: Task context provision..."
+# Test 7: Verify nested delegation prohibition
+echo "Test 7: Nested delegation prohibition..."
 
-output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Answer using exactly this structure:
-Controller provides: <directly or by file>
-Implementer must read plan file: <yes or no>" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "May child sessions in subagent-driven-development invoke task, create_session, run_factory, background agents, or nested delegation?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "provide.*directly\|full.*text\|paste\|include.*prompt" "Provides text directly"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "Implementer must read plan file:.*no" "Doesn't make subagent read file"; then
+if assert_contains "$output" "no\|must not\|never\|prohibit" "Children cannot delegate"; then
     : # pass
 else
     exit 1
@@ -176,4 +174,17 @@ fi
 
 echo ""
 
-echo "=== All subagent-driven-development skill tests passed ==="
+# Test 10: Verify stop boundary
+echo "Test 10: Phase stop boundary..."
+
+output=$(run_claude "What must the controller do after the approved subagent-driven-development phase completes?" "$CLAUDE_PROMPT_TIMEOUT")
+
+if assert_contains "$output" "stop\|new approval" "Stops after approved phase"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+echo "=== All bounded subagent-driven-development skill tests passed ==="

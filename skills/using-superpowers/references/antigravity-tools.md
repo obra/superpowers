@@ -7,6 +7,11 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `invoke_subagent` with a built-in `TypeName` — `self` for full-capability work, `research` for read-only |
 | Task tracking ("create a todo", "mark complete") | a **task artifact** — `write_to_file` with `IsArtifact: true` and `ArtifactType: "task"` (see [Task tracking](#task-tracking)). **Not** `manage_task`, which manages background processes. |
 
+`invoke_subagent` must support resuming the same two children before it can be
+used for bounded `subagent-driven-development`. If it is one-shot in the
+current Antigravity version, execute the phase inline rather than dispatching
+fresh implementers or reviewers. Never run the bounded pair concurrently.
+
 ## Task tracking
 
 Antigravity has **no todo tool** (`manage_task` manages background
