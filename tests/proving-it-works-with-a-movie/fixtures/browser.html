@@ -1,5 +1,0 @@
-<!doctype html><meta charset="utf-8"><title>Local counter proof</title>
-<style>body{margin:80px;background:#122438;color:#fff;font:36px system-ui}button{font:inherit;padding:20px 40px;background:#ffcf66;border:0;border-radius:12px}output{display:block;font-size:160px;margin:40px 0}small{font-size:26px}</style>
-<h1>Local counter — real clicks</h1><button onclick="count.value=Number(count.value)+1">Add one</button><output id="count">0</output><small>This page runs from a local file. Each click updates its own state.</small>
-<i id="cursor" style="position:fixed;display:none;width:24px;height:24px;border:4px solid #ff4081;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%)"></i>
-<script>document.addEventListener('mousemove',e=>{cursor.style.display='block';cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'});</script>

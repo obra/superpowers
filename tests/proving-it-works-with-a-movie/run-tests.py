@@ -21,18 +21,12 @@ IMPLEMENTED_SUITES = {
     "subtitles": "test_subtitles.py",
     "terminal": "test_terminal.py",
 }
-RESERVED_SUITES = {
-    "shells",
-    "routes",
-}
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--suite",
         required=True,
-        choices=[*IMPLEMENTED_SUITES, *sorted(RESERVED_SUITES), "all"],
+        choices=[*IMPLEMENTED_SUITES, "all"],
     )
     parser.add_argument("--require-capabilities", action="store_true")
     return parser.parse_args()
@@ -40,13 +34,6 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if args.suite in RESERVED_SUITES:
-        print(
-            f"suite {args.suite!r} is reserved but not implemented",
-            file=sys.stderr,
-        )
-        return 2
-
     patterns = (
         list(IMPLEMENTED_SUITES.values())
         if args.suite == "all"
