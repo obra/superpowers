@@ -48,35 +48,3 @@ contact sheet, and look. A stills movie earns a
 frozen-tail warning when its final card outlasts its last narration by a
 lot — that usually means the closing card is doing too much work, or the
 last scene should have been two.
-
-## Native Windows paths and browser stills
-
-Keep the existing image/frame scene kinds and use the five native commands
-in assembling.md. For a real local HTML page, the existing browser helper
-handles a file URI, an isolated profile, a timeout, and owned cleanup. Save
-this small capture script in the movie's pipeline directory:
-
-```python
-# capture-still.py — arguments: skill-scripts-directory, page.html, image.png
-import sys
-from pathlib import Path
-sys.path.insert(0, sys.argv[1])
-from browser_tools import find_browser, render_card
-browser = find_browser(None)
-if browser is None:
-    raise SystemExit('Install Chrome or Edge, or supply an explicit browser')
-render_card(Path(sys.argv[2]), Path(sys.argv[3]), browser=browser,
-            width=1600, height=900)
-```
-
-PowerShell, using native Python and individually quoted arguments:
-
-```powershell
-& python "$work/capture-still.py" "$skill/scripts" "$work/page.html" "$work/still.png"
-if ($LASTEXITCODE -ne 0) { throw 'Browser still failed' }
-```
-
-In Git Bash, use the same arguments with `skill` and `work` converted by
-`cygpath -m` as in assembling.md. Inspect the PNG before making it an image
-scene. A screenshot of one real state establishes that state; claims about
-clicks or motion need the live interaction route in recording-motion.md.
