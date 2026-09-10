@@ -14,6 +14,10 @@ and matching conversation content. Recency alone is not confirmation. Distinguis
 the requested session from its children and unrelated candidates. Ask for a
 missing identifying fact when the available evidence cannot distinguish them.
 
+For each filesystem source, obtain its full absolute path from the environment,
+with home-directory shorthand and variables expanded. Use that same path in the
+case record and in the discovery answer you give your human partner.
+
 Establish the record meanings needed for the requested investigation from
 observed records or documentation. Distinguish human messages from injected
 messages, tool results, and a parent agent's dispatch. Match tool calls to their
