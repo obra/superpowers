@@ -27,8 +27,10 @@ class SubtitlePathRegression(unittest.TestCase):
                     self.assertEqual((cwd / "captions.srt").read_bytes(), subs.read_bytes())
                 return True
 
-            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", side_effect=fake_run):
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", side_effect=fake_run), redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(module.main(), 0)
+            self.assertIn("burned into the picture", stdout.getvalue())
             command, cwd = calls[0]
             self.assertEqual(cwd.name.startswith("movie-subtitles-"), True)
             self.assertIn(str(movie.resolve()), command)
@@ -43,8 +45,10 @@ class SubtitlePathRegression(unittest.TestCase):
             movie, subs, output = root / "in.mp4", root / "captions.srt", root / "out.mp4"
             movie.write_bytes(b"movie")
             subs.write_text("1\n00:00:00,000 --> 00:00:01,000\ncaption\n", encoding="utf-8")
-            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", return_value=False):
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", return_value=False), redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(module.main(), 1)
+            self.assertIn("burn failed", stderr.getvalue())
 
 class SubtitleIntegrationRegression(unittest.TestCase):
     def test_bom_manifest_and_offsets_write_utf8_under_legacy_console(self):

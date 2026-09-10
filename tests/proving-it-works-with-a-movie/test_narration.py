@@ -1,4 +1,6 @@
+import io
 import tempfile
+from contextlib import redirect_stderr, redirect_stdout
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -76,11 +78,15 @@ class NarrationDriftRegression(unittest.TestCase):
             ]}), encoding="utf-8")
             argv = ["narrate", str(scenes), str(output),
                     "--engine", "piper", "--verify", "on"]
+            stdout, stderr = io.StringIO(), io.StringIO()
             with patch.object(sys, "argv", argv), \
                  patch.object(module, "openai_key", return_value=None), \
                  patch.object(module, "duration", return_value=1.0), \
-                 patch.object(module, "transcribe_local", return_value=None):
+                 patch.object(module, "transcribe_local", return_value=None), \
+                 redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertNotEqual(module.main(), 0)
+            self.assertIn("clip: required verification unavailable", stderr.getvalue())
+            self.assertIn("FAILED verbatim delivery: ['clip']", stderr.getvalue())
 
 class TranscriptionProtocolRegression(unittest.TestCase):
     def test_owned_json_is_used_instead_of_library_stdout(self):
@@ -88,7 +94,6 @@ class TranscriptionProtocolRegression(unittest.TestCase):
         import subprocess
         import sys
         import io
-        from contextlib import redirect_stderr
         module = fixtures.load_script("narrate")
         def child(argv, **kwargs):
             self.assertIn("--isolated", argv)
@@ -113,8 +118,11 @@ class TranscriptionProtocolRegression(unittest.TestCase):
                     if payload is not None and "--isolated" in argv:
                         Path(argv[-1]).write_text(payload, encoding="utf-8")
                     return subprocess.CompletedProcess(argv, code, "misleading stdout", "error")
-                with patch.object(module.subprocess, "run", side_effect=child):
+                diagnostics = io.StringIO()
+                with patch.object(module.subprocess, "run", side_effect=child), \
+                     redirect_stderr(diagnostics):
                     self.assertIsNone(module.transcribe_local(Path("clip.wav")))
+                self.assertIn("local ASR", diagnostics.getvalue())
 
     def test_fresh_and_off_then_on_clips_require_asr(self):
         import json
@@ -131,10 +139,14 @@ class TranscriptionProtocolRegression(unittest.TestCase):
                 argv = ["narrate", str(scenes), str(output), "--engine", "piper", "--verify"]
                 with patch.object(module, "openai_key", return_value=None), patch.object(module, "say_piper", side_effect=synthesize), patch.object(module, "duration", return_value=1.0), patch.object(module, "transcribe_local", return_value=None):
                     if cached:
-                        with patch.object(sys, "argv", [*argv, "off"]):
+                        with patch.object(sys, "argv", [*argv, "off"]), \
+                             redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                             self.assertEqual(module.main(), 0)
-                    with patch.object(sys, "argv", [*argv, "on"]):
+                    stdout, stderr = io.StringIO(), io.StringIO()
+                    with patch.object(sys, "argv", [*argv, "on"]), \
+                         redirect_stdout(stdout), redirect_stderr(stderr):
                         self.assertNotEqual(module.main(), 0)
+                    self.assertIn("clip: required verification unavailable", stderr.getvalue())
 
 
 if __name__ == "__main__":
