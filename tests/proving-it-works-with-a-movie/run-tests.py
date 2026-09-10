@@ -15,9 +15,9 @@ IMPLEMENTED_SUITES = {
     "assembly": "test_assembly.py",
     "checker": "test_checker.py",
     "narration": "test_narration.py",
+    "paths": "test_paths.py",
 }
 RESERVED_SUITES = {
-    "paths",
     "browser",
     "subtitles",
     "processes",
