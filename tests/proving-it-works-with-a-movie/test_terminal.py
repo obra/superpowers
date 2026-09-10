@@ -183,12 +183,35 @@ class NativeTerminalTests(unittest.TestCase):
         self.run_command('echo recovered')
         self.request('close');self.assertEqual(self.server.wait(10),0)
 
+    def outcome_commands(self):
+        """Shell outcomes the recorder must attribute correctly: (name, command, native_producer)."""
+        exe=os.environ['MOVIE_TEST_SHELL_EXE'];python=sys.executable
+        commands=[('native_success',self.native('import sys;sys.exit(0)'),python)]
+        if self.shell!='gitbash':
+            commands+=[
+                ('cmdlet_failure',"Get-Item 'Z:\\probe-path-that-does-not-exist'",None),
+                ('native_failure',self.native('import sys;sys.exit(7)'),python),
+                ('cmdlet_success',"Write-Output 'cmdlet success λ'",None),
+                ('terminating_error',"throw 'probe terminating error'",None),
+                ('nonterminating_error',"Write-Error 'probe nonterminating error'",None),
+                ('parse_failure','Write-Output )',None),
+                ('logging_failure',self.native("import sys;print('producer');sys.exit(7)")+' | Tee-Object -Variable ProbeLog',python),
+                ('expression_wrapper',"(Write-Error 'probe expression wrapper')",None),
+                ('script_exit',f"& '{exe}' -NoLogo -NoProfile -Command 'exit 9'",exe),
+            ]
+        else:
+            commands+=[
+                ('shell_failure','test -e /probe-path-that-does-not-exist',None),
+                ('native_failure',self.native('import sys;sys.exit(7)'),python),
+                ('shell_success',"printf 'shell success λ\\n'",None),
+                ('parse_failure','echo )',None),
+                ('logging_failure',self.native("import sys;print('producer');sys.exit(7)")+' | cat',python),
+                ('script_exit',"bash --noprofile --norc -c 'exit 9'",'Git Bash'),
+            ]
+        return commands
+
     def test_native_shell_outcomes(self):
-        spec=importlib.util.spec_from_file_location('historical_probe',Path(__file__).with_name('probe-windows.py'))
-        probe=importlib.util.module_from_spec(spec);spec.loader.exec_module(probe)
-        import argparse
-        args=argparse.Namespace(shell_kind=self.shell,shell=os.environ['MOVIE_TEST_SHELL_EXE'])
-        for name,command,native in probe.outcome_commands(args):
+        for name,command,native in self.outcome_commands():
             success=name in ('native_success','cmdlet_success','shell_success')
             result=self.run_command(command,native_producer=native,expected=0 if success else 1)
             self.assertEqual(result['outcome'],'completed')
