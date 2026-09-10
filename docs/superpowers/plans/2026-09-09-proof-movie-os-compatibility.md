@@ -1,6 +1,6 @@
 # Proof Movie OS Compatibility Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **SUPERSEDED — DO NOT EXECUTE.** The user stopped this rollout. The [focused Windows completion spec](../specs/2026-09-09-proof-movie-windows-completion-design.md) replaces the remaining scope. Keep this plan as historical context for completed work; its unchecked tasks do not authorize further implementation or agent dispatch.
 
 **Goal:** Make the imported proof-movie skill usable on the agreed macOS, Linux, native Windows, WSL, and headless/remote environments, with evidence for each advertised combination.
 

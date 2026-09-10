@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-09
 
-**Status:** Adversarial review complete; implementation plan written for review
+**Status:** Historical design. Remaining work is superseded by the [focused Windows completion spec](2026-09-09-proof-movie-windows-completion-design.md). Do not resume this design's broader rollout.
 
 **Scope:** Platform compatibility for the movie skill proposed in [PR #2214](https://github.com/obra/superpowers/pull/2214). Implementation depends on that import or its final equivalent.
 
