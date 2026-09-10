@@ -11,9 +11,8 @@ uv run --script tests/proving-it-works-with-a-movie/run-tests.py --suite all
 
 By default, unavailable external capabilities are reported as skips. Add
 `--require-capabilities` when the selected environment is required to provide
-them; any skip then makes the run fail. The names `paths`, `browser`,
-`subtitles`, `processes`, `shells`, `terminal`, and `routes` are reserved for
-later tasks and currently fail explicitly instead of reporting empty success.
+them; any skip then makes the run fail. Only `shells` and `routes` are reserved
+for later tasks and currently fail explicitly instead of reporting empty success.
 
 The assembly sine wave is only a synthetic timing fixture. The narration drift
 inputs exercise text comparison only. Neither is speech/ASR acceptance.
