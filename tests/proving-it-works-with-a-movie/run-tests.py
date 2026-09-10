@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pyyaml", "pillow", "websockets"]
+# dependencies = ["pyyaml", "pillow", "websockets", "websocket-client==1.9.0"]
 # ///
 """Run the proving-it-works-with-a-movie regression suites portably."""
 
@@ -19,10 +19,10 @@ IMPLEMENTED_SUITES = {
     "paths": "test_paths.py",
     "processes": "test_processes.py",
     "subtitles": "test_subtitles.py",
+    "terminal": "test_terminal.py",
 }
 RESERVED_SUITES = {
     "shells",
-    "terminal",
     "routes",
 }
 
