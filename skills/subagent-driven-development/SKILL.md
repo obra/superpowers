@@ -374,11 +374,9 @@ scoped re-review. Five rounds maximum per task:
 
 **Rounds 1-3 — resume the original implementer.** Send it the open findings
 verbatim. Its context is intact: it knows the task, the code, and its own
-choices. If your harness can continue a live subagent, do that (e.g. OpenCode
-V2: re-invoke the `subagent` tool passing the subagent's `sessionID`; V1:
-re-dispatch `task` with the same context). Otherwise dispatch a fresh
-implementer carrying the brief path, the report-file path, and the findings —
-the report file is the persistent memory either way.
+choices. If your harness cannot send another message to a live subagent,
+dispatch a fresh implementer carrying the brief path, the report-file path,
+and the findings — the report file is the persistent memory either way.
 
 **Rounds 4-5 — dispatch a fresh implementer on a more capable model** (per
 Model Selection), with the brief path, the report-file path, the open
