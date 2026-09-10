@@ -450,13 +450,22 @@ class Recorder:
             self.capture = (self.terminal.cdp.send('Page.captureScreenshot', {'format': 'png'}), now)
             self.capture_due = now + .2
 
+    def check_observation(self):
+        if self.terminal.closed:
+            raise ConnectionError('Terminal connection lost or reconnected')
+        if any({k:size[k] for k in self.geometry} != self.geometry
+               for size in self.terminal.terminal_sizes):
+            raise RuntimeError('Terminal geometry changed; start a new fixed-viewport session')
+
     def end(self, incomplete=False):
         if self.take is None:
             raise ValueError('No take is active')
         if not incomplete:
             while self.capture is not None:
                 self.terminal.cdp.pump()
+                self.check_observation()
                 self.capture_tick(schedule=False)
+            self.check_observation()
         take = self.take
         end = time.monotonic()
         take['end'] = end
@@ -574,10 +583,7 @@ class Recorder:
             self.status()
             while self.stopping is None:
                 self.terminal.cdp.pump()
-                if self.terminal.closed:
-                    raise ConnectionError('Terminal connection lost or reconnected')
-                if any({k:s[k] for k in self.geometry} != self.geometry for s in sizes):
-                    raise RuntimeError('Terminal geometry changed; start a new fixed-viewport session')
+                self.check_observation()
                 self.finish_pending()
                 self.capture_tick()
                 self.read_request()

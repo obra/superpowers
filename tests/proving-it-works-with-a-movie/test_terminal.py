@@ -298,7 +298,8 @@ class CaptureBoundaryTests(unittest.TestCase):
             class CDP:
                 responses={}
                 def pump(self):self.responses[9]={'result':{'data':'c2Vjb25k'}}
-            recorder.terminal=SimpleNamespace(cdp=CDP())
+            recorder.geometry=dict(columns=220,rows=59)
+            recorder.terminal=SimpleNamespace(cdp=CDP(),closed=False,terminal_sizes=[recorder.geometry.copy()])
             result=recorder.end()
             self.assertEqual(len(result['samples']),2)
             self.assertFalse(recorder.terminal.cdp.responses)
@@ -341,3 +342,83 @@ class ClientWaitTests(unittest.TestCase):
             reply,code=m.client(SimpleNamespace(directory=directory,action='result',id=1,timeout=.1))
             self.assertEqual(code,0)
             self.assertEqual(sorted(p.name for p in control.iterdir()),sorted(before+['000001.result.json']))
+
+
+class FinalizationHealthTests(unittest.TestCase):
+    recorder = TerminalPolicyTests.recorder
+
+    def session(self, fault=None):
+        """Exercise real recorder/control files; inject CDP events at the drain boundary."""
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        m=self.recorder()
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        directory=Path(temporary.name)/'session'
+
+        class Terminal:
+            def __init__(self,args,directory):
+                directory.mkdir()
+                self.session='finalization-session'
+                self.closed=False
+                self.released=False
+                self.terminal_sizes=[dict(columns=220,rows=59)]
+                self.parser=SimpleNamespace(records=[])
+                terminal=self
+                class CDP:
+                    def __init__(self):self.responses={};self.pumps=0
+                    def pump(self):
+                        self.pumps+=1
+                        if self.pumps==2:
+                            if fault=='loss':terminal.closed=True
+                            if fault=='geometry':terminal.terminal_sizes.append(dict(columns=100,rows=59))
+                            self.responses[9]={'result':{'data':'c2Vjb25k'}}
+                self.cdp=CDP()
+            def start(self):pass
+            def readiness(self):return dict(session=self.session,shell='powershell51',cwd=str(directory))
+            def install_prompt(self):pass
+            def close(self):self.released=True
+
+        with patch.object(m,'Terminal',Terminal):
+            recorder=m.Recorder(SimpleNamespace(directory=directory))
+        recorder.geometry=dict(columns=220,rows=59)
+        recorder.begin('take',0)
+        start=time.monotonic()
+        sample=directory/'take/samples/000000.png';sample.write_bytes(b'first')
+        recorder.take.update(start=start,samples=[dict(path=str(sample),requested=start,completed=start)])
+        recorder.capture=(9,start)
+        recorder.capture_due=start+100
+        return m,recorder
+
+    def test_close_rejects_terminal_loss_during_final_capture(self):
+        self.check_close_fault('loss',ConnectionError)
+
+    def test_close_rejects_geometry_change_during_final_capture(self):
+        self.check_close_fault('geometry',RuntimeError)
+
+    def check_close_fault(self,fault,error):
+        m,recorder=self.session(fault)
+        m.write_json(recorder.control/'000001.request.json',dict(id=1,operation='close'))
+        with self.assertRaises(error):recorder.run()
+        self.assertTrue(recorder.terminal.released)
+        self.assertTrue(m.read_json(recorder.args.directory/'take/take.json')['incomplete'])
+        self.assertFalse(m.read_json(recorder.control/'000001.result.json')['success'])
+
+    def test_healthy_close_still_finalizes_after_draining(self):
+        m,recorder=self.session()
+        m.write_json(recorder.control/'000001.request.json',dict(id=1,operation='close'))
+        recorder.run()
+        self.assertTrue(recorder.terminal.released)
+        self.assertFalse(m.read_json(recorder.args.directory/'take/take.json')['incomplete'])
+        self.assertTrue(m.read_json(recorder.control/'000001.result.json')['success'])
+
+    def test_finalization_without_pending_capture_checks_observation(self):
+        for fault,error in [('loss',ConnectionError),('geometry',RuntimeError)]:
+            with self.subTest(fault=fault):
+                m,recorder=self.session()
+                recorder.capture=None
+                if fault=='loss':recorder.terminal.closed=True
+                else:recorder.terminal.terminal_sizes.append(dict(columns=100,rows=59))
+                with self.assertRaises(error):recorder.end()
+                recorder.end(incomplete=True)
+                self.assertTrue(m.read_json(recorder.args.directory/'take/take.json')['incomplete'])
