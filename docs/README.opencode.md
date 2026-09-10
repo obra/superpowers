@@ -96,18 +96,20 @@ To pin a specific version, use a branch or tag:
 
 ## How It Works
 
-The plugin does two things:
+The plugin does two things, using host-flavor-specific APIs:
 
 1. **Registers the skills directory** so OpenCode discovers all superpowers skills without symlinks or manual config.
-   - **V1:** via the `config` hook, injecting into `config.skills.paths`
-   - **V2:** via the `setup()` function using `ctx.skill.transform()` (V2 native API, confirmed active at runtime)
-2. **Injects bootstrap context** into the first user message of each conversation, adding superpowers awareness.
-   - **V1:** via `experimental.chat.messages.transform` hook
-   - **V2:** via `ctx.session.hook("context")` — the V2 equivalent (confirmed active at runtime)
+    - **V1:** via the `config` hook, injecting into `config.skills.paths`
+    - **V2:** via the `setup()` function using `ctx.skill.transform()` (V2 native API, confirmed active at runtime)
+2. **Injects bootstrap context** into the first user message of each conversation, adding superpowers awareness. The bootstrap includes a tool mapping that is also flavor-specific: V1 sessions get the V1 tool names below, V2 sessions get the V2 names.
+    - **V1:** via `experimental.chat.messages.transform` hook
+    - **V2:** via `ctx.session.hook("context")` — the V2 equivalent (confirmed active at runtime)
 
 ### Tool Mapping
 
-Skills speak in actions rather than naming any one runtime's tools. On OpenCode these resolve to:
+Skills speak in actions rather than naming any one runtime's tools. The bootstrap maps them to the tools your OpenCode flavor actually exposes.
+
+**V1 (`opencode` 1.x):**
 
 - "Create a todo" / "mark complete in todo list" → `todowrite`
 - `Subagent (general-purpose):` template → OpenCode's `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
@@ -118,7 +120,20 @@ Skills speak in actions rather than naming any one runtime's tools. On OpenCode 
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
-(Verified against the installed OpenCode CLI's tool inventory.)
+**V2 (`opencode2` beta):**
+
+- "Create a todo" → V2 has no todo tool of any kind; the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
+- `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
+- "Invoke a skill" → OpenCode's native `skill` tool
+- "Read a file" → `read`
+- "Create a file" / "edit a file" / "delete a file" → `patch` with `patchText` (same patch format as V1's `apply_patch`)
+- "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
+- "Search file contents" / "find files by name" → `grep`, `glob`
+- "Fetch a URL" → `webfetch`
+
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely; `read`, `grep`, `glob`, `webfetch`, and `skill` keep their V1 names.
+
+(V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the V2 source at `dbd9b18`.)
 
 ## Troubleshooting
 

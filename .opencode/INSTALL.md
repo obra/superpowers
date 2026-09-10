@@ -98,7 +98,9 @@ Then use the installed package path in `opencode.json`:
 
 ### Tool mapping
 
-Skills speak in actions ("create a todo", "dispatch a subagent", "read a file"). On OpenCode these resolve to:
+Skills speak in actions ("create a todo", "dispatch a subagent", "read a file"). The plugin injects a flavor-specific mapping — check your OpenCode version:
+
+**V1 (`opencode` 1.x):**
 
 - "Create a todo" / "mark complete in todo list" → `todowrite`
 - `Subagent (general-purpose):` template → `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
@@ -106,6 +108,17 @@ Skills speak in actions ("create a todo", "dispatch a subagent", "read a file").
 - "Read a file" → `read`
 - "Create a file" / "edit a file" / "delete a file" → `apply_patch`
 - "Run a shell command" → `bash`
+- "Search file contents" / "find files by name" → `grep`, `glob`
+- "Fetch a URL" → `webfetch`
+
+**V2 (`opencode2` beta):**
+
+- "Create a todo" → V2 has no todo tool; track the plan in a markdown file instead
+- `Subagent (general-purpose):` template → `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
+- "Invoke a skill" → OpenCode's native `skill` tool
+- "Read a file" → `read`
+- "Create a file" / "edit a file" / "delete a file" → `patch` (same patch format, via `patchText`)
+- "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 

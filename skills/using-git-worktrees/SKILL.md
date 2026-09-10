@@ -56,6 +56,8 @@ Native tools handle directory placement, branch creation, and cleanup automatica
 
 Only proceed to Step 1b if you have no native worktree tool available.
 
+**OpenCode:** there is no agent-side worktree tool on V1 or V2 — use the git worktree fallback (Step 1b). V2's TUI worktree dialogs (new-worktree / move-session keybinds) are user-side only; you cannot invoke them from a session.
+
 ### 1b. Git Worktree Fallback
 
 **Only use this if Step 1a does not apply** — you have no native worktree tool available. Create a worktree manually using git.
