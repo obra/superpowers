@@ -4,141 +4,54 @@ CLIs, TUIs, installs, test runs, agents at work — a large share of what is
 worth proving happens in a terminal, and none of it is visible to a browser
 recorder or an OS screen capture you probably can't get permission for.
 
-## Native Windows: one shell, two takes
+## Native Windows: `examples/film-terminal.py` stands in for tmux
 
-`examples/film-terminal.py` serves a native shell through ttyd/ConPTY and an
-owned headless Chrome or Edge page. It needs uv, native Python 3.12+, ttyd,
-and Chrome or Edge. PowerShell itself does not need Bash. Choose the shell
-being recorded with `--shell powershell51|powershell7|gitbash`; the shell
-invoking uv is a separate choice. Use `--shell-exe`, `--ttyd`, and `--browser`
-for explicit executable paths when they are absent from PATH.
+Windows has no tmux, so the example script holds the session instead. `serve`
+starts ttyd on the shell you name and a headless Chrome or Edge page showing
+it, keeps both alive, and appends the raw terminal output to
+`SESSION/terminal.log`. Every other verb is one short call against that
+browser. Run `serve` in a background task your harness keeps alive, the way
+the visual companion server runs; a one-shot shell that kills its children
+on return ends the session.
 
-Run `serve` in a foreground/background task kept alive by your harness,
-like the visual companion. Keep that task running while later shell tool
-calls submit requests. Do not use a one-shot shell that tears down its
-children on return. Do not install a service. PowerShell `Start-Process
--ArgumentList` joins arguments into a string and can lose special-path
-quoting; the foreground invocation below keeps arguments separate.
-
-PowerShell 5.1 or 7, in the long-lived recorder task:
+It needs uv, ttyd, and Chrome or Edge on PATH, or `--ttyd` and `--browser`.
+`--shell powershell51|powershell7|gitbash` picks the filmed shell; the shell
+you type these commands into is a separate choice. From PowerShell:
 
 ```powershell
 $skill = 'C:/path/to/skills/proving-it-works-with-a-movie'
 $work = "$HOME/movie O'Brien λ & [take]"
-& uv run --script "$skill/examples/film-terminal.py" serve --shell powershell51 --directory "$work/session" --cwd "$work"
+$film = "$skill/examples/film-terminal.py"
+# in a background task, kept alive until close:
+& uv run --script $film serve "$work/session" --shell powershell7 --cwd $work
+# then one call each; wait for "$work/session/ready.json" first:
+& uv run --script $film run "$work/session" 'pytest -q' --record "$work/take-one"
+& uv run --script $film run "$work/session" 'python app.py' --record "$work/take-two" --seconds 8  # a TUI: exits 2, still running
+& uv run --script $film key "$work/session" q --record "$work/take-three"
+& uv run --script $film close "$work/session"
 ```
 
-Git Bash, in the long-lived recorder task:
+From Git Bash the commands are the same with `skill=$(cygpath -m ...)` and
+`work=$(cygpath -m ...)`, as in assembling.md.
 
-```bash
-skill=$(cygpath -m '/c/path/to/skills/proving-it-works-with-a-movie')
-work=$(cygpath -m "$HOME/movie O'Brien λ & [take]")
-uv run --script "$skill/examples/film-terminal.py" serve --shell gitbash --directory "$work/session" --cwd "$work"
-```
+`run` types the command and films at 5 fps into `--record` until the prompt
+comes back, holds 1.5 s so the result stays readable, and prints the status
+as JSON: `ok` is the shell's own success flag and `exit_code` the last native
+program's exit code, which PowerShell keeps from an earlier program when the
+command was a cmdlet. It exits 1 when the command failed and 2 when it is
+still running after `--seconds`. `key` presses one key and `watch` films
+without typing; both wait for the prompt the same way. Every `--record`
+directory is a `kind: frames` scene at `rate: 5`; a slow screenshot repeats
+the previous frame so the timing stays honest.
 
-Create `work` first; use a new session directory each time. Wait for
-`session/control/ready.json` and inspect `session/ready.png`. The ready record
-contains the filmed shell's identity, cwd, geometry, and `next_request_id`.
-Readiness comes through that same filmed terminal; opening a second ttyd
-client would replace the session and is not an observation technique.
+Long work spans takes exactly as on Unix: film the command being issued with
+a short `--seconds`, do other things, then `watch` the result as a new take.
+The shell, its variables and its cwd persist across calls until `close`,
+which kills ttyd, the browser and everything they started.
 
-For each subsequent PowerShell control call, set `skill` and `work` again
-and define this small request helper. It writes JSON without a BOM and
-preserves each argument:
-
-```powershell
-function Send-MovieRequest([hashtable]$data, [switch]$WaitResult) {
-    $path = "$work/request-$($data.id).json"
-    $json = $data | ConvertTo-Json -Compress
-    [IO.File]::WriteAllText($path, $json, [Text.UTF8Encoding]::new($false))
-    $arguments = @('run','--script',"$skill/examples/film-terminal.py",'request',
-        '--directory',"$work/session",'--file',$path)
-    if ($WaitResult) { $arguments += '--wait-result' }
-    & uv @arguments
-    if ($LASTEXITCODE -ne 0) { throw 'Recorder request failed' }
-}
-# First control call: a real command keeps stdin until the later Enter key.
-Send-MovieRequest @{id=1;operation='begin-take';name='take-one'} -WaitResult
-Send-MovieRequest @{id=2;operation='run';command='python -u -c "print(123); input(); print(456)"';native_producer='python';timeout_seconds=120}
-Start-Sleep -Seconds 2
-Send-MovieRequest @{id=3;operation='end-take'} -WaitResult
-```
-
-In a **later control call**, with the same paths/helper and server still alive:
-
-```powershell
-Send-MovieRequest @{id=4;operation='begin-take';name='take-two'} -WaitResult
-Send-MovieRequest @{id=5;operation='key';key='Enter'} -WaitResult
-& uv run --script "$skill/examples/film-terminal.py" result --directory "$work/session" --id 2 --timeout 30
-if ($LASTEXITCODE -ne 0) { throw 'Recorded command did not succeed' }
-Start-Sleep -Seconds 2  # Keep the observed completion readable in the movie.
-Send-MovieRequest @{id=6;operation='end-take'} -WaitResult
-Send-MovieRequest @{id=7;operation='close'} -WaitResult
-```
-
-Equivalent Git Bash control calls use UTF-8 files and native-form paths.
-Set `skill` and `work` in each call. The first call:
-
-```bash
-set -euo pipefail
-recorder="$skill/examples/film-terminal.py"
-printf '%s\n' '{"id":1,"operation":"begin-take","name":"take-one"}' > "$work/1.json"
-printf '%s\n' '{"id":2,"operation":"run","command":"python -u -c \"print(123); input(); print(456)\"","native_producer":"python","timeout_seconds":120}' > "$work/2.json"
-printf '%s\n' '{"id":3,"operation":"end-take"}' > "$work/3.json"
-uv run --script "$recorder" request --directory "$work/session" --file "$work/1.json" --wait-result
-uv run --script "$recorder" request --directory "$work/session" --file "$work/2.json"
-sleep 2
-uv run --script "$recorder" request --directory "$work/session" --file "$work/3.json" --wait-result
-```
-
-The later Git Bash call:
-
-```bash
-set -euo pipefail
-recorder="$skill/examples/film-terminal.py"
-printf '%s\n' '{"id":4,"operation":"begin-take","name":"take-two"}' > "$work/4.json"
-printf '%s\n' '{"id":5,"operation":"key","key":"Enter"}' > "$work/5.json"
-printf '%s\n' '{"id":6,"operation":"end-take"}' > "$work/6.json"
-printf '%s\n' '{"id":7,"operation":"close"}' > "$work/7.json"
-uv run --script "$recorder" request --directory "$work/session" --file "$work/4.json" --wait-result
-uv run --script "$recorder" request --directory "$work/session" --file "$work/5.json" --wait-result
-uv run --script "$recorder" result --directory "$work/session" --id 2 --timeout 30
-sleep 2
-uv run --script "$recorder" request --directory "$work/session" --file "$work/6.json" --wait-result
-uv run --script "$recorder" request --directory "$work/session" --file "$work/7.json" --wait-result
-```
-
-Use one controller and consecutive IDs starting at one. Acknowledgment only
-means accepted. `--wait-result` and the wait-only `result` command return
-nonzero on failed, unknown, interrupted, or missing results. After a client
-wait timeout, retrieve the original ID with `result`; do not submit it again.
-The command's `timeout_seconds` is separate: its expiry ends the session and
-marks the outcome unknown. `inspect` reports the pending command, active
-take, and next ID; it consumes an ID like every other request.
-
-`end-take` stops capture, preserving shell variables, cwd, and a pending
-command. A second `run` is rejected while one is pending. Use intentional
-`key` requests for input: printable characters (such as the fixture's `q`),
-Enter, Escape, arrows, Tab, and Ctrl-C. `close` finalizes a healthy take;
-`cancel` marks it incomplete. Both release only owned processes and mark a
-pending command interrupted. Wait for the shutdown result before declaring
-cleanup successful.
-
-The viewport is fixed at 1600×900, sampled at a target 5 fps. Read the actual
-rows/columns from readiness; resizing fails the session. Hold important
-states at least 1.3 seconds. A screenshot gap above two seconds fails a take.
-Exports use completed samples on the 0.2-second grid and record duplicates
-in `take.json`; sampling does not prove every faster event was observed.
-Each completed `end-take` supplies `kind: frames`, `src`, and `rate: 5` for
-assembling.md. Keep the final movie at a readable resolution and inspect the
-exported frames and finished movie, including command completion.
-
-For native commands followed by logging, set `native_producer` to the
-explicit first-stage executable. This prevents successful `tee`/`Tee-Object`
-from hiding producer failure. Omit it for opaque/mixed scripts; their result
-does not certify every internal command. Preserve raw PowerShell `$?`
-separately from request-attributed errors and native exit status. See
-rendering-from-a-log.md for direct shell logging recipes.
+The viewport is fixed at 1600×900 with a 17 px font. Look at
+`SESSION/ready.png` before filming; `serve` refuses a blank canvas, the same
+preflight as below.
 
 ## Unix: tmux and ttyd
 

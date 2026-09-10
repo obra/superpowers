@@ -1,4 +1,4 @@
-"""Owned headless browser discovery and bounded card screenshots."""
+"""Headless browser discovery, bounded card screenshots, and process-tree cleanup."""
 
 from __future__ import annotations
 
@@ -10,8 +10,6 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-
-from windows_jobs import WindowsJob
 
 
 UNIX_BROWSERS = [
@@ -59,6 +57,29 @@ def find_browser(explicit: str | None) -> str | None:
     return None
 
 
+def _descendants(pid: int) -> list[int]:
+    pids, index = [pid], 0
+    while index < len(pids):
+        listed = subprocess.run(["pgrep", "-P", str(pids[index])], capture_output=True, text=True).stdout
+        pids.extend(int(child) for child in listed.split())
+        index += 1
+    return pids
+
+
+def kill_process_tree(pid: int) -> None:
+    """Kill a process this tool started and everything it spawned. A browser
+    or ttyd leaves helpers behind otherwise, and on Unix a pty child starts
+    its own session, so a process group is not enough."""
+    if sys.platform == "win32":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True)
+        return
+    for victim in reversed(_descendants(pid)):
+        try:
+            os.kill(victim, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+
 def render_card(html: Path, png: Path, *, browser: str, width: int,
                 height: int, timeout: float = 20) -> None:
     """Render one local HTML page and release every process it launched."""
@@ -68,53 +89,39 @@ def render_card(html: Path, png: Path, *, browser: str, width: int,
         raise FileNotFoundError(f"card HTML does not exist: {html}")
     png.parent.mkdir(parents=True, exist_ok=True)
     png.unlink(missing_ok=True)
-    with tempfile.TemporaryDirectory(prefix="movie-browser-") as profile:
+    with tempfile.TemporaryDirectory(prefix="movie-browser-", ignore_cleanup_errors=True) as profile:
         profile_path = Path(profile)
         log = profile_path / "browser.log"
-        job = None
-        process = None
+        argv = [
+            str(Path(browser).resolve()) if Path(browser).is_file() else browser,
+            "--headless=new", "--disable-gpu", "--hide-scrollbars",
+            "--no-first-run", "--no-default-browser-check",
+            f"--user-data-dir={profile_path}", f"--screenshot={png}",
+            f"--window-size={width},{height}", "--force-device-scale-factor=1",
+            html.as_uri(),
+        ]
+        with log.open("wb") as output:
+            process = subprocess.Popen(argv, cwd=profile_path, stdin=subprocess.DEVNULL,
+                                       stdout=output, stderr=subprocess.STDOUT,
+                                       start_new_session=sys.platform != "win32")
         try:
-            argv = [
-                str(Path(browser).resolve()) if Path(browser).is_file() else browser,
-                "--headless=new", "--disable-gpu", "--hide-scrollbars",
-                "--no-first-run", "--no-default-browser-check",
-                f"--user-data-dir={profile_path}", f"--screenshot={png}",
-                f"--window-size={width},{height}", "--force-device-scale-factor=1",
-                html.as_uri(),
-            ]
-            with log.open("wb") as output:
-                if sys.platform == "win32":
-                    job = WindowsJob()
-                    pid = job.spawn(argv, profile_path, log)
-                else:
-                    process = subprocess.Popen(argv, cwd=profile_path,
-                        stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT,
-                        start_new_session=True)
-                deadline = time.monotonic() + timeout
-                while time.monotonic() < deadline:
-                    # A fresh profile may keep background services alive after
-                    # taking the screenshot. A complete PNG is the render result.
-                    if png.is_file():
-                        data = png.read_bytes()
-                        if data.startswith(b"\x89PNG\r\n\x1a\n") and data.endswith(b"IEND\xaeB`\x82"):
-                            return
-                    try:
-                        remaining = min(0.05, max(0, deadline - time.monotonic()))
-                        code = job.wait(pid, remaining) if job else process.wait(timeout=remaining)
-                    except (TimeoutError, subprocess.TimeoutExpired):
-                        continue
-                    if code != 0 or not png.is_file() or png.stat().st_size == 0:
-                        detail = log.read_text(encoding="utf-8", errors="replace")[-1000:]
-                        raise RuntimeError(f"Browser exited with status {code} without a complete PNG: {detail}")
-                    # Read the file on the next iteration after a successful exit.
-                    time.sleep(0.01)
-                raise TimeoutError(f"Browser exceeded {timeout:g}s")
+            deadline = time.monotonic() + timeout
+            while time.monotonic() < deadline:
+                # A fresh profile may keep background services alive after
+                # taking the screenshot. A complete PNG is the render result.
+                if png.is_file():
+                    data = png.read_bytes()
+                    if data.startswith(b"\x89PNG\r\n\x1a\n") and data.endswith(b"IEND\xaeB`\x82"):
+                        return
+                elif process.poll() is not None:
+                    detail = log.read_text(encoding="utf-8", errors="replace")[-1000:]
+                    raise RuntimeError(f"Browser exited with status {process.returncode} "
+                                       f"without a complete PNG: {detail}")
+                time.sleep(0.05)
+            raise TimeoutError(f"Browser exceeded {timeout:g}s")
         finally:
-            if job is not None:
-                job.close()
-            if process is not None:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+            kill_process_tree(process.pid)
+            try:
                 process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass

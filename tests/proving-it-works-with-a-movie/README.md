@@ -16,8 +16,9 @@ them; any skip then makes the run fail.
 The assembly sine wave is only a synthetic timing fixture. The narration drift
 inputs exercise text comparison only. Neither is speech/ASR acceptance.
 
-The `processes` and `terminal` suites need native Windows with ttyd and Chrome
-or Edge available; elsewhere they skip. Set `MOVIE_TEST_SHELL` to
-`powershell51`, `powershell7`, or `gitbash` to choose the recorded shell, and
-`MOVIE_TEST_SHELL_EXE` and `MOVIE_TEST_TTYD` to name those executables when
-they are not on PATH.
+The `terminal` suite starts a real ttyd session and skips where ttyd or a
+Chrome-family browser is missing. It films `bash` by default on Unix and
+`powershell51` on Windows; set `MOVIE_TEST_SHELL` to `powershell51`,
+`powershell7`, `gitbash`, or `bash`, and `MOVIE_TEST_SHELL_EXE`,
+`MOVIE_TEST_TTYD`, or `MOVIE_TEST_BROWSER` when those executables are not on
+PATH.

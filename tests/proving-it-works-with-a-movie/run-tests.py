@@ -17,7 +17,6 @@ IMPLEMENTED_SUITES = {
     "checker": "test_checker.py",
     "narration": "test_narration.py",
     "paths": "test_paths.py",
-    "processes": "test_processes.py",
     "subtitles": "test_subtitles.py",
     "terminal": "test_terminal.py",
 }

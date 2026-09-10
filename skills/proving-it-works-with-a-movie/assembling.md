@@ -107,8 +107,8 @@ is small and always worth committing.
 
 Use native `uv`, FFmpeg and ffprobe on the test process's PATH. Hard subtitles
 require FFmpeg's `subtitles` filter (libass). Install Chrome or Edge for cards.
-The tools' Python environments are managed by uv; the media scripts require
-Python 3.10+, and the Windows terminal example requires 3.12+. First use can
+The tools' Python environments are managed by uv and need Python 3.10+.
+First use can
 download Python, script dependencies, the local Piper voice, and the local
 transcription model. Do that setup before recording. No cloud key is required.
 PowerShell needs neither Git Bash nor WSL, tmux, Docker, or administrator rights.

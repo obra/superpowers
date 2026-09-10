@@ -1,490 +1,248 @@
-"""Windows terminal recorder timing, control, and native acceptance."""
+"""The terminal recorder: prompt parsing and the frame grid anywhere; a real
+ttyd session wherever ttyd and a Chrome-family browser exist."""
 import importlib.util
-from pathlib import Path
-import unittest
-
-SCRIPT=Path(__file__).resolve().parents[2]/'skills/proving-it-works-with-a-movie/examples/film-terminal.py'
-
-class TerminalPolicyTests(unittest.TestCase):
-    def recorder(self):
-        self.assertTrue(SCRIPT.is_file(), 'Windows recorder entry point is missing')
-        spec=importlib.util.spec_from_file_location('film_terminal',SCRIPT)
-        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
-        return module
-
-    def test_output_grid_never_uses_future_capture(self):
-        m=self.recorder()
-        self.assertEqual(m.frame_sources([10.,10.35,10.81],10.,11.),[0,0,1,1,1])
-        self.assertEqual(m.frame_sources([10.],10.,10.),[0])
-        self.assertEqual(m.frame_sources([10.,10.2],10.,10.4),[0,1,1])
-
-    def test_capture_gaps_and_invalid_boundaries_fail(self):
-        m=self.recorder()
-        for times,start,end in [([],0,1),([1],0,2),([1],1,.9),([1,3,2],1,4),([1,4],1,3)]:
-            with self.subTest(times=times),self.assertRaises(ValueError):m.frame_sources(times,start,end)
-        for times,start,end in [([1,3.01],1,4),([1],1,3.01)]:
-            with self.subTest(times=times),self.assertRaises(TimeoutError):m.frame_sources(times,start,end)
-
-    def test_logger_cannot_hide_identified_producer_failure(self):
-        m=self.recorder()
-        good=dict(outcome='completed',shell_success=True,shell_error=None,native_producer='python.exe',producer_exit_code=0)
-        self.assertTrue(m.command_succeeded(good))
-        for change in [dict(producer_exit_code=7),dict(producer_exit_code=None),dict(outcome='unknown'),dict(outcome='interrupted'),dict(shell_success=None),dict(shell_error='failed')]:
-            with self.subTest(change=change):self.assertFalse(m.command_succeeded(good|change))
-        self.assertTrue(m.command_succeeded(good|dict(native_producer=None,producer_exit_code=None)))
-
-class ReadinessDirectoryTests(unittest.TestCase):
-    def test_readiness_requires_requested_directory(self):
-        import tempfile
-        from types import SimpleNamespace
-        from unittest.mock import Mock
-        module = TerminalPolicyTests().recorder()
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = (Path(tmp) / "movie O'Brien λ & [take]").resolve()
-            cwd.mkdir()
-            for shell in ['powershell51', 'powershell7', 'gitbash']:
-                for actual in [cwd, Path(tmp)]:
-                    with self.subTest(shell=shell, actual=actual):
-                        terminal = module.Terminal.__new__(module.Terminal)
-                        terminal.args = SimpleNamespace(shell_kind=shell, cwd=cwd)
-                        terminal.session = 'session'
-                        terminal.directory = Path(tmp)
-                        terminal.closed = False
-                        terminal.parser = SimpleNamespace(records=[{'session':'session', 'cwd':str(actual)}])
-                        terminal.cdp = SimpleNamespace(pump=Mock())
-                        terminal.type = Mock()
-                        terminal.screenshot = Mock()
-                        if actual == cwd:
-                            self.assertEqual(terminal.readiness()['cwd'], str(cwd))
-                            terminal.screenshot.assert_called_once_with('ready.png')
-                        else:
-                            with self.assertRaisesRegex(RuntimeError, 'requested cwd'):
-                                terminal.readiness()
-                            terminal.screenshot.assert_not_called()
-
-
 import json
 import os
+import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import unittest
+from pathlib import Path
 
-@unittest.skipUnless(sys.platform == 'win32', 'native Windows required')
-class NativeCwdFailureTests(unittest.TestCase):
-    def test_missing_cwd_fails_before_launch(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            directory = Path(tmp) / 'session'
-            result = subprocess.run([sys.executable, str(SCRIPT), 'serve', '--shell',
-                'powershell51', '--directory', str(directory), '--cwd', str(Path(tmp) / 'missing')],
-                capture_output=True, timeout=10)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertFalse((directory / 'launches.json').exists())
-            self.assertFalse((directory / 'control/ready.json').exists())
+import fixtures
+
+SCRIPT = Path(__file__).resolve().parents[2] / "skills/proving-it-works-with-a-movie/examples/film-terminal.py"
+FIXTURE = Path(__file__).resolve().with_name("fixtures") / "terminal_app.py"
+TTYD = os.environ.get("MOVIE_TEST_TTYD") or shutil.which("ttyd")
+BROWSER = fixtures.load_script("browser_tools").find_browser(os.environ.get("MOVIE_TEST_BROWSER"))
+SHELL = os.environ.get("MOVIE_TEST_SHELL") or ("powershell51" if os.name == "nt" else "bash")
+BASH = SHELL in ("bash", "gitbash")
 
 
-@unittest.skipUnless(sys.platform=='win32', 'native Windows terminal required')
-class NativeTerminalTests(unittest.TestCase):
+def recorder():
+    spec = importlib.util.spec_from_file_location("film_terminal", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def gone(pid, timeout=5):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if os.name == "nt":
+            listed = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"],
+                                    capture_output=True, text=True).stdout
+            if str(pid) not in listed:
+                return True
+        else:
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return True
+        time.sleep(0.1)
+    return False
+
+
+class PromptTests(unittest.TestCase):
+    def test_prompts_parse_both_terminators_and_paths_with_semicolons(self):
+        module = recorder()
+        log = (b"noise\x1b]0;MOVIE;1;1;;C:\\a;b\x07\x1b[0m"
+               b"\x1b]2;MOVIE;2;0;7;/c/x\x1b\\tail"
+               b"\x1b]0;MOVIE;3;1;0;/home/me\x07")
+        self.assertEqual(module.prompts(log), [
+            dict(n=1, ok=True, exit_code=None, cwd="C:\\a;b"),
+            dict(n=2, ok=False, exit_code=7, cwd="/c/x"),
+            dict(n=3, ok=True, exit_code=0, cwd="/home/me"),
+        ])
+        self.assertEqual(module.prompts(b"\x1b]0;something else\x07"), [])
+
+    def test_prompt_install_is_one_typed_line_per_shell(self):
+        module = recorder()
+        cwd = Path("C:/Users/x/movie O'Brien λ")
+        for kind in module.SHELLS:
+            line = module.prompt_command(kind, cwd)
+            self.assertEqual(len(line.splitlines()), 1, kind)
+            self.assertNotIn("MOVIE;", line, "the marker text must not be echoed by the install line")
+            self.assertIn("Brien λ", module.prompt_script(kind, cwd), "the script enters the cwd")
+
+    def test_keys_are_named_or_single_characters(self):
+        module = recorder()
+        self.assertEqual(module.key_params("Ctrl-C")["modifiers"], 2)
+        self.assertEqual(module.key_params("Enter")["text"], "\r")
+        self.assertEqual(module.key_params("q"), dict(key="q", text="q"))
+        with self.assertRaises(SystemExit):
+            module.key_params("Bogus")
+
+
+class FilmGridTests(unittest.TestCase):
+    def test_a_slow_capture_repeats_the_previous_frame_and_filming_holds_after_the_prompt(self):
+        module = recorder()
+        clock = {"now": 0.0}
+        shots = []
+
+        def capture():
+            shots.append(len(shots) + 1)
+            clock["now"] += 0.5 if len(shots) == 2 else 0.01  # the second screenshot stalls
+            return bytes([len(shots)])
+
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "take"
+            frames = module.film(out, seconds=10, hold=0.4, capture=capture,
+                                 finished=lambda: clock["now"] >= 1.0,
+                                 clock=lambda: clock["now"],
+                                 sleep=lambda s: clock.__setitem__("now", clock["now"] + s))
+            files = sorted(out.glob("f*.png"))
+            self.assertEqual([f.name for f in files], [f"f{i:05d}.png" for i in range(frames)])
+            self.assertEqual(files[2].read_bytes(), files[1].read_bytes(), "missed slot repeats the last frame")
+            self.assertNotEqual(files[3].read_bytes(), files[2].read_bytes())
+            self.assertEqual(frames, 7, "1.0 s to the prompt plus 0.4 s hold at 5 fps")
+
+    def test_filming_stops_at_the_deadline_while_the_command_runs(self):
+        module = recorder()
+        clock = {"now": 0.0}
+        with tempfile.TemporaryDirectory() as directory:
+            frames = module.film(Path(directory), seconds=1.0, hold=5, capture=lambda: b"png",
+                                 finished=lambda: False, clock=lambda: clock["now"],
+                                 sleep=lambda s: clock.__setitem__("now", clock["now"] + s))
+            self.assertEqual(frames, 5)
+
+
+class ServeArgumentTests(unittest.TestCase):
+    def test_serve_refuses_a_missing_cwd_before_launching_anything(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run([sys.executable, str(SCRIPT), "serve", str(Path(directory) / "session"),
+                                     "--shell", "bash", "--cwd", str(Path(directory) / "missing")],
+                                    capture_output=True, text=True, timeout=60)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("--cwd is not a directory", result.stderr)
+            self.assertFalse((Path(directory) / "session" / "session.json").exists())
+
+
+@unittest.skipUnless(TTYD and BROWSER, "ttyd and a Chrome-family browser are required")
+class SessionTests(unittest.TestCase):
     def setUp(self):
-        self.work=tempfile.TemporaryDirectory(prefix='movie-terminal-')
-        self.addCleanup(self.work.cleanup)
-        self.directory=Path(self.work.name)/'session'
-        self.shell=os.environ.get('MOVIE_TEST_SHELL','powershell51')
-        self.number=0
-        identity=subprocess.run(['whoami','/all'],capture_output=True,check=True)
-        self.assertIn(b'S-1-16-8192',identity.stdout)
-        (Path(self.work.name)/'identity.txt').write_bytes(identity.stdout)
-        self.log=(Path(self.work.name)/'serve.log').open('wb')
+        self.tmp = tempfile.TemporaryDirectory(prefix="movie-terminal-", ignore_cleanup_errors=True)
+        self.addCleanup(self.tmp.cleanup)
+        self.work = Path(self.tmp.name) / "movie O'Brien λ"
+        self.work.mkdir()
+        self.session = Path(self.tmp.name) / "session"
+        self.log = (Path(self.tmp.name) / "serve.log").open("wb")
         self.addCleanup(self.log.close)
-        argv=[sys.executable,str(SCRIPT),'serve','--shell',self.shell,'--directory',str(self.directory)]
-        for flag,variable in [('shell-exe','MOVIE_TEST_SHELL_EXE'),('ttyd','MOVIE_TEST_TTYD')]:
-            if os.environ.get(variable):argv+=['--'+flag,os.environ[variable]]
-        self.server=subprocess.Popen(argv,stdout=self.log,stderr=subprocess.STDOUT)
-        deadline=time.monotonic()+30
-        while not (self.directory/'control/ready.json').exists() and self.server.poll() is None and time.monotonic()<deadline:time.sleep(.05)
-        self.assertTrue((self.directory/'control/ready.json').exists(),(Path(self.work.name)/'serve.log').read_text(errors='replace'))
+        argv = [sys.executable, str(SCRIPT), "serve", str(self.session), "--shell", SHELL,
+                "--cwd", str(self.work), "--ttyd", TTYD, "--browser", BROWSER]
+        if os.environ.get("MOVIE_TEST_SHELL_EXE"):
+            argv += ["--shell-exe", os.environ["MOVIE_TEST_SHELL_EXE"]]
+        self.serve = subprocess.Popen(argv, stdout=self.log, stderr=subprocess.STDOUT)
+        deadline = time.monotonic() + 45
+        while not (self.session / "ready.json").exists() and self.serve.poll() is None \
+                and time.monotonic() < deadline:
+            time.sleep(0.1)
+        if not (self.session / "ready.json").exists():
+            report = "".join(f"--- {name}\n" + path.read_text(errors="replace") if path.exists() else ""
+                             for name, path in (("serve.log", Path(self.tmp.name) / "serve.log"),
+                                                ("ttyd.log", self.session / "ttyd.log"),
+                                                ("browser.log", self.session / "browser.log")))
+            self.fail(report)
 
     def tearDown(self):
-        if self.server.poll() is None:
-            try:self.request('cancel')
-            finally:
-                try:self.server.wait(10)
-                except subprocess.TimeoutExpired:self.server.kill();self.server.wait()
-        self.log.close()
-        evidence=os.environ.get('MOVIE_TERMINAL_EVIDENCE')
-        if evidence:
-            import shutil
-            destination=Path(evidence)/(self.shell+'-'+self._testMethodName)
-            shutil.copytree(self.work.name,destination,ignore=shutil.ignore_patterns('profile'),dirs_exist_ok=True)
-        self.work.cleanup()
+        if self.serve.poll() is None:
+            self.cli("close", str(self.session))
+            try:
+                self.serve.wait(15)
+            except subprocess.TimeoutExpired:
+                self.serve.kill()
+                self.serve.wait()
+        for pid in json.loads((self.session / "session.json").read_text(encoding="utf-8"))["pids"]:
+            self.assertTrue(gone(pid), f"pid {pid} survived close")
 
-    def cli(self,*args):
-        return subprocess.run([sys.executable,str(SCRIPT),*args],capture_output=True,timeout=40)
+    def cli(self, *args, timeout=120):
+        result = subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, timeout=timeout)
+        return result.returncode, result.stdout.decode("utf-8", "replace"), result.stderr.decode("utf-8", "replace")
 
-    def request(self,operation,wait=True,expected=0,timeout=30,**fields):
-        self.number+=1
-        file=Path(self.work.name)/f'request-{self.number}.json'
-        file.write_text(json.dumps(dict(id=self.number,operation=operation,**fields)),encoding='utf-8')
-        args=['request','--directory',str(self.directory),'--file',str(file),'--timeout',str(timeout)]
-        if wait:args+=['--wait-result']
-        r=self.cli(*args)
-        self.assertEqual(r.returncode,expected,(r.stdout+r.stderr).decode(errors='replace'))
-        return json.loads(r.stdout) if r.stdout.strip() else None
+    def run_command(self, command, *extra):
+        code, out, err = self.cli("run", str(self.session), command, *extra)
+        self.assertTrue(out.strip(), err)
+        return code, json.loads(out.strip().splitlines()[-1])
 
-    def run_command(self,command,**kwargs):return self.request('run',command=command,**kwargs)
+    def quoted(self, *words):
+        if BASH:
+            return " ".join(shlex.quote(w.replace("\\", "/")) for w in words)
+        return "& " + " ".join("'" + w.replace("'", "''") + "'" for w in words)
 
-    def native(self,code):
-        import base64
-        payload=base64.b64encode(code.encode()).decode()
-        exe=sys.executable.replace('\\','/')
-        return ('' if self.shell=='gitbash' else '& ')+f"'{exe}' -c \"import base64;exec(base64.b64decode('{payload}'))\""
+    def native(self, code):
+        return self.quoted(sys.executable) + f' -c "{code}"'
 
-    def test_takes_pending_command_and_failure_recovery(self):
-        ready=json.loads((self.directory/'control/ready.json').read_text())
-        self.assertGreaterEqual(ready['geometry']['columns'],80)
-        self.run_command("export MOVIE_VALUE=kept" if self.shell=='gitbash' else "$global:MovieValue='kept'")
-        self.request('begin-take',name='first')
-        r=self.run_command(self.native('import time;time.sleep(2);print("long command done")'),wait=True,expected=1,timeout=.2)
-        self.assertEqual(r['outcome'],'client-timeout')
-        pending=self.number
-        self.run_command("echo must-not-run",expected=1)
-        inspect=self.request('inspect');self.assertEqual(inspect['pending']['id'],pending)
-        first=self.request('end-take');self.assertEqual(first['kind'],'frames')
-        self.request('begin-take',name='second')
-        r=self.cli('result','--directory',str(self.directory),'--id',str(pending),'--timeout','10')
-        self.assertEqual(r.returncode,0,r.stdout+r.stderr)
-        fixture=Path(__file__).parent/'fixtures/terminal_app.py'
-        code=f"import runpy,sys;sys.argv=['fixture','states'];runpy.run_path({str(fixture)!r},run_name='__main__')"
-        self.run_command(self.native(code),wait=False,native_producer=sys.executable)
-        tui=self.number
-        time.sleep(6.5)
-        self.request('key',key='q')
-        self.assertEqual(self.cli('result','--directory',str(self.directory),'--id',str(tui)).returncode,0)
-        take=self.request('end-take')
-        self.assertEqual(take['session_id'],ready['session_id'])
-        from PIL import Image
-        colors=[]
-        for png in sorted(Path(take['src']).glob('*.png')):
-            # Require a solid block; a colored shell prompt is not a TUI state.
-            image=Image.open(png).convert('RGB')
-            pixel=image.getpixel((100,60))
-            if sum(count for count,value in image.crop((40,30,440,140)).getcolors(44000) if value==pixel)<30000:continue
-            if pixel[0]>pixel[1]*1.5 and pixel[0]>pixel[2]*1.5:color='red'
-            elif pixel[1]>pixel[0]*1.5 and pixel[1]>pixel[2]*1.5:color='green'
-            elif pixel[2]>pixel[0]*1.5 and pixel[2]>pixel[1]*1.3:color='blue'
-            else:continue
-            if not colors or colors[-1]!=color:colors.append(color)
-        self.assertEqual(colors,['red','green','blue'])
-        command="test \"$MOVIE_VALUE\" = kept" if self.shell=='gitbash' else "if ($MovieValue -ne 'kept') {throw 'state lost'}"
-        self.run_command(command)
-        logging=' | cat' if self.shell=='gitbash' else ' | Tee-Object -Variable MovieLog'
-        failure=self.run_command(self.native('import sys;print("producer");sys.exit(7)')+logging,native_producer=sys.executable,expected=1)
-        self.assertEqual(failure['producer_exit_code'],7)
-        self.run_command('echo recovered')
-        self.request('close');self.assertEqual(self.server.wait(10),0)
-
-    def outcome_commands(self):
-        """Shell outcomes the recorder must attribute correctly: (name, command, native_producer)."""
-        exe=os.environ['MOVIE_TEST_SHELL_EXE'];python=sys.executable
-        commands=[('native_success',self.native('import sys;sys.exit(0)'),python)]
-        if self.shell!='gitbash':
-            commands+=[
-                ('cmdlet_failure',"Get-Item 'Z:\\probe-path-that-does-not-exist'",None),
-                ('native_failure',self.native('import sys;sys.exit(7)'),python),
-                ('cmdlet_success',"Write-Output 'cmdlet success λ'",None),
-                ('terminating_error',"throw 'probe terminating error'",None),
-                ('nonterminating_error',"Write-Error 'probe nonterminating error'",None),
-                ('parse_failure','Write-Output )',None),
-                ('logging_failure',self.native("import sys;print('producer');sys.exit(7)")+' | Tee-Object -Variable ProbeLog',python),
-                ('expression_wrapper',"(Write-Error 'probe expression wrapper')",None),
-                ('script_exit',f"& '{exe}' -NoLogo -NoProfile -Command 'exit 9'",exe),
-            ]
+    def test_commands_report_status_and_the_shell_persists_between_calls(self):
+        code, result = self.run_command("echo hello")
+        self.assertEqual((code, result["outcome"], result["ok"]), (0, "completed", True), result)
+        self.assertTrue(result["cwd"].endswith("movie O'Brien λ"), result["cwd"])
+        if BASH:
+            set_value, check_value, failing = "MOVIE_VALUE=kept", 'test "$MOVIE_VALUE" = kept', "false"
         else:
-            commands+=[
-                ('shell_failure','test -e /probe-path-that-does-not-exist',None),
-                ('native_failure',self.native('import sys;sys.exit(7)'),python),
-                ('shell_success',"printf 'shell success λ\\n'",None),
-                ('parse_failure','echo )',None),
-                ('logging_failure',self.native("import sys;print('producer');sys.exit(7)")+' | cat',python),
-                ('script_exit',"bash --noprofile --norc -c 'exit 9'",'Git Bash'),
-            ]
-        return commands
+            set_value = "$global:MovieValue = 'kept'"
+            check_value = "if ($global:MovieValue -ne 'kept') { throw 'lost' }"
+            failing = "Get-Item 'Z:\\nowhere'"
+        self.assertEqual(self.run_command(set_value)[0], 0)
+        self.assertEqual(self.run_command(check_value)[0], 0, "state must survive separate calls")
+        code, result = self.run_command(failing)
+        self.assertEqual((code, result["ok"]), (1, False), result)
+        code, result = self.run_command(self.native("import sys; sys.exit(7)"))
+        self.assertEqual((code, result["ok"], result["exit_code"]), (1, False, 7), result)
 
-    def test_native_shell_outcomes(self):
-        for name,command,native in self.outcome_commands():
-            success=name in ('native_success','cmdlet_success','shell_success')
-            result=self.run_command(command,native_producer=native,expected=0 if success else 1)
-            self.assertEqual(result['outcome'],'completed')
-            if name=='expression_wrapper':
-                self.assertEqual(result['raw_shell_success'],self.shell=='powershell51')
-            if name=='logging_failure':self.assertEqual(result['producer_exit_code'],7)
-        if self.shell != 'gitbash':
-            self.run_command(self.native('import sys;sys.exit(0)'),native_producer=sys.executable)
-            missing=self.run_command("Write-Output 'no native process ran'",native_producer=sys.executable,expected=1)
-            self.assertIsNone(missing['producer_exit_code'])
-        self.request('close')
-        self.assertEqual(self.server.wait(10),0)
+    def test_a_tui_is_filmed_across_two_takes_and_a_long_command_across_calls(self):
+        from PIL import Image
 
-    def test_command_deadline_ends_session_and_marks_take_incomplete(self):
-        self.request('begin-take',name='timeout')
-        result=self.run_command(self.native('import time;time.sleep(30)'),timeout_seconds=.4,expected=1)
-        self.assertEqual(result['outcome'],'unknown')
-        self.assertIsNone(result['shell_success'])
-        self.assertNotEqual(self.server.wait(10),0)
-        self.assertTrue(json.loads((self.directory/'timeout/take.json').read_text())['incomplete'])
+        take_one, take_two, take_three = (self.work / name for name in ("take-one", "take-two", "take-three"))
+        code, result = self.run_command(self.quoted(sys.executable, str(FIXTURE)),
+                                        "--record", str(take_one), "--seconds", "7")
+        self.assertEqual((code, result["outcome"]), (2, "running"), result)
+        frames = sorted(take_one.glob("f*.png"))
+        self.assertGreaterEqual(len(frames), 30, "7 s at 5 fps")
+        seen = []
+        for frame in frames:
+            with Image.open(frame) as image:
+                r, g, b = image.convert("RGB").getpixel((300, 120))
+            color = ("red" if r > 150 and g < 100 and b < 100 else
+                     "green" if g > 120 and r < 100 and b < 140 else
+                     "blue" if b > 150 and r < 100 and g < 140 else None)
+            if color and (not seen or seen[-1] != color):
+                seen.append(color)
+        self.assertEqual(seen, ["red", "green", "blue"], "the three TUI states, in order, in the automatic frames")
+        code, out, err = self.cli("key", str(self.session), "q", "--record", str(take_two), "--seconds", "10")
+        result = json.loads(out.strip().splitlines()[-1])
+        self.assertEqual((code, result["outcome"], result["ok"]), (0, "completed", True), (result, err))
+        self.assertGreaterEqual(result["frames"], 7, "the exit plus the 1.5 s hold")
+        self.assertEqual(len(json.loads((self.work / "states.json").read_text())), 3)
 
-    def test_gap_duplicate_and_rejection_leave_cancellation_usable(self):
-        file=Path(self.work.name)/'gap.json';file.write_text('{"id":2,"operation":"inspect"}')
-        result=self.cli('request','--directory',str(self.directory),'--file',str(file),'--timeout','1')
-        self.assertNotEqual(result.returncode,0)
-        self.assertFalse((self.directory/'control/000002.request.json').exists())
-        self.request('key',key='F99',expected=1)
-        self.assertEqual(json.loads((self.directory/'control/status.json').read_text())['next_request_id'],2)
-        first=Path(self.work.name)/'request-1.json'
-        result=self.cli('request','--directory',str(self.directory),'--file',str(first),'--timeout','1')
-        self.assertNotEqual(result.returncode,0)
-        self.request('cancel');self.assertEqual(self.server.wait(10),0)
+        code, result = self.run_command(self.native("import time; time.sleep(3)"), "--seconds", "1")
+        self.assertEqual(result["outcome"], "running")
+        code, out, err = self.cli("watch", str(self.session), "--record", str(take_three), "--seconds", "15")
+        result = json.loads(out.strip().splitlines()[-1])
+        self.assertEqual((code, result["outcome"], result["ok"]), (0, "completed", True), (result, err))
+        self.assertGreaterEqual(result["frames"], 10, "about 2 s of waiting plus the hold")
+        self.assertEqual(result["scene"], {"kind": "frames", "src": str(take_three.resolve()), "rate": 5})
 
-    def own_descendants(self):
-        fixture=Path(__file__).parent/'fixtures/terminal_app.py'
-        directory=Path(self.work.name)/'descendants'
-        code=f"import runpy,sys;sys.argv=['fixture','tree',{str(directory)!r}];runpy.run_path({str(fixture)!r},run_name='__main__')"
-        self.run_command(self.native(code),wait=False,native_producer=sys.executable)
-        deadline=time.monotonic()+10
-        while time.monotonic()<deadline and len(list(directory.glob('*.json')))<3:time.sleep(.05)
-        pids=[json.loads(p.read_text())['pid'] for p in directory.glob('*.json')]
-        self.assertEqual(len(pids),3)
-        launches=json.loads((self.directory/'launches.json').read_text())
-        return pids+[v['pid'] for v in launches]
-
-    def assert_dead(self,pids):
-        import ctypes
-        from ctypes import wintypes as W
-        kernel=ctypes.WinDLL('kernel32',use_last_error=True)
-        kernel.OpenProcess.argtypes=[W.DWORD,W.BOOL,W.DWORD];kernel.OpenProcess.restype=W.HANDLE
-        kernel.WaitForSingleObject.argtypes=[W.HANDLE,W.DWORD];kernel.CloseHandle.argtypes=[W.HANDLE]
-        deadline=time.monotonic()+10
-        alive=pids
-        while alive and time.monotonic()<deadline:
-            alive=[]
-            for pid in pids:
-                handle=kernel.OpenProcess(0x100000,False,pid)
-                if handle:
-                    if kernel.WaitForSingleObject(handle,0)==258:alive.append(pid)
-                    kernel.CloseHandle(handle)
-            if alive:time.sleep(.05)
-        self.assertEqual(alive,[])
-
-    def cleanup_case(self,mode):
-        sentinel=subprocess.Popen([sys.executable,'-c','import time;time.sleep(180)'])
-        try:
-            pids=self.own_descendants()
-            self.request('begin-take',name='cleanup')
-            if mode in ('close','cancel'):
-                self.request(mode);self.assertEqual(self.server.wait(10),0)
-                take=json.loads((self.directory/'cleanup/take.json').read_text())
-                self.assertEqual(take['incomplete'],mode=='cancel')
-            elif mode=='forced-exit':self.server.kill();self.server.wait(10)
-            elif mode=='browser-loss':
-                launches=json.loads((self.directory/'launches.json').read_text())
-                browser=next(v['pid'] for v in launches if v['name']=='browser')
-                subprocess.run(['taskkill','/PID',str(browser),'/F'],capture_output=True,check=True)
-                self.assertNotEqual(self.server.wait(10),0)
-            elif mode=='capture-write':
-                samples=self.directory/'cleanup/samples'
-                samples.rename(samples.with_name('saved-samples'));samples.write_text('blocked')
-                self.assertNotEqual(self.server.wait(10),0)
-            elif mode=='report-write':
-                result_path=self.directory/'control'/f'{self.number+1:06d}.result.json';result_path.mkdir()
-                self.request('close',expected=1,timeout=1)
-                self.assertNotEqual(self.server.wait(10),0)
-            elif mode=='control-write':
-                status=self.directory/'control/status.json';status.unlink();status.mkdir()
-                # Publish directly: client status validation correctly cannot read a directory.
-                number=self.number+1
-                (self.directory/'control'/f'{number:06d}.request.json').write_text(json.dumps(dict(id=number,operation='inspect')))
-                self.assertNotEqual(self.server.wait(10),0)
-            self.assert_dead(pids)
-            self.assertIsNone(sentinel.poll())
-            (Path(self.work.name)/'cleanup-evidence.json').write_text(json.dumps(dict(mode=mode,owned_pids=pids,owned_remaining=[],sentinel_pid=sentinel.pid,sentinel_alive=True)))
-        finally:
-            sentinel.terminate();sentinel.wait(10)
-
-    def test_normal_cleanup(self):self.cleanup_case('close')
-    def test_cancel_cleanup(self):self.cleanup_case('cancel')
-    def test_browser_loss_cleanup(self):self.cleanup_case('browser-loss')
-    def test_forced_exit_cleanup(self):self.cleanup_case('forced-exit')
-    def test_capture_write_failure_cleanup(self):self.cleanup_case('capture-write')
-    def test_report_write_failure_cleanup(self):self.cleanup_case('report-write')
-    def test_control_write_failure_cleanup(self):self.cleanup_case('control-write')
-
-    def test_geometry_change_ends_session(self):
-        pids=self.own_descendants()
-        self.request('begin-take',name='geometry')
-        launches=json.loads((self.directory/'launches.json').read_text())
-        browser=next(v for v in launches if v['name']=='browser')
-        port=next(v.split('=')[1] for v in browser['argv'] if v.startswith('--remote-debugging-port='))
-        import urllib.request,websocket
-        with urllib.request.urlopen(f'http://127.0.0.1:{port}/json/list') as response:pages=json.load(response)
-        page=next(page for page in pages if page['type']=='page' and page['url'].startswith('http://127.0.0.1:'))
-        ws=websocket.create_connection(page['webSocketDebuggerUrl'],suppress_origin=True)
-        try:
-            ws.send(json.dumps(dict(id=1,method='Runtime.evaluate',params=dict(expression="document.querySelector('.xterm').parentElement.style.width='800px'; window.dispatchEvent(new Event('resize')); document.querySelector('.xterm').parentElement.getBoundingClientRect().width",returnByValue=True))))
-            resize=json.loads(ws.recv())
-            self.assertNotIn('error',resize)
-            (Path(self.work.name)/'resize-response.json').write_text(json.dumps(dict(page=page,response=resize)))
-            self.assertEqual(resize['result']['result'].get('value'),800,resize)
-            self.assertNotEqual(self.server.wait(10),0)
-        finally:ws.close()
-        self.assert_dead(pids)
-        self.assertTrue(json.loads((self.directory/'geometry/take.json').read_text())['incomplete'])
+    def test_close_kills_the_shell_tree_and_spares_unrelated_processes(self):
+        sentinel = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
+        self.addCleanup(sentinel.kill)
+        tree = self.work / "tree"
+        code, result = self.run_command(self.quoted(sys.executable, str(FIXTURE), "tree", str(tree)), "--seconds", "2")
+        self.assertEqual(result["outcome"], "running")
+        deadline = time.monotonic() + 20
+        while len(list(tree.glob("*.json"))) < 3 and time.monotonic() < deadline:
+            time.sleep(0.1)
+        pids = [json.loads(path.read_text())["pid"] for path in tree.glob("*.json")]
+        self.assertEqual(len(pids), 3)
+        code, out, err = self.cli("close", str(self.session))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.serve.wait(15), 0)
+        for pid in pids:
+            self.assertTrue(gone(pid), f"descendant {pid} survived close")
+        self.assertIsNone(sentinel.poll(), "an unrelated process must survive")
 
 
-class CaptureBoundaryTests(unittest.TestCase):
-    recorder = TerminalPolicyTests.recorder
-    def test_screenshot_deadline_is_bounded(self):
-        from types import SimpleNamespace
-        m=self.recorder();recorder=m.Recorder.__new__(m.Recorder)
-        recorder.take={'samples':[]}
-        recorder.capture=(1,time.monotonic()-2.01)
-        recorder.terminal=SimpleNamespace(cdp=SimpleNamespace(responses={}))
-        with self.assertRaises(TimeoutError):recorder.capture_tick()
-
-    def test_end_take_drains_existing_screenshot_before_next_take(self):
-        from types import SimpleNamespace
-        m=self.recorder()
-        with tempfile.TemporaryDirectory() as temporary:
-            directory=Path(temporary);(directory/'samples').mkdir()
-            (directory/'samples/0.png').write_bytes(b'first')
-            recorder=m.Recorder.__new__(m.Recorder)
-            start=time.monotonic()
-            recorder.take=dict(name='one',directory=str(directory),start=start,begin_request=1,
-                               samples=[dict(path=str(directory/'samples/0.png'),requested=start,completed=start)])
-            recorder.capture=(9,start);recorder.capture_due=start+100
-            class CDP:
-                responses={}
-                def pump(self):self.responses[9]={'result':{'data':'c2Vjb25k'}}
-            recorder.geometry=dict(columns=220,rows=59)
-            recorder.terminal=SimpleNamespace(cdp=CDP(),closed=False,terminal_sizes=[recorder.geometry.copy()])
-            result=recorder.end()
-            self.assertEqual(len(result['samples']),2)
-            self.assertFalse(recorder.terminal.cdp.responses)
-
-    def test_late_screenshot_response_is_still_a_timeout(self):
-        from types import SimpleNamespace
-        m=self.recorder();recorder=m.Recorder.__new__(m.Recorder)
-        with tempfile.TemporaryDirectory() as temporary:
-            (Path(temporary)/'samples').mkdir()
-            recorder.take={'directory':temporary,'samples':[{}]}
-            recorder.capture_due=time.monotonic()+10
-            recorder.capture=(1,time.monotonic()-2.01)
-            recorder.terminal=SimpleNamespace(cdp=SimpleNamespace(responses={1:{'result':{'data':'YQ=='}}}))
-            with self.assertRaises(TimeoutError):recorder.capture_tick()
-
-class ClientWaitTests(unittest.TestCase):
-    recorder = TerminalPolicyTests.recorder
-
-    def test_ack_and_result_share_one_client_wait_budget(self):
-        import threading
-        from types import SimpleNamespace
-        m=self.recorder()
-        with tempfile.TemporaryDirectory() as temporary:
-            directory=Path(temporary);control=directory/'control';control.mkdir()
-            m.write_json(control/'status.json',dict(next_request_id=1,closed=False))
-            request=directory/'request.json';m.write_json(request,dict(id=1,operation='run',command='waiting'))
-            def acknowledge():
-                while not (control/'000001.request.json').exists():time.sleep(.01)
-                time.sleep(.4)
-                m.write_json(control/'000001.ack.json',dict(accepted=True))
-            worker=threading.Thread(target=acknowledge);worker.start()
-            started=time.monotonic()
-            try:reply,code=m.client(SimpleNamespace(directory=directory,action='request',file=request,timeout=.6,wait_result=True))
-            finally:worker.join()
-            self.assertEqual(code,1)
-            self.assertEqual(reply['outcome'],'client-timeout')
-            self.assertLess(time.monotonic()-started,.85)
-            before=sorted(p.name for p in control.iterdir())
-            m.write_json(control/'000001.result.json',dict(outcome='completed',success=True))
-            reply,code=m.client(SimpleNamespace(directory=directory,action='result',id=1,timeout=.1))
-            self.assertEqual(code,0)
-            self.assertEqual(sorted(p.name for p in control.iterdir()),sorted(before+['000001.result.json']))
-
-
-class FinalizationHealthTests(unittest.TestCase):
-    recorder = TerminalPolicyTests.recorder
-
-    def session(self, fault=None):
-        """Exercise real recorder/control files; inject CDP events at the drain boundary."""
-        from types import SimpleNamespace
-        from unittest.mock import patch
-        m=self.recorder()
-        temporary=tempfile.TemporaryDirectory()
-        self.addCleanup(temporary.cleanup)
-        directory=Path(temporary.name)/'session'
-
-        class Terminal:
-            def __init__(self,args,directory):
-                directory.mkdir()
-                self.session='finalization-session'
-                self.closed=False
-                self.released=False
-                self.terminal_sizes=[dict(columns=220,rows=59)]
-                self.parser=SimpleNamespace(records=[])
-                terminal=self
-                class CDP:
-                    def __init__(self):self.responses={};self.pumps=0
-                    def pump(self):
-                        self.pumps+=1
-                        if self.pumps==2:
-                            if fault=='loss':terminal.closed=True
-                            if fault=='geometry':terminal.terminal_sizes.append(dict(columns=100,rows=59))
-                            self.responses[9]={'result':{'data':'c2Vjb25k'}}
-                self.cdp=CDP()
-            def start(self):pass
-            def readiness(self):return dict(session=self.session,shell='powershell51',cwd=str(directory))
-            def install_prompt(self):pass
-            def close(self):self.released=True
-
-        with patch.object(m,'Terminal',Terminal):
-            recorder=m.Recorder(SimpleNamespace(directory=directory))
-        recorder.geometry=dict(columns=220,rows=59)
-        recorder.begin('take',0)
-        start=time.monotonic()
-        sample=directory/'take/samples/000000.png';sample.write_bytes(b'first')
-        recorder.take.update(start=start,samples=[dict(path=str(sample),requested=start,completed=start)])
-        recorder.capture=(9,start)
-        recorder.capture_due=start+100
-        return m,recorder
-
-    def test_close_rejects_terminal_loss_during_final_capture(self):
-        self.check_close_fault('loss',ConnectionError)
-
-    def test_close_rejects_geometry_change_during_final_capture(self):
-        self.check_close_fault('geometry',RuntimeError)
-
-    def check_close_fault(self,fault,error):
-        m,recorder=self.session(fault)
-        m.write_json(recorder.control/'000001.request.json',dict(id=1,operation='close'))
-        with self.assertRaises(error):recorder.run()
-        self.assertTrue(recorder.terminal.released)
-        self.assertTrue(m.read_json(recorder.args.directory/'take/take.json')['incomplete'])
-        self.assertFalse(m.read_json(recorder.control/'000001.result.json')['success'])
-
-    def test_healthy_close_still_finalizes_after_draining(self):
-        m,recorder=self.session()
-        m.write_json(recorder.control/'000001.request.json',dict(id=1,operation='close'))
-        recorder.run()
-        self.assertTrue(recorder.terminal.released)
-        self.assertFalse(m.read_json(recorder.args.directory/'take/take.json')['incomplete'])
-        self.assertTrue(m.read_json(recorder.control/'000001.result.json')['success'])
-
-    def test_finalization_without_pending_capture_checks_observation(self):
-        for fault,error in [('loss',ConnectionError),('geometry',RuntimeError)]:
-            with self.subTest(fault=fault):
-                m,recorder=self.session()
-                recorder.capture=None
-                if fault=='loss':recorder.terminal.closed=True
-                else:recorder.terminal.terminal_sizes.append(dict(columns=100,rows=59))
-                with self.assertRaises(error):recorder.end()
-                recorder.end(incomplete=True)
-                self.assertTrue(m.read_json(recorder.args.directory/'take/take.json')['incomplete'])
+if __name__ == "__main__":
+    unittest.main()
