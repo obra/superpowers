@@ -28,7 +28,7 @@ class SubtitlePathRegression(unittest.TestCase):
                 return True
 
             stdout, stderr = io.StringIO(), io.StringIO()
-            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", side_effect=fake_run), redirect_stdout(stdout), redirect_stderr(stderr):
+            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module.shutil, "which", return_value="ffmpeg"), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", side_effect=fake_run), redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(module.main(), 0)
             self.assertIn("burned into the picture", stdout.getvalue())
             command, cwd = calls[0]
@@ -46,7 +46,7 @@ class SubtitlePathRegression(unittest.TestCase):
             movie.write_bytes(b"movie")
             subs.write_text("1\n00:00:00,000 --> 00:00:01,000\ncaption\n", encoding="utf-8")
             stdout, stderr = io.StringIO(), io.StringIO()
-            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", return_value=False), redirect_stdout(stdout), redirect_stderr(stderr):
+            with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module.shutil, "which", return_value="ffmpeg"), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", return_value=False), redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(module.main(), 1)
             self.assertIn("burn failed", stderr.getvalue())
 
@@ -69,6 +69,9 @@ class SubtitleIntegrationRegression(unittest.TestCase):
 
     def test_hard_subtitles_are_pixels_in_nested_special_path(self):
         import subprocess
+        missing = fixtures.missing_executables("uv", "ffmpeg")
+        if missing:
+            self.skipTest(f"required executable(s) not on PATH: {', '.join(missing)}")
         module = fixtures.load_script("burn-subtitles")
         if not module.has_libass():
             self.skipTest("libass FFmpeg is required for hard subtitle pixels")
@@ -93,7 +96,7 @@ class SubtitleIntegrationRegression(unittest.TestCase):
                 movie, subs = root / "in.mp4", root / "in.srt"
                 movie.touch(); subs.touch()
                 stdout, stderr = io.StringIO(), io.StringIO()
-                with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(root / "out.mp4")]), patch.object(module, "has_libass", return_value=libass), patch.object(module, "run", side_effect=[False, True] if libass else [True]), redirect_stdout(stdout), redirect_stderr(stderr):
+                with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(root / "out.mp4")]), patch.object(module.shutil, "which", return_value="ffmpeg"), patch.object(module, "has_libass", return_value=libass), patch.object(module, "run", side_effect=[False, True] if libass else [True]), redirect_stdout(stdout), redirect_stderr(stderr):
                     self.assertEqual(module.main(), 0)
                 self.assertEqual("no libass" in stdout.getvalue(), not libass)
                 self.assertEqual("burn failed" in stderr.getvalue(), libass)

@@ -87,6 +87,52 @@ class NarrationDriftRegression(unittest.TestCase):
                 self.assertNotEqual(module.main(), 0)
             self.assertIn("clip: required verification unavailable", stderr.getvalue())
             self.assertIn("FAILED verbatim delivery: ['clip']", stderr.getvalue())
+            self.assertEqual(
+                json.loads((output / "manifest.json").read_text(encoding="utf-8")),
+                [],
+            )
+            self.assertEqual((output / "clip.wav").read_bytes(), b"cached audio fixture")
+
+    def test_rejected_chat_audio_is_never_cached_but_accepted_audio_is(self):
+        import json
+        import sys
+        module = fixtures.load_script("narrate")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            scenes = root / "scenes.yaml"
+            scenes.write_text(json.dumps({"scenes": [
+                {"id": "accepted", "narration": "Read this sentence exactly."},
+                {"id": "rejected", "narration": "Keep this evidence out of the manifest."},
+            ]}), encoding="utf-8")
+            output = root / "voice"
+            calls = []
+
+            def synthesize(key, text, wav, voice):
+                calls.append(text)
+                wav.write_bytes(f"render {len(calls)}".encode())
+                if text.startswith("Keep"):
+                    return "Unrelated invented preamble with entirely different words here."
+                return text
+
+            argv = ["narrate", str(scenes), str(output), "--engine", "openai-chat",
+                    "--verify", "off"]
+            rejected_renders = []
+            with patch.object(sys, "argv", argv), \
+                 patch.object(module, "openai_key", return_value="test-key"), \
+                 patch.object(module, "say_openai_chat", side_effect=synthesize), \
+                 patch.object(module, "duration", return_value=1.0):
+                for _ in range(2):
+                    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                        self.assertEqual(module.main(), 1)
+                    manifest = json.loads(
+                        (output / "manifest.json").read_text(encoding="utf-8")
+                    )
+                    self.assertEqual([entry["id"] for entry in manifest], ["accepted"])
+                    rejected_renders.append((output / "rejected.wav").read_bytes())
+
+            self.assertEqual(calls.count("Read this sentence exactly."), 1)
+            self.assertEqual(calls.count("Keep this evidence out of the manifest."), 4)
+            self.assertNotEqual(rejected_renders[0], rejected_renders[1])
 
 class TranscriptionProtocolRegression(unittest.TestCase):
     def test_owned_json_is_used_instead_of_library_stdout(self):

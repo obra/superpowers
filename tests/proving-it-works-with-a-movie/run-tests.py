@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pyyaml", "pillow", "websockets", "websocket-client==1.9.0"]
+# dependencies = ["pyyaml", "pillow", "websocket-client==1.9.0"]
 # ///
 """Run the proving-it-works-with-a-movie regression suites portably."""
 

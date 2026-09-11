@@ -281,6 +281,8 @@ def main():
             break
         else:
             failures.append(sid)
+        if sid in failures:
+            continue
         manifest.append({"id": sid, "text": text, "wav": wav.name,
                          "duration": duration(wav)})
 

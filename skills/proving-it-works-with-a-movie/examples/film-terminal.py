@@ -137,10 +137,16 @@ def key_params(key):
     raise SystemExit(f"unknown key {key!r}: use one character or one of {', '.join(KEYS)}")
 
 
+def require_empty_take(out):
+    if out.exists() and any(out.iterdir()):
+        raise SystemExit(f"{out} is not empty: use a new take directory")
+
+
 def film(out, seconds, hold, capture, finished, clock=time.monotonic, sleep=time.sleep):
     """Write PNG frames on the FPS grid until `finished()` plus `hold` seconds,
     or `seconds` in all. A slow capture repeats the previous frame, so the
     directory plays back at exactly FPS. Returns the frame count."""
+    require_empty_take(out)
     out.mkdir(parents=True, exist_ok=True)
     start, index, last, stop = clock(), -1, None, None
     while True:
@@ -516,6 +522,8 @@ def main():
     args = parser.parse_args()
     if args.verb == "watch" and not args.record:
         parser.error("watch needs --record")
+    if getattr(args, "record", None):
+        require_empty_take(args.record)
     return {"serve": serve, "run": run, "key": key, "watch": watch, "close": close}[args.verb](args)
 
 

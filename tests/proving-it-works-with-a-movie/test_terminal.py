@@ -11,6 +11,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import fixtures
 
@@ -78,6 +79,26 @@ class PromptTests(unittest.TestCase):
 
 
 class FilmGridTests(unittest.TestCase):
+    def test_filming_refuses_a_nonempty_take_without_changing_its_contents(self):
+        module = recorder()
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "take"
+            out.mkdir()
+            (out / "f00000.png").write_bytes(b"old frame")
+            (out / "notes.txt").write_bytes(b"sentinel evidence")
+            before = {path.name: path.read_bytes() for path in out.iterdir()}
+            captures = []
+
+            with self.assertRaisesRegex(SystemExit, "not empty.*new take directory"):
+                module.film(out, seconds=1, hold=0,
+                            capture=lambda: captures.append(True) or b"new frame",
+                            finished=lambda: True)
+
+            self.assertEqual(captures, [])
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in out.iterdir()}, before
+            )
+
     def test_a_slow_capture_repeats_the_previous_frame_and_filming_holds_after_the_prompt(self):
         module = recorder()
         clock = {"now": 0.0}
@@ -119,6 +140,44 @@ class ServeArgumentTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("--cwd is not a directory", result.stderr)
             self.assertFalse((Path(directory) / "session" / "session.json").exists())
+
+    def test_recording_verbs_refuse_a_nonempty_take_before_session_side_effects(self):
+        module = recorder()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            session = root / "session"
+            session.mkdir()
+            (session / "ready.json").write_text("{}", encoding="utf-8")
+            (session / "session.json").write_text(
+                json.dumps({"debug_port": 1}), encoding="utf-8"
+            )
+            (session / "terminal.log").write_bytes(
+                b"\x1b]0;MOVIE;1;1;0;/tmp\x07"
+            )
+            for verb, positional in (("run", ["echo hello"]),
+                                     ("key", ["Enter"]),
+                                     ("watch", [])):
+                with self.subTest(verb=verb):
+                    take = root / verb
+                    take.mkdir()
+                    (take / "f00000.png").write_bytes(b"old frame")
+                    (take / "sentinel.txt").write_bytes(b"keep me")
+                    before = {path.name: path.read_bytes() for path in take.iterdir()}
+                    argv = ["film-terminal", verb, str(session), *positional,
+                            "--record", str(take)]
+                    with patch.object(sys, "argv", argv), \
+                         patch.object(module, "connect",
+                                      side_effect=AssertionError("connected")), \
+                         patch.object(module, "type_text",
+                                      side_effect=AssertionError("typed")), \
+                         patch.object(module, "press",
+                                      side_effect=AssertionError("pressed")), \
+                         self.assertRaisesRegex(SystemExit,
+                                                "not empty.*new take directory"):
+                        module.main()
+                    self.assertEqual(
+                        {path.name: path.read_bytes() for path in take.iterdir()}, before
+                    )
 
 
 @unittest.skipUnless(TTYD and BROWSER, "ttyd and a Chrome-family browser are required")
