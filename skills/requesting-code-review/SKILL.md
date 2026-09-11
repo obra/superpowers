@@ -46,11 +46,25 @@ Fill the template at [code-reviewer.md](code-reviewer.md). In bounded
 subagent-driven development, resume the phase's same persistent reviewer
 instead of creating another reviewer.
 
+Apply every approved runtime setting through the harness-native dispatch or
+resume fields, not only as prose inside the prompt:
+
+- exact model/provider: `[EXACT_MODEL_AND_PROVIDER]`;
+- reasoning effort: `[REASONING_EFFORT]`;
+- context tier: `[CONTEXT_TIER]`.
+
+If the harness cannot explicitly apply any approved setting, stop and request
+revised approval. Never omit it, inherit it, substitute a default, or
+auto-route the reviewer.
+
 **Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `[EXACT_MODEL_AND_PROVIDER]` - Approved provider and exact model identifier
+- `[REASONING_EFFORT]` - Approved reasoning effort
+- `[CONTEXT_TIER]` - Approved context tier
+- `[DESCRIPTION]` - Brief summary of what you built
+- `[PLAN_OR_REQUIREMENTS]` - What it should do
+- `[BASE_SHA]` - Starting commit
+- `[HEAD_SHA]` - Ending commit
 
 **4. Act on feedback:**
 - Fix Critical issues immediately
@@ -75,6 +89,7 @@ instead of creating another reviewer.
 - Proceed with unfixed Important issues
 - Create an undisclosed reviewer
 - Broaden the approved fixed range
+- Omit, inherit, default, or auto-route an approved runtime setting
 - Argue with valid technical feedback
 
 **If reviewer wrong:**

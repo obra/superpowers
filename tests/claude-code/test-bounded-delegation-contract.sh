@@ -11,6 +11,7 @@ REVIEWER="$REPO_ROOT/skills/subagent-driven-development/task-reviewer-prompt.md"
 RE_REVIEWER="$REPO_ROOT/skills/subagent-driven-development/re-review-prompt.md"
 EXECUTING="$REPO_ROOT/skills/executing-plans/SKILL.md"
 REQUESTING="$REPO_ROOT/skills/requesting-code-review/SKILL.md"
+CODE_REVIEWER="$REPO_ROOT/skills/requesting-code-review/code-reviewer.md"
 WRITING="$REPO_ROOT/skills/writing-plans/SKILL.md"
 README="$REPO_ROOT/README.md"
 CODEX="$REPO_ROOT/skills/using-superpowers/references/codex-tools.md"
@@ -112,6 +113,20 @@ assert_has "$EXECUTING" 'approval.*phase|approved phase' \
     "inline routing preserves the phase approval gate"
 assert_has "$REQUESTING" 'additional review.*approval|approval.*additional review' \
     "extra review requires new approval"
+assert_lacks "$CODE_REVIEWER" 'git worktree add|worktree add' \
+    "generic reviewer cannot create a temporary worktree"
+assert_has "$CODE_REVIEWER" 'stop.*controller|controller.*stop' \
+    "generic reviewer stops when read-only inspection is insufficient"
+for runtime_field in 'EXACT_MODEL_AND_PROVIDER' 'REASONING_EFFORT' 'CONTEXT_TIER'; do
+    assert_has "$CODE_REVIEWER" "$runtime_field" \
+        "generic reviewer template requires $runtime_field"
+    assert_has "$REQUESTING" "$runtime_field" \
+        "generic review dispatch requires $runtime_field"
+done
+assert_has "$REQUESTING" 'harness-native|native.*harness' \
+    "generic review dispatch applies approved settings through the harness"
+assert_has "$REQUESTING" 'cannot explicitly apply.*stop|stop.*cannot explicitly apply' \
+    "unsupported runtime settings require revised approval"
 assert_has "$WRITING" '2-3 closely related.*milestones|two or three closely related.*milestones' \
     "plans define bounded phases"
 assert_has "$README" 'persistent implementer' \
