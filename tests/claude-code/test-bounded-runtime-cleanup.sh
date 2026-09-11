@@ -50,6 +50,20 @@ assert_lacks() {
     fi
 }
 
+assert_top_banner() {
+    local file="$1"
+    local label="$2"
+
+    if head -n 8 "$file" | grep -Eiq '^>[[:space:]].*(Historical|Superseded|Do not execute)'; then
+        printf '  [PASS] %s\n' "$label"
+    else
+        printf '  [FAIL] %s\n' "$label"
+        printf '         missing historical/non-executable banner near top of %s\n' \
+            "${file#"$REPO_ROOT/"}"
+        return 1
+    fi
+}
+
 echo "=== Bounded runtime and eval cleanup contract ==="
 
 assert_has "$SDD" 'milestone-brief' \
@@ -113,6 +127,7 @@ assert_has "$VERIFYING" 'Do not.*(create|dispatch|spawn).*(agent|reviewer)' \
     "verification never creates a reviewer"
 
 for historical in \
+    "$REPO_ROOT/docs/superpowers/plans/2026-05-06-lift-drill-into-evals.md" \
     "$REPO_ROOT/docs/superpowers/plans/2026-06-09-sdd-task-scoped-review-dispatch.md" \
     "$REPO_ROOT/docs/superpowers/plans/2026-07-06-sdd-plan-scoped-workspace.md" \
     "$REPO_ROOT/docs/superpowers/plans/2026-07-15-sdd-fix-loop-redesign.md" \
@@ -124,9 +139,10 @@ for historical in \
     "$REPO_ROOT/docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results.md" \
     "$REPO_ROOT/docs/superpowers/specs/2026-07-15-sdd-fix-loop-redesign-design.md" \
     "$REPO_ROOT/docs/superpowers/specs/2026-01-22-document-review-system-design.md" \
+    "$REPO_ROOT/docs/superpowers/specs/2026-05-06-lift-drill-into-evals-design.md" \
     "$REPO_ROOT/docs/superpowers/specs/2026-07-30-codex-efficiency-fixes-design.md" \
     "$REPO_ROOT/docs/plans/2025-11-28-skills-improvements-from-user-feedback.md"; do
-    assert_has "$historical" 'Historical|Superseded|Do not execute' \
+    assert_top_banner "$historical" \
         "$(basename "$historical") is clearly non-executable history"
 done
 

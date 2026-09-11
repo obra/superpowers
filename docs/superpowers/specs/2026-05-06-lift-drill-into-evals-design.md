@@ -1,5 +1,11 @@
 # Lift drill into superpowers as `evals/` — design
 
+> **Historical and superseded — not executable guidance.** This design is
+> reference only. Its legacy parallel adversarial-review and subagent topology
+> must not be executed. Current execution is defined by the bounded phase
+> workflow in `skills/subagent-driven-development/SKILL.md`: one persistent
+> implementer and one persistent read-only reviewer.
+
 ## Background
 
 Drill is a Python skill-compliance benchmark that lives in its own repo at `obra/drill`. It drives real tmux sessions, runs an LLM actor as a simulated user, runs an LLM verifier on the resulting transcript, and reports pass/fail per scenario. It supports Claude Code, Codex, Gemini CLI, and (per recent commits) OpenCode and Copilot CLI.
