@@ -16,6 +16,9 @@ for text in \
 done
 for text in \
   'Kiro CLI v3' \
+  'kiro-cli settings chat.defaultAgent superpowers' \
+  'kiro-cli chat --agent-engine v3' \
+  '--source .' \
   'kiro-cli chat --agent superpowers --agent-engine v3' \
   'XDG_DATA_HOME' \
   '.superpowers-kiro-install' \

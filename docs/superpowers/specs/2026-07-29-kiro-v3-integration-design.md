@@ -1,7 +1,7 @@
 # Kiro CLI v3 Integration Design
 
 **Date:** 2026-07-29
-**Status:** Implemented and locally verified on Kiro CLI 2.16.2; pull request creation deferred
+**Status:** Automated checks pass on macOS. Supplied runtime evidence verifies the settings-command setup and two fresh default-agent acceptance sessions on Kiro CLI 2.21.3 / KAS 0.60.10 (interactive TUI). Markdown validation is unavailable through the tested JSON-only validator; IDE persistence remains unverified. Earlier version-specific observations below are historical.
 **Scope:** Local implementation and validation only
 
 Sections below marked ~~struck~~ record decisions superseded during implementation and local acceptance testing. The surrounding text is the shipped design.
@@ -44,7 +44,7 @@ The installer downloads a selected stable release into one fixed namespaced dire
 
 Repository-local installation is not the canonical user path. Existing harnesses use native plugin, extension, marketplace, or package installation; Pi's checkout-based mode is explicitly a local-development path. The repository profile serves the same development and acceptance role for Kiro.
 
-For the porting guide's taxonomy this is a new shape: an **agent-profile** integration, where selecting a named agent is what loads the bootstrap. There is no shell hook, no code plugin, and no always-read instructions file.
+For the porting guide taxonomy this is an **agent-profile** integration. One-time `kiro-cli settings chat.defaultAgent superpowers` must persist activation for ordinary `kiro-cli chat --agent-engine v3` sessions. The installer prints these commands and never changes settings itself. Per-session selection does not satisfy the acceptance bar; IDE persistence must be established separately.
 
 ## Package Layout
 
@@ -160,16 +160,17 @@ Arrays of strings and objects using `description` are explicitly identified as i
 
 ### Interface
 
-The script supports only two installation forms:
+The script supports release installation and a local checkout snapshot:
 
 ```bash
 ./scripts/install-kiro.sh             # latest stable release
 ./scripts/install-kiro.sh v1.2.3      # selected stable release
+./scripts/install-kiro.sh --source . # local checkout, including uncommitted edits
 ```
 
-The latest form resolves the latest GitHub release tag; a failure to resolve it reports that specifically rather than blaming a version argument the user did not pass. The selected form downloads the matching tagged source archive. The script requires standard POSIX tools, `curl`, and `tar`; it does not require Git, Node.js, Python, or `jq`.
+The latest form resolves the latest GitHub release tag; a failure to resolve it reports that specifically rather than blaming a version argument the user did not pass. The selected form downloads the matching tagged source archive. The script requires standard POSIX tools, plus `curl` and `tar` for release downloads; it does not require Git, Node.js, Python, or `jq`.
 
-The implementation should remain roughly 100 lines of straightforward POSIX shell, excluding comments. This is a review goal, not a test-enforced line limit. The shipped script is 116 lines; the overshoot is the two worker configs and the shadowing guard, both added after the original design.
+Keep the installer reviewable POSIX shell without new runtime dependencies. The earlier roughly 100-line goal is superseded by the approved local-source and handled-failure recovery requirements; tests check behavior, not line count.
 
 ### Destinations
 
@@ -188,13 +189,22 @@ The implementation should remain roughly 100 lines of straightforward POSIX shel
 6. Validate the required agent, worker, bootstrap, mapping, and skill files.
 7. Confirm that the archive's declared version matches the selected tag after normalizing the tag's `v` prefix.
 8. Add the ownership/version marker to the staged payload.
-9. Replace the single managed payload directory.
-10. Generate the three global agents by transforming the tracked `.kiro/agents/*.md` shipped in the payload — substituting the `{{SUPERPOWERS_SKILLS_DIR}}` placeholder with the absolute skills directory, inserting the install root into each resource URI, and adding the ownership marker — rather than embedding copies. Each is written to a temporary file renamed into place.
-11. Print the command that starts the Superpowers agent.
+9. Copy the payload into a private staging directory beside its destination, then generate all three agents into private staging slots beside their destinations. Generated resources reference the final payload path. Literal string splicing preserves ampersands and backslashes without awk replacement interpretation.
+10. For each of the four destinations, retain the existing managed artifact in its staging slot, then rename the new artifact into place. These renames stay on the destination filesystem.
+11. On handled failure or catchable interruption, restore existing artifacts and remove newly installed artifacts that had no predecessor. If restoration fails, retain staging directories and report their paths. Remove temporary backups after success.
+12. Print the one-time default-agent command and the v3 session command.
 
-All refusals precede tag resolution and the download, so a refused run leaves the filesystem untouched. Staging ensures that download or extraction failures do not damage an existing installation. Because the staged payload already contains its ownership marker, an interruption after payload replacement remains recognizable as managed state and a rerun can repair the installation. The script does not implement multi-destination transaction coordination or retained rollback state.
+Ownership and shadowing refusals happen before downloads or staging. Download,
+copy, validation, and generation failures leave installed artifacts unchanged.
+Run one installer at a time. Recovery is not a multi-path atomic transaction or
+a guarantee against power loss or SIGKILL. There is no retained version history.
 
-**Accepted without change:** there is no rollback across the three agent writes. A failure leaves a partial install, recovered by rerunning; the ownership guard makes a rerun safe, and rollback logic would cost more than the failure it prevents.
+With `--source <directory>`, skip the release download and tag comparison. Copy
+`skills/`, the three tracked profiles, and `package.json` into staging, materializing
+skill symlinks so the result is independent of the checkout. Require version
+metadata. Record `source: local` and an optional `base-commit` when Git is
+available; the snapshot includes uncommitted edits, so this is not a clean-tree
+attestation. Reject a combined source and release tag.
 
 ### Shadowing guard
 
@@ -214,37 +224,35 @@ The installer downloads GitHub-generated release archives over HTTPS, refusing r
 
 ### Explicitly omitted complexity
 
-Version history and rollback; status, doctor, repair, or migration commands; lock management; background or automatic updates; built-in uninstallation; checksums or signatures; a general-purpose installation framework; a Power wrapper.
+Retained version history; status, doctor, repair, or migration commands; lock management; background or automatic updates; built-in uninstallation; checksums or signatures; a general-purpose installation framework; a Power wrapper.
 
 ## Documentation
 
-`README.md` contains a short Kiro entry and links to `docs/README.kiro.md`. The detailed document covers Kiro CLI v3 prerequisites; latest and pinned installation; a download-inspect-run alternative to piping remote shell code; updating by rerunning the installer; manual removal with ownership-marker checks on every managed path; global and repository-local invocation; the worker agents and how tiers are chosen; native skill activation and permissions; TUI and non-interactive limitations; collision, shadowing, and resource-loading troubleshooting; why Kiro Powers are not used initially; and the installer's transitional status pending native Kiro package installation.
+`README.md` contains a short Kiro entry and links to `docs/README.kiro.md`. The detailed document covers Kiro CLI v3 prerequisites; latest and pinned installation; the primary download-inspect-run recipe and a local-source alternative; updating by rerunning the installer; manual removal with ownership-marker checks on every managed path; global and repository-local invocation; the worker agents and how tiers are chosen; native skill activation and permissions; TUI and non-interactive limitations; collision, shadowing, and resource-loading troubleshooting; why Kiro Powers are not used initially; and the installer's transitional status pending native Kiro package installation.
 
 Known limitations are stated rather than implied: model identifiers are not validated when a config is written, so a wrong one surfaces only at dispatch; the agent list is fixed at session start, so a restart is required after installing; and install paths containing spaces are untested, because the generated URIs embed the payload path without percent-encoding.
 
-The concise install form is:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh | sh
-```
-
-A pinned release is passed as the script's positional argument.
+The primary release recipe downloads the installer from a user-selected tag to
+a temporary file for inspection, then passes that same tag to the installer.
+See `docs/README.kiro.md` for the exact command. The first supported release is
+not assumed available; before release, use `sh scripts/install-kiro.sh --source .`
+from a reviewed checkout containing the integration.
 
 ## Testing
 
 ### Automated tests
 
-`tests/kiro/` covers the repository profile's resources, tools, permissions, prompt, and welcome message; worker neutrality as a closed property, asserting the permitted frontmatter keys and exact body so any added persona fails; required entries and the valid todo payload in the canonical mapping; the documentation contract; successful installation into a temporary `HOME` using local archive fixtures and a stubbed `curl` on `PATH`; generated absolute startup and skill resource paths; a second installation replacing the first managed version; refusal to overwrite an unmanaged agent, an unmanaged worker, or an unmanaged payload; refusal to install beside a shadowing `.json` config; refusal of a relative `XDG_DATA_HOME`; an accurate error when the latest release cannot be resolved; rejection of an archive missing required files; preservation of unmanaged content on every tested failure, plus the absence of any other artifact after a refusal; and semantic parity between repository-local and generated profiles.
+`tests/kiro/` covers the repository profile's resources, tools, permissions, prompt, and welcome message; worker neutrality as a closed property, asserting the permitted frontmatter keys and exact body so any added persona fails; required entries and the valid todo payload in the canonical mapping; the documentation contract; successful installation into a temporary `HOME` using local archive fixtures and a stubbed `curl` on `PATH`; generated absolute startup and skill resource paths; a second installation replacing the first managed version; refusal to overwrite an unmanaged agent, an unmanaged worker, or an unmanaged payload; refusal to install beside a shadowing `.json` config; refusal of a relative `XDG_DATA_HOME`; an accurate error when the latest release cannot be resolved; rejection of an archive missing required files; preservation of unmanaged content on every tested failure, plus local checkout snapshots, compact version metadata, literal paths, generation failure, every replacement failure, backup failure, catchable interruption, and failed-restoration backup preservation; and semantic parity between repository-local and generated profiles.
 
 Tests do not make live network requests, depend on GitHub availability, test shell implementation details, or enforce an exact installer line count.
 
 ### Manual runtime acceptance
 
-Kiro v3 currently requires its TUI, so runtime acceptance is manual rather than automated through brittle terminal control. Both paths passed and are a hard completion gate.
+Kiro v3 currently requires its TUI, so runtime acceptance is manual rather than automated through brittle terminal control. The original explicit-agent paths passed. The revised settings-command default-agent path also passed in two fresh interactive sessions on CLI 2.21.3, from an absent default. Supplied TUI records show completed native brainstorming loads on claude-sonnet-5 and explicit-agent acceptance on gpt-5.6-sol.
 
 Repository-local: start a clean session with the repository profile, send exactly `Let's make a react todo list`, and confirm `Load skill: brainstorming` occurs before any implementation action.
 
-Installed-profile: install into a temporary home, start Kiro from a project outside the Superpowers checkout, send the same prompt, and confirm the absolute resources resolve and native `brainstorming` precedes implementation.
+Installed-profile: install into an isolated test home, run `kiro-cli settings chat.defaultAgent superpowers` once, then start fresh sessions with `kiro-cli chat --agent-engine v3` from a project outside the checkout. Send the same prompt and confirm absolute resources resolve and native `brainstorming` precedes implementation. Record full session evidence and Kiro/model versions. On 2.21.3 the tested validator parses Markdown as JSON and errors despite exit zero, so it cannot certify these profiles. Use successful native skill loading as runtime evidence and record the validator limitation separately.
 
 Worker acceptance, on Kiro CLI 2.16.2:
 
@@ -269,7 +277,7 @@ If maintainers interpret the harness-owned-installation rule as requiring a Kiro
 
 ## Success Criteria
 
-All met at the time of writing:
+Original PR criteria below were reported met before this revision. Fresh default-agent acceptance and original session records are now supplied for CLI 2.21.3. The tested Markdown validator is unusable and IDE persistence remains unverified; attaching reviewed evidence to the PR is still outstanding:
 
 - The repository-local agent auto-loads the bootstrap and mapping.
 - Native Kiro skill discovery exposes all upstream Superpowers skills.

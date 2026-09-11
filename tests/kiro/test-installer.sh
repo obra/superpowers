@@ -330,6 +330,24 @@ else
 fi
 assert_file_contains "$invalid_home/data/superpowers/kiro/release-marker.txt" 'release-123' "preserves managed payload after invalid archive"
 
+# Literal paths must survive both awk variable passing and replacement.
+for suffix in 'data&more' 'data\backslash'; do
+  special_home="$TEST_ROOT/$suffix"
+  mkdir -p "$special_home"
+  if run_installer "$special_home" "$archive_123" v1.2.3 >/dev/null 2>&1; then
+    for name in superpowers superpowers-worker-default-model superpowers-worker-lite-model; do
+      assert_file_contains "$special_home/.kiro/agents/$name.md" \
+        "skill://$special_home/data/superpowers/kiro/skills/**/SKILL.md" \
+        "$name preserves literal path $suffix"
+      assert_file_contains "$special_home/.kiro/agents/$name.md" \
+        "$special_home/data/superpowers/kiro/skills/<skill-name>/" \
+        "$name preserves literal reference path $suffix"
+    done
+  else
+    fail "installs at literal path $suffix"
+  fi
+done
+
 if [[ "$FAILURES" -ne 0 ]]; then
   echo "$FAILURES Kiro installer test(s) failed"
   exit 1

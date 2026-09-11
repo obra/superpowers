@@ -3,12 +3,12 @@
 This integration uses a Kiro v3 Markdown custom agent, startup `file://`
 resources, and native `skill://` discovery. Because the Kiro CLI v3 and the
 Kiro IDE (1.0+) run the same v3 agent engine and agent format, one installed
-agent works in both — no per-surface setup. It does not support Kiro CLI v2,
+agent format works in both; configure activation on each surface. It does not support Kiro CLI v2,
 which is no longer being extended — Kiro prompts you to migrate v2 agents with
 `/upgrade-agent`, and new capabilities land in v3 only.
 
 Testing note: this integration was developed and used primarily on the Kiro
-CLI. The IDE has been smoke-tested (the agent loads, skills are discovered, and
+CLI versions recorded in the PR. The IDE has been smoke-tested (the agent loads, skills are discovered, and
 `brainstorming` triggers on the acceptance prompt) but not exercised across the
 full range of skills.
 
@@ -16,31 +16,29 @@ full range of skills.
 
 - Kiro CLI with the v3 agent engine, or Kiro IDE 1.0+ (same v3 agent engine)
 - macOS, Linux, or WSL
-- `curl` and `tar`
+- `curl` and `tar` for release downloads (not required by `--source`)
 
 Native Windows is not supported by the initial installer.
 
 ## Installation
 
-Install the latest stable release:
+Choose a release tag that contains Kiro support (replace `vX.Y.Z` below).
+Download and inspect that release's installer, then install the same tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh | sh
+kiro_release=vX.Y.Z
+kiro_installer="$(mktemp)"
+curl -fsSL --proto '=https' --proto-redir '=https' \
+  "https://raw.githubusercontent.com/obra/superpowers/refs/tags/$kiro_release/scripts/install-kiro.sh" \
+  -o "$kiro_installer" &&
+  less "$kiro_installer" &&
+  sh "$kiro_installer" "$kiro_release"
+rm -f "$kiro_installer"
 ```
 
-Install a specific release:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh | sh -s -- v1.2.3
-```
-
-To inspect the installer before running it:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh -o /tmp/install-kiro.sh
-less /tmp/install-kiro.sh
-sh /tmp/install-kiro.sh
-```
+Until a release containing the integration ships, use the local-source
+installation below. Older tags lack the required files. Tagged downloads use
+HTTPS; this recipe does not add checksum or signature verification.
 
 The payload is installed at
 `${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro`. The installer generates
@@ -56,6 +54,22 @@ The installer refuses to replace the payload or any of the three agents unless
 they carry the Superpowers ownership marker. It also refuses when a same-named
 `.json` config exists, because that form takes precedence and would leave the
 generated agent unloadable.
+
+## Install from a branch or fork before release
+
+Clone the repository or fork containing Kiro support and check out the branch
+or commit you want to test. Review its installer, then run from that checkout:
+
+```bash
+sh scripts/install-kiro.sh --source .
+```
+
+`--source <directory>` installs a snapshot of the checkout's skills and three
+agent profiles, including uncommitted changes, without downloading a release.
+It cannot be combined with a release tag. The checkout can be removed afterward;
+to update, update the checkout and rerun the command. Ownership guards are the
+same as for release installations. The installation marker records a local
+source and, when Git is available, its base commit (not a claim of a clean tree).
 
 ## Worker agents
 
@@ -82,15 +96,35 @@ not necessarily inherit the model of your session.
 
 ## Usage
 
-Start a v3 TUI session in any project:
+After installing, choose Superpowers as the CLI default once (verified on
+Kiro CLI 2.21.3, interactive TUI):
 
 ```bash
-kiro-cli chat --agent superpowers --agent-engine v3
+kiro-cli settings chat.defaultAgent superpowers
 ```
+
+Then start a v3 TUI session in any project:
+
+```bash
+kiro-cli chat --agent-engine v3
+```
+
+The installer prints these steps; it does not edit Kiro settings or run
+the settings command for you. On Kiro CLI 2.21.3, choosing the default agent
+does not select the v3 engine: `--agent-engine v3` belongs to `chat`. The separate
+`--v3` shorthand is a top-level flag. Keep explicit `--agent superpowers` for
+repository-local development or deliberate one-off agent selection.
 
 Kiro loads `using-superpowers` and the Kiro tool mapping at startup. It exposes
 skill metadata from `skill://` resources and uses its native Load skill action
-to load full skill instructions on demand.
+to load full skill instructions on demand. Registered skill names are unqualified:
+`brainstorming`, not `superpowers:brainstorming`.
+
+On CLI 2.21.3, `kiro-cli agent set-default superpowers` cannot resolve the
+Markdown agent and reports an error despite exiting zero. Use the documented
+`settings` command above instead. It stores the name without checking that the
+agent exists: use the exact name and confirm the TUI shows `superpowers`.
+This is a tested version, not a claim that 2.21.3 is the minimum supported version.
 
 Only file reads and skill loading are pre-approved by the profile. Writes,
 shell commands, network access, and other consequential actions retain Kiro's
@@ -108,13 +142,24 @@ ask the agent to list its skills) to confirm the Superpowers skills are present.
 
 ## Updating or changing versions
 
-Rerun the installation command. With no argument it installs the latest stable
-release; with a tag such as `v1.2.3` it installs that release. The installer
-replaces the one managed payload and does not retain rollback versions.
+Repeat the download-inspect-run recipe with the desired supported release tag.
+The installer also accepts no argument to resolve the latest stable release;
+the documented recipe passes a tag to keep the installer and payload aligned. The installer
+stages the payload and all three agents before replacement. During replacement,
+it temporarily backs up existing managed files and restores them on handled
+failures. Backups are removed after success; it does not retain version history.
+Run only one installer at a time and restart Kiro after updating.
+
+If recovery itself fails, the installer reports the staging directories holding
+remaining backups. Preserve those directories and restore their `old` entries to
+the corresponding destinations before retrying. This is recovery from handled
+command failures and catchable signals, not an atomic multi-file update or a
+power-loss guarantee.
 
 ## Removal
 
-Inspect the ownership marker on every managed path before deleting anything:
+First select another installed CLI default agent with `kiro-cli settings chat.defaultAgent <name>`.
+Then inspect the ownership marker on every managed path before deleting anything:
 
 ```bash
 cat "${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro/.superpowers-kiro-install"
@@ -157,7 +202,9 @@ native package mechanism.
 
 ## Current limitations
 
-- On the CLI, the v3 workflow requires the TUI; classic and non-interactive
+- On the CLI, the tested workflow requires the interactive TUI. The 2.21.3
+  noninteractive `--output-format stream-json` path did not reproduce native
+  skill loading or default-agent activation; classic and noninteractive
   acceptance are not claimed. In the IDE, use a normal chat session.
 - IDE support rides on the shared v3 engine and has only been smoke-tested. The
   agent and skills load and `brainstorming` triggers, but the full skill set has
@@ -183,6 +230,14 @@ native package mechanism.
   would be silent — skills simply never load — so if that happens, check whether
   `${XDG_DATA_HOME:-$HOME/.local/share}` contains a space and reinstall with
   `XDG_DATA_HOME` set to a path without one.
+
+### Validation on CLI 2.21.3
+
+`kiro-cli agent validate --path <agent.md>` attempts JSON parsing for Markdown
+profiles, reports a parse error, and exits zero on this version. It is not a
+usable Markdown validation gate. Verify discovery with `/config skills` in the
+interactive TUI and confirm a native skill load completes and returns the skill
+content. An attempted load or an inline fallback is not proof of successful loading.
 
 ## Troubleshooting
 

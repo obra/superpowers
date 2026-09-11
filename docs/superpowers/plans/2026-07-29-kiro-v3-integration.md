@@ -1,5 +1,46 @@
 # Kiro CLI v3 Integration Implementation Plan
 
+## PR #2126 revision — September 2026
+
+The original implementation record below is historical. Its embedded installer
+and installation recipes are superseded by the current files and this revision;
+do not replay them over the revised implementation. The current specification is
+`docs/superpowers/specs/2026-07-29-kiro-v3-integration-design.md`.
+
+- [x] Fix literal install-path substitution in `scripts/install-kiro.sh`; prove
+  ampersand and backslash preservation for all three profiles in
+  `tests/kiro/test-installer.sh`.
+- [x] Add mutually exclusive `--source <directory>`; copy a checkout snapshot
+  into staging and record local provenance. Verify no-network operation,
+  uncommitted changes, compact version metadata, ownership guards, and invalid
+  sources in `tests/kiro/test-local-source.sh`.
+- [x] Generate the complete installation before changing live destinations;
+  retain temporary backups during replacement and restore on handled failure.
+  Verify first installs and upgrades, generation and replacement failures,
+  backup-rename failure, SIGTERM, and failed-rollback backup preservation in
+  `tests/kiro/test-recovery.sh`.
+- [x] Update `README.md`, `docs/README.kiro.md`, and the porting guide: persistent
+  CLI default activation, same-tag download-inspect-run installation, pre-release
+  checkout support, and accurate recovery limits. Keep IDE claims separately scoped.
+- [x] Inspect supplied Kiro CLI 2.21.3 / KAS 0.60.10 interactive-TUI evidence:
+  installed and repository-local discovery, successful native brainstorming,
+  explicit claude-sonnet-5 and gpt-5.6-sol acceptance, and two default-agent sessions.
+- [x] Verify one-time setup from an absent default using
+  `kiro-cli settings chat.defaultAgent superpowers`; replace the failing
+  `agent set-default` instructions. The installer still only prints the command.
+- [x] Record that the tested Markdown validator attempts JSON parsing and exits
+  zero despite errors. No usable Markdown validation route was demonstrated.
+- [ ] Verify IDE persistence before broadening its claim. Lite-worker dispatch
+  was not rerun in the supplied revision validation.
+- [ ] Attach raw runtime evidence and the corrected environment table to the PR.
+
+Automated validation: `bash tests/kiro/run-tests.sh`,
+`bash tests/codex-plugin-sync/test-sync-to-codex-plugin.sh`,
+`sh -n scripts/install-kiro.sh`, and `git diff --check`.
+The requested runtime evidence cannot be replaced with these shell tests.
+
+## Original implementation record
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add an upstream Kiro CLI v3 integration with native skill loading, a repository-local agent, and a deliberately small archive-based global installer.
