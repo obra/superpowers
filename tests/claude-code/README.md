@@ -103,22 +103,27 @@ Tests skill content and requirements (~2 minutes):
 Full workflow execution test (~10-30 minutes):
 - Creates real test project with Node.js setup
 - Creates implementation plan with 2 tasks
-- Executes one two-milestone phase using subagent-driven-development
+- Supplies a complete two-milestone bounded-phase approval fixture
+- Executes the plan using subagent-driven-development
 - Verifies actual behaviors:
-  - One persistent implementer and reviewer are reused
-  - Delegated work is sequential
-  - Reviewer stays read-only
-  - Findings return to the same implementer
-  - Execution stops at the approved phase boundary
+  - Skill invocation is present in the transcript
+  - At least two Agent/Task tool calls occur
+  - Task-tracking tools are used
   - Working implementation is produced
   - Tests pass
   - Milestone commits are created
+  - No unrequested arithmetic exports are added
+  - Token telemetry can analyze the transcript
 
 **What it tests:**
-- The workflow actually works end-to-end
-- Our improvements are actually applied
-- Subagents follow the skill correctly
-- Final code is functional and tested
+- Observable implementation outcomes from one end-to-end run
+- Final code is functional, scoped, committed, and tested
+
+The transcript format does not currently provide reliable assertions for child
+identity/reuse, non-overlap, reviewer filesystem behavior, fix routing,
+review-pass caps, or the phase stop boundary. Those contracts are covered by
+`test-bounded-delegation-contract.sh`; this integration test does not claim to
+verify them dynamically.
 
 #### test-worktree-native-preference.sh
 RED-GREEN-REFACTOR validation for the using-git-worktrees skill (~5 minutes):

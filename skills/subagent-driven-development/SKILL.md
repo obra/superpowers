@@ -46,7 +46,7 @@ Before creating either child, disclose one proposal containing:
 | Reviewer | Agent type, exact model/provider, reasoning effort, context tier |
 | Scope | Files/components each milestone may change |
 | Validation | Focused commands and milestone acceptance criteria |
-| Bounds | Two persistent children, sequential work, maximum six delegated work turns per milestone (three implementer + three reviewer), and three review passes per milestone |
+| Bounds | Two idle child creations, sequential activations, maximum `8 × milestones + 1` child activations for the phase, and three review passes per milestone |
 | Stop boundary | Stop after this phase; no next phase, push, PR, merge, or deploy |
 
 Wait for exact approval of that proposal. Approval covers only the disclosed
@@ -78,17 +78,34 @@ and request approval for the replacement instead of silently rerouting.
    loosely related groups into later phases.
 4. Confirm each milestone is independently testable and committable.
 5. Create a todo per milestone and record the phase approval.
-6. Create the persistent implementer child with
-   [implementer-prompt.md](implementer-prompt.md).
-7. Create the persistent reviewer child with
-   [task-reviewer-prompt.md](task-reviewer-prompt.md), but do not dispatch work
-   to it while the implementer is active.
-8. Record both child session IDs. Reuse these exact sessions for the whole
+6. Create both child sessions idle, with no kickoff prompt or auto-start:
+   one implementer and one reviewer. Idle creation does not activate a child.
+7. Record both child session IDs. Reuse these exact sessions for the whole
    phase.
+8. Initialize one role at a time on first use. Send the implementer prompt
+   together with Milestone 1, then wait until the implementer is idle before
+   sending the reviewer prompt together with review pass 1. Never initialize
+   both roles concurrently.
 
-For a phase with `M` milestones, the disclosed maximum is two child creations
-plus `6 × M` delegated work turns. Most milestones use only the initial
-implementer turn and first review; fix and re-review turns are conditional.
+For a phase with `M` milestones, the default disclosed maximum is `8 × M + 1`
+child activations:
+
+- per milestone: one implementation activation, up to two blocker-resolution
+  activations, up to two fix activations, and up to three review activations;
+- per phase: one optional implementer phase-complete summary activation.
+
+Every child activation or resume counts against this total, including first-use
+initialization, milestone work, a turn that returns BLOCKED, blocker resolution,
+fixes, reviews, re-reviews, no-op turns, and the optional phase summary. The
+first implementer activation combines initialization with Milestone 1; the
+first reviewer activation combines initialization with review pass 1. If a
+platform requires separate initialization, those activations still count and
+reduce the remaining budget.
+
+Stop and seek reapproval before exceeding the disclosed activation budget.
+Repeated blockers do not create an unlimited exception: after two
+blocker-resolution activations for a milestone, stop unless a revised finite
+budget is approved.
 
 Use the platform's session-native messaging and resume mechanisms. If the
 platform cannot preserve two reusable child sessions, do not emulate the
@@ -105,7 +122,7 @@ Record the fixed review base before implementation:
 BASE_SHA=$(git rev-parse HEAD)
 ```
 
-Send the same implementer:
+Activate the same implementer with:
 
 - milestone requirements and acceptance criteria;
 - exact allowed scope;
@@ -114,9 +131,14 @@ Send the same implementer:
 - the milestone report path;
 - the explicit no-nested-delegation contract.
 
+For Milestone 1, include
+[implementer-prompt.md](implementer-prompt.md) in this first message to the
+already-created idle child. Later milestones resume the initialized child
+without repeating the role prompt.
+
 The implementer uses TDD where required, validates, self-reviews, commits, and
-reports only when blocked or milestone-ready-for-review. Verbose evidence
-belongs in the report file, not the chat response.
+reports only when blocked or milestone-ready-for-review. Verbose implementation
+evidence belongs in the implementer's report file, not the chat response.
 
 If blocked, resolve the blocker without creating another child. A material
 scope, model, provider, reasoning, context, or milestone change requires new
@@ -130,9 +152,12 @@ Wait until the implementer is idle. Record:
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-Send the same reviewer the milestone acceptance criteria, implementer report,
-and exact fixed `BASE_SHA..HEAD_SHA` range. The reviewer remains read-only and
-does not broaden the range, edit files, create commits, or dispatch children.
+Activate the same reviewer with the milestone acceptance criteria, implementer
+report, and exact fixed `BASE_SHA..HEAD_SHA` range. For the first review, include
+[task-reviewer-prompt.md](task-reviewer-prompt.md) in this first message to the
+already-created idle child. The reviewer remains read-only and does not broaden
+the range, edit files, create commits, dispatch children, or write review
+artifacts into the checkout or worktree.
 
 The reviewer returns:
 
@@ -204,13 +229,16 @@ Children report only at these boundaries:
 - **PHASE_COMPLETE** — only when explicitly asked to summarize the completed
   approved phase.
 
-Keep child responses concise. Put full diffs, logs, and review artifacts in
-files and report their paths.
+Keep implementer responses concise and put verbose implementation logs in its
+report file. The reviewer returns its complete review in its response and does
+not write review artifacts into the repository or worktree.
 
 ## Red Flags
 
 - Creating a fresh child for the next milestone
 - Running implementer and reviewer concurrently
+- Auto-starting either child during creation
+- Initializing the reviewer before the implementer is idle
 - Letting the reviewer edit or commit
 - Creating a fixer for review findings
 - Starting review pass 2 or 3 without unresolved Critical/Important findings
@@ -218,6 +246,8 @@ files and report their paths.
 - Selecting a model through inheritance, automatic routing, or "most capable"
 - Adding an undisclosed reviewer or review swarm
 - Continuing into the next phase after completion
+- Treating BLOCKED or initialization turns as free activations
+- Exceeding the disclosed activation budget without reapproval
 
 Any of these means stop and restore the approved bounded topology.
 
@@ -229,6 +259,7 @@ Any of these means stop and restore the approved bounded topology.
 | "Parallel work is faster." | Shared phase state and review ordering require at most one active delegated agent. |
 | "A specialist fixer will converge faster." | A third editor breaks ownership and the approved topology; return findings to the same implementer. |
 | "One more review pass cannot hurt." | Three passes is the disclosed cap. Escalate after pass 3. |
+| "A blocked turn did no work, so it should not count." | Every activation consumes budget and can retain resources or trigger more work. |
 | "The parent model is inherited automatically." | Automatic routing is not disclosed approval. Specify the exact model. |
 | "A final reviewer is extra assurance." | It is an extra agent and dispatch outside the approved topology. Obtain new approval first. |
 | "The plan has more tasks, so keep going." | Approval covers one phase only. Stop at its boundary. |

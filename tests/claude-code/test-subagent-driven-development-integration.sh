@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # Integration Test: subagent-driven-development workflow
-# Actually executes a plan and verifies the new workflow behaviors
+# Actually executes a plan and checks observable implementation outcomes
 #
 # Drill coverage: evals/scenarios/sdd-rejects-extra-features.yaml covers the
 # YAGNI enforcement subset (forbidden exports + reviewer-as-gate semantics)
-# and is stricter on that axis. This bash test additionally asserts:
-#   - >=3 git commits (initial + per-task commits, exercising SDD's
+# and is stricter on that axis. This bash test asserts:
+#   - >=3 git commits (initial + per-milestone commits, exercising SDD's
 #     commit-per-milestone workflow shape)
-#   - exactly two child roles: a persistent implementer and reviewer
+#   - >=2 Claude Code Agent/Task tool calls
 #   - Claude Code task-tracking tool usage (drill makes no assertion)
 #   - test/math.test.js exists (drill relies on `npm test` succeeding)
+#   - no unrequested arithmetic exports
 #   - analyze-token-usage.py token-budget telemetry
-# Kept until those assertions are added to drill or explicitly retired.
+# It does not infer child identity, reuse, non-overlap, reviewer filesystem
+# behavior, fix routing, review-pass caps, or the phase stop boundary from
+# aggregate tool-call counts.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,13 +24,12 @@ echo "========================================"
 echo " Integration Test: subagent-driven-development"
 echo "========================================"
 echo ""
-echo "This test executes a real plan using the skill and verifies:"
-echo "  1. One bounded phase contains two milestones"
-echo "  2. One persistent implementer and reviewer are reused"
-echo "  3. Delegated work runs sequentially"
-echo "  4. The reviewer remains read-only"
-echo "  5. Review loops return findings to the same implementer"
-echo "  6. Execution stops after the approved phase"
+echo "This test executes a real plan using the skill and checks:"
+echo "  1. The skill is invoked"
+echo "  2. Child-dispatch and task-tracking tools are used"
+echo "  3. Two milestone commits produce the requested implementation"
+echo "  4. Tests pass and no extra arithmetic exports are added"
+echo "  5. Token telemetry can analyze the session transcript"
 echo ""
 echo "WARNING: This test may take 10-30 minutes to complete."
 echo ""
@@ -132,30 +134,38 @@ OUTPUT_FILE="$TEST_PROJECT/claude-output.txt"
 
 # Create prompt file
 cat > "$TEST_PROJECT/prompt.txt" <<'EOF'
-I want you to execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
+I approve this exact bounded delegation proposal:
+- Phase: Arithmetic core
+- Milestones: add function; multiply function
+- Implementer: general-purpose child, Anthropic model claude-sonnet-4-5-20250929, medium reasoning, default context
+- Reviewer: general-purpose child, Anthropic model claude-sonnet-4-5-20250929, medium reasoning, default context
+- Scope: package.json, src/math.js, test/math.test.js, and git commits in this temporary repository
+- Validation: npm test; all six specified arithmetic cases pass; no divide, power, or subtract export
+- Topology: create both children idle; activate only one at a time; reuse the same implementer and reviewer
+- Limits: maximum 17 child activations for this two-milestone phase; at most three review passes per milestone
+- Stop boundary: stop after Arithmetic core; do not continue, push, create a PR, merge, or deploy
 
-IMPORTANT: Treat the two tasks as one approved phase with two milestones.
-Follow the skill exactly. I will be verifying that you:
-1. Use one persistent implementer and one persistent reviewer
-2. Run at most one delegated agent at a time
-3. Keep the reviewer read-only
-4. Return findings to the same implementer
-5. Stop after this phase
+Execute docs/superpowers/plans/implementation-plan.md using the
+subagent-driven-development skill and only this approved phase.
 
 Begin now. Execute the plan.
 EOF
 
 # Note: We use a longer timeout since this is integration testing
 # Use --allowed-tools to enable tool usage in headless mode
-PROMPT="Execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
+PROMPT="I approve this exact bounded delegation proposal:
+- Phase: Arithmetic core
+- Milestones: add function; multiply function
+- Implementer: general-purpose child, Anthropic model claude-sonnet-4-5-20250929, medium reasoning, default context
+- Reviewer: general-purpose child, Anthropic model claude-sonnet-4-5-20250929, medium reasoning, default context
+- Scope: package.json, src/math.js, test/math.test.js, and git commits in this temporary repository
+- Validation: npm test; all six specified arithmetic cases pass; no divide, power, or subtract export
+- Topology: create both children idle; activate only one at a time; reuse the same implementer and reviewer
+- Limits: maximum 17 child activations for this two-milestone phase; at most three review passes per milestone
+- Stop boundary: stop after Arithmetic core; do not continue, push, create a PR, merge, or deploy
 
-IMPORTANT: Treat the two tasks as one approved phase with two milestones.
-Follow the skill exactly. I will be verifying that you:
-1. Use one persistent implementer and one persistent reviewer
-2. Run at most one delegated agent at a time
-3. Keep the reviewer read-only
-4. Return findings to the same implementer
-5. Stop after this phase
+Execute docs/superpowers/plans/implementation-plan.md using the
+subagent-driven-development skill and only this approved phase.
 
 Begin now. Execute the plan."
 
@@ -215,9 +225,10 @@ else
 fi
 echo ""
 
-# Test 2: The bounded pair was created
-echo "Test 2: Bounded pair created..."
-task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || echo "0")
+# Test 2: Child-dispatch activity is observable
+echo "Test 2: Child-dispatch activity..."
+task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || true)
+task_count=${task_count:-0}
 if [ "$task_count" -ge 2 ]; then
     echo "  [PASS] child dispatch activity observed ($task_count tool calls)"
 else
@@ -228,7 +239,8 @@ echo ""
 
 # Test 3: Claude Code task-tracking tool was used
 echo "Test 3: Task tracking..."
-todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || echo "0")
+todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || true)
+todo_count=${todo_count:-0}
 if [ "$todo_count" -ge 1 ]; then
     echo "  [PASS] Task tracking used $todo_count time(s)"
 else
@@ -280,7 +292,7 @@ echo ""
 # Test 7: Git commits show proper workflow
 echo "Test 7: Git commit history..."
 commit_count=$(git -C "$TEST_PROJECT" log --oneline | wc -l)
-if [ "$commit_count" -gt 2 ]; then  # Initial + at least 2 task commits
+if [ "$commit_count" -gt 2 ]; then  # Initial + at least 2 milestone commits
     echo "  [PASS] Multiple commits created ($commit_count total)"
 else
     echo "  [FAIL] Too few commits ($commit_count, expected >2)"
@@ -288,11 +300,11 @@ else
 fi
 echo ""
 
-# Test 8: Check for extra features (spec compliance should catch)
+# Test 8: Check for extra features
 echo "Test 8: No extra features added (spec compliance)..."
 if grep -q "export function divide\|export function power\|export function subtract" "$TEST_PROJECT/src/math.js" 2>/dev/null; then
-    echo "  [WARN] Extra features found (spec review should have caught this)"
-    # Not failing on this as it tests reviewer effectiveness
+    echo "  [FAIL] Extra arithmetic export found"
+    FAILED=$((FAILED + 1))
 else
     echo "  [PASS] No extra features added"
 fi
@@ -316,13 +328,12 @@ if [ $FAILED -eq 0 ]; then
     echo "STATUS: PASSED"
     echo "All verification tests passed!"
     echo ""
-    echo "The subagent-driven-development skill correctly:"
-    echo "  ✓ Uses one bounded phase"
-    echo "  ✓ Reuses a persistent implementer and reviewer"
-    echo "  ✓ Runs delegated work sequentially"
-    echo "  ✓ Keeps review independent and read-only"
-    echo "  ✓ Produces working milestone commits"
-    echo "  ✓ Stops at the phase boundary"
+    echo "The integration run produced the observable outcomes asserted here:"
+    echo "  ✓ Skill invocation"
+    echo "  ✓ Child-dispatch and task-tracking activity"
+    echo "  ✓ Working milestone commits"
+    echo "  ✓ Passing tests with no extra arithmetic exports"
+    echo "  ✓ Analyzable token telemetry"
     exit 0
 else
     echo "STATUS: FAILED"

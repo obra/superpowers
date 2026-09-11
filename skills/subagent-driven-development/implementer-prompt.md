@@ -1,10 +1,17 @@
 # Persistent Implementer Child Prompt
 
-Use this prompt once when creating the phase's implementer child session. Reuse
-that same session for every milestone and fix round in the approved phase.
+Use this prompt in the first message to an already-created idle child. Combine
+it with Milestone 1 requirements so initialization and implementation consume
+one activation. Do not use it as an auto-start kickoff during child creation.
+Reuse that same session for every milestone and fix round in the approved
+phase.
 
 ```text
 You are the only implementation child for this approved phase.
+
+This is your first activation. Initialization counts against the approved
+finite activation budget. Begin only the Milestone 1 work included with this
+message.
 
 ## Approved Runtime
 

@@ -82,6 +82,32 @@ assert_has "$REVIEWER" 'exact.*BASE\.\.HEAD|fixed.*BASE\.\.HEAD' \
     "reviewer receives a fixed review range"
 assert_has "$REVIEWER" 'read-only' \
     "reviewer remains read-only"
+assert_has "$REVIEWER" 'return the complete review in (this|your) response' \
+    "reviewer returns its complete review without writing artifacts"
+assert_lacks "$REVIEWER" 'REVIEW_REPORT_PATH|write.*review.*file|put.*analysis.*file' \
+    "reviewer prompt has no ambiguous writable report path"
+assert_lacks "$SDD" 'review artifacts in files|review report path' \
+    "controller does not route reviewer output through checkout files"
+assert_has "$SDD" 'create both.*idle|already-created idle' \
+    "children are created idle"
+assert_has "$SDD" 'wait until the implementer is idle' \
+    "implementer reaches idle before reviewer initialization"
+assert_has "$SDD" 'sending the reviewer prompt together with review pass 1' \
+    "reviewer initialization waits for the implementer"
+assert_has "$IMPLEMENTER" 'already-created idle child' \
+    "implementer prompt is not an auto-start kickoff"
+assert_has "$REVIEWER" 'already-created idle child' \
+    "reviewer prompt is not an auto-start kickoff"
+assert_has "$SDD" 'every child activation.*counts|every activation.*counts' \
+    "every child activation consumes the budget"
+assert_has "$SDD" 'BLOCKED.*counts|blocked.*consumes' \
+    "blocked turns consume the activation budget"
+assert_has "$SDD" '8 × M \+ 1' \
+    "phase activation budget has a finite formula"
+assert_has "$SDD" 'up to two blocker-resolution' \
+    "blocker allowance is finite"
+assert_has "$SDD" 'stop.*reapproval.*exceed|before exceeding.*reapproval' \
+    "budget exhaustion requires reapproval"
 assert_has "$EXECUTING" 'approval.*phase|approved phase' \
     "inline routing preserves the phase approval gate"
 assert_has "$REQUESTING" 'additional review.*approval|approval.*additional review' \
@@ -102,5 +128,17 @@ assert_has "$ANTIGRAVITY" 'execute the phase inline' \
     "Antigravity falls back inline without resumable children"
 assert_has "$HERMES" 'fresh children' \
     "Hermes falls back inline without resumable children"
+assert_has "$REPO_ROOT/tests/claude-code/test-subagent-driven-development-integration.sh" \
+    'claude-sonnet-4-5-20250929.*Anthropic|Anthropic.*claude-sonnet-4-5-20250929' \
+    "integration fixture names an exact approved model and provider"
+assert_has "$REPO_ROOT/tests/claude-code/test-subagent-driven-development-integration.sh" \
+    'medium reasoning, default context' \
+    "integration fixture names approved effort and context"
+assert_has "$REPO_ROOT/tests/claude-code/test-subagent-driven-development-integration.sh" \
+    'maximum 17 child activations' \
+    "integration fixture states the finite phase budget"
+assert_lacks "$REPO_ROOT/tests/claude-code/README.md" \
+    'persistent implementer and reviewer are reused|Delegated work is sequential|Reviewer stays read-only|Findings return to the same implementer|stops at the approved phase boundary' \
+    "test documentation does not overclaim unasserted runtime properties"
 
 echo "=== Bounded delegation contract passed ==="
