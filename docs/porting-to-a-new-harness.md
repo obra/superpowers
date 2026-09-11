@@ -293,9 +293,35 @@ part of the installed extension** — never substitute "edit the user's global
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
 | has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
+| loads a named *agent profile* at startup and can persist it as the default through a one-time setup command | D (agent-profile) | Kiro CLI v3 (`.kiro/agents/superpowers.md` + `references/kiro-tools.md` + `scripts/install-kiro.sh`) |
 
-Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
+Most real harnesses fit one row cleanly; the Antigravity row is the hybrid case (rule 2 still
 holds — the bootstrap rides the install mechanism, never a user-config edit).
+
+### Shape D — Agent-profile
+
+The harness has no shell hook, no code plugin, and no instructions file it always
+reads. What it has is a *named agent* defined by a manifest, and that manifest can
+declare files to load as startup resources. This shape meets the same acceptance
+bar only when a one-time setup makes that agent the persistent default: ordinary
+new sessions must load the bootstrap without selecting skills or an agent again.
+For Kiro CLI, document `kiro-cli settings chat.defaultAgent superpowers`, followed by
+`kiro-cli chat --agent-engine v3`. The installer must not edit the user's settings.
+Verify persistence on each claimed surface; CLI defaults alone do not establish
+IDE behavior. A per-session selector is not an exception to the acceptance bar.
+
+- Reference: `.kiro/agents/superpowers.md` (profile declaring the bootstrap and
+  mapping as `resources`, plus a `skill://` glob registering every skill),
+  `skills/using-superpowers/references/kiro-tools.md`, `scripts/install-kiro.sh`.
+- Because the entry point is an agent rather than a plugin, distribution must
+  write a *global* profile with absolute resource URIs; a repository-local profile
+  only works inside the checkout. The installer generates that profile rather
+  than shipping it, since the paths depend on the install location.
+- If the harness resolves subagents by name from the same agent directory, ship
+  neutral worker profiles too. Skill templates dispatch a general-purpose
+  subagent and supply the persona in the prompt; if every available agent is
+  purpose-built, the model will substitute one and silently discard the
+  template's checklist and output format.
 
 ---
 
@@ -790,6 +816,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
+| Kiro CLI v3 | `.kiro/agents/superpowers.md` (agent profile) | agent manifest declares bootstrap + mapping as startup `resources`; no hook, no context file | `references/kiro-tools.md` | `tests/kiro/` | `scripts/install-kiro.sh` (release archive → `$XDG_DATA_HOME` payload + generated global agents) |
 | OpenCode | `.opencode/plugins/superpowers.js` (declared via root `package.json` `main`) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` plugin git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
 

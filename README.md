@@ -18,6 +18,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [GitHub Copilot CLI](#github-copilot-cli)
   - [Grok Build CLI](#grok-build-cli)
   - [Kimi Code](#kimi-code)
+  - [Kiro CLI](#kiro-cli)
   - [OpenCode](#opencode)
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
@@ -216,6 +217,36 @@ Superpowers is available in Kimi Code's plugin marketplace.
   ```
 
 - Detailed docs: [docs/README.kimi.md](docs/README.kimi.md)
+
+### Kiro CLI
+
+Kiro CLI v3 uses a native custom agent and native Agent Skills. The same agent
+format also works in the Kiro IDE (1.0+).
+
+For releases containing Kiro support, follow the
+[download-inspect-run installation recipe](docs/README.kiro.md#installation).
+Before the first such release, use a checkout containing the integration:
+
+```bash
+sh scripts/install-kiro.sh --source .
+```
+
+This also works with a branch or fork; see
+[local-source installation](docs/README.kiro.md#install-from-a-branch-or-fork-before-release).
+
+After installation, set the CLI default once, then start interactive v3 sessions
+(verified on Kiro CLI 2.21.3):
+
+```bash
+kiro-cli settings chat.defaultAgent superpowers
+kiro-cli chat --agent-engine v3
+```
+
+In the Kiro IDE, restart after installation and select `superpowers` in the
+agent selector. Configure the IDE agent separately from the CLI default.
+
+See [the complete Kiro guide](docs/README.kiro.md) for updates, removal,
+repository-local development, and current limitations.
 
 ### OpenCode
 
