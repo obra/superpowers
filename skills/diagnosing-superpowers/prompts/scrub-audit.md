@@ -23,12 +23,6 @@ Return CLEAN only if no policy misses or unresolved classifications remain.
 Otherwise return:
 
 ```
-CLEAN
-```
-
-or
-
-```
 MISSED
 - <file>:<line> — <category> — <non-sensitive description or classification question>
 ...
