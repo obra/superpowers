@@ -5,10 +5,16 @@ behavior testing has been explicitly approved.
 
 ## Overview
 
-Skill testing applies RED-GREEN-REFACTOR to process documentation. Delegation
-is optional: deterministic static tests and direct parent evaluation remain
-valid when they prove the required behavior. When delegated testing is useful,
-use an approved bounded test topology rather than fresh-agent swarms.
+Skill testing applies RED-GREEN-REFACTOR to process documentation. Static and
+deterministic tests apply only to mechanically observable properties.
+Behavioral or discipline-enforcing claims require the same pressure scenario in
+both RED and GREEN, executed and observed directly in the current session or
+through the already approved persistent test executor. Direct parent execution
+means actually running and observing that scenario. Static checks and document
+shape do not prove model or agent behavior or compliance.
+
+When delegated testing is useful, use an approved bounded test topology rather
+than fresh-agent swarms.
 
 **Core principle:** Define the scenario and success criteria first, then test
 within a finite approved topology.
@@ -101,19 +107,19 @@ Use concrete choices, real paths, and observable actions. For technique,
 pattern, and reference skills, use application, variation, retrieval, and
 missing-information cases as appropriate.
 
-## Direct and Static Alternatives
+## Mechanical Static Checks
 
-Prefer deterministic parent-owned checks when the behavior is mechanically
+Use deterministic parent-owned checks only when the property is mechanically
 observable:
 
 - frontmatter and required-section contracts;
 - forbidden phrase and topology scans;
 - script fixture tests;
 - schema or output-shape validation;
-- direct self-review against a checklist.
 
-Static checks do not prove model behavior beyond their assertions. Report that
-limit precisely and do not claim pressure-test coverage from text matching.
+Static checks and document shape do not prove model or agent behavior or
+compliance. Report only the mechanical property asserted; do not claim
+pressure-test coverage from text matching.
 
 ## Reporting Contract
 

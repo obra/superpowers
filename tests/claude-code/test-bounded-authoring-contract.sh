@@ -100,6 +100,20 @@ assert_has "$WRITING" 'behavioral.*GREEN' \
     "writing workflow requires behavioral GREEN evidence"
 assert_lacks "$TESTING" 'continue REFACTOR cycle|re-test until bulletproof' \
     "testing reference does not prescribe open-ended loops"
+assert_lacks "$TESTING" 'static tests and direct parent evaluation remain.*valid when they prove.*behavior' \
+    "testing reference does not broadly allow static behavioral evidence"
+assert_has "$TESTING" 'deterministic tests apply only' \
+    "testing reference limits static tests to mechanical properties"
+assert_has "$TESTING" 'mechanically observable properties' \
+    "testing reference names the mechanical boundary"
+assert_has "$TESTING" 'same pressure scenario' \
+    "testing reference requires the same behavioral scenario in RED and GREEN"
+assert_has "$TESTING" 'both RED and GREEN' \
+    "testing reference requires both behavioral phases"
+assert_has "$TESTING" 'Static checks and document shape do not prove' \
+    "testing reference denies static proof of agent compliance"
+assert_has "$TESTING" 'model or agent behavior or compliance' \
+    "testing reference names the unsupported behavioral claim"
 assert_has "$EXAMPLE" 'bounded test topology' \
     "worked example starts with an approved bounded topology"
 assert_lacks "$EXAMPLE" 'Create subagent test harness' \
