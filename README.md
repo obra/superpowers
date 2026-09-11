@@ -237,6 +237,9 @@ kiro-cli chat --agent superpowers --agent-engine v3
 In the Kiro IDE, select the `superpowers` agent from the agent selector (restart
 the IDE after installing so it picks up the new agent).
 
+To test a branch or fork before release, run `sh scripts/install-kiro.sh --source .`
+from its checkout. See [local-source installation](docs/README.kiro.md#install-from-a-branch-or-fork-before-release).
+
 See [the complete Kiro guide](docs/README.kiro.md) for pinned versions,
 updates, removal, repository-local development, and current limitations.
 

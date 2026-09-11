@@ -6,10 +6,25 @@ PAYLOAD_MARKER=".superpowers-kiro-install"
 AGENT_MARKER="<!-- Managed by the Superpowers Kiro installer. -->"
 
 die() { echo "error: $*" >&2; exit 1; }
-for tool in cat curl dirname tar grep sed mkdir rm mv awk; do
+for tool in cat cp dirname grep sed mkdir rm mv awk; do
   command -v "$tool" >/dev/null 2>&1 || die "required tool '$tool' is not on PATH"
 done
-[ "$#" -le 1 ] || die "usage: $0 [vMAJOR.MINOR.PATCH]"
+source_dir=""
+tag=""
+usage() { die "usage: $0 [vMAJOR.MINOR.PATCH] | --source <directory>"; }
+case "${1:-}" in
+  --source)
+    [ "$#" -eq 2 ] && [ -n "$2" ] || usage
+    source_dir="$(cd -- "$2" && pwd -P)" || die "source directory does not exist: $2"
+    ;;
+  *)
+    [ "$#" -le 1 ] || usage
+    tag="${1:-}"
+    for tool in curl tar; do
+      command -v "$tool" >/dev/null 2>&1 || die "required tool '$tool' is not on PATH"
+    done
+    ;;
+esac
 
 install_root="${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro"
 # A relative XDG_DATA_HOME would install into the current directory and emit
@@ -46,7 +61,7 @@ if { [ -e "$install_root" ] || [ -L "$install_root" ]; } \
   die "refusing to overwrite unmanaged payload: $install_root"
 fi
 
-tag="${1:-}"
+if [ -z "$source_dir" ]; then
 if [ -z "$tag" ]; then
   tag="$(curl -fsSL --proto '=https' --proto-redir '=https' "https://api.github.com/repos/$REPOSITORY/releases/latest" \
     | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
@@ -58,6 +73,7 @@ fi
 printf '%s\n' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' \
   || die "release must look like v1.2.3"
 version="${tag#v}"
+fi
 
 work_dir="${TMPDIR:-/tmp}/superpowers-kiro.$$"
 (umask 077 && mkdir "$work_dir") || die "cannot create temporary directory"
@@ -66,11 +82,21 @@ cleanup() { rm -rf "$work_dir"; rm -f "$agents_dir"/*.tmp.$$; }
 trap cleanup 0
 trap 'exit 1' 1 2 15
 
+if [ -n "$source_dir" ]; then
+  source_root="$work_dir/source"
+  mkdir -p "$source_root/.kiro/agents"
+  cp -RL "$source_dir/skills" "$source_root/"
+  cp "$source_dir/package.json" "$source_root/"
+  for name in superpowers superpowers-worker-default-model superpowers-worker-lite-model; do
+    cp "$source_dir/.kiro/agents/$name.md" "$source_root/.kiro/agents/"
+  done
+else
 archive="$work_dir/release.tar.gz"
 curl -fsSL --proto '=https' --proto-redir '=https' \
   "https://github.com/$REPOSITORY/archive/refs/tags/$tag.tar.gz" -o "$archive"
 tar -xzf "$archive" --no-same-owner -C "$work_dir"
 source_root="$work_dir/superpowers-$version"
+fi
 for required in \
   package.json \
   .kiro/agents/superpowers.md \
@@ -82,8 +108,19 @@ for required in \
   [ -f "$source_root/$required" ] || die "release is missing $required"
 done
 archive_version="$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$source_root/package.json" | sed -n '1p')"
-[ "$archive_version" = "$version" ] || die "release version does not match $tag"
-printf '%s\n' "$version" >"$source_root/$PAYLOAD_MARKER"
+[ -n "$archive_version" ] || die "source package.json is missing version metadata"
+if [ -n "$source_dir" ]; then
+  version="$archive_version"
+  printf '%s\nsource: local\n' "$version" >"$source_root/$PAYLOAD_MARKER"
+  # A commit identifies the checkout base; the snapshot also includes local edits.
+  if command -v git >/dev/null 2>&1 && [ -e "$source_dir/.git" ]; then
+    commit="$(git -C "$source_dir" rev-parse --verify HEAD 2>/dev/null || true)"
+    [ -z "$commit" ] || printf 'base-commit: %s\n' "$commit" >>"$source_root/$PAYLOAD_MARKER"
+  fi
+else
+  [ "$archive_version" = "$version" ] || die "release version does not match $tag"
+  printf '%s\n' "$version" >"$source_root/$PAYLOAD_MARKER"
+fi
 
 mkdir -p "$(dirname "$install_root")" "$(dirname "$agent_path")"
 rm -rf "$install_root"

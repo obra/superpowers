@@ -57,6 +57,22 @@ they carry the Superpowers ownership marker. It also refuses when a same-named
 `.json` config exists, because that form takes precedence and would leave the
 generated agent unloadable.
 
+## Install from a branch or fork before release
+
+Clone the repository or fork containing Kiro support and check out the branch
+or commit you want to test. Review its installer, then run from that checkout:
+
+```bash
+sh scripts/install-kiro.sh --source .
+```
+
+`--source <directory>` installs a snapshot of the checkout's skills and three
+agent profiles, including uncommitted changes, without downloading a release.
+It cannot be combined with a release tag. The checkout can be removed afterward;
+to update, update the checkout and rerun the command. Ownership guards are the
+same as for release installations. The installation marker records a local
+source and, when Git is available, its base commit (not a claim of a clean tree).
+
 ## Worker agents
 
 Superpowers skills dispatch a general-purpose subagent and supply the reviewer
