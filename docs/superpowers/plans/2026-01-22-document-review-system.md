@@ -1,5 +1,8 @@
 # Document Review System Implementation Plan
 
+> **Historical — do not execute.** This plan predates the bounded persistent
+> reviewer contract. Current behavior is defined by the relevant skills.
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan.
 
 **Goal:** Add spec and plan document review loops to the brainstorming and writing-plans skills.

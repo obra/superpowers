@@ -1,5 +1,9 @@
 # Strict-Cost SDD — Design Spec
 
+> **Historical and superseded.** This experiment predates the persistent
+> bounded phase-pair contract and must not be used as current execution
+> guidance. See `skills/subagent-driven-development/SKILL.md`.
+
 **Status:** Proposed experiment ladder (not implementation). Each rung ships
 only with its gate evidence; abort any rung whose gates fail.
 **Objective:** minimize dollars per plan-execution. Wall-clock is

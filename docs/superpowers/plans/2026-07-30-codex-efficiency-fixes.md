@@ -1,5 +1,9 @@
 # Codex Efficiency Fixes Implementation Plan
 
+> **Historical — do not execute.** This plan records an earlier Codex
+> delegation configuration. Current bounded runtime behavior is defined by the
+> skills and `skills/using-superpowers/references/codex-tools.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the five evidence-strong treatments (T1–T5) from the codex-efficiency eval campaign as skill/doc changes on `codex-efficiency-fixes`, grade each against its pre-registered criterion with the campaign's scorers, and cut one PR per passing treatment against `dev`.

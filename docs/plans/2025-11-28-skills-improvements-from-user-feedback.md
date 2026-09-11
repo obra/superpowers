@@ -1,5 +1,9 @@
 # Skills Improvements from User Feedback
 
+> **Historical — do not execute.** This plan records earlier workflow behavior,
+> including obsolete fixer and subagent assumptions. Current behavior is
+> defined by the skills under `skills/`.
+
 **Date:** 2025-11-28
 **Status:** Draft
 **Source:** Two Claude instances using superpowers in real development scenarios

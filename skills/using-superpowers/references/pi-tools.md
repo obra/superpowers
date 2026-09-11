@@ -12,9 +12,17 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 Pi core does not ship a standard subagent tool. The `pi-subagents` package is a strong optional companion and provides a `subagent` tool with single-agent, chain, parallel, async, forked-context, and resume/status workflows. If no subagent tool is available, do not fabricate `Task` calls; execute sequentially in the current session or explain that the optional subagent capability is not installed.
 
 For bounded `subagent-driven-development`, use only a mode that can preserve
-and resume one implementer plus one reviewer for the whole approved phase.
+and resume one persistent implementer plus one persistent reviewer for the
+whole approved phase.
 Dispatch them sequentially. If the installed tool cannot preserve that pair,
 execute the phase inline; do not emulate persistence with fresh children.
+
+The installed tool must also create both children idle, apply the approved
+exact provider/model, reasoning effort, and context tier, count every
+activation against the finite budget, keep the reviewer read-only, and prevent
+nested delegation. If any approved field or lifecycle guarantee is unavailable,
+execute in the current session or stop for reapproval; never inherit, default,
+auto-route, or substitute values.
 
 ## Task lists
 

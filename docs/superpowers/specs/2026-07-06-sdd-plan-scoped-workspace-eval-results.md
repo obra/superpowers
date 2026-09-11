@@ -1,5 +1,8 @@
 # SDD plan-scoped workspace — eval results
 
+> **Historical evidence, not executable guidance.** The fresh-agent eval
+> topology recorded here predates the persistent bounded phase-pair contract.
+
 - **Date:** 2026-07-06
 - **Method:** writing-skills RED→GREEN pressure test, re-scoped 2026-07-06
   with maintainer sign-off after the RED baseline did not reproduce blind

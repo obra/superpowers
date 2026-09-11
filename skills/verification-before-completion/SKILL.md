@@ -21,6 +21,11 @@ If you haven't run the verification command in this message, you cannot claim it
 
 ## The Gate Function
 
+Run verification directly in the current session.
+Do not create, dispatch, or spawn an agent or reviewer.
+
+A delegated report is an input to inspect, never the verification itself.
+
 ```
 BEFORE claiming any status or expressing satisfaction:
 
@@ -97,7 +102,7 @@ Skip any step = lying, not verifying
 ❌ "Tests pass, phase complete"
 ```
 
-**Agent delegation:**
+**Delegated work:**
 ```
 ✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
 ❌ Trust agent report

@@ -7,7 +7,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 SDD="$REPO_ROOT/skills/subagent-driven-development/SKILL.md"
 IMPLEMENTER="$REPO_ROOT/skills/subagent-driven-development/implementer-prompt.md"
-REVIEWER="$REPO_ROOT/skills/subagent-driven-development/task-reviewer-prompt.md"
+REVIEWER="$REPO_ROOT/skills/subagent-driven-development/milestone-reviewer-prompt.md"
 RE_REVIEWER="$REPO_ROOT/skills/subagent-driven-development/re-review-prompt.md"
 EXECUTING="$REPO_ROOT/skills/executing-plans/SKILL.md"
 REQUESTING="$REPO_ROOT/skills/requesting-code-review/SKILL.md"

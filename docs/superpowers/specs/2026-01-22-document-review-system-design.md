@@ -1,5 +1,8 @@
 # Document Review System Design
 
+> **Historical and superseded.** This design predates the bounded persistent
+> reviewer contract and is not current executable guidance.
+
 ## Overview
 
 Add two new review stages to the superpowers workflow:

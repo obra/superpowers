@@ -1,5 +1,9 @@
 # SDD Fix-Loop Redesign Implementation Plan
 
+> **Historical — do not execute.** This plan documents the superseded
+> five-round/fresh-takeover topology. Current behavior is defined by
+> `skills/subagent-driven-development/SKILL.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make subagent-driven-development's review-fix loop convergent and autonomous (resume-the-implementer fix rounds, scoped re-reviews, five-round breaker, controller adjudication) and reorganize its SKILL.md by lifecycle — with quorum eval evidence.

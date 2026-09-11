@@ -49,13 +49,13 @@ mkdir -p "$PROJECT_DIR/docs/superpowers/plans"
 cat > "$PROJECT_DIR/docs/superpowers/plans/auth-system.md" << 'EOF'
 # Auth System Implementation Plan
 
-## Task 1: Add User Model
+## Milestone 1: Add User Model
 Create user model with email and password fields.
 
-## Task 2: Add Auth Routes
+## Milestone 2: Add Auth Routes
 Create login and register endpoints.
 
-## Task 3: Add JWT Middleware
+## Later Phase: Add JWT Middleware
 Protect routes with JWT validation.
 EOF
 

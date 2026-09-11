@@ -58,6 +58,13 @@ You understand 1,2,3,6. Unclear on 4,5.
 
 ## Source-Specific Handling
 
+Receiving feedback is a direct evaluation-and-fix workflow.
+Do not create, dispatch, or spawn another agent or reviewer.
+
+Interpret, validate, and implement the feedback directly. If an independently
+useful review is desired, it requires its own disclosed approval under
+`requesting-code-review`.
+
 ### From your human partner
 - **Trusted** - implement after understanding
 - **Still ask** if scope unclear

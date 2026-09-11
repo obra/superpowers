@@ -55,6 +55,15 @@ Skills describe actions instead of hard-coding one runtime's tool names. On Kimi
 - "Fetch a URL" -> `FetchURL`
 - "Search the web" -> `WebSearch`
 
+For bounded `subagent-driven-development`, use `Agent` only if Kimi can create
+both children idle, preserve and resume one persistent implementer and one
+persistent read-only reviewer, activate at most one at a time, apply the
+approved exact provider/model, reasoning effort, and context tier through
+native fields, count every activation against the finite budget, and prevent
+nested delegation. Otherwise execute in the current session or stop for
+reapproval. Never inherit, default, auto-route, substitute, run the pair in the
+background, or emulate persistence with fresh children.
+
 ## Updating
 
 Use Kimi Code's plugin manager:

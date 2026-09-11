@@ -1,5 +1,9 @@
 # SDD Task-Scoped Review Dispatch
 
+> **Historical and superseded.** This design records an earlier topology with
+> task-scoped and final reviewers. It is not current executable guidance; see
+> `skills/subagent-driven-development/SKILL.md`.
+
 Make subagent-driven-development's per-task reviews cheaper and faster without weakening them, by scoping per-task review prompts to the task and stopping redundant work — while final branch review stays broad.
 
 ## Problem

@@ -1,5 +1,9 @@
 # SDD Fix-Loop Redesign — Design Spec
 
+> **Historical and superseded.** This design records the former five-round
+> takeover loop. It is not current executable guidance; see
+> `skills/subagent-driven-development/SKILL.md`.
+
 **Status:** Approved design (brainstormed with Jesse 2026-07-15); implementation
 plan to follow.
 **Objective:** make the subagent-driven-development skill's review-fix loop

@@ -92,6 +92,12 @@ activation budgets, persistent skill-test and document-review roles,
 non-overlapping parallel writers, and no nested delegation across the authoring
 and general parallel-delegation skills.
 
+#### test-bounded-runtime-cleanup.sh
+Statically verifies milestone-oriented SDD compatibility surfaces, bounded
+harness-porting requirements, safe adapter fallbacks, updated explicit-skill
+fixtures, direct review/verification behavior, and superseded historical SDD
+documents.
+
 #### test-subagent-driven-development.sh
 Tests skill content and requirements (~2 minutes):
 - Skill loading and accessibility
@@ -108,7 +114,7 @@ Tests skill content and requirements (~2 minutes):
 #### test-subagent-driven-development-integration.sh
 Full workflow execution test (~10-30 minutes):
 - Creates real test project with Node.js setup
-- Creates implementation plan with 2 tasks
+- Creates implementation plan with 2 milestones
 - Supplies a complete two-milestone bounded-phase approval fixture
 - Executes the plan using subagent-driven-development
 - Verifies actual behaviors:

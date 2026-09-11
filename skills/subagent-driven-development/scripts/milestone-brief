@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Extract one milestone's full text from an implementation plan into a file the
+# persistent implementer reads in one call.
+#
+# Usage: milestone-brief PLAN_FILE MILESTONE_NUMBER [OUTFILE]
+# Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/milestone-<N>-brief.md
+set -euo pipefail
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "usage: milestone-brief PLAN_FILE MILESTONE_NUMBER [OUTFILE]" >&2
+  exit 2
+fi
+
+plan=$1
+n=$2
+[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+
+if [ $# -eq 3 ]; then
+  out=$3
+else
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  out="$dir/milestone-${n}-brief.md"
+fi
+
+awk -v n="$n" '
+  /^```/ { infence = !infence }
+  !infence && /^#+[ \t]+(Milestone|Task)[ \t]+[0-9]+/ {
+    inmilestone = ($0 ~ ("^#+[ \t]+(Milestone|Task)[ \t]+" n "([^0-9]|$)"))
+  }
+  inmilestone { print }
+' "$plan" > "$out"
+
+if [ ! -s "$out" ]; then
+  echo "milestone ${n} not found in ${plan} (no heading matching 'Milestone ${n}' or compatibility 'Task ${n}')" >&2
+  exit 3
+fi
+
+echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"

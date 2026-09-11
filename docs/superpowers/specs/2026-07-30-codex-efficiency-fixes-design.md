@@ -1,5 +1,8 @@
 # Codex Efficiency Fixes — Design
 
+> **Historical and superseded.** This design records an earlier Codex runtime
+> configuration and is not current executable guidance.
+
 Date: 2026-07-30
 Status: approved by Jesse (in-session)
 Branch: `codex-efficiency-fixes` off `dev`

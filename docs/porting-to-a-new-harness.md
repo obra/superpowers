@@ -113,13 +113,20 @@ real port.
 | **File read / write / edit** | Nearly every skill manipulates files | Essential. No workaround. |
 | **Run shell commands** | TDD, verification, git workflows | Essential. |
 | **Subagent / task dispatch** | `dispatching-parallel-agents`, `subagent-driven-development` | Degradable: if unavailable, those specific skills tell the model to do the work inline or report the missing capability — *never* to invent a `Task` call. Some harnesses gate this behind a config flag (e.g. Codex needs multi-agent enabled). |
+| **Explicit delegated runtime controls** | Bounded delegation requires an exact provider/model, reasoning effort, and context tier to be applied through harness-native fields | If any approved field cannot be expressed, execute directly in the current session or stop for revised approval. Never omit, inherit, default, or substitute a runtime value. |
+| **Persistent child identity and resume** | One implementer and one independent reviewer must be reused across the approved phase | If the harness cannot preserve and resume both identities, execute the phase directly. Never emulate persistence with fresh children. |
+| **Idle creation and sequential activation** | Both children are created without kickoff and at most one delegated agent is active | If the harness auto-starts children or cannot keep activations sequential, do not use delegated SDD. |
+| **Finite activation accounting** | Every initialization, milestone, blocker, fix, review, status, retry, no-op, and summary activation consumes the disclosed budget | The mapping must expose enough lifecycle information to count activations. Stop for reapproval before the budget is exhausted. |
+| **Read-only reviewer enforcement** | The independent reviewer must not mutate repository, checkout, worktree metadata, index, or session artifacts in the checkout | Use a harness-native read-only role or tool restriction. Prompt-only intent is not technical enforcement; document that limitation and execute directly or stop if the approved contract requires enforcement. |
+| **No nested delegation** | Implementer and reviewer children cannot create agents, sessions, factories, or background work | Use a leaf role/tool restriction where available. Otherwise state that the prohibition is prompt-enforced and do not claim stronger enforcement. |
 | **Todo / task tracking** | Progress tracking in several skills | Degradable: fall back to a plan file or `TODO.md`. |
 | **Web fetch / search** | A few skills | Degradable. |
 | **Shell or polyglot script execution (Windows)** | Only for the shell-hook shape, only if you want Windows support | See Part 7. In-process-plugin harnesses sidestep this entirely. |
 
 "Degradable" means: the skill already has fallback wording for the missing
 tool. Your job in the tool mapping is to point at the real tool when it exists
-and reuse that fallback wording when it doesn't.
+and reuse that fallback wording when it doesn't. It never means silently
+weakening an approved bounded runtime contract.
 
 ### You may not need a new directory at all
 
@@ -466,6 +473,12 @@ of these actions (omit only what genuinely doesn't apply):
 - fetch a URL / web search
 - **dispatch a subagent**, including how to pass the agent type — and any config
   flag needed to enable it
+- **create children idle, preserve their identities, and resume the same
+  children sequentially**
+- **apply exact provider/model, reasoning effort, and context tier values**
+- **account for every child activation against a finite approved budget**
+- **enforce a read-only reviewer and leaf/no-nested-delegation role**, or state
+  precisely which guarantees are prompt-only
 - **create / update todos** (treat older `TodoWrite` references as this action)
 - **invoke a skill** — see Step 5
 
@@ -473,6 +486,14 @@ of these actions (omit only what genuinely doesn't apply):
 don't list them, the authoritative source is the harness itself: in a live
 session, ask the model to "list the exact machine names of every tool you can
 call, one per line" and use what it reports.
+
+For bounded `subagent-driven-development`, verify the mapping with deterministic
+adapter tests before any live acceptance run. If the harness cannot explicitly
+apply an approved runtime field, preserve persistent identity, create children
+idle, activate them sequentially, count finite activations, keep the reviewer
+read-only, or prevent nested delegation, the safe behavior is direct execution
+in the current session or a stop for reapproval. Never silently inherit,
+default, auto-route, substitute, or approximate these fields.
 
 **How the harness finds the `skills/` directory is itself per-harness** — confirm
 it, don't assume. Possibilities: a manifest `skills` path field (Codex's

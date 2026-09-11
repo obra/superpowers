@@ -53,9 +53,16 @@ delegate_task(goal="...", context="...", toolsets=[...], role="leaf")
 If `delegate_task` is unavailable, do the work inline rather than inventing tool calls.
 
 Bounded `subagent-driven-development` also requires resuming the same
-implementer and reviewer for the whole phase. If the installed Hermes version
-cannot resume both children, execute the phase inline. Do not emulate the pair
-with fresh children, parallel workstreams, or a multi-agent task board.
+persistent implementer and persistent reviewer for the whole phase. If the
+installed Hermes version cannot resume both children, execute the phase inline.
+Do not emulate the pair with fresh children, parallel workstreams, or a
+multi-agent task board.
+
+Use delegated SDD only when Hermes can create both children idle, apply the
+approved exact provider/model, reasoning effort, and context tier, count every
+activation against the finite budget, keep the reviewer read-only, and prevent
+nested delegation. Otherwise execute in the current session or stop for
+reapproval; never inherit, default, auto-route, or substitute values.
 
 ## Task tracking
 

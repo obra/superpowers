@@ -131,7 +131,8 @@ Activate the same implementer with:
 - the milestone report path;
 - the explicit no-nested-delegation contract.
 
-For Milestone 1, include
+For Milestone 1, generate its focused input with
+[`scripts/milestone-brief`](scripts/milestone-brief), then include
 [implementer-prompt.md](implementer-prompt.md) in this first message to the
 already-created idle child. Later milestones resume the initialized child
 without repeating the role prompt.
@@ -154,10 +155,10 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 Activate the same reviewer with the milestone acceptance criteria, implementer
 report, and exact fixed `BASE_SHA..HEAD_SHA` range. For the first review, include
-[task-reviewer-prompt.md](task-reviewer-prompt.md) in this first message to the
-already-created idle child. The reviewer remains read-only and does not broaden
-the range, edit files, create commits, dispatch children, or write review
-artifacts into the checkout or worktree.
+[milestone-reviewer-prompt.md](milestone-reviewer-prompt.md) in this first
+message to the already-created idle child. The reviewer remains read-only and
+does not broaden the range, edit files, create commits, dispatch children, or
+write review artifacts into the checkout or worktree.
 
 The reviewer returns:
 

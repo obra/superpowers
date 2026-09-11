@@ -1,5 +1,9 @@
 # SDD Plan-Scoped Workspace Implementation Plan
 
+> **Historical — do not execute.** This plan predates the persistent bounded
+> phase-pair topology. Current behavior is defined by
+> `skills/subagent-driven-development/SKILL.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make SDD's durable-progress workspace plan-scoped (`.superpowers/sdd/<plan-basename>/`) with a self-identifying ledger and end-of-plan cleanup, so a follow-up plan can never collide with a previous plan's artifacts and resumed controllers stop paying a forensic disambiguation tax.

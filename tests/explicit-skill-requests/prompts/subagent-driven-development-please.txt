@@ -1,1 +1,2 @@
-subagent-driven-development, please
+subagent-driven-development, please. Propose the bounded phase and persistent
+implementer/reviewer runtime for approval before creating children.

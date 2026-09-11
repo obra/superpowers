@@ -39,7 +39,7 @@ main() {
     cat > "$repo/plan-a.md" <<'PLAN'
 # Plan A
 
-## Task 1: First thing
+## Milestone 1: First thing
 
 Do the first thing.
 PLAN
@@ -118,15 +118,24 @@ PLAN
         echo "    staged: $staged"
     fi
 
-    # --- task-brief lands in its plan's directory ---
+    # --- milestone-brief lands in its plan's directory ---
     local brief_out brief_path
-    brief_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1)"
+    brief_out="$(cd "$repo" && "$SDD_SCRIPTS/milestone-brief" plan-a.md 1)"
     brief_path="$(printf '%s\n' "$brief_out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
-    if [[ "$brief_path" == "$repo/.superpowers/sdd/plan-a/task-1-brief.md" ]]; then
-        pass "task-brief writes its brief under the plan's workspace"
+    if [[ "$brief_path" == "$repo/.superpowers/sdd/plan-a/milestone-1-brief.md" ]]; then
+        pass "milestone-brief writes its brief under the plan's workspace"
     else
-        fail "task-brief writes its brief under the plan's workspace"
+        fail "milestone-brief writes its brief under the plan's workspace"
         echo "    got: $brief_path"
+    fi
+
+    local compatibility_out
+    compatibility_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-b.md 1)"
+    if [[ "$compatibility_out" == *"/task-1-brief.md:"* ]]; then
+        pass "task-brief compatibility wrapper preserves its output path"
+    else
+        fail "task-brief compatibility wrapper preserves its output path"
+        echo "    got: $compatibility_out"
     fi
 
     # --- review-package takes the plan first and lands in its directory ---

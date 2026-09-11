@@ -1,3 +1,4 @@
 I have a plan at docs/superpowers/plans/auth-system.md that's ready to implement.
 
-subagent-driven-development, please
+subagent-driven-development, please. Start by proposing a bounded phase and
+the persistent implementer/reviewer runtime for approval.

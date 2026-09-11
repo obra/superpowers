@@ -84,6 +84,8 @@ When skills request actions, substitute OpenCode equivalents:
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`
 
+For bounded subagent-driven-development, use delegated execution only if OpenCode can create both children idle, preserve and resume one persistent implementer and one persistent read-only reviewer, activate at most one at a time, apply the approved exact provider/model, reasoning effort, and context tier through native fields, count every activation against the finite budget, and prevent nested delegation. Otherwise execute in the current session or stop for reapproval. Never inherit, default, auto-route, substitute, or emulate persistence with fresh children.
+
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     _bootstrapCache = `<EXTREMELY_IMPORTANT>

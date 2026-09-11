@@ -1,13 +1,13 @@
 Great, the plan is complete. I've saved it to docs/superpowers/plans/auth-system.md.
 
 Here's a summary of what we designed:
-- Task 1: Add User Model with email/password fields
-- Task 2: Create auth routes for login/register
-- Task 3: Add JWT middleware for protected routes
-- Task 4: Write tests for all auth functionality
+- Milestone 1: Add User Model with email/password fields
+- Milestone 2: Create auth routes for login/register
+- Later phase: Add JWT middleware and its tests
 
 Two execution options:
-1. Subagent-Driven (this session) - dispatch a fresh subagent per task
+1. Subagent-Driven (this session) - propose one bounded phase with a persistent
+   implementer/reviewer pair and wait for exact runtime approval
 2. Parallel Session (separate) - open new Claude Code session
 
 Which approach do you want?

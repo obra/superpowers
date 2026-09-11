@@ -7,12 +7,12 @@
 # and is stricter on that axis. This bash test asserts:
 #   - >=3 git commits (initial + per-milestone commits, exercising SDD's
 #     commit-per-milestone workflow shape)
-#   - >=2 Claude Code Agent/Task tool calls
+#   - >=2 Claude Code Agent/Task tool calls (dispatch activity only)
 #   - Claude Code task-tracking tool usage (drill makes no assertion)
 #   - test/math.test.js exists (drill relies on `npm test` succeeding)
 #   - no unrequested arithmetic exports
 #   - analyze-token-usage.py token-budget telemetry
-# It does not infer child identity, reuse, non-overlap, reviewer filesystem
+# The tool-call count does not infer child identity, reuse, non-overlap, reviewer filesystem
 # behavior, fix routing, review-pass caps, or the phase stop boundary from
 # aggregate tool-call counts.
 set -euo pipefail
@@ -26,7 +26,7 @@ echo "========================================"
 echo ""
 echo "This test executes a real plan using the skill and checks:"
 echo "  1. The skill is invoked"
-echo "  2. Child-dispatch and task-tracking tools are used"
+echo "  2. Child-dispatch activity and milestone tracking are observable"
 echo "  3. Two milestone commits produce the requested implementation"
 echo "  4. Tests pass and no extra arithmetic exports are added"
 echo "  5. Token telemetry can analyze the session transcript"
@@ -63,7 +63,7 @@ cat > docs/superpowers/plans/implementation-plan.md <<'EOF'
 
 This is a minimal plan to test the subagent-driven-development workflow.
 
-## Task 1: Create Add Function
+## Milestone 1: Create Add Function
 
 Create a function that adds two numbers.
 
@@ -89,7 +89,7 @@ export function add(a, b) {
 
 **Verification:** `npm test`
 
-## Task 2: Create Multiply Function
+## Milestone 2: Create Multiply Function
 
 Create a function that multiplies two numbers.
 

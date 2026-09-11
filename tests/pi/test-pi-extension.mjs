@@ -86,6 +86,13 @@ test('startup context injects the bootstrap as one user message until agent_end'
   assert.equal(result.messages[0].role, 'user');
   assert.match(textOf(result.messages[0]), /You have superpowers/);
   assert.match(textOf(result.messages[0]), /Pi tool mapping/);
+  assert.match(textOf(result.messages[0]), /persistent implementer/);
+  assert.match(textOf(result.messages[0]), /persistent read-only reviewer/);
+  assert.match(textOf(result.messages[0]), /reasoning effort/);
+  assert.match(textOf(result.messages[0]), /context tier/);
+  assert.match(textOf(result.messages[0]), /finite budget/);
+  assert.match(textOf(result.messages[0]), /nested delegation/);
+  assert.match(textOf(result.messages[0]), /current session|stop for reapproval/);
   assert.equal(result.messages[1], originalMessages[0]);
 
   const repeatedProviderRequest = await context({ type: 'context', messages: originalMessages }, {});
@@ -134,4 +141,11 @@ test('pi tools reference documents pi-specific mappings', async () => {
     rows.some((row) => /todo|task/i.test(row)),
     'mapping table documents task tracking',
   );
+  assert.match(text, /persistent implementer/);
+  assert.match(text, /persistent reviewer/);
+  assert.match(text, /reasoning effort/);
+  assert.match(text, /context tier/);
+  assert.match(text, /finite budget/);
+  assert.match(text, /nested delegation/);
+  assert.match(text, /current session|stop for reapproval/);
 });

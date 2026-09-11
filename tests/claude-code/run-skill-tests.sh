@@ -79,6 +79,7 @@ tests=(
     "test-sdd-workspace.sh"
     "test-bounded-authoring-contract.sh"
     "test-bounded-delegation-contract.sh"
+    "test-bounded-runtime-cleanup.sh"
     "test-subagent-driven-development.sh"
 )
 

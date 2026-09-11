@@ -66,16 +66,14 @@ per the Model Selection rules of the skill you are executing. Spawned children
 must not fan out or create nested agents. Setting `model` alone is a trap: the
 child's effort silently resets to that model's default, not to yours.
 
-Ask your human partner to add a machine-level backstop to
-`~/.codex/config.toml` so any spawn that slips through still routes to
-a deliberate tier instead of silently inheriting the session's most
-expensive model:
-
-```toml
-[agents]
-default_subagent_model = "<a mid-tier model from your spawn allowlist>"
-default_subagent_reasoning_effort = "medium"
-```
+Bounded delegation also requires an explicitly approved reasoning effort and
+context tier, idle creation, persistent implementer/reviewer identities,
+sequential activation, finite activation accounting, and a read-only reviewer.
+Apply every supported field through Codex-native spawn/resume controls. If the
+current Codex version cannot apply any approved field or preserve both
+identities, execute the phase directly in the current session or stop for
+reapproval; never inherit, default, auto-route, substitute, or replace the pair
+with fresh children.
 
 ## Environment Detection
 

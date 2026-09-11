@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Resolve and ensure the working-tree directory SDD uses for one plan's
-# short-lived artifacts: task briefs, implementer reports, review packages,
+# short-lived artifacts: milestone briefs, implementer reports, review packages,
 # and the progress ledger. Print the plan directory's absolute path.
 #
 # One directory per plan (.superpowers/sdd/<plan-basename>/) so a follow-up
 # plan in the same working tree can never read or overwrite another plan's
 # artifacts. A stale ledger misread as current progress makes controllers
-# skip whole task sequences — plan-scoping removes that failure structurally.
+# skip whole milestone sequences — plan-scoping removes that failure structurally.
 #
 # The workspace lives in the working tree (not under .git/) because Claude Code
 # treats .git/ as a protected path and denies agent writes there — which blocks
@@ -14,7 +14,7 @@
 # .gitignore at .superpowers/sdd/ keeps every plan's workspace out of
 # `git status` and out of accidental commits without modifying any tracked file.
 #
-# Single source of truth for the workspace location, so task-brief and
+# Single source of truth for the workspace location, so milestone-brief and
 # review-package cannot drift to different directories.
 #
 # Usage: sdd-workspace PLAN_FILE

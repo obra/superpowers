@@ -1,5 +1,8 @@
 # SDD plan-scoped workspace — design
 
+> **Historical and superseded.** This design predates the persistent bounded
+> phase-pair contract and is not current executable guidance.
+
 - **Date:** 2026-07-06
 - **Status:** approved direction (Jesse, 2026-07-06); this spec captures the investigation's recommended fix
 - **Problem owner:** subagent-driven-development skill (`skills/subagent-driven-development/`)

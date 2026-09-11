@@ -48,6 +48,13 @@ const result = {
   staleTaskMapping: bootstrapText(firstOutput).includes('`Task` tool with subagents'),
   mapsSubagentToTask: bootstrapText(firstOutput).includes('`task` with `subagent_type: "general"`'),
   mapsMutationToApplyPatch: bootstrapText(firstOutput).includes('`apply_patch`'),
+  hasBoundedRuntimeMapping: /persistent implementer/.test(bootstrapText(firstOutput))
+    && /persistent read-only reviewer/.test(bootstrapText(firstOutput))
+    && /reasoning effort/.test(bootstrapText(firstOutput))
+    && /context tier/.test(bootstrapText(firstOutput))
+    && /finite budget/.test(bootstrapText(firstOutput))
+    && /nested delegation/.test(bootstrapText(firstOutput))
+    && /current session|stop for reapproval/.test(bootstrapText(firstOutput)),
   firstReadCount: afterFirst.readCount,
   secondReadCount: afterSecond.readCount,
   firstExistsCount: afterFirst.existsCount,
@@ -121,6 +128,9 @@ function assertPresentBootstrap(result) {
   }
   if (!result.mapsMutationToApplyPatch) {
     failures.push('expected OpenCode bootstrap to map file mutation to apply_patch');
+  }
+  if (!result.hasBoundedRuntimeMapping) {
+    failures.push('expected OpenCode bootstrap to preserve bounded runtime requirements');
   }
   return failures;
 }

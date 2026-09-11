@@ -46,8 +46,18 @@ for token in [
     "Glob",
     "FetchURL",
     "WebSearch",
+    "persistent implementer",
+    "persistent read-only reviewer",
+    "reasoning effort",
+    "context tier",
+    "finite budget",
+    "nested delegation",
+    "current session",
 ]:
     assert_present(instructions, token, "skillInstructions")
+
+if "run_in_background" in instructions:
+    raise AssertionError("bounded Kimi mapping must not recommend background delegation")
 
 version_config = json.loads(
     (manifest_path.parents[1] / ".version-bump.json").read_text(encoding="utf-8")

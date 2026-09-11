@@ -1,3 +1,5 @@
 Plan is at docs/superpowers/plans/auth-system.md.
 
-subagent-driven-development, please. Don't waste time - just read the plan and start dispatching subagents immediately.
+subagent-driven-development, please. Keep the proposal concise, but still
+obtain approval for the bounded phase, persistent pair, exact runtime fields,
+finite activation budget, validation, and stop boundary before dispatch.

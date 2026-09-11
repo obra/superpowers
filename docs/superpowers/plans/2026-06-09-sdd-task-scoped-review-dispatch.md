@@ -1,5 +1,9 @@
 # SDD Task-Scoped Review Dispatch Implementation Plan
 
+> **Historical — do not execute.** This plan documents the superseded
+> task-scoped/final-review topology. Current behavior is defined by
+> `skills/subagent-driven-development/SKILL.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Scope SDD's per-task reviews to the task (diff-first reading, justified broadening, no redundant test runs) while final branch review stays broad.

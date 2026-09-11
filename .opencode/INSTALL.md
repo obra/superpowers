@@ -109,6 +109,15 @@ Skills speak in actions ("create a todo", "dispatch a subagent", "read a file").
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
+For bounded `subagent-driven-development`, use `task` only if the installed
+OpenCode version can create children idle, preserve and resume one persistent
+implementer and one persistent read-only reviewer, activate at most one at a
+time, apply the approved exact provider/model, reasoning effort, and context
+tier through native fields, count every activation against the finite budget,
+and prevent nested delegation. Otherwise execute in the current session or
+stop for reapproval. Never inherit, default, auto-route, substitute, or emulate
+persistence with fresh children.
+
 ## Getting Help
 
 - Report issues: https://github.com/obra/superpowers/issues
