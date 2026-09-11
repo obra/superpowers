@@ -126,7 +126,16 @@ ask the agent to list its skills) to confirm the Superpowers skills are present.
 
 Rerun the installation command. With no argument it installs the latest stable
 release; with a tag such as `v1.2.3` it installs that release. The installer
-replaces the one managed payload and does not retain rollback versions.
+stages the payload and all three agents before replacement. During replacement,
+it temporarily backs up existing managed files and restores them on handled
+failures. Backups are removed after success; it does not retain version history.
+Run only one installer at a time and restart Kiro after updating.
+
+If recovery itself fails, the installer reports the staging directories holding
+remaining backups. Preserve those directories and restore their `old` entries to
+the corresponding destinations before retrying. This is recovery from handled
+command failures and catchable signals, not an atomic multi-file update or a
+power-loss guarantee.
 
 ## Removal
 

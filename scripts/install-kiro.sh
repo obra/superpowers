@@ -62,23 +62,64 @@ if { [ -e "$install_root" ] || [ -L "$install_root" ]; } \
 fi
 
 if [ -z "$source_dir" ]; then
-if [ -z "$tag" ]; then
-  tag="$(curl -fsSL --proto '=https' --proto-redir '=https' "https://api.github.com/repos/$REPOSITORY/releases/latest" \
-    | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
-    | sed -n '1p')"
-  # Distinguish a lookup failure from a malformed argument: the user gave none.
-  [ -n "$tag" ] \
-    || die "could not resolve the latest release; pass a tag explicitly, e.g. $0 v1.2.3"
-fi
-printf '%s\n' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' \
-  || die "release must look like v1.2.3"
-version="${tag#v}"
+  if [ -z "$tag" ]; then
+    tag="$(curl -fsSL --proto '=https' --proto-redir '=https' "https://api.github.com/repos/$REPOSITORY/releases/latest" \
+      | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+      | sed -n '1p')"
+    # Distinguish a lookup failure from a malformed argument: the user gave none.
+    [ -n "$tag" ] \
+      || die "could not resolve the latest release; pass a tag explicitly, e.g. $0 v1.2.3"
+  fi
+  printf '%s\n' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+    || die "release must look like v1.2.3"
+  version="${tag#v}"
 fi
 
 work_dir="${TMPDIR:-/tmp}/superpowers-kiro.$$"
 (umask 077 && mkdir "$work_dir") || die "cannot create temporary directory"
 agents_dir="$HOME/.kiro/agents"
-cleanup() { rm -rf "$work_dir"; rm -f "$agents_dir"/*.tmp.$$; }
+payload_stage=""
+agent_stage=""
+replacing=0
+# Each destination has its own same-filesystem staging slot with new/old entries.
+select_slot() {
+  case "$1" in
+    0) slot="$payload_stage/0"; destination="$install_root" ;;
+    1) slot="$agent_stage/1"; destination="$agent_path" ;;
+    2) slot="$agent_stage/2"; destination="$worker_default_model_path" ;;
+    3) slot="$agent_stage/3"; destination="$worker_lite_model_path" ;;
+  esac
+}
+cleanup() {
+  status=$?
+  trap - 0
+  trap '' 1 2 15
+  set +e
+  recovery_failed=0
+  if [ "$replacing" -eq 1 ]; then
+    for index in 3 2 1 0; do
+      select_slot "$index"
+      [ -f "$slot/started" ] || continue
+      if [ -e "$slot/old" ] || [ -L "$slot/old" ]; then
+        if ! rm -rf "$destination" || ! mv "$slot/old" "$destination"; then
+          recovery_failed=1
+        fi
+      elif [ ! -f "$slot/had-original" ]; then
+        rm -rf "$destination" || recovery_failed=1
+      fi
+    done
+  fi
+  if [ "$recovery_failed" -eq 1 ]; then
+    printf 'error: recovery incomplete; preserve backups in %s and %s\n' \
+      "$payload_stage" "$agent_stage" >&2
+    status=1
+  else
+    [ -z "$payload_stage" ] || rm -rf "$payload_stage"
+    [ -z "$agent_stage" ] || rm -rf "$agent_stage"
+  fi
+  rm -rf "$work_dir"
+  exit "$status"
+}
 trap cleanup 0
 trap 'exit 1' 1 2 15
 
@@ -91,11 +132,11 @@ if [ -n "$source_dir" ]; then
     cp "$source_dir/.kiro/agents/$name.md" "$source_root/.kiro/agents/"
   done
 else
-archive="$work_dir/release.tar.gz"
-curl -fsSL --proto '=https' --proto-redir '=https' \
-  "https://github.com/$REPOSITORY/archive/refs/tags/$tag.tar.gz" -o "$archive"
-tar -xzf "$archive" --no-same-owner -C "$work_dir"
-source_root="$work_dir/superpowers-$version"
+  archive="$work_dir/release.tar.gz"
+  curl -fsSL --proto '=https' --proto-redir '=https' \
+    "https://github.com/$REPOSITORY/archive/refs/tags/$tag.tar.gz" -o "$archive"
+  tar -xzf "$archive" --no-same-owner -C "$work_dir"
+  source_root="$work_dir/superpowers-$version"
 fi
 for required in \
   package.json \
@@ -122,9 +163,16 @@ else
   printf '%s\n' "$version" >"$source_root/$PAYLOAD_MARKER"
 fi
 
-mkdir -p "$(dirname "$install_root")" "$(dirname "$agent_path")"
-rm -rf "$install_root"
-mv "$source_root" "$install_root"
+mkdir -p "$(dirname "$install_root")" "$agents_dir"
+stage_candidate="$(dirname "$install_root")/.superpowers-kiro-stage.$$"
+(umask 077 && mkdir "$stage_candidate") || die "cannot stage payload"
+payload_stage="$stage_candidate"
+stage_candidate="$agents_dir/.superpowers-kiro-stage.$$"
+(umask 077 && mkdir "$stage_candidate") || die "cannot stage agents"
+agent_stage="$stage_candidate"
+mkdir "$payload_stage/0" "$agent_stage/1" "$agent_stage/2" "$agent_stage/3"
+# Copy before touching live paths, even when TMPDIR is on another filesystem.
+cp -R "$source_root" "$payload_stage/0/new"
 
 # Generate each global agent from the tracked profile shipped in the payload,
 # instead of embedding a second copy here. The transform makes three defined
@@ -136,9 +184,8 @@ mv "$source_root" "$install_root"
 # installed agents cannot drift from them.
 generate_agent() {
   name="$1"
-  src="$install_root/.kiro/agents/$name.md"
-  dest="$HOME/.kiro/agents/$name.md"
-  tmp="$dest.tmp.$$"
+  src="$payload_stage/0/new/.kiro/agents/$name.md"
+  tmp="$slot/new"
   [ -f "$src" ] || die "payload is missing agent $name.md"
   (umask 077 && : >"$tmp")
   KIRO_INSTALL_ROOT="$install_root" awk -v marker="$AGENT_MARKER" '
@@ -158,11 +205,26 @@ generate_agent() {
     }
     { print }
   ' "$src" >"$tmp"
-  mv "$tmp" "$dest"
 }
-for name in superpowers superpowers-worker-default-model superpowers-worker-lite-model; do
-  generate_agent "$name"
+for index in 1 2 3; do
+  select_slot "$index"
+  name="${destination##*/}"
+  generate_agent "${name%.md}"
 done
+
+replacing=1
+for index in 0 1 2 3; do
+  select_slot "$index"
+  if [ -e "$destination" ] || [ -L "$destination" ]; then
+    : > "$slot/had-original"
+  fi
+  : > "$slot/started"
+  if [ -f "$slot/had-original" ]; then
+    mv "$destination" "$slot/old"
+  fi
+  mv "$slot/new" "$destination"
+done
+replacing=0
 
 printf 'Installed Superpowers %s for Kiro CLI v3.\n' "$version"
 printf 'Start it with: kiro-cli chat --agent superpowers --agent-engine v3\n'
