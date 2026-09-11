@@ -96,10 +96,11 @@ not necessarily inherit the model of your session.
 
 ## Usage
 
-After installing, choose Superpowers as the CLI default once:
+After installing, choose Superpowers as the CLI default once (verified on
+Kiro CLI 2.21.3, interactive TUI):
 
 ```bash
-kiro-cli agent set-default superpowers
+kiro-cli settings chat.defaultAgent superpowers
 ```
 
 Then start a v3 TUI session in any project:
@@ -109,14 +110,21 @@ kiro-cli chat --agent-engine v3
 ```
 
 The installer prints these steps; it does not edit Kiro settings or run
-`set-default` for you. On the tested CLI 2.x versions, choosing the default agent
+the settings command for you. On Kiro CLI 2.21.3, choosing the default agent
 does not select the v3 engine: `--agent-engine v3` belongs to `chat`. The separate
 `--v3` shorthand is a top-level flag. Keep explicit `--agent superpowers` for
 repository-local development or deliberate one-off agent selection.
 
 Kiro loads `using-superpowers` and the Kiro tool mapping at startup. It exposes
 skill metadata from `skill://` resources and uses its native Load skill action
-to load full skill instructions on demand.
+to load full skill instructions on demand. Registered skill names are unqualified:
+`brainstorming`, not `superpowers:brainstorming`.
+
+On CLI 2.21.3, `kiro-cli agent set-default superpowers` cannot resolve the
+Markdown agent and reports an error despite exiting zero. Use the documented
+`settings` command above instead. It stores the name without checking that the
+agent exists: use the exact name and confirm the TUI shows `superpowers`.
+This is a tested version, not a claim that 2.21.3 is the minimum supported version.
 
 Only file reads and skill loading are pre-approved by the profile. Writes,
 shell commands, network access, and other consequential actions retain Kiro's
@@ -150,7 +158,7 @@ power-loss guarantee.
 
 ## Removal
 
-First select another installed CLI default agent with `kiro-cli agent set-default <name>`.
+First select another installed CLI default agent with `kiro-cli settings chat.defaultAgent <name>`.
 Then inspect the ownership marker on every managed path before deleting anything:
 
 ```bash
@@ -194,7 +202,9 @@ native package mechanism.
 
 ## Current limitations
 
-- On the CLI, the v3 workflow requires the TUI; classic and non-interactive
+- On the CLI, the tested workflow requires the interactive TUI. The 2.21.3
+  noninteractive `--output-format stream-json` path did not reproduce native
+  skill loading or default-agent activation; classic and noninteractive
   acceptance are not claimed. In the IDE, use a normal chat session.
 - IDE support rides on the shared v3 engine and has only been smoke-tested. The
   agent and skills load and `brainstorming` triggers, but the full skill set has
@@ -220,6 +230,14 @@ native package mechanism.
   would be silent — skills simply never load — so if that happens, check whether
   `${XDG_DATA_HOME:-$HOME/.local/share}` contains a space and reinstall with
   `XDG_DATA_HOME` set to a path without one.
+
+### Validation on CLI 2.21.3
+
+`kiro-cli agent validate --path <agent.md>` attempts JSON parsing for Markdown
+profiles, reports a parse error, and exits zero on this version. It is not a
+usable Markdown validation gate. Verify discovery with `/config skills` in the
+interactive TUI and confirm a native skill load completes and returns the skill
+content. An attempted load or an inline fallback is not proof of successful loading.
 
 ## Troubleshooting
 

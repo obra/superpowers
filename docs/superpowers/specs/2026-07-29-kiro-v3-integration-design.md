@@ -1,7 +1,7 @@
 # Kiro CLI v3 Integration Design
 
 **Date:** 2026-07-29
-**Status:** PR #2126 revision implemented; automated checks pass on macOS. Fresh Kiro validation and default-agent acceptance are pending runtime access. Earlier runtime observations below describe the original PR, not the revised installer.
+**Status:** Automated checks pass on macOS. Supplied runtime evidence verifies the settings-command setup and two fresh default-agent acceptance sessions on Kiro CLI 2.21.3 / KAS 0.60.10 (interactive TUI). Markdown validation is unavailable through the tested JSON-only validator; IDE persistence remains unverified. Earlier version-specific observations below are historical.
 **Scope:** Local implementation and validation only
 
 Sections below marked ~~struck~~ record decisions superseded during implementation and local acceptance testing. The surrounding text is the shipped design.
@@ -44,7 +44,7 @@ The installer downloads a selected stable release into one fixed namespaced dire
 
 Repository-local installation is not the canonical user path. Existing harnesses use native plugin, extension, marketplace, or package installation; Pi's checkout-based mode is explicitly a local-development path. The repository profile serves the same development and acceptance role for Kiro.
 
-For the porting guide taxonomy this is an **agent-profile** integration. One-time `kiro-cli agent set-default superpowers` must persist activation for ordinary `kiro-cli chat --agent-engine v3` sessions. The installer prints these commands and never changes settings itself. Per-session selection does not satisfy the acceptance bar; IDE persistence must be established separately.
+For the porting guide taxonomy this is an **agent-profile** integration. One-time `kiro-cli settings chat.defaultAgent superpowers` must persist activation for ordinary `kiro-cli chat --agent-engine v3` sessions. The installer prints these commands and never changes settings itself. Per-session selection does not satisfy the acceptance bar; IDE persistence must be established separately.
 
 ## Package Layout
 
@@ -248,11 +248,11 @@ Tests do not make live network requests, depend on GitHub availability, test she
 
 ### Manual runtime acceptance
 
-Kiro v3 currently requires its TUI, so runtime acceptance is manual rather than automated through brittle terminal control. The original explicit-agent paths passed. The revised default-agent path remains a hard completion gate and is not yet verified.
+Kiro v3 currently requires its TUI, so runtime acceptance is manual rather than automated through brittle terminal control. The original explicit-agent paths passed. The revised settings-command default-agent path also passed in two fresh interactive sessions on CLI 2.21.3, from an absent default. Supplied TUI records show completed native brainstorming loads on claude-sonnet-5 and explicit-agent acceptance on gpt-5.6-sol.
 
 Repository-local: start a clean session with the repository profile, send exactly `Let's make a react todo list`, and confirm `Load skill: brainstorming` occurs before any implementation action.
 
-Installed-profile: install into an isolated test home, run `kiro-cli agent set-default superpowers` once, then start fresh sessions with `kiro-cli chat --agent-engine v3` from a project outside the checkout. Send the same prompt and confirm absolute resources resolve and native `brainstorming` precedes implementation. Record full session evidence and Kiro/model versions. Run the v3 validator on all tracked and installed profiles; successful validation alone does not prove skill loading.
+Installed-profile: install into an isolated test home, run `kiro-cli settings chat.defaultAgent superpowers` once, then start fresh sessions with `kiro-cli chat --agent-engine v3` from a project outside the checkout. Send the same prompt and confirm absolute resources resolve and native `brainstorming` precedes implementation. Record full session evidence and Kiro/model versions. On 2.21.3 the tested validator parses Markdown as JSON and errors despite exit zero, so it cannot certify these profiles. Use successful native skill loading as runtime evidence and record the validator limitation separately.
 
 Worker acceptance, on Kiro CLI 2.16.2:
 
@@ -277,7 +277,7 @@ If maintainers interpret the harness-owned-installation rule as requiring a Kiro
 
 ## Success Criteria
 
-Original PR criteria below were reported met before this revision. Fresh default-agent acceptance, validator output, and unabridged transcripts remain outstanding; automated installer tests do not establish those runtime results:
+Original PR criteria below were reported met before this revision. Fresh default-agent acceptance and original session records are now supplied for CLI 2.21.3. The tested Markdown validator is unusable and IDE persistence remains unverified; attaching reviewed evidence to the PR is still outstanding:
 
 - The repository-local agent auto-loads the bootstrap and mapping.
 - Native Kiro skill discovery exposes all upstream Superpowers skills.

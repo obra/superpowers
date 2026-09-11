@@ -305,7 +305,7 @@ reads. What it has is a *named agent* defined by a manifest, and that manifest c
 declare files to load as startup resources. This shape meets the same acceptance
 bar only when a one-time setup makes that agent the persistent default: ordinary
 new sessions must load the bootstrap without selecting skills or an agent again.
-For Kiro CLI, document `kiro-cli agent set-default superpowers`, followed by
+For Kiro CLI, document `kiro-cli settings chat.defaultAgent superpowers`, followed by
 `kiro-cli chat --agent-engine v3`. The installer must not edit the user's settings.
 Verify persistence on each claimed surface; CLI defaults alone do not establish
 IDE behavior. A per-session selector is not an exception to the acceptance bar.

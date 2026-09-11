@@ -227,5 +227,5 @@ done
 replacing=0
 
 printf 'Installed Superpowers %s for Kiro CLI v3.\n' "$version"
-printf 'Set the CLI default once: kiro-cli agent set-default superpowers\n'
+printf 'Set the CLI default once: kiro-cli settings chat.defaultAgent superpowers\n'
 printf 'Start a session: kiro-cli chat --agent-engine v3\n'

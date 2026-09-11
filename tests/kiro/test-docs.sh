@@ -16,7 +16,7 @@ for text in \
 done
 for text in \
   'Kiro CLI v3' \
-  'kiro-cli agent set-default superpowers' \
+  'kiro-cli settings chat.defaultAgent superpowers' \
   'kiro-cli chat --agent-engine v3' \
   '--source .' \
   'kiro-cli chat --agent superpowers --agent-engine v3' \

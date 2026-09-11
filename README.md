@@ -234,10 +234,11 @@ sh scripts/install-kiro.sh --source .
 This also works with a branch or fork; see
 [local-source installation](docs/README.kiro.md#install-from-a-branch-or-fork-before-release).
 
-After installation, set the CLI default once, then start v3 sessions:
+After installation, set the CLI default once, then start interactive v3 sessions
+(verified on Kiro CLI 2.21.3):
 
 ```bash
-kiro-cli agent set-default superpowers
+kiro-cli settings chat.defaultAgent superpowers
 kiro-cli chat --agent-engine v3
 ```
 

@@ -22,12 +22,16 @@ do not replay them over the revised implementation. The current specification is
 - [x] Update `README.md`, `docs/README.kiro.md`, and the porting guide: persistent
   CLI default activation, same-tag download-inspect-run installation, pre-release
   checkout support, and accurate recovery limits. Keep IDE claims separately scoped.
-- [ ] Run Kiro v3 validation for all tracked and installed profiles; verify native
-  resources and permissions on the tested binary. Current official docs support
-  `skill` permissions and relative resources without `./`; do not change these
-  based solely on the original review's documentation concern.
-- [ ] Capture complete fresh default-agent acceptance sessions outside the checkout,
-  record model/Kiro versions, and verify IDE persistence before broadening its claim.
+- [x] Inspect supplied Kiro CLI 2.21.3 / KAS 0.60.10 interactive-TUI evidence:
+  installed and repository-local discovery, successful native brainstorming,
+  explicit claude-sonnet-5 and gpt-5.6-sol acceptance, and two default-agent sessions.
+- [x] Verify one-time setup from an absent default using
+  `kiro-cli settings chat.defaultAgent superpowers`; replace the failing
+  `agent set-default` instructions. The installer still only prints the command.
+- [x] Record that the tested Markdown validator attempts JSON parsing and exits
+  zero despite errors. No usable Markdown validation route was demonstrated.
+- [ ] Verify IDE persistence before broadening its claim. Lite-worker dispatch
+  was not rerun in the supplied revision validation.
 - [ ] Attach raw runtime evidence and the corrected environment table to the PR.
 
 Automated validation: `bash tests/kiro/run-tests.sh`,
