@@ -1,167 +1,127 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use when two or more tasks are genuinely independent and could benefit from approved concurrent delegation
 ---
 
 # Dispatching Parallel Agents
 
-## Overview
+Delegate only independently scoped work through a disclosed, finite topology
+that your human partner explicitly approves.
 
-You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+**Core principle:** Prove independence, disclose every runtime and budget
+choice, obtain approval, then dispatch only the approved agents.
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+## Independence Gate
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+Parallel dispatch is appropriate only when every task:
 
-## When to Use
+- can be understood and completed without results from another task;
+- has a distinct read-only scope or an isolated mutable workspace;
+- cannot edit the same checkout, branch, worktree, file set, generated output,
+  database, service, or other shared mutable resource;
+- has an independently verifiable result.
 
-```dot
-digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
-    "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
-    "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
-    "Parallel dispatch" [shape=box];
+If the work is related, shares mutable state, or needs ordered handoffs, execute
+it sequentially. For an approved 2-3 milestone implementation phase, use
+`superpowers:subagent-driven-development` instead of fan-out.
 
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
-    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
-    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
-}
-```
+## Approval Proposal
 
-**Use when:**
-- 3+ test files failing with different root causes
-- Multiple subsystems broken independently
-- Each problem can be understood without context from others
-- No shared state between investigations
+Before creating, dispatching, or activating any child, present one proposal and
+wait for explicit approval:
 
-**Don't use when:**
-- Failures are related (fix one might fix others)
-- Need to understand full system state
-- Agents would interfere with each other
+| Field | Required detail |
+| --- | --- |
+| Agent / role | Exact agent type and responsibility for each child |
+| Runtime | Exact model and provider, reasoning effort, and context tier for each child |
+| Scope | Exact files, subsystem, question, or artifact each child owns |
+| Independence | Why each task has no dependency on another and cannot overlap mutable scope |
+| Output | Expected result and how the parent will verify it |
+| Bounds | Maximum dispatch/activation count for each child and the batch total, including initialization, retries, blockers, and follow-ups |
+| Stop boundary | What ends the approved parallel batch |
 
-## The Pattern
+A general request to "use agents," "work in parallel," or "implement it" is not
+approval for an undisclosed topology. Never rely on inherited, unspecified, or
+automatic model routing. Never select the "most capable available model."
 
-### 1. Identify Independent Domains
+If the harness cannot explicitly apply an approved runtime field or preserve an
+approved child identity, stop for revised approval or do the work directly.
 
-Group failures by what's broken:
-- File A tests: Tool approval flow
-- File B tests: Batch completion behavior
-- File C tests: Abort functionality
+## Dispatch Contract
 
-Each domain is independent - fixing tool approval doesn't affect abort tests.
+After approval:
 
-### 2. Create Focused Agent Tasks
+1. Create only the approved children.
+2. Give each child a self-contained prompt with its exact scope, constraints,
+   validation, output contract, and remaining activation budget.
+3. State that children must not delegate, create agents or sessions, run
+   factories, or start background agents.
+4. Dispatch concurrently only after confirming scopes are independent and
+   non-overlapping.
+5. Count every child activation or resume, including initialization, blockers,
+   retries, fixes, and no-op turns.
+6. Stop for reapproval before the maximum dispatch/activation count is
+   exhausted.
+7. Review each result, check for conflicts, and run the parent-owned integration
+   validation.
 
-Each agent gets:
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
+Parallel writers may never use the same checkout, branch, or worktree, even
+when they intend to edit different files. Give each writer an isolated
+workspace, or run writers sequentially. Read-only agents may share a checkout
+only when their scopes and artifacts do not mutate it.
 
-### 3. Dispatch in Parallel
-
-Issue all three subagent dispatches in the same response — they run in parallel:
-
-```text
-Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
-Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
-Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
-# All three run concurrently.
-```
-
-Multiple dispatch calls in one response = parallel execution. One per response = sequential.
-
-### 4. Review and Integrate
-
-When agents return:
-- Read each summary
-- Verify fixes don't conflict
-- Run full test suite
-- Integrate all changes
-
-## Agent Prompt Structure
-
-Good agent prompts are:
-1. **Focused** - One clear problem domain
-2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
+## Prompt Shape
 
 ```markdown
-Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
-
-1. "should abort tool with partial output capture" - expects 'interrupted at' in message
-2. "should handle mixed completed and aborted tools" - fast tool aborted instead of completed
-3. "should properly track pendingToolCount" - expects 3 results but gets 0
-
-These are timing/race condition issues. Your task:
-
-1. Read the test file and understand what each test verifies
-2. Identify root cause - timing issues or actual bugs?
-3. Fix by:
-   - Replacing arbitrary timeouts with event-based waiting
-   - Fixing bugs in abort implementation if found
-   - Adjusting test expectations if testing changed behavior
-
-Do NOT just increase timeouts - find the real issue.
-
-Return: Summary of what you found and what you fixed.
+Role: [exact approved agent/role]
+Runtime: [exact model and provider], [reasoning effort], [context tier]
+Scope: [one independent problem and exact files/artifact]
+Independence: [why no other task result or mutable scope is shared]
+Goal: [observable outcome]
+Constraints:
+- Do not change anything outside scope.
+- Do not delegate or create agents, sessions, factories, or background work.
+- Stop and report BLOCKED rather than broadening scope.
+Validation: [focused checks]
+Output: [concise result expected by the parent]
+Budget: This activation is [N] of [MAX] for the approved batch.
 ```
 
-## Common Mistakes
+## Integration
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
+When the approved batch finishes:
 
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
+1. Read every result and inspect every changed range.
+2. Confirm no scopes overlapped and no child exceeded its contract.
+3. Run focused integration validation in the parent session.
+4. Report the batch outcome and stop at the approved boundary.
 
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
+Do not automatically add a Rubber Duck, review swarm, second reviewer, or final
+reviewer. Any additional agent or activation requires remaining approved budget
+and must match the disclosed topology; otherwise obtain new approval.
 
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
+## Red Flags
 
-## When NOT to Use
+- Dispatching before explicit approval
+- Omitting agent/role, model and provider, reasoning effort, or context tier
+- Calling tasks independent because they are in different files while they
+  still share a checkout, generated output, database, or runtime
+- Starting parallel writers on the same checkout, branch, or worktree
+- Letting children delegate or create agents/sessions
+- Treating initialization, blockers, retries, or fixes as free activations
+- Using inherited, automatic, default, or "most capable" model selection
+- Adding Rubber Duck, review swarms, or automatic final review
+- Continuing after the approved batch or activation budget
 
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+Any red flag means stop, return to direct or sequential execution, or request a
+new bounded approval.
 
-## Real Example from Session
+## Common Rationalizations
 
-**Scenario:** 6 test failures across 3 files after major refactoring
-
-**Failures:**
-- agent-tool-abort.test.ts: 3 failures (timing issues)
-- batch-completion-behavior.test.ts: 2 failures (tools not executing)
-- tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
-
-**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
-
-**Dispatch:**
-```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
-```
-
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
-
-**Integration:** All fixes independent, no conflicts, full suite green
-
-## Verification
-
-After agents return:
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
+| Excuse | Reality |
+| --- | --- |
+| "Different files mean independent work." | Shared branches, generated state, and runtime resources can still conflict. |
+| "The harness will choose a reasonable model." | Automatic routing is an undisclosed runtime choice. |
+| "A quick retry should not count." | Every activation consumes the finite approved budget. |
+| "An extra reviewer only improves quality." | It changes the approved topology and requires new approval. |
+| "Parallel writers are faster." | They are safe only in isolated workspaces with non-overlapping mutable scope. |

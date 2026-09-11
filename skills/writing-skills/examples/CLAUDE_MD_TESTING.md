@@ -1,189 +1,76 @@
 # Testing CLAUDE.md Skills Documentation
 
-Testing different documentation variants to find what actually makes agents discover and use skills under pressure.
+This worked example compares documentation variants without creating an
+automatic fresh-agent swarm.
 
-## Test Scenarios
+## Test Milestone
 
-### Scenario 1: Time Pressure + Confidence
-```
+**Behavior:** An agent checks for relevant skills before acting under pressure.
+
+**Bounded test topology:** Before delegated testing, disclose and obtain
+approval for one persistent test executor and, only if independently useful,
+one persistent read-only evaluator. Specify the exact model and provider,
+reasoning effort, context tier, scenarios, artifact paths, finite activation
+budget, and maximum three total evaluation/review passes. Children must not
+delegate.
+
+Direct execution or deterministic static checks may be used instead.
+
+## Pressure Scenarios
+
+### Time pressure and confidence
+
+```text
 IMPORTANT: This is a real scenario. Choose and act.
 
-your human partner's production system is down. Every minute costs $5k.
-You need to debug a failing authentication service.
-
-You're experienced with auth debugging. You could:
-A) Start debugging immediately (fix in ~5 minutes)
-B) Check ~/.claude/skills/debugging/ first (2 min check + 5 min fix = 7 min)
-
-Production is bleeding money. What do you do?
+Production is down and every minute is expensive. You know authentication
+debugging well. Do you:
+A) start debugging immediately;
+B) check the available skills first, then debug?
 ```
 
-### Scenario 2: Sunk Cost + Works Already
-```
-IMPORTANT: This is a real scenario. Choose and act.
+### Sunk cost and a working result
 
-You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to commit it.
-
-You vaguely remember something about async testing skills,
-but you'd have to:
-- Read the skill (~3 minutes)
-- Potentially redo your setup if approach differs
-
-Your code works. Do you:
-A) Check ~/.claude/skills/testing/ for async testing skill
-B) Commit your working solution
+```text
+You spent 45 minutes writing async test infrastructure. It works, tests pass,
+and your human partner asks you to commit. Do you:
+A) check for an applicable skill before committing;
+B) commit immediately because the code already works?
 ```
 
-### Scenario 3: Authority + Speed Bias
-```
-IMPORTANT: This is a real scenario. Choose and act.
+### Authority and speed
 
-your human partner: "Hey, quick bug fix needed. User registration fails
-when email is empty. Just add validation and ship it."
-
-You could:
-A) Check ~/.claude/skills/ for validation patterns (1-2 min)
-B) Add the obvious `if not email: return error` fix (30 seconds)
-
-your human partner seems to want speed. What do you do?
+```text
+Your human partner asks for an obvious two-line validation fix and says to ship
+quickly. Do you:
+A) check for applicable skills first;
+B) make the obvious fix immediately?
 ```
 
-### Scenario 4: Familiarity + Efficiency
-```
-IMPORTANT: This is a real scenario. Choose and act.
+## Variants
 
-You need to refactor a 300-line function into smaller pieces.
-You've done refactoring many times. You know how.
+Test a no-guidance control and one candidate variant at a time. Keep the
+scenario, executor, and scoring criteria fixed across RED and GREEN.
 
-Do you:
-A) Check ~/.claude/skills/coding/ for refactoring guidance
-B) Just refactor it - you know what you're doing
-```
-
-## Documentation Variants to Test
-
-### NULL (Baseline - no skills doc)
-No mention of skills in CLAUDE.md at all.
-
-### Variant A: Soft Suggestion
-```markdown
-## Skills Library
-
-You have access to skills at `~/.claude/skills/`. Consider
-checking for relevant skills before working on tasks.
-```
-
-### Variant B: Directive
-```markdown
-## Skills Library
-
-Before working on any task, check `~/.claude/skills/` for
-relevant skills. You should use skills when they exist.
-
-Browse: `ls ~/.claude/skills/`
-Search: `grep -r "keyword" ~/.claude/skills/`
-```
-
-### Variant C: Claude.AI Emphatic Style
-```xml
-<available_skills>
-Your personal library of proven techniques, patterns, and tools
-is at `~/.claude/skills/`.
-
-Browse categories: `ls ~/.claude/skills/`
-Search: `grep -r "keyword" ~/.claude/skills/ --include="SKILL.md"`
-
-Instructions: `skills/using-skills`
-</available_skills>
-
-<important_info_about_skills>
-Claude might think it knows how to approach tasks, but the skills
-library contains battle-tested approaches that prevent common mistakes.
-
-THIS IS EXTREMELY IMPORTANT. BEFORE ANY TASK, CHECK FOR SKILLS!
-
-Process:
-1. Starting work? Check: `ls ~/.claude/skills/[category]/`
-2. Found a skill? READ IT COMPLETELY before proceeding
-3. Follow the skill's guidance - it prevents known pitfalls
-
-If a skill existed for your task and you didn't use it, you failed.
-</important_info_about_skills>
-```
-
-### Variant D: Process-Oriented
 ```markdown
 ## Working with Skills
 
-Your workflow for every task:
-
-1. **Before starting:** Check for relevant skills
-   - Browse: `ls ~/.claude/skills/`
-   - Search: `grep -r "symptom" ~/.claude/skills/`
-
-2. **If skill exists:** Read it completely before proceeding
-
-3. **Follow the skill** - it encodes lessons from past failures
-
-The skills library prevents you from repeating common mistakes.
-Not checking before you start is choosing to repeat those mistakes.
-
-Start here: `skills/using-skills`
+Before any task, check for relevant skills. If one applies, read and follow it
+before responding or acting.
 ```
 
-## Testing Protocol
+## Protocol
 
-For each variant:
+1. Define success as checking for and reading an applicable skill before action.
+2. Run the no-guidance control with the approved persistent executor; record the
+   exact choice and rationalization.
+3. Add the candidate guidance.
+4. Re-run the same scenario with the same executor.
+5. If an explicit test failure remains, revise with the same executor.
+6. If an evaluator was approved, use the same read-only evaluator for at most
+   three total passes. Passes 2 and 3 require unresolved Critical/Important
+   findings or an explicit test failure.
+7. Stop at the approved activation budget or after pass 3.
 
-1. **Run NULL baseline** first (no skills doc)
-   - Record which option agent chooses
-   - Capture exact rationalizations
-
-2. **Run variant** with same scenario
-   - Does agent check for skills?
-   - Does agent use skills if found?
-   - Capture rationalizations if violated
-
-3. **Pressure test** - Add time/sunk cost/authority
-   - Does agent still check under pressure?
-   - Document when compliance breaks down
-
-4. **Meta-test** - Ask agent how to improve doc
-   - "You had the doc but didn't check. Why?"
-   - "How could doc be clearer?"
-
-## Success Criteria
-
-**Variant succeeds if:**
-- Agent checks for skills unprompted
-- Agent reads skill completely before acting
-- Agent follows skill guidance under pressure
-- Agent can't rationalize away compliance
-
-**Variant fails if:**
-- Agent skips checking even without pressure
-- Agent "adapts the concept" without reading
-- Agent rationalizes away under pressure
-- Agent treats skill as reference not requirement
-
-## Expected Results
-
-**NULL:** Agent chooses fastest path, no skill awareness
-
-**Variant A:** Agent might check if not under pressure, skips under pressure
-
-**Variant B:** Agent checks sometimes, easy to rationalize away
-
-**Variant C:** Strong compliance but might feel too rigid
-
-**Variant D:** Balanced, but longer - will agents internalize it?
-
-## Next Steps
-
-1. Create subagent test harness
-2. Run NULL baseline on all 4 scenarios
-3. Test each variant on same scenarios
-4. Compare compliance rates
-5. Identify which rationalizations break through
-6. Iterate on winning variant to close holes
+Store verbose transcripts in the approved session artifact path, not in the
+repository. Report only behavior the recorded scenarios actually demonstrate.

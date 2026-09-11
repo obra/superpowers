@@ -216,14 +216,32 @@ After writing the spec document, look at it with fresh eyes:
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
 
-Fix any issues inline. No need to re-review — just fix and move on.
+Fix any issues inline. Direct parent self-review is the default.
+
+If delegated design/spec review would be independently useful, first disclose
+and obtain approval for one approved persistent read-only reviewer: exact
+agent/role, model and provider, reasoning effort, context tier, exact artifact
+and scope, finite activation budget, and at most three total review passes.
+Reuse that reviewer for the approved review milestone. Passes 2 and 3 are
+allowed only while Critical/Important findings remain. Every activation or
+resume counts, including initialization and blockers.
+
+The reviewer must not mutate repository or worktree state and must not delegate
+or create agents/sessions. If the harness cannot explicitly apply the approved
+runtime settings or preserve reviewer identity, continue with direct
+self-review or stop for revised approval. Never auto-route to the most capable
+model, invoke Rubber Duck, create a review swarm, or add an automatic final
+reviewer. Stop after pass 3 and report unresolved findings.
 
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Wait for the user's response. If they request changes, make them and repeat the
+direct self-review. A delegated re-review is allowed only within the approved
+persistent reviewer's remaining pass and activation budget. Only proceed once
+the user approves.
 
 **Implementation:**
 

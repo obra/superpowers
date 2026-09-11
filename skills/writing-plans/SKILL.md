@@ -151,7 +151,8 @@ Every step must contain the actual content an engineer needs. These are **plan f
 
 ## Self-Review
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+After writing the complete plan, look at the spec with fresh eyes and check the
+plan against it. Direct parent self-review is the default.
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point
 to a milestone that implements it? List any gaps.
@@ -165,6 +166,21 @@ bug.
 
 If you find issues, fix them inline. No need to re-review — just fix and move
 on. If a spec requirement has no milestone, add one in the appropriate phase.
+
+If delegated plan review would be independently useful, first disclose and
+obtain approval for one approved persistent read-only reviewer: exact
+agent/role, model and provider, reasoning effort, context tier, plan/spec paths,
+exact scope, finite activation budget, and at most three total review passes.
+Reuse that reviewer for the approved review milestone. Passes 2 and 3 are
+allowed only while Critical/Important findings remain.
+
+Every activation or resume counts, including initialization and blockers. The
+reviewer must not mutate repository or worktree state and must not delegate or
+create agents/sessions. If the harness cannot explicitly apply the approved
+runtime settings or preserve reviewer identity, continue with direct
+self-review or stop for revised approval. Stop after pass 3 and report
+unresolved findings; never add Rubber Duck, a review swarm, or an automatic
+final reviewer.
 
 ## Execution Handoff
 

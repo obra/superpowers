@@ -58,6 +58,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
+            echo "  test-bounded-authoring-contract.sh    Test bounded authoring/delegation contracts"
             echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
             echo ""
             echo "Integration Tests (use --integration):"
@@ -76,6 +77,7 @@ done
 tests=(
     "test-worktree-path-policy.sh"
     "test-sdd-workspace.sh"
+    "test-bounded-authoring-contract.sh"
     "test-bounded-delegation-contract.sh"
     "test-subagent-driven-development.sh"
 )

@@ -86,6 +86,12 @@ echo "=== All tests passed ==="
 Statically verifies the bounded phase/pair contract across the core delegation
 skills, prompt templates, and user documentation.
 
+#### test-bounded-authoring-contract.sh
+Statically verifies approval disclosure, exact runtime settings, finite
+activation budgets, persistent skill-test and document-review roles,
+non-overlapping parallel writers, and no nested delegation across the authoring
+and general parallel-delegation skills.
+
 #### test-subagent-driven-development.sh
 Tests skill content and requirements (~2 minutes):
 - Skill loading and accessibility
