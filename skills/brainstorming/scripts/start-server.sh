@@ -114,11 +114,12 @@ umask 077
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  ws_root="${SUPERPOWERS_WORKSPACE_DIR:-${PROJECT_DIR}/.superpowers}"
+  SESSION_DIR="${ws_root}/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.
-  export BRAINSTORM_PORT_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-port"
-  export BRAINSTORM_TOKEN_FILE="${PROJECT_DIR}/.superpowers/brainstorm/.last-token"
+  export BRAINSTORM_PORT_FILE="${ws_root}/brainstorm/.last-port"
+  export BRAINSTORM_TOKEN_FILE="${ws_root}/brainstorm/.last-token"
 else
   SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
 fi
