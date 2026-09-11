@@ -49,8 +49,9 @@ stop for revised approval. Never inherit or auto-route a model/provider.
   explicit test failure. Stop after pass 3.
 - Children must not delegate, create agents or sessions, run factories, or
   start background agents.
-- Every child activation or resume counts, including initialization, blockers,
-  retries, fixes, evaluation, and no-op turns.
+- Every child activation or resume counts, including initialization, scenario execution,
+  BLOCKED, status, or no-op turns, blocker-resolution turns,
+  retries, revisions or fixes, evaluation or review, and any optional summary activation.
 - Stop for reapproval before exhaustion of the activation budget.
 
 Store verbose transcripts and evaluation artifacts outside the repository in a

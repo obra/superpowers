@@ -77,6 +77,12 @@ for file in "$WRITING" "$TESTING"; do
         "$(basename "$file") caps evaluation passes"
     assert_has "$file" 'every.*(activation|resume).*counts' \
         "$(basename "$file") counts every child activation"
+    for term in 'initialization' 'scenario execution' 'BLOCKED' 'status' 'no-op' \
+        'blocker-resolution' 'retries' 'revisions' 'fixes' 'evaluation' 'review' \
+        'summary activation'; do
+        assert_has "$file" "$term" \
+            "$(basename "$file") counts $term"
+    done
     assert_has "$file" 'stop for reapproval' \
         "$(basename "$file") stops before budget exhaustion"
     assert_has "$file" 'children must not.*(delegate|create agents|create sessions)' \
@@ -84,12 +90,39 @@ for file in "$WRITING" "$TESTING"; do
 done
 assert_lacks "$WRITING" 'one fresh-context sample per call|single-shot subagent' \
     "writing workflow does not require fresh test agents"
+assert_lacks "$WRITING" 'pressure scenario or deterministic contract|scenarios or deterministic contracts' \
+    "writing workflow does not substitute static contracts for behavioral tests"
+assert_has "$WRITING" 'static.*only.*mechanically observable' \
+    "writing workflow limits static tests to mechanical properties"
+assert_has "$WRITING" 'behavioral.*RED' \
+    "writing workflow requires behavioral RED evidence"
+assert_has "$WRITING" 'behavioral.*GREEN' \
+    "writing workflow requires behavioral GREEN evidence"
 assert_lacks "$TESTING" 'continue REFACTOR cycle|re-test until bulletproof' \
     "testing reference does not prescribe open-ended loops"
 assert_has "$EXAMPLE" 'bounded test topology' \
     "worked example starts with an approved bounded topology"
 assert_lacks "$EXAMPLE" 'Create subagent test harness' \
     "worked example does not end with an automatic test swarm"
+assert_lacks "$EXAMPLE" 'Direct execution or deterministic static checks may be used instead' \
+    "worked example does not replace behavioral pressure tests with static checks"
+assert_has "$EXAMPLE" 'same pressure scenario.*RED.*GREEN' \
+    "worked example runs the behavioral scenario in RED and GREEN"
+assert_has "$EXAMPLE" 'every child activation or resume consumes' \
+    "worked example counts every child activation"
+for term in 'initialization' 'scenario execution' 'BLOCKED' 'status' 'no-op' \
+    'blocker-resolution' 'retries' 'revisions' 'fixes' 'evaluation' 'review' \
+    'summary activation'; do
+    assert_has "$EXAMPLE" "$term" \
+        "worked example counts $term"
+done
+assert_has "$EXAMPLE" 'stop for reapproval before.*budget.*(exhausted|exceeded)' \
+    "worked example stops before budget exhaustion"
+for term in 'task' 'create_session' 'run_factory' 'background agents' \
+    'nested delegation'; do
+    assert_has "$EXAMPLE" "$term" \
+        "worked example prohibits $term"
+done
 
 assert_has "$BRAINSTORMING" 'direct.*self-review' \
     "brainstorming defaults to direct self-review"
@@ -118,6 +151,11 @@ for prompt in "$SPEC_REVIEWER" "$PLAN_REVIEWER"; do
         "$(basename "$prompt") prohibits nested delegation"
     assert_has "$prompt" 'every activation or resume counts' \
         "$(basename "$prompt") counts every activation"
+    for term in 'initialization' 'review' 'BLOCKED' 'status' 'no-op' 'retries' \
+        're-review' 'summary activation'; do
+        assert_has "$prompt" "$term" \
+            "$(basename "$prompt") counts $term"
+    done
 done
 
 assert_has "$README" 'bounded parallel' \

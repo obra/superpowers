@@ -12,9 +12,9 @@ description: Use when creating new skills, editing existing skills, or verifying
 **Personal skills live in your runtime's skills directory** (`~/.claude/skills/` on Claude Code) — see [codex-tools.md](../using-superpowers/references/codex-tools.md) or [gemini-tools.md](../using-superpowers/references/gemini-tools.md) for the path on those runtimes. Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias.
 
 You write test cases, watch them fail (baseline behavior), write the skill
-(documentation), watch tests pass, and refactor (close loopholes). Use direct
-or deterministic tests when they prove the behavior. Delegated skill testing
-requires an explicitly approved bounded test topology.
+(documentation), watch tests pass, and refactor (close loopholes). Static tests apply only to mechanically observable properties. Behavioral and discipline
+claims require pressure-scenario evidence. Delegated skill testing requires an
+explicitly approved bounded test topology.
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
@@ -34,10 +34,10 @@ A **skill** is a reference guide for proven techniques, patterns, or tools. Skil
 
 | TDD Concept | Skill Creation |
 |-------------|----------------|
-| **Test case** | Pressure scenario or deterministic contract |
+| **Test case** | Pressure scenario for behavior; deterministic contract only for mechanical properties |
 | **Production code** | Skill document (SKILL.md) |
-| **Test fails (RED)** | Agent violates rule without skill (baseline) |
-| **Test passes (GREEN)** | Required behavior is observed with the skill present |
+| **Test fails (RED)** | Baseline failure is observed before the change |
+| **Test passes (GREEN)** | The same test demonstrates the required result after the change |
 | **Refactor** | Close loopholes while maintaining compliance |
 | **Write test first** | Run baseline scenario BEFORE writing skill |
 | **Watch it fail** | Document exact rationalizations agent uses |
@@ -558,22 +558,34 @@ Follow the TDD cycle:
 
 ### RED: Write Failing Test (Baseline)
 
-Run the pressure scenario or deterministic contract WITHOUT the proposed skill
-change. Document exact behavior:
+Classify the claim before choosing the test:
+
+- **Mechanical claim:** frontmatter, required output shape, file layout, exact
+  strings, forbidden topology text, or another property fully observable
+  without model behavior. A deterministic/static contract may test it.
+- **Behavioral or discipline claim:** whether an agent chooses, refuses,
+  follows, or resists something under pressure. Run a pressure scenario in RED
+  and GREEN, either directly in the current session when appropriate or through
+  the already approved persistent test executor.
+
+For behavioral RED, run the pressure scenario without the skill or before the
+change and demonstrate the baseline failure or undesired behavior. Document:
 - What choices did they make?
 - What rationalizations did they use (verbatim)?
 - Which pressures triggered violations?
 
-For delegated behavior testing, first disclose and obtain approval for the
-bounded test topology described below. This is "watch the test fail" - you must
-observe the baseline before writing the skill.
+Static grep or structure checks cannot substitute for behavioral RED. For
+delegated behavioral testing, first disclose and obtain approval for the
+bounded test topology described below.
 
 ### GREEN: Write Minimal Skill
 
 Write skill that addresses those specific rationalizations. Don't add extra content for hypothetical cases.
 
-Run the same scenarios WITH the skill. The required behavior should now be
-observable.
+For behavioral GREEN, run the same pressure scenario after the skill change and
+demonstrate compliance under the same pressure. Use the same approved
+persistent test executor when delegation is active. A static contract may
+supplement this evidence, but cannot establish model compliance.
 
 ### REFACTOR: Close Loopholes
 
@@ -605,8 +617,10 @@ findings or an explicit test failure.
 
 Children must not delegate, create agents or sessions, run factories, or start
 background work. Every child activation or resume counts, including
-initialization, blockers, retries, fixes, and evaluation. Stop for reapproval
-before exhaustion of the activation budget.
+initialization, scenario execution, BLOCKED, status, or no-op turns,
+blocker-resolution turns, retries, revisions or fixes, evaluation or review,
+and any optional summary activation. Stop for reapproval before exhaustion of
+the activation budget.
 
 Never use fresh-agent swarms, implicit or automatic provider/model selection,
 "most capable available model," Rubber Duck, review swarms, or an automatic
@@ -660,12 +674,15 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 ## Skill Creation Checklist (TDD Adapted)
 
-**IMPORTANT: Create a todo for EACH applicable checklist item below. Mark a
-delegated item N/A when direct or static testing proves the requirement.**
+**IMPORTANT: Create a todo for EACH applicable checklist item below. A
+delegated item may be N/A when testing is direct. Static testing may replace
+only mechanically observable checks, never behavioral pressure testing.**
 
 **RED Phase - Write Failing Test:**
 - [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios or deterministic contracts WITHOUT the change
+- [ ] Classify each claim as mechanical or behavioral
+- [ ] For mechanical claims, run deterministic contracts WITHOUT the change
+- [ ] For behavioral/discipline claims, run the pressure scenario in RED and demonstrate baseline failure
 - [ ] Identify patterns in rationalizations/failures
 
 **GREEN Phase - Write Minimal Skill:**
@@ -682,7 +699,9 @@ delegated item N/A when direct or static testing proves the requirement.**
 - [ ] One persistent test executor reused; optional evaluator is persistent and read-only
 - [ ] Code inline OR link to separate file
 - [ ] One excellent example (not multi-language)
-- [ ] Run scenarios or deterministic contracts WITH the skill
+- [ ] For mechanical claims, run the same deterministic contracts WITH the skill
+- [ ] For behavioral/discipline claims, run the same pressure scenario in GREEN and demonstrate compliance
+- [ ] Do not claim model compliance from static text or structure assertions
 
 **REFACTOR Phase - Close Loopholes:**
 - [ ] Identify NEW rationalizations from testing

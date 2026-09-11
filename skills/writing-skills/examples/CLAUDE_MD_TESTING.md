@@ -14,7 +14,16 @@ reasoning effort, context tier, scenarios, artifact paths, finite activation
 budget, and maximum three total evaluation/review passes. Children must not
 delegate.
 
-Direct execution or deterministic static checks may be used instead.
+Every child activation or resume consumes one unit of that budget, including
+initialization, scenario execution, BLOCKED, status, or no-op turns,
+blocker-resolution turns, retries, revisions or fixes, evaluation or review,
+and any optional summary activation. Stop for reapproval before the approved budget is exhausted or exceeded; there is no silent extra turn.
+
+The executor and evaluator must not invoke `task`, `create_session`,
+`run_factory`, background agents, or any nested delegation.
+
+This example tests a behavioral discipline claim. It must run the same pressure scenario in both RED and GREEN. Static checks may supplement the result, but
+cannot replace the behavioral run or prove model compliance.
 
 ## Pressure Scenarios
 
@@ -62,10 +71,12 @@ before responding or acting.
 ## Protocol
 
 1. Define success as checking for and reading an applicable skill before action.
-2. Run the no-guidance control with the approved persistent executor; record the
-   exact choice and rationalization.
+2. Run the no-guidance control as behavioral RED, directly in the current
+   session when appropriate or with the approved persistent executor; record
+   the baseline failure, exact choice, and rationalization.
 3. Add the candidate guidance.
-4. Re-run the same scenario with the same executor.
+4. Run the same pressure scenario as behavioral GREEN under the same pressure,
+   using the same executor when delegation is active; demonstrate compliance.
 5. If an explicit test failure remains, revise with the same executor.
 6. If an evaluator was approved, use the same read-only evaluator for at most
    three total passes. Passes 2 and 3 require unresolved Critical/Important

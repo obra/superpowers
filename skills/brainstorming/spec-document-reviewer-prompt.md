@@ -56,4 +56,5 @@ Use the same reviewer for at most three total review passes. Passes 2 and 3 are
 allowed only while Critical/Important issues remain. After pass 3, stop and
 report unresolved issues; do not create another reviewer or review swarm.
 Every activation or resume counts against `[ACTIVATION_BUDGET]`, including
-initialization, blockers, and re-review. Stop for reapproval before exhaustion.
+initialization, review, BLOCKED, status, or no-op turns, retries, re-review, and
+any optional summary activation. Stop for reapproval before exhaustion.
