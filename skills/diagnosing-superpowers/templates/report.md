@@ -23,6 +23,10 @@ what would raise it. No statement about what superpowers should do.>
 - Other plugins, extensions, MCP servers:
 - Instruction files present (paths only):
 
+Label every environment field and skill observation as historical evidence,
+unverified snapshot, current observation, or unknown, and record its
+supporting evidence location.
+
 ## 4. Sessions examined (REQUIRED)
 
 | Role | Session id | Absolute path | Lines | Bytes |

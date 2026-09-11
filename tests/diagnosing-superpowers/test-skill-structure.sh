@@ -78,6 +78,7 @@ fi
 
 # --- expected files -------------------------------------------------------
 expected_files=(
+  references/redaction-policy.md
   references/session-discovery.md
   references/context-safety.md
   references/github-issues.md

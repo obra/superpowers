@@ -30,8 +30,15 @@ Session still running at read time: yes | no (mtime <ISO>, lines <N>)
 - Superpowers install root: <path>; version <x.y.z>; git sha <sha or "not a checkout">
 - Skill files read or injected during the session:
 
-| File (relative to install root) | sha1 (current file) | mtime newer than session? |
-|---|---|---|
+| Skill / source path | sha1 or unavailable | Provenance | Supporting location |
+|---|---|---|---|
+
+Label environment and skill observations as historical evidence, unverified
+snapshot, current observation, or unknown. Check supplied provenance notes,
+archives and captured skill bodies before declaring historical information
+unavailable. Missing original paths do not erase retained copies. Current
+versions/mtimes do not establish historical versions; one captured skill body
+does not authenticate an entire installation.
 
 - Other plugins / extensions / MCP servers configured: <list, or "none found">
 - Instruction files present (paths only): <list>

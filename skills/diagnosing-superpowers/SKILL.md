@@ -31,9 +31,8 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    first prompt and timestamp, and list every candidate you rejected with the
    reason, or "none". Enumerate subagent transcripts. Create
    `~/.superpowers/diagnosing-superpowers/<session-id>/`, tell your
-   partner the path, and fill `templates/case.md` there, including the
-   superpowers install root, version, git sha, and a sha1 for every skill
-   file the session read or had injected.
+   partner the path, and fill `templates/case.md` there, following its
+   provenance rules for environment and skill observations.
 3. **Triage.** Read the region around the reported problem yourself. Then
    dispatch one analyst subagent per dimension in parallel, each given the
    case file path, `prompts/analyst-common.md`, and one dimension file from
@@ -43,7 +42,9 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    Split a dimension by turn range when the transcript is long. Discard
    any returned finding without `path:line`.
 4. **Report.** Fill every section of `templates/report.md` in order, write
-   it to the workspace, show it, and give the path.
+   it to the workspace, show it, and give the path. Check what cited content
+   actually proves and preserve the supporting case; a symlink alias is not a
+   redundant copy.
 5. **GitHub issues** — when report §7 says possible or likely, or your
    partner asks. Search open and closed issues for the symptoms per
    `references/github-issues.md`. Show matches and suggest adding the
@@ -58,10 +59,11 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    evidence (bodies only for cited events), full. Build the bundle per
    `templates/bundle-README.md`, dispatch `prompts/scrub.md`, then
    `prompts/scrub-audit.md`, repeating both until the audit returns CLEAN.
-   Show the scrub log and file list; archive (`zip -r` or `tar -czf`)
-   only after approval. With the archive path, state what it contains,
-   point at the scrub log for what was replaced, and say scrubbing can
-   miss things: they must review every file before sharing it.
+   Complete the bundle template's evidence check and reconciliation before
+   showing the final scrub log, file list, and privacy and evidence outcomes.
+   Archive (`zip -r` or `tar -czf`) only after approval. With the archive
+   path, state what it contains, point at the scrub log for replacements, and
+   say scrubbing can miss things: they must review every file before sharing.
 7. **Similar sessions** — when asked. Turn confirmed findings into a
    signature, list candidates by mtime and size, find marker line numbers,
    dispatch `prompts/similar-session.md` per candidate in parallel, and

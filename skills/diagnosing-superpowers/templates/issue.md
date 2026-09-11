@@ -4,14 +4,14 @@ Title: <skill or symptom>: <one-line observable> (<harness>)
 
 ## Environment (required)
 
-| Field | Value |
-|-------|-------|
-| Superpowers version | <version> (<sha or "not a checkout">) |
-| Harness (Claude Code, Cursor, etc.) | <harness> |
-| Harness version | <version> |
-| Your model + version | <model ids seen> |
-| All plugins installed | <list> |
-| OS + shell | <os version>, <shell> |
+| Field | Value | Provenance / supporting evidence |
+|-------|-------|-------------------------------|
+| Superpowers version | <version> (<sha or "not a checkout">) | <historical evidence / unverified snapshot / current observation / unknown>; <location> |
+| Harness (Claude Code, Cursor, etc.) | <harness> | <label>; <location> |
+| Harness version | <version> | <label>; <location> |
+| Your model + version | <model ids seen> | <label>; <location> |
+| All plugins installed | <list> | <label>; <location> |
+| OS + shell | <os version>, <shell> | <label>; <location> |
 
 ## Is this a Superpowers issue or a platform issue?
 
@@ -41,8 +41,8 @@ rewritten as `transcript line <n>`.>
 
 ## Debug log or conversation transcript
 
-Session id(s): <ids>. Bundle: <attached, redaction level <level> | none
-built>.
+Session id(s): <ids>. Delivered local archive: <path, redaction level <level>
+| none built>. Attached bundle: <no claim; attach only after approval>.
 Superpowers involvement per the diagnosis report: <possible | likely>, with
 evidence at <transcript lines>. This report does not propose a fix.
 
