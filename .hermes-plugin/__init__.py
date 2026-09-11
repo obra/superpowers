@@ -37,6 +37,25 @@ def _strip_frontmatter(content: str) -> str:
     return (match.group(1) if match else content).strip()
 
 
+def _frontmatter_value(content: str, key: str) -> str:
+    """Return a flat ``key: value`` scalar from a SKILL.md frontmatter block.
+
+    Hermes reads a skill's description from ``register_skill``'s ``description``
+    argument, which defaults to "" — registering only the path left every stock
+    skill with a blank description in the skill catalogue, so the model had
+    nothing to select on. Stock frontmatter is a flat block of single-line
+    scalars, so a line scan covers it without a YAML dependency.
+    """
+    match = re.match(r"^---\n([\s\S]*?)\n---\n", content)
+    if not match:
+        return ""
+    for line in match.group(1).splitlines():
+        name, sep, value = line.partition(":")
+        if sep and name.strip() == key:
+            return value.strip().strip("\"'")
+    return ""
+
+
 def _build_bootstrap(skills_dir: str) -> str:
     with open(
         os.path.join(skills_dir, "using-superpowers", "SKILL.md"),
@@ -82,7 +101,9 @@ def register(ctx):
     for name in sorted(os.listdir(skills_dir)):
         skill_md = os.path.join(skills_dir, name, "SKILL.md")
         if os.path.isfile(skill_md):
-            ctx.register_skill(name, Path(skill_md))
+            with open(skill_md, encoding="utf-8") as f:
+                description = _frontmatter_value(f.read(), "description")
+            ctx.register_skill(name, Path(skill_md), description=description)
 
     # pre_llm_call returning {"context": ...} is the documented injection path
     # (on_session_start return values are ignored, and ctx.inject_message
