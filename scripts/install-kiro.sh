@@ -6,7 +6,7 @@ PAYLOAD_MARKER=".superpowers-kiro-install"
 AGENT_MARKER="<!-- Managed by the Superpowers Kiro installer. -->"
 
 die() { echo "error: $*" >&2; exit 1; }
-for tool in cat curl dirname tar grep sed mkdir rm mv; do
+for tool in cat curl dirname tar grep sed mkdir rm mv awk; do
   command -v "$tool" >/dev/null 2>&1 || die "required tool '$tool' is not on PATH"
 done
 [ "$#" -le 1 ] || die "usage: $0 [vMAJOR.MINOR.PATCH]"
@@ -104,11 +104,20 @@ generate_agent() {
   tmp="$dest.tmp.$$"
   [ -f "$src" ] || die "payload is missing agent $name.md"
   (umask 077 && : >"$tmp")
-  awk -v root="$install_root" -v marker="$AGENT_MARKER" '
-    { gsub(/\{\{SUPERPOWERS_SKILLS_DIR\}\}/, root "/skills") }
+  KIRO_INSTALL_ROOT="$install_root" awk -v marker="$AGENT_MARKER" '
+    BEGIN { root = ENVIRON["KIRO_INSTALL_ROOT"]; token = "{{SUPERPOWERS_SKILLS_DIR}}" }
+    {
+      line = $0; result = ""
+      while ((at = index(line, token)) > 0) {
+        result = result substr(line, 1, at - 1) root "/skills"
+        line = substr(line, at + length(token))
+      }
+      $0 = result line
+    }
     /^---$/ { print; fm++; if (fm == 2) print marker; next }
     fm == 1 && /^[[:space:]]*-[[:space:]]+(file|skill):\/\// {
-      sub(/:\/\//, "://" root "/"); print; next
+      at = index($0, "://") + 3
+      $0 = substr($0, 1, at - 1) root "/" substr($0, at); print; next
     }
     { print }
   ' "$src" >"$tmp"
