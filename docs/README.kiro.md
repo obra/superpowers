@@ -3,12 +3,12 @@
 This integration uses a Kiro v3 Markdown custom agent, startup `file://`
 resources, and native `skill://` discovery. Because the Kiro CLI v3 and the
 Kiro IDE (1.0+) run the same v3 agent engine and agent format, one installed
-agent works in both — no per-surface setup. It does not support Kiro CLI v2,
+agent format works in both; configure activation on each surface. It does not support Kiro CLI v2,
 which is no longer being extended — Kiro prompts you to migrate v2 agents with
 `/upgrade-agent`, and new capabilities land in v3 only.
 
 Testing note: this integration was developed and used primarily on the Kiro
-CLI. The IDE has been smoke-tested (the agent loads, skills are discovered, and
+CLI versions recorded in the PR. The IDE has been smoke-tested (the agent loads, skills are discovered, and
 `brainstorming` triggers on the acceptance prompt) but not exercised across the
 full range of skills.
 
@@ -16,31 +16,29 @@ full range of skills.
 
 - Kiro CLI with the v3 agent engine, or Kiro IDE 1.0+ (same v3 agent engine)
 - macOS, Linux, or WSL
-- `curl` and `tar`
+- `curl` and `tar` for release downloads (not required by `--source`)
 
 Native Windows is not supported by the initial installer.
 
 ## Installation
 
-Install the latest stable release:
+Choose a release tag that contains Kiro support (replace `vX.Y.Z` below).
+Download and inspect that release's installer, then install the same tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh | sh
+kiro_release=vX.Y.Z
+kiro_installer="$(mktemp)"
+curl -fsSL --proto '=https' --proto-redir '=https' \
+  "https://raw.githubusercontent.com/obra/superpowers/refs/tags/$kiro_release/scripts/install-kiro.sh" \
+  -o "$kiro_installer" &&
+  less "$kiro_installer" &&
+  sh "$kiro_installer" "$kiro_release"
+rm -f "$kiro_installer"
 ```
 
-Install a specific release:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh | sh -s -- v1.2.3
-```
-
-To inspect the installer before running it:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh -o /tmp/install-kiro.sh
-less /tmp/install-kiro.sh
-sh /tmp/install-kiro.sh
-```
+Until a release containing the integration ships, use the local-source
+installation below. Older tags lack the required files. Tagged downloads use
+HTTPS; this recipe does not add checksum or signature verification.
 
 The payload is installed at
 `${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro`. The installer generates
@@ -98,11 +96,23 @@ not necessarily inherit the model of your session.
 
 ## Usage
 
-Start a v3 TUI session in any project:
+After installing, choose Superpowers as the CLI default once:
 
 ```bash
-kiro-cli chat --agent superpowers --agent-engine v3
+kiro-cli agent set-default superpowers
 ```
+
+Then start a v3 TUI session in any project:
+
+```bash
+kiro-cli chat --agent-engine v3
+```
+
+The installer prints these steps; it does not edit Kiro settings or run
+`set-default` for you. On the tested CLI 2.x versions, choosing the default agent
+does not select the v3 engine: `--agent-engine v3` belongs to `chat`. The separate
+`--v3` shorthand is a top-level flag. Keep explicit `--agent superpowers` for
+repository-local development or deliberate one-off agent selection.
 
 Kiro loads `using-superpowers` and the Kiro tool mapping at startup. It exposes
 skill metadata from `skill://` resources and uses its native Load skill action
@@ -124,8 +134,9 @@ ask the agent to list its skills) to confirm the Superpowers skills are present.
 
 ## Updating or changing versions
 
-Rerun the installation command. With no argument it installs the latest stable
-release; with a tag such as `v1.2.3` it installs that release. The installer
+Repeat the download-inspect-run recipe with the desired supported release tag.
+The installer also accepts no argument to resolve the latest stable release;
+the documented recipe passes a tag to keep the installer and payload aligned. The installer
 stages the payload and all three agents before replacement. During replacement,
 it temporarily backs up existing managed files and restores them on handled
 failures. Backups are removed after success; it does not retain version history.
@@ -139,7 +150,8 @@ power-loss guarantee.
 
 ## Removal
 
-Inspect the ownership marker on every managed path before deleting anything:
+First select another installed CLI default agent with `kiro-cli agent set-default <name>`.
+Then inspect the ownership marker on every managed path before deleting anything:
 
 ```bash
 cat "${XDG_DATA_HOME:-$HOME/.local/share}/superpowers/kiro/.superpowers-kiro-install"

@@ -293,7 +293,7 @@ part of the installed extension** — never substitute "edit the user's global
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
 | has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
-| loads a named *agent profile* whose manifest declares startup resources, with no hook, no context file, and no include syntax | D (agent-profile) | Kiro CLI v3 (`.kiro/agents/superpowers.md` + `references/kiro-tools.md` + `scripts/install-kiro.sh`) |
+| loads a named *agent profile* at startup and can persist it as the default through a one-time setup command | D (agent-profile) | Kiro CLI v3 (`.kiro/agents/superpowers.md` + `references/kiro-tools.md` + `scripts/install-kiro.sh`) |
 
 Most real harnesses fit one row cleanly; the Antigravity row is the hybrid case (rule 2 still
 holds — the bootstrap rides the install mechanism, never a user-config edit).
@@ -302,10 +302,13 @@ holds — the bootstrap rides the install mechanism, never a user-config edit).
 
 The harness has no shell hook, no code plugin, and no instructions file it always
 reads. What it has is a *named agent* defined by a manifest, and that manifest can
-declare files to load as startup resources. Selecting the agent is what loads the
-bootstrap, so injection is guaranteed for anyone who starts a session with it —
-and only for them. The bootstrap is not injected into the harness's default
-agent, which is the tradeoff this shape accepts.
+declare files to load as startup resources. This shape meets the same acceptance
+bar only when a one-time setup makes that agent the persistent default: ordinary
+new sessions must load the bootstrap without selecting skills or an agent again.
+For Kiro CLI, document `kiro-cli agent set-default superpowers`, followed by
+`kiro-cli chat --agent-engine v3`. The installer must not edit the user's settings.
+Verify persistence on each claimed surface; CLI defaults alone do not establish
+IDE behavior. A per-session selector is not an exception to the acceptance bar.
 
 - Reference: `.kiro/agents/superpowers.md` (profile declaring the bootstrap and
   mapping as `resources`, plus a `skill://` glob registering every skill),

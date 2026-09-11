@@ -221,27 +221,31 @@ Superpowers is available in Kimi Code's plugin marketplace.
 ### Kiro CLI
 
 Kiro CLI v3 uses a native custom agent and native Agent Skills. The same agent
-also works in the Kiro IDE (1.0+), which runs the same v3 agent engine. Install
-the latest stable Superpowers release:
+format also works in the Kiro IDE (1.0+).
+
+For releases containing Kiro support, follow the
+[download-inspect-run installation recipe](docs/README.kiro.md#installation).
+Before the first such release, use a checkout containing the integration:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/scripts/install-kiro.sh | sh
+sh scripts/install-kiro.sh --source .
 ```
 
-Start Kiro with:
+This also works with a branch or fork; see
+[local-source installation](docs/README.kiro.md#install-from-a-branch-or-fork-before-release).
+
+After installation, set the CLI default once, then start v3 sessions:
 
 ```bash
-kiro-cli chat --agent superpowers --agent-engine v3
+kiro-cli agent set-default superpowers
+kiro-cli chat --agent-engine v3
 ```
 
-In the Kiro IDE, select the `superpowers` agent from the agent selector (restart
-the IDE after installing so it picks up the new agent).
+In the Kiro IDE, restart after installation and select `superpowers` in the
+agent selector. Configure the IDE agent separately from the CLI default.
 
-To test a branch or fork before release, run `sh scripts/install-kiro.sh --source .`
-from its checkout. See [local-source installation](docs/README.kiro.md#install-from-a-branch-or-fork-before-release).
-
-See [the complete Kiro guide](docs/README.kiro.md) for pinned versions,
-updates, removal, repository-local development, and current limitations.
+See [the complete Kiro guide](docs/README.kiro.md) for updates, removal,
+repository-local development, and current limitations.
 
 ### OpenCode
 
