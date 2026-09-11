@@ -8,6 +8,16 @@
 # artifacts. A stale ledger misread as current progress makes controllers
 # skip whole task sequences — plan-scoping removes that failure structurally.
 #
+# Basename slugs collide when two plans share a filename (docs/alpha/plan.md
+# vs docs/beta/plan.md), so each workspace records its owning plan's path in
+# a plan-path marker (repo-relative in-repo, absolute outside). A workspace
+# owned by a different plan is skipped and the slug disambiguated with the
+# plan's parent-directory name, then a counter. A workspace with no marker
+# predates the marker scheme and is adopted for the current plan so in-flight
+# workspaces keep resolving — which means the first collision on such a
+# legacy workspace adopts instead of detecting; acceptable, marker-less
+# workspaces age out as plans finish.
+#
 # The workspace lives in the working tree (not under .git/) because Claude Code
 # treats .git/ as a protected path and denies agent writes there — which blocks
 # an implementer subagent from writing its report file. A self-ignoring
@@ -34,7 +44,39 @@ slug=$(basename "$plan" .md)
 
 root=$(git rev-parse --show-toplevel)
 base="$root/.superpowers/sdd"
+
+# Normalize the plan path (physical directory, so relative/absolute/../
+# spellings of one plan compare equal) and express it as the marker value:
+# repo-relative when the plan lives under the repo root, absolute otherwise.
+plan_dir=$(CDPATH= cd -- "$(dirname "$plan")" && pwd -P)
+plan_abs="$plan_dir/$(basename "$plan")"
+case "$plan_abs" in
+  "$root"/*) plan_id=${plan_abs#"$root"/} ;;
+  *)         plan_id=$plan_abs ;;
+esac
+
+# True when the workspace at $1 is (or becomes) this plan's: an existing
+# marker must name this plan; a missing marker means a new workspace or a
+# pre-marker legacy one, and either way the plan claims it by writing one.
+owns() {
+  if [ -e "$1/plan-path" ]; then
+    [ "$(cat "$1/plan-path")" = "$plan_id" ]
+  else
+    mkdir -p "$1"
+    printf '%s\n' "$plan_id" > "$1/plan-path"
+  fi
+}
+
 dir="$base/$slug"
-mkdir -p "$dir"
+if ! owns "$dir"; then
+  parent=$(basename "$plan_dir")
+  dir="$base/$slug-$parent"
+  if ! owns "$dir"; then
+    n=2
+    while ! owns "$base/$slug-$parent-$n"; do n=$((n + 1)); done
+    dir="$base/$slug-$parent-$n"
+  fi
+fi
+
 printf '*\n' > "$base/.gitignore"
-cd "$dir" && pwd
+CDPATH= cd -- "$dir" && pwd
