@@ -5,25 +5,24 @@ Dimension: Cost and time
 
 Account for where tokens and wall-clock went.
 
-1. Tokens. Claude Code: sum `message.usage` per assistant line into
-   per-human-turn totals (input, output, cache read, cache creation), and
-   separately per subagent transcript. Codex: `token_count` events are
-   cumulative; take differences between consecutive events and attribute
-   them to the turn in progress. Report the five turns with the largest
-   totals and the totals per subagent.
-2. Wall-clock. Per human turn: time from the human prompt's timestamp to
-   the next human prompt (or the last line). Codex also has
-   `task_complete.duration_ms`. Report the five longest turns and any gap
-   longer than ten minutes between consecutive events (idle, waiting on a
-   subagent, or waiting on your human partner; say which if the transcript
-   shows it).
-3. Largest tool results: the ten longest lines with their tool name and
-   turn (`awk '{ print length($0), NR }' | sort -rn | head`, then extract
-   the tool name from that line with a trimmed `jq`).
-4. Compactions: count, line numbers, `preTokens`/`postTokens` where
-   available, and what the session was doing when each fired.
-5. Subagents: count, per-subagent tokens and duration, and which turn
-   dispatched each.
+1. Tokens. Use only the usage records and counter meanings established in the
+   case file. State whether each counter is incremental or cumulative before
+   calculating totals; difference cumulative observations without turning a
+   missing observation into zero. Report the five turns with the largest
+   supported totals and the supported totals per associated session.
+2. Wall-clock. Use the evidenced timestamp fields, event boundaries, and units
+   recorded in the case file. Report the five longest supported turns and any
+   gap longer than ten minutes between consecutive events (idle, waiting on an
+   associated session, or waiting on your human partner; say which only when
+   the records show it).
+3. Largest tool results: use the case file's evidenced tool-result records to
+   report the ten largest results with their tool and turn. Measure records
+   before extracting bounded content.
+4. Compactions: count and locate records whose meaning as compaction events was
+   established during discovery. Report available before/after counters and
+   what the session was doing when each fired; mark unsupported fields absent.
+5. Associated sessions: count them and report supported usage, duration, and
+   dispatching turn for each.
 6. Report the turns, subagents, tools, or repeats that dominate the
    totals, with numbers. Do not speculate about why a
    turn was expensive beyond what the transcript shows.

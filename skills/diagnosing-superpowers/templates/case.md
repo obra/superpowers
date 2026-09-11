@@ -41,6 +41,17 @@ Session still running at read time: yes | no (mtime <ISO>, lines <N>)
 - Follow `references/context-safety.md` before reading any file listed here.
 - In a subagent transcript, "user" is the parent agent.
 
-## Harness reference to use
+## Discovered sources and record meanings
 
-<references/claude-code-sessions.md | references/codex-sessions.md | references/other-harnesses.md>
+- Sources consulted: <absolute path, tool, help, or documentation source>
+- Extraction commands or queries: <bounded commands or tool queries used for each source>
+- Target identity evidence: <session id, working directory, timestamps, matching content, and supporting record locations>
+- Associated sessions: <session id, relationship, and supporting record locations, or "none found">
+- Human messages: <record shape and evidence for its meaning>
+- Injected messages and parent dispatches: <record shape and evidence for its meaning>
+- Assistant messages: <record shape and evidence for its meaning>
+- Tool calls and results: <record shapes, how they match, and evidence for those meanings>
+- Usage counters: <fields, incremental or cumulative semantics, units, and evidence, or "unavailable">
+- Timing: <fields, units, event boundaries, and evidence, or "unavailable">
+- Other relevant records: <models, versions, compactions, or other meanings and evidence>
+- Unresolved information: <missing, inaccessible, ambiguous, or absent information, or "none">

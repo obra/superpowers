@@ -6,17 +6,14 @@ Dimension: Skill timeline
 Build the per-human-turn record of skill and plugin use, then look for gaps.
 
 1. List the human prompts with line numbers and timestamps.
-2. List every skill invocation (Claude Code: `Skill` tool_use `input.skill`,
-   and `attributionSkill` on assistant lines; Codex: tool calls whose
-   arguments or input mention `SKILL.md`; other harnesses: reads of files
-   named `SKILL.md`). Record the line, the skill name, and the human turn
-   it happened in.
+2. Using the skill-invocation and attribution meanings established in the case
+   file, list every explicit invocation, active-skill attribution, or read of a
+   file named `SKILL.md`. Record the line, the skill name, and the human turn it
+   happened in.
 3. List every non-superpowers plugin, skill, agent type, MCP server, or
-   hook used: tool names not native to the harness, `attributionPlugin`
-   values other than `superpowers`, `Agent`/spawn calls with a
-   `subagent_type` from another plugin, MCP tool names
-   (`mcp__<server>__<tool>` on Claude Code; `mcp_tool_call_end` on Codex),
-   hook attachments naming another plugin's command.
+   hook used. Use only the evidenced tool, attribution, agent-dispatch, MCP,
+   and hook meanings recorded in the case file; identify values associated
+   with something other than `superpowers`.
 4. For each human turn, compare the request text against the trigger
    descriptions of the superpowers skills installed (read
    `<install root>/skills/*/SKILL.md` frontmatter `description` lines; the
