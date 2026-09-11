@@ -168,7 +168,7 @@ The script supports release installation and a local checkout snapshot:
 ./scripts/install-kiro.sh --source . # local checkout, including uncommitted edits
 ```
 
-The latest form resolves the latest GitHub release tag; a failure to resolve it reports that specifically rather than blaming a version argument the user did not pass. The selected form downloads the matching tagged source archive. The script requires standard POSIX tools, `curl`, and `tar`; it does not require Git, Node.js, Python, or `jq`.
+The latest form resolves the latest GitHub release tag; a failure to resolve it reports that specifically rather than blaming a version argument the user did not pass. The selected form downloads the matching tagged source archive. The script requires standard POSIX tools, plus `curl` and `tar` for release downloads; it does not require Git, Node.js, Python, or `jq`.
 
 Keep the installer reviewable POSIX shell without new runtime dependencies. The earlier roughly 100-line goal is superseded by the approved local-source and handled-failure recovery requirements; tests check behavior, not line count.
 
