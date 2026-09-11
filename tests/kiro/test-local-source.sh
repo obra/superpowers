@@ -54,6 +54,8 @@ if run --source "$source_dir" > "$TEST_ROOT/log" 2>&1; then fail 'accepts missin
 diff -r "$TEST_ROOT/before" "$payload"
 printf '{\n "version": "6.3.0-dev"\n}\n' > "$source_dir/package.json"
 printf 'updated content\n' > "$source_dir/skills/local-change.txt"
+# A valid compact package.json must work too.
+printf '{"name":"superpowers","version":"6.3.0-dev"}\n' > "$source_dir/package.json"
 run --source "$source_dir" > /dev/null
 rm -rf "$source_dir"
 grep -Fq 'updated content' "$payload/skills/local-change.txt" || fail 'does not install independent updated snapshot'

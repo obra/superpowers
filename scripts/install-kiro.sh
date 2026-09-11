@@ -148,7 +148,7 @@ for required in \
   skills/brainstorming/SKILL.md; do
   [ -f "$source_root/$required" ] || die "release is missing $required"
 done
-archive_version="$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$source_root/package.json" | sed -n '1p')"
+archive_version="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$source_root/package.json" | sed -n '1p')"
 [ -n "$archive_version" ] || die "source package.json is missing version metadata"
 if [ -n "$source_dir" ]; then
   version="$archive_version"
