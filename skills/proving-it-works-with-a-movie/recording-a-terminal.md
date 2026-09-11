@@ -16,33 +16,113 @@ on return ends the session.
 
 It needs uv, ttyd, and Chrome or Edge on PATH, or `--ttyd` and `--browser`.
 `--shell powershell51|powershell7|gitbash` picks the filmed shell; the shell
-you type these commands into is a separate choice. From PowerShell:
+you type these commands into is a separate choice. Replace the sample
+commands below with the software you are proving.
+
+### PowerShell
+
+Run this block in a background terminal/task your harness keeps alive.
+For PowerShell 5.1 use `--shell powershell51`; for PowerShell 7 use
+`--shell powershell7`.
 
 ```powershell
 $skill = 'C:/path/to/skills/proving-it-works-with-a-movie'
 $work = "$HOME/movie O'Brien λ & [take]"
 $film = "$skill/examples/film-terminal.py"
-# in a background task, kept alive until close:
+[System.IO.Directory]::CreateDirectory($work) | Out-Null
 & uv run --script $film serve "$work/session" --shell powershell7 --cwd $work
-# then one call each; wait for "$work/session/ready.json" first:
-& uv run --script $film run "$work/session" 'pytest -q' --record "$work/take-one"
-& uv run --script $film run "$work/session" 'python app.py' --record "$work/take-two" --seconds 8  # a TUI: exits 2, still running
-& uv run --script $film key "$work/session" q --record "$work/take-three"
+```
+
+In a second terminal/task, define the same paths and wait for readiness.
+Repeat these three variable definitions in each tool call if your harness
+starts a fresh shell for every call. `-LiteralPath` keeps the brackets in
+the sample directory name from being interpreted as wildcards.
+
+```powershell
+$skill = 'C:/path/to/skills/proving-it-works-with-a-movie'
+$work = "$HOME/movie O'Brien λ & [take]"
+$film = "$skill/examples/film-terminal.py"
+$deadline = (Get-Date).AddSeconds(60)
+while (-not (Test-Path -LiteralPath "$work/session/ready.json")) {
+    if ((Get-Date) -gt $deadline) { throw 'Recorder not ready; inspect the serve task output.' }
+    Start-Sleep -Milliseconds 200
+}
+& uv run --script $film run "$work/session" 'echo hello' --record "$work/take-one"
+& uv run --script $film run "$work/session" 'Read-Host' --record "$work/take-two" --seconds 2
+# Exit 2 means Read-Host is still waiting. Press Enter to finish it in a new take:
+& uv run --script $film key "$work/session" Enter --record "$work/take-three"
+# A long command can continue across calls; exit 2 here is expected too:
+& uv run --script $film run "$work/session" 'Start-Sleep -Seconds 5' --record "$work/take-four" --seconds 1
+& uv run --script $film watch "$work/session" --record "$work/take-five" --seconds 10
 & uv run --script $film close "$work/session"
 ```
 
-From Git Bash the commands are the same with `skill=$(cygpath -m ...)` and
-`work=$(cygpath -m ...)`, as in assembling.md.
+Read `$LASTEXITCODE` immediately after each invocation. Stop on exit 1;
+exit 2 is expected while the interactive command is waiting for input.
+Always call `close` when finished, including after a failed command.
+
+When invoking from PowerShell 5.1, escape embedded double quotes with a
+backslash before passing a command to native uv: use the command argument
+`'python -c \"print(123)\"'`. PowerShell 7 preserves the quotes in
+`'python -c "print(123)"'` directly. This depends on the invoking shell,
+regardless of which shell you record.
+
+### Git Bash
+
+Convert paths passed to native uv/Python with `cygpath -m`. Run this block
+in a background terminal/task your harness keeps alive:
+
+```bash
+skill=$(cygpath -m /c/path/to/skills/proving-it-works-with-a-movie)
+work=$(cygpath -m "$HOME/movie O'Brien λ & [take]")
+film="$skill/examples/film-terminal.py"
+mkdir -p "$work"
+uv run --script "$film" serve "$work/session" --shell gitbash --cwd "$work"
+```
+
+In a second terminal/task, use the same paths. Repeat the three variable
+definitions in each tool call if it starts a fresh shell. Keep `set -e`
+off for these interactive calls so expected exit 2 does not end the script.
+
+```bash
+skill=$(cygpath -m /c/path/to/skills/proving-it-works-with-a-movie)
+work=$(cygpath -m "$HOME/movie O'Brien λ & [take]")
+film="$skill/examples/film-terminal.py"
+deadline=$((SECONDS + 60))
+until [[ -f "$work/session/ready.json" ]]; do
+    if (( SECONDS >= deadline )); then
+        printf '%s\n' 'Recorder not ready; inspect the serve task output.' >&2
+        exit 1
+    fi
+    sleep 0.2
+done
+uv run --script "$film" run "$work/session" 'echo hello' --record "$work/take-one"
+uv run --script "$film" run "$work/session" 'read -r answer' --record "$work/take-two" --seconds 2
+# Exit 2 means read is still waiting. Press Enter to finish it in a new take:
+uv run --script "$film" key "$work/session" Enter --record "$work/take-three"
+# A long command can continue across calls; exit 2 here is expected too:
+uv run --script "$film" run "$work/session" 'sleep 5' --record "$work/take-four" --seconds 1
+uv run --script "$film" watch "$work/session" --record "$work/take-five" --seconds 10
+uv run --script "$film" close "$work/session"
+```
+
+Read `$?` immediately after each invocation. Stop on exit 1; exit 2 means
+the command remains active. Always call `close` when finished, including
+after a failed command. The original `serve` task exits after `close`.
 
 `run` types the command and films at 5 fps into `--record` until the prompt
 comes back, holds 1.5 s so the result stays readable, and prints the status
 as JSON: `ok` is the shell's own success flag and `exit_code` the last native
 program's exit code, which PowerShell keeps from an earlier program when the
-command was a cmdlet. It exits 1 when the command failed and 2 when it is
-still running after `--seconds`. `key` presses one key and `watch` films
+command was a cmdlet. PowerShell can also leave its success flag true after
+a parse error, so check the terminal output when a command returns without
+doing the expected work. The recorder exits 1 when the shell reports failure
+and 2 when it is still running after `--seconds`. `key` presses one key and `watch` films
 without typing; both wait for the prompt the same way. Every `--record`
 directory is a `kind: frames` scene at `rate: 5`; a slow screenshot repeats
-the previous frame so the timing stays honest.
+the previous frame so the timing stays honest. Use a new or empty directory
+for every take, including retakes. A nonempty `--record` directory is refused
+before input is sent, preserving the earlier take.
 
 Long work spans takes exactly as on Unix: film the command being issued with
 a short `--seconds`, do other things, then `watch` the result as a new take.
