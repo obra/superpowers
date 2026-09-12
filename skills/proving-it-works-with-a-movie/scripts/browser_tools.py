@@ -71,7 +71,10 @@ def kill_process_tree(pid: int) -> None:
     or ttyd leaves helpers behind otherwise, and on Unix a pty child starts
     its own session, so a process group is not enough."""
     if sys.platform == "win32":
-        subprocess.run(["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True)
+        result = subprocess.run(["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True)
+        if result.returncode != 0:
+            detail = result.stderr.decode(errors="replace").strip()
+            raise OSError(f"taskkill failed for child {pid} (status {result.returncode}): {detail}")
         return
     for victim in reversed(_descendants(pid)):
         try:
@@ -89,7 +92,7 @@ def render_card(html: Path, png: Path, *, browser: str, width: int,
         raise FileNotFoundError(f"card HTML does not exist: {html}")
     png.parent.mkdir(parents=True, exist_ok=True)
     png.unlink(missing_ok=True)
-    with tempfile.TemporaryDirectory(prefix="movie-browser-", ignore_cleanup_errors=True) as profile:
+    with tempfile.TemporaryDirectory(prefix="movie-browser-") as profile:
         profile_path = Path(profile)
         log = profile_path / "browser.log"
         argv = [
@@ -120,8 +123,7 @@ def render_card(html: Path, png: Path, *, browser: str, width: int,
                 time.sleep(0.05)
             raise TimeoutError(f"Browser exceeded {timeout:g}s")
         finally:
-            kill_process_tree(process.pid)
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                pass
+            # One-shot screenshot commands may exit normally once output is ready.
+            if process.poll() is None:
+                kill_process_tree(process.pid)
+            process.wait(timeout=5)

@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 import subprocess
@@ -9,6 +10,75 @@ from pathlib import Path
 from unittest.mock import patch
 
 import fixtures
+
+
+class ChatResponseContract(unittest.TestCase):
+    def test_malformed_transcripts_cannot_publish_candidates_in_any_asr_mode(self):
+        cases = ({}, {"transcript": None}, {"transcript": 42},
+                 {"transcript": ["Two", "words"]}, {"transcript": {}},
+                 {"transcript": False}, {"transcript": ""},
+                 {"transcript": "   "}, {"transcript": "...!?"})
+        for response in cases:
+            for mode in ("off", "auto", "on"):
+                with self.subTest(response=response, mode=mode), tempfile.TemporaryDirectory() as temp:
+                    module = fixtures.load_script("narrate")
+                    root = Path(temp)
+                    scenes, output = root / "scenes.json", root / "narration"
+                    scenes.write_text(json.dumps({"scenes": [{"id": "clip", "narration": "Two words"}]}))
+                    sentinels = []
+
+                    def post(*args, **kwargs):
+                        sentinel = f"NOT MEDIA: response {len(sentinels) + 1}".encode()
+                        sentinels.append(sentinel)
+                        audio = dict(response, data=base64.b64encode(sentinel).decode())
+                        return {"choices": [{"message": {"audio": audio}}]}
+
+                    argv = ["narrate", str(scenes), str(output), "--engine", "openai-chat", "--verify", mode]
+                    with patch.object(sys, "argv", argv), \
+                         patch.object(module.shutil, "which", return_value="fake-ffprobe"), \
+                         patch.object(module, "openai_key", return_value="fake-key"), \
+                         patch.object(module, "post", post), \
+                         patch.object(module, "duration", return_value=1.25), \
+                         patch.object(module, "transcribe_local", side_effect=AssertionError("invalid transcript reached ASR")), \
+                         redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                        try:
+                            result = module.main()
+                        except Exception as error:
+                            result = error
+                    self.assertEqual(result, 1)
+                    self.assertEqual(json.loads((output / "manifest.json").read_text()), [])
+                    self.assertEqual(len(sentinels), 2)
+                    self.assertEqual({path.read_bytes() for path in output.glob(".clip.attempt-*.wav")}, set(sentinels))
+                    self.assertFalse((output / "clip.wav").exists())
+
+    def test_valid_chat_and_cached_reuse_obey_independent_asr_modes(self):
+        for mode in ("off", "auto", "on"):
+            for heard in (None, "Two words"):
+                with self.subTest(mode=mode, heard=heard), tempfile.TemporaryDirectory() as temp:
+                    module = fixtures.load_script("narrate")
+                    root = Path(temp)
+                    scenes, output = root / "scenes.json", root / "narration"
+                    scenes.write_text(json.dumps({"scenes": [{"id": "clip", "narration": "Two words"}]}))
+                    sentinel = b"NOT MEDIA: accepted response"
+                    response = {"choices": [{"message": {"audio": {
+                        "data": base64.b64encode(sentinel).decode(), "transcript": "Two words",
+                    }}}]}
+                    argv = ["narrate", str(scenes), str(output), "--engine", "openai-chat", "--verify", "off"]
+                    with patch.object(sys, "argv", argv), \
+                         patch.object(module.shutil, "which", return_value="fake-ffprobe"), \
+                         patch.object(module, "openai_key", return_value="fake-key"), \
+                         patch.object(module, "post", return_value=response) as post, \
+                         patch.object(module, "duration", return_value=1.25), \
+                         patch.object(module, "transcribe_local", return_value=heard) as asr, \
+                         redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                        self.assertEqual(module.main(), 0)
+                        argv[-1] = mode
+                        expected = 1 if mode == "on" and heard is None else 0
+                        self.assertEqual(module.main(), expected)
+                    self.assertEqual(post.call_count, 1, "accepted cache must not synthesize again")
+                    self.assertEqual(asr.call_count, int(mode != "off"))
+                    self.assertEqual(bool(json.loads((output / "manifest.json").read_text())), expected == 0)
+                    self.assertEqual((output / "clip.wav").read_bytes(), sentinel)
 
 
 class NarrationPublicationContract(unittest.TestCase):
@@ -81,11 +151,12 @@ class NarrationPublicationContract(unittest.TestCase):
                   {"id": "raise", "narration": "Raise here"}]
         def accepted(text, wav, voice):
             wav.write_bytes(b"accepted")
+            return text
 
-        self.run_narrate(scenes, accepted)
-        first = self.run_narrate(scenes, synthesize, expected=1, extra_options=("--force",))
+        self.run_narrate(scenes, accepted, engine="openai-chat")
+        first = self.run_narrate(scenes, synthesize, engine="openai-chat", expected=1, extra_options=("--force",))
         attempts_after_rejection = len(attempts)
-        second = self.run_narrate(scenes, synthesize, expected=1)
+        second = self.run_narrate(scenes, synthesize, engine="openai-chat", expected=1)
 
         self.assertEqual(first, [])
         self.assertEqual(second, [])

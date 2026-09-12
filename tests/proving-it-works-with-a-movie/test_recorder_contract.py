@@ -10,6 +10,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import fixtures
+
 SCRIPT = Path(__file__).resolve().parents[2] / "skills/proving-it-works-with-a-movie/examples/film-terminal.py"
 
 
@@ -179,6 +181,33 @@ def serving(failure=None, stop_at=None, relative=False):
 
 
 class ServeLifecycleTests(unittest.TestCase):
+    def test_tree_cleanup_failure_keeps_failure_after_leader_exits_and_cleans_other_resources(self):
+        with serving(stop_at="ready") as rig:
+            browser = fixtures.load_script("browser_tools")
+            terminated = []
+
+            def taskkill(argv, **kwargs):
+                pid = int(argv[-1])
+                terminated.append(pid)
+                child = next(child for child in rig.children if child.pid == pid)
+                child.returncode = 0 if pid == 1100 else -9
+                return subprocess.CompletedProcess(argv, 1 if pid == 1100 else 0, b"", b"tree termination failed")
+
+            with patch.object(rig.module, "kill_process_tree", browser.kill_process_tree), \
+                 patch.object(browser.sys, "platform", "win32"), \
+                 patch.object(browser.subprocess, "run", taskkill):
+                self.assertEqual(rig.module.serve(rig.args), 1)
+            session = rig.module.read_json(rig.directory / "session.json")
+            self.assertEqual(session["pids"], [1100, 1101])
+            self.assertFalse(session.get("closed", False))
+            self.assertEqual(terminated, [1100, 1101])
+            self.assertTrue(all(child.poll() is not None for child in rig.children))
+            self.assertTrue(all(handle.closed for handle in rig.handles))
+            self.assertFalse((rig.directory / "profile").exists())
+            self.assertFalse((rig.directory / "ready.json").exists())
+            self.assertTrue(all((rig.directory / name).exists()
+                                for name in ("ttyd.log", "browser.log", "terminal.log")))
+
     def test_every_acquisition_failure_releases_owned_resources(self):
         for failure in ("ttyd.log", "browser.log", "ttyd launch", "browser launch",
                         "session metadata", "terminal.log", "connection", "later connection"):

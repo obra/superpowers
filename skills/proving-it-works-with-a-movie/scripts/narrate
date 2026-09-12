@@ -345,8 +345,8 @@ def main():
                     continue
 
             # Preserve the engine transcript gate and the ASR drift thresholds.
-            if claimed is not None:
-                if not norm(claimed):
+            if engine == "openai-chat" and not cached:
+                if not isinstance(claimed, str) or not norm(claimed):
                     print(f"{sid}: chat transcript contains no speech", file=sys.stderr)
                     continue
                 drift_result = structural_drift(text, claimed)
