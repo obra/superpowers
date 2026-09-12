@@ -85,6 +85,14 @@ is theirs.
 
 ### Option 1: Merge Locally
 
+If the branch came from subagent-driven-development, commit the plan ledger's
+deferred findings first: carry every ledger line tagged `minor (deferred)`,
+`parked`, or `Ruling:` into
+`docs/superpowers/follow-ups/<plan-basename>.md` (append under a dated
+heading if the file already exists) and commit it to the branch before the
+merge — subagent-driven-development's Finish rule owns the details, and the
+file must land here so it survives the branch deletion.
+
 ```bash
 # Get main repo root for CWD safety
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
@@ -122,6 +130,13 @@ Then create the pull/merge request against <base-branch> with the forge's
 tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
+
+If the branch came from subagent-driven-development, append the plan
+ledger's deferred findings to the PR description before reporting the URL —
+a "Deferred items" checklist carrying every ledger line tagged `minor
+(deferred)`, `parked`, or `Ruling:`, verbatim. Subagent-driven-development's
+Finish rule owns the details; the checklist must land here, where your human
+partner reviews.
 
 Keep the worktree — your human partner iterates on PR feedback there.
 
