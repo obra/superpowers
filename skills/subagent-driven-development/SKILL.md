@@ -87,7 +87,7 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
+    "Final review clean: retain workspace for finishing" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -116,8 +116,8 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: retain workspace for finishing";
+    "Final review clean: retain workspace for finishing" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -152,6 +152,17 @@ a ledger file, not only in todos.
   trust the ledger and `git log` over your own recollection.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
+
+### Lifecycle metrics
+
+Read [metrics-events.md](metrics-events.md) before setup. Controller alone
+creates/appends canonical metrics; implementer and reviewer contracts do not
+change. For a new run, create its run metadata/events before dispatch and add
+`Metrics run: <run-id>` to this plan's ledger. On resume, use that run's
+physical event tail, not memory. At each setup, dispatch/report, paired task
+review, finding/fix round, acceptance/blocking, final review, and handoff
+boundary, append only the matching canonical event recipe. If recording fails,
+follow reference failure recipe and continue development.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
@@ -351,6 +362,10 @@ review — it enters the fix loop with the other findings.
 
 Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
 
+Record both initial-review events with one shared `review_id`: spec/gate result
+and quality result. Raise each real finding once; scoped rereviews reuse its
+stable finding ID in fix-round/resolution events.
+
 ### 4. The fix loop
 
 The loop triggers when the review reports spec ❌, any Critical or Important
@@ -405,6 +420,9 @@ minors — they never extend the loop.
 **After each round,** append to the ledger:
 `Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
 
+Record matching `fix_round_started`, `fix_round_completed`, and finding
+resolution/parking events; do not raise a rereview of the same finding again.
+
 Never fix findings yourself in the controller session — your context stays
 clean for coordination, and controller fixes skip review.
 
@@ -442,6 +460,10 @@ Then mark the todo complete and move on. Never move to the next task while
 the review has open Critical/Important issues that are neither fixed nor
 parked-with-ruling at the cap.
 
+Record `task_accepted` when task completes. For genuine SDD blocker, record
+task/run blocking evidence, write BLOCKED report when Node is available,
+preserve workspace, then stop only under existing SDD rules.
+
 ## Final Review
 
 The final whole-branch review gets a package too: run
@@ -468,6 +490,10 @@ the four classes above stop you here. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
 finishing-a-development-branch presents the options.
 
+Record final findings and `final_review_result`. If final review passes, retain
+this plan's workspace and hand `<plan-path>` plus active metrics run identity to
+superpowers:finishing-a-development-branch.
+
 ## Finish
 
 Before you delete anything, collect every ledger line containing `Ruling:` —
@@ -479,10 +505,10 @@ took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
-When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
-the record now. Sibling directories belong to other plans; leave them
-alone.
+Do not delete this plan's workspace after final review. Persistent events and
+final-test/report handling continue in finishing; it deletes only this plan's
+workspace after event persistence and report attempt. Sibling directories
+belong to other plans; leave them alone.
 
 Use superpowers:finishing-a-development-branch.
 
@@ -562,7 +588,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Delete this plan's workspace — the record now lives in git]
+[Retain this plan's workspace; hand plan path + active metrics run identity to finishing]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```

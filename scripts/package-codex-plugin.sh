@@ -39,9 +39,9 @@ Options:
   --keep-stage             Print and keep the temporary staging directory.
   -h, --help               Show this help.
 
-The archive is rootless: .codex-plugin/, assets/, skills/, README.md, LICENSE,
-and CODE_OF_CONDUCT.md sit at the archive root. Source-only repo files, hooks, tests,
-docs, and other harness manifests are intentionally not shipped.
+The archive is rootless: .codex-plugin/, assets/, bin/, lib/, skills/, README.md,
+LICENSE, and CODE_OF_CONDUCT.md sit at the archive root. Source-only repo files,
+hooks, tests, docs, and other harness manifests are intentionally not shipped.
 EOF
 }
 
@@ -238,6 +238,8 @@ git -C "$REPO_ROOT" -c tar.umask=0022 archive --format=tar "$REF" -- \
   LICENSE \
   README.md \
   assets \
+  bin \
+  lib \
   skills \
   | tar -xpf - -C "$STAGE"
 
@@ -333,7 +335,7 @@ esac
 
 unexpected_paths="$(
   printf '%s\n' "$archive_paths" |
-    grep -E '(^superpowers/|^\.agents/|^hooks/|package\.json$|^\.git|^\.pytest_cache|^\.ruff_cache|^scripts/|^tests/|^docs/|^evals/|^lib/|^\.claude|^\.cursor|^\.kimi|^\.opencode|^\.pi|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^RELEASE-NOTES\.md$|^CHANGELOG\.md$)' || true
+    grep -E '(^superpowers/|^\.agents/|^hooks/|package\.json$|^\.git|^\.pytest_cache|^\.ruff_cache|^scripts/|^tests/|^docs/|^evals/|^\.claude|^\.cursor|^\.kimi|^\.opencode|^\.pi|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^RELEASE-NOTES\.md$|^CHANGELOG\.md$)' || true
 )"
 if [[ -n "$unexpected_paths" ]]; then
   printf '%s\n' "$unexpected_paths" | sed 's/^/  /' >&2
