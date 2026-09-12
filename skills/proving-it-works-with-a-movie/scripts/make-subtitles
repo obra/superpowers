@@ -68,20 +68,31 @@ def scene_cues(text, start, duration, max_chars, max_secs):
         chunks = [" ".join(chunks[i * len(chunks) // available:
                                   (i + 1) * len(chunks) // available])
                   for i in range(available)]
-    total_chars = sum(len(chunk) for chunk in chunks) or 1
-    elapsed_chars, previous = 0, start_ms
-    cues = []
-    for i, chunk in enumerate(chunks):
-        elapsed_chars += len(chunk)
-        remaining = len(chunks) - i - 1
-        boundary = start_ms + round(available * elapsed_chars / total_chars)
-        # Reserve one millisecond per remaining cue, even for very uneven text.
-        boundary = min(end_ms - remaining, max(previous + 1, boundary))
-        if not remaining:
-            boundary = end_ms
-        cues.append((previous / 1000, boundary / 1000, wrap(chunk)))
-        previous = boundary
-    return cues
+    while True:
+        total_chars = sum(len(chunk) for chunk in chunks) or 1
+        elapsed_chars, previous = 0, start_ms
+        cues, split = [], None
+        for i, chunk in enumerate(chunks):
+            elapsed_chars += len(chunk)
+            remaining = len(chunks) - i - 1
+            boundary = start_ms + round(available * elapsed_chars / total_chars)
+            # Reserve one millisecond per remaining cue, even for very uneven text.
+            boundary = min(end_ms - remaining, max(previous + 1, boundary))
+            if not remaining:
+                boundary = end_ms
+            if (split is None and boundary - previous > max_secs * 1000
+                    and len(chunk.split()) > 1):
+                split = i
+            cues.append((previous / 1000, boundary / 1000, wrap(chunk)))
+            previous = boundary
+        if split is None or len(chunks) == available:
+            return cues
+        # Splitting removes a space from the allocation weights, so remeasure all
+        # cues until every splittable chunk fits or milliseconds limit the count.
+        words = chunks[split].split()
+        midpoint = len(words) // 2
+        chunks[split:split + 1] = [" ".join(words[:midpoint]),
+                                   " ".join(words[midpoint:])]
 
 
 def wrap(line, width=42):

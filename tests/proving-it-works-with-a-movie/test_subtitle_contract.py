@@ -84,12 +84,29 @@ class SubtitleTimingContract(unittest.TestCase):
         self.assertGreater(len(cues), 1)
         self.assertTrue(all(b - a <= 3000 for a, b, _ in cues))
 
+    def test_max_seconds_refines_unequal_chunks_against_allocated_time(self):
+        text = "ab cde f ghi"
+        cues, report = self.subtitles([
+            {"id": "unequal", "duration": 6, "text": text},
+        ], "--max-secs", "3")
+        self.assert_scene(cues, 0, 6000, text)
+        self.assertTrue(all(b - a <= 3000 for a, b, _ in cues), cues)
+        self.assertIn("ends at 00:00:06,000", report)
+
     def test_chunks_coalesce_to_fit_representable_milliseconds(self):
         text = "one two six ten red"
         cues, report = self.subtitles([{"id": "tiny", "duration": 0.002, "text": text}], "--max-chars", "3")
         self.assert_scene(cues, 0, 2, text)
         self.assertLessEqual(len(cues), 2)
         self.assertIn("ends at 00:00:00,002", report)
+
+    def test_unrepresentable_max_seconds_preserves_positive_cues_and_all_words(self):
+        text = "one two six ten red"
+        cues, _ = self.subtitles([
+            {"id": "tiny", "duration": 0.002, "text": text},
+        ], "--max-secs", "0.0001")
+        self.assert_scene(cues, 0, 2, text)
+        self.assertLessEqual(len(cues), 2)
 
     def test_submillisecond_scene_can_use_its_rounded_interval(self):
         cues, _ = self.subtitles([{"id": "tiny", "duration": 0.0008, "text": "one two"}])
