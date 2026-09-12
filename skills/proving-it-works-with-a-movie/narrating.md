@@ -41,8 +41,11 @@ the first run needs network access to download dependencies and the ASR model.
 | `--verify auto` (CLI default) | Tries ASR for Piper and `openai-chat`; reports unavailable ASR but allows the clip. Skips ASR for `openai`. Detected drift still fails. |
 | `--verify off` | Skips ASR. |
 
-The `openai-chat` engine's returned transcript is also checked when rendering,
-regardless of the ASR mode. That transcript does not prove what the WAV contains.
+For `openai-chat`, word-comparison support is mandatory in every ASR mode,
+including cache reuse. During synthesis its returned transcript must contain
+speech and pass that comparison; an unsupported script also withdraws cached
+acceptance before reuse. `--verify off` bypasses only local ASR. The returned
+transcript still does not prove what the WAV contains.
 
 What it measures is **missing or invented content**, not exact words, and
 that distinction is load-bearing. A small ASR mangles unusual names — ours
@@ -60,6 +63,12 @@ listen to one clip yourself when you pick the voice.
 Changing any of these re-renders the clip. Clips without recorded synthesis
 settings also re-render; an unchanged clip can be reused and still receives
 any requested ASR verification.
+
+A newly synthesized clip gets at most two attempts when synthesis or a
+supported transcript/ASR comparison fails. A cached clip is checked once; if
+rejected, its manifest acceptance is withdrawn and a later invocation can
+synthesize a replacement. Failed candidate files remain as evidence rather
+than being deleted to make a retry appear clean.
 
 ## The verbatim gate — required
 

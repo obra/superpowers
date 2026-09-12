@@ -33,13 +33,15 @@ a passing run and pollutes the evidence.
 
 ```bash
 bash -o pipefail -c '
-  printf "RUN_KIND=<name>\n";
-  printf "STARTED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
-  <the real command>;
-  rc=$?;
-  printf "FINISHED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
-  printf "EXIT_STATUS=%s\n" "$rc"; exit "$rc"
-' 2>&1 | tee evidence/run.log
+  {
+    printf "RUN_KIND=<name>\n";
+    printf "STARTED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
+    <the real command>;
+    rc=$?;
+    printf "FINISHED_AT="; date -u +%Y-%m-%dT%H:%M:%SZ;
+    printf "EXIT_STATUS=%s\n" "$rc"; exit "$rc"
+  } 2>&1 | tee evidence/run.log
+'
 ```
 
 Keep each producer plus its `tee` under one `pipefail` owner, or a failing

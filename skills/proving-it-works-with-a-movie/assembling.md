@@ -63,7 +63,9 @@ a PR comment, or a phone — and keep the `.srt` beside the movie as the
 sidecar the checker reads (and as the searchable transcript).
 
 ```bash
-scripts/make-subtitles narration/manifest.json movie.srt
+set -euo pipefail
+scripts/make-subtitles narration/manifest.json movie.srt \
+  --offsets-json segments/offsets.json
 scripts/burn-subtitles silent-cut.mp4 movie.srt movie.mp4
 ```
 

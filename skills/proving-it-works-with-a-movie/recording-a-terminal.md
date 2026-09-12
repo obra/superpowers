@@ -14,6 +14,11 @@ browser. Run `serve` in a background task your harness keeps alive, the way
 the visual companion server runs; a one-shot shell that kills its children
 on return ends the session.
 
+Use a new or empty `SESSION` directory for every session, including retries,
+just as every take directory must be new or empty. `serve` refuses a nonempty
+session directory before launching anything, preserving the prior session's
+logs and evidence.
+
 It needs uv, ttyd, and Chrome or Edge on PATH, or `--ttyd` and `--browser`.
 `--shell powershell51|powershell7|gitbash` picks the filmed shell; the shell
 you type these commands into is a separate choice. Replace the sample
@@ -126,8 +131,14 @@ before input is sent, preserving the earlier take.
 
 Long work spans takes exactly as on Unix: film the command being issued with
 a short `--seconds`, do other things, then `watch` the result as a new take.
-The shell, its variables and its cwd persist across calls until `close`,
-which kills ttyd, the browser and everything they started.
+The shell, its variables and its cwd persist across calls until `close`.
+`close` asks the running `serve` command to clean up its owned browser, ttyd,
+shell descendants, readiness file, and profile, then waits up to 30 seconds
+for confirmation. It returns failure when `serve` is unavailable, descendant
+cleanup cannot be confirmed, or profile cleanup fails; it never kills numeric
+PIDs copied from old session metadata. Hard-killing `serve` can leave children
+and stale readiness behind, so a surviving browser or `ready.json` cannot by
+itself establish that a live owner remains.
 
 The viewport is fixed at 1600×900 with a 17 px font. Look at
 `SESSION/ready.png` before filming; `serve` refuses a blank canvas, the same

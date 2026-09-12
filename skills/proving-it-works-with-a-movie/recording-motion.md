@@ -40,6 +40,8 @@ document.addEventListener("mousemove", e => {
 }, true);
 document.addEventListener("mousedown",
   () => ring.style.transform = "translate(-50%,-50%) scale(.6)", true);
+document.addEventListener("mouseup",
+  () => ring.style.transform = "translate(-50%,-50%)", true);
 ```
 
 Type at human pace too (~55ms/char, longer after punctuation). Instant text

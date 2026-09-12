@@ -40,6 +40,7 @@ five tools with `uv run --script`; Windows does not execute their Unix shebangs.
 The Unix sequence:
 
 ```bash
+set -euo pipefail
 # $SKILL_DIR is this skill's own directory - the "Base directory for this
 # skill" path printed when it loads. Installed as a plugin that is
 # $CLAUDE_PLUGIN_ROOT/skills/proving-it-works-with-a-movie
@@ -50,6 +51,12 @@ The Unix sequence:
 "$SKILL_DIR/scripts/burn-subtitles" silent-cut.mp4 movie.srt movie.mp4
 "$SKILL_DIR/scripts/check-movie"    movie.mp4      # nonzero exit: do not ship
 ```
+
+For each current narrated non-movie scene, downstream tools accept only a
+manifest entry whose text matches after collapsing whitespace while preserving
+case and punctuation, and whose WAV path is relative to the narration directory.
+`kind: movie` scenes retain their source audio and receive no narration offset,
+even if the scene contains a `narration` field.
 
 It samples picture and sound on one timeline and fails the movie when the
 action is crammed into the first seconds while narration keeps talking, when
