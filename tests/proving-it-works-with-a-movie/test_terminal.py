@@ -194,11 +194,15 @@ class SessionTests(unittest.TestCase):
                 "--cwd", str(self.work), "--ttyd", TTYD, "--browser", BROWSER]
         if os.environ.get("MOVIE_TEST_SHELL_EXE"):
             argv += ["--shell-exe", os.environ["MOVIE_TEST_SHELL_EXE"]]
+        self.owned_pids = []
         self.serve = subprocess.Popen(argv, stdout=self.log, stderr=subprocess.STDOUT)
+        self.addCleanup(self.close_session)
         deadline = time.monotonic() + 45
         while not (self.session / "ready.json").exists() and self.serve.poll() is None \
                 and time.monotonic() < deadline:
             time.sleep(0.1)
+        if (self.session / "session.json").exists():
+            self.owned_pids = json.loads((self.session / "session.json").read_text(encoding="utf-8"))["pids"]
         if not (self.session / "ready.json").exists():
             report = "".join(f"--- {name}\n" + path.read_text(errors="replace") if path.exists() else ""
                              for name, path in (("serve.log", Path(self.tmp.name) / "serve.log"),
@@ -206,15 +210,18 @@ class SessionTests(unittest.TestCase):
                                                 ("browser.log", self.session / "browser.log")))
             self.fail(report)
 
-    def tearDown(self):
+    def close_session(self):
         if self.serve.poll() is None:
-            self.cli("close", str(self.session))
+            # A failed setup may not have session metadata yet, but the
+            # owner still needs its stop request before we wait for cleanup.
+            self.session.mkdir(parents=True, exist_ok=True)
+            (self.session / "stop").write_text("", encoding="utf-8")
             try:
-                self.serve.wait(15)
+                self.serve.wait(35)
             except subprocess.TimeoutExpired:
                 self.serve.kill()
                 self.serve.wait()
-        for pid in json.loads((self.session / "session.json").read_text(encoding="utf-8"))["pids"]:
+        for pid in self.owned_pids:
             self.assertTrue(gone(pid), f"pid {pid} survived close")
 
     def cli(self, *args, timeout=120):

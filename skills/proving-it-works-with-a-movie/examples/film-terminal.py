@@ -115,7 +115,7 @@ def prompt_command(kind, cwd):
             f"[Convert]::FromBase64String('{encoded}'))))")
 
 
-VISIBLE = re.compile(rb"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\\\)|\x1b\[[0-?]*[ -/]*[@-~]|\r")
+VISIBLE = re.compile(rb"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b\[[0-?]*[ -/]*[@-~]|\r")
 
 
 def at_prompt(log):
@@ -153,7 +153,13 @@ def film(out, seconds, hold, capture, finished, clock=time.monotonic, sleep=time
         now = clock()
         if stop is None and finished():
             stop = now + hold
-        if now - start >= seconds or (stop is not None and now >= stop):
+        endpoint = min(start + seconds, stop) if stop is not None else start + seconds
+        if now >= endpoint:
+            # A capture may cross the endpoint. Fill only grid slots before
+            # that endpoint; tolerate floating-point noise at exact FPS ticks.
+            while last is not None and (index + 1) / FPS < endpoint - start - 1e-9:
+                index += 1
+                (out / f"f{index:05d}.png").write_bytes(last)
             return index + 1
         slot = int((now - start) * FPS)
         if slot > index:
@@ -170,7 +176,7 @@ class CDP:
         import websocket
 
         self.ws = websocket.create_connection(url, timeout=5, suppress_origin=True)
-        self.count, self.on_event = 0, None
+        self.count, self.on_event, self.before_call = 0, None, None
 
     def recv(self, timeout):
         import websocket
@@ -188,6 +194,8 @@ class CDP:
         return message
 
     def call(self, method, params=None, timeout=10):
+        if self.before_call:
+            self.before_call()
         self.count += 1
         self.ws.send(json.dumps({"id": self.count, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
@@ -259,7 +267,7 @@ def lit_fraction(png):
 
 
 def serve(args):
-    directory = args.session
+    directory = args.session.resolve()
     if directory.exists() and any(directory.iterdir()):
         raise SystemExit(f"{directory} is not empty: use a new session directory")
     directory.mkdir(parents=True, exist_ok=True)
@@ -286,18 +294,20 @@ def serve(args):
                     "--disable-background-networking", "--remote-debugging-address=127.0.0.1",
                     f"--remote-debugging-port={debug_port}", f"--user-data-dir={directory / 'profile'}",
                     f"--window-size={WIDTH},{HEIGHT}", "--hide-scrollbars", "about:blank"]
-    logs = [(directory / "ttyd.log").open("ab"), (directory / "browser.log").open("ab")]
-    processes = [
-        subprocess.Popen(ttyd_argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=logs[0],
-                         stderr=subprocess.STDOUT, start_new_session=unix),
-        subprocess.Popen(browser_argv, cwd=directory, stdin=subprocess.DEVNULL, stdout=logs[1],
-                         stderr=subprocess.STDOUT, start_new_session=unix),
-    ]
+    logs, processes = [], []
     session = dict(shell=args.shell, cwd=str(cwd), terminal_url=f"http://127.0.0.1:{port}/",
-                   debug_port=debug_port, pids=[process.pid for process in processes])
-    write_json(directory / "session.json", session)
-    output = (directory / "terminal.log").open("ab")
+                   debug_port=debug_port, pids=[])
+    output, cdp = None, None
     state = {"closed": False}
+
+    class StopRequested(Exception):
+        pass
+
+    def check_active():
+        if (directory / "stop").exists():
+            raise StopRequested()
+        if state["closed"] or any(process.poll() is not None for process in processes):
+            raise ConnectionError("the terminal session closed")
 
     def on_event(event):
         if event["method"] == "Network.webSocketFrameReceived":
@@ -312,9 +322,9 @@ def serve(args):
     def pump_until(condition, timeout, failure):
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
+            check_active()
             cdp.recv(0.05)
-            if state["closed"]:
-                raise ConnectionError("the terminal connection closed")
+            check_active()
             if condition():
                 return
         (directory / "timeout.png").write_bytes(screenshot(cdp))
@@ -325,16 +335,28 @@ def serve(args):
         # it has been silent for `quiet` seconds.
         deadline, seen = time.monotonic() + quiet, output.tell()
         while time.monotonic() < deadline:
+            check_active()
             cdp.recv(0.05)
-            if state["closed"]:
-                raise ConnectionError("the terminal connection closed")
+            check_active()
             if output.tell() != seen:
                 deadline, seen = time.monotonic() + quiet, output.tell()
 
     code = 1
     try:
+        for name in ("ttyd.log", "browser.log"):
+            logs.append((directory / name).open("ab"))
+        processes.append(subprocess.Popen(
+            ttyd_argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=logs[0],
+            stderr=subprocess.STDOUT, start_new_session=unix))
+        processes.append(subprocess.Popen(
+            browser_argv, cwd=directory, stdin=subprocess.DEVNULL, stdout=logs[1],
+            stderr=subprocess.STDOUT, start_new_session=unix))
+        session["pids"] = [process.pid for process in processes]
+        write_json(directory / "session.json", session)
+        output = (directory / "terminal.log").open("ab")
         deadline = time.monotonic() + 20
         while True:
+            check_active()
             try:
                 cdp = CDP(page_url(debug_port))
                 break
@@ -343,6 +365,7 @@ def serve(args):
                     raise TimeoutError(f"browser did not start: {error}") from None
                 time.sleep(0.1)
         cdp.on_event = on_event
+        cdp.before_call = check_active
         cdp.call("Network.enable")  # before navigation, or the terminal socket is never reported
         cdp.call("Page.enable")
         cdp.call("Emulation.setDeviceMetricsOverride",
@@ -385,29 +408,71 @@ def serve(args):
             raise RuntimeError(f"the terminal renders blank ({lit:.4%} lit pixels); see ready.png")
         typed("clear")
         time.sleep(0.3)
+        check_active()
         prompt = prompts(tail(directory / "terminal.log"))[-1]
         write_json(directory / "ready.json", dict(session, prompt=prompt, lit=round(lit, 4)))
-        print(json.dumps({"ready": True, "session": str(directory), "cwd": prompt["cwd"]},
-                         ensure_ascii=False), flush=True)
+        print(json.dumps({"ready": True, "session": str(directory), "cwd": prompt["cwd"]}), flush=True)
         while not (directory / "stop").exists():
             cdp.recv(0.2)
-            if state["closed"]:
-                raise ConnectionError("the terminal connection closed")
+            check_active()
         code = 0
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, StopRequested):
         code = 0
     except Exception as error:  # noqa: BLE001 - report, then clean up below
         print(f"serve: {error}", file=sys.stderr)
-        code = 0 if (directory / "stop").exists() else 1
+        code = 1
     finally:
-        for process in processes:
-            kill_process_tree(process.pid)
+        cleaned = True
+        try:
+            (directory / "ready.json").unlink(missing_ok=True)
+        except OSError as error:
+            print(f"serve cleanup: {error}", file=sys.stderr)
+            cleaned = False
+        if cdp is not None:
             try:
+                cdp.ws.close()
+            except Exception as error:
+                print(f"serve cleanup: {error}", file=sys.stderr)
+                cleaned = False
+        for process in processes:
+            try:
+                # Only the owner acts on handles it acquired, never stored PIDs.
+                if process.poll() is None:
+                    kill_process_tree(process.pid)
                 process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                pass
-        for handle in (output, *logs):
-            handle.close()
+            except (OSError, subprocess.TimeoutExpired) as error:
+                print(f"serve cleanup: {error}", file=sys.stderr)
+                cleaned = False
+        for handle in ([output] if output is not None else []) + logs:
+            try:
+                handle.close()
+            except OSError as error:
+                print(f"serve cleanup: {error}", file=sys.stderr)
+                cleaned = False
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                shutil.rmtree(directory / "profile")
+                break
+            except FileNotFoundError:
+                break
+            except OSError as error:
+                if time.monotonic() >= deadline:
+                    print(f"serve cleanup: {error}", file=sys.stderr)
+                    cleaned = False
+                    break
+                time.sleep(0.1)
+        if cleaned:
+            try:
+                # Readers see either active ownership or completed cleanup.
+                completed = directory / "session.json.tmp"
+                write_json(completed, dict(session, pids=[], closed=True))
+                completed.replace(directory / "session.json")
+            except OSError as error:
+                print(f"serve cleanup: {error}", file=sys.stderr)
+                cleaned = False
+        if not cleaned:
+            code = 1
     return code
 
 
@@ -418,14 +483,37 @@ def observe(args, cdp, n0):
     def latest():
         return next((p for p in reversed(prompts(tail(log))) if p["n"] > n0), None)
 
+    def poll():
+        prompt = latest()
+        if prompt:
+            return prompt
+        try:
+            cdp.recv(0.05)
+        except Exception:
+            # The owner can log the final native status just before disconnect.
+            prompt = latest()
+            if prompt:
+                return prompt
+            raise
+        prompt = latest()
+        if prompt:
+            return prompt
+        if not (args.session / "ready.json").is_file():
+            raise ConnectionError("the terminal session is no longer ready")
+        return None
+
     frames = 0
-    if args.record:
-        frames = film(args.record, args.seconds, args.hold, lambda: screenshot(cdp), lambda: latest() is not None)
-    else:
-        deadline = time.monotonic() + args.seconds
-        while latest() is None and time.monotonic() < deadline:
-            time.sleep(0.05)
-    prompt = latest()
+    try:
+        if args.record:
+            frames = film(args.record, args.seconds, args.hold, lambda: screenshot(cdp), lambda: poll() is not None)
+        else:
+            deadline = time.monotonic() + args.seconds
+            while poll() is None and time.monotonic() < deadline:
+                time.sleep(0.05)
+        prompt = poll()
+    except Exception as error:
+        print(json.dumps({"outcome": "failed", "error": str(error)}))
+        return 1
     result = {"outcome": "completed" if prompt else "running"}
     if prompt:
         result.update(ok=prompt["ok"], exit_code=prompt["exit_code"], cwd=prompt["cwd"])
@@ -433,7 +521,7 @@ def observe(args, cdp, n0):
         result["frames"] = frames
         result["scene"] = {"kind": "frames", "src": str(args.record.resolve()), "rate": FPS}
         write_json(args.record / "take.json", result)
-    print(json.dumps(result, ensure_ascii=False))
+    print(json.dumps(result))
     return 2 if not prompt else 0 if prompt["ok"] else 1
 
 
@@ -471,20 +559,24 @@ def watch(args):
 
 
 def close(args):
-    session = read_json(args.session / "session.json")
-    (args.session / "stop").write_text("")
-    for pid in session["pids"]:
-        kill_process_tree(pid)
-    for _ in range(50):  # the browser releases its profile shortly after dying
-        try:
-            shutil.rmtree(args.session / "profile")
-            break
-        except FileNotFoundError:
-            break
-        except OSError:
-            time.sleep(0.1)
-    print(json.dumps({"closed": True}))
-    return 0
+    deadline = time.monotonic() + 30
+    try:
+        session = read_json(args.session / "session.json")
+        (args.session / "stop").write_text("", encoding="utf-8")
+        while True:
+            if (session.get("closed") is True and session.get("pids") == []
+                    and not (args.session / "ready.json").exists()
+                    and not (args.session / "profile").exists()):
+                print(json.dumps({"closed": True}))
+                return 0
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError("serve did not confirm cleanup within 30 seconds")
+            time.sleep(min(0.1, remaining))
+            session = read_json(args.session / "session.json")
+    except (OSError, ValueError, AttributeError) as error:
+        print(f"close: {error}", file=sys.stderr)
+        return 1
 
 
 def main():
