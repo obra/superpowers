@@ -77,7 +77,7 @@
 - [x] Restore the cursor transform on mouseup. Execute the documented JavaScript with a minimal fake DOM/event dispatcher and assert repeated press/release state changes; no browser or pixels.
 - [x] State that session directories, like take directories, must be new or empty on retries. Explain that close requests cleanup from serve, waits up to 30 seconds, and reports failure when the owner is unavailable or cleanup fails; hard-killing serve can leave its children and stale readiness, so these signals cannot establish a live owner. Document unsupported transcript verification and existing retry behavior accurately without adding a user approval gate.
 - [x] Document the new `--suite contracts` entrypoint as safe mocked/text checks, distinct from existing media/session suites and live acceptance.
-- [ ] Fresh-reader candidate trials use the same bounded scenarios as baseline, then execute supplied commands with fake boundaries. Preserve both failures and successes; do not call this full skill evaluation. Self-review and commit documentation plus concise results in this plan.
+- [x] Fresh-reader candidate trials use the same bounded scenarios as baseline, then execute supplied commands with fake boundaries. Preserve both failures and successes; do not call this full skill evaluation. Self-review and commit documentation plus concise results in this plan.
 
 Task 4 executable snippet result: the preserved baseline returned success after
 an assembly failure and a failed logged producer, emitted subtitles at zero
@@ -86,10 +86,20 @@ mouseup. After the focused guide edits, the fake-boundary harness preserves
 assembly exit 41 and logger exit 23, stops later producers, retains prior
 outputs, runs all five stages on success, emits the subtitle interval at
 `00:00:02,000`, and restores the cursor on two releases. The safe `contracts`
-entrypoint passes 66 tests. Independent fresh-reader candidate trials remain
-pending after the documentation commit; these snippet checks are not full skill
-evaluation or live movie acceptance.
+entrypoint passes 66 tests. Two independent fresh-reader candidate trials also
+passed the bounded command checks recorded below; these checks are not full
+skill evaluation or live movie acceptance.
 
 ## Final verification and review
 
 Run the safe accumulated contract selection once after all code changes. Have an independent reviewer read the full accumulated PR from `fd02874aa5c55ba3c2bca431253b48e0e4c8be5a` through the final head, including docs/spec and tests, and resolve concrete remaining findings. Push only to Ada's `import/proving-it-works-skill` branch after passing review, verify #2214's remote head, and reply to the four current external threads with exact evidence. Do not merge. Drew's viewing remains final acceptance.
+
+## Consolidated verification results
+
+- Narration/assembly, subtitle, recorder, and guide tasks each passed independent spec and quality review after their recorded fix rounds.
+- At `b206e0cb`, the normal `--suite contracts` entrypoint passed 66 mocked/text tests and the selected existing portable regressions passed 45 tests: 111 safe tests total. No media/session suites ran.
+- Executing the original guide snippets with fake producers reproduced lost failure statuses, missing measured subtitle offsets, continued burning after subtitle failure, and a cursor that stayed pressed. The corrected snippets passed failure and success cases while preserving prior output evidence.
+- Two independent fresh readers used the candidate guides. Their supplied Bash commands passed the bounded failed-rebuild, producer-status, evidence-preservation, and measured-caption-offset checks with fake tool boundaries. These are focused reference trials, not a full skill evaluation or native workflow acceptance.
+- The before-change fresh reader independently supplied fail-fast/offset corrections but also deleted prior outputs. No before/after agent success-rate improvement is claimed.
+- Logs, rejected-attempt evidence, reports, and review packages remain in the worktree's ignored review/SDD directories. The parent checkout remains untouched.
+- Final whole-PR review and normal push to the existing Ada-fork PR head follow these results. Drew's viewing remains the final acceptance decision; this pass does not merge the PR.
