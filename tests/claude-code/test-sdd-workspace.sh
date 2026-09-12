@@ -189,6 +189,21 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
+    local stripped="$TEST_ROOT/stripped-scripts"
+    mkdir -p "$stripped"
+    cp "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
+    chmod -x "$stripped"/*
+    local noexec_out noexec_rc=0
+    noexec_out="$(cd "$repo" && bash "$stripped/task-brief" plan-b.md 1 2>&1)" || noexec_rc=$?
+    if [[ "$noexec_rc" -eq 0 && -f "$repo/.superpowers/sdd/plan-b/task-1-brief.md" ]]; then
+        pass "task-brief works with no exec bit on sdd-workspace"
+    else
+        fail "task-brief works with no exec bit on sdd-workspace"
+        echo "    rc: $noexec_rc"
+        echo "    output: $noexec_out"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
