@@ -22,12 +22,12 @@ Usage:
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
 MAX_CHARS = 84          # two comfortable lines
 MAX_SECS = 5.5
-MIN_SECS = 1.0
 
 
 def cue_chunks(text, max_chars):
@@ -46,6 +46,42 @@ def cue_chunks(text, max_chars):
     if cur:
         chunks.append(cur)
     return chunks or [text]
+
+
+def scene_cues(text, start, duration, max_chars, max_secs):
+    """Allocate positive millisecond cues across the complete measured scene."""
+    end = start + duration
+    if (not all(math.isfinite(value) for value in (start, duration, end))
+            or start < 0 or duration <= 0):
+        raise ValueError("start must be finite and nonnegative; "
+                         "duration must be finite and positive")
+    start_ms, end_ms = round(start * 1000), round(end * 1000)
+    available = end_ms - start_ms
+    if available <= 0:
+        raise ValueError("scene has no representable millisecond subtitle interval")
+
+    # Readability guides word-boundary splitting, never cuts off the scene tail.
+    char_limit = max(1, min(max_chars,
+                            int(len(text) * min(1.0, max_secs / duration))))
+    chunks = cue_chunks(text, char_limit)
+    if len(chunks) > available:
+        chunks = [" ".join(chunks[i * len(chunks) // available:
+                                  (i + 1) * len(chunks) // available])
+                  for i in range(available)]
+    total_chars = sum(len(chunk) for chunk in chunks) or 1
+    elapsed_chars, previous = 0, start_ms
+    cues = []
+    for i, chunk in enumerate(chunks):
+        elapsed_chars += len(chunk)
+        remaining = len(chunks) - i - 1
+        boundary = start_ms + round(available * elapsed_chars / total_chars)
+        # Reserve one millisecond per remaining cue, even for very uneven text.
+        boundary = min(end_ms - remaining, max(previous + 1, boundary))
+        if not remaining:
+            boundary = end_ms
+        cues.append((previous / 1000, boundary / 1000, wrap(chunk)))
+        previous = boundary
+    return cues
 
 
 def wrap(line, width=42):
@@ -86,6 +122,8 @@ def main():
     ap.add_argument("--max-chars", type=int, default=MAX_CHARS)
     ap.add_argument("--max-secs", type=float, default=MAX_SECS)
     args = ap.parse_args()
+    if args.max_chars <= 0 or not math.isfinite(args.max_secs) or args.max_secs <= 0:
+        ap.error("--max-chars and --max-secs must be finite and positive")
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8-sig"))
     overrides = {}
@@ -101,21 +139,16 @@ def main():
     cues, clock = [], 0.0
     for entry in manifest:
         start = overrides.get(entry["id"], clock)
-        dur = float(entry["duration"])
-        chunks = cue_chunks(entry["text"], args.max_chars)
-        total_chars = sum(len(c) for c in chunks) or 1
-        t = start
-        for chunk in chunks:
-            share = dur * (len(chunk) / total_chars)
-            share = max(MIN_SECS, min(share, args.max_secs))
-            cues.append((t, min(t + share, start + dur), wrap(chunk)))
-            t += share
+        try:
+            dur = float(entry["duration"])
+            cues.extend(scene_cues(entry["text"], start, dur,
+                                   args.max_chars, args.max_secs))
+        except (ValueError, TypeError, OverflowError) as error:
+            ap.error(f"scene {entry['id']}: {error}")
         clock = start + dur
 
     lines = []
     for i, (a, b, text) in enumerate(cues, 1):
-        if b <= a:
-            b = a + MIN_SECS
         lines += [str(i), f"{ts(a)} --> {ts(b)}", text, ""]
     args.out.write_text("\n".join(lines), encoding="utf-8")
     end = cues[-1][1] if cues else 0.0

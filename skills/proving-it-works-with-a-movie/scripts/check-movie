@@ -28,6 +28,7 @@ import argparse
 import array
 import json
 import math
+import re
 import shutil
 import subprocess
 import sys
@@ -126,13 +127,18 @@ def contact_sheet(paths, out_path, count=12):
 def subtitle_end(text):
     """Return the last SRT cue's end time, or None when there are no cues."""
     ends = []
-    for line in text.splitlines():
-        if "-->" in line:
-            end = line.split("-->")[1].strip().split()[0]
-            hh, mm, rest = end.split(":")
-            ss, _, ms = rest.partition(",")
-            ends.append(int(hh) * 3600 + int(mm) * 60 + int(ss)
-                        + int(ms or 0) / 1000)
+    timestamp = r"(\d{2,}):([0-5]\d):([0-5]\d),(\d{3})"
+    for block in re.split(r"\n\s*\n", text.strip()):
+        if not block:
+            continue
+        lines = block.splitlines()
+        if len(lines) < 2 or not lines[0].strip().isdigit():
+            raise ValueError("malformed SRT cue index or missing timing line")
+        timing = re.fullmatch(rf"{timestamp}\s+-->\s+{timestamp}", lines[1].strip())
+        if timing is None:
+            raise ValueError(f"malformed SRT cue timing: {lines[1]}")
+        hh, mm, ss, ms = map(int, timing.groups()[4:])
+        ends.append(hh * 3600 + mm * 60 + ss + ms / 1000)
     return max(ends, default=None)
 
 

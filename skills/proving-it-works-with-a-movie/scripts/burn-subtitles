@@ -91,6 +91,7 @@ def main():
 
     ok = run(["ffmpeg", "-nostdin", "-y", "-v", "error",
               "-i", str(args.movie), "-i", str(args.subs),
+              "-map", "0:v:0", "-map", "0:a?", "-map", "1:s:0",
               "-c", "copy", "-c:s", "mov_text",
               "-metadata:s:s:0", "language=eng", str(args.out)])
     if not ok:
