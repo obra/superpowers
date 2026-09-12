@@ -20,6 +20,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
+  - [Prime Agent](#prime-agent)
   - [Hermes Agent](#hermes-agent)
 - [The Basic Workflow](#the-basic-workflow)
 - [When Something Goes Wrong](#when-something-goes-wrong)
@@ -246,6 +247,22 @@ pi -e /path/to/superpowers
 ```
 
 The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
+
+### Prime Agent
+
+Install Superpowers as a Prime Agent capability package from this repository:
+
+```bash
+prime-agent package install git:github.com/obra/superpowers
+```
+
+For local development, run Prime Agent with this checkout loaded as a temporary package:
+
+```bash
+prime-agent -e /path/to/superpowers
+```
+
+Prime Agent retains compatibility with the Pi package manifest and extension API. The shared extension detects Prime Agent at runtime, loads the Superpowers skills, and injects the `using-superpowers` bootstrap with Prime Agent's native `ipython` and RLM tool mapping at session startup and again after compaction. This integration is tested with Prime Agent 0.9.1.
 
 ### Hermes Agent
 
