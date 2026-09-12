@@ -17,7 +17,7 @@ SCRIPT = (
 
 
 class NarrationDriftRegression(unittest.TestCase):
-    def drift(self, expected_exit: int, heard: str) -> None:
+    def drift(self, expected_exit: int, heard: str, script: str = SCRIPT) -> None:
         missing = fixtures.missing_executables("uv")
         if missing:
             self.skipTest(
@@ -27,7 +27,7 @@ class NarrationDriftRegression(unittest.TestCase):
             work = Path(directory)
             script_path = work / "script.txt"
             heard_path = work / "heard.txt"
-            script_path.write_text(SCRIPT, encoding="utf-8")
+            script_path.write_text(script, encoding="utf-8")
             heard_path.write_text(heard, encoding="utf-8")
             result = fixtures.run_tool(
                 "narrate",
@@ -60,6 +60,22 @@ class NarrationDriftRegression(unittest.TestCase):
 
     def test_empty_clip_fails(self):
         self.drift(1, "you")
+
+    def test_inserted_runs_fail_even_when_total_length_is_close(self):
+        words = [f"word{i}" for i in range(50)]
+        for position in (0, 25, 50):
+            with self.subTest(position=position):
+                heard = words[:position] + "Before we begin please listen".split() + words[position:]
+                self.drift(1, " ".join(heard), " ".join(words))
+
+    def test_expanded_replacement_counts_the_added_words(self):
+        words = [f"word{i}" for i in range(50)]
+        heard = words[:25] + "Before we begin please listen".split() + words[26:]
+        self.drift(1, " ".join(heard), " ".join(words))
+
+    def test_short_insertions_keep_the_existing_tolerance(self):
+        words = [f"word{i}" for i in range(50)]
+        self.drift(0, "Please listen closely " + " ".join(words), " ".join(words))
 
     def test_cached_audio_requires_requested_verification(self):
         import json

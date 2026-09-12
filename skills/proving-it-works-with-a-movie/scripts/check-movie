@@ -121,6 +121,19 @@ def contact_sheet(paths, out_path, count=12):
     return [paths.index(p) for p in picks]
 
 
+def subtitle_end(text):
+    """Return the last SRT cue's end time, or None when there are no cues."""
+    ends = []
+    for line in text.splitlines():
+        if "-->" in line:
+            end = line.split("-->")[1].strip().split()[0]
+            hh, mm, rest = end.split(":")
+            ss, _, ms = rest.partition(",")
+            ends.append(int(hh) * 3600 + int(mm) * 60 + int(ss)
+                        + int(ms or 0) / 1000)
+    return max(ends, default=None)
+
+
 def main():
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -180,40 +193,48 @@ def main():
         failures.append(f"duration is {duration:.2f}s - that is not a movie")
     if args.expect_audio and not as_:
         failures.append("expected narration but there is no audio stream")
-    if levels and not talking:
+    if args.expect_audio and levels and not talking:
         failures.append("the audio track is silent end to end")
 
     # a narrated movie with no subtitles fails for everyone watching it muted
-    if as_ and args.expect_subs:
+    if talking and args.expect_subs:
         srt = args.subs or args.movie.with_suffix(".srt")
         embedded = any(s["codec_type"] == "subtitle" for s in info["streams"])
+        subtitle_text, source = None, srt.name
         if srt.exists():
-            last = 0.0
-            for line in srt.read_text(encoding="utf-8-sig", errors="replace").splitlines():
-                if "-->" in line:
-                    end = line.split("-->")[1].strip().split()[0]
-                    hh, mm, rest = end.split(":")
-                    ss, _, ms = rest.partition(",")
-                    last = max(last, int(hh) * 3600 + int(mm) * 60 + int(ss)
-                               + int(ms or 0) / 1000)
-            # compare against where the narration ends, not the runtime: a
-            # silent end card is normal and must not read as missing subtitles
-            speech_end = float(last_talk + 1) if last_talk is not None else duration
-            print(f"subtitles   {srt.name}, last cue ends at {last:.1f}s "
-                  f"(narration ends {speech_end:.0f}s)")
-            if last < speech_end - 3.0:
-                failures.append(
-                    f"subtitles stop at {last:.0f}s but the narration runs to "
-                    f"{speech_end:.0f}s - {speech_end - last:.0f}s of speech "
-                    f"has no subtitles")
+            subtitle_text = srt.read_text(encoding="utf-8-sig", errors="replace")
         elif embedded:
-            print("subtitles   embedded subtitle stream present")
+            extracted = subprocess.run(
+                ["ffmpeg", "-nostdin", "-v", "error", "-i", str(args.movie),
+                 "-map", "0:s:0", "-f", "srt", "-"],
+                capture_output=True, text=True, encoding="utf-8", errors="replace")
+            if extracted.returncode != 0:
+                die(f"embedded subtitle extraction failed: {extracted.stderr.strip()[:200]}")
+            subtitle_text, source = extracted.stdout, "embedded"
         else:
             failures.append(
                 f"narrated, but no subtitles: expected {srt.name} beside the "
                 f"movie (or an embedded track). Run make-subtitles and burn "
                 f"them in; pass --no-expect-subtitles only for a movie nobody "
                 f"will ever watch muted.")
+        if subtitle_text is not None:
+            try:
+                last = subtitle_end(subtitle_text)
+            except (ValueError, IndexError):
+                die(f"invalid subtitle timing in {source}")
+            # compare against where the narration ends, not the runtime: a
+            # silent end card is normal and must not read as missing subtitles
+            speech_end = float(last_talk + 1)
+            if last is None:
+                failures.append(f"{source}: subtitles contain no cues")
+            else:
+                print(f"subtitles   {source}, last cue ends at {last:.1f}s "
+                      f"(narration ends {speech_end:.0f}s)")
+                if last < speech_end - 3.0:
+                    failures.append(
+                        f"subtitles stop at {last:.0f}s but the narration runs to "
+                        f"{speech_end:.0f}s - {speech_end - last:.0f}s of speech "
+                        f"has no subtitles")
     if not changes:
         failures.append("the picture never reaches a new state - this is a still, "
                         "not a movie")

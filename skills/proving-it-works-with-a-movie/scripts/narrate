@@ -109,12 +109,12 @@ def structural_drift(text, heard):
     scores as more similar than two mispronounced ones. What is detectable,
     and what actually matters, is missing or invented CONTENT: a sentence
     the voice skipped, or a preamble it invented. Returns
-    (length_delta_fraction, longest_run_of_missing_or_changed_words).
+    (length_delta_fraction, longest_run_of_missing_added_or_changed_words).
     """
     want, got = norm(text), norm(heard)
     delta = abs(len(got) - len(want)) / max(1, len(want))
     ops = difflib.SequenceMatcher(a=want, b=got).get_opcodes()
-    worst = max((i2 - i1 for tag, i1, i2, _, _ in ops if tag in ("delete", "replace")),
+    worst = max((max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in ops if tag != "equal"),
                 default=0)
     return delta, worst
 
