@@ -4,7 +4,7 @@
 #
 # No drill coverage: this test asks the agent to *describe* SDD (string-
 # matches its verbal explanation against expected keywords like
-# "self-review", "skeptical", "worktree", "Step 1", "loop"). Drill scenarios
+# "self-review", "skeptical", "worktree", "setup", "loop"). Drill scenarios
 # test behavior (real subagent dispatch, plan-following, review loops),
 # not description-recall. Kept by design.
 set -euo pipefail
@@ -83,7 +83,7 @@ else
     exit 1
 fi
 
-if assert_contains "$output" "Step 1\|beginning\|start\|Load Plan" "Read at beginning"; then
+if assert_contains "$output" "beginning\|start\|setup\|before.*dispatch\|before.*task" "Read at beginning"; then
     : # pass
 else
     exit 1
@@ -133,16 +133,16 @@ echo ""
 echo "Test 7: Task context provision..."
 
 output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Answer using exactly this structure:
-Controller provides: <directly or by file>
-Implementer must read plan file: <yes or no>" "$CLAUDE_PROMPT_TIMEOUT")
+Controller provides: <brief file or whole plan file>
+Implementer must read whole plan file: <yes or no>" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "provide.*directly\|full.*text\|paste\|include.*prompt" "Provides text directly"; then
+if assert_contains "$output" "task-brief\|brief file\|brief.*path\|Controller provides:.*brief" "Provides task brief file"; then
     : # pass
 else
     exit 1
 fi
 
-if assert_contains "$output" "Implementer must read plan file:.*no" "Doesn't make subagent read file"; then
+if assert_contains "$output" "Implementer must read whole plan file:.*no" "Doesn't make subagent read whole plan"; then
     : # pass
 else
     exit 1
