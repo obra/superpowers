@@ -1,16 +1,28 @@
 /**
  * Superpowers plugin for OpenCode.ai
  *
- * Injects superpowers bootstrap context via message transform.
- * Auto-registers skills directory via config hook (no symlinks needed).
+ * Dual-compatible with OpenCode V1 and V2.
+ *
+ * V1 (opencode): loaded via named export SuperpowersPlugin — provides config
+ * hook for skills registration and experimental.chat.messages.transform for
+ * bootstrap injection.
+ *
+ * V2 (opencode2): loaded via default export { id, setup } by PluginSupervisor.
+ * setup() registers skills natively via ctx.skill.transform(), and injects
+ * bootstrap context via ctx.session.hook("context").
+ *
+ * No external dependencies — pure JavaScript works in both V1 and V2 without
+ * installing @opencode-ai/plugin or effect.
  */
 
 import path from 'path';
 import fs from 'fs';
-import os from 'os';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Skills directory shared by V1 (config hook) and V2 (setup/ctx.skill.transform)
+const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
 const extractAndStripFrontmatter = (content) => {
@@ -33,47 +45,14 @@ const extractAndStripFrontmatter = (content) => {
   return { frontmatter, content: body };
 };
 
-// Normalize a path: trim whitespace, expand ~, resolve to absolute
-const normalizePath = (p, homeDir) => {
-  if (!p || typeof p !== 'string') return null;
-  let normalized = p.trim();
-  if (!normalized) return null;
-  if (normalized.startsWith('~/')) {
-    normalized = path.join(homeDir, normalized.slice(2));
-  } else if (normalized === '~') {
-    normalized = homeDir;
-  }
-  return path.resolve(normalized);
-};
+// Tool mapping injected into the bootstrap, differentiated by host flavor.
+// V1 (OpenCode 1.18.x) and V2 (OpenCode 2.x beta) expose different built-in
+// tools, so each flavor's injection path picks its own constant below.
+// Exported for tests (tests/opencode/test-bootstrap-caching.mjs).
 
-// Module-level cache for bootstrap content.
-// The SKILL.md file does not change during a session, so reading + parsing it
-// once eliminates redundant fs.existsSync + fs.readFileSync + regex work on
-// every agent step.  See #1202 for the full analysis.
-let _bootstrapCache = undefined; // undefined = not yet loaded, null = file missing
-
-export const SuperpowersPlugin = async ({ client, directory }) => {
-  const homeDir = os.homedir();
-  const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
-  const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
-  const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
-
-  // Helper to generate bootstrap content (cached after first call)
-  const getBootstrapContent = () => {
-    // Return cached result on subsequent calls
-    if (_bootstrapCache !== undefined) return _bootstrapCache;
-
-    // Try to load using-superpowers skill
-    const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) {
-      _bootstrapCache = null;
-      return null;
-    }
-
-    const fullContent = fs.readFileSync(skillPath, 'utf8');
-    const { content } = extractAndStripFrontmatter(fullContent);
-
-    const toolMapping = `**Tool Mapping for OpenCode:**
+// V1 built-ins: todowrite, task (subagent_type), skill, read, apply_patch,
+// bash, grep, glob, webfetch.
+export const V1_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → \`todowrite\`
 - \`Subagent (general-purpose):\` → \`task\` with \`subagent_type: "general"\`
@@ -86,7 +65,44 @@ When skills request actions, substitute OpenCode equivalents:
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-    _bootstrapCache = `<EXTREMELY_IMPORTANT>
+// V2 built-ins: no todo tool at all; task → subagent (agent name in 'agent',
+// continuation via sessionID); apply_patch → patch (patchText, same patch
+// format); bash → shell. read, grep, glob, webfetch, skill keep their names.
+export const V2_MAPPING = `**Tool Mapping for OpenCode:**
+When skills request actions, substitute OpenCode equivalents:
+- Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
+- \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
+- Invoke a skill → OpenCode's native \`skill\` tool
+- Read files → \`read\`
+- Create, edit, or delete files → \`patch\` with \`patchText\` (same patch format)
+- Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
+- Search files → \`grep\`, \`glob\`
+- Fetch a URL → \`webfetch\`
+
+Use OpenCode's native \`skill\` tool to list and load skills.`;
+
+// Module-level cache for bootstrap content, keyed by tool mapping (host
+// flavor). The SKILL.md file does not change during a session, so reading +
+// parsing it once eliminates redundant fs.existsSync + fs.readFileSync +
+// regex work on every agent step.  See #1202 for the full analysis.
+const _bootstrapCache = new Map(); // mapping -> bootstrap (null = file missing)
+
+// Helper to generate bootstrap content (cached after first call per mapping)
+const getBootstrapContent = (toolMapping) => {
+  // Return cached result on subsequent calls
+  if (_bootstrapCache.has(toolMapping)) return _bootstrapCache.get(toolMapping);
+
+  // Try to load using-superpowers skill
+  const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
+  if (!fs.existsSync(skillPath)) {
+    _bootstrapCache.set(toolMapping, null);
+    return null;
+  }
+
+  const fullContent = fs.readFileSync(skillPath, 'utf8');
+  const { content } = extractAndStripFrontmatter(fullContent);
+
+  _bootstrapCache.set(toolMapping, `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
@@ -94,17 +110,71 @@ You have superpowers.
 ${content}
 
 ${toolMapping}
-</EXTREMELY_IMPORTANT>`;
+</EXTREMELY_IMPORTANT>`);
 
-    return _bootstrapCache;
-  };
+  return _bootstrapCache.get(toolMapping);
+};
 
+// --- Task-subagent (child session) detection --------------------------------
+//
+// #2160: the bootstrap drives controller workflows (brainstorming, planning,
+// approval cycles). Injecting it into task subagent sessions makes workers
+// restart design/approval cycles for work the parent already authorised; the
+// <SUBAGENT-STOP> note inside the bootstrap relies on model compliance, which
+// is not reliable. Detect child sessions structurally instead: a parentID on
+// the session is the child signal on both flavors (task sessions are created
+// with one; top-level sessions simply lack the field), so when the session
+// carrying the message has a parentID we skip bootstrap injection. Skills
+// stay registered for every session — workers keep explicit access to
+// execution skills.
+
+// sessionID -> is-child decision. parentID never changes for a session, so
+// the result is cached for life and the injection hook (which fires on every
+// agent step) pays only one client roundtrip per session.
+const _childSessionCache = new Map();
+
+const isChildSession = async (fetchSession, sessionID) => {
+  if (!sessionID) return false; // unknown session: keep current behavior
+  if (_childSessionCache.has(sessionID)) return _childSessionCache.get(sessionID);
+
+  let isChild = false;
+  try {
+    const result = await fetchSession(sessionID);
+    // Defensive dual-shape unwrap: fetchers may return the session record
+    // itself (V2 ctx) or an SDK envelope { data: Session } (V1 client). An
+    // envelope never carries parentID at the top level, so if `result` has
+    // one it already IS the session record — never unwrap past it.
+    const session = result && typeof result === 'object' && result.data && typeof result.data === 'object' && !('parentID' in result)
+      ? result.data
+      : result;
+    // parentID presence is the child-session signal on both flavors.
+    isChild = Boolean(session && typeof session === 'object' && session.parentID);
+  } catch (err) {
+    // Fail open: on lookup errors keep injecting (previous behavior) and do
+    // not cache, so a transient failure can recover on the next step.
+    console.error('[superpowers] session lookup failed, treating session as top-level:', err);
+    return false;
+  }
+  _childSessionCache.set(sessionID, isChild);
+  return isChild;
+};
+
+/**
+ * V1 Plugin Function (named export + default.server)
+ *
+ * Used by V1 (OpenCode 1.x): discovered via named export scanning.
+ * Provides: config hook (V1 skills registration) + bootstrap injection
+ * (experimental.chat.messages.transform).
+ */
+export const SuperpowersPlugin = async ({ client, directory }) => {
   return {
     // Inject skills path into live config so OpenCode discovers superpowers skills
     // without requiring manual symlinks or config file edits.
-    // This works because Config.get() returns a cached singleton — modifications
-    // here are visible when skills are lazily discovered later.
     config: async (config) => {
+      // V2: skills is a flat array — skip, setup() handles V2 skill registration
+      if (Array.isArray(config.skills)) return;
+
+      // V1: skills is { paths: [...] }
       config.skills = config.skills || {};
       config.skills.paths = config.skills.paths || [];
       if (!config.skills.paths.includes(superpowersSkillsDir)) {
@@ -112,7 +182,7 @@ ${toolMapping}
       }
     },
 
-    // Inject bootstrap into the first user message of each session.
+    // Inject bootstrap into the first user message of each top-level session.
     // Using a user message instead of a system message avoids:
     //   1. Token bloat from system messages repeated every turn (#750)
     //   2. Multiple system messages breaking Qwen and other models (#894)
@@ -122,18 +192,117 @@ ${toolMapping}
     // arrays may need injection again, so getBootstrapContent() must not do
     // repeated disk work.
     'experimental.chat.messages.transform': async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+      const bootstrap = getBootstrapContent(V1_MAPPING);
       if (!bootstrap || !output.messages.length) return;
       const firstUser = output.messages.find(m => m.info.role === 'user');
       if (!firstUser || !firstUser.parts.length) return;
 
       // Guard: skip if first user message already contains bootstrap.
-      // This prevents double injection when OpenCode passes an already
-      // transformed in-memory message array through the hook again.
       if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
+      // #2160: never restart the controller workflow inside task subagent
+      // (child) sessions. V1 passes no input to this hook (verified in the
+      // 1.18.x bundle: trigger(..., {}, {messages})), so take the sessionID
+      // from the message record itself.
+      if (client && await isChildSession(
+        (id) => client.session.get({ path: { id } }),
+        firstUser.info.sessionID,
+      )) return;
 
       const ref = firstUser.parts[0];
       firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
     }
   };
+};
+
+/**
+ * V2 Setup Function (default.setup)
+ *
+ * Called by V2 PluginSupervisor (packages/core/src/plugin/supervisor.ts).
+ * Performs two things:
+ *
+ * 1. Registers every skills/<name>/SKILL.md as a native Skill.Info object
+ *    via ctx.skill.transform((draft) => draft.add(info)).
+ *    V2 removed the old draft.source() directory registration; the draft API
+ *    is now { list, add, update, remove } where add() decodes plain objects:
+ *    { id, name, description?, slash?, autoinvoke?, location, content }.
+ *    See packages/core/src/plugin/skill.ts and packages/schema/src/skill.ts.
+ * 2. Injects bootstrap context via ctx.session.hook("context"), the V2
+ *    equivalent of V1's experimental.chat.messages.transform.
+ */
+async function setup(ctx) {
+  // V1 (observed on opencode 1.18.18) also invokes default.setup, but with a
+  // V1-shaped ctx that lacks the skill/session domains. Detect it and return
+  // quietly — V1 is served entirely by the SuperpowersPlugin named export.
+  if (!ctx || !ctx.skill || typeof ctx.skill.transform !== 'function' || !ctx.session || typeof ctx.session.hook !== 'function') {
+    return;
+  }
+
+  // 1. Register skills (one transform; one draft.add per skill)
+  try {
+    const skills = [];
+    if (fs.existsSync(superpowersSkillsDir)) {
+      for (const entry of fs.readdirSync(superpowersSkillsDir, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+        const skillPath = path.join(superpowersSkillsDir, entry.name, 'SKILL.md');
+        if (!fs.existsSync(skillPath)) continue;
+        const { frontmatter, content } = extractAndStripFrontmatter(fs.readFileSync(skillPath, 'utf8'));
+        skills.push({
+          id: entry.name,
+          name: frontmatter.name || entry.name,
+          ...(frontmatter.description ? { description: frontmatter.description } : {}),
+          location: skillPath,
+          content,
+        });
+      }
+    }
+    await ctx.skill.transform((draft) => {
+      for (const skill of skills) draft.add(skill);
+    });
+  } catch (err) {
+    // Never break plugin activation: one failing plugin takes down the whole
+    // V2 generation (including provider/catalog plugins => no models in TUI).
+    console.error('[superpowers] skill registration failed:', err);
+  }
+
+  // 2. Inject bootstrap into first user message via V2 session context hook
+  try {
+    await ctx.session.hook('context', async (event) => {
+      try {
+        const bootstrap = getBootstrapContent(V2_MAPPING);
+        if (!bootstrap || !event.messages || !event.messages.length) return;
+        const firstUser = event.messages.find(m => m.role === 'user');
+        if (!firstUser || !firstUser.content || !firstUser.content.length) return;
+        if (firstUser.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
+        // #2160: the context event carries the sessionID directly. Skip the
+        // controller bootstrap when this prompt belongs to a task subagent
+        // (child) session. Skills registered above stay available to workers.
+        if (typeof ctx.session.get === 'function' && await isChildSession(
+          (id) => ctx.session.get({ sessionID: id }),
+          event.sessionID,
+        )) return;
+
+        firstUser.content.unshift({ type: 'text', text: bootstrap });
+      } catch (err) {
+        // Never let hook callback errors break the request pipeline.
+        console.error('[superpowers] context hook failed:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[superpowers] session hook registration failed:', err);
+  }
+}
+
+/**
+ * Default Export: { id, server, setup }
+ *
+ * V2 PluginSupervisor reads { id, setup }.
+ * V1 reads named export SuperpowersPlugin.
+ * server() is exported for V1 compatibility.
+ */
+export default {
+  id: 'superpowers',
+  server: SuperpowersPlugin,
+  setup,
 };
