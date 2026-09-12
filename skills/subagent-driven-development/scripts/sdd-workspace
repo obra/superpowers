@@ -17,6 +17,10 @@
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
+# A greenfield plan's first task is often "create the repo", so there is no
+# repo root to resolve yet: fall back to the current directory rather than
+# failing, since that task is exactly the one needing a brief.
+#
 # Usage: sdd-workspace PLAN_FILE
 set -euo pipefail
 
@@ -32,7 +36,10 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-root=$(git rev-parse --show-toplevel)
+if ! root=$(git rev-parse --show-toplevel 2>/dev/null); then
+  root=$PWD
+  echo "sdd-workspace: no git repository yet, using $root/.superpowers/sdd until this plan's first task creates one" >&2
+fi
 base="$root/.superpowers/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"
