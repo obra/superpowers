@@ -100,6 +100,20 @@ if (shape === "nested") {
     fail("cursor output included additionalContext");
   }
   context = payload.additional_context;
+} else if (shape === "zcode") {
+  if (payload.hookEventName !== "SessionStart") {
+    fail(`unexpected or missing hookEventName: ${payload.hookEventName}`);
+  }
+  if (!hasOwn(payload, "additionalContext")) {
+    fail("zcode output missing top-level additionalContext");
+  }
+  if (hasOwn(payload, "hookSpecificOutput")) {
+    fail("zcode output included nested hookSpecificOutput");
+  }
+  if (hasOwn(payload, "additional_context")) {
+    fail("zcode output included snake_case additional_context");
+  }
+  context = payload.additionalContext;
 } else if (shape === "sdk") {
   if (hasOwn(payload, "hookSpecificOutput")) {
     fail("sdk output included hookSpecificOutput");
@@ -192,6 +206,17 @@ assert_command_output \
     "" \
     "$cursor_home" \
     CURSOR_PLUGIN_ROOT="$REPO_ROOT" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$HOOK_UNDER_TEST"
+
+zcode_home="$(make_home zcode)"
+assert_command_output \
+    "ZCode emits native top-level additionalContext" \
+    "zcode" \
+    "" \
+    "" \
+    "$zcode_home" \
+    ZCODE_PLUGIN_ROOT="$REPO_ROOT" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
