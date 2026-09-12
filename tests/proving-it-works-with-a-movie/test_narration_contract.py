@@ -21,11 +21,15 @@ class NarrationPublicationContract(unittest.TestCase):
         self.output = self.root / "narration"
 
     def run_narrate(self, scenes, synthesize, *, verify="off", expected=0, engine="piper",
-                    extra_options=(), transcript=None):
+                    extra_options=(), transcript=None, asr_calls=None):
         self.scenes.write_text(json.dumps({"scenes": scenes}), encoding="utf-8")
         argv = ["narrate", str(self.scenes), str(self.output), "--engine", engine,
                 "--verify", verify, *extra_options]
         stderr = io.StringIO()
+        def transcribe(wav, model):
+            if asr_calls is not None:
+                asr_calls.append((wav, model))
+            return transcript
         with patch.object(sys, "argv", argv), \
              patch.object(self.module.shutil, "which", return_value="ffprobe"), \
              patch.object(self.module, "openai_key", return_value="key" if engine.startswith("openai") else None), \
@@ -33,7 +37,7 @@ class NarrationPublicationContract(unittest.TestCase):
              patch.object(self.module, "say_openai_chat",
                           side_effect=lambda key, text, wav, voice: synthesize(text, wav, voice)), \
              patch.object(self.module, "duration", return_value=1.25), \
-             patch.object(self.module, "transcribe_local", return_value=transcript), \
+             patch.object(self.module, "transcribe_local", side_effect=transcribe), \
              redirect_stdout(io.StringIO()), redirect_stderr(stderr):
             self.assertEqual(self.module.main(), expected, stderr.getvalue())
         manifest = self.output / "manifest.json"
@@ -80,13 +84,16 @@ class NarrationPublicationContract(unittest.TestCase):
 
         self.run_narrate(scenes, accepted)
         first = self.run_narrate(scenes, synthesize, expected=1, extra_options=("--force",))
-        second = self.run_narrate(scenes, synthesize, expected=1, extra_options=("--force",))
+        attempts_after_rejection = len(attempts)
+        second = self.run_narrate(scenes, synthesize, expected=1)
 
         self.assertEqual(first, [])
         self.assertEqual(second, [])
+        self.assertGreater(len(attempts), attempts_after_rejection)
         rejected_paths = [path for text, path in attempts if text == "Reject this"]
         self.assertEqual(len({path.name for path in rejected_paths}), len(rejected_paths))
         self.assertTrue(all(path.exists() for path in rejected_paths))
+        self.assertEqual(len({path.read_bytes() for path in rejected_paths}), len(rejected_paths))
 
     def test_duration_failure_leaves_only_prior_accepted_scenes_published(self):
         scenes = [{"id": "accepted", "narration": "Accepted words"},
@@ -159,9 +166,12 @@ class NarrationPublicationContract(unittest.TestCase):
         scenes = [{"id": "clip", "narration": "\u77ed\u6587"}]
         for mode, expected in (("auto", 0), ("on", 1), ("off", 0)):
             with self.subTest(mode=mode):
+                asr_calls = []
                 manifest = self.run_narrate(scenes, synthesize, verify=mode,
-                                             expected=expected)
+                                             expected=expected, transcript="\u77ed\u6587",
+                                             asr_calls=asr_calls)
                 self.assertEqual(bool(manifest), expected == 0)
+                self.assertEqual(bool(asr_calls), mode != "off")
 
     def test_missing_ffprobe_stops_before_synthesis(self):
         self.scenes.write_text(json.dumps({"scenes": [{"id": "clip", "narration": "Words"}]}),
