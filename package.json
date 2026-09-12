@@ -19,5 +19,10 @@
     "skills": [
       "./skills"
     ]
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./.dsh/cordis.patch.yml"
+    }
   }
 }
