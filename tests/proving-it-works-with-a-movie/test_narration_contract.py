@@ -20,17 +20,20 @@ class NarrationPublicationContract(unittest.TestCase):
         self.scenes = self.root / "scenes.yaml"
         self.output = self.root / "narration"
 
-    def run_narrate(self, scenes, synthesize, *, verify="off", expected=0):
+    def run_narrate(self, scenes, synthesize, *, verify="off", expected=0, engine="piper",
+                    extra_options=(), transcript=None):
         self.scenes.write_text(json.dumps({"scenes": scenes}), encoding="utf-8")
-        argv = ["narrate", str(self.scenes), str(self.output), "--engine", "piper",
-                "--verify", verify]
+        argv = ["narrate", str(self.scenes), str(self.output), "--engine", engine,
+                "--verify", verify, *extra_options]
         stderr = io.StringIO()
         with patch.object(sys, "argv", argv), \
              patch.object(self.module.shutil, "which", return_value="ffprobe"), \
-             patch.object(self.module, "openai_key", return_value=None), \
+             patch.object(self.module, "openai_key", return_value="key" if engine.startswith("openai") else None), \
              patch.object(self.module, "say_piper", side_effect=synthesize), \
+             patch.object(self.module, "say_openai_chat",
+                          side_effect=lambda key, text, wav, voice: synthesize(text, wav, voice)), \
              patch.object(self.module, "duration", return_value=1.25), \
-             patch.object(self.module, "transcribe_local", return_value=None), \
+             patch.object(self.module, "transcribe_local", return_value=transcript), \
              redirect_stdout(io.StringIO()), redirect_stderr(stderr):
             self.assertEqual(self.module.main(), expected, stderr.getvalue())
         manifest = self.output / "manifest.json"
@@ -72,8 +75,12 @@ class NarrationPublicationContract(unittest.TestCase):
 
         scenes = [{"id": "reject", "narration": "Reject this"},
                   {"id": "raise", "narration": "Raise here"}]
-        first = self.run_narrate(scenes, synthesize, expected=1)
-        second = self.run_narrate(scenes, synthesize, expected=1)
+        def accepted(text, wav, voice):
+            wav.write_bytes(b"accepted")
+
+        self.run_narrate(scenes, accepted)
+        first = self.run_narrate(scenes, synthesize, expected=1, extra_options=("--force",))
+        second = self.run_narrate(scenes, synthesize, expected=1, extra_options=("--force",))
 
         self.assertEqual(first, [])
         self.assertEqual(second, [])
@@ -102,6 +109,27 @@ class NarrationPublicationContract(unittest.TestCase):
 
         manifest = json.loads((self.output / "manifest.json").read_text())
         self.assertEqual([entry["id"] for entry in manifest], ["accepted"])
+
+    def test_duration_failures_keep_distinct_attempt_bytes_across_reruns(self):
+        scenes = [{"id": "clip", "narration": "Measure this clip"}]
+
+        def synthesize(text, wav, voice):
+            wav.write_bytes(f"attempt {len(list(self.output.glob('.clip.attempt-*.wav'))) + 1}".encode())
+
+        for expected_attempts in (1, 2):
+            self.scenes.write_text(json.dumps({"scenes": scenes}), encoding="utf-8")
+            argv = ["narrate", str(self.scenes), str(self.output), "--engine", "piper", "--verify", "off"]
+            with patch.object(sys, "argv", argv), \
+                 patch.object(self.module.shutil, "which", return_value="ffprobe"), \
+                 patch.object(self.module, "openai_key", return_value=None), \
+                 patch.object(self.module, "say_piper", side_effect=synthesize), \
+                 patch.object(self.module, "duration", side_effect=RuntimeError("ffprobe failed")), \
+                 redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                self.assertEqual(self.module.main(), 1)
+            attempts = sorted(self.output.glob(".clip.attempt-*.wav"))
+            self.assertEqual(len(attempts), expected_attempts)
+            self.assertEqual(len({path.read_bytes() for path in attempts}), expected_attempts)
+            self.assertFalse((self.output / "clip.wav").exists())
 
     def test_two_accepted_scenes_are_published_together(self):
         def synthesize(text, wav, voice):
@@ -145,6 +173,19 @@ class NarrationPublicationContract(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 self.module.main()
 
+    def test_fresh_unsupported_chat_transcript_is_rejected_before_synthesis(self):
+        called = []
+
+        def synthesize(*args):
+            called.append(args)
+
+        manifest = self.run_narrate(
+            [{"id": "clip", "narration": "\U00020000\U00020001"}], synthesize,
+            engine="openai-chat", expected=1,
+        )
+        self.assertEqual(manifest, [])
+        self.assertEqual(called, [])
+
     def test_cached_unsupported_chat_transcript_withdraws_acceptance_without_asr(self):
         self.output.mkdir()
         (self.output / "clip.wav").write_bytes(b"cached bytes")
@@ -157,15 +198,83 @@ class NarrationPublicationContract(unittest.TestCase):
         self.scenes.write_text(json.dumps({"scenes": [
             {"id": "clip", "narration": "\u77ed\u6587"}
         ]}), encoding="utf-8")
-        argv = ["narrate", str(self.scenes), str(self.output), "--engine", "openai-chat",
-                "--verify", "off"]
+        for mode in ("off", "auto"):
+            with self.subTest(mode=mode):
+                (self.output / "manifest.json").write_text(json.dumps([{
+                    "id": "clip", "text": "\u77ed\u6587", "wav": "clip.wav", "duration": 1.0,
+                    "synthesis": synthesis,
+                }]), encoding="utf-8")
+                argv = ["narrate", str(self.scenes), str(self.output), "--engine", "openai-chat",
+                        "--verify", mode]
+                with patch.object(sys, "argv", argv), \
+                     patch.object(self.module.shutil, "which", return_value="ffprobe"), \
+                     patch.object(self.module, "openai_key", return_value="key"), \
+                     patch.object(self.module, "say_openai_chat", side_effect=AssertionError("cached")), \
+                     patch.object(self.module, "transcribe_local", side_effect=AssertionError("ASR")), \
+                     redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                    self.assertEqual(self.module.main(), 1)
+                self.assertEqual(json.loads((self.output / "manifest.json").read_text()), [])
+
+    def test_empty_chat_or_asr_speech_is_rejected(self):
+        def empty_chat_synthesis(text, wav, voice):
+            wav.write_bytes(b"audio")
+            return ""
+
+        empty_chat = self.run_narrate(
+            [{"id": "clip", "narration": "Two words"}],
+            empty_chat_synthesis, engine="openai-chat", expected=1,
+        )
+        self.assertEqual(empty_chat, [])
+
+        def synthesize(text, wav, voice):
+            wav.write_bytes(b"audio")
+
+        self.scenes.write_text(json.dumps({"scenes": [{"id": "clip", "narration": "Two words"}]}),
+                              encoding="utf-8")
+        argv = ["narrate", str(self.scenes), str(self.output), "--engine", "piper", "--verify", "auto"]
         with patch.object(sys, "argv", argv), \
              patch.object(self.module.shutil, "which", return_value="ffprobe"), \
-             patch.object(self.module, "openai_key", return_value="key"), \
-             patch.object(self.module, "say_openai_chat", side_effect=AssertionError("cached")), \
-             patch.object(self.module, "transcribe_local", side_effect=AssertionError("ASR")), \
+             patch.object(self.module, "openai_key", return_value=None), \
+             patch.object(self.module, "say_piper", side_effect=synthesize), \
+             patch.object(self.module, "transcribe_local", return_value=""), \
+             patch.object(self.module, "duration", return_value=1.0), \
              redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             self.assertEqual(self.module.main(), 1)
+        self.assertEqual(json.loads((self.output / "manifest.json").read_text()), [])
+
+    def test_cached_nested_wav_keeps_its_manifest_path_after_reverification(self):
+        nested = self.output / "takes" / "clip.wav"
+        nested.parent.mkdir(parents=True)
+        nested.write_bytes(b"accepted")
+        synthesis = {"engine": "piper", "voice": self.module.PIPER_VOICE,
+                     "model": self.module.PIPER_VOICE}
+        (self.output / "manifest.json").write_text(json.dumps([{
+            "id": "clip", "text": "Nested clip", "wav": "takes/clip.wav", "duration": 1.0,
+            "synthesis": synthesis,
+        }]), encoding="utf-8")
+        manifest = self.run_narrate(
+            [{"id": "clip", "narration": "Nested clip"}],
+            lambda *args: (_ for _ in ()).throw(AssertionError("cached")), verify="on",
+            transcript="Nested clip",
+        )
+        self.assertEqual(manifest[0]["wav"], "takes/clip.wav")
+
+    def test_cached_strict_verification_withdraws_before_interrupt(self):
+        def synthesize(text, wav, voice):
+            wav.write_bytes(b"accepted")
+
+        self.run_narrate([{"id": "clip", "narration": "Interrupt safely"}], synthesize)
+        self.scenes.write_text(json.dumps({"scenes": [{"id": "clip", "narration": "Interrupt safely"}]}),
+                              encoding="utf-8")
+        argv = ["narrate", str(self.scenes), str(self.output), "--engine", "piper", "--verify", "on"]
+        with patch.object(sys, "argv", argv), \
+             patch.object(self.module.shutil, "which", return_value="ffprobe"), \
+             patch.object(self.module, "openai_key", return_value=None), \
+             patch.object(self.module, "say_piper", side_effect=AssertionError("cached")), \
+             patch.object(self.module, "transcribe_local", side_effect=KeyboardInterrupt), \
+             redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            with self.assertRaises(KeyboardInterrupt):
+                self.module.main()
         self.assertEqual(json.loads((self.output / "manifest.json").read_text()), [])
 
 
@@ -178,6 +287,7 @@ class NarrationComparisonContract(unittest.TestCase):
             ("你好世界", "こんにちは世界"),
             ("短文", "短文"),
             ("mixed 日本語 words", "mixed 日本語 words"),
+            ("\U00020000\U00020001", "\U00020002\U00020003"),
             ("*** !!!", "*** !!!"),
         ):
             with self.subTest(script=script):
@@ -302,6 +412,28 @@ class AssemblyNarrationContract(unittest.TestCase):
                       movie_encode[movie_encode.index("-vf") + 1])
         offsets = json.loads((self.root / "work" / "offsets.json").read_text())
         self.assertEqual(offsets, {})
+
+    def test_movie_with_audio_maps_its_source_audio(self):
+        source = self.root / "source-with-audio.mp4"
+        source.write_bytes(b"source")
+        status, calls = self.assemble(
+            [{"id": "movie", "kind": "movie", "src": source.name}],
+            run_side_effect=lambda command: subprocess.CompletedProcess(
+                command, 0,
+                json.dumps({"streams": [{"codec_type": "video"}, {"codec_type": "audio"}]}), ""
+            ) if "-show_streams" in command else subprocess.CompletedProcess(command, 0, "1.0", ""),
+        )
+        self.assertEqual(status, 0)
+        movie_encode = next(call for call in calls if call and call[0] == "ffmpeg")
+        self.assertNotIn("anullsrc=r=44100:cl=stereo", movie_encode)
+        self.assertEqual(movie_encode[movie_encode.index("-map") + 1], "0:v:0")
+        self.assertEqual(movie_encode[movie_encode.index("-map", movie_encode.index("-map") + 1) + 1], "0:a:0")
+
+    def test_movie_geometry_fits_width_and_requested_inner_height_before_padding(self):
+        self.assertEqual(self.module.movie_geometry(1920, 1080, 800), {
+            "scale": (1920, 800),
+            "pad": (1920, 1080),
+        })
 
 
 class PercentPathContract(unittest.TestCase):

@@ -99,6 +99,7 @@ class NarrationDriftRegression(unittest.TestCase):
                     "--engine", "piper", "--verify", "on"]
             stdout, stderr = io.StringIO(), io.StringIO()
             with patch.object(sys, "argv", argv), \
+                 patch.object(module.shutil, "which", return_value="ffprobe"), \
                  patch.object(module, "openai_key", return_value=None), \
                  patch.object(module, "duration", return_value=1.0), \
                  patch.object(module, "say_piper", side_effect=AssertionError("expected cached clip")), \
@@ -138,6 +139,7 @@ class NarrationDriftRegression(unittest.TestCase):
                     "--verify", "off"]
             rejected_renders = []
             with patch.object(sys, "argv", argv), \
+                 patch.object(module.shutil, "which", return_value="ffprobe"), \
                  patch.object(module, "openai_key", return_value="test-key"), \
                  patch.object(module, "say_openai_chat", side_effect=synthesize), \
                  patch.object(module, "duration", return_value=1.0):
@@ -189,7 +191,10 @@ class TranscriptionProtocolRegression(unittest.TestCase):
                 diagnostics = io.StringIO()
                 with patch.object(module.subprocess, "run", side_effect=child), \
                      redirect_stderr(diagnostics):
-                    self.assertIsNone(module.transcribe_local(Path("clip.wav")))
+                    self.assertEqual(
+                        module.transcribe_local(Path("clip.wav")),
+                        "" if payload == '{"text": ""}' and code == 0 else None,
+                    )
                 self.assertIn("local ASR", diagnostics.getvalue())
 
     def test_fresh_and_off_then_on_clips_require_asr(self):
@@ -205,7 +210,7 @@ class TranscriptionProtocolRegression(unittest.TestCase):
                 def synthesize(text, wav, voice):
                     wav.write_bytes(b"branch policy fixture")
                 argv = ["narrate", str(scenes), str(output), "--engine", "piper", "--verify"]
-                with patch.object(module, "openai_key", return_value=None), patch.object(module, "say_piper", side_effect=synthesize), patch.object(module, "duration", return_value=1.0), patch.object(module, "transcribe_local", return_value=None):
+                with patch.object(module.shutil, "which", return_value="ffprobe"), patch.object(module, "openai_key", return_value=None), patch.object(module, "say_piper", side_effect=synthesize), patch.object(module, "duration", return_value=1.0), patch.object(module, "transcribe_local", return_value=None):
                     if cached:
                         with patch.object(sys, "argv", [*argv, "off"]), \
                              redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
@@ -228,6 +233,10 @@ class NarrationCacheRegression(unittest.TestCase):
         self.write_scenes(self.text)
         self.output = self.root / "voice"
         self.renders = []
+
+        which = patch.object(self.module.shutil, "which", return_value="ffprobe")
+        which.start()
+        self.addCleanup(which.stop)
 
         def synthesize(*args):
             text, wav, voice = args[-3:]

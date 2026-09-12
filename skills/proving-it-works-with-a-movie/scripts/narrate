@@ -65,6 +65,9 @@ SEGMENTATION_SCRIPTS = (
     (0x3040, 0x30FF),  # Hiragana and Katakana
     (0x3400, 0x4DBF),  # CJK Extension A
     (0x4E00, 0x9FFF),  # CJK Unified Ideographs
+    (0xF900, 0xFAFF),  # CJK Compatibility Ideographs
+    (0x20000, 0x323AF),  # CJK Unified Ideograph extensions B through I
+    (0x2F800, 0x2FA1F),  # CJK Compatibility Ideographs Supplement
     (0x0E00, 0x0E7F),  # Thai
 )
 
@@ -119,7 +122,7 @@ def transcribe_local(wav, model="base.en"):
                 return None
             data = json.loads(result_path.read_text(encoding="utf-8"))
             text = data.get("text") if isinstance(data, dict) else None
-            return text.strip() if isinstance(text, str) and text.strip() else None
+            return text.strip() if isinstance(text, str) else None
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         print(f"local ASR unavailable: {error}", file=sys.stderr)
         return None
@@ -322,8 +325,7 @@ def main():
             withdraw(sid)
             failures.append(sid)
             continue
-        if not cached:
-            withdraw(sid)
+        withdraw(sid)
         accepted = False
         for attempt in ((1,) if cached else (1, 2)):
             claimed = None
@@ -344,6 +346,9 @@ def main():
 
             # Preserve the engine transcript gate and the ASR drift thresholds.
             if claimed is not None:
+                if not norm(claimed):
+                    print(f"{sid}: chat transcript contains no speech", file=sys.stderr)
+                    continue
                 drift_result = structural_drift(text, claimed)
                 if drift_result is None:
                     print(f"{sid}: chat transcript comparison unavailable", file=sys.stderr)
@@ -381,15 +386,16 @@ def main():
                               f"change, worst run {worst})")
             if not verify:
                 print(f"{sid}: ok")
-            if not cached:
-                candidate.replace(args.outdir / f"{sid}.wav")
-                candidate = args.outdir / f"{sid}.wav"
             try:
                 clip_duration = duration(candidate)
             except Exception as error:  # unaccepted bytes remain as evidence
                 print(f"{sid}: duration failed ({error})", file=sys.stderr)
                 break
-            accept({"id": sid, "text": text, "wav": candidate.name,
+            if not cached:
+                candidate.replace(args.outdir / f"{sid}.wav")
+                candidate = args.outdir / f"{sid}.wav"
+            wav_name = previous["wav"] if cached else candidate.name
+            accept({"id": sid, "text": text, "wav": wav_name,
                     "duration": clip_duration, "synthesis": synthesis})
             accepted = True
             break

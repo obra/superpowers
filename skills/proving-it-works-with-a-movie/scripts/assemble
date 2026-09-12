@@ -79,6 +79,10 @@ def has_audio_stream(path):
     return any(stream.get("codec_type") == "audio" for stream in streams)
 
 
+def movie_geometry(width, height, inner_height):
+    return {"scale": (width, inner_height), "pad": (width, height)}
+
+
 def make_card(scene, png, w, h, browser):
     if not browser:
         die("a `card` scene needs a browser (Chrome/Chromium) to render text; "
@@ -141,13 +145,15 @@ def main():
             src = base / sc["src"]
             target = dur(src)
             inner_h = int(sc.get("height", int(H * 0.82)))
+            geometry = movie_geometry(W, H, inner_h)
             source_audio = has_audio_stream(src)
             ain = ([] if source_audio
                    else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
             audio_map = "0:a:0" if source_audio else "1:a:0"
             run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", str(src), *ain,
-                 "-vf", f"scale={W}:{inner_h}:force_original_aspect_ratio=decrease,"
-                        f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:"
+                 "-vf", f"scale={geometry['scale'][0]}:{geometry['scale'][1]}:"
+                        f"force_original_aspect_ratio=decrease,"
+                        f"pad={geometry['pad'][0]}:{geometry['pad'][1]}:(ow-iw)/2:(oh-ih)/2:"
                         f"color=#101014,setsar=1",
                  "-af", f"volume={sc.get('gain_db', 0)}dB,apad",
                  "-r", str(FPS), "-t", f"{target:.3f}",
