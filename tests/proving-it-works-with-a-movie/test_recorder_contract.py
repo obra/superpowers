@@ -82,8 +82,11 @@ def serving(failure=None, stop_at=None, relative=False):
 
         def kill(pid):
             for child in children:
-                if child.pid == pid and failure != "child wait":
-                    child.returncode = -9
+                if child.pid == pid:
+                    if child.poll() is not None:
+                        raise AssertionError("cannot use an exited leader's PID")
+                    if failure != "child wait":
+                        child.returncode = -9
 
         def write_json(path, value):
             if failure == "session metadata" and path.name == "session.json":
@@ -108,6 +111,8 @@ def serving(failure=None, stop_at=None, relative=False):
                 clock.sleep(timeout)
                 if (directory / "ready.json").exists():
                     stop("ready")
+                    if failure == "exited leader":
+                        children[0].returncode = 0
                     if failure == "later connection":
                         raise ConnectionError("injected later disconnect")
                 else:
@@ -246,6 +251,17 @@ class ServeLifecycleTests(unittest.TestCase):
                 self.assertEqual(session["pids"], [1100, 1101])
                 self.assertFalse(session.get("closed", False))
                 self.assertFalse((rig.directory / "ready.json").exists())
+
+    def test_exited_leader_cannot_confirm_descendant_cleanup(self):
+        with serving("exited leader", stop_at="ready") as rig:
+            self.assertEqual(rig.module.serve(rig.args), 1)
+            session = rig.module.read_json(rig.directory / "session.json")
+            self.assertEqual(session["pids"], [1100, 1101])
+            self.assertFalse(session.get("closed", False))
+            self.assertEqual(rig.children[0].returncode, 0)
+            self.assertEqual(rig.children[1].returncode, -9)
+            self.assertTrue(all(h.closed for h in rig.handles))
+            self.assertFalse((rig.directory / "ready.json").exists())
 
 
 class CloseContractTests(unittest.TestCase):
@@ -404,6 +420,37 @@ class ObservationTests(unittest.TestCase):
         except UnicodeError as error:
             self.fail(f"stdout JSON was not portable: {error}")
         self.assertEqual((code, result["cwd"]), (1, "C:/René/λ"))
+
+    def test_capture_disconnect_during_hold_preserves_completed_command_status(self):
+        for ok, exit_code in ((True, 0), (False, 7)):
+            with self.subTest(ok=ok), tempfile.TemporaryDirectory() as temp:
+                module, clock, writes = recorder(), Clock(), []
+                marker = f"\x1b]0;MOVIE;2;{int(ok)};{exit_code};C:/René/λ\x07".encode()
+                args = SimpleNamespace(session=Path(temp), record=Path(temp) / "take",
+                                       seconds=10, hold=0.6)
+                real_film = module.film
+
+                def film(*args):
+                    return real_film(*args, clock=clock.monotonic, sleep=clock.sleep)
+
+                def capture(cdp):
+                    if clock.now >= 0.2:
+                        raise ConnectionError("capture connection closed")
+                    return b"capture-token"
+
+                with patch.object(module, "film", film), \
+                     patch.object(module, "screenshot", capture), \
+                     patch.object(module, "tail", lambda path: marker), \
+                     patch.object(Path, "write_bytes", lambda path, token: writes.append(token)), \
+                     patch.object(module, "write_json", side_effect=AssertionError("failed take publication")), \
+                     contextlib.redirect_stdout(io.StringIO()) as out:
+                    code = module.observe(args, SimpleNamespace(), 1)
+                self.assertEqual(code, 1)
+                self.assertEqual(json.loads(out.getvalue()), {
+                    "outcome": "failed", "error": "capture connection closed",
+                    "ok": ok, "exit_code": exit_code, "cwd": "C:/René/λ",
+                })
+                self.assertEqual(writes, [b"capture-token"])
 
 
 class VisibleTextTests(unittest.TestCase):

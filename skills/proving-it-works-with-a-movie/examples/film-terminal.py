@@ -437,8 +437,12 @@ def serve(args):
         for process in processes:
             try:
                 # Only the owner acts on handles it acquired, never stored PIDs.
-                if process.poll() is None:
-                    kill_process_tree(process.pid)
+                if process.poll() is not None:
+                    print(f"serve cleanup: child {process.pid} exited before tree cleanup; "
+                          "descendant cleanup cannot be confirmed", file=sys.stderr)
+                    cleaned = False
+                    continue
+                kill_process_tree(process.pid)
                 process.wait(timeout=5)
             except (OSError, subprocess.TimeoutExpired) as error:
                 print(f"serve cleanup: {error}", file=sys.stderr)
@@ -511,17 +515,22 @@ def observe(args, cdp, n0):
             while poll() is None and time.monotonic() < deadline:
                 time.sleep(0.05)
         prompt = poll()
+        result = {"outcome": "completed" if prompt else "running"}
     except Exception as error:
-        print(json.dumps({"outcome": "failed", "error": str(error)}))
-        return 1
-    result = {"outcome": "completed" if prompt else "running"}
+        result = {"outcome": "failed", "error": str(error)}
+        try:
+            prompt = latest()
+        except OSError:
+            prompt = None
     if prompt:
         result.update(ok=prompt["ok"], exit_code=prompt["exit_code"], cwd=prompt["cwd"])
-    if args.record:
+    if args.record and result["outcome"] != "failed":
         result["frames"] = frames
         result["scene"] = {"kind": "frames", "src": str(args.record.resolve()), "rate": FPS}
         write_json(args.record / "take.json", result)
     print(json.dumps(result))
+    if result["outcome"] == "failed":
+        return 1
     return 2 if not prompt else 0 if prompt["ok"] else 1
 
 
