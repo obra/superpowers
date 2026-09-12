@@ -88,3 +88,13 @@ Check the sample for your own jargon before committing to a voice. If a good
 voice mangles one term, spell it phonetically **in the TTS input only**
 ("S M evals"), never in the script file a human reads. Keep that
 substitution in the narrate step so the source text stays clean.
+
+## Native Windows local voice
+
+Use `--engine piper --verify on` with the commands in assembling.md. The
+first run downloads the Piper voice and the transcription model; later runs
+reuse those caches. `--verify on` transcribes every clip, including cached
+WAVs from an earlier run, and treats an unavailable transcriber as a failure
+rather than a pass. Afterwards, transcribe the finished movie's audio and
+compare each narrated interval with its script. A `kind: movie` segment
+keeps its own sound and is checked against its source, not a script.

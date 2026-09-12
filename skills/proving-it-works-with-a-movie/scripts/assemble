@@ -30,16 +30,12 @@ import os
 import shutil
 import subprocess
 import sys
-import urllib.parse
+import tempfile
 from pathlib import Path
 
 import yaml
-
-BROWSERS = [
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Chromium.app/Contents/MacOS/Chromium",
-    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
-]
+from browser_tools import find_browser, render_card
+from media_paths import ffconcat_entry, stage_frames
 
 CARD_HTML = """<!doctype html><meta charset="utf-8">
 <style>
@@ -59,8 +55,9 @@ def die(msg):
     sys.exit(1)
 
 
-def run(cmd):
-    r = subprocess.run(cmd, capture_output=True, text=True)
+def run(cmd, *, cwd=None):
+    r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     if r.returncode != 0:
         die(f"{' '.join(map(str, cmd))}\n{r.stderr.strip()[:500]}")
     return r
@@ -70,18 +67,6 @@ def dur(path):
     r = run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "csv=p=0", str(path)])
     return float(r.stdout.strip())
-
-
-def find_browser(explicit):
-    for cand in ([explicit] if explicit else []) + BROWSERS:
-        if not cand:
-            continue
-        if os.path.sep in cand and Path(cand).exists():
-            return cand
-        found = shutil.which(cand)
-        if found:
-            return found
-    return None
 
 
 def make_card(scene, png, w, h, browser):
@@ -94,13 +79,17 @@ def make_card(scene, png, w, h, browser):
         sub=scene.get("subtitle_size", max(16, h // 32)),
         TITLE=scene.get("title", ""), SUB=scene.get("subtitle", ""))
     tmp = png.with_suffix(".html")
-    tmp.write_text(html)
-    run([browser, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-         f"--screenshot={png}", f"--window-size={w},{h}",
-         "--force-device-scale-factor=1", "file://" + urllib.parse.quote(str(tmp))])
+    tmp.write_text(html, encoding="utf-8")
+    try:
+        render_card(tmp, png, browser=browser, width=w, height=h)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("scenes", type=Path)
     ap.add_argument("out", type=Path)
@@ -113,7 +102,7 @@ def main():
         if not shutil.which(tool):
             die(f"{tool} not on PATH")
 
-    doc = yaml.safe_load(args.scenes.read_text())
+    doc = yaml.safe_load(args.scenes.read_text(encoding="utf-8-sig"))
     base = args.scenes.parent
     res = doc.get("resolution", {}) or {}
     W, H = int(res.get("width", 1920)), int(res.get("height", 1080))
@@ -146,16 +135,28 @@ def main():
                  "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
                  "-c:a", "aac", "-ar", "44100", "-ac", "2", str(seg)])
         else:
+            frame_staging = None
             if kind == "frames":
                 src = base / sc["src"]
-                n = len(list(Path(src).glob("*.png")))
-                if not n:
-                    die(f"scene {sid}: no PNGs in {src}")
                 rate = float(sc.get("rate", FPS))
+                frame_staging = tempfile.TemporaryDirectory(
+                    prefix=f"frames-{sid}-", dir=work
+                )
+                try:
+                    staged = stage_frames(
+                        src, Path(frame_staging.name) / "sequence"
+                    )
+                except ValueError as error:
+                    frame_staging.cleanup()
+                    die(f"scene {sid}: {error}")
+                except BaseException:
+                    frame_staging.cleanup()
+                    raise
+                n = len(staged)
                 vis = n / rate
                 target = max(nard, vis)
-                vin = ["-framerate", str(rate), "-pattern_type", "glob",
-                       "-i", str(Path(src) / "*.png")]
+                vin = ["-framerate", str(rate), "-start_number", "0",
+                       "-i", str(staged[0].parent / "frame-%08d.png")]
                 # freeze the last frame when narration outlasts the action
                 vf = fit + f",tpad=stop_mode=clone:stop_duration={max(0.0, target - vis):.3f}"
             else:
@@ -174,11 +175,15 @@ def main():
 
             ain = (["-i", str(nar)] if nar.exists()
                    else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
-            run(["ffmpeg", "-nostdin", "-y", "-v", "error", *vin, *ain,
-                 "-vf", vf, "-af", "apad", "-r", str(FPS), "-t", f"{target:.3f}",
-                 "-map", "0:v:0", "-map", "1:a:0",
-                 "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
-                 "-c:a", "aac", "-ar", "44100", "-ac", "2", str(seg)])
+            try:
+                run(["ffmpeg", "-nostdin", "-y", "-v", "error", *vin, *ain,
+                     "-vf", vf, "-af", "apad", "-r", str(FPS), "-t", f"{target:.3f}",
+                     "-map", "0:v:0", "-map", "1:a:0",
+                     "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-ar", "44100", "-ac", "2", str(seg)])
+            finally:
+                if frame_staging is not None:
+                    frame_staging.cleanup()
 
         actual = dur(seg)
         # only scenes that speak get a subtitle offset; a movie played as
@@ -186,14 +191,16 @@ def main():
         if nar.exists() and kind != "movie":
             offsets[sid] = round(clock, 3)
         clock += actual
-        concat_lines.append(f"file '{seg.resolve()}'")
+        concat_lines.append(ffconcat_entry(seg))
         print(f"{sid}: {actual:.1f}s{' (own audio)' if kind == 'movie' else ''}")
 
     listing = work / "concat.txt"
-    listing.write_text("\n".join(concat_lines) + "\n")
+    listing.write_text("".join(concat_lines), encoding="utf-8")
     run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-f", "concat", "-safe", "0",
          "-i", str(listing), "-c", "copy", str(args.out)])
-    (work / "offsets.json").write_text(json.dumps(offsets, indent=2))
+    (work / "offsets.json").write_text(
+        json.dumps(offsets, indent=2), encoding="utf-8"
+    )
     print(f"\nassembled {args.out} ({dur(args.out):.1f}s)")
     print(f"scene offsets -> {work / 'offsets.json'} "
           f"(feed to make-subtitles --offsets-json)")

@@ -116,3 +116,26 @@ scene depends on a job outliving the process that started it.
   only; tagging every navigation forces reloads and breaks hash routing.
 - **Typed fields with parsers**: a value like `Yes`/`No`/`On`/`Off` in a
   YAML-backed form field saves as a boolean and can crash the app on camera.
+
+## Native Windows desktop capture
+
+FFmpeg's `gdigrab` captures one window by its exact title, or the whole
+desktop with `-i desktop`. From an ordinary-user interactive desktop:
+
+```powershell
+$check = "$HOME/movie capture check"
+[IO.Directory]::CreateDirectory($check) | Out-Null
+$arguments = @('-nostdin','-y','-f','gdigrab','-framerate','5','-i',
+    'title=Your application window title','-t','2',"$check/window-check.mp4")
+& ffmpeg @arguments
+if ($LASTEXITCODE -ne 0) { throw 'Window capture unavailable' }
+$arguments = @('-nostdin','-y','-i',"$check/window-check.mp4",
+    '-frames:v','1',"$check/window-check.png")
+& ffmpeg @arguments
+```
+
+Look at the PNG. A zero exit with wallpaper or a blank window is not a
+capture; only visible application pixels are. On the host this was tested
+on, the window-title form captured the app and `-i desktop` returned only
+wallpaper. If neither shows the app, use the browser route and say what
+remains unproven.

@@ -33,6 +33,12 @@ that quietly fakes one beat is worthless as evidence for any beat.
 
 ## The gate — every route, before you hand anything over
 
+On native Windows, use the complete PowerShell or Git Bash sequence in
+assembling.md and the native example in recording-a-terminal.md. Invoke all
+five tools with `uv run --script`; Windows does not execute their Unix shebangs.
+
+The Unix sequence:
+
 ```bash
 # $SKILL_DIR is this skill's own directory - the "Base directory for this
 # skill" path printed when it loads. Installed as a plugin that is
