@@ -214,6 +214,10 @@ class AssemblyRegression(unittest.TestCase):
             make_tone(narration / "image.wav", 0.8, 660, cwd=launch)
             make_tone(narration / "frames.wav", 1.4, 770, cwd=launch)
             make_tone(narration / "movie.wav", 1.6, 880, cwd=launch)
+            (narration / "manifest.json").write_text(json.dumps([
+                {"id": "image", "text": "Image narration", "wav": "image.wav", "duration": 0.8},
+                {"id": "frames", "text": "Frames narration", "wav": "frames.wav", "duration": 1.4},
+            ]), encoding="utf-8")
 
             nested_srt = subtitles / "captions.srt"
             nested_srt.write_bytes(
@@ -227,10 +231,12 @@ scenes:
     kind: image
     src: assets/still image.png
     duration: 0.3
+    narration: Image narration
   - id: frames
     kind: frames
     src: {frames.resolve().as_posix()}
     rate: 2.0
+    narration: Frames narration
   - id: movie
     kind: movie
     src: assets/source movie.mp4
@@ -326,6 +332,9 @@ scenes:
             narration = root / "narration"
             narration.mkdir()
             make_tone(narration / "card.wav", 0.8, 550, cwd=root)
+            (narration / "manifest.json").write_text(json.dumps([
+                {"id": "card", "text": "Card narration", "wav": "card.wav", "duration": 0.8}
+            ]), encoding="utf-8")
             scenes = root / "scenes.yaml"
             scenes.write_bytes(
                 b"\xef\xbb\xbfresolution: { width: 160, height: 90 }\r\n"
@@ -336,6 +345,7 @@ scenes:
                 b"    title: Portable\r\n"
                 b"    subtitle: paths\r\n"
                 b"    duration: 0.3\r\n"
+                b"    narration: Card narration\r\n"
             )
             work = root / "work"
             result = fixtures.run_tool(

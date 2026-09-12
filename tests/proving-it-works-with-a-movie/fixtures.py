@@ -164,6 +164,7 @@ scenes:
     kind: frames
     src: shots
     rate: 1.0
+    narration: one two three four five six seven eight nine ten
 """,
         encoding="utf-8",
     )

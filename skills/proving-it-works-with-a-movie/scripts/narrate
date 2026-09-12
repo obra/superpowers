@@ -25,11 +25,13 @@ import base64
 import difflib
 import json
 import os
-import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import urllib.request
+import uuid
 import wave
 from pathlib import Path
 
@@ -59,8 +61,31 @@ def openai_key():
     return None
 
 
+SEGMENTATION_SCRIPTS = (
+    (0x3040, 0x30FF),  # Hiragana and Katakana
+    (0x3400, 0x4DBF),  # CJK Extension A
+    (0x4E00, 0x9FFF),  # CJK Unified Ideographs
+    (0x0E00, 0x0E7F),  # Thai
+)
+
+
 def norm(s):
-    return re.sub(r"[^a-z0-9 ]+", "", s.lower()).split()
+    """Return comparable words without changing narration/cache identity."""
+    words = []
+    for token in unicodedata.normalize("NFKC", s).casefold().split():
+        word = "".join(
+            char for char in token
+            if unicodedata.category(char)[0] in {"L", "N", "M"}
+        )
+        if word:
+            words.append(word)
+    return words
+
+
+def requires_segmentation(s):
+    return any(start <= ord(char) <= end
+               for char in unicodedata.normalize("NFKC", s)
+               for start, end in SEGMENTATION_SCRIPTS)
 
 
 ASR_SNIPPET = """
@@ -111,7 +136,13 @@ def structural_drift(text, heard):
     the voice skipped, or a preamble it invented. Returns
     (length_delta_fraction, longest_run_of_missing_added_or_changed_words).
     """
+    if requires_segmentation(text) or requires_segmentation(heard):
+        return None
     want, got = norm(text), norm(heard)
+    if not want:
+        return None
+    if not got:
+        return 1.0, len(want)
     delta = abs(len(got) - len(want)) / max(1, len(want))
     ops = difflib.SequenceMatcher(a=want, b=got).get_opcodes()
     worst = max((max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in ops if tag != "equal"),
@@ -173,6 +204,26 @@ def duration(path):
     return round(float(out.stdout.strip()), 3)
 
 
+def accepted_wav(outdir, entry):
+    wav = entry.get("wav") if isinstance(entry, dict) else None
+    if not isinstance(wav, str) or not wav:
+        return None
+    candidate = Path(wav)
+    if candidate.is_absolute():
+        return None
+    return outdir / candidate
+
+
+def write_manifest(manifest_path, entries):
+    with tempfile.NamedTemporaryFile(dir=manifest_path.parent, delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        temporary.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+        temporary.replace(manifest_path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def main():
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -180,7 +231,11 @@ def main():
     if len(sys.argv) == 4 and sys.argv[1] == "--drift-check":
         script = Path(sys.argv[2]).read_text(encoding="utf-8-sig")
         heard = Path(sys.argv[3]).read_text(encoding="utf-8-sig")
-        delta, worst = structural_drift(script, heard)
+        drift = structural_drift(script, heard)
+        if drift is None:
+            print("comparison unavailable -> MISMATCH")
+            return 1
+        delta, worst = drift
         bad = delta > 0.15 or worst >= 4
         print(f"length change {delta:.0%}, worst run {worst} -> "
               f"{'MISMATCH' if bad else 'ok'}")
@@ -204,6 +259,8 @@ def main():
     scenes = [s for s in doc.get("scenes", []) if (s.get("narration") or "").strip()]
     if not scenes:
         die("no scenes with narration")
+    if not shutil.which("ffprobe"):
+        die("ffprobe not on PATH (narration durations cannot be measured)")
 
     key = openai_key()
     engine = args.engine
@@ -234,32 +291,63 @@ def main():
                      json.loads(prior_path.read_text(encoding="utf-8-sig"))}
         except Exception:  # noqa: BLE001 - a corrupt manifest just means no cache
             prior = {}
-    manifest, failures = [], []
+    current_ids = {sc["id"] for sc in scenes}
+    manifest = {sid: entry for sid, entry in prior.items() if sid in current_ids}
+    write_manifest(prior_path, list(manifest.values()))
+    failures = []
+
+    def withdraw(sid):
+        if sid in manifest:
+            del manifest[sid]
+        write_manifest(prior_path, list(manifest.values()))
+
+    def accept(entry):
+        manifest[entry["id"]] = entry
+        write_manifest(prior_path, list(manifest.values()))
 
     for sc in scenes:
         sid = sc["id"]
         text = " ".join((sc["narration"] or "").split())
-        wav = args.outdir / f"{sid}.wav"
         previous = prior.get(sid, {})
-        cached = (wav.exists() and not args.force
+        previous_wav = accepted_wav(args.outdir, previous)
+        cached = (previous_wav is not None and previous_wav.exists() and not args.force
                   and previous.get("text") == text
                   and previous.get("synthesis") == synthesis)
         if cached:
             print(f"{sid}: cached")
-        elif wav.exists() and not args.force and sid in prior:
+        elif previous_wav is not None and previous_wav.exists() and not args.force and sid in prior:
             print(f"{sid}: text or synthesis settings changed - redoing")
+        if engine == "openai-chat" and structural_drift(text, text) is None:
+            print(f"{sid}: chat transcript comparison unavailable", file=sys.stderr)
+            withdraw(sid)
+            failures.append(sid)
+            continue
+        if not cached:
+            withdraw(sid)
+        accepted = False
         for attempt in ((1,) if cached else (1, 2)):
             claimed = None
+            candidate = previous_wav if cached else args.outdir / (
+                f".{sid}.attempt-{uuid.uuid4().hex}.wav"
+            )
             if not cached:
-                if engine == "openai":
-                    claimed = say_openai(key, text, wav, voice)
-                elif engine == "openai-chat":
-                    claimed = say_openai_chat(key, text, wav, voice)
-                else:
-                    claimed = say_piper(text, wav, voice)
+                try:
+                    if engine == "openai":
+                        claimed = say_openai(key, text, candidate, voice)
+                    elif engine == "openai-chat":
+                        claimed = say_openai_chat(key, text, candidate, voice)
+                    else:
+                        claimed = say_piper(text, candidate, voice)
+                except Exception as error:  # rejected bytes remain as evidence
+                    print(f"{sid}: synthesis failed (attempt {attempt}: {error})", file=sys.stderr)
+                    continue
 
             # Preserve the engine transcript gate and the ASR drift thresholds.
             if claimed is not None:
+                drift_result = structural_drift(text, claimed)
+                if drift_result is None:
+                    print(f"{sid}: chat transcript comparison unavailable", file=sys.stderr)
+                    break
                 want, got = norm(text), norm(claimed)
                 drift = abs(len(want) - len(got)) + sum(
                     1 for a, b in zip(want, got) if a != b)
@@ -267,36 +355,51 @@ def main():
                     print(f"{sid}: engine ad-libbed (attempt {attempt}, drift {drift})")
                     continue
             if verify:
-                heard = transcribe_local(wav, args.asr_model)
+                heard = transcribe_local(candidate, args.asr_model)
                 if heard is None:
                     if args.verify == "on":
                         print(f"{sid}: required verification unavailable", file=sys.stderr)
-                        failures.append(sid)
+                        break
                     else:
                         print(f"{sid}: verification unavailable (no local ASR)")
-                    break
-                delta, worst = structural_drift(text, heard)
-                if delta > 0.15 or worst >= 4:
-                    print(f"{sid}: what came out does not match the script "
-                          f"(attempt {attempt}: {delta:.0%} length change, "
-                          f"{worst} words in a row wrong)")
-                    print(f"       heard: {heard[:120]}")
-                    continue
-                print(f"{sid}: ok (verified by ear: {delta:.0%} length "
-                      f"change, worst run {worst})")
+                else:
+                    drift_result = structural_drift(text, heard)
+                    if drift_result is None:
+                        if args.verify == "on":
+                            print(f"{sid}: required verification unavailable", file=sys.stderr)
+                            break
+                        print(f"{sid}: verification unavailable (unsupported script)")
+                    else:
+                        delta, worst = drift_result
+                        if delta > 0.15 or worst >= 4:
+                            print(f"{sid}: what came out does not match the script "
+                                  f"(attempt {attempt}: {delta:.0%} length change, "
+                                  f"{worst} words in a row wrong)")
+                            print(f"       heard: {heard[:120]}")
+                            continue
+                        print(f"{sid}: ok (verified by ear: {delta:.0%} length "
+                              f"change, worst run {worst})")
+            if not verify:
+                print(f"{sid}: ok")
+            if not cached:
+                candidate.replace(args.outdir / f"{sid}.wav")
+                candidate = args.outdir / f"{sid}.wav"
+            try:
+                clip_duration = duration(candidate)
+            except Exception as error:  # unaccepted bytes remain as evidence
+                print(f"{sid}: duration failed ({error})", file=sys.stderr)
                 break
-            print(f"{sid}: ok")
+            accept({"id": sid, "text": text, "wav": candidate.name,
+                    "duration": clip_duration, "synthesis": synthesis})
+            accepted = True
             break
-        else:
+        if not accepted:
+            withdraw(sid)
             failures.append(sid)
-        if sid in failures:
-            continue
-        manifest.append({"id": sid, "text": text, "wav": wav.name,
-                         "duration": duration(wav), "synthesis": synthesis})
 
-    (args.outdir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    total = sum(m["duration"] for m in manifest)
-    print(f"\n{len(manifest)} clips, {total:.1f}s total -> {args.outdir}/manifest.json")
+    entries = list(manifest.values())
+    total = sum(m["duration"] for m in entries)
+    print(f"\n{len(entries)} clips, {total:.1f}s total -> {args.outdir}/manifest.json")
     if engine == "piper":
         print("local voice: it mispronounces unusual names rather than dropping "
               "them - listen to one clip before you commit to a voice.")

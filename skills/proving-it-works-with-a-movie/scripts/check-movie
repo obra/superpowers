@@ -34,6 +34,7 @@ import sys
 from pathlib import Path
 
 from PIL import Image
+from media_paths import sequence_pattern
 
 THUMB_W = 320          # sampling width; the metric is a pixel fraction, so scale-free
 PIXEL_DELTA = 8        # per-pixel grey delta that counts as "this pixel moved"
@@ -63,7 +64,8 @@ def sample_picture(movie, workdir):
         old.unlink()
     out = subprocess.run(
         ["ffmpeg", "-nostdin", "-v", "error", "-i", str(movie),
-         "-vf", f"fps=1,scale={THUMB_W}:-1", "-f", "image2", str(frames / "s%05d.png")],
+         "-vf", f"fps=1,scale={THUMB_W}:-1", "-f", "image2",
+         sequence_pattern(frames, "s%05d.png")],
         capture_output=True, text=True, encoding="utf-8", errors="replace")
     if out.returncode != 0:
         die(f"frame sampling failed: {out.stderr.strip()[:200]}")

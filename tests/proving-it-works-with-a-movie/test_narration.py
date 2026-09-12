@@ -148,11 +148,13 @@ class NarrationDriftRegression(unittest.TestCase):
                         (output / "manifest.json").read_text(encoding="utf-8")
                     )
                     self.assertEqual([entry["id"] for entry in manifest], ["accepted"])
-                    rejected_renders.append((output / "rejected.wav").read_bytes())
+                    rejected_renders.append(sorted(
+                        path.read_bytes() for path in output.glob(".rejected.attempt-*.wav")
+                    ))
 
             self.assertEqual(calls.count("Read this sentence exactly."), 1)
             self.assertEqual(calls.count("Keep this evidence out of the manifest."), 4)
-            self.assertNotEqual(rejected_renders[0], rejected_renders[1])
+            self.assertLess(len(rejected_renders[0]), len(rejected_renders[1]))
 
 class TranscriptionProtocolRegression(unittest.TestCase):
     def test_owned_json_is_used_instead_of_library_stdout(self):

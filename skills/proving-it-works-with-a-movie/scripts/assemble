@@ -35,7 +35,8 @@ from pathlib import Path
 
 import yaml
 from browser_tools import find_browser, render_card
-from media_paths import ffconcat_entry, stage_frames
+from media_paths import ffconcat_entry, sequence_pattern, stage_frames
+from narration_contract import accepted_narration
 
 CARD_HTML = """<!doctype html><meta charset="utf-8">
 <style>
@@ -67,6 +68,15 @@ def dur(path):
     r = run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "csv=p=0", str(path)])
     return float(r.stdout.strip())
+
+
+def has_audio_stream(path):
+    result = run(["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(path)])
+    try:
+        streams = json.loads(result.stdout).get("streams", [])
+    except json.JSONDecodeError:
+        die(f"ffprobe returned invalid stream data for {path}")
+    return any(stream.get("codec_type") == "audio" for stream in streams)
 
 
 def make_card(scene, png, w, h, browser):
@@ -108,6 +118,10 @@ def main():
     W, H = int(res.get("width", 1920)), int(res.get("height", 1080))
     FPS = int(doc.get("fps", 30))
     narration = args.narration or (base / "narration")
+    try:
+        accepted = accepted_narration(narration, doc["scenes"])
+    except ValueError as error:
+        die(str(error))
     work = args.work or (base / "segments")
     work.mkdir(parents=True, exist_ok=True)
     browser = find_browser(args.browser)
@@ -120,18 +134,24 @@ def main():
         sid = sc["id"]
         kind = sc.get("kind", "frames")
         seg = work / f"{sid}.mp4"
-        nar = narration / f"{sid}.wav"
-        nard = dur(nar) if nar.exists() else 0.0
+        nar = accepted.get(sid)
+        nard = dur(nar) if nar is not None else 0.0
 
         if kind == "movie":
             src = base / sc["src"]
             target = dur(src)
             inner_h = int(sc.get("height", int(H * 0.82)))
-            run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", str(src),
-                 "-vf", f"scale=-2:{inner_h},pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:"
+            source_audio = has_audio_stream(src)
+            ain = ([] if source_audio
+                   else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
+            audio_map = "0:a:0" if source_audio else "1:a:0"
+            run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", str(src), *ain,
+                 "-vf", f"scale={W}:{inner_h}:force_original_aspect_ratio=decrease,"
+                        f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:"
                         f"color=#101014,setsar=1",
                  "-af", f"volume={sc.get('gain_db', 0)}dB,apad",
                  "-r", str(FPS), "-t", f"{target:.3f}",
+                 "-map", "0:v:0", "-map", audio_map,
                  "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
                  "-c:a", "aac", "-ar", "44100", "-ac", "2", str(seg)])
         else:
@@ -156,7 +176,7 @@ def main():
                 vis = n / rate
                 target = max(nard, vis)
                 vin = ["-framerate", str(rate), "-start_number", "0",
-                       "-i", str(staged[0].parent / "frame-%08d.png")]
+                       "-i", sequence_pattern(staged[0].parent, "frame-%08d.png")]
                 # freeze the last frame when narration outlasts the action
                 vf = fit + f",tpad=stop_mode=clone:stop_duration={max(0.0, target - vis):.3f}"
             else:
@@ -173,7 +193,7 @@ def main():
                 vin = ["-loop", "1", "-i", str(img)]
                 vf = fit
 
-            ain = (["-i", str(nar)] if nar.exists()
+            ain = (["-i", str(nar)] if nar is not None
                    else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"])
             try:
                 run(["ffmpeg", "-nostdin", "-y", "-v", "error", *vin, *ain,
@@ -188,7 +208,7 @@ def main():
         actual = dur(seg)
         # only scenes that speak get a subtitle offset; a movie played as
         # itself carries its own subtitles already
-        if nar.exists() and kind != "movie":
+        if nar is not None and kind != "movie":
             offsets[sid] = round(clock, 3)
         clock += actual
         concat_lines.append(ffconcat_entry(seg))

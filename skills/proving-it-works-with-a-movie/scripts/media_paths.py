@@ -22,3 +22,8 @@ def ffconcat_entry(path: Path) -> str:
     if "\n" in value or "\r" in value:
         raise ValueError("FFconcat paths cannot contain line breaks")
     return "file '" + value.replace("'", "'\\''") + "'\n"
+
+
+def sequence_pattern(directory: Path, filename_pattern: str) -> str:
+    """Keep FFmpeg's frame placeholder while escaping literal directory percent signs."""
+    return directory.as_posix().replace("%", "%%") + "/" + filename_pattern
