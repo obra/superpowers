@@ -43,7 +43,7 @@ The Unix sequence:
 # $SKILL_DIR is this skill's own directory - the "Base directory for this
 # skill" path printed when it loads. Installed as a plugin that is
 # $CLAUDE_PLUGIN_ROOT/skills/proving-it-works-with-a-movie
-"$SKILL_DIR/scripts/narrate"        scenes.yaml narration/   # voice, gated
+"$SKILL_DIR/scripts/narrate"        scenes.yaml narration/ --verify on
 "$SKILL_DIR/scripts/assemble"       scenes.yaml silent-cut.mp4
 "$SKILL_DIR/scripts/make-subtitles" narration/manifest.json movie.srt \
                                     --offsets-json segments/offsets.json

@@ -19,7 +19,7 @@ word your movie is about is worse than no narration.
 
 ## Use the script
 
-`scripts/narrate scenes.yaml narration/` renders one clip per scene and
+`scripts/narrate scenes.yaml narration/ --verify on` renders one clip per scene and
 picks its engine automatically: a cloud voice when a key is there, Piper
 when there isn't. It writes `manifest.json` with the exact text and the
 *measured* duration of every clip — which is what make-subtitles and the
@@ -30,10 +30,19 @@ buys the best prosody and pays for it with ad-libs, so it is gated below.
 
 ## The gate runs even without a key
 
-`narrate` listens back to every clip it renders and compares what it hears
-against the script. With a key it can use a cloud transcriber; without one
-it uses a local ASR (faster-whisper) in its own environment. The gate is not
-something you only get when you're online.
+`narrate --verify on` transcribes every clip, including cached clips, with
+local faster-whisper in its own environment and compares the result against
+the script. It needs no API key. Missing or failed transcription is a failure;
+the first run needs network access to download dependencies and the ASR model.
+
+| Mode | Local transcription behavior |
+|---|---|
+| `--verify on` | Required for every engine. Unavailable ASR or detected drift returns nonzero and excludes the failed clip from the manifest. Use this for the gated workflow above. |
+| `--verify auto` (CLI default) | Tries ASR for Piper and `openai-chat`; reports unavailable ASR but allows the clip. Skips ASR for `openai`. Detected drift still fails. |
+| `--verify off` | Skips ASR. |
+
+The `openai-chat` engine's returned transcript is also checked when rendering,
+regardless of the ASR mode. That transcript does not prove what the WAV contains.
 
 What it measures is **missing or invented content**, not exact words, and
 that distinction is load-bearing. A small ASR mangles unusual names — ours
@@ -47,8 +56,10 @@ preamble, a clip that came out empty.
 It will not catch a single dropped word in a jargon-heavy line. For those,
 listen to one clip yourself when you pick the voice.
 
-Editing a line re-renders it: `narrate` records the text each clip was made
-from, and a clip whose script has changed is regenerated rather than reused.
+`narrate` records each clip's text, engine, voice, and synthesis model.
+Changing any of these re-renders the clip. Clips without recorded synthesis
+settings also re-render; an unchanged clip can be reused and still receives
+any requested ASR verification.
 
 ## The verbatim gate — required
 

@@ -1,4 +1,5 @@
 import tempfile
+import json
 import sys
 import io
 from contextlib import redirect_stderr, redirect_stdout
@@ -49,6 +50,61 @@ class SubtitlePathRegression(unittest.TestCase):
             with patch.object(sys, "argv", ["burn-subtitles", str(movie), str(subs), str(output)]), patch.object(module.shutil, "which", return_value="ffmpeg"), patch.object(module, "has_libass", return_value=True), patch.object(module, "run", return_value=False), redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(module.main(), 1)
             self.assertIn("burn failed", stderr.getvalue())
+
+class SubtitleOffsetRegression(unittest.TestCase):
+    def subtitles(self, *manual, offsets=None):
+        module = fixtures.load_script("make-subtitles")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest, output = root / "manifest.json", root / "captions.srt"
+            manifest.write_text(json.dumps([
+                {"id": scene, "text": scene, "duration": 1.0}
+                for scene in ("intro", "body", "end")
+            ]), encoding="utf-8")
+            argv = ["make-subtitles", str(manifest), str(output)]
+            if offsets is not None:
+                path = root / "offsets.json"
+                path.write_text(json.dumps(offsets), encoding="utf-8")
+                argv += ["--offsets-json", str(path)]
+            if manual:
+                argv += ["--offsets", *manual]
+            with patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+                self.assertEqual(module.main(), 0)
+            cues = []
+            for block in output.read_text(encoding="utf-8").strip().split("\n\n"):
+                if not block:
+                    continue
+                _, timing, text = block.split("\n", 2)
+                times = []
+                for timestamp in timing.split(" --> "):
+                    h, m, s = timestamp.replace(",", ".").split(":")
+                    times.append(int(h) * 3600 + int(m) * 60 + float(s))
+                cues.append((*times, text))
+            return cues
+
+    def test_default_scenes_run_back_to_back(self):
+        self.assertEqual(self.subtitles(),
+                         [(0, 1, "intro"), (1, 2, "body"), (2, 3, "end")])
+
+    def test_partial_manual_offsets_preserve_other_scenes(self):
+        self.assertEqual(self.subtitles("intro=2"),
+                         [(2, 3, "intro"), (3, 4, "body"), (4, 5, "end")])
+        self.assertEqual(self.subtitles("body=4"),
+                         [(0, 1, "intro"), (4, 5, "body"), (5, 6, "end")])
+
+    def test_assembly_offsets_select_scenes_in_the_cut(self):
+        self.assertEqual(self.subtitles(offsets={"intro": 2, "end": 8}),
+                         [(2, 3, "intro"), (8, 9, "end")])
+
+    def test_manual_offsets_change_timing_without_changing_cut_membership(self):
+        self.assertEqual(self.subtitles("intro=3", "body=5", offsets={"intro": 2, "end": 8}),
+                         [(3, 4, "intro"), (8, 9, "end")])
+
+    def test_cut_without_narrated_scenes_has_no_cues(self):
+        for offsets in ({}, {"silent": 2}):
+            with self.subTest(offsets=offsets):
+                self.assertEqual(self.subtitles(offsets=offsets), [])
+
 
 class SubtitleIntegrationRegression(unittest.TestCase):
     def test_bom_manifest_and_offsets_write_utf8_under_legacy_console(self):

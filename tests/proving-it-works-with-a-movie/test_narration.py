@@ -1,4 +1,6 @@
 import io
+import json
+import sys
 import tempfile
 from contextlib import redirect_stderr, redirect_stdout
 import unittest
@@ -70,7 +72,8 @@ class NarrationDriftRegression(unittest.TestCase):
             (output / "clip.wav").write_bytes(b"cached audio fixture")
             (output / "manifest.json").write_text(json.dumps([
                 {"id": "clip", "text": "Read this sentence.", "wav": "clip.wav",
-                 "duration": 1.0}
+                 "duration": 1.0, "synthesis": {"engine": "piper",
+                 "voice": module.PIPER_VOICE, "model": module.PIPER_VOICE}}
             ]), encoding="utf-8")
             scenes = work / "scenes.yaml"
             scenes.write_text(json.dumps({"scenes": [
@@ -82,6 +85,7 @@ class NarrationDriftRegression(unittest.TestCase):
             with patch.object(sys, "argv", argv), \
                  patch.object(module, "openai_key", return_value=None), \
                  patch.object(module, "duration", return_value=1.0), \
+                 patch.object(module, "say_piper", side_effect=AssertionError("expected cached clip")), \
                  patch.object(module, "transcribe_local", return_value=None), \
                  redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertNotEqual(module.main(), 0)
@@ -193,6 +197,127 @@ class TranscriptionProtocolRegression(unittest.TestCase):
                          redirect_stdout(stdout), redirect_stderr(stderr):
                         self.assertNotEqual(module.main(), 0)
                     self.assertIn("clip: required verification unavailable", stderr.getvalue())
+
+
+class NarrationCacheRegression(unittest.TestCase):
+    def setUp(self):
+        self.module = fixtures.load_script("narrate")
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.scenes = self.root / "scenes.yaml"
+        self.text = "Read this sentence exactly."
+        self.write_scenes(self.text)
+        self.output = self.root / "voice"
+        self.renders = []
+
+        def synthesize(*args):
+            text, wav, voice = args[-3:]
+            self.renders.append((text, voice))
+            wav.write_bytes(f"render {len(self.renders)}".encode())
+            return text
+
+        for name, options in (
+            ("openai_key", {"return_value": "test-key"}),
+            ("duration", {"return_value": 1.0}),
+            ("transcribe_local", {"return_value": None}),
+            ("say_piper", {"side_effect": synthesize}),
+            ("say_openai", {"side_effect": synthesize}),
+            ("say_openai_chat", {"side_effect": synthesize}),
+        ):
+            mocked = patch.object(self.module, name, **options)
+            mocked.start()
+            self.addCleanup(mocked.stop)
+
+    def write_scenes(self, text):
+        self.scenes.write_text(json.dumps({"scenes": [
+            {"id": "clip", "narration": text}
+        ]}), encoding="utf-8")
+
+    def narrate(self, *options, verify="off", expected_exit=0):
+        argv = ["narrate", str(self.scenes), str(self.output),
+                "--verify", verify, *options]
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch.object(sys, "argv", argv), \
+             redirect_stdout(stdout), redirect_stderr(stderr):
+            self.assertEqual(self.module.main(), expected_exit, stderr.getvalue())
+        return json.loads((self.output / "manifest.json").read_text(encoding="utf-8"))
+
+    def test_engine_and_voice_changes_rerender(self):
+        for index, options in enumerate((
+            ("--engine", "piper", "--voice", "voice-a"),
+            ("--engine", "piper", "--voice", "voice-b"),
+            ("--engine", "openai", "--voice", "voice-b"),
+            ("--engine", "openai-chat", "--voice", "voice-b"),
+        ), 1):
+            with self.subTest(options=options):
+                self.narrate(*options)
+                self.assertEqual(len(self.renders), index)
+                self.assertEqual((self.output / "clip.wav").read_bytes(),
+                                 f"render {index}".encode())
+
+    def test_cloud_model_changes_rerender(self):
+        for engine, constant in (("openai", "OPENAI_TTS_MODEL"),
+                                 ("openai-chat", "OPENAI_CHAT_MODEL")):
+            with self.subTest(engine=engine):
+                self.narrate("--engine", engine)
+                count = len(self.renders)
+                with patch.object(self.module, constant, "another-model"):
+                    self.narrate("--engine", engine)
+                self.assertEqual(len(self.renders), count + 1)
+
+    def test_implicit_and_explicit_defaults_share_cache(self):
+        for engine, voice in (("piper", self.module.PIPER_VOICE),
+                              ("openai", "nova"), ("openai-chat", "nova")):
+            with self.subTest(engine=engine):
+                self.narrate("--engine", engine)
+                count = len(self.renders)
+                self.narrate("--engine", engine, "--voice", voice)
+                self.assertEqual(len(self.renders), count)
+        self.narrate("--engine", "openai")
+        count = len(self.renders)
+        self.narrate()
+        self.assertEqual(len(self.renders), count)
+        with patch.object(self.module, "openai_key", return_value=None):
+            self.narrate()
+        self.assertEqual(len(self.renders), count + 1)
+
+    def test_cache_without_synthesis_settings_rerenders(self):
+        manifest = self.narrate()
+        manifest[0].pop("synthesis", None)
+        (self.output / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        self.narrate()
+        self.assertEqual(len(self.renders), 2)
+
+    def test_changed_text_force_and_missing_wav_rerender(self):
+        self.narrate()
+        self.write_scenes("Read a different sentence exactly.")
+        manifest = self.narrate()
+        self.assertEqual(manifest[0]["text"], "Read a different sentence exactly.")
+        self.assertEqual(len(self.renders), 2)
+        self.narrate("--force")
+        self.assertEqual(len(self.renders), 3)
+        (self.output / "clip.wav").unlink()
+        self.narrate()
+        self.assertEqual(len(self.renders), 4)
+
+    def test_cached_clip_is_reverified_with_requested_asr_model(self):
+        self.narrate()
+        with patch.object(self.module, "transcribe_local", return_value=self.text) as asr:
+            self.narrate("--asr-model", "small.en", verify="on")
+        asr.assert_called_once_with(self.output / "clip.wav", "small.en")
+        self.assertEqual(len(self.renders), 1)
+
+    def test_unavailable_asr_respects_each_verification_mode(self):
+        for engine in ("piper", "openai", "openai-chat"):
+            for mode in ("auto", "on", "off"):
+                with self.subTest(engine=engine, mode=mode):
+                    self.module.transcribe_local.reset_mock()
+                    manifest = self.narrate("--engine", engine, verify=mode,
+                                            expected_exit=1 if mode == "on" else 0)
+                    self.assertEqual(bool(manifest), mode != "on")
+                    self.assertEqual(self.module.transcribe_local.call_count,
+                                     int(mode == "on" or (mode == "auto" and engine != "openai")))
 
 
 if __name__ == "__main__":

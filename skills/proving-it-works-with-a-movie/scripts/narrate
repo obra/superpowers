@@ -129,7 +129,7 @@ def post(url, key, body, want_json=True):
 
 def say_openai(key, text, out_wav, voice):
     data = post("https://api.openai.com/v1/audio/speech", key,
-                {"model": OPENAI_TTS_MODEL, "voice": voice or "nova",
+                {"model": OPENAI_TTS_MODEL, "voice": voice,
                  "input": text, "response_format": "wav"}, want_json=False)
     out_wav.write_bytes(data)
     return None                       # deterministic engine: nothing to gate
@@ -139,7 +139,7 @@ def say_openai_chat(key, text, out_wav, voice):
     doc = post("https://api.openai.com/v1/chat/completions", key, {
         "model": OPENAI_CHAT_MODEL,
         "modalities": ["text", "audio"],
-        "audio": {"voice": voice or "nova", "format": "wav"},
+        "audio": {"voice": voice, "format": "wav"},
         "messages": [{"role": "user", "content":
                       "Read this narration aloud, warm and clear, verbatim, "
                       "and say nothing else:\n\n" + text}],
@@ -155,7 +155,7 @@ def say_piper(text, out_wav, voice):
     home = Path(os.environ.get("PIPER_VOICE_DIR",
                                Path.home() / ".cache" / "piper-voices"))
     home.mkdir(parents=True, exist_ok=True)
-    name = voice or PIPER_VOICE
+    name = voice
     onnx = home / f"{name}.onnx"
     if not onnx.exists():
         print(f"  downloading local voice {name} (one time)…")
@@ -194,9 +194,9 @@ def main():
     ap.add_argument("--voice", default=None)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--verify", default="auto", choices=["auto", "on", "off"],
-                    help="listen back to each clip with a local ASR and flag "
-                         "missing or invented content (default: on when the "
-                         "engine can't tell you what it said)")
+                    help="local ASR: on requires verification; auto tries it "
+                         "for piper/openai-chat but allows unavailable ASR; "
+                         "off skips ASR (default: auto)")
     ap.add_argument("--asr-model", default="base.en")
     args = ap.parse_args()
 
@@ -213,19 +213,24 @@ def main():
         die("no OPENAI_API_KEY (and `llm keys get openai` found nothing). "
             "Use --engine piper for a local voice.")
     print(f"engine: {engine}" + ("" if key or engine == "piper" else ""))
+    voice = args.voice or (PIPER_VOICE if engine == "piper" else "nova")
+    synthesis = {"engine": engine, "voice": voice, "model": {
+        "openai": OPENAI_TTS_MODEL,
+        "openai-chat": OPENAI_CHAT_MODEL,
+        "piper": voice,
+    }[engine]}
 
     # a deterministic cloud endpoint reads exactly what you send it, so the
     # ear-check is optional there; anything else gets listened to by default
     verify = args.verify == "on" or (args.verify == "auto" and engine != "openai")
 
     args.outdir.mkdir(parents=True, exist_ok=True)
-    # what the cached clips were rendered FROM: editing a line and keeping
-    # its old audio is a silent lie, and the movie will contradict itself
+    # Cache only clips rendered from the requested text and synthesis settings.
     prior = {}
     prior_path = args.outdir / "manifest.json"
     if prior_path.exists():
         try:
-            prior = {e["id"]: e.get("text", "") for e in
+            prior = {e["id"]: e for e in
                      json.loads(prior_path.read_text(encoding="utf-8-sig"))}
         except Exception:  # noqa: BLE001 - a corrupt manifest just means no cache
             prior = {}
@@ -235,20 +240,23 @@ def main():
         sid = sc["id"]
         text = " ".join((sc["narration"] or "").split())
         wav = args.outdir / f"{sid}.wav"
-        cached = wav.exists() and not args.force and prior.get(sid) == text
+        previous = prior.get(sid, {})
+        cached = (wav.exists() and not args.force
+                  and previous.get("text") == text
+                  and previous.get("synthesis") == synthesis)
         if cached:
             print(f"{sid}: cached")
         elif wav.exists() and not args.force and sid in prior:
-            print(f"{sid}: text changed since this clip was rendered - redoing")
+            print(f"{sid}: text or synthesis settings changed - redoing")
         for attempt in ((1,) if cached else (1, 2)):
             claimed = None
             if not cached:
                 if engine == "openai":
-                    claimed = say_openai(key, text, wav, args.voice)
+                    claimed = say_openai(key, text, wav, voice)
                 elif engine == "openai-chat":
-                    claimed = say_openai_chat(key, text, wav, args.voice)
+                    claimed = say_openai_chat(key, text, wav, voice)
                 else:
-                    claimed = say_piper(text, wav, args.voice)
+                    claimed = say_piper(text, wav, voice)
 
             # Preserve the engine transcript gate and the ASR drift thresholds.
             if claimed is not None:
@@ -284,7 +292,7 @@ def main():
         if sid in failures:
             continue
         manifest.append({"id": sid, "text": text, "wav": wav.name,
-                         "duration": duration(wav)})
+                         "duration": duration(wav), "synthesis": synthesis})
 
     (args.outdir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     total = sum(m["duration"] for m in manifest)

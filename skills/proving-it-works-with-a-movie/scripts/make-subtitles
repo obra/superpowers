@@ -78,11 +78,11 @@ def main():
     ap.add_argument("manifest", type=Path)
     ap.add_argument("out", type=Path)
     ap.add_argument("--offsets", nargs="*", default=[],
-                    help="SCENE=SECONDS start overrides; without these, scenes "
-                         "are assumed to run back to back in manifest order")
+                    help="SCENE=SECONDS start overrides; other scenes run "
+                         "back to back in manifest order")
     ap.add_argument("--offsets-json", type=Path, default=None,
-                    help="segments/offsets.json from assemble - the reliable "
-                         "way to time cues against the finished cut")
+                    help="segments/offsets.json from assemble - selects scenes "
+                         "in the finished cut and sets their start times")
     ap.add_argument("--max-chars", type=int, default=MAX_CHARS)
     ap.add_argument("--max-secs", type=float, default=MAX_SECS)
     args = ap.parse_args()
@@ -92,14 +92,12 @@ def main():
     if args.offsets_json:
         overrides.update({k: float(v) for k, v in
                           json.loads(args.offsets_json.read_text(encoding="utf-8-sig")).items()})
+        # Assembly offsets identify the cut's scenes; manual offsets only retime them.
+        manifest = [e for e in manifest if e["id"] in overrides]
     for spec in args.offsets:
         k, _, v = spec.partition("=")
         overrides[k] = float(v)
 
-    # a scene with no offset and no place in the cut would silently land at
-    # the wrong time; skip it rather than mistime it
-    if overrides:
-        manifest = [e for e in manifest if e["id"] in overrides]
     cues, clock = [], 0.0
     for entry in manifest:
         start = overrides.get(entry["id"], clock)
@@ -120,7 +118,8 @@ def main():
             b = a + MIN_SECS
         lines += [str(i), f"{ts(a)} --> {ts(b)}", text, ""]
     args.out.write_text("\n".join(lines), encoding="utf-8")
-    print(f"{len(cues)} cues, ends at {ts(cues[-1][1])} -> {args.out}")
+    end = cues[-1][1] if cues else 0.0
+    print(f"{len(cues)} cues, ends at {ts(end)} -> {args.out}")
     return 0
 
 
