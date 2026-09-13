@@ -16,6 +16,9 @@ Load plan, review critically, execute all tasks, report when complete.
 ## The Process
 
 ### Step 1: Load and Review Plan
+
+**Entry check:** does this plan produce code changes in a git-tracked project? If the working directory is not a git repository, or the plan's deliverable is not code changes, skip the worktree step below and skip Step 3 — execute the tasks, then report completion.
+
 1. Ensure an isolated workspace: use superpowers:using-git-worktrees to create one or verify the existing one
 2. Read plan file
 3. Review critically - identify any questions or concerns about the plan
@@ -31,6 +34,8 @@ For each task:
 4. Mark as completed
 
 ### Step 3: Complete Development
+
+Code-change plans in a git-tracked project only (see the Step 1 entry check) — anything else reports completion instead.
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
