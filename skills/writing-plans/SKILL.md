@@ -137,6 +137,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
+- An expected count, output, or match you did not produce by running the command against the real tree — run it while writing the plan and paste the real value, or describe what to observe and compare two independently derived counts
 
 ## Self-Review
 
@@ -147,6 +148,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Self-contradiction check:** for every verification command, ask whether text this plan introduces elsewhere would match it. A step that greps for a word the plan itself adds will return a count the author did not anticipate, or can become unsatisfiable outright.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
