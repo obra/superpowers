@@ -141,8 +141,15 @@ a ledger file, not only in todos.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
   — do not re-dispatch them; resume at the first task without one. A task
-  whose last line is a fix round is mid-loop: resume the loop at the next
-  round. A ledger whose first line names a different plan file — or a stray
+  whose last line is `Task <N>: dispatched (base <base7>, …)` was
+  interrupted mid-flight — do not re-dispatch it blind. Run
+  `git log <base7>..HEAD` with the base from that line: no commits means
+  the implementer landed nothing, so re-dispatch normally; commits present
+  means the work exists but was never reviewed — do not re-implement.
+  Generate the review package (`scripts/review-package <plan-file> <base7>
+  HEAD`) and dispatch the task reviewer, entering the normal review loop.
+  A task whose last line is a fix round is mid-loop: resume the loop at the
+  next round. A ledger whose first line names a different plan file — or a stray
   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
   plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
@@ -260,6 +267,10 @@ and fix-round diffs need it.
   (5) the report-file path and report contract. Exact values (numbers,
   magic strings, signatures, test cases) appear only in the brief. Never
   make a subagent read the whole plan file.
+- **Ledger the dispatch:** before the implementer starts, append
+  `Task <N>: dispatched (base <base7>, brief <brief-path>)` to the ledger.
+  An outage between dispatch and a clean review must leave the resuming
+  controller a record — the resume rule's `dispatched` state reads it.
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
