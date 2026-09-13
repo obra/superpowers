@@ -745,8 +745,10 @@ single file that's valid as both a Windows batch script and a Unix shell script.
 On Windows, `cmd.exe` runs the batch portion, which locates `bash` (Git for
 Windows, then `bash` on PATH) and runs the named hook script; if no bash is
 found it exits cleanly so the harness still works, just without injection. On
-Unix, the leading `:` makes the batch block a no-op and the shell runs the
-script directly.
+Unix, the shell executes the leading `:;` lines and `exec`s the hook script
+before reaching the batch block (cmd.exe skips those lines as labels).
+Heredocs are banned throughout hooks/ — see issue #571 and the fence test
+`tests/hooks/test-no-heredocs-in-hooks.sh`.
 
 Two rules this enforces, which you must respect:
 
