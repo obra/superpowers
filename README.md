@@ -22,6 +22,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
 - [The Basic Workflow](#the-basic-workflow)
+- [When Something Goes Wrong](#when-something-goes-wrong)
 - [Community](#community)
 - [What's Inside](#whats-inside)
 - [Philosophy](#philosophy)
@@ -276,6 +277,12 @@ turn loses the bootstrap — start a fresh session if skills stop triggering.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+## When Something Goes Wrong
+
+Sometimes a session misbehaves: a skill fires when it shouldn't, stays silent when it should, or the agent ignores its plan, repeats work, or burns more tokens than you'd expect. Ask your coding agent to "figure out what went wrong with superpowers in this session" and it will invoke the **diagnosing-superpowers** skill. To examine an earlier session, name it: "figure out what went wrong with superpowers in session `<id>`".
+
+The skill reads the session transcript, reports what happened with line-level evidence, and, if you want, packages a scrubbed bundle for a bug report.
+
 ## Community
 
 Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
@@ -294,6 +301,7 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
+- **diagnosing-superpowers** - Work out what went wrong in a session, with evidence; export a scrubbed bundle or file an issue
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
