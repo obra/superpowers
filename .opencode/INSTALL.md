@@ -117,10 +117,13 @@ Skills speak in actions ("create a todo", "dispatch a subagent", "read a file").
 - `Subagent (general-purpose):` template → `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool
 - "Read a file" → `read`
-- "Create a file" / "edit a file" / "delete a file" → `patch` (same patch format, via `patchText`)
+- "Create / overwrite a file" → `write`
+- "Edit a file" → `edit` for targeted changes, or `patch` (same patch format, via `patchText`) when a skill speaks in patch format
+- "Delete a file" → `patch` (via `patchText`) or a `shell` `rm`
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
+- "Search the web" → `websearch`
 
 ## Getting Help
 

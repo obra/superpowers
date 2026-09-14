@@ -24,21 +24,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Skills directory shared by V1 (config hook) and V2 (setup/ctx.skill.transform)
 const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
 
-// Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
+// Simple frontmatter extraction (avoid dependency on skills-core for
+// bootstrap). Handles plain `key: value` lines, quoted values, YAML block
+// scalar markers (`>`, `|`) with indented continuation lines, and CRLF line
+// endings. Not a full YAML parser — nested maps flatten into their parent
+// key's value, which is fine for the name/description fields consumed here.
 const extractAndStripFrontmatter = (content) => {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) return { frontmatter: {}, content };
 
   const frontmatterStr = match[1];
   const body = match[2];
   const frontmatter = {};
+  let lastKey = null;
 
-  for (const line of frontmatterStr.split('\n')) {
+  for (const rawLine of frontmatterStr.split('\n')) {
+    const line = rawLine.replace(/\r$/, '');
     const colonIdx = line.indexOf(':');
-    if (colonIdx > 0) {
+    if (colonIdx > 0 && !/^\s/.test(line)) {
       const key = line.slice(0, colonIdx).trim();
       const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
-      frontmatter[key] = value;
+      // Block scalar markers (>, |, optionally with +/- chomping) carry no
+      // value themselves; the indented lines that follow do.
+      frontmatter[key] = /^(>[+-]?|\|[+-]?)$/.test(value) ? '' : value;
+      lastKey = key;
+    } else if (lastKey !== null && line.trim() !== '') {
+      // Continuation of a multi-line value: append rather than drop so long
+      // descriptions survive parsing. Newlines collapse to spaces — good
+      // enough for the single-line name/description fields consumed here.
+      frontmatter[lastKey] = `${frontmatter[lastKey]} ${line.trim()}`.trim();
     }
   }
 
@@ -67,17 +81,21 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 
 // V2 built-ins: no todo tool at all; task → subagent (agent name in 'agent',
 // continuation via sessionID); apply_patch → patch (patchText, same patch
-// format); bash → shell. read, grep, glob, webfetch, skill keep their names.
+// format); bash → shell. read, write, edit, grep, glob, webfetch, websearch,
+// and skill all exist under those names (verified against the 2.0.3 tool
+// catalog served by /api/plugin).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
 - Invoke a skill → OpenCode's native \`skill\` tool
 - Read files → \`read\`
-- Create, edit, or delete files → \`patch\` with \`patchText\` (same patch format)
+- Create or overwrite a file → \`write\`
+- Edit files → \`edit\` for targeted changes, or \`patch\` with \`patchText\` (same patch format) when a skill speaks in patch format or deletes files
 - Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`
+- Search the web → \`websearch\`
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
@@ -129,9 +147,25 @@ ${toolMapping}
 // execution skills.
 
 // sessionID -> is-child decision. parentID never changes for a session, so
-// the result is cached for life and the injection hook (which fires on every
-// agent step) pays only one client roundtrip per session.
+// the result is cached until eviction and the injection hook (which fires on
+// every agent step) pays only one client roundtrip per session. The V2
+// service process is long-lived and sessions accumulate over weeks, so the
+// cache is bounded: when full, drop the oldest quarter (Map iterates keys in
+// insertion order). An evicted session merely pays one extra lookup if seen
+// again.
+const CHILD_SESSION_CACHE_MAX = 512;
 const _childSessionCache = new Map();
+
+const _cacheChildSession = (sessionID, isChild) => {
+  if (_childSessionCache.size >= CHILD_SESSION_CACHE_MAX) {
+    let toDrop = Math.ceil(CHILD_SESSION_CACHE_MAX / 4);
+    for (const key of _childSessionCache.keys()) {
+      if (toDrop-- <= 0) break;
+      _childSessionCache.delete(key);
+    }
+  }
+  _childSessionCache.set(sessionID, isChild);
+};
 
 const isChildSession = async (fetchSession, sessionID) => {
   if (!sessionID) return false; // unknown session: keep current behavior
@@ -155,7 +189,7 @@ const isChildSession = async (fetchSession, sessionID) => {
     console.error('[superpowers] session lookup failed, treating session as top-level:', err);
     return false;
   }
-  _childSessionCache.set(sessionID, isChild);
+  _cacheChildSession(sessionID, isChild);
   return isChild;
 };
 

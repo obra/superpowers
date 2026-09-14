@@ -181,11 +181,14 @@ function assertMappingConstants(mod) {
     '`subagent` with `agent: "general"`',
     '`sessionID` to continue a previous subagent',
     'no todo tool',
+    '`write`',
+    '`edit`',
     '`patch` with `patchText`',
     '`shell`',
     '`read`',
     '`grep`, `glob`',
     '`webfetch`',
+    '`websearch`',
   ]) {
     if (!mod.V2_MAPPING.includes(needle)) {
       failures.push(`expected V2_MAPPING to teach the V2 tool ${needle}`);

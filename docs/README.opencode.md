@@ -126,14 +126,17 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 - `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool
 - "Read a file" → `read`
-- "Create a file" / "edit a file" / "delete a file" → `patch` with `patchText` (same patch format as V1's `apply_patch`)
+- "Create / overwrite a file" → `write`
+- "Edit a file" → `edit` for targeted changes, or `patch` with `patchText` (same patch format as V1's `apply_patch`) when a skill speaks in patch format
+- "Delete a file" → `patch` (via `patchText`) or a `shell` `rm`
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
+- "Search the web" → `websearch`
 
-In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely; `read`, `grep`, `glob`, `webfetch`, and `skill` keep their V1 names.
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely; `read`, `write`, `edit`, `grep`, `glob`, `webfetch`, `websearch`, and `skill` keep their V1 names (`write`/`edit`/`websearch` replace V1's `apply_patch`-only path, `apply_patch`-only mutation habits, and V1's lack of a search tool respectively).
 
-(V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the V2 source at `dbd9b18`.)
+(V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the 2.0.3 tool catalog served by a live v2.0.3 service via `/api/plugin`.)
 
 ## Troubleshooting
 
