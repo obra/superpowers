@@ -74,6 +74,8 @@ digraph process {
         "Rule on the conflict, ledger the ruling" [shape=box];
         "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [shape=box];
         "Dispatch scoped re-review (./re-review-prompt.md)" [shape=box];
+        "Reviewer verifies evidence (once per finding, unchanged HEAD)" [shape=box];
+        "Reviewer verdict received?" [shape=diamond];
         "All findings addressed?" [shape=diamond];
         "R = 5?" [shape=diamond];
         "Adjudicate each open finding" [shape=box];
@@ -102,7 +104,11 @@ digraph process {
     "Finding conflicts with plan text?" -> "Rule on the conflict, ledger the ruling" [label="yes"];
     "Rule on the conflict, ledger the ruling" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model";
     "Finding conflicts with plan text?" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [label="no"];
-    "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" -> "Dispatch scoped re-review (./re-review-prompt.md)";
+    "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" -> "Dispatch scoped re-review (./re-review-prompt.md)" [label="code changed"];
+    "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" -> "Reviewer verifies evidence (once per finding, unchanged HEAD)" [label="no changes; cited rebuttal"];
+    "Reviewer verifies evidence (once per finding, unchanged HEAD)" -> "Reviewer verdict received?";
+    "Reviewer verdict received?" -> "Reviewer verdict received?" [label="no - reconcile pending review; do not re-dispatch"];
+    "Reviewer verdict received?" -> "All findings addressed?" [label="yes - only withdrawn findings addressed"];
     "Dispatch scoped re-review (./re-review-prompt.md)" -> "All findings addressed?";
     "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "All findings addressed?" -> "R = 5?" [label="no"];
@@ -385,7 +391,35 @@ findings, and this framing: "A prior implementer attempted this task
 that survives three resumes usually means the implementer cannot see its
 own problem — fresh eyes and a capability bump in one move.
 
-**Every round, either way:** the implementer fixes, re-runs the tests
+**No-change response with evidence:** If the implementer disputes a finding
+without changing the reviewed HEAD and cites concrete source locations,
+versioned documentation, or existing test evidence, send the rebuttal to the
+reviewer once for that finding. Include the original finding, brief, report,
+and original review package at that HEAD. The handoff contains the finding,
+the cited evidence, and a request to verify it; the verdict belongs to the
+reviewer. Until that verdict arrives, the controller records the finding as
+open, without a ruling that it is invalid. The reviewer either withdraws it
+with evidence or upholds it with reasons. Before dispatch, ledger the round
+number, original finding, reviewed
+HEAD, stable finding ID, original review-package path, and
+`evidence-only: pending`; then append the reviewer identity. On resume,
+reconcile that pending review instead of dispatching it again. Append its
+verdict under the same finding ID as `evidence-only: withdrawn` or
+`evidence-only: upheld`; the pending entry consumes the one allowed attempt
+even after compaction or rewording. An unsupported denial stays in the
+normal fix loop.
+
+This evidence-only review needs no empty fix commit, empty fix-range
+package, or repeated test run solely to satisfy the handoff. The reviewer
+may run a focused test to resolve a specific unanswered doubt, as in the
+task-reviewer template. A corrected verdict resolves only the findings the
+reviewer withdraws; all others remain open. If the reviewer upholds the
+finding, continue the normal fix loop with its reasons. Count this as the
+current round, preserve the five-round cap, and do not repeat the
+evidence-only route for that finding. This is reviewer correction, not
+controller adjudication before the cap.
+
+**When code changes, either way:** the implementer fixes, re-runs the tests
 covering the amended code, appends its fix report to the same report file,
 and returns the short contract. Before re-dispatching the reviewer, confirm
 the fix report contains the covering tests, the command run, and the
