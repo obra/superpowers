@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Integration Test: subagent-driven-development workflow
-# Actually executes a plan and verifies the new workflow behaviors
+# Integration Test: subagent-driven-development workflow (direct-execution)
 #
-# Drill coverage: evals/scenarios/sdd-rejects-extra-features.yaml covers the
-# YAGNI enforcement subset (forbidden exports + reviewer-as-gate semantics)
-# and is stricter on that axis. This bash test additionally asserts:
-#   - >=3 git commits (initial + per-task commits, exercising SDD's
-#     commit-per-task workflow shape)
-#   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1)
-#   - Claude Code task-tracking tool usage (drill makes no assertion)
-#   - test/math.test.js exists (drill relies on `npm test` succeeding)
-#   - analyze-token-usage.py token-budget telemetry
-# Kept until those assertions are added to drill or explicitly retired.
+# Verifies the current default: the primary agent implements a small approved
+# plan directly in the current working tree, runs focused verification and
+# self-review per task, runs final verification, inspects the working tree,
+# and stops without any automatic Git mutation. Delegating a task to a
+# subagent remains a valid *optional* choice under this skill — this test
+# does not require, forbid, or assert on whether one was used, since the
+# harness cannot reliably observe an optional internal choice either way.
+#
+# Drill coverage: evals/scenarios/sdd-rejects-extra-features.yaml covers YAGNI
+# enforcement (forbidden exports). This bash test additionally exercises the
+# full task-by-task loop end-to-end and inspects real working-tree/Git state,
+# which drill does not.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,15 +22,14 @@ echo "========================================"
 echo " Integration Test: subagent-driven-development"
 echo "========================================"
 echo ""
-echo "This test executes a real plan using the skill and verifies:"
-echo "  1. Plan is read once (not per task)"
-echo "  2. Full task text provided to subagents"
-echo "  3. Subagents perform self-review"
-echo "  4. Spec compliance review before code quality"
-echo "  5. Review loops when issues found"
-echo "  6. Spec reviewer reads code independently"
+echo "This test executes a small deterministic plan directly and verifies:"
+echo "  1. The skill was invoked"
+echo "  2. The implementation matches the plan"
+echo "  3. Focused verification (npm test) actually passes"
+echo "  4. The working tree holds the implementation, uncommitted"
+echo "  5. No automatic commit, staging, or other Git history mutation occurred"
 echo ""
-echo "WARNING: This test may take 10-30 minutes to complete."
+echo "WARNING: This test may take several minutes to complete."
 echo ""
 
 # Create test project
@@ -55,11 +55,12 @@ EOF
 
 mkdir -p src test docs/superpowers/plans
 
-# Create a simple implementation plan
+# Create a simple, already-approved implementation plan
 cat > docs/superpowers/plans/implementation-plan.md <<'EOF'
 # Test Implementation Plan
 
-This is a minimal plan to test the subagent-driven-development workflow.
+This is a minimal, approved plan to exercise the subagent-driven-development
+direct-execution workflow.
 
 ## Task 1: Create Add Function
 
@@ -72,13 +73,6 @@ Create a function that adds two numbers.
 - Takes two parameters: `a` and `b`
 - Returns the sum of `a` and `b`
 - Export the function
-
-**Implementation:**
-```javascript
-export function add(a, b) {
-  return a + b;
-}
-```
 
 **Tests:** Create `test/math.test.js` that verifies:
 - `add(2, 3)` returns `5`
@@ -100,13 +94,6 @@ Create a function that multiplies two numbers.
 - Export the function
 - DO NOT add any extra features (like power, divide, etc.)
 
-**Implementation:**
-```javascript
-export function multiply(a, b) {
-  return a * b;
-}
-```
-
 **Tests:** Add to `test/math.test.js`:
 - `multiply(2, 3)` returns `6`
 - `multiply(0, 5)` returns `0`
@@ -115,45 +102,29 @@ export function multiply(a, b) {
 **Verification:** `npm test`
 EOF
 
-# Initialize git repo
+# Initialize git repo with one baseline commit, matching a real
+# already-approved-plan starting point.
 git init --quiet
 git config user.email "test@test.com"
 git config user.name "Test User"
 git add .
 git commit -m "Initial commit" --quiet
 
+BASELINE_COMMITS=$(git log --oneline | wc -l | tr -d ' ')
+
 echo ""
 echo "Project setup complete. Starting execution..."
 echo ""
 
-# Run Claude with subagent-driven-development
-# Capture full output to analyze
 OUTPUT_FILE="$TEST_PROJECT/claude-output.txt"
 
-# Create prompt file
-cat > "$TEST_PROJECT/prompt.txt" <<'EOF'
-I want you to execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
-
-IMPORTANT: Follow the skill exactly. I will be verifying that you:
-1. Read the plan once at the beginning
-2. Provide full task text to subagents (don't make them read files)
-3. Ensure subagents do self-review before reporting
-4. Run spec compliance review before code quality review
-5. Use review loops when issues are found
-
-Begin now. Execute the plan.
-EOF
-
-# Note: We use a longer timeout since this is integration testing
-# Use --allowed-tools to enable tool usage in headless mode
 PROMPT="Execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
 
-IMPORTANT: Follow the skill exactly. I will be verifying that you:
-1. Read the plan once at the beginning
-2. Provide full task text to subagents (don't make them read files)
-3. Ensure subagents do self-review before reporting
-4. Run spec compliance review before code quality review
-5. Use review loops when issues are found
+Follow the skill exactly: implement each task directly in the current working
+tree, run focused verification and self-review after each task, run final
+verification once both tasks are done, inspect the working tree, report what
+you did, and then stop. Do not stage, commit, push, or otherwise change Git
+history — leave the result in the working tree for the user.
 
 Begin now. Execute the plan."
 
@@ -179,11 +150,28 @@ echo ""
 # Find the session transcript. Because we ran claude from $TEST_PROJECT (a
 # unique tmp dir), its sessions live in their own ~/.claude/projects/ folder
 # and we can pick the most-recent one without racing other concurrent sessions.
-# Resolve the real path because macOS mktemp returns /var/... but claude
-# normalizes it to /private/var/... when naming the project dir.
-TEST_PROJECT_REAL=$(cd "$TEST_PROJECT" && pwd -P)
+#
+# Resolve the path exactly as Claude Code itself sees it, not as this shell
+# sees it — the two can differ:
+#   - macOS: mktemp returns /var/..., but Claude Code resolves it to
+#     /private/var/... when naming the project dir. `pwd -P` (physical path,
+#     symlinks resolved) matches that.
+#   - Windows/Git Bash: Claude Code runs as a native Windows process, so it
+#     names the project dir from the Windows form of the path (drive letter,
+#     e.g. C:/Users/<user>/AppData/Local/Temp/...), even though this test's
+#     $TEST_PROJECT is a POSIX-style path (e.g. /tmp/... or /c/Users/...).
+#     `pwd -W` is a bash builtin on MSYS/Git-Bash that reports that native
+#     Windows form directly from the OS, regardless of which POSIX alias was
+#     used to reach the directory — no drive letter, username, or temp path
+#     needs to be hard-coded or guessed. It's unavailable (and errors) on
+#     real Unix shells, so it's only used when it actually works.
+if TEST_PROJECT_REAL=$(cd "$TEST_PROJECT" && pwd -W 2>/dev/null) && [ -n "$TEST_PROJECT_REAL" ]; then
+    : # native Windows path resolved via MSYS/Git-Bash's pwd -W
+else
+    TEST_PROJECT_REAL=$(cd "$TEST_PROJECT" && pwd -P)
+fi
 # Claude normalizes the cwd to a directory name by replacing every non-alphanumeric
-# character with `-` (so `_`, `.`, `/` all become `-`).
+# character with `-` (so `_`, `.`, `/`, `\`, `:` all become `-`).
 SESSION_DIR="$HOME/.claude/projects/$(echo "$TEST_PROJECT_REAL" | sed 's|[^a-zA-Z0-9]|-|g')"
 # `|| true` prevents pipefail killing the script if ls gets SIGPIPE'd by head.
 SESSION_FILE=$(ls -t "$SESSION_DIR"/*.jsonl 2>/dev/null | head -1 || true)
@@ -213,30 +201,8 @@ else
 fi
 echo ""
 
-# Test 2: Subagents were used (Agent / Task tool — name varies by harness version)
-echo "Test 2: Subagents dispatched..."
-task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || echo "0")
-if [ "$task_count" -ge 2 ]; then
-    echo "  [PASS] $task_count subagents dispatched"
-else
-    echo "  [FAIL] Only $task_count subagent(s) dispatched (expected >= 2)"
-    FAILED=$((FAILED + 1))
-fi
-echo ""
-
-# Test 3: Claude Code task-tracking tool was used
-echo "Test 3: Task tracking..."
-todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || echo "0")
-if [ "$todo_count" -ge 1 ]; then
-    echo "  [PASS] Task tracking used $todo_count time(s)"
-else
-    echo "  [FAIL] No Claude Code task-tracking tool used"
-    FAILED=$((FAILED + 1))
-fi
-echo ""
-
-# Test 6: Implementation actually works
-echo "Test 6: Implementation verification..."
+# Test 2: Implementation matches the plan (behavioral: read the actual files)
+echo "Test 2: Implementation matches the plan..."
 if [ -f "$TEST_PROJECT/src/math.js" ]; then
     echo "  [PASS] src/math.js created"
 
@@ -264,8 +230,10 @@ else
     echo "  [FAIL] test/math.test.js not created"
     FAILED=$((FAILED + 1))
 fi
+echo ""
 
-# Try running tests
+# Test 3: Focused verification actually passes
+echo "Test 3: Tests pass..."
 if cd "$TEST_PROJECT" && npm test > test-output.txt 2>&1; then
     echo "  [PASS] Tests pass"
 else
@@ -275,22 +243,54 @@ else
 fi
 echo ""
 
-# Test 7: Git commits show proper workflow
-echo "Test 7: Git commit history..."
-commit_count=$(git -C "$TEST_PROJECT" log --oneline | wc -l)
-if [ "$commit_count" -gt 2 ]; then  # Initial + at least 2 task commits
-    echo "  [PASS] Multiple commits created ($commit_count total)"
+# Test 4: The working tree holds the implementation, uncommitted
+echo "Test 4: Implementation left uncommitted in the working tree..."
+tree_status="$(git -C "$TEST_PROJECT" status --porcelain)"
+if [ -n "$tree_status" ]; then
+    echo "  [PASS] Working tree has uncommitted changes"
 else
-    echo "  [FAIL] Too few commits ($commit_count, expected >2)"
+    echo "  [FAIL] Working tree is clean (expected uncommitted implementation)"
     FAILED=$((FAILED + 1))
 fi
 echo ""
 
-# Test 8: Check for extra features (spec compliance should catch)
-echo "Test 8: No extra features added (spec compliance)..."
+# Test 5: No automatic commit was created beyond the baseline
+echo "Test 5: No automatic commit..."
+final_commits=$(git -C "$TEST_PROJECT" log --oneline | wc -l | tr -d ' ')
+if [ "$final_commits" -eq "$BASELINE_COMMITS" ]; then
+    echo "  [PASS] Commit count unchanged ($final_commits, matches baseline)"
+else
+    echo "  [FAIL] Commit count changed ($BASELINE_COMMITS -> $final_commits); the skill should not commit automatically"
+    FAILED=$((FAILED + 1))
+fi
+echo ""
+
+# Test 6: No branch/history mutation
+echo "Test 6: No branch mutation..."
+final_branch=$(git -C "$TEST_PROJECT" branch --show-current)
+if [ "$final_branch" = "main" ] || [ "$final_branch" = "master" ]; then
+    echo "  [PASS] Still on the original branch ($final_branch)"
+else
+    echo "  [FAIL] Branch changed unexpectedly (now: $final_branch)"
+    FAILED=$((FAILED + 1))
+fi
+echo ""
+
+# Test 7: No hidden execution ledger/workspace was created
+echo "Test 7: No execution ledger..."
+if [ -d "$TEST_PROJECT/.superpowers" ]; then
+    echo "  [FAIL] .superpowers execution ledger/workspace was created"
+    FAILED=$((FAILED + 1))
+else
+    echo "  [PASS] No .superpowers execution ledger created"
+fi
+echo ""
+
+# Test 8: No extra features added (self-review should catch this)
+echo "Test 8: No extra features added..."
 if grep -q "export function divide\|export function power\|export function subtract" "$TEST_PROJECT/src/math.js" 2>/dev/null; then
-    echo "  [WARN] Extra features found (spec review should have caught this)"
-    # Not failing on this as it tests reviewer effectiveness
+    echo "  [WARN] Extra features found (self-review should have caught this)"
+    # Not failing on this — it tests self-review effectiveness, not a hard requirement.
 else
     echo "  [PASS] No extra features added"
 fi
@@ -315,12 +315,10 @@ if [ $FAILED -eq 0 ]; then
     echo "All verification tests passed!"
     echo ""
     echo "The subagent-driven-development skill correctly:"
-    echo "  ✓ Reads plan once at start"
-    echo "  ✓ Provides full task text to subagents"
-    echo "  ✓ Enforces self-review"
-    echo "  ✓ Runs spec compliance before code quality"
-    echo "  ✓ Spec reviewer verifies independently"
-    echo "  ✓ Produces working implementation"
+    echo "  ✓ Implemented the plan directly (no subagent dispatch required)"
+    echo "  ✓ Produced a working, tested implementation"
+    echo "  ✓ Left the result uncommitted in the working tree"
+    echo "  ✓ Performed no automatic Git mutation"
     exit 0
 else
     echo "STATUS: FAILED"

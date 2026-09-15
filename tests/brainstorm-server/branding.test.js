@@ -78,9 +78,9 @@ function createPackagedServerFixture(version) {
   const root = fs.mkdtempSync(path.join('/tmp', 'superpowers-packaged-server-'));
   const scriptDir = path.join(root, 'skills/brainstorming/scripts');
   fs.cpSync(path.join(REPO_ROOT, 'skills/brainstorming/scripts'), scriptDir, { recursive: true });
-  fs.mkdirSync(path.join(root, '.codex-plugin'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.claude-plugin'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, '.codex-plugin/plugin.json'),
+    path.join(root, '.claude-plugin/plugin.json'),
     JSON.stringify({ name: 'superpowers', version }, null, 2)
   );
   return {
@@ -270,9 +270,9 @@ async function main() {
     });
   });
 
-  await test('packaged Codex plugin reads version from .codex-plugin manifest', async () => {
+  await test('packaged plugin reads version from .claude-plugin manifest', async () => {
     const port = 3457;
-    const dir = '/tmp/brainstorm-branding-packaged-codex';
+    const dir = '/tmp/brainstorm-branding-packaged-claude';
     const packagedVersion = '7.8.9';
     const fixture = createPackagedServerFixture(packagedVersion);
 

@@ -20,13 +20,13 @@ make_fixture() {
   local repo="$1"
   local yaml_body="$2"
 
-  mkdir -p "$repo/scripts" "$repo/.hermes-plugin"
+  mkdir -p "$repo/scripts" "$repo/.test-plugin"
   cp "$SCRIPT_SOURCE" "$repo/scripts/bump-version.sh"
   cat >"$repo/.version-bump.json" <<'JSON'
 {
   "files": [
     { "path": "package.json", "field": "version" },
-    { "path": ".hermes-plugin/plugin.yaml", "field": "version" }
+    { "path": ".test-plugin/plugin.yaml", "field": "version" }
   ],
   "audit": { "exclude": [] }
 }
@@ -37,7 +37,7 @@ JSON
   "version": "1.2.3"
 }
 JSON
-  printf '%s\n' "$yaml_body" >"$repo/.hermes-plugin/plugin.yaml"
+  printf '%s\n' "$yaml_body" >"$repo/.test-plugin/plugin.yaml"
 }
 
 happy_repo="$TEST_ROOT/happy"
@@ -49,19 +49,13 @@ make_fixture "$happy_repo" $'name: superpowers\nversion: 1.2.3'
 
 [[ "$(jq -r '.version' "$happy_repo/package.json")" == "2.3.4" ]] \
   || fail "JSON manifest was not bumped"
-[[ "$(yq -r '.version' "$happy_repo/.hermes-plugin/plugin.yaml")" == "2.3.4" ]] \
+[[ "$(yq -r '.version' "$happy_repo/.test-plugin/plugin.yaml")" == "2.3.4" ]] \
   || fail "YAML manifest was not bumped"
-
-jq -e '
-  any(.files[];
-    .path == ".hermes-plugin/plugin.yaml" and .field == "version")
-' "$REPO_ROOT/.version-bump.json" >/dev/null \
-  || fail "Hermes manifest is not registered"
 
 invalid_repo="$TEST_ROOT/invalid"
 make_fixture "$invalid_repo" $'name: superpowers\nversion: 123'
 cp "$invalid_repo/package.json" "$TEST_ROOT/package.before"
-cp "$invalid_repo/.hermes-plugin/plugin.yaml" "$TEST_ROOT/plugin.before"
+cp "$invalid_repo/.test-plugin/plugin.yaml" "$TEST_ROOT/plugin.before"
 
 if /bin/bash "$invalid_repo/scripts/bump-version.sh" 2.3.4 \
   >"$TEST_ROOT/invalid.out" 2>&1; then
@@ -70,7 +64,7 @@ fi
 
 cmp -s "$TEST_ROOT/package.before" "$invalid_repo/package.json" \
   || fail "JSON manifest changed before YAML validation failed"
-cmp -s "$TEST_ROOT/plugin.before" "$invalid_repo/.hermes-plugin/plugin.yaml" \
+cmp -s "$TEST_ROOT/plugin.before" "$invalid_repo/.test-plugin/plugin.yaml" \
   || fail "invalid YAML manifest changed"
 
 echo "Version-bump tests passed"

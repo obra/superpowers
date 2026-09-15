@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: Use when isolation from the current workspace is wanted or explicitly requested - an optional technique, not a default prerequisite for plan execution - ensures an isolated workspace exists via native tools or git worktree fallback
 ---
 
 # Using Git Worktrees
@@ -83,9 +83,20 @@ Follow this priority order. Explicit user preference always beats observed files
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+**If NOT ignored:** Report this to the user and let them decide how to proceed — do not automatically stage or commit a `.gitignore` change yourself.
 
-**Why critical:** Prevents accidentally committing worktree contents to repository.
+```
+The worktree directory `<path>` is not in .gitignore, so its contents
+could accidentally be committed. You may want to add a line like:
+
+    <path>/
+
+I have not modified .gitignore or made any commits — that's your call.
+```
+
+If the user asks you to make the change, edit `.gitignore` directly, but leave staging and committing to them.
+
+**Why critical:** An unignored worktree directory can end up committed to the repository if nobody catches it.
 
 #### Create the Worktree
 
@@ -151,7 +162,7 @@ Ready to implement <feature-name>
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
-| Directory not ignored | Add to .gitignore + commit |
+| Directory not ignored | Report to user; do not auto-commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -162,6 +173,6 @@ Ready to implement <feature-name>
 |--------|---------|
 | "I'm obviously not in a worktree — no need to check" | Run Step 0. Harness-created isolation and submodules both fool eyeballing; the detection commands settle it. |
 | "`git worktree add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, branching, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
-| "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
+| "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory can commit the whole tree into the repo — report it, don't auto-commit a fix. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |

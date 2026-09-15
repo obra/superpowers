@@ -1,23 +1,13 @@
 {
   "name": "superpowers",
   "version": "6.3.0",
-  "description": "Superpowers skills and runtime bootstrap for coding agents",
+  "description": "Superpowers skills and runtime bootstrap for Claude Code",
   "type": "module",
-  "main": ".opencode/plugins/superpowers.js",
   "keywords": [
-    "pi-package",
     "skills",
     "tdd",
     "debugging",
     "collaboration",
     "workflow"
-  ],
-  "pi": {
-    "extensions": [
-      "./.pi/extensions/superpowers.ts"
-    ],
-    "skills": [
-      "./skills"
-    ]
-  }
+  ]
 }

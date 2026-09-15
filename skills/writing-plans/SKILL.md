@@ -7,13 +7,15 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as meaningful, independently verifiable tasks. DRY. YAGNI. TDD.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
+Plan for direct implementation, not agent orchestration: the plan should read cleanly whether it's executed in the current session or picked up fresh in a separate one, by the primary agent working directly. Nothing in the plan should assume a reviewer agent, a fixer agent, or a subagent handoff between tasks.
+
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** Plans execute in the current working tree by default. Isolation via `superpowers:using-git-worktrees` is an optional technique for when it genuinely helps (e.g. running two plans side by side) — it is not a default requirement of planning or execution.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -35,21 +37,31 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Task Right-Sizing
 
-A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
-configuration, scaffolding, and documentation steps into the task whose
-deliverable needs them; split only where a reviewer could meaningfully
-reject one task while approving its neighbor. Each task ends with an
-independently testable deliverable.
+A task is a meaningful implementation unit — not a reviewer-agent gate, a commit boundary, or a subagent handoff point. When drawing task boundaries, a task should be:
 
-## Bite-Sized Task Granularity
+- independently understandable
+- independently testable where practical
+- small enough to reason about
+- large enough to represent meaningful progress
+- ordered according to its dependencies on other tasks
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+Fold setup, configuration, scaffolding, and documentation steps into the task whose deliverable needs them. Do not split work artificially just to create more checkpoints or handoffs — split only where it produces genuinely separable, independently testable deliverables. Each task ends with an independently testable deliverable.
+
+## Implementation Step Granularity
+
+Steps should be concrete actions that tell the implementing agent exactly what to do and how to verify it.
+
+Good steps:
+
+* identify the exact file and symbol to change
+* describe the implementation change
+* provide relevant code or pseudocode where it materially reduces ambiguity
+* specify the exact test or verification to run
+* state the expected result
+
+Do not split steps merely to create more checkpoints or smaller units of work. Keep related implementation actions together when splitting them would add unnecessary ceremony.
+
+A task should end with a verified, working deliverable. Git staging and commits are outside the plan.
 
 ## Plan Document Header
 
@@ -58,7 +70,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Execution:** Use `superpowers:subagent-driven-development` to execute this plan directly in the current session, or `superpowers:executing-plans` to execute it in a separate or resumable session. Both execute tasks directly; subagents are optional in either and never required. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -119,24 +131,35 @@ def function(input):
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
 ````
 
 ## No Placeholders
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
-- Steps that describe what to do without showing how (code blocks required for code steps)
-- References to types, functions, or methods not defined in any task
+Every task must contain enough concrete information for another engineer or a fresh Claude session to execute it without rediscovering the design.
+
+Do not write vague placeholders such as:
+
+* "TBD"
+* "TODO"
+* "implement later"
+* "fill in details"
+* "add appropriate error handling"
+* "add validation"
+* "handle edge cases"
+
+When a requirement involves non-trivial logic, provide the relevant implementation details, interfaces, examples, pseudocode, or code necessary to make the intended behaviour unambiguous.
+
+Do not require full source-code listings for every step. Include code where it materially improves clarity.
+
+Tests must specify what behaviour is being verified and how to run the relevant verification. Include concrete test code when the exact test structure is important to the implementation; otherwise provide the exact test target and expected result.
+
+Do not refer vaguely to another task when the information is necessary to execute the current task. Repeat the relevant interface or contract instead.
+
+## Git
+
+Reading Git is useful while planning — checking existing history, understanding the current branch, or inspecting relevant prior changes can surface context a spec doesn't state explicitly. Use read-only inspection (`git log`, `git show`, `git diff`, `git branch --show-current`) freely for this.
+
+The plan itself must not instruct automatic staging, commits, pushes, merges, rebases, or branch/worktree creation or deletion. A task's completion boundary is a verified, working deliverable — never a commit. Staging and committing are the user's decision, made after execution, not a step inside it.
 
 ## Self-Review
 
@@ -152,20 +175,12 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, explain that it can be executed either in the current session or in a separate/resumable session:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**Current session:** Use `superpowers:subagent-driven-development` to execute the plan directly in the primary session.
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+**Separate or resumable session:** Use `superpowers:executing-plans` to execute the plan directly in a new or resumable session.
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+Both workflows implement tasks directly in the primary agent. Subagents are optional in either workflow and are used only when they provide concrete value.
 
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
-
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+The plan is the durable record of implementation intent. No separate execution ledger or progress file is needed.

@@ -53,7 +53,8 @@ assert_not_contains "$USING_SKILL" "Global path" "using-git-worktrees has no glo
 assert_contains "$USING_SKILL" 'default to `.worktrees/` at the project root' "using-git-worktrees defaults new manual worktrees to .worktrees/"
 
 assert_not_contains "$FINISHING_SKILL" "~/.config/superpowers/worktrees" "finishing-a-development-branch does not treat old global path as owned"
-assert_contains "$FINISHING_SKILL" '`.worktrees/` or `worktrees/`' "finishing-a-development-branch keeps project-local cleanup ownership"
+assert_contains "$FINISHING_SKILL" "This skill does not manage worktrees or branches." "finishing-a-development-branch disclaims worktree/branch management"
+assert_contains "$FINISHING_SKILL" "* delete worktrees" "finishing-a-development-branch lists worktree deletion as a forbidden automatic action"
 
 assert_not_contains "$ROTOTILL_SPEC" "~/.config/superpowers/worktrees" "rototill spec does not preserve old global path policy"
 assert_not_contains "$ROTOTILL_PLAN" "~/.config/superpowers/worktrees" "rototill plan does not preserve old global path policy"

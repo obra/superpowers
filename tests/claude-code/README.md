@@ -84,36 +84,38 @@ echo "=== All tests passed ==="
 
 #### test-subagent-driven-development.sh
 Tests skill content and requirements (~2 minutes):
-- Skill loading and accessibility
-- Workflow ordering (spec compliance before code quality)
-- Self-review requirements documented
-- Plan reading efficiency documented
-- Spec compliance reviewer skepticism documented
-- Review loops documented
-- Task context provision documented
+- Skill loading and its central "no automatic delegation" rule
+- Default execution model (primary agent implements directly, not a fresh subagent per task)
+- Per-task loop: focused verification, self-review, fix, re-test
+- Final verification: full test suite, working-tree inspection, plan/acceptance-criteria comparison
+- Delegation is optional and benefit-driven, not automatic per task
+- No mandatory reviewer/fixer agent, no recursive delegation by default
+- Git history (staging, commits, push, branches) is user-owned
+- Current working tree is the default; worktrees are optional
+- No execution ledger or hidden progress state
 
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh
 Full workflow execution test (~10-30 minutes):
 - Creates real test project with Node.js setup
-- Creates implementation plan with 2 tasks
-- Executes plan using subagent-driven-development
+- Creates a small, already-approved implementation plan with 2 tasks
+- Executes the plan directly using subagent-driven-development
 - Verifies actual behaviors:
-  - Plan read once at start (not per task)
-  - Full task text provided in subagent prompts
-  - Subagents perform self-review before reporting
-  - Spec compliance review happens before code quality
-  - Spec reviewer reads code independently
-  - Working implementation is produced
-  - Tests pass
-  - Proper git commits created
+  - The skill was invoked
+  - The implementation matches the plan and tests pass
+  - The working tree holds the implementation, uncommitted
+  - No automatic commit, staging, branch change, or other Git mutation occurred
+  - No hidden execution ledger/workspace was created
+
+Delegating a task to a subagent remains a valid optional choice under this
+skill. This test does not require, forbid, or assert on whether one was
+used — only that the workflow does not depend on it.
 
 **What it tests:**
-- The workflow actually works end-to-end
-- Our improvements are actually applied
-- Subagents follow the skill correctly
+- The direct-execution workflow actually works end-to-end
 - Final code is functional and tested
+- Git history is left untouched for the user to review and commit
 
 #### test-worktree-native-preference.sh
 RED-GREEN-REFACTOR validation for the using-git-worktrees skill (~5 minutes):

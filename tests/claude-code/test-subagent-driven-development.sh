@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# Test: subagent-driven-development skill
-# Verifies that the skill is loaded and follows correct workflow
+# Test: subagent-driven-development skill (direct-execution architecture)
 #
-# No drill coverage: this test asks the agent to *describe* SDD (string-
-# matches its verbal explanation against expected keywords like
-# "self-review", "skeptical", "worktree", "Step 1", "loop"). Drill scenarios
-# test behavior (real subagent dispatch, plan-following, review loops),
-# not description-recall. Kept by design.
+# No drill coverage: this test asks the agent to *describe* the skill (string-
+# matches its verbal explanation against expected keywords like "directly",
+# "self-review", "optional", "user owns"). Drill scenarios test behavior (real
+# execution, actual git state), not description-recall. Kept by design.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,162 +12,158 @@ source "$SCRIPT_DIR/test-helpers.sh"
 
 CLAUDE_PROMPT_TIMEOUT="${CLAUDE_PROMPT_TIMEOUT:-90}"
 
-echo "=== Test: subagent-driven-development skill ==="
+echo "=== Test: subagent-driven-development skill (direct-execution) ==="
 echo ""
 
-# Test 1: Verify skill can be loaded
-echo "Test 1: Skill loading..."
+# Test 1: Skill recognized and states its central rule
+echo "Test 1: Skill loading and central rule..."
 
-output=$(run_claude "What is the subagent-driven-development skill? Describe its key steps briefly." "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "What is the subagent-driven-development skill? What is its central rule about delegation?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "subagent-driven-development\|Subagent-Driven Development\|Subagent Driven" "Skill is recognized"; then
-    : # pass
+if assert_contains "$output" "subagent-driven-development\|Subagent-Driven Development\|Direct-Execution" "Skill is recognized"; then
+    :
 else
     exit 1
 fi
 
-if assert_contains "$output" "Load Plan\|read.*plan\|extract.*tasks" "Mentions loading plan"; then
-    : # pass
-else
-    exit 1
-fi
-
-echo ""
-
-# Test 2: Verify skill describes correct workflow order
-echo "Test 2: Workflow ordering..."
-
-output=$(run_claude "In the subagent-driven-development skill, what comes first: spec compliance review or code quality review? Answer using exactly this structure:
-First: <review type>
-Second: <review type>" "$CLAUDE_PROMPT_TIMEOUT")
-
-if assert_order "$output" "First:.*spec.*compliance" "Second:.*code.*quality" "Spec compliance before code quality"; then
-    : # pass
+if assert_contains "$output" "does not automatically delegate\|not.*automatically delegate\|delegation is optional\|optional.*delegat" "States delegation is not automatic"; then
+    :
 else
     exit 1
 fi
 
 echo ""
 
-# Test 3: Verify self-review is mentioned
-echo "Test 3: Self-review requirement..."
+# Test 2: Default execution model is direct, not a fresh subagent per task
+echo "Test 2: Default execution model..."
 
-output=$(run_claude "Does the subagent-driven-development skill require implementers to self-review before handoff, and can self-review replace the external reviews? Answer using exactly this structure:
-Self-review required: <yes or no>
-Self-review replaces external review: <yes or no>" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In subagent-driven-development, who implements each task by default: the primary agent directly, or a fresh subagent dispatched per task? Answer using exactly this structure:
+Default implementer: <primary agent directly | subagent per task>" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "Self-review required:.*yes" "Mentions self-review"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "Self-review replaces external review:.*no" "Self-review does not replace external review"; then
-    : # pass
+if assert_contains "$output" "Default implementer:.*primary agent" "Primary agent implements directly by default"; then
+    :
 else
     exit 1
 fi
 
 echo ""
 
-# Test 4: Verify plan is read once
-echo "Test 4: Plan reading efficiency..."
+# Test 3: Per-task loop includes focused verification, self-review, fix, re-test
+echo "Test 3: Per-task verification loop..."
 
-output=$(run_claude "In subagent-driven-development, how many times should the controller read the plan file? When does this happen?" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In subagent-driven-development, what happens immediately after implementing a single task, and what happens if that verification fails?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "once\|one time\|single" "Read plan once"; then
-    : # pass
+if assert_contains "$output" "focused.*test\|focused.*verif\|run.*test" "Runs focused verification after each task"; then
+    :
 else
     exit 1
 fi
 
-if assert_contains "$output" "Step 1\|beginning\|start\|Load Plan" "Read at beginning"; then
-    : # pass
+if assert_contains "$output" "self-review" "Self-reviews each task"; then
+    :
 else
     exit 1
 fi
 
-echo ""
-
-# Test 5: Verify spec compliance reviewer is skeptical
-echo "Test 5: Spec compliance reviewer mindset..."
-
-output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" "$CLAUDE_PROMPT_TIMEOUT")
-
-if assert_contains "$output" "not.*trust\|don't trust\|skeptical\|verify.*independently\|suspiciously" "Reviewer is skeptical"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "read.*code\|inspect.*code\|verify.*code\|read.*diff\|trust.*diff" "Reviewer reads code"; then
-    : # pass
+if assert_contains "$output" "fix\|re-test\|test again" "Fixes and re-tests on failure"; then
+    :
 else
     exit 1
 fi
 
 echo ""
 
-# Test 6: Verify review loops
-echo "Test 6: Review loop requirements..."
+# Test 4: Final verification covers full suite + working-tree inspection + plan comparison
+echo "Test 4: Final verification scope..."
 
-output=$(run_claude "In subagent-driven-development, what happens if a reviewer finds issues? Is it a one-time review or a loop?" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In subagent-driven-development, once all tasks are complete, what does final verification check? Mention what happens to the working tree and whether the implementation is compared back against the plan." "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "loop\|again\|repeat\|until.*approved\|until.*compliant" "Review loops mentioned"; then
-    : # pass
+if assert_contains "$output" "full.*test\|entire.*test\|whole.*test suite\|relevant test suite" "Runs the full relevant test suite"; then
+    :
 else
     exit 1
 fi
 
-if assert_contains "$output" "implementer.*fix\|fix.*issues" "Implementer fixes issues"; then
-    : # pass
+if assert_contains "$output" "git status\|working tree\|untracked" "Inspects the working tree"; then
+    :
 else
     exit 1
 fi
 
-echo ""
-
-# Test 7: Verify full task text is provided
-echo "Test 7: Task context provision..."
-
-output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Answer using exactly this structure:
-Controller provides: <directly or by file>
-Implementer must read plan file: <yes or no>" "$CLAUDE_PROMPT_TIMEOUT")
-
-if assert_contains "$output" "provide.*directly\|full.*text\|paste\|include.*prompt" "Provides text directly"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "Implementer must read plan file:.*no" "Doesn't make subagent read file"; then
-    : # pass
+if assert_contains "$output" "plan\|acceptance criteria" "Compares against the plan/acceptance criteria"; then
+    :
 else
     exit 1
 fi
 
 echo ""
 
-# Test 8: Verify worktree requirement
-echo "Test 8: Worktree requirement..."
+# Test 5: Subagent delegation is optional, based on concrete benefit
+echo "Test 5: Optional delegation..."
 
-output=$(run_claude "What workflow skills are required before using subagent-driven-development? List any prerequisites or required skills." "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In subagent-driven-development, is a subagent dispatched for every task automatically, or only in some cases? If only some cases, what makes it worth dispatching one?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "using-git-worktrees\|worktree" "Mentions worktree requirement"; then
-    : # pass
+if assert_contains "$output" "not.*every task\|not.*automatic\|only when\|concrete benefit\|optional" "Delegation is optional, not automatic per task"; then
+    :
 else
     exit 1
 fi
 
 echo ""
 
-# Test 9: Verify main branch warning
-echo "Test 9: Main branch red flag..."
+# Test 6: No mandatory reviewer/fixer chain, no recursive delegation by default
+echo "Test 6: No mandatory review/fixer chain..."
 
-output=$(run_claude "In subagent-driven-development, is it okay to start implementation directly on the main branch?" "$CLAUDE_PROMPT_TIMEOUT")
+output=$(run_claude "In subagent-driven-development, is there a mandatory reviewer agent and fixer agent for every task? Can a dispatched subagent spawn its own subagents by default?" "$CLAUDE_PROMPT_TIMEOUT")
 
-if assert_contains "$output" "worktree\|feature.*branch\|not.*main\|never.*main\|avoid.*main\|don't.*main\|consent\|permission" "Warns against main branch"; then
-    : # pass
+if assert_contains "$output" "not.*mandatory\|no mandatory\|optional\|not required" "No mandatory reviewer/fixer agent"; then
+    :
+else
+    exit 1
+fi
+
+if assert_contains "$output" "not.*recursive\|no.*recursive\|should not\|avoid" "No recursive delegation by default"; then
+    :
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 7: Git history ownership
+echo "Test 7: Git ownership..."
+
+output=$(run_claude "According to subagent-driven-development, who decides when to stage, commit, push, and manage branches: Superpowers/the agent, or the user? Answer using exactly this structure:
+Owner of staging and commits: <agent | user>" "$CLAUDE_PROMPT_TIMEOUT")
+
+if assert_contains "$output" "Owner of staging and commits:.*user" "User owns staging/commits/branch management"; then
+    :
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 8: Working tree default, worktrees optional
+echo "Test 8: Working tree default..."
+
+output=$(run_claude "In subagent-driven-development, is a git worktree or new branch required before implementation can begin, or does work happen in the current working tree by default?" "$CLAUDE_PROMPT_TIMEOUT")
+
+if assert_contains "$output" "current working tree\|not required\|optional" "Current working tree is the default; worktree is optional"; then
+    :
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 9: No execution ledger / hidden progress state
+echo "Test 9: No execution ledger..."
+
+output=$(run_claude "Does subagent-driven-development create a persistent execution ledger, workspace directory, or other hidden state file to track task progress across the session?" "$CLAUDE_PROMPT_TIMEOUT")
+
+if assert_contains "$output" "no\|does not\|not create" "No execution ledger or hidden progress state"; then
+    :
 else
     exit 1
 fi
