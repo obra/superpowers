@@ -51,6 +51,42 @@ PLAN
 Do the other thing.
 PLAN
 
+    # Fenced-example fixtures for task-brief fence tracking
+    cat > "$repo/fence-backtick.md" <<'PLAN'
+## Task 1: Backtick fence control
+
+```
+### Task 99: Example only
+```
+REQUIRED_END: brief must include this
+PLAN
+    cat > "$repo/fence-tilde.md" <<'PLAN'
+## Task 1: Tilde fence
+
+~~~
+### Task 99: Example only
+~~~
+REQUIRED_END: brief must include this
+PLAN
+    cat > "$repo/fence-nested.md" <<'PLAN'
+## Task 1: Nested fence
+
+````markdown
+```python
+### Task 99: Example only
+```
+````
+REQUIRED_END: brief must include this
+PLAN
+    cat > "$repo/fence-indented.md" <<'PLAN'
+## Task 1: Indented fence
+
+  ```
+### Task 99: Example only
+  ```
+REQUIRED_END: brief must include this
+PLAN
+
     # --- argument validation ---
     local rc=0
     (cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" >/dev/null 2>&1) || rc=$?
@@ -127,6 +163,47 @@ PLAN
     else
         fail "task-brief writes its brief under the plan's workspace"
         echo "    got: $brief_path"
+    fi
+
+    # --- fence tracking: fenced examples must not end a task early ---
+    local fence_brief fence_lines
+
+    # Control: ``` fence (works with both old and new code)
+    fence_brief="$TEST_ROOT/fence-backtick-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-backtick.md 1 "$fence_brief") >/dev/null
+    fence_lines=$(wc -l < "$fence_brief" | tr -d ' ')
+    if grep -q 'REQUIRED_END' "$fence_brief" && [[ "$fence_lines" -eq 6 ]]; then
+        pass "task-brief: backtick-fenced example does not end task early (6 lines)"
+    else
+        fail "task-brief: backtick-fenced example does not end task early (6 lines)"
+        echo "    lines: $fence_lines"
+    fi
+
+    # ~~~ fence
+    fence_brief="$TEST_ROOT/fence-tilde-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-tilde.md 1 "$fence_brief") >/dev/null
+    if grep -q 'REQUIRED_END' "$fence_brief"; then
+        pass "task-brief: tilde-fenced example does not end task early"
+    else
+        fail "task-brief: tilde-fenced example does not end task early"
+    fi
+
+    # ```` fence wrapping ``` block
+    fence_brief="$TEST_ROOT/fence-nested-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-nested.md 1 "$fence_brief") >/dev/null
+    if grep -q 'REQUIRED_END' "$fence_brief"; then
+        pass "task-brief: nested-fenced example does not end task early"
+    else
+        fail "task-brief: nested-fenced example does not end task early"
+    fi
+
+    # indented ``` fence (up to 3 spaces)
+    fence_brief="$TEST_ROOT/fence-indented-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-indented.md 1 "$fence_brief") >/dev/null
+    if grep -q 'REQUIRED_END' "$fence_brief"; then
+        pass "task-brief: indented-fenced example does not end task early"
+    else
+        fail "task-brief: indented-fenced example does not end task early"
     fi
 
     # --- review-package takes the plan first and lands in its directory ---
