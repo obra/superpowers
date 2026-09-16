@@ -1,0 +1,12 @@
+# Workflow-engine arm (sdd-workflow.js), 3 reps, same fixture
+# Not scored by score.py: runs in the controller session via the Workflow tool,
+# so agents inherit that session's CLAUDE.md and hooks (unlike the clean arms).
+# Token totals summed from the workflow's agent-*.jsonl transcripts.
+
+rep   agents  out     cache_read  cache_create  commits  tests  utf8-crash-shipped  final-review-findings
+wf-1  12      35861   4269274     516440        4        OK     yes                 1 Minor (dead guard); encoding not mentioned
+wf-2  20      64743   6865097     734816        5        OK     yes                 3 Minor; encoding not mentioned; Task 3 looped 4 fix rounds on a script text-matching bug (every re-review said addressed)
+wf-3  12      38689   4555162     422008        5        OK     yes                 5 Minor incl. the encoding crash graded Minor "outside mandated spec"; Minor gate -> no fix wave
+
+# Comparison medians (clean csd arms, same fixture):
+#   bare 5.6k out / 0.29M cache_read; spike inline 37.7k / 1.79M; SDD-in-session 86k / 4.5M
