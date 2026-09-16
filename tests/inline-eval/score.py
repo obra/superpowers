@@ -39,28 +39,48 @@ transcript = find_transcript()
 if not transcript:
     sys.exit(f"no transcript found for {repo}")
 
-calls = []   # (idx, tool, input)
-texts = []   # (idx, text)
-usage = {}   # message id -> usage dict (records repeat per content block)
-idx = 0
-for line in open(transcript):
-    try:
-        rec = json.loads(line)
-    except json.JSONDecodeError:
-        continue
-    t = rec.get("type")
-    msg = rec.get("message") or {}
-    content = msg.get("content")
-    if t != "assistant" or not isinstance(content, list):
-        continue
-    if msg.get("usage"):
-        usage[msg.get("id", idx)] = msg["usage"]
-    for block in content:
-        idx += 1
-        if block.get("type") == "tool_use":
-            calls.append((idx, block.get("name", ""), block.get("input") or {}))
-        elif block.get("type") == "text" and block.get("text", "").strip():
-            texts.append((idx, block["text"].strip()))
+# Subagent transcripts: <transcript dir>/<sid>/subagents/agent-*.jsonl.
+# In subagent-driven runs the implementers do the writes and test runs, so
+# tool calls from every transcript are merged into one timestamp-ordered
+# stream. Assistant text and usage are kept per transcript.
+sub_dir = os.path.join(os.path.dirname(transcript), os.path.basename(transcript)[:-6], "subagents")
+sub_files = sorted(glob.glob(os.path.join(sub_dir, "*.jsonl")))
+
+raw_calls = []  # (timestamp, seq, tool, input, source)
+texts = []      # (idx, text)   main transcript only
+usage = {}      # main: message id -> usage
+sub_usage = {}  # subagents: (file, message id) -> usage
+seq = 0
+
+def ingest(path, is_main):
+    global seq
+    for line in open(path):
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg = rec.get("message") or {}
+        content = msg.get("content")
+        if rec.get("type") != "assistant" or not isinstance(content, list):
+            continue
+        if msg.get("usage"):
+            if is_main:
+                usage[msg.get("id", seq)] = msg["usage"]
+            else:
+                sub_usage[(path, msg.get("id", seq))] = msg["usage"]
+        for block in content:
+            seq += 1
+            if block.get("type") == "tool_use":
+                raw_calls.append((rec.get("timestamp", ""), seq, block.get("name", ""),
+                                  block.get("input") or {}, "main" if is_main else "sub"))
+            elif is_main and block.get("type") == "text" and block.get("text", "").strip():
+                texts.append((seq, block["text"].strip()))
+
+ingest(transcript, True)
+for f in sub_files:
+    ingest(f, False)
+raw_calls.sort(key=lambda c: (c[0], c[1]))
+calls = [(i, tool, inp) for i, (_, _, tool, inp, _) in enumerate(raw_calls, 1)]
 
 def is_write(tool):
     return tool in ("Write", "Edit", "MultiEdit", "NotebookEdit")
@@ -105,7 +125,7 @@ row("all skills invoked", ", ".join(s.replace("superpowers:", "") for _, s in sk
 
 agents = [(i, inp) for i, tool, inp in calls if tool == "Agent"]
 row("Agent dispatches", len(agents),
-    "; ".join(f"model={a.get('model', '-')} desc={str(a.get('description', ''))[:40]!r}" for _, a in agents))
+    "; ".join(f"{a.get('model', '-')}:{str(a.get('description', ''))[:28]!r}" for _, a in agents))
 
 bash = [(i, inp.get("command", "")) for i, tool, inp in calls if tool == "Bash"]
 test_runs = [i for i, c in bash if "unittest" in c]
@@ -148,24 +168,11 @@ KEYS = ("input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_r
 def totals(us):
     return {k: sum(u.get(k, 0) for u in us.values()) for k in KEYS}
 
-# Subagent transcripts: <transcript dir>/<sid>/subagents/agent-*.jsonl
-sub_usage = {}
-sub_dir = os.path.join(os.path.dirname(transcript), os.path.basename(transcript)[:-6], "subagents")
-for f in glob.glob(os.path.join(sub_dir, "*.jsonl")):
-    for line in open(f):
-        try:
-            rec = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        m = rec.get("message") or {}
-        if rec.get("type") == "assistant" and m.get("usage"):
-            sub_usage[(f, m.get("id"))] = m["usage"]
-
 main = totals(usage); sub = totals(sub_usage)
 def fmt(t):
     return f"out={t['output_tokens']} cache_read={t['cache_read_input_tokens']} cache_create={t['cache_creation_input_tokens']} in={t['input_tokens']}"
 row("main session tokens", len(usage), "msgs; " + fmt(main))
-row("subagent tokens", len(glob.glob(os.path.join(sub_dir, "*.jsonl"))), "agents; " + fmt(sub))
+row("subagent tokens", len(sub_files), "agents; " + fmt(sub))
 both = {k: main[k] + sub[k] for k in KEYS}
 row("TOTAL tokens", "", fmt(both))
 

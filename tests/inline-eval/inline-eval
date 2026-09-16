@@ -9,8 +9,9 @@
 # hook, bootstrap, and Skill tool are the real thing.
 #
 # Arms:
-#   dev    — superpowers at the dev branch (baseline; the RED run)
-#   spike  — this checkout (whatever branch it is on)
+#   dev    — superpowers at the dev branch (baseline; the RED run), inline prompt
+#   spike  — this checkout (whatever branch it is on), inline prompt
+#   sdd    — this checkout, but the prompt asks for subagent-driven-development
 #
 # Usage:
 #   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
@@ -49,7 +50,7 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 
 plugin_dir_for() {
   case "$1" in
-    spike) echo "$REPO_ROOT" ;;
+    spike|sdd) echo "$REPO_ROOT" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
       if [ ! -d "$wt" ]; then
@@ -58,7 +59,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd)" ;;
   esac
 }
 
@@ -104,7 +105,13 @@ use_rep_tmux() {
   mkdir -p "$TMUX_TMPDIR"
 }
 
-PROMPT='I have a plan at plan.md, with design context in design.md. Execute it inline in this session using the superpowers:executing-plans skill — do not dispatch a subagent per task. This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
+prompt_for() {
+  local common='This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
+  case "$1" in
+    sdd) echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
+    *)   echo "I have a plan at plan.md, with design context in design.md. Execute it inline in this session using the superpowers:executing-plans skill — do not dispatch a subagent per task. $common" ;;
+  esac
+}
 
 cmd_start() {
   local arm=$1 n=$2
@@ -124,7 +131,7 @@ cmd_start() {
   use_rep_tmux "$arm" "$n"
   CLAUDE_CONFIG_DIR="$dir/cfg" ANTHROPIC_API_KEY="$key" \
     "$CSD" launch "$(worker "$arm" "$n")" "$dir/repo" -- --plugin-dir "$plugin" ${extra[@]+"${extra[@]}"}
-  "$(shim "$arm" "$n")" send "$PROMPT"
+  "$(shim "$arm" "$n")" send "$(prompt_for "$arm")"
   echo "started $(worker "$arm" "$n"); wait with: $0 wait $arm $n"
 }
 
