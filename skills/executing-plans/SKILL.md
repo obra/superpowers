@@ -52,6 +52,11 @@ those, stop and ask.
 - Tasks are mostly independent — the same precondition as
   superpowers:subagent-driven-development.
 
+A fully specified plan makes inline execution transcription plus testing:
+it runs well on a mid-tier session model, and the one place the most
+capable model earns its cost is the final review, which this skill
+dispatches separately. Tell your human partner so when they choose inline.
+
 Prefer superpowers:subagent-driven-development when your human partner
 wants a review gate on every task, or when the plan is long enough that
 its later tasks would run on a compacted context. Inline execution over a
@@ -66,36 +71,36 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Extract brief (task-brief), read it, record BASE" [shape=box];
+        "task-start: brief + BASE; read the brief" [shape=box];
         "Work the steps in order: TDD, run every verification, read every output" [shape=box];
         "Step output matches plan's Expected?" [shape=diamond];
         "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" [shape=box];
         "Commit as the plan's commit steps say" [shape=box];
         "Completion contract met?" [shape=diamond];
-        "Append completion line to ledger, mark todo complete" [shape=box];
+        "task-done: run tests, ledger the result; mark todo complete" [shape=box];
     }
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Final whole-branch review (fresh reviewer if you have one)" [shape=box];
-    "Re-grade, then: Critical/Important → ONE fix pass by you + ONE scoped re-review; Minor → ledger" [shape=box];
+    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" -> "Extract brief (task-brief), read it, record BASE";
-    "Extract brief (task-brief), read it, record BASE" -> "Work the steps in order: TDD, run every verification, read every output";
+    "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" -> "task-start: brief + BASE; read the brief";
+    "task-start: brief + BASE; read the brief" -> "Work the steps in order: TDD, run every verification, read every output";
     "Work the steps in order: TDD, run every verification, read every output" -> "Step output matches plan's Expected?";
     "Step output matches plan's Expected?" -> "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" [label="no"];
     "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" -> "Work the steps in order: TDD, run every verification, read every output";
     "Step output matches plan's Expected?" -> "Commit as the plan's commit steps say" [label="yes, last step"];
     "Commit as the plan's commit steps say" -> "Completion contract met?";
     "Completion contract met?" -> "Work the steps in order: TDD, run every verification, read every output" [label="no - finish the task"];
-    "Completion contract met?" -> "Append completion line to ledger, mark todo complete" [label="yes"];
-    "Append completion line to ledger, mark todo complete" -> "More tasks remain?";
-    "More tasks remain?" -> "Extract brief (task-brief), read it, record BASE" [label="yes"];
+    "Completion contract met?" -> "task-done: run tests, ledger the result; mark todo complete" [label="yes"];
+    "task-done: run tests, ledger the result; mark todo complete" -> "More tasks remain?";
+    "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
     "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
-    "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass by you + ONE scoped re-review; Minor → ledger";
-    "Re-grade, then: Critical/Important → ONE fix pass by you + ONE scoped re-review; Minor → ledger" -> "Final review clean: delete this plan's workspace";
+    "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger";
+    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" -> "Final review clean: delete this plan's workspace";
     "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
@@ -146,18 +151,15 @@ before Task 1. It governs every step of every task below; a plan whose
 steps already say "write the failing test first" does not exempt you
 from reading it.
 
-Before Task 1, scan the plan once for conflicts, writing down what you
-checked as you check it: tasks that contradict each other or the plan's
-Global Constraints, and anything the plan mandates that a reviewer would
-call a defect (a test that asserts nothing, verbatim duplication of a
-logic block). The scan's output is a table, not a verdict: one row per
-pair of tasks that share a file or an interface (what one produces against
-what the other consumes, and what you found), and one row per task (does
-its own text agree with itself — the tests it specifies against the code
-it specifies). "The scan is clean" without those rows is not a scan you
-ran. Write the table to the ledger, rule on each conflict it surfaces with
-the spec as the binding authority, record each ruling beside its row, and
-start Task 1.
+Before Task 1, scan the plan for conflicts between tasks. The plan's
+Interfaces blocks tell you where to look: for every task that consumes
+what an earlier task produces, one ledger row — the two tasks, what one
+produces against what the other consumes, and what you found. Tasks that
+share nothing get no row; a plan whose tasks share nothing gets the single
+line `Pre-flight: no shared interfaces`. Rule on each conflict a row
+surfaces with the spec as the binding authority, record the ruling beside
+its row, and start Task 1. Each task's own text is checked when you read
+its brief, not here.
 
 ## The Task Loop
 
@@ -167,13 +169,16 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-- Run `../subagent-driven-development/scripts/task-brief PLAN_FILE N` and
-  read the brief file it prints. Read the brief for every task, including
-  ones you remember from setup: what you remember is a summary, the brief
-  has the exact values, signatures, and test cases.
-- Record BASE (`git rev-parse HEAD`). The final review package and any
-  mid-plan diff you need are cut from it.
+- Run this skill's `scripts/task-start PLAN_FILE N`. It prints the brief
+  path and BASE (the commit the task's range is cut from) in one call.
+  Read the brief for every task, including ones you remember from setup:
+  what you remember is a summary, the brief has the exact values,
+  signatures, and test cases.
 - Mark the task's todo in_progress.
+
+Every tool call is a turn that re-reads your whole context. Bookkeeping
+rides along with work — a ledger append in the same call as the commit,
+never in a call of its own.
 
 ### 2. Work the steps
 
@@ -206,8 +211,8 @@ in this session — not inferred from the diff looking right:
 
 - Every test the brief names exists and ran in this task, and you read
   the output.
-- The final test run for the task passed, and its command and result go
-  in the ledger line.
+- The final test run for the task passed — `task-done` is that run, and
+  it writes the command and result into the ledger line.
 - Every `Expected:` line in the brief was compared against real output.
 - Every deviation from the brief has a `Ruling:` line in the ledger.
 
@@ -216,13 +221,15 @@ the claim. If any item is missing, the task is not complete: finish it.
 
 ### 4. Complete the task
 
-Append the completion line to the ledger in the same message as your
-other bookkeeping:
+Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
+with the test command the brief names for the whole task. It runs the
+tests, keeps the full output in the workspace, prints the tail, and — only
+if they pass — appends the completion line to the ledger:
 
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
-Then mark the todo complete and take the next task. Never take the next
-task while this one's contract is unmet.
+A failing run records nothing; the task is not complete. When it records,
+mark the todo complete and take the next task.
 
 ## Final Review
 
@@ -234,8 +241,11 @@ Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE 
 available model — the whole-branch review is a judgment task — using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md), with the
-package path, the plan and spec paths, and a pointer to the ledger's
-`Ruling:` lines so it can weigh the calls you made. Specify the model
+package path, the plan and spec paths, the plan's Review Focus section
+verbatim if it has one (the input classes and failure modes the plan's
+tests do not exercise — the reviewer checks each deliberately), and a
+pointer to the ledger's `Ruling:` lines so it can weigh the calls you
+made. Specify the model
 explicitly; an omitted model inherits the session's, which may not be the
 most capable. This is the one fresh context the whole run buys. Do not
 skip it, and do not replace it with your own read of the diff.
@@ -261,17 +271,18 @@ did not mention the input that triggers them. Then:
   conflict, not a note that you declined a polish suggestion.
 
 Fix the Critical and Important findings yourself — you are the
-implementer here — in ONE pass, each fix under TDD, covering tests re-run.
-Then run exactly one scoped re-review of the fix range
-(`review-package PLAN_FILE FIX_BASE HEAD`, dispatched with
-superpowers:subagent-driven-development's
-[re-review-prompt.md](../subagent-driven-development/re-review-prompt.md)
-on a mid-tier model — the re-review verifies named fixes against a small
-diff and does not need the most capable model — or performed yourself
-without a subagent tool). Adjudicate residual findings as rulings in the
-ledger. There is no second fix pass — residual load-bearing findings
-surface to your human partner when finishing-a-development-branch
-presents the options.
+implementer here — in ONE pass. Each fix is verified by TDD, not by a
+second reviewer: write the test that reproduces the finding, watch it
+fail, make it pass, then run the whole suite. Record each in the ledger as
+`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
+without a test that failed first is not verified; a suite that is not
+green after the pass means the pass is not over. Do not dispatch a
+re-review: it would re-read a diff whose covering tests already answer
+"addressed" and whose suite run already answers "broke nothing".
+
+A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
+<why the code stands> — <cost if wrong>` — and reaches your human partner
+in the rulings list. There is no second fix pass.
 
 ## Finish
 
@@ -302,7 +313,8 @@ Use superpowers:finishing-a-development-branch.
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
 | "Subagents are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
 | "The reviewer said Minor, so it's Minor" | A traceback is Important whatever the label. Re-grade, then gate. |
-| "I'll fix the minors too while I'm in there" | Minors cost a fix pass and a re-review each time. Ledger them; your partner decides. |
+| "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
+| "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them; your partner decides. |
 
 ## Example Workflow
 
@@ -317,34 +329,39 @@ You: I'm using the executing-plans skill to implement this plan inline.
 
 Task 1: Hook installation script
 
-[task-brief plan 1 → read brief; BASE a1b2c3d]
+[task-start plan 1 → brief read; BASE a1b2c3d]
 [Step 1: write failing test — written]
 [Step 2: run it — FAIL: install_hook not defined. Matches Expected.]
 [Step 3: implement — written]
 [Step 4: run it — PASS 1/1. Matches Expected.]
 [Step 5: commit — d4e5f6a]
 [Contract: tests ran, output read, no deviations]
-[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, tests: npm test -- hooks → 1/1 pass)]
+[task-done plan 1 a1b2c3d -- npm test -- hooks → ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, tests: npm test -- hooks → 1/1 pass)]
 
 Task 2: Recovery modes
 
-[task-brief plan 2 → read brief; BASE d4e5f6a]
+[task-start plan 2 → brief read; BASE d4e5f6a]
 [Step 2: run failing test — FAIL, but on an import error: Task 1 exported
  installHook, brief consumes install_hook]
 [Ruling: brief's consumer name is a typo against Task 1's Produces block;
  use installHook — Ledger: Task 2: Ruling: install_hook → installHook — matches Task 1 Produces — cost if wrong: one rename]
 [Steps 2-5 as planned; commit b7c8d9e]
-[Ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass)]
+[task-done plan 2 d4e5f6a -- npm test -- recovery → ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass)]
 
 ...
 
 [After all tasks: review-package plan MERGE_BASE HEAD; dispatch code-reviewer, most capable model]
-Reviewer: One Important finding — progress reporting interval hardcoded.
-[Fix pass: extract PROGRESS_INTERVAL under TDD; commit; review-package FIX_BASE HEAD; scoped re-review]
-Re-reviewer: ADDRESSED. No new breakage.
+Reviewer: One Important finding — progress reporting interval hardcoded. Two Minor.
+[Re-grade: Important stands; minors → ledger as deferred]
+[Fix pass: test_progress_interval_configurable RED → extract PROGRESS_INTERVAL → GREEN; suite 12/12; commit]
+[Ledger: Final: fixed hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12]
 
 Rulings I made:
 - Task 2: install_hook → installHook (brief typo; cost if wrong: one rename)
+
+Deferred minors:
+- README lacks a usage example
+- recovery.js could split verify/repair into two files
 
 [Delete this plan's workspace — the record now lives in git]
 

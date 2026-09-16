@@ -17,6 +17,10 @@
 #   barerevs — same, but the reviewer is sonnet
 #   barefork — bare, plus a FORKED reviewer after each task, told it is a fork
 #              whose job is to find issues in the implementer's work
+#   spikesonnet — spike, with the worker session on sonnet (reviewer stays on the
+#              most capable model per the skill)
+#   spikerf  — spike, with the plan carrying a Review Focus section
+#              (tests/inline-eval/fixtures/review-focus-wordstat.md appended)
 #
 # Usage:
 #   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
@@ -55,7 +59,7 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 
 plugin_dir_for() {
   case "$1" in
-    spike|sdd) echo "$REPO_ROOT" ;;
+    spike|sdd|spikesonnet|spikerf) echo "$REPO_ROOT" ;;
     bare|barerev|barerevs|barefork) echo "" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
@@ -65,7 +69,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf)" ;;
   esac
 }
 
@@ -129,6 +133,10 @@ cmd_start() {
   [ -e "$dir" ] && die "rep exists: $dir (pick a new n or remove it)"
   mkdir -p "$dir/repo"
   cp -R "$FIXTURE"/. "$dir/repo/"
+  if [ "$arm" = "spikerf" ]; then
+    printf '\n' >> "$dir/repo/plan.md"
+    cat "$HERE/fixtures/review-focus-wordstat.md" >> "$dir/repo/plan.md"
+  fi
   git -C "$dir/repo" init -q -b main
   git -C "$dir/repo" add -A
   git -C "$dir/repo" -c user.name=fixture -c user.email=fixture@example.com commit -q -m "fixture: wordstat plan"
@@ -136,7 +144,9 @@ cmd_start() {
   seed_config_dir "$dir/cfg" "$dir/repo" "$key"
   local plugin; plugin=$(plugin_dir_for "$arm") || exit 1
   local extra=()
-  [ -n "${INLINE_EVAL_MODEL:-}" ] && extra=(--model "$INLINE_EVAL_MODEL")
+  local model=${INLINE_EVAL_MODEL:-}
+  [ "$arm" = "spikesonnet" ] && model=${model:-sonnet}
+  [ -n "$model" ] && extra=(--model "$model")
   if [ -n "$plugin" ]; then
     extra=(--plugin-dir "$plugin" ${extra[@]+"${extra[@]}"})
     echo "plugin: $plugin ($(git -C "$plugin" rev-parse --short HEAD) $(git -C "$plugin" branch --show-current))" | tee "$dir/plugin.txt"
