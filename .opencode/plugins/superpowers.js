@@ -258,8 +258,11 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
  * 1. Registers every skills/<name>/SKILL.md as a native Skill.Info object
  *    via ctx.skill.transform((draft) => draft.add(info)).
  *    V2 removed the old draft.source() directory registration; the draft API
- *    is now { list, add, update, remove } where add() decodes plain objects:
- *    { id, name, description?, slash?, autoinvoke?, location, content }.
+ *    is now { list, add, update, remove } where add() decodes plain objects
+ *    against the host's Skill.Info schema (OpenCode 2.0.4 contract):
+ *    { id, name, description?, autoinvoke?, path, content }. The file field
+ *    is `path` — renamed from `location` in upstream commit 199aabe9e2,
+ *    first released in v2.0.4.
  *    See packages/core/src/plugin/skill.ts and packages/schema/src/skill.ts.
  * 2. Injects bootstrap context via ctx.session.hook("context"), the V2
  *    equivalent of V1's experimental.chat.messages.transform.
@@ -285,13 +288,29 @@ async function setup(ctx) {
           id: entry.name,
           name: frontmatter.name || entry.name,
           ...(frontmatter.description ? { description: frontmatter.description } : {}),
-          location: skillPath,
+          // Skill.Info renamed its required file field `location` -> `path`
+          // in OpenCode v2.0.4 (upstream commit 199aabe9e2).
+          path: skillPath,
           content,
         });
       }
     }
     await ctx.skill.transform((draft) => {
-      for (const skill of skills) draft.add(skill);
+      // draft.add() decodes against the host's Skill.Info schema and throws
+      // synchronously on a mismatch. A throw escaping this callback is what
+      // the host escalates into an asynchronous hard-disable of the entire
+      // plugin ("Plugin disabled after skill.transform failed") — the
+      // try/catch around ctx.skill.transform never sees it, and the
+      // bootstrap hook is torn down as collateral. Contain failures per
+      // skill so one rejected payload skips that skill instead of killing
+      // skills AND bootstrap.
+      for (const skill of skills) {
+        try {
+          draft.add(skill);
+        } catch (err) {
+          console.error(`[superpowers] skill "${skill.id}" rejected by host, skipping:`, err);
+        }
+      }
     });
   } catch (err) {
     // Never break plugin activation: one failing plugin takes down the whole
