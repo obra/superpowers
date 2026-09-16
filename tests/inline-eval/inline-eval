@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# inline-eval — lightweight A/B eval of the executing-plans skill.
+#
+# Drives real Claude Code sessions (via claude-session-driver's csd) against
+# the sdd-tiny fixture, with ONLY the superpowers checkout under test loaded
+# (--settings disables every installed plugin; --plugin-dir loads one copy).
+#
+# Arms:
+#   dev    — superpowers at origin's dev branch (baseline; the RED run)
+#   spike  — this checkout (whatever branch it is on)
+#
+# Usage:
+#   inline-eval start <arm> <n>          create scratch repo, launch worker, send prompt
+#   inline-eval wait  <arm> <n> [secs]   block until the worker's turn ends (default 2400)
+#   inline-eval reply <arm> <n> <text>   answer a worker that stopped to ask something
+#   inline-eval check <arm> <n>          score the rep (events + repo + transcript)
+#   inline-eval turn  <arm> <n>          print the worker's last turn (full)
+#   inline-eval stop  <arm> <n>          stop the worker (keeps the scratch repo)
+#   inline-eval list                     list live workers
+#
+# Env:
+#   INLINE_EVAL_DIR   scratch base (default /tmp/inline-eval)
+#   INLINE_EVAL_MODEL extra `--model` for the worker (default: harness default)
+#
+# Artifacts per rep live in $INLINE_EVAL_DIR/reps/<arm>-<n>/:
+#   repo/         the scratch git repo the worker works in
+#   events.jsonl  copy of the csd event stream (after `check`)
+#   score.txt     the scorecard (after `check`)
+set -euo pipefail
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
+CSD=/Users/jesse/.claude/plugins/cache/superpowers-marketplace/claude-session-driver/4.0.0/skills/driving-claude-code-sessions/scripts/csd
+EVAL_DIR=${INLINE_EVAL_DIR:-/tmp/inline-eval}
+# Claude inside a tmux server started from another login context cannot
+# reach the macOS keychain ("Not logged in · run security unlock-keychain").
+# A private socket dir makes tmux spawn a fresh server from THIS process,
+# which inherits working auth. Every csd/shim call must see the same value.
+# Short path on purpose: unix socket paths are capped at ~104 chars on macOS.
+export TMUX_TMPDIR=${TMUX_TMPDIR:-/tmp/inline-eval-tmux}
+mkdir -p "$TMUX_TMPDIR"
+FIXTURE=$REPO_ROOT/evals/scenarios/sdd-tiny/fixtures
+
+usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+
+die() { echo "inline-eval: $*" >&2; exit 1; }
+
+[ -x "$CSD" ] || die "csd not found at $CSD (claude-session-driver plugin moved?)"
+[ -d "$FIXTURE" ] || die "fixture missing: $FIXTURE (is evals/ cloned?)"
+
+plugin_dir_for() {
+  case "$1" in
+    spike) echo "$REPO_ROOT" ;;
+    dev)
+      local wt="$EVAL_DIR/plugin-dev"
+      if [ ! -d "$wt" ]; then
+        git -C "$REPO_ROOT" worktree add -q "$wt" dev
+      fi
+      echo "$wt" ;;
+    *) die "unknown arm: $1 (dev|spike)" ;;
+  esac
+}
+
+no_plugins_settings() {
+  local f="$EVAL_DIR/no-plugins.json"
+  python3 - "$f" <<'PY'
+import json, sys, os
+s = json.load(open(os.path.expanduser('~/.claude/settings.json')))
+off = {k: False for k in s.get('enabledPlugins', {})}
+json.dump({"enabledPlugins": off}, open(sys.argv[1], 'w'))
+PY
+  echo "$f"
+}
+
+# Claude Code shows a workspace-trust dialog for a directory it has never
+# seen, and csd cannot answer it. Pre-record acceptance the way Claude Code
+# itself does (projects[<realpath>].hasTrustDialogAccepted in ~/.claude.json).
+trust_repo() {
+  python3 - "$1" <<'PY'
+import json, os, sys
+path = os.path.realpath(sys.argv[1])
+cfg = os.path.expanduser('~/.claude.json')
+d = json.load(open(cfg))
+d.setdefault('projects', {}).setdefault(path, {})['hasTrustDialogAccepted'] = True
+tmp = cfg + '.inline-eval.tmp'
+json.dump(d, open(tmp, 'w'), indent=2)
+os.replace(tmp, cfg)
+PY
+}
+
+rep_dir() { echo "$EVAL_DIR/reps/$1-$2"; }
+worker()  { echo "ep-$1-$2"; }
+shim()    { echo "/tmp/csd-workers/bin/$(worker "$1" "$2")"; }
+
+PROMPT='I have a plan at plan.md, with design context in design.md. Execute it inline in this session using the superpowers:executing-plans skill — do not dispatch a subagent per task. This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
+
+cmd_start() {
+  local arm=$1 n=$2
+  local dir; dir=$(rep_dir "$arm" "$n")
+  [ -e "$dir" ] && die "rep exists: $dir (pick a new n or remove it)"
+  mkdir -p "$dir/repo"
+  cp -R "$FIXTURE"/. "$dir/repo/"
+  git -C "$dir/repo" init -q -b main
+  git -C "$dir/repo" add -A
+  git -C "$dir/repo" -c user.name=fixture -c user.email=fixture@example.com commit -q -m "fixture: wordstat plan"
+  trust_repo "$dir/repo"
+  local plugin; plugin=$(plugin_dir_for "$arm")
+  local settings; settings=$(no_plugins_settings)
+  local extra=()
+  [ -n "${INLINE_EVAL_MODEL:-}" ] && extra=(--model "$INLINE_EVAL_MODEL")
+  echo "plugin: $plugin ($(git -C "$plugin" rev-parse --short HEAD) $(git -C "$plugin" branch --show-current))" | tee "$dir/plugin.txt"
+  "$CSD" launch "$(worker "$arm" "$n")" "$dir/repo" -- --settings "$settings" --plugin-dir "$plugin" ${extra[@]+"${extra[@]}"}
+  "$(shim "$arm" "$n")" send "$PROMPT"
+  echo "started $(worker "$arm" "$n"); wait with: $0 wait $arm $n"
+}
+
+# A worker that dispatches a background Agent ends its turn to wait for it
+# and is re-invoked when the agent reports, so one wait-for-turn returns
+# early. Loop until the worker is genuinely idle.
+cmd_wait() {
+  local arm=$1 n=$2 secs=${3:-2400}
+  local s; s=$(shim "$arm" "$n")
+  while :; do
+    "$s" wait-for-turn "$secs" || true
+    local st; st=$("$s" status)
+    echo "$st"
+    [ "$st" = "working" ] || break
+  done
+}
+
+cmd_reply() {
+  local arm=$1 n=$2; shift 2
+  "$(shim "$arm" "$n")" send "$*"
+}
+
+cmd_turn() { "$(shim "$1" "$2")" read-turn --full; }
+
+cmd_check() {
+  local arm=$1 n=$2
+  local dir; dir=$(rep_dir "$arm" "$n")
+  local s; s=$(shim "$arm" "$n")
+  [ -x "$s" ] && "$s" read-events > "$dir/events.jsonl" || true
+  [ -s "$dir/events.jsonl" ] || die "no events for $arm-$n (worker stopped before check?)"
+  local sid=""; [ -x "$s" ] && sid=$("$s" session-id 2>/dev/null || true)
+  python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt"
+}
+
+cmd_stop() { "$(shim "$1" "$2")" stop; }
+cmd_list() { "$CSD" list ep- ; }
+
+[ $# -ge 1 ] || usage
+cmd=$1; shift
+case "$cmd" in
+  start|wait|reply|check|turn|stop) [ $# -ge 2 ] || usage; "cmd_$cmd" "$@" ;;
+  list) cmd_list ;;
+  *) usage ;;
+esac
