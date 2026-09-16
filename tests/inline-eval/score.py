@@ -50,6 +50,7 @@ raw_calls = []  # (timestamp, seq, tool, input, source)
 texts = []      # (idx, text)   main transcript only
 usage = {}      # main: message id -> usage
 sub_usage = {}  # subagents: (file, message id) -> usage
+seen_ids = set()
 seq = 0
 
 def ingest(path, is_main):
@@ -71,6 +72,11 @@ def ingest(path, is_main):
         for block in content:
             seq += 1
             if block.get("type") == "tool_use":
+                # a fork's transcript repeats its parent's history, including the
+                # dispatch that spawned it — count each tool_use id once
+                if block.get("id") in seen_ids:
+                    continue
+                seen_ids.add(block.get("id"))
                 raw_calls.append((rec.get("timestamp", ""), seq, block.get("name", ""),
                                   block.get("input") or {}, "main" if is_main else "sub"))
             elif is_main and block.get("type") == "text" and block.get("text", "").strip():
@@ -125,7 +131,7 @@ row("all skills invoked", ", ".join(s.replace("superpowers:", "") for _, s in sk
 
 agents = [(i, inp) for i, tool, inp in calls if tool == "Agent"]
 row("Agent dispatches", len(agents),
-    "; ".join(f"{a.get('model', '-')}:{str(a.get('description', ''))[:28]!r}" for _, a in agents))
+    "; ".join(f"{a.get('subagent_type', '-')}/{a.get('model', '-')}:{str(a.get('description', ''))[:28]!r}" for _, a in agents))
 
 bash = [(i, inp.get("command", "")) for i, tool, inp in calls if tool == "Bash"]
 test_runs = [i for i, c in bash if "unittest" in c]

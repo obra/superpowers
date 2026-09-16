@@ -15,6 +15,8 @@
 #   bare   — no superpowers loaded at all; the prompt just says to execute the plan
 #   barerev  — bare, plus one sentence asking for a fresh opus reviewer at the end
 #   barerevs — same, but the reviewer is sonnet
+#   barefork — bare, plus a FORKED reviewer after each task, told it is a fork
+#              whose job is to find issues in the implementer's work
 #
 # Usage:
 #   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
@@ -54,7 +56,7 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 plugin_dir_for() {
   case "$1" in
     spike|sdd) echo "$REPO_ROOT" ;;
-    bare|barerev|barerevs) echo "" ;;
+    bare|barerev|barerevs|barefork) echo "" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
       if [ ! -d "$wt" ]; then
@@ -63,7 +65,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork)" ;;
   esac
 }
 
@@ -116,6 +118,7 @@ prompt_for() {
     bare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
     barerev)  echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the opus model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
     barerevs) echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the sonnet model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
+    barefork) echo "I have a plan at plan.md, with design context in design.md. Execute it. After you finish each task, dispatch a forked subagent (Agent tool, subagent_type \"fork\") to review that task's work. Tell it explicitly that it is a fork of you, that it therefore shares your context and your assumptions, and that its job is to find issues in the implementer's work — spec gaps, bugs, missing edge cases, weak tests — not to confirm it. Fix every real defect it reports before starting the next task, and list anything you declined to fix, with the reason, when you tell me the plan is done. $common" ;;
     *)   echo "I have a plan at plan.md, with design context in design.md. Execute it inline in this session using the superpowers:executing-plans skill — do not dispatch a subagent per task. $common" ;;
   esac
 }
