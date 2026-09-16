@@ -1,0 +1,6 @@
+{
+  "tasks": {"model": "test_model", "parse": "test_parse", "rules": "test_rules", "balance": "test_balance", "report": "test_report", "cli": "test_cli"},
+  "impl_dir": "ledgerlite",
+  "test_marker": "unittest",
+  "suite": "python3 -m unittest"
+}

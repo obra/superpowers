@@ -21,6 +21,7 @@
 #              most capable model per the skill)
 #   spikerf  — spike, with the plan carrying a Review Focus section
 #              (tests/inline-eval/fixtures/review-focus-wordstat.md appended)
+#   sddrf    — sdd, with the same Review Focus section appended
 #
 # Usage:
 #   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
@@ -33,6 +34,9 @@
 #
 # Env:
 #   INLINE_EVAL_DIR       scratch base (default /tmp/inline-eval)
+#   INLINE_EVAL_FIXTURE   fixture dir (default fixtures/wordstat): plan.md, design.md,
+#                         starter files, plus scoring.json and probe.sh which are
+#                         stripped from the worker's copy
 #   INLINE_EVAL_ENV_FILE  file holding ANTHROPIC_API_KEY=... (default <repo>/evals/.env)
 #   INLINE_EVAL_MODEL     extra `--model` for the worker (default: harness default)
 #
@@ -48,18 +52,18 @@ REPO_ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 CSD=/Users/jesse/.claude/plugins/cache/superpowers-marketplace/claude-session-driver/4.0.0/skills/driving-claude-code-sessions/scripts/csd
 EVAL_DIR=${INLINE_EVAL_DIR:-/tmp/inline-eval}
 ENV_FILE=${INLINE_EVAL_ENV_FILE:-$REPO_ROOT/evals/.env}
-FIXTURE=$REPO_ROOT/evals/scenarios/sdd-tiny/fixtures
+FIXTURE=${INLINE_EVAL_FIXTURE:-$HERE/fixtures/wordstat}
 
 usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
 die() { echo "inline-eval: $*" >&2; exit 1; }
 
 [ -x "$CSD" ] || die "csd not found at $CSD (claude-session-driver plugin moved?)"
-[ -d "$FIXTURE" ] || die "fixture missing: $FIXTURE (is evals/ cloned?)"
+[ -f "$FIXTURE/plan.md" ] || die "fixture missing plan.md: $FIXTURE"
 
 plugin_dir_for() {
   case "$1" in
-    spike|sdd|spikesonnet|spikerf) echo "$REPO_ROOT" ;;
+    spike|sdd|spikesonnet|spikerf|sddrf) echo "$REPO_ROOT" ;;
     bare|barerev|barerevs|barefork) echo "" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
@@ -69,7 +73,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf)" ;;
   esac
 }
 
@@ -118,7 +122,7 @@ use_rep_tmux() {
 prompt_for() {
   local common='This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
   case "$1" in
-    sdd)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
+    sdd|sddrf)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
     bare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
     barerev)  echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the opus model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
     barerevs) echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the sonnet model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
@@ -132,8 +136,10 @@ cmd_start() {
   local dir; dir=$(rep_dir "$arm" "$n")
   [ -e "$dir" ] && die "rep exists: $dir (pick a new n or remove it)"
   mkdir -p "$dir/repo"
-  cp -R "$FIXTURE"/. "$dir/repo/"
-  if [ "$arm" = "spikerf" ]; then
+  cp -RL "$FIXTURE"/. "$dir/repo/"
+  rm -f "$dir/repo/scoring.json" "$dir/repo/probe.sh"   # scorer-only files
+  echo "$FIXTURE" > "$dir/fixture.txt"
+  if [ "$arm" = "spikerf" ] || [ "$arm" = "sddrf" ]; then
     printf '\n' >> "$dir/repo/plan.md"
     cat "$HERE/fixtures/review-focus-wordstat.md" >> "$dir/repo/plan.md"
   fi
@@ -198,7 +204,8 @@ cmd_check() {
   [ -x "$s" ] && "$s" read-events > "$dir/events.jsonl" || true
   [ -s "$dir/events.jsonl" ] || die "no events for $arm-$n (worker stopped before check?)"
   local sid=""; [ -x "$s" ] && sid=$("$s" session-id 2>/dev/null || true)
-  CLAUDE_CONFIG_DIR="$dir/cfg" python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt"
+  CLAUDE_CONFIG_DIR="$dir/cfg" INLINE_EVAL_FIXTURE="$(cat "$dir/fixture.txt" 2>/dev/null || echo "$FIXTURE")" \
+    python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt"
 }
 
 cmd_stop() { use_rep_tmux "$1" "$2"; "$(shim "$1" "$2")" stop; }

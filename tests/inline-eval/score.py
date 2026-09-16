@@ -22,6 +22,11 @@ rep = sys.argv[1]
 sid = sys.argv[2] if len(sys.argv) > 2 else ""
 repo = os.path.join(rep, "repo")
 
+# Fixture-specific scoring: which test file goes with which module, where the
+# implementation lives, how to run the suite, and a probe for planted defects.
+FIXTURE = os.environ.get("INLINE_EVAL_FIXTURE") or os.path.join(os.path.dirname(__file__), "fixtures", "wordstat")
+SCORING = json.load(open(os.path.join(FIXTURE, "scoring.json")))
+
 # ---- transcript -----------------------------------------------------------
 
 CFG = os.path.expanduser(os.environ.get("CLAUDE_CONFIG_DIR", "~/.claude"))
@@ -134,13 +139,12 @@ row("Agent dispatches", len(agents),
     "; ".join(f"{a.get('subagent_type', '-')}/{a.get('model', '-')}:{str(a.get('description', ''))[:28]!r}" for _, a in agents))
 
 bash = [(i, inp.get("command", "")) for i, tool, inp in calls if tool == "Bash"]
-test_runs = [i for i, c in bash if "unittest" in c]
-row("unittest runs", len(test_runs))
+test_runs = [i for i, c in bash if SCORING["test_marker"] in c]
+row("test runs", len(test_runs))
 
-tasks = {"counter": "test_counter", "formatter": "test_formatter", "cli": "test_cli"}
-for mod, test in tasks.items():
+for mod, test in SCORING["tasks"].items():
     tw = first_write_idx(test)
-    iw = first_write_idx(rf"wordstat/{mod}\.py")
+    iw = first_write_idx(rf"{SCORING['impl_dir']}/{mod}\.py")
     # a command that writes the test AND runs it counts as a red run (r == tw);
     # one that writes the impl and runs it is green, not red (r == iw excluded)
     red = any(tw is not None and iw is not None and tw <= r < iw for r in test_runs)
@@ -158,8 +162,14 @@ def sh(cmd):
 
 commits = sh("git rev-list --count HEAD").stdout.strip()
 row("commits (incl. fixture)", commits)
-t = sh('python3 -m unittest discover -p "test_*.py" 2>&1 | tail -1')
-row("unittest in repo", t.stdout.strip()[:60])
+t = sh(SCORING["suite"] + ' 2>&1 | tail -1')
+row("suite in repo", t.stdout.strip()[:60])
+probe = os.path.join(FIXTURE, "probe.sh")
+if os.path.exists(probe):
+    p = sh(f'bash "{probe}"')
+    for line in (p.stdout.strip() or "probe produced no output").splitlines():
+        name, _, verdict = line.partition(":")
+        row(f"probe {name.strip()}", verdict.strip()[:50])
 events = os.path.join(rep, "events.jsonl")
 turns = sum(1 for l in open(events) if '"user_prompt_submit"' in l) if os.path.exists(events) else "?"
 row("user_prompt_submit events", turns, "(background-agent wakeups count too)")
