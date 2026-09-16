@@ -78,7 +78,7 @@ digraph process {
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Final whole-branch review (fresh reviewer if you have one)" [shape=box];
-    "Findings? ONE fix pass by you, ONE scoped re-review, adjudicate residuals" [shape=box];
+    "Re-grade, then: Critical/Important → ONE fix pass by you + ONE scoped re-review; Minor → ledger" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
@@ -94,8 +94,8 @@ digraph process {
     "Append completion line to ledger, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "Extract brief (task-brief), read it, record BASE" [label="yes"];
     "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
-    "Final whole-branch review (fresh reviewer if you have one)" -> "Findings? ONE fix pass by you, ONE scoped re-review, adjudicate residuals";
-    "Findings? ONE fix pass by you, ONE scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
+    "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass by you + ONE scoped re-review; Minor → ledger";
+    "Re-grade, then: Critical/Important → ONE fix pass by you + ONE scoped re-review; Minor → ledger" -> "Final review clean: delete this plan's workspace";
     "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
@@ -141,6 +141,11 @@ authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
 
+**REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
+before Task 1. It governs every step of every task below; a plan whose
+steps already say "write the failing test first" does not exempt you
+from reading it.
+
 Before Task 1, scan the plan once for conflicts, writing down what you
 checked as you check it: tasks that contradict each other or the plan's
 Global Constraints, and anything the plan mandates that a reviewer would
@@ -172,8 +177,8 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 2. Work the steps
 
-**REQUIRED SUB-SKILL:** Use superpowers:test-driven-development. The plan's
-steps are already in RED-GREEN order; follow them in that order. A test
+The plan's steps are already in RED-GREEN order; follow them in that
+order under superpowers:test-driven-development, loaded at setup. A test
 step's code is written first and run first. Watching it fail is a step,
 not a formality — a test that passes before the implementation exists is
 a finding about the test.
@@ -242,24 +247,40 @@ ledger, and say so in your final message: a self-review by the author is
 weaker than a fresh reviewer, and your human partner decides whether that
 is enough before merge.
 
-If the review returns findings, fix them yourself — you are the
+Sort the findings before you act on any of them. The reviewer's severity
+labels are advice; the gate is yours. Re-grade first: a finding labeled
+Minor that describes an unhandled exception, a traceback reaching the
+user, data loss, or a wrong result on valid input is Important, whatever
+the label says — reviewers have filed crashes as Minor because the spec
+did not mention the input that triggers them. Then:
+
+- **Critical and Important** enter the fix pass.
+- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
+  and to your final message under "Deferred minors". Minors never enter
+  the fix pass, and never become rulings — a ruling is a decision about a
+  conflict, not a note that you declined a polish suggestion.
+
+Fix the Critical and Important findings yourself — you are the
 implementer here — in ONE pass, each fix under TDD, covering tests re-run.
 Then run exactly one scoped re-review of the fix range
 (`review-package PLAN_FILE FIX_BASE HEAD`, dispatched with
 superpowers:subagent-driven-development's
-[re-review-prompt.md](../subagent-driven-development/re-review-prompt.md),
-or performed yourself without a subagent tool). Adjudicate residual
-findings as rulings in the ledger. There is no second fix pass — residual
-load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+[re-review-prompt.md](../subagent-driven-development/re-review-prompt.md)
+on a mid-tier model — the re-review verifies named fixes against a small
+diff and does not need the most capable model — or performed yourself
+without a subagent tool). Adjudicate residual findings as rulings in the
+ledger. There is no second fix pass — residual load-bearing findings
+surface to your human partner when finishing-a-development-branch
+presents the options.
 
 ## Finish
 
 Before you delete anything, collect every ledger line containing
 `Ruling:` into your final message under "Rulings I made", in the order you
-made them, each with what it costs if wrong. The list is exhaustive. That
-list is the only place the decisions you took on your human partner's
-behalf reach them.
+made them, each with what it costs if wrong, and every `minor (deferred)`
+line under "Deferred minors". Both lists are exhaustive. Your final
+message is the only place the decisions you took on your human partner's
+behalf — and the findings you chose not to act on — reach them.
 
 When the final review is clean and its fixes are committed, delete this
 plan's workspace directory — the git history is the record now. Sibling
@@ -280,6 +301,8 @@ Use superpowers:finishing-a-development-branch.
 | "I read my own diff carefully; the final reviewer is redundant" | Same author, same blind spots. The reviewer is the only fresh context this run buys. |
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
 | "Subagents are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
+| "The reviewer said Minor, so it's Minor" | A traceback is Important whatever the label. Re-grade, then gate. |
+| "I'll fix the minors too while I'm in there" | Minors cost a fix pass and a re-review each time. Ledger them; your partner decides. |
 
 ## Example Workflow
 
