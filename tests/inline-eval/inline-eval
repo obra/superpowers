@@ -2,28 +2,33 @@
 # inline-eval — lightweight A/B eval of the executing-plans skill.
 #
 # Drives real Claude Code sessions (via claude-session-driver's csd) against
-# the sdd-tiny fixture, with ONLY the superpowers checkout under test loaded
-# (--settings disables every installed plugin; --plugin-dir loads one copy).
+# the sdd-tiny fixture. Each rep runs in a CLEAN environment: a fresh
+# CLAUDE_CONFIG_DIR (so no user CLAUDE.md, no user hooks, no installed
+# plugins), API-key auth from the evals .env file, and ONLY the superpowers
+# checkout under test loaded via --plugin-dir. The plugin's SessionStart
+# hook, bootstrap, and Skill tool are the real thing.
 #
 # Arms:
-#   dev    — superpowers at origin's dev branch (baseline; the RED run)
+#   dev    — superpowers at the dev branch (baseline; the RED run)
 #   spike  — this checkout (whatever branch it is on)
 #
 # Usage:
-#   inline-eval start <arm> <n>          create scratch repo, launch worker, send prompt
-#   inline-eval wait  <arm> <n> [secs]   block until the worker's turn ends (default 2400)
+#   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
+#   inline-eval wait  <arm> <n> [secs]   block until the worker is idle (default 2400/turn)
 #   inline-eval reply <arm> <n> <text>   answer a worker that stopped to ask something
-#   inline-eval check <arm> <n>          score the rep (events + repo + transcript)
+#   inline-eval check <arm> <n>          score the rep (transcript + events + repo)
 #   inline-eval turn  <arm> <n>          print the worker's last turn (full)
 #   inline-eval stop  <arm> <n>          stop the worker (keeps the scratch repo)
 #   inline-eval list                     list live workers
 #
 # Env:
-#   INLINE_EVAL_DIR   scratch base (default /tmp/inline-eval)
-#   INLINE_EVAL_MODEL extra `--model` for the worker (default: harness default)
+#   INLINE_EVAL_DIR       scratch base (default /tmp/inline-eval)
+#   INLINE_EVAL_ENV_FILE  file holding ANTHROPIC_API_KEY=... (default <repo>/evals/.env)
+#   INLINE_EVAL_MODEL     extra `--model` for the worker (default: harness default)
 #
 # Artifacts per rep live in $INLINE_EVAL_DIR/reps/<arm>-<n>/:
 #   repo/         the scratch git repo the worker works in
+#   cfg/          the worker's CLAUDE_CONFIG_DIR (transcripts under cfg/projects/)
 #   events.jsonl  copy of the csd event stream (after `check`)
 #   score.txt     the scorecard (after `check`)
 set -euo pipefail
@@ -32,16 +37,10 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 REPO_ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 CSD=/Users/jesse/.claude/plugins/cache/superpowers-marketplace/claude-session-driver/4.0.0/skills/driving-claude-code-sessions/scripts/csd
 EVAL_DIR=${INLINE_EVAL_DIR:-/tmp/inline-eval}
-# Claude inside a tmux server started from another login context cannot
-# reach the macOS keychain ("Not logged in · run security unlock-keychain").
-# A private socket dir makes tmux spawn a fresh server from THIS process,
-# which inherits working auth. Every csd/shim call must see the same value.
-# Short path on purpose: unix socket paths are capped at ~104 chars on macOS.
-export TMUX_TMPDIR=${TMUX_TMPDIR:-/tmp/inline-eval-tmux}
-mkdir -p "$TMUX_TMPDIR"
+ENV_FILE=${INLINE_EVAL_ENV_FILE:-$REPO_ROOT/evals/.env}
 FIXTURE=$REPO_ROOT/evals/scenarios/sdd-tiny/fixtures
 
-usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
 die() { echo "inline-eval: $*" >&2; exit 1; }
 
@@ -54,43 +53,56 @@ plugin_dir_for() {
     dev)
       local wt="$EVAL_DIR/plugin-dev"
       if [ ! -d "$wt" ]; then
-        git -C "$REPO_ROOT" worktree add -q "$wt" dev
+        # --detach: a branch already checked out elsewhere cannot be added again
+        git -C "$REPO_ROOT" worktree add -q --detach "$wt" dev >&2
       fi
+      [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
     *) die "unknown arm: $1 (dev|spike)" ;;
   esac
 }
 
-no_plugins_settings() {
-  local f="$EVAL_DIR/no-plugins.json"
-  python3 - "$f" <<'PY'
-import json, sys, os
-s = json.load(open(os.path.expanduser('~/.claude/settings.json')))
-off = {k: False for k in s.get('enabledPlugins', {})}
-json.dump({"enabledPlugins": off}, open(sys.argv[1], 'w'))
-PY
-  echo "$f"
+api_key() {
+  [ -f "$ENV_FILE" ] || die "no env file at $ENV_FILE (set INLINE_EVAL_ENV_FILE)"
+  local k; k=$(grep '^ANTHROPIC_API_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2-)
+  [ -n "$k" ] || die "ANTHROPIC_API_KEY is empty in $ENV_FILE"
+  echo "$k"
 }
 
-# Claude Code shows a workspace-trust dialog for a directory it has never
-# seen, and csd cannot answer it. Pre-record acceptance the way Claude Code
-# itself does (projects[<realpath>].hasTrustDialogAccepted in ~/.claude.json).
-trust_repo() {
-  python3 - "$1" <<'PY'
+# Seed the worker's fresh config dir so Claude Code skips its first-run
+# wizard (theme, "use this API key?", security notes) and the workspace-trust
+# dialog — csd cannot answer any of them. Field names and shapes were read
+# back from a config dir after walking the wizard by hand on 2.1.273.
+seed_config_dir() {
+  local cfg=$1 repo=$2 key=$3
+  mkdir -p "$cfg"
+  python3 - "$cfg" "$repo" "$key" "$(claude --version | awk '{print $1}')" <<'PY'
 import json, os, sys
-path = os.path.realpath(sys.argv[1])
-cfg = os.path.expanduser('~/.claude.json')
-d = json.load(open(cfg))
-d.setdefault('projects', {}).setdefault(path, {})['hasTrustDialogAccepted'] = True
-tmp = cfg + '.inline-eval.tmp'
-json.dump(d, open(tmp, 'w'), indent=2)
-os.replace(tmp, cfg)
+cfg, repo, key, version = sys.argv[1:5]
+d = {
+    "hasCompletedOnboarding": True,
+    "lastOnboardingVersion": version,
+    "customApiKeyResponses": {"approved": [key[-20:]], "rejected": []},
+    "projects": {os.path.realpath(repo): {"hasTrustDialogAccepted": True}},
+}
+json.dump(d, open(os.path.join(cfg, ".claude.json"), "w"), indent=2)
 PY
 }
 
 rep_dir() { echo "$EVAL_DIR/reps/$1-$2"; }
 worker()  { echo "ep-$1-$2"; }
 shim()    { echo "/tmp/csd-workers/bin/$(worker "$1" "$2")"; }
+
+# One private tmux server per rep, for two reasons: a server started from an
+# old login context cannot reach the macOS keychain ("Not logged in"), and a
+# tmux server captures its environment at creation, so per-rep env vars
+# (CLAUDE_CONFIG_DIR, ANTHROPIC_API_KEY) only reach the worker if the server
+# is born from a shell that has them. Short path: unix sockets cap at ~104
+# chars on macOS. Every csd/shim call for a rep must see the same value.
+use_rep_tmux() {
+  export TMUX_TMPDIR="/tmp/ie-tmux-$1-$2"
+  mkdir -p "$TMUX_TMPDIR"
+}
 
 PROMPT='I have a plan at plan.md, with design context in design.md. Execute it inline in this session using the superpowers:executing-plans skill — do not dispatch a subagent per task. This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
 
@@ -103,26 +115,36 @@ cmd_start() {
   git -C "$dir/repo" init -q -b main
   git -C "$dir/repo" add -A
   git -C "$dir/repo" -c user.name=fixture -c user.email=fixture@example.com commit -q -m "fixture: wordstat plan"
-  trust_repo "$dir/repo"
-  local plugin; plugin=$(plugin_dir_for "$arm")
-  local settings; settings=$(no_plugins_settings)
+  local key; key=$(api_key)
+  seed_config_dir "$dir/cfg" "$dir/repo" "$key"
+  local plugin; plugin=$(plugin_dir_for "$arm") || exit 1
   local extra=()
   [ -n "${INLINE_EVAL_MODEL:-}" ] && extra=(--model "$INLINE_EVAL_MODEL")
   echo "plugin: $plugin ($(git -C "$plugin" rev-parse --short HEAD) $(git -C "$plugin" branch --show-current))" | tee "$dir/plugin.txt"
-  "$CSD" launch "$(worker "$arm" "$n")" "$dir/repo" -- --settings "$settings" --plugin-dir "$plugin" ${extra[@]+"${extra[@]}"}
+  use_rep_tmux "$arm" "$n"
+  CLAUDE_CONFIG_DIR="$dir/cfg" ANTHROPIC_API_KEY="$key" \
+    "$CSD" launch "$(worker "$arm" "$n")" "$dir/repo" -- --plugin-dir "$plugin" ${extra[@]+"${extra[@]}"}
   "$(shim "$arm" "$n")" send "$PROMPT"
   echo "started $(worker "$arm" "$n"); wait with: $0 wait $arm $n"
 }
 
 # A worker that dispatches a background Agent ends its turn to wait for it
 # and is re-invoked when the agent reports, so one wait-for-turn returns
-# early. Loop until the worker is genuinely idle.
+# early. Worse, csd reports "idle" for a moment between the turn's stop
+# event and the subagent's first tool call. Loop until the worker has been
+# idle for a sustained stretch.
 cmd_wait() {
   local arm=$1 n=$2 secs=${3:-2400}
+  use_rep_tmux "$arm" "$n"
   local s; s=$(shim "$arm" "$n")
   while :; do
     "$s" wait-for-turn "$secs" || true
-    local st; st=$("$s" status)
+    local st="idle" i
+    for i in 1 2 3; do
+      sleep 10
+      st=$("$s" status)
+      [ "$st" = "working" ] && break
+    done
     echo "$st"
     [ "$st" = "working" ] || break
   done
@@ -130,22 +152,24 @@ cmd_wait() {
 
 cmd_reply() {
   local arm=$1 n=$2; shift 2
+  use_rep_tmux "$arm" "$n"
   "$(shim "$arm" "$n")" send "$*"
 }
 
-cmd_turn() { "$(shim "$1" "$2")" read-turn --full; }
+cmd_turn() { use_rep_tmux "$1" "$2"; "$(shim "$1" "$2")" read-turn --full; }
 
 cmd_check() {
   local arm=$1 n=$2
   local dir; dir=$(rep_dir "$arm" "$n")
+  use_rep_tmux "$arm" "$n"
   local s; s=$(shim "$arm" "$n")
   [ -x "$s" ] && "$s" read-events > "$dir/events.jsonl" || true
   [ -s "$dir/events.jsonl" ] || die "no events for $arm-$n (worker stopped before check?)"
   local sid=""; [ -x "$s" ] && sid=$("$s" session-id 2>/dev/null || true)
-  python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt"
+  CLAUDE_CONFIG_DIR="$dir/cfg" python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt"
 }
 
-cmd_stop() { "$(shim "$1" "$2")" stop; }
+cmd_stop() { use_rep_tmux "$1" "$2"; "$(shim "$1" "$2")" stop; }
 cmd_list() { "$CSD" list ep- ; }
 
 [ $# -ge 1 ] || usage

@@ -3,7 +3,7 @@
 
 Usage: score.py <rep-dir> [session-id]
 
-Reads the Claude Code session transcript (~/.claude/projects/**/<sid>.jsonl)
+Reads the Claude Code session transcript ($CLAUDE_CONFIG_DIR/projects/**/<sid>.jsonl)
 for the ordered tool calls and assistant text, the csd events copy in
 <rep-dir>/events.jsonl as a cross-check on tool-call counts, the scratch repo
 for commits and a real test run, and the session's subagent transcripts for their token usage.
@@ -24,14 +24,15 @@ repo = os.path.join(rep, "repo")
 
 # ---- transcript -----------------------------------------------------------
 
+CFG = os.path.expanduser(os.environ.get("CLAUDE_CONFIG_DIR", "~/.claude"))
+
 def find_transcript():
     if sid:
-        hits = glob.glob(os.path.expanduser(f"~/.claude/projects/*/{sid}.jsonl"))
+        hits = glob.glob(f"{CFG}/projects/*/{sid}.jsonl")
         if hits:
             return hits[0]
     enc = re.sub(r"[/._]", "-", os.path.realpath(repo))
-    hits = sorted(glob.glob(os.path.expanduser(f"~/.claude/projects/{enc}/*.jsonl")),
-                  key=os.path.getmtime)
+    hits = sorted(glob.glob(f"{CFG}/projects/{enc}/*.jsonl"), key=os.path.getmtime)
     return hits[-1] if hits else None
 
 transcript = find_transcript()
