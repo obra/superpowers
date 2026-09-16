@@ -1,0 +1,18 @@
+# USD per rep (cost.py; Anthropic API list rates cached 2026-06-24), medians of 3 clean reps
+bare (1 2 3)              $  0.38
+dev (1 2 3)               $  0.47
+barerevs (1 2 3)          $  0.63
+barerev (1 2 3)           $  0.85
+spike (1 2 3)             $  2.53
+spike (11 12 13)          $  2.21
+spike (21 22 23)          $  1.83
+spikerf (1 2 3)           $  1.88
+spikesonnet (1 2 3)       $  1.43
+barefork (1 2 3)          $  3.59
+sdd (1 2 3)               $  4.53
+
+# spike (1 2 3)    = executing-plans v1 (rebuild)
+# spike (11 12 13) = v2: TDD at setup, re-grade + severity gate, sonnet re-review
+# spike (21 22 23) = v3: task-start/task-done helpers, TDD-verified fix pass (no re-review), scoped scan
+# spikerf          = v3 + plan carries a Review Focus section
+# spikesonnet      = v3 with a sonnet session; final review on opus
