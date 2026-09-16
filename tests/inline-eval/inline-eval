@@ -13,6 +13,8 @@
 #   spike  — this checkout (whatever branch it is on), inline prompt
 #   sdd    — this checkout, but the prompt asks for subagent-driven-development
 #   bare   — no superpowers loaded at all; the prompt just says to execute the plan
+#   barerev  — bare, plus one sentence asking for a fresh opus reviewer at the end
+#   barerevs — same, but the reviewer is sonnet
 #
 # Usage:
 #   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
@@ -52,7 +54,7 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 plugin_dir_for() {
   case "$1" in
     spike|sdd) echo "$REPO_ROOT" ;;
-    bare) echo "" ;;
+    bare|barerev|barerevs) echo "" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
       if [ ! -d "$wt" ]; then
@@ -61,7 +63,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs)" ;;
   esac
 }
 
@@ -112,6 +114,8 @@ prompt_for() {
   case "$1" in
     sdd)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
     bare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
+    barerev)  echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the opus model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
+    barerevs) echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the sonnet model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
     *)   echo "I have a plan at plan.md, with design context in design.md. Execute it inline in this session using the superpowers:executing-plans skill — do not dispatch a subagent per task. $common" ;;
   esac
 }
