@@ -241,8 +241,11 @@ Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE 
 available model — the whole-branch review is a judgment task — using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md), with the
-package path, the plan and spec paths, and a pointer to the ledger's
-`Ruling:` lines so it can weigh the calls you made. Specify the model
+package path, the plan and spec paths, the plan's Review Focus section
+verbatim if it has one (the input classes and failure modes the plan's
+tests do not exercise — the reviewer checks each deliberately), and a
+pointer to the ledger's `Ruling:` lines so it can weigh the calls you
+made. Specify the model
 explicitly; an omitted model inherits the session's, which may not be the
 most capable. This is the one fresh context the whole run buys. Do not
 skip it, and do not replace it with your own read of the diff.
@@ -255,7 +258,11 @@ weaker than a fresh reviewer, and your human partner decides whether that
 is enough before merge.
 
 Sort the findings before you act on any of them. The reviewer's severity
-labels are advice; the gate is yours. Re-grade first, by effect: the
+labels are advice; the gate is yours. Its "Declined to judge" list is
+yours too: every line there is a ruling you make and ledger, exactly like
+a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
+<what a reasonable person using this software gets, and why that stands
+or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect: the
 spec is a vision document, and a finding's grade is what a reasonable
 person using this software gets if it ships, not whether the spec names
 the input that triggers it — a reviewer who set a finding at Minor
