@@ -189,6 +189,73 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- Greenfield: the scripts run before a repo exists ---
+    # A greenfield plan's Task 1 is "create the repo", so the scripts must
+    # work with no repo to resolve. $TEST_ROOT is outside any repo.
+    local gf="$TEST_ROOT/greenfield"
+    mkdir -p "$gf"
+    cat > "$gf/plan-a.md" <<'PLAN'
+# Plan A
+
+## Task 1: Scaffold the repo
+
+Create the repo.
+PLAN
+    local gf_phys
+    gf_phys="$(cd "$gf" && pwd)"
+
+    local gf_dir gf_rc=0
+    gf_dir="$(cd "$gf" && "$SDD_SCRIPTS/sdd-workspace" plan-a.md 2>/dev/null)" || gf_rc=$?
+    if [[ "$gf_rc" -eq 0 && "$gf_dir" == "$gf_phys/.superpowers/sdd/plan-a" ]]; then
+        pass "sdd-workspace outside a repo degrades to the current directory"
+    else
+        fail "sdd-workspace outside a repo degrades to the current directory"
+        echo "    rc: $gf_rc, got: $gf_dir"
+    fi
+
+    # stdout stays the bare path (task-brief captures it); the notice goes to stderr
+    local gf_err
+    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/sdd-workspace" plan-a.md 2>&1 >/dev/null)"
+    if [[ "$gf_err" == *"no git repository yet"* ]]; then
+        pass "sdd-workspace outside a repo explains itself on stderr"
+    else
+        fail "sdd-workspace outside a repo explains itself on stderr"
+        echo "    stderr: $gf_err"
+    fi
+
+    local tb_rc=0
+    (cd "$gf" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 >/dev/null 2>&1) || tb_rc=$?
+    if [[ "$tb_rc" -eq 0 && -s "$gf_phys/.superpowers/sdd/plan-a/task-1-brief.md" ]]; then
+        pass "task-brief outside a repo writes the brief for Task 1"
+    else
+        fail "task-brief outside a repo writes the brief for Task 1"
+        echo "    rc: $tb_rc"
+    fi
+
+    # review-package genuinely needs SHAs: it must refuse with an actionable
+    # message rather than git's bare "fatal: not a git repository".
+    local rp_rc=0 rp_err
+    rp_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD 2>&1 >/dev/null)" || rp_rc=$?
+    if [[ "$rp_rc" -eq 2 && "$rp_err" == *"not a git repository"* && "$rp_err" == *"BASE and HEAD"* ]]; then
+        pass "review-package outside a repo errors actionably with exit 2"
+    else
+        fail "review-package outside a repo errors actionably with exit 2"
+        echo "    rc: $rp_rc, stderr: $rp_err"
+    fi
+
+    # Once Task 1 creates the repo in place, the workspace path is unchanged,
+    # so briefs written pre-repo are not orphaned.
+    git init -q -b main "$gf"
+    local gf_after
+    gf_after="$(cd "$gf" && "$SDD_SCRIPTS/sdd-workspace" plan-a.md 2>/dev/null)"
+    if [[ "$gf_after" == "$gf_dir" ]]; then
+        pass "workspace path survives the repo being created in place"
+    else
+        fail "workspace path survives the repo being created in place"
+        echo "    before: $gf_dir"
+        echo "    after:  $gf_after"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
