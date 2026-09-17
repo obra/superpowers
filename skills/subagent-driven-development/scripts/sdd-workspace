@@ -17,6 +17,9 @@
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
+# The workspace root can be overridden via $SUPERPOWERS_WORKSPACE_DIR.
+# Defaults to <repo-root>/.superpowers.
+#
 # Usage: sdd-workspace PLAN_FILE
 set -euo pipefail
 
@@ -33,7 +36,7 @@ slug=$(basename "$plan" .md)
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
 root=$(git rev-parse --show-toplevel)
-base="$root/.superpowers/sdd"
+base="${SUPERPOWERS_WORKSPACE_DIR:-$root/.superpowers}/sdd"
 dir="$base/$slug"
 mkdir -p "$dir"
 printf '*\n' > "$base/.gitignore"
