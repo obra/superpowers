@@ -1,0 +1,315 @@
+I’ll compare the branch with the plan and spec, read the implementation and tests, and check behavior without changing the checkout.
+exec
+/bin/zsh -lc "pwd; rg --files -g 'AGENTS.md' -g 'plan.md' -g 'design.md' -g 'pyproject.toml' -g '*test*' -g 'wordstat/**'; git status --short; git diff --stat 370a61dd7955dea6e5d90eb23de7d4237b5e8040..HEAD; git diff 370a61dd7955dea6e5d90eb23de7d4237b5e8040..HEAD" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R0-current-3/repo
+ succeeded in 5914ms:
+2026-09-17 12:52:23.171 xcodebuild[41617:99751419]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:23.416 xcodebuild[41617:99751418] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-IuJurtQc' (errno=Operation not permitted)
+2026-09-17 12:52:23.900 xcodebuild[41637:99751550]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:24.017 xcodebuild[41637:99751549] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-Zzz9NF7I' (errno=Operation not permitted)
+2026-09-17 12:52:25.053 xcodebuild[41671:99751725]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:25.179 xcodebuild[41671:99751723] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-eMg4Av2V' (errno=Operation not permitted)
+2026-09-17 12:52:25.611 xcodebuild[41690:99751816]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:25.738 xcodebuild[41690:99751813] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+ test_cli.py           | 30 ++++++++++++++++++++++++++++++
+ test_counter.py       | 18 ++++++++++++++++++
+ test_formatter.py     | 11 +++++++++++
+ wordstat/cli.py       | 27 +++++++++++++++++++++++++++
+ wordstat/counter.py   | 13 +++++++++++++
+ wordstat/formatter.py |  5 +++++
+ 6 files changed, 104 insertions(+)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-kwEqiVlC' (errno=Operation not permitted)
+2026-09-17 12:52:26.719 xcodebuild[41718:99751984]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:26.858 xcodebuild[41718:99751981] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-WpoLrl2s' (errno=Operation not permitted)
+2026-09-17 12:52:27.304 xcodebuild[41736:99752073]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:27.429 xcodebuild[41736:99752072] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+diff --git a/test_cli.py b/test_cli.py
+new file mode 100644
+index 0000000..0793491
+--- /dev/null
++++ b/test_cli.py
+@@ -0,0 +1,30 @@
++import io
++import tempfile
++import unittest
++from contextlib import redirect_stderr, redirect_stdout
++from pathlib import Path
++
++from wordstat.cli import main
++
++
++class CliTests(unittest.TestCase):
++    def test_main_prints_report_for_file(self):
++        with tempfile.TemporaryDirectory() as directory:
++            path = Path(directory) / "sample.txt"
++            path.write_text("the quick\nbrown fox\n", encoding="utf-8")
++            stdout = io.StringIO()
++
++            with redirect_stdout(stdout):
++                result = main([str(path)])
++
++        self.assertEqual(result, 0)
++        self.assertEqual(stdout.getvalue(), "words: 4\nlines: 2\nchars: 20\n")
++
++    def test_main_returns_one_for_missing_file(self):
++        stderr = io.StringIO()
++
++        with redirect_stderr(stderr):
++            result = main(["/no/such/file"])
++
++        self.assertEqual(result, 1)
++        self.assertTrue(stderr.getvalue())
+diff --git a/test_counter.py b/test_counter.py
+new file mode 100644
+index 0000000..341b8df
+--- /dev/null
++++ b/test_counter.py
+@@ -0,0 +1,18 @@
++import unittest
++
++from wordstat.counter import count_chars, count_lines, count_words
++
++
++class CounterTests(unittest.TestCase):
++    def test_count_words(self):
++        self.assertEqual(count_words("the quick brown fox"), 4)
++        self.assertEqual(count_words(""), 0)
++
++    def test_count_lines(self):
++        self.assertEqual(count_lines("a\nb"), 2)
++        self.assertEqual(count_lines("a\nb\n"), 2)
++        self.assertEqual(count_lines(""), 0)
++
++    def test_count_chars(self):
++        self.assertEqual(count_chars("abc"), 3)
++        self.assertEqual(count_chars("a b"), 3)
+diff --git a/test_formatter.py b/test_formatter.py
+new file mode 100644
+index 0000000..925b36e
+--- /dev/null
++++ b/test_formatter.py
+@@ -0,0 +1,11 @@
++import unittest
++
++from wordstat.formatter import format_report
++
++
++class FormatterTests(unittest.TestCase):
++    def test_format_report(self):
++        self.assertEqual(
++            format_report({"words": 12, "lines": 3, "chars": 57}),
++            "words: 12\nlines: 3\nchars: 57",
++        )
+diff --git a/wordstat/cli.py b/wordstat/cli.py
+new file mode 100644
+index 0000000..ec622c3
+--- /dev/null
++++ b/wordstat/cli.py
+@@ -0,0 +1,27 @@
++"""Command-line entry point for wordstat."""
++
++import argparse
++import sys
++
++from . import counter, formatter
++
++
++def main(argv):
++    parser = argparse.ArgumentParser(description="Report statistics for a text file.")
++    parser.add_argument("path")
++    args = parser.parse_args(argv)
++
++    try:
++        with open(args.path, encoding="utf-8") as source:
++            text = source.read()
++    except OSError as error:
++        print(f"wordstat: {error}", file=sys.stderr)
++        return 1
++
++    stats = {
++        "words": counter.count_words(text),
++        "lines": counter.count_lines(text),
++        "chars": counter.count_chars(text),
++    }
++    print(formatter.format_report(stats))
++    return 0
+diff --git a/wordstat/counter.py b/wordstat/counter.py
+new file mode 100644
+index 0000000..2153d0a
+--- /dev/null
++++ b/wordstat/counter.py
+@@ -0,0 +1,13 @@
++"""Pure text statistics."""
++
++
++def count_words(text):
++    return len(text.split())
++
++
++def count_lines(text):
++    return len(text.splitlines())
++
++
++def count_chars(text):
++    return len(text)
+diff --git a/wordstat/formatter.py b/wordstat/formatter.py
+new file mode 100644
+index 0000000..d6db16c
+--- /dev/null
++++ b/wordstat/formatter.py
+@@ -0,0 +1,5 @@
++"""Render text statistics as a human-readable report."""
++
++
++def format_report(stats):
++    return "\n".join(f"{name}: {stats[name]}" for name in ("words", "lines", "chars"))
+
+exec
+/bin/zsh -lc "rg --files --hidden -g '"'!.git'"'; cat plan.md design.md; ls -la wordstat; rg --files /private/tmp/claude-501 -g AGENTS.md" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R0-current-3/repo
+ succeeded in 1990ms:
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v1-scope-vs-failure-3/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v1-scope-vs-failure-4/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v2-deletion-only-6/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v2-deletion-only-1/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v1-scope-vs-failure-5/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v1-scope-vs-failure-2/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v0-current-1/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v0-current-6/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v2-deletion-only-2/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v2-deletion-only-5/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v2-deletion-only-4/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v2-deletion-only-3/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v1-scope-vs-failure-1/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v1-scope-vs-failure-6/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v0-current-5/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v0-current-2/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v0-current-3/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out/v0-current-4/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/67b7eb56-dd95-43ff-bb80-a38a5d035457/scratchpad/old-local-plugin-dev/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v4/v4-boundary-slot-5/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v4/v4-boundary-slot-2/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v4/v4-boundary-slot-3/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v4/v4-boundary-slot-4/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v4/v4-boundary-slot-1/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v4/v4-boundary-slot-6/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v3/v3-boundary-list-3/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v3/v3-boundary-list-4/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v3/v3-boundary-list-5/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v3/v3-boundary-list-2/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v3/v3-boundary-list-1/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-out-v3/v3-boundary-list-6/repo/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-prime-radiant-inc-evener--claude-worktrees-issue-1116-merge-review-1fc3f3/c188f328-8307-42c0-8c58-f2b3e0d8b222/scratchpad/main-probe2/AGENTS.md
+/private/tmp/claude-501/-Users-jesse-git-prime-radiant-inc-evener--claude-worktrees-issue-1116-merge-review-1fc3f3/c188f328-8307-42c0-8c58-f2b3e0d8b222/scratchpad/main-probe2/mobile-native/AGENTS.md
+
+exec
+/bin/zsh -lc 'PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v; git log --oneline 370a61dd7955dea6e5d90eb23de7d4237b5e8040..HEAD; cat wordstat/__init__.py; nl -ba wordstat/cli.py; PYTHONDONTWRITEBYTECODE=1 python3 -m wordstat.cli design.md' in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R0-current-3/repo
+ succeeded in 1400ms:
+2026-09-17 12:52:38.580 xcodebuild[42007:99752922]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:38.696 xcodebuild[42007:99752921] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-E7cz5M2J' (errno=Operation not permitted)
+2026-09-17 12:52:39.076 xcodebuild[42013:99752954]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:52:39.194 xcodebuild[42013:99752953] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+56ffbda tasks 1-3
+"""wordstat — tiny text-statistics package. See design.md and plan.md."""
+     1	"""Command-line entry point for wordstat."""
+     2	
+     3	import argparse
+     4	import sys
+     5	
+     6	from . import counter, formatter
+     7	
+     8	
+     9	def main(argv):
+    10	    parser = argparse.ArgumentParser(description="Report statistics for a text file.")
+    11	    parser.add_argument("path")
+    12	    args = parser.parse_args(argv)
+    13	
+    14	    try:
+    15	        with open(args.path, encoding="utf-8") as source:
+    16	            text = source.read()
+    17	    except OSError as error:
+    18	        print(f"wordstat: {error}", file=sys.stderr)
+    19	        return 1
+    20	
+    21	    stats = {
+    22	        "words": counter.count_words(text),
+    23	        "lines": counter.count_lines(text),
+    24	        "chars": counter.count_chars(text),
+    25	    }
+    26	    print(formatter.format_report(stats))
+    27	    return 0
+
+The code matches the functions and test cases listed in the plan. Five tests pass; the file-based test is blocked by the read-only sandbox because it creates a temporary file. I also confirmed that `python3 -m wordstat.cli` exits without running `main`; I’ll check character counting through a read-only input stream next.
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 python3 -c 'import subprocess, sys, io; from contextlib import redirect_stdout; from pathlib import Path; from wordstat.cli import main
+text = Path(\"design.md\").read_text(encoding=\"utf-8\")
+out = io.StringIO()
+with redirect_stdout(out):
+    code = main([\"design.md\"])
+assert code == 0
+assert out.getvalue() == \"words: {}\\nlines: {}\\nchars: {}\\n\".format(len(text.split()), len(text.splitlines()), len(text))
+print(\"Existing-file integration check: passed\")
+for data in [b\"a\\r\\nb\\r\\n\", b\"\\xff\"]:
+    result = subprocess.run([sys.executable, \"-B\", \"-c\", \"from wordstat.cli import main; raise SystemExit(main([\\\"/dev/stdin\\\"]))\"], input=data, capture_output=True)
+    print(repr(data), \"exit:\", result.returncode, \"stdout:\", repr(result.stdout), \"stderr:\", result.stderr.decode()[-200:])'" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R0-current-3/repo
+ succeeded in 0ms:
+Existing-file integration check: passed
+b'a\r\nb\r\n' exit: 0 stdout: b'words: 2\nlines: 2\nchars: 4\n' stderr: 
+b'\xff' exit: 1 stdout: b'' stderr: po/wordstat/cli.py", line 16, in main
+    text = source.read()
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+
+### Strengths
+
+- Clean separation between counting, formatting, and CLI orchestration; standard library only.
+- All explicitly planned functions and test cases are implemented, including empty input, trailing newlines, exact report formatting, and missing-file handling.
+- Five tests passed. The sixth was blocked by sandbox restrictions on temporary-file creation; a separate integration check using an existing file passed.
+
+### Issues
+
+#### Critical (Must Fix)
+
+None found.
+
+#### Important (Should Fix)
+
+1. **CLI module never invokes its entry point**
+   - **File:** `wordstat/cli.py:27`
+   - `python3 -m wordstat.cli design.md` exits successfully without printing anything because nothing calls `main`.
+   - Add `if __name__ == "__main__": sys.exit(main(sys.argv[1:]))` and a subprocess test.
+   - This is also a plan gap: the plan tests the callable API but omits executable CLI behavior.
+
+2. **File reading changes character counts**
+   - **File:** `wordstat/cli.py:15`
+   - Default newline translation converts CRLF into LF before counting. Input `a\r\nb\r\n` reports **4 characters instead of 6**, contrary to counting characters including whitespace.
+   - Open with `newline=""` to preserve the original characters, and add a CRLF integration test.
+
+#### Minor (Nice to Have)
+
+1. **Invalid UTF-8 produces an unhandled traceback**
+   - **File:** `wordstat/cli.py:16–17`
+   - Decoding failures raise `UnicodeDecodeError`, which the `OSError` handler does not catch.
+   - Document UTF-8 input and catch `UnicodeError` to print a concise diagnostic and return 1.
+
+### Recommendations
+
+Add end-to-end tests for module invocation and preserved newline characters. Rerun the full suite in an environment permitting temporary files.
+
+The history contains one combined `tasks 1-3` commit, rather than the plan’s separate task commits. Test-first development cannot be verified from that history.
+
+### Assessment
+
+**Ready to merge? With fixes**
+
+**Reasoning:** The planned callable interfaces are implemented cleanly, but command-line execution currently does nothing and CRLF input produces incorrect character totals. Fix these before merging.

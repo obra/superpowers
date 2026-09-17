@@ -1,0 +1,13 @@
+## Review Focus
+
+- **Empty input file** — the one input a user hits by accident: `counter` returns 0/0/0, `format_report` renders `words: 0\nlines: 0\nchars: 0` (not blanks or a crash), and `cli.main` still prints it and returns 0; no task exercises zeros past `count_*`.
+- **No path argument, or two or more paths** — `argparse` raises `SystemExit(2)` rather than returning an int, so `main(argv)`'s "→ int" contract is silently violated for the most common misuse; the spec only pins the one-positional-arg case.
+- **Path exists but is unreadable — a directory, or permission denied** — the spec names only "missing file → stderr + 1", but the same user-facing failure class must not surface as an `IsADirectoryError`/`PermissionError` traceback.
+- **File whose bytes are not decodable, or contain non-ASCII text** — `count_chars` counts *characters*, not bytes (`"héllo"` == 5), which forces an explicit read encoding; undecodable input must fail as a message-and-1, not a `UnicodeDecodeError`.
+- **Multi-line text reaching `count_words` and `count_chars`** — tests only ever pass single-line strings to these two, yet `cli` always feeds them whole files: newlines and tabs must separate words, and newlines must be included in the char count (`count_chars("a\nb")` == 3).
+- **Irregular whitespace: leading, trailing, or repeated runs, and whitespace-only input** — "whitespace-separated tokens" implies `count_words("  a   b  ")` == 2 and `count_words(" \n\t")` == 0; a naive `split(" ")` passes every planned test and fails both.
+- **Single line with no newline, and blank lines** — `count_lines("a")` == 1, `count_lines("\n")` == 1, `count_lines("a\n\nb")` == 3, `count_lines("a\n\n")` == 2; the planned cases fix only the trailing-newline rule and can't distinguish a correct implementation from an off-by-one.
+- **CRLF input** — a file written on Windows must not report a phantom extra line or count `\r` as a character on top of the newline; this is decided by the read mode and the split strategy, neither of which any test pins.
+- **Stream discipline on the error path** — the failure test checks only the return code, so nothing verifies the diagnostic goes to *stderr* and that stdout stays empty (a partial or duplicated report on stdout would pass).
+- **Exact stdout shape on success** — the report is a 3-line string with no trailing newline, so `print` supplies exactly one; a `print` of an already-newline-terminated report yields a trailing blank line that no assertion catches.
+- **`format_report` key order and unexpected keys** — output order is fixed at words/lines/chars regardless of dict insertion order, and a dict missing a key should fail loudly rather than render a partial report; one happy-path dict tests neither.

@@ -1,0 +1,9 @@
+variant=v5-reasonable-ruling rep=1 effort=low
+except: except OSError 
+decode-test: 0
+0
+boundary:
+# boundary: read the user-supplied text file
+#   file exists and is readable       -> test_main_prints_report
+#   file does not exist               -> test_main_returns_one_for_missing_file
+#   file is not decodable as text     -> ruled out: the CLI accepts text files

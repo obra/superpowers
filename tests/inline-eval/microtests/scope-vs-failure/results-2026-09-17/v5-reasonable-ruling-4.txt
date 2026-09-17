@@ -1,0 +1,8 @@
+variant=v5-reasonable-ruling rep=4 effort=low
+except: except OSError 
+decode-test: 0
+0
+boundary:
+# boundary: read the text file named by the command-line argument
+#   readable file contains known text -> test_main_prints_report
+#   path does not exist             -> test_main_returns_one_for_missing_file

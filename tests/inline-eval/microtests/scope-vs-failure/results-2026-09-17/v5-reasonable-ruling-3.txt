@@ -1,0 +1,11 @@
+variant=v5-reasonable-ruling rep=3 effort=low
+except: except (OSError, UnicodeError) 
+decode-test: 0
+0
+boundary:
+# boundary: parse a single positional path with argparse
+#   missing positional path             -> ruled out: argparse's standard usage error is appropriate for invalid CLI invocation
+# boundary: open and read the requested text file
+#   path does not exist                 -> test_main_missing_file_returns_1
+#   another OS-level read failure       -> ruled out: handled by the same OSError path tested with a missing file
+#   file is not decodable as text       -> ruled out: handled by the same read-error path; the input contract requires a text file

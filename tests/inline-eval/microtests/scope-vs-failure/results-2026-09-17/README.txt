@@ -94,3 +94,18 @@ Where the enumeration of what the spec implies actually happened today:
 The lever is which model, at what effort, is asked to enumerate, and
 whether its scoping decisions are written where a human sees them. Not
 the executor's wording.
+
+EFFORT: control and v0 at reasoning effort medium, 6 each: except OSError
+12/12. Effort alone does not produce the enumeration.
+
+v5-reasonable-ruling (v4 slot + a standard for "ruled out" lines: would a
+reasonable user accept what happens; the spec is a vision document and
+its silence is not permission; "the spec does not mention it" is never
+the reason), 6 reps at low effort:
+  (OSError, UnicodeError) 3/6 (reps 2, 3, 6; rep 6 with a test), except
+  OSError 3/6. First implementer-side movement in five variants, and
+  noisy. The shipped reps' rulings: "ruled out: the CLI accepts text
+  files" (2) and no entry at all (1). New rationalization-table row:
+  "the contract accepts text files, so undecodable input is the user's
+  problem" -> a reasonable user hands the tool a file and gets a message,
+  not a traceback.

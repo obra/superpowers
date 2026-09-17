@@ -1,0 +1,10 @@
+variant=v5-reasonable-ruling rep=2 effort=low
+except: except (OSError, UnicodeError) 
+decode-test: 1
+boundary:
+# boundary: parse command-line arguments
+#   missing or extra path arguments -> ruled out: argparse's standard usage error is appropriate CLI behavior
+# boundary: open and read the requested text file
+#   path does not exist -> test_missing_file
+#   permission, directory, or other OS error -> ruled out: handled by the same user-facing error path
+#   text cannot be decoded -> ruled out: handled by the same user-facing error path

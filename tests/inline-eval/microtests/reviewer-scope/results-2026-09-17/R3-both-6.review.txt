@@ -1,0 +1,375 @@
+I’ll read the plan, spec, and full branch diff, then check behavior and run the tests without changing the checkout.
+exec
+/bin/zsh -lc "pwd; rg --files -g 'AGENTS.md' -g 'plan.md' -g 'design.md' -g 'pyproject.toml'; git status --short; git diff --stat 793a51622b97b5e1460bf6a3bebf82d3f51a62ca..HEAD; git diff 793a51622b97b5e1460bf6a3bebf82d3f51a62ca..HEAD" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R3-both-6/repo
+ succeeded in 4497ms:
+2026-09-17 12:55:42.909 xcodebuild[54888:99780907]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:55:43.034 xcodebuild[54888:99780906] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-kEgT51Jz' (errno=Operation not permitted)
+2026-09-17 12:55:43.406 xcodebuild[54892:99780943]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:55:43.519 xcodebuild[54892:99780942] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-oCMyN9mb' (errno=Operation not permitted)
+2026-09-17 12:55:44.412 xcodebuild[54909:99781041]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:55:44.533 xcodebuild[54909:99781040] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-DOio0PZY' (errno=Operation not permitted)
+2026-09-17 12:55:44.928 xcodebuild[54919:99781105]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:55:45.054 xcodebuild[54919:99781101] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+ test_cli.py           | 30 ++++++++++++++++++++++++++++++
+ test_counter.py       | 18 ++++++++++++++++++
+ test_formatter.py     | 11 +++++++++++
+ wordstat/cli.py       | 27 +++++++++++++++++++++++++++
+ wordstat/counter.py   | 13 +++++++++++++
+ wordstat/formatter.py |  5 +++++
+ 6 files changed, 104 insertions(+)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-87qFYT4x' (errno=Operation not permitted)
+2026-09-17 12:55:45.979 xcodebuild[54933:99781159]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:55:46.101 xcodebuild[54933:99781158] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-JuwDuaiy' (errno=Operation not permitted)
+2026-09-17 12:55:46.520 xcodebuild[54937:99781180]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:55:46.633 xcodebuild[54937:99781179] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+diff --git a/test_cli.py b/test_cli.py
+new file mode 100644
+index 0000000..0793491
+--- /dev/null
++++ b/test_cli.py
+@@ -0,0 +1,30 @@
++import io
++import tempfile
++import unittest
++from contextlib import redirect_stderr, redirect_stdout
++from pathlib import Path
++
++from wordstat.cli import main
++
++
++class CliTests(unittest.TestCase):
++    def test_main_prints_report_for_file(self):
++        with tempfile.TemporaryDirectory() as directory:
++            path = Path(directory) / "sample.txt"
++            path.write_text("the quick\nbrown fox\n", encoding="utf-8")
++            stdout = io.StringIO()
++
++            with redirect_stdout(stdout):
++                result = main([str(path)])
++
++        self.assertEqual(result, 0)
++        self.assertEqual(stdout.getvalue(), "words: 4\nlines: 2\nchars: 20\n")
++
++    def test_main_returns_one_for_missing_file(self):
++        stderr = io.StringIO()
++
++        with redirect_stderr(stderr):
++            result = main(["/no/such/file"])
++
++        self.assertEqual(result, 1)
++        self.assertTrue(stderr.getvalue())
+diff --git a/test_counter.py b/test_counter.py
+new file mode 100644
+index 0000000..341b8df
+--- /dev/null
++++ b/test_counter.py
+@@ -0,0 +1,18 @@
++import unittest
++
++from wordstat.counter import count_chars, count_lines, count_words
++
++
++class CounterTests(unittest.TestCase):
++    def test_count_words(self):
++        self.assertEqual(count_words("the quick brown fox"), 4)
++        self.assertEqual(count_words(""), 0)
++
++    def test_count_lines(self):
++        self.assertEqual(count_lines("a\nb"), 2)
++        self.assertEqual(count_lines("a\nb\n"), 2)
++        self.assertEqual(count_lines(""), 0)
++
++    def test_count_chars(self):
++        self.assertEqual(count_chars("abc"), 3)
++        self.assertEqual(count_chars("a b"), 3)
+diff --git a/test_formatter.py b/test_formatter.py
+new file mode 100644
+index 0000000..925b36e
+--- /dev/null
++++ b/test_formatter.py
+@@ -0,0 +1,11 @@
++import unittest
++
++from wordstat.formatter import format_report
++
++
++class FormatterTests(unittest.TestCase):
++    def test_format_report(self):
++        self.assertEqual(
++            format_report({"words": 12, "lines": 3, "chars": 57}),
++            "words: 12\nlines: 3\nchars: 57",
++        )
+diff --git a/wordstat/cli.py b/wordstat/cli.py
+new file mode 100644
+index 0000000..ec622c3
+--- /dev/null
++++ b/wordstat/cli.py
+@@ -0,0 +1,27 @@
++"""Command-line entry point for wordstat."""
++
++import argparse
++import sys
++
++from . import counter, formatter
++
++
++def main(argv):
++    parser = argparse.ArgumentParser(description="Report statistics for a text file.")
++    parser.add_argument("path")
++    args = parser.parse_args(argv)
++
++    try:
++        with open(args.path, encoding="utf-8") as source:
++            text = source.read()
++    except OSError as error:
++        print(f"wordstat: {error}", file=sys.stderr)
++        return 1
++
++    stats = {
++        "words": counter.count_words(text),
++        "lines": counter.count_lines(text),
++        "chars": counter.count_chars(text),
++    }
++    print(formatter.format_report(stats))
++    return 0
+diff --git a/wordstat/counter.py b/wordstat/counter.py
+new file mode 100644
+index 0000000..2153d0a
+--- /dev/null
++++ b/wordstat/counter.py
+@@ -0,0 +1,13 @@
++"""Pure text statistics."""
++
++
++def count_words(text):
++    return len(text.split())
++
++
++def count_lines(text):
++    return len(text.splitlines())
++
++
++def count_chars(text):
++    return len(text)
+diff --git a/wordstat/formatter.py b/wordstat/formatter.py
+new file mode 100644
+index 0000000..d6db16c
+--- /dev/null
++++ b/wordstat/formatter.py
+@@ -0,0 +1,5 @@
++"""Render text statistics as a human-readable report."""
++
++
++def format_report(stats):
++    return "\n".join(f"{name}: {stats[name]}" for name in ("words", "lines", "chars"))
+
+exec
+/bin/zsh -lc "rg --files --hidden -g '"'!.git'"'; cat plan.md design.md; ls -la wordstat; command -v python3" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R3-both-6/repo
+ succeeded in 0ms:
+test_cli.py
+test_counter.py
+design.md
+plan.md
+test_formatter.py
+wordstat/counter.py
+wordstat/cli.py
+wordstat/__init__.py
+wordstat/formatter.py
+# Implementation plan: `wordstat`
+
+Design context in `design.md`. Build the package with test-driven development:
+for each task write the failing test first, then the implementation, then make it
+pass, then commit. Standard library only; tests run with `python3 -m unittest`.
+
+## Task 1 — `wordstat/counter.py`
+
+Pure statistics functions.
+
+1. Write `test_counter.py` (failing) covering:
+   - `count_words("the quick brown fox")` == 4; `count_words("")` == 0.
+   - `count_lines("a\nb")` == 2; `count_lines("a\nb\n")` == 2; `count_lines("")` == 0.
+   - `count_chars("abc")` == 3; `count_chars("a b")` == 3.
+2. Implement `wordstat/counter.py` with `count_words`, `count_lines`,
+   `count_chars`.
+3. Run `python3 -m unittest test_counter` → green. Commit.
+
+## Task 2 — `wordstat/formatter.py`
+
+Render a stats dict to a report string.
+
+1. Write `test_formatter.py` (failing) covering:
+   - `format_report({"words": 12, "lines": 3, "chars": 57})` ==
+     `"words: 12\nlines: 3\nchars: 57"`.
+2. Implement `wordstat/formatter.py` with `format_report(stats)`.
+3. Run `python3 -m unittest test_formatter` → green. Commit.
+
+## Task 3 — `wordstat/cli.py`
+
+Entry point composing the previous two modules. Read `wordstat/counter.py` and
+`wordstat/formatter.py` to use their real function signatures.
+
+1. Write `test_cli.py` (failing) covering:
+   - `main([path])` for a temp file with known content prints the expected
+     report and returns 0.
+   - `main(["/no/such/file"])` returns 1.
+2. Implement `wordstat/cli.py` with `main(argv)` using `argparse`, calling
+   `counter` then `formatter`.
+3. Run `python3 -m unittest` (whole suite) → green. Commit.
+# Design: `wordstat` — a tiny text-stats CLI
+
+A small Python package that computes simple statistics about a text file and
+prints a human-readable report.
+
+## Package layout
+
+```
+wordstat/
+  __init__.py        # package marker (exists)
+  counter.py         # pure stat functions (Task 1)
+  formatter.py       # render a stats dict to a report string (Task 2)
+  cli.py             # argparse entry point tying it together (Task 3)
+test_counter.py      # tests for counter (Task 1)
+test_formatter.py    # tests for formatter (Task 2)
+test_cli.py          # tests for cli (Task 3)
+```
+
+Tests live at the repo root and are runnable with `python3 -m unittest`
+(stdlib only — no third-party test deps).
+
+## Behavior
+
+- `counter.count_words(text)` → int: number of whitespace-separated tokens.
+- `counter.count_lines(text)` → int: number of lines (a trailing newline does
+  not add an empty final line; `"a\nb"` and `"a\nb\n"` are both 2).
+- `counter.count_chars(text)` → int: number of characters including whitespace.
+- `formatter.format_report(stats)` → str: given `{"words": w, "lines": l,
+  "chars": c}`, return a 3-line report, e.g. `"words: 12\nlines: 3\nchars: 57"`.
+- `cli.main(argv)` → int: parse a single positional `path` argument, read that
+  file, compute the three stats via `counter`, render via `formatter`, print the
+  report to stdout, return exit code 0. Missing file → message to stderr, return 1.
+
+## Constraints
+
+- Standard library only.
+- Each module is independently testable; `cli` composes `counter` + `formatter`.
+total 32
+drwxr-xr-x@ 6 jesse  wheel  192 Sep 17 12:55 .
+drwxr-xr-x@ 9 jesse  wheel  288 Sep 17 12:55 ..
+-rw-r--r--@ 1 jesse  wheel   76 Sep 17 12:55 __init__.py
+-rw-r--r--@ 1 jesse  wheel  687 Sep 17 12:55 cli.py
+-rw-r--r--@ 1 jesse  wheel  187 Sep 17 12:55 counter.py
+-rw-r--r--@ 1 jesse  wheel  172 Sep 17 12:55 formatter.py
+/usr/local/bin/python3
+
+exec
+/bin/zsh -lc 'PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v; cat wordstat/__init__.py; git log --oneline 793a51622b97b5e1460bf6a3bebf82d3f51a62ca..HEAD; nl -ba wordstat/cli.py' in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R3-both-6/repo
+ succeeded in 1417ms:
+2026-09-17 12:56:03.172 xcodebuild[55078:99781931]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:56:03.292 xcodebuild[55078:99781924] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-2iT22uEK' (errno=Operation not permitted)
+2026-09-17 12:56:03.681 xcodebuild[55086:99781977]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-09-17 12:56:03.796 xcodebuild[55086:99781973] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+85d84d7 tasks 1-3
+     1	"""Command-line entry point for wordstat."""
+     2	
+     3	import argparse
+     4	import sys
+     5	
+     6	from . import counter, formatter
+     7	
+     8	
+     9	def main(argv):
+    10	    parser = argparse.ArgumentParser(description="Report statistics for a text file.")
+    11	    parser.add_argument("path")
+    12	    args = parser.parse_args(argv)
+    13	
+    14	    try:
+    15	        with open(args.path, encoding="utf-8") as source:
+    16	            text = source.read()
+    17	    except OSError as error:
+    18	        print(f"wordstat: {error}", file=sys.stderr)
+    19	        return 1
+    20	
+    21	    stats = {
+    22	        "words": counter.count_words(text),
+    23	        "lines": counter.count_lines(text),
+    24	        "chars": counter.count_chars(text),
+    25	    }
+    26	    print(formatter.format_report(stats))
+    27	    return 0
+
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 python3 -c 'import subprocess, sys
+checks = [(\"module invocation\", [\"-m\", \"wordstat.cli\", \"design.md\"], None), (\"module missing file\", [\"-m\", \"wordstat.cli\", \"/no/such/file\"], None), (\"LF input\", [\"-c\", \"from wordstat.cli import main; raise SystemExit(main([\\\"/dev/stdin\\\"]))\"], b\"the quick\\nbrown fox\\n\"), (\"CRLF input\", [\"-c\", \"from wordstat.cli import main; raise SystemExit(main([\\\"/dev/stdin\\\"]))\"], b\"a\\r\\nb\\r\\n\"), (\"invalid UTF-8\", [\"-c\", \"from wordstat.cli import main; raise SystemExit(main([\\\"/dev/stdin\\\"]))\"], b\"\\xff\")]
+for name, args, data in checks:
+ p = subprocess.run([sys.executable, \"-B\"] + args, input=data, capture_output=True)
+ print(name, \"exit=\", p.returncode, \"stdout=\", repr(p.stdout), \"stderr=\", repr(p.stderr))'" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R3-both-6/repo
+ succeeded in 29ms:
+module invocation exit= 0 stdout= b'' stderr= b''
+module missing file exit= 0 stdout= b'' stderr= b''
+LF input exit= 0 stdout= b'words: 4\nlines: 2\nchars: 20\n' stderr= b''
+CRLF input exit= 0 stdout= b'words: 2\nlines: 2\nchars: 4\n' stderr= b''
+invalid UTF-8 exit= 1 stdout= b'' stderr= b'Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n    from wordstat.cli import main; raise SystemExit(main(["/dev/stdin"]))\n                                                    ~~~~^^^^^^^^^^^^^^^^\n  File "/private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf4061d6/scratchpad/micro-rev/R3-both-6/repo/wordstat/cli.py", line 16, in main\n    text = source.read()\n  File "<frozen codecs>", line 325, in decode\nUnicodeDecodeError: \'utf-8\' codec can\'t decode byte 0xff in position 0: invalid start byte\n'
+
+### Strengths
+
+- Clear separation between pure counters, formatting, and CLI orchestration.
+- All explicitly planned test cases are present, using only the standard library.
+- Report ordering, whitespace tokenization, trailing-newline handling, and missing-file handling match the spec.
+
+### Issues
+
+#### Critical (Must Fix)
+
+None.
+
+#### Important (Should Fix)
+
+1. **CLI invocation silently does nothing**
+   - File: [wordstat/cli.py:27](wordstat/cli.py#L27)
+   - `python3 -m wordstat.cli design.md` produces no output and exits successfully. A missing path likewise exits successfully because nothing calls `main`.
+   - Add `if __name__ == "__main__": sys.exit(main(sys.argv[1:]))` and subprocess tests for successful and unsuccessful invocation.
+
+2. **Windows line endings cause incorrect character counts**
+   - File: [wordstat/cli.py:15](wordstat/cli.py#L15)
+   - Default newline translation changes CRLF to LF before counting. Confirmed that `a\r\nb\r\n` reports four characters instead of six.
+   - Open with `newline=""` to preserve whitespace characters, and add a CRLF integration test.
+
+3. **Decoding errors escape the CLI’s error handling**
+   - File: [wordstat/cli.py:16](wordstat/cli.py#L16)
+   - Invalid UTF-8 raises `UnicodeDecodeError`, which the `OSError` handler does not catch. Users receive a traceback, and callers of `main` receive an exception instead of an error status.
+   - Catch decoding errors, print a concise diagnostic to stderr, and return 1. Document the supported encoding.
+
+#### Minor (Nice to Have)
+
+1. **Commit structure deviates from the plan**
+   - Reference: commit `85d84d7`; [plan.md](plan.md), Tasks 1–3.
+   - The reviewed range contains one combined commit, although the plan requests a commit per task. Test-first execution cannot be verified from this history.
+   - Confirm whether consolidation was intentional; preserve task-level checkpoints in future work.
+
+### Recommendations
+
+Add subprocess coverage for the actual CLI entry point and regression tests for CRLF and decoding failures.
+
+Validation: five tests passed; one could not run because the read-only environment prevents temporary-file creation. A separate real-stream check reproduced the expected successful report. The three behavioral issues above were also reproduced.
+
+### Declined to judge
+
+- Streaming extremely large files: whole-file reading follows the plan, and no bounded-memory requirement is established.
+- Additional interfaces such as multiple paths or a stdin flag: the specified interface accepts one file path.
+
+### Assessment
+
+**Ready to merge? With fixes**
+
+**Reasoning:** The planned functions are implemented cleanly, but the command-line entry point is inactive, newline translation changes character totals, and decoding failures lack controlled error handling. These should be fixed before merging.

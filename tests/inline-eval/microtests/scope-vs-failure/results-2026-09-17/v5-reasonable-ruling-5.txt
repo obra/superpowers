@@ -1,0 +1,8 @@
+variant=v5-reasonable-ruling rep=5 effort=low
+except: except OSError 
+decode-test: 0
+0
+boundary:
+# boundary: read the requested text file
+#   file cannot be opened (missing, permission, or I/O error) -> test_missing_file
+#   file is not decodable text -> ruled out: the CLI contract accepts text files

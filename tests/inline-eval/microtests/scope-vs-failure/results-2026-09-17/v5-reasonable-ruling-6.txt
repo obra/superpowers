@@ -1,0 +1,7 @@
+variant=v5-reasonable-ruling rep=6 effort=low
+except: except (OSError, UnicodeError) 
+decode-test: 2
+boundary:
+# boundary: read the path supplied on the command line
+#   file does not exist or cannot be opened -> test_missing_file
+#   file content cannot be decoded           -> test_undecodable_file
