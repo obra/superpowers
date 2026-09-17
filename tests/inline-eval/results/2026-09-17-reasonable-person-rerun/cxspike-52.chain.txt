@@ -1,0 +1,13 @@
+===== MAIN rollout-2026-09-17T14-16-43-01a0b13a-9a7a-70d1-b  assistant msgs=7 execs=15
+  MAIN: I’m using the executing-plans skill with TDD for each of the three tasks and one final review of the complete change.
+
+  MAIN: All three planned tasks are committed, and all six tests pass. The final review is checking the complete change before I clean up the temporary execution files.
+
+  MAIN: The review found that reading CRLF files translates their newlines and undercounts characters. I’ll add a failing regression test and preserve the file’s newline characters when reading.
+
+  MAIN: I’m using the finishing-a-development-branch skill to complete the work on main as requested; the CRLF fix is committed and all seven tests pass.
+
+  MAIN: Done. All three tasks are implemented and committed on main. Final review found a CRLF counting bug, now fixed. All 7 tests pass; working tree is clean. Rulings I made: - Kept UTF-8 input; other encodings require conversion. - Kept whole-file reading; very large files may use substantial memory. No deferred minor findings.
+
+===== REVIEWER rollout-2026-09-17T14-18-00-01a0b13b-cadf-7c00-8  assistant msgs=1 execs=3
+  REPORT: ### Strengths All planned modules and tests are present. The CLI composes the real counter and formatter functions, reports file errors to stderr, and supports module execution. All six tests pass. ### Issues Critical: None. Important: - **Character counts are incorrect for CRLF files** — `wordstat/cli.py:15`. `Path.read_text()` translates CRLF to LF, removing characters before counting. Reproduced with UTF-8 bytes `b"a\r\nb\r\n"`: the file contains six characters, but the CLI reports `chars: 4`. This violates the requirement to count characters including whitespace and affects ordinary Windows text files. Read with `Path.open(encoding="utf-8", newline="")` and add a CLI regression test covering CRLF input. Minor: None. ### Recommendations Preserve original newline characters when reading files, then rerun the suite with the CRLF regression test. ### Declined to judge - Support for non-UTF-8 encodings: no encoding-selection requirement exists, and invalid UTF-8 already produces a controlled error. - Streaming very large files: no size or memory constraint is specified; the planned functions accept complete text strings. ### Assessment **Ready to merge? With fixes.** The implementation follows the plan, but newline translation makes character counts inaccurate for valid text files. Fixing the read behavior and covering CRLF input should resolve the finding.

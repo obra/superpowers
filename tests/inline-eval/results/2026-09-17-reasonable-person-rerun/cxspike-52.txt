@@ -1,0 +1,16 @@
+# rep cxspike-52  (codex; events=47)
+tool calls                         22           Bash=18, collaborationspawn_agent=1, collaborationsend_message=1, collaborationwait_agent=1, apply_patch=1
+skill loads (SKILL.md reads)       3            executing-plans
+subagent spawns                    1            
+test runs                          10           
+task counter: RED run / GREEN run  yes / yes    test<impl
+task formatter: RED run / GREEN run yes / yes    test<impl
+task cli: RED run / GREEN run      yes / yes    test<impl
+ledger (progress.md) touches       4            
+helper/script invocations          5            
+commits (incl. fixture)            5            
+suite in repo                      OK           
+probe utf8-crash                   handled      
+wall clock (s)                     105          
+user_prompt_submit events          1            
+tokens (codex, cumulative)         3873         in=739917 cached_in=702336 reasoning=151

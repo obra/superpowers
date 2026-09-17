@@ -1,0 +1,12 @@
+===== MAIN rollout-2026-09-17T14-16-15-01a0b13a-2f1d-7400-a  assistant msgs=7 execs=17
+  MAIN: I’m using executing-plans with its TDD and verification skills; each task will be tested and committed before the final review.
+
+  MAIN: All three tasks are committed and all six tests pass; the final reviewer is checking the complete change.
+
+  MAIN: The reviewer found that file reading normalizes CRLF newlines and undercounts characters; I’ll add a failing test and preserve those characters when reading.
+
+  MAIN: Done. All tasks were executed inline and committed on main. Final review found a CRLF character-count bug, now fixed. All 7 tests pass; working tree is clean. Rulings I made: - Whole-file reading is reasonable here; large files may use substantial memory. - UTF-8 is the default; other encodings require conversion. - Session evidence establishes TDD; if that evidence were insufficient, regression confidence would be weaker. No deferred minors.
+
+===== MAIN rollout-2026-09-17T14-17-32-01a0b13b-5d05-7bd2-a  assistant msgs=1 execs=2
+  MAIN: Strengths: - All three planned modules and tests are present, with clean separation between counting, formatting, and CLI composition. - Error handling covers missing files and decoding failures. - All six tests pass. Critical findings: None. Important finding: - `wordstat/cli.py:15`: `Path.read_text()` normalizes CRLF to LF, causing incorrect character counts for Windows text files. Reproduced with `b"a\r\nb\r\n"`: the CLI reports `chars: 4`, although the file contains six characters, including whitespace. Read using `Path.open(encoding="utf-8", newline="")` and add a CRLF integration case asserting six characters. Minor findings: None. Declined to judge: - Streaming very large files: the plan provides no size or memory requirements, and whole-file reading is reasonable for this tiny utility. - Support for other encodings: no encoding contract is specified; UTF-8 with a controlled error
+
