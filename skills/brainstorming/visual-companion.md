@@ -14,7 +14,7 @@ Decide per-question, not per-session. The test: **would the user understand this
 - **Design polish** — when the question is about look and feel, spacing, visual hierarchy
 - **Spatial relationships** — state machines, flowcharts, entity relationships rendered as diagrams
 
-**Use the terminal** when the content is text or tabular:
+**Use the interactive questioning tool / terminal** when the content is text or tabular:
 
 - **Requirements and scope questions** — "what does X mean?", "which features are in scope?"
 - **Conceptual A/B/C choices** — picking between approaches described in words

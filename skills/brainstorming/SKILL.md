@@ -106,6 +106,12 @@ complete that path's reviews before implementation.
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
 | "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
 | "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
+| "I'll ask clarifying questions in plain chat text" | Use your harness's interactive questioning tool (e.g. `AskUserQuestion`, `ask_question`, `ask_user`) with structured options and recommendations, or formatted chat options if your harness lacks one. |
+| "I'll ask where this config or file lives" | If it can be answered by exploring the codebase, explore instead of asking. |
+| "I'll batch multiple questions at once to save time" | Ask one question at a time. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. |
+| "I'll dump paragraphs of explanation into the modal question" | The prompt header has limited space; output the structured Decision Context in chat and keep the prompt to a concise sentence (<120 chars) ending with `(see chat for details)`. |
+| "I'll put the TL;DR at the top of the chat message" | As text streams, top content scrolls off-screen. Place the TL;DR & Recommendation at the very bottom of the chat message so it stays visible right above the prompt without scrolling. |
+| "I'll write long essays in chat before asking" | Respect the length budget: 1-2 sentences for Problem, 1-line bullets for Tradeoffs, 1-2 sentences for bottom TL;DR. Don't bombard your human partner with walls of text. |
 
 ## Checklist
 
@@ -121,7 +127,7 @@ your path and complete them in order.
 
 **Bounded:**
 1. **Explore project context** — check files, docs, recent commits
-2. **Ask clarifying questions** — one at a time, the ones that matter
+2. **Ask clarifying questions** — one at a time via interactive questioning tool if available (or structured chat), with recommended options; explore codebase first
 3. **Present short design in chat** — approach, files touched, testing
 4. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate
 5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
@@ -129,8 +135,8 @@ your path and complete them in order.
 **Architectural:**
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+3. **Ask clarifying questions** — one at a time via interactive questioning tool if available (or structured chat), with recommended options; understand purpose/constraints/success criteria
+4. **Propose 2-3 approaches** — with trade-offs and recommendation, prompting choice via interactive questioning if available (or structured chat)
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
@@ -201,17 +207,40 @@ is the whole process.
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+- For appropriately-scoped projects, ask questions to refine the idea using the **Dual-Surface Questioning Protocol** (using your harness's interactive questioning tool like `AskUserQuestion`, `ask_question`, `ask_user`, `question`, `clarify` if available, or structured chat options if your harness lacks one):
+  - **The Dual-Surface Pattern**: Main chat stream provides rich, readable context; the interactive prompt captures structured input.
+  - **Bottom-Anchored TL;DR (Anti-Scrolling Invariant)**: In the chat message, always place the **TL;DR & Recommendation** at the very bottom (immediately before the prompt is invoked). As long responses stream down, content at the top scrolls off-screen. Placing the TL;DR at the bottom guarantees it remains visible in your human partner's viewport right above the interactive prompt without requiring them to scroll up.
+  - **Strict Length Budget (No Bombardment)**:
+    - **Problem / Finding**: 1–2 sentences on what is underspecified or discovered in the codebase (with clickable file/line links).
+    - **Tradeoffs**: 1-line bullet per option highlighting key pros & cons.
+    - **TL;DR & Recommendation**: 1–2 punchy sentences summarizing the choice and why the recommended path was picked.
+  - **Chat Message Format Template**:
+    ```markdown
+    ### Decision Context: <Topic Title>
+
+    **Problem / Finding**:
+    <1-2 sentences on what's underspecified or what was found in the codebase. Link relevant files/lines.>
+
+    **Tradeoffs**:
+    - **<Option A>**: <1-line pros & cons>
+    - **<Option B>**: <1-line pros & cons>
+
+    ---
+    💡 **TL;DR & Recommendation**:
+    <1-2 punchy sentences summarizing the core choice and why the (Recommended) path was chosen.>
+    ```
+  - **Prompt Header Constraint**: Keep the prompt `question` string to a concise single sentence (<120 characters) ending with `(see chat for details)`.
+  - **Option Formatting**: Provide 2–4 distinct options formatted as user responses with a short tag + 1-line rationale (e.g. `(Recommended) SQLite — ACID guarantees & zero-corruption`).
+  - **Lead with Recommendation**: The first option MUST be prefixed with `(Recommended)`.
+  - **Prompt Conventions**: Never add an "Other" option (built-in write-in box exists); never enumerate options (UI numbers them); set `is_multi_select: true` only if multiple choices apply.
+  - **Codebase First & One at a Time**: Never ask for what can be discovered by reading code. Ask one question per turn, walking down the decision tree.
 
 **Exploring approaches:**
 
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
-- YAGNI ruthlessly - remove unnecessary features from every approach and design
+- Propose 2-3 different approaches with trade-offs using the same Dual-Surface format.
+- Output the `Decision Context` in chat with Problem, Tradeoffs, and bottom-anchored `💡 TL;DR & Recommendation`.
+- Use your harness's interactive questioning tool (or structured chat options) to let your human partner select the approach, formatting each approach as a selectable option with its 1-line rationale and marking your recommended choice with `(Recommended)`.
+- YAGNI ruthlessly - remove unnecessary features from every approach and design.
 
 **Presenting the design:**
 
@@ -277,7 +306,7 @@ A browser-based companion for showing mockups, diagrams, and visual options duri
 **Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
 
 - **Use the browser** for content that IS visual — mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs
-- **Use the terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions
+- **Use the interactive questioning tool / terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, approach selection, scope decisions
 
 A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
 
