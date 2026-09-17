@@ -57,6 +57,7 @@ If your harness appears here, read its reference file for special instructions:
 - Pi: `references/pi-tools.md`
 - Antigravity: `references/antigravity-tools.md`
 - Hermes Agent: `references/hermes-tools.md`
+- Command Code: `references/commandcode-tools.md`
 
 ## User Instructions
 

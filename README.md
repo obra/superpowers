@@ -8,6 +8,7 @@ Superpowers is a complete software development methodology for your coding agent
 - [Commercial Services](#commercial-services)
 - [Getting Started](#installation)
   - [Claude Code](#claude-code)
+  - [Command Code](#command-code)
   - [Antigravity](#antigravity)
   - [Codex App](#codex-app)
   - [Codex CLI](#codex-cli)
@@ -78,6 +79,22 @@ The Superpowers marketplace provides Superpowers and some other related plugins 
   ```bash
   /plugin install superpowers@superpowers-marketplace
   ```
+
+### Command Code
+
+Install Superpowers as a global Command Code mod from this repository:
+
+```bash
+cmd mods add -g obra/superpowers
+```
+
+Update later with:
+
+```bash
+cmd mods update
+```
+
+Detailed docs: [docs/README.commandcode.md](docs/README.commandcode.md)
 
 ### Antigravity
 
