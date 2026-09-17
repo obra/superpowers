@@ -1,0 +1,18 @@
+```markdown
+## Review Focus
+
+The spec fixes only a few example inputs; these are the classes it implies but no task's tests touch. Each line names the input, the behavior a reasonable person expects, and the test that pins it.
+
+- **Runs of whitespace, tabs, and newlines between words** — `count_words` splits on any whitespace run, so `"a  b\tc\nd"` is 4 words, not 6 empty-string-inflated tokens (the naive `text.split(" ")` fails here). Test: Task 1, `test_counter.py` — `count_words("a  b\tc\nd") == 4`.
+- **Text with no trailing newline at all** — `count_lines("a")` is 1; the spec's "trailing newline does not add a line" rule must not be implemented as `text.count("\n")`, which reports 0. Test: Task 1, `test_counter.py` — `count_lines("a") == 1`.
+- **Blank lines, including a lone newline** — interior empty lines are real lines: `count_lines("a\n\nb")` is 3 and `count_lines("\n")` is 1. Test: Task 1, `test_counter.py` — `count_lines("a\n\nb") == 3` and `count_lines("\n") == 1`.
+- **Whitespace-only text** — `count_words("   \n\t")` is 0 words, matching the empty-string case, while `count_chars` still counts all 5 characters. Test: Task 1, `test_counter.py` — `count_words("   \n\t") == 0` and `count_chars("   \n\t") == 5`.
+- **Newlines inside `count_chars`** — "including whitespace" includes line breaks, so `count_chars("a\nb\n")` is 4; the character count must not be computed from stripped or per-line text. Test: Task 1, `test_counter.py` — `count_chars("a\nb\n") == 4`.
+- **A stats dict whose keys arrive in a different order** — `format_report` always emits words, then lines, then chars, regardless of insertion order, so it must index the three keys rather than iterate `stats.items()`. Test: Task 2, `test_formatter.py` — `format_report({"chars": 57, "lines": 3, "words": 12}) == "words: 12\nlines: 3\nchars: 57"`.
+- **An empty file** — a zero-byte file is valid input, not an error: the report is `"words: 0\nlines: 0\nchars: 0"` and the exit code is 0. Test: Task 3, `test_cli.py` — `main([empty_path])` returns 0 and prints exactly that report.
+- **A file that is not valid UTF-8 (binary or another encoding)** — reading it must produce the stderr message and exit 1, not a `UnicodeDecodeError` traceback out of `main`. Test: Task 3, `test_cli.py` — write `b"\xff\xfe\x00"` to a temp file; `main([path]) == 1` and stderr is non-empty.
+- **A path that exists but cannot be read as a file (a directory, or a mode-000 file)** — same contract as a missing file: message to stderr, return 1, since the spec's intent is "unreadable input exits 1," not "only `FileNotFoundError` exits 1." Test: Task 3, `test_cli.py` — `main([tmpdir]) == 1` with stderr non-empty.
+- **Wrong argument count — no path, or two paths** — argparse prints usage to stderr and the process exits non-zero; the test must state whether `main` returns that code or lets `SystemExit` propagate, so callers know which. Test: Task 3, `test_cli.py` — `assertRaises(SystemExit)` around `main([])` and `main(["a", "b"])`, asserting `code == 2`.
+- **Stream discipline on the failure path** — the error message goes to stderr and stdout stays empty, so `wordstat f > out.txt` never writes a half-report. Test: Task 3, `test_cli.py` — `main(["/no/such/file"])` with both streams captured: stdout is `""`, stderr mentions the path.
+- **CRLF (Windows) input** — `"a\r\nb\r\n"` is 2 lines and 2 words, with the `\r` counted in chars; line splitting must not leave stray `\r` in a token. Test: Task 1, `test_counter.py` — `count_lines("a\r\nb\r\n") == 2`, `count_words("a\r\nb\r\n") == 2`, `count_chars("a\r\nb\r\n") == 6`.
+```

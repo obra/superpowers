@@ -1,0 +1,97 @@
+T0-current-ledgerlite-1: lines=16 implied=10 override=2 restated=4
+  OVERRIDE: **`--rules` pointing at a file that cannot be read** — the spec only promises a message for TRANSACTIONS, but a missing  || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+  OVERRIDE: **Missing or misspelled header** — Task 2's step 3 says "validate the header" but nothing says what happens; a file whos || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+T0-current-ledgerlite-2: lines=20 implied=12 override=2 restated=6
+  OVERRIDE: **A missing, misspelled, or reordered header row, and a zero-byte file** — rejected as malformed at line 1, not silently || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **An unreadable `--rules` path** — the spec defines the error only for TRANSACTIONS, but its silence is not permission t || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T0-current-ledgerlite-3: lines=16 implied=10 override=2 restated=4
+  OVERRIDE: **An empty file, or a file whose header is missing or misspelled** — the spec guarantees the header row, and Task 2's St || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **`--rules` pointing at a file that cannot be read** — the spec spells out the `cannot read` message only for TRANSACTIO || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T0-current-ledgerlite-4: lines=13 implied=8 override=2 restated=3
+  OVERRIDE: **`--rules` pointing at a file that cannot be read** — the same `ledgerlite: cannot read <path>: <reason>` and exit 1 as || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+  OVERRIDE: **A file with a wrong header, or an empty file with no header at all** — malformed at line 1 with exit 2; Task 2's Step  || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+T0-current-ledgerlite-5: lines=15 implied=10 override=3 restated=2
+  OVERRIDE: **A missing, misspelled, or reordered header row, and a zero-byte file.** Task 2 Step 3 says "validate the header" with  || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **`--rules` given but unreadable.** The spec's `cannot read` clause is written for TRANSACTIONS; silence about the rules || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+  OVERRIDE: **No transactions at all (header-only CSV): what does the report look like?** The spec fixes the closing balance (the op || "Then a blank line, then `closing balance: <amount>`."
+T0-current-ledgerlite-6: lines=16 implied=10 override=3 restated=3
+  OVERRIDE: **A wrong, missing, or reordered header row (`amount,date,description`, or a data row first)** — Task 2 Step 3 says "val || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **A header-only CSV run end to end** — the spec's "opening amount if there are none" case produces a report with no cate || "Then a blank line, then `closing balance: <amount>`."
+  OVERRIDE: **`--rules` naming an unreadable file** — the spec's cannot-read message is written for TRANSACTIONS only; expect the sa || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T0-current-wordstat-1: lines=13 implied=10 override=2 restated=1
+  OVERRIDE: **Path names a directory, or an existing file that can't be read** — `IsADirectoryError` / `PermissionError` should land || "Missing file → message to stderr, return 1."
+  OVERRIDE: **File whose bytes aren't valid UTF-8** — reading in text mode raises `UnicodeDecodeError`; expected is the same stderr- || "Missing file → message to stderr, return 1."
+T0-current-wordstat-2: lines=13 implied=11 override=1 restated=1
+  OVERRIDE: **Path exists but is not a readable file** — `main([dir_path])` (and an unreadable file) returns 1 with a message on std || "Missing file → message to stderr, return 1."
+T0-current-wordstat-3: lines=11 implied=9 override=1 restated=1
+  OVERRIDE: **A path that exists but is not a readable file** — a directory or a permission-denied file raises `IsADirectoryError`/` || "Missing file → message to stderr, return 1."
+T0-current-wordstat-4: lines=12 implied=9 override=2 restated=1
+  OVERRIDE: **A file that is not valid UTF-8 (binary or another encoding)** — reading it must produce the stderr message and exit 1, || "Missing file → message to stderr, return 1."
+  OVERRIDE: **A path that exists but cannot be read as a file (a directory, or a mode-000 file)** — same contract as a missing file: || "Missing file → message to stderr, return 1."
+T0-current-wordstat-5: lines=11 implied=8 override=2 restated=1
+  OVERRIDE: A `path` that exists but is not a readable file (a directory, or a mode-000 file): the spec's "missing file" branch is r || "Missing file → message to stderr, return 1."
+  OVERRIDE: A file that is not valid UTF-8: reading it must fail as a reported error with exit 1, or be read with an explicit fallba || "Missing file → message to stderr, return 1."
+T0-current-wordstat-6: lines=11 implied=8 override=2 restated=1
+  OVERRIDE: **A path that exists but is not a readable file** — a directory or a permission-denied file raises `IsADirectoryError`/` || "Missing file → message to stderr, return 1."
+  OVERRIDE: **A file that is not valid UTF-8** — reading in text mode raises `UnicodeDecodeError` mid-`main`, so an unreadable-encod || "Missing file → message to stderr, return 1."
+T1-ruling-cost-ledgerlite-1: lines=22 implied=15 override=4 restated=3
+  OVERRIDE: A file with no header row: a zero-byte file, and a file whose first line is already data — malformed, exit 2 — Task 2's  || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: Zero transactions (header-only CSV) — `format_report({}, opening)` produces exactly `closing balance: 0.00` with no lead || "Then a blank line, then `closing balance: <amount>`."
+  OVERRIDE: `--rules` pointing at a file that cannot be read — the same treatment the spec gives TRANSACTIONS: `ledgerlite: cannot r || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+  OVERRIDE: `python3 -m ledgerlite report txns.csv` — runs; this is the invocation the spec's Behavior section documents — the packa || "Package layout: ledgerlite/ __init__.py, model.py, parse.py, rules.py, balance.py, report.py, cli.py (no __main__.py listed)"
+T1-ruling-cost-ledgerlite-2: lines=21 implied=15 override=3 restated=3
+  OVERRIDE: **An empty (0-byte) file, or a file whose header is not exactly `date,amount,description` (missing header, reordered, ex || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **`--rules` pointing at a path that cannot be read** — an error on stderr and a non-zero exit, never a report — `design. || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+  OVERRIDE: **`format_report` with no categories at all (header-only CSV, or every transaction filtered away)** — `closing balance:  || "Then a blank line, then `closing balance: <amount>`."
+T1-ruling-cost-ledgerlite-3: lines=26 implied=19 override=1 restated=6
+  OVERRIDE: `--rules` naming a file that cannot be read — the same `cannot read` message and exit 1 as an unreadable TRANSACTIONS, n || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T1-ruling-cost-ledgerlite-4: lines=19 implied=14 override=2 restated=3
+  OVERRIDE: **A zero-byte file, and a file whose first row is data rather than the `date,amount,description` header** — a missing or || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **`--rules` pointing at a file that cannot be read** — the same `ledgerlite: cannot read <path>: <reason>` treatment and || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T1-ruling-cost-ledgerlite-5: lines=24 implied=15 override=3 restated=6
+  OVERRIDE: Empty file, and a file whose first line is not `date,amount,description` — rejected as malformed (line 1), never an `Ind || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: No transactions at all (header-only CSV) — `closing balance: <opening>` with no category lines and no stray leading blan || "Then a blank line, then `closing balance: <amount>`."
+  OVERRIDE: `--rules /no/such/file` — `ledgerlite: cannot read /no/such/file: <reason>` and exit 1, same as an unreadable TRANSACTIO || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T1-ruling-cost-ledgerlite-6: lines=20 implied=13 override=2 restated=5
+  OVERRIDE: **A first line that is not `date,amount,description` (header absent because the export was already trimmed, or columns r || "If any row is malformed — wrong column count, an unparseable date, an amount that is not a decimal number, or an amount with more than two fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) — prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2."
+  OVERRIDE: **`--rules` pointing at a missing or unreadable file** — the same `ledgerlite: cannot read <path>: <reason>` plus exit 1 || "If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>` to stderr and returns 1."
+T1-ruling-cost-wordstat-1: lines=15 implied=11 override=3 restated=1
+  OVERRIDE: Path that exists but is not a readable file (a directory) — the same stderr message and exit 1 as a missing file — catch || "Missing file → message to stderr, return 1."
+  OVERRIDE: Non-UTF-8 / binary input (e.g. a file of `b"\xff\xfe\x00"`) — a message to stderr and exit 1, not a `UnicodeDecodeError` || "Missing file → message to stderr, return 1."
+  OVERRIDE: `PermissionError` on an unreadable file — same message-and-exit-1 treatment as the directory case — Reviewer checks: the || "Missing file → message to stderr, return 1."
+T1-ruling-cost-wordstat-2: lines=16 implied=15 override=1 restated=0
+  OVERRIDE: **A path that exists but cannot be read as text** (a directory, or a binary file with invalid UTF-8) — the same one-line || "Missing file → message to stderr, return 1."
+T1-ruling-cost-wordstat-3: lines=12 implied=10 override=2 restated=0
+  OVERRIDE: `path` names a directory, or a file the user cannot read (`IsADirectoryError`, `PermissionError`) — the same treatment a || "Missing file → message to stderr, return 1."
+  OVERRIDE: A file that is not decodable text (binary, or bytes invalid in the read encoding) — a message on stderr and exit 1, not  || "Missing file → message to stderr, return 1."
+T1-ruling-cost-wordstat-4: lines=17 implied=14 override=2 restated=1
+  OVERRIDE: **Path is a directory** — the same treatment as a missing file: message to stderr, return 1 — `open()` raises `IsADirect || "Missing file → message to stderr, return 1."
+  OVERRIDE: **A file that is not decodable text** (binary, or a legacy 8-bit encoding) — an error message and return 1, not a `Unico || "Missing file → message to stderr, return 1."
+T1-ruling-cost-wordstat-5: lines=17 implied=14 override=2 restated=1
+  OVERRIDE: `path` names a directory, or a file the user cannot read — same shape as the missing-file case: one-line message to stde || "Missing file → message to stderr, return 1."
+  OVERRIDE: Binary or non-UTF-8 file — message to stderr, return 1 — an uncaught `UnicodeDecodeError` traceback when someone points  || "Missing file → message to stderr, return 1."
+T1-ruling-cost-wordstat-6: lines=18 implied=14 override=3 restated=1
+  OVERRIDE: **A file whose bytes are not valid UTF-8** — a one-line error on stderr and a nonzero exit, not a `UnicodeDecodeError` t || "Missing file → message to stderr, return 1."
+  OVERRIDE: **Path names a directory** — the same stderr message and exit 1 as a missing file; "I can't read that" is one story to t || "Missing file → message to stderr, return 1."
+  OVERRIDE: **Unreadable file (mode `000`)** — message to stderr, exit 1 — same crash class as the directory case and fixed by the s || "Missing file → message to stderr, return 1."
+T2-ruling-free-wordstat-1: lines=17 implied=12 override=3 restated=2
+  OVERRIDE: **`path` is a directory** — same treatment as a missing file: message naming the path to stderr, return 1 — the spec nam || "Missing file → message to stderr, return 1."
+  OVERRIDE: **File that isn't valid UTF-8** (binary, or Latin-1 bytes) — a diagnostic to stderr and return 1; the tool declines to c || "Missing file → message to stderr, return 1."
+  OVERRIDE: **Unreadable file (exists, permission denied)** — same shape as the other read failures: stderr message, return 1, no tr || "Missing file → message to stderr, return 1."
+T2-ruling-free-wordstat-2: lines=20 implied=17 override=2 restated=1
+  OVERRIDE: `path` is a directory, or an existing file the user cannot read — same treatment as missing: one message to stderr namin || "Missing file → message to stderr, return 1."
+  OVERRIDE: File containing bytes that are not valid UTF-8 — the CLI reports a readable error and returns 1 rather than raising `Uni || "Missing file → message to stderr, return 1."
+T2-ruling-free-wordstat-3: lines=15 implied=12 override=2 restated=1
+  OVERRIDE: **A file that is not decodable as UTF-8** (latin-1 or binary bytes) — a message on stderr and exit 1, the same shape as  || "Missing file → message to stderr, return 1."
+  OVERRIDE: **A path that exists but is not a readable file** (a directory; a file with permissions cleared) — stderr message and ex || "Missing file → message to stderr, return 1."
+T2-ruling-free-wordstat-5: lines=13 implied=9 override=2 restated=2
+  OVERRIDE: A file whose bytes are not valid UTF-8 (binary, or Latin-1 accents) — the tool fails like a tool: a message on stderr an || "Missing file → message to stderr, return 1."
+  OVERRIDE: `path` names a directory, or an unreadable file — same contract as a missing file: stderr message, exit 1 — `IsADirector || "Missing file → message to stderr, return 1."
+
+Summary (per-rep override counts, reps in name order; skipped reps with no out.md omitted):
+T0-current wordstat: 2 1 1 2 2 2
+T0-current ledgerlite: 2 2 2 2 3 3
+T1-ruling-cost wordstat: 3 1 2 2 2 3
+T1-ruling-cost ledgerlite: 4 3 1 2 3 2
+T2-ruling-free wordstat: 3 2 2 2
+T2-ruling-free ledgerlite: (no reps with out.md)
