@@ -5,6 +5,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const EXTREMELY_IMPORTANT_MARKER = "<EXTREMELY_IMPORTANT>";
 const BOOTSTRAP_MARKER = "superpowers:using-superpowers bootstrap for pi";
+const BOOTSTRAP_CUSTOM_TYPE = "superpowers-bootstrap";
 
 const extensionDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(extensionDir, "../..");
@@ -14,46 +15,82 @@ const bootstrapSkillPath = resolve(skillsDir, "using-superpowers", "SKILL.md");
 let cachedBootstrap: string | null | undefined;
 
 export default function superpowersPiExtension(pi: ExtensionAPI) {
-	let injectBootstrap = true;
+	let bootstrapPendingInRun = false;
 
 	pi.on("resources_discover", async () => ({
 		skillPaths: [skillsDir],
 	}));
 
 	pi.on("session_start", async () => {
-		injectBootstrap = true;
+		bootstrapPendingInRun = false;
 	});
 
-	pi.on("session_compact", async () => {
-		injectBootstrap = true;
+	pi.on("session_compact", async (_event, ctx) => {
+		if (activeContextHasBootstrap(ctx.sessionManager)) {
+			bootstrapPendingInRun = false;
+			return;
+		}
+		if (bootstrapPendingInRun) return;
+
+		const message = createBootstrapMessage();
+		if (!message) return;
+
+		pi.sendMessage(message, { deliverAs: "steer" });
+		bootstrapPendingInRun = !ctx.isIdle();
+	});
+
+	pi.on("before_agent_start", async (_event, ctx) => {
+		if (activeContextHasBootstrap(ctx.sessionManager)) return;
+
+		const message = createBootstrapMessage();
+		if (!message) return;
+
+		bootstrapPendingInRun = true;
+		return { message };
+	});
+
+	pi.on("agent_start", async () => {
+		bootstrapPendingInRun = false;
+	});
+
+	pi.on("message_end", async event => {
+		if (event.message.role === "custom" && event.message.customType === BOOTSTRAP_CUSTOM_TYPE) {
+			bootstrapPendingInRun = false;
+		}
 	});
 
 	pi.on("agent_end", async () => {
-		injectBootstrap = false;
+		bootstrapPendingInRun = false;
 	});
+}
 
-	pi.on("context", async (event) => {
-		if (!injectBootstrap) return;
-		if (event.messages.some(messageContainsBootstrap)) return;
+function createBootstrapMessage() {
+	const content = getBootstrapContent();
+	if (!content) return null;
+	return {
+		customType: BOOTSTRAP_CUSTOM_TYPE,
+		content,
+		display: false,
+	};
+}
 
-		const bootstrap = getBootstrapContent();
-		if (!bootstrap) return;
+function activeContextHasBootstrap(sessionManager: {
+	buildContextEntries?: () => ReadonlyArray<{ type?: unknown; customType?: unknown }>;
+	buildSessionContext?: () => {
+		messages?: ReadonlyArray<{ role?: unknown; customType?: unknown }>;
+	};
+}): boolean {
+	const entries = sessionManager.buildContextEntries?.();
+	if (entries) {
+		return entries.some(
+			entry => entry.type === "custom_message" && entry.customType === BOOTSTRAP_CUSTOM_TYPE,
+		);
+	}
 
-		const bootstrapMessage = {
-			role: "user" as const,
-			content: [{ type: "text" as const, text: bootstrap }],
-			timestamp: Date.now(),
-		};
-
-		const insertAt = firstNonCompactionSummaryIndex(event.messages);
-		return {
-			messages: [
-				...event.messages.slice(0, insertAt),
-				bootstrapMessage,
-				...event.messages.slice(insertAt),
-			],
-		};
-	});
+	const messages = sessionManager.buildSessionContext?.().messages;
+	return (
+		messages?.some(message => message.role === "custom" && message.customType === BOOTSTRAP_CUSTOM_TYPE) ?? false
+	);
 }
 
 function getBootstrapContent(): string | null {
@@ -95,27 +132,4 @@ Pi's built-in coding tools are lowercase: \`read\`, \`write\`, \`edit\`, \`bash\
 Pi does not ship a standard subagent tool. If a subagent tool such as \`subagent\` from \`pi-subagents\` is available, use it for Superpowers subagent workflows. If no subagent tool is available, do the work in this session or explain the missing capability instead of inventing \`Task\` calls.
 
 Pi does not ship a standard task-list tool. If an installed todo/task tool is available, use it. Otherwise track work in plan files or a repo-local \`TODO.md\` when task tracking is needed. Treat older \`TodoWrite\` references as this task-tracking action.`;
-}
-
-function messageContainsBootstrap(message: unknown): boolean {
-	const content = (message as { content?: unknown }).content;
-	if (typeof content === "string") return content.includes(BOOTSTRAP_MARKER);
-	if (!Array.isArray(content)) return false;
-	return content.some((part) => {
-		return (
-			part &&
-			typeof part === "object" &&
-			(part as { type?: unknown }).type === "text" &&
-			typeof (part as { text?: unknown }).text === "string" &&
-			(part as { text: string }).text.includes(BOOTSTRAP_MARKER)
-		);
-	});
-}
-
-function firstNonCompactionSummaryIndex(messages: unknown[]): number {
-	let index = 0;
-	while ((messages[index] as { role?: unknown } | undefined)?.role === "compactionSummary") {
-		index += 1;
-	}
-	return index;
 }
