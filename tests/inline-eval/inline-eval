@@ -22,6 +22,10 @@
 #   spikerf  — spike, with the plan carrying a Review Focus section
 #              (tests/inline-eval/fixtures/review-focus-wordstat.md appended)
 #   sddrf    — sdd, with the same Review Focus section appended
+#   cxbare   — Codex CLI (csd --harness codex), no superpowers, "execute the plan"
+#   cxspike  — Codex CLI with this checkout loaded as a local plugin marketplace,
+#              inline prompt. Codex workers get a fresh CODEX_HOME from csd (auth
+#              + generated config only), so these are clean by construction.
 #
 # Usage:
 #   inline-eval start <arm> <n>          create scratch repo + config dir, launch, send prompt
@@ -64,7 +68,8 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 plugin_dir_for() {
   case "$1" in
     spike|sdd|spikesonnet|spikerf|sddrf) echo "$REPO_ROOT" ;;
-    bare|barerev|barerevs|barefork) echo "" ;;
+    bare|barerev|barerevs|barefork|cxbare) echo "" ;;
+    cxspike) echo "$REPO_ROOT" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
       if [ ! -d "$wt" ]; then
@@ -73,7 +78,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf|cxbare|cxspike)" ;;
   esac
 }
 
@@ -123,7 +128,7 @@ prompt_for() {
   local common='This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
   case "$1" in
     sdd|sddrf)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
-    bare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
+    bare|cxbare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
     barerev)  echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the opus model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
     barerevs) echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the sonnet model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
     barefork) echo "I have a plan at plan.md, with design context in design.md. Execute it. After you finish each task, dispatch a forked subagent (Agent tool, subagent_type \"fork\") to review that task's work. Tell it explicitly that it is a fork of you, that it therefore shares your context and your assumptions, and that its job is to find issues in the implementer's work — spec gaps, bugs, missing edge cases, weak tests — not to confirm it. Fix every real defect it reports before starting the next task, and list anything you declined to fix, with the reason, when you tell me the plan is done. $common" ;;
@@ -146,9 +151,33 @@ cmd_start() {
   git -C "$dir/repo" init -q -b main
   git -C "$dir/repo" add -A
   git -C "$dir/repo" -c user.name=fixture -c user.email=fixture@example.com commit -q -m "fixture: wordstat plan"
+  local plugin; plugin=$(plugin_dir_for "$arm") || exit 1
+  case "$arm" in
+    cx*)
+      # Codex: csd stages a fresh CODEX_HOME (auth + its own config). The plugin
+      # rides in as config overrides pointing a local marketplace at the checkout.
+      local cx=()
+      if [ -n "$plugin" ]; then
+        cx=(-c "marketplaces.superpowers-dev.source_type=\"local\"" \
+            -c "marketplaces.superpowers-dev.source=\"$plugin\"" \
+            -c "plugins.\"superpowers@superpowers-dev\".enabled=true" \
+            -c "features.plugin_hooks=true")
+        echo "plugin: $plugin ($(git -C "$plugin" rev-parse --short HEAD) $(git -C "$plugin" branch --show-current)) via codex marketplace override" | tee "$dir/plugin.txt"
+      else
+        echo "plugin: none (codex bare)" | tee "$dir/plugin.txt"
+      fi
+      use_rep_tmux "$arm" "$n"
+      # csd 4.0.0 pins model gpt-5.5, which Codex 0.154 retires behind a startup
+      # migration modal that swallows the first prompt (no turn, no SessionStart,
+      # no registration). Pin a current model until csd is fixed.
+      export CSD_CODEX_MODEL=${CSD_CODEX_MODEL:-gpt-5.6-sol}
+      "$CSD" launch --harness codex "$(worker "$arm" "$n")" "$dir/repo" -- -c "features.multi_agent=true" ${cx[@]+"${cx[@]}"}
+      "$(shim "$arm" "$n")" send "$(prompt_for "$arm")"
+      echo "started $(worker "$arm" "$n") (codex); wait with: $0 wait $arm $n"
+      return ;;
+  esac
   local key; key=$(api_key)
   seed_config_dir "$dir/cfg" "$dir/repo" "$key"
-  local plugin; plugin=$(plugin_dir_for "$arm") || exit 1
   local extra=()
   local model=${INLINE_EVAL_MODEL:-}
   [ "$arm" = "spikesonnet" ] && model=${model:-sonnet}
@@ -204,8 +233,12 @@ cmd_check() {
   [ -x "$s" ] && "$s" read-events > "$dir/events.jsonl" || true
   [ -s "$dir/events.jsonl" ] || die "no events for $arm-$n (worker stopped before check?)"
   local sid=""; [ -x "$s" ] && sid=$("$s" session-id 2>/dev/null || true)
-  CLAUDE_CONFIG_DIR="$dir/cfg" INLINE_EVAL_FIXTURE="$(cat "$dir/fixture.txt" 2>/dev/null || echo "$FIXTURE")" \
-    python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt"
+  local fx; fx="$(cat "$dir/fixture.txt" 2>/dev/null || echo "$FIXTURE")"
+  case "$arm" in
+    cx*) local tp=""; [ -x "$s" ] && tp=$("$s" events-file 2>/dev/null | sed 's/\.events\.jsonl$/.meta/' | xargs -I{} python3 -c "import json;print(json.load(open('{}')).get('transcript_path',''))" 2>/dev/null || true)
+         INLINE_EVAL_FIXTURE="$fx" python3 "$HERE/score-codex.py" "$dir" "$tp" | tee "$dir/score.txt" ;;
+    *)   CLAUDE_CONFIG_DIR="$dir/cfg" INLINE_EVAL_FIXTURE="$fx" python3 "$HERE/score.py" "$dir" "$sid" | tee "$dir/score.txt" ;;
+  esac
 }
 
 cmd_stop() { use_rep_tmux "$1" "$2"; "$(shim "$1" "$2")" stop; }
