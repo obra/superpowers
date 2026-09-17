@@ -204,10 +204,24 @@ cmd_start() {
       cp "$HOME/.claude/.claude-session-driver-consent" "$home/.claude/" 2>/dev/null || true
       printf '[user]\n\tname = inline-eval\n\temail = inline-eval@example.com\n' > "$home/.gitconfig"
       # Codex seeds every fresh CODEX_HOME with OpenAI's curated marketplace, which
+      # installs and enables a released superpowers, and a local-marketplace plugin
+      # is inert until `codex plugin add` installs it. Prepare csd's worker home
+      # (csd only adds auth.json and config.toml to it) with local plugin commands:
+      # seed, remove the curated copy, and for the plugin arm install the checkout.
+      local cxhome="${CSD_WORKER_DIR:-/tmp/csd-workers}/homes/$(worker "$arm" "$n")"
+      mkdir -p "$cxhome" && cp "$HOME/.codex/auth.json" "$cxhome/auth.json"
+      CODEX_HOME="$cxhome" codex plugin list >/dev/null 2>&1 || true
+      CODEX_HOME="$cxhome" codex plugin remove superpowers@openai-curated-remote 2>&1 | grep -v '^WARNING' | tail -1 || true
+      if [ -n "$plugin" ]; then
+        CODEX_HOME="$cxhome" codex plugin add superpowers@superpowers-dev \
+          -c "marketplaces.superpowers-dev.source_type=\"local\"" -c "marketplaces.superpowers-dev.source=\"$plugin\"" 2>&1 | grep -v '^WARNING' | tail -1
+        [ -x "$cxhome/plugins/cache/superpowers-dev/superpowers/"*/skills/executing-plans/scripts/task-start ] || die "checkout plugin did not install into $cxhome"
+      fi
+      # Codex seeds every fresh CODEX_HOME with OpenAI's curated marketplace, which
       # carries a released superpowers; keep it disabled so the only copy in the
       # session is the checkout under test (or none, for the bare arm).
       HOME="$home" "$CSD" launch --harness codex "$(worker "$arm" "$n")" "$dir/repo" -- \
-        -c "features.multi_agent=true" -c "plugins.\"superpowers@openai-curated\".enabled=false" ${cx[@]+"${cx[@]}"}
+        -c "features.multi_agent=true" -c "plugins.\"superpowers@openai-curated-remote\".enabled=false" ${cx[@]+"${cx[@]}"}
       "$(shim "$arm" "$n")" send "$(prompt_for "$arm")"
       echo "started $(worker "$arm" "$n") (codex); wait with: $0 wait $arm $n"
       return ;;
