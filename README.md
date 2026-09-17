@@ -21,6 +21,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [OpenCode](#opencode)
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
+  - [MiniMax Code](#minimax-code)
 - [The Basic Workflow](#the-basic-workflow)
 - [When Something Goes Wrong](#when-something-goes-wrong)
 - [Community](#community)
@@ -258,6 +259,33 @@ hermes plugins install obra/superpowers --enable
 Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
+
+### MiniMax Code
+
+Superpowers is available in MiniMax Code's plugin marketplace.
+
+**Desktop app**
+
+- Open `Plugins`, search for `Superpowers`, and click `Install`.
+
+**CLI**
+
+- Open the plugin manager:
+
+  ```text
+  /plugins
+  ```
+
+- Search for `Superpowers` and press `Enter` to install it. If disabled, press `Space` to enable it.
+
+- Or install from the command line:
+
+  ```bash
+  mcode plugin add superpowers@official
+  mcode plugin enable superpowers@official
+  ```
+
+Start a new MiniMax Code session after installing.
 
 ## The Basic Workflow
 
