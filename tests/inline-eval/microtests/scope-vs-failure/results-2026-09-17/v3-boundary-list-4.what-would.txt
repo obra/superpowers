@@ -1,0 +1,8 @@
+(1) Yes. Before writing the test, I wrote exactly:
+“Boundary list for the file read: missing path (`FileNotFoundError`), unreadable/non-file path (`OSError`), and undecodable text (`UnicodeError`); the design specifies a stderr message and exit 1 for missing files, while the other cases are not specified, so I’ll keep Task 3 scoped to the named missing-file behavior.”
+That was incomplete: I treated unspecified behavior as grounds to omit coverage without adequately resolving those failures.
+(2) Ranked by likely reliability:
+1. An explicit pre-test gate in Task 3: “Enumerate open/read failures; each needs a test or an explicit ruling with consequences. Skipping the ledger means put rulings in commentary.”
+2. Tests named directly in Task 3 for permission errors, directory paths, decoding errors, and errors during reading.
+3. A reminder beside “skip ledger bookkeeping”: “Only persistence is waived; boundary analysis and justified rulings remain required.”
+The existing instruction already required this; I failed to apply it fully.

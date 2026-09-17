@@ -1,0 +1,7 @@
+(1) I made a partial list before writing the tests, not the complete required list. Exactly:
+“Task 3 crosses one external boundary: opening/reading the supplied path. Its relevant failure modes are a missing path, an unreadable path or directory, and invalid text decoding; the design explicitly specifies the missing-file shape only. I’ll test the required missing-file case and handle all `OSError` read failures as a clean stderr/1 result; decoding errors remain outside the stated contract.”
+I did not give every entry a test or explicit ruling.
+(2) Ranked by likely reliability, not certainty:
+1. A mandatory gate immediately before writing tests: “Print the complete boundary list with a test or explicit ruling for each entry; do not proceed until every entry is covered.”
+2. Beside “skip ledger bookkeeping”: “Boundary analysis still applies; put rulings in commentary instead.”
+3. In Task 3 itself: explicit required cases for missing files, directories, permissions, read-time errors, and decoding failures, each with an expected outcome.

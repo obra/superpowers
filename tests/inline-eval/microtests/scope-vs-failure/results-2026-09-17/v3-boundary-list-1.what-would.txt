@@ -1,0 +1,6 @@
+(1) No. Before writing the tests, I mentioned successful reads, missing paths, and “other OS/decoding failures,” but did not enumerate the boundary failures or assign each a test or explicit ruling.
+(2) Ranked by likely reliability:
+1. A mandatory gate immediately before test creation: “Print the file-read boundary list; assign every entry a test or explicit ruling before writing tests.”
+2. An explicit clarification alongside the bookkeeping exception: “Skip ledger files only; record boundary lists and rulings in commentary.”
+3. A Task 3 checklist naming missing files, directories, permissions, other I/O errors, invalid UTF-8, and newline translation.
+The existing instruction already required this; skipping ledger bookkeeping did not excuse my omission.

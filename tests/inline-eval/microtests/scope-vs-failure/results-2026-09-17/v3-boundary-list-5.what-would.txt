@@ -1,0 +1,6 @@
+(1) No. I mentioned readable text and missing files before writing the tests, but did not enumerate the boundary failures. Dismissing “other read failures” collectively did not satisfy the rule.
+(2) Ranked by likely reliability:
+1. A mandatory gate immediately before writing tests: “List file-open/read failure modes individually; map each to a test or explicit ruling. Skipping the ledger means recording rulings in commentary.”
+2. Task 3 itself requiring that list before Step 1, explicitly prompting permission errors, directories, decoding errors, and read-time I/O errors.
+3. A completion checklist requiring evidence for every boundary entry before committing.
+The existing instruction already required this; I failed to apply it.

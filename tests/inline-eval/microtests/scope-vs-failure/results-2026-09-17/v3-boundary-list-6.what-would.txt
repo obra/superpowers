@@ -1,0 +1,8 @@
+(1) Yes—before writing `test_cli.py`, I wrote exactly:
+“Boundary list for the file-read step: the path can be missing, inaccessible, a directory, or fail with another OS-level read error; decoding can also fail. The design names missing-file behavior, so I’ll test that directly and make other read failures follow the same clean stderr/exit-1 path rather than leak tracebacks.”
+That was incomplete compliance: I didn’t give every entry its own test or explicit ruling.
+(2) Ranked by likely reliability:
+1. An explicit gate immediately before writing tests: “Enumerate file-read failures; map each to an expected outcome and a test or inline ruling before implementing.”
+2. An explicit exception clarification: “Skip ledger storage only; publish boundary lists and rulings in commentary.”
+3. A completion checklist requiring evidence for each boundary entry before committing.
+The existing instruction already required this; skipping bookkeeping did not excuse the gap.

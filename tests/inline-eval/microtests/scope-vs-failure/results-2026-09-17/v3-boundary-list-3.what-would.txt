@@ -1,0 +1,8 @@
+(1) No. I named the boundary and mentioned success/missing-file cases, but did not make the required failure list before writing the test.
+(2) Ranked by likely reliability; these are estimates, not guarantees:
+
+1. A mandatory gate immediately before test creation: “Print the complete file-open/read boundary list; map each failure to a test or explicit ruling before editing.”
+2. An explicit exception clarification: “Skip ledger storage only; boundary lists and rulings remain required—record them in commentary.”
+3. A Task 3 checklist naming permission errors, directory paths, read errors, decoding failures, and invalid paths, requiring a test or ruling for each.
+
+The existing instruction already required this; I failed to apply it.

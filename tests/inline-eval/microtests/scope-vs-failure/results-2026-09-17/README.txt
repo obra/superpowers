@@ -44,3 +44,18 @@ names?", ranked; see *.what-would.txt). All 24 rank identically:
 1-3 are case-specific (what Review Focus generates upstream). 4 is the
 general mechanism: a procedure at the boundary, not a principle in prose.
 5 is the sessions confirming the prose form is inert.
+
+v3-boundary-list (a prose step: "before the failing test for a step that
+meets the outside world, list every way it can fail; each entry becomes a
+test or a ledgered ruling"), 6 reps:
+  except FileNotFoundError 3, except OSError 2, except (OSError, UnicodeError) 1
+  Worse and noisier than v0. Resumed and asked whether they made the list
+  and what would have gotten them to: 4/6 did not make it, 2/6 made a
+  partial list and "treated unspecified behavior as grounds to omit
+  coverage"; collective entries ("other read failures") stood in for
+  individual ones. All 6 rank first: a mandatory gate immediately before
+  the test is written whose output is produced, one entry per failure,
+  each with a test or a ruling; several note the micro-test's "skip
+  ledger bookkeeping" waiver swallowed the rulings. Form lesson: a
+  required slot in an artifact they already produce (the test file), not
+  a rule about a step.
