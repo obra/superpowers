@@ -1,0 +1,1 @@
+{"tasks": {}, "impl_dir": "ledgerlite", "test_marker": "unittest", "suite": "test -f plan.md && echo plan.md-present || echo no-plan"}

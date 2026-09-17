@@ -67,7 +67,7 @@ REPO_ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 CSD=/Users/jesse/.claude/plugins/cache/superpowers-marketplace/claude-session-driver/4.0.0/skills/driving-claude-code-sessions/scripts/csd
 EVAL_DIR=${INLINE_EVAL_DIR:-/tmp/inline-eval}
 ENV_FILE=${INLINE_EVAL_ENV_FILE:-$REPO_ROOT/evals/.env}
-FIXTURE=${INLINE_EVAL_FIXTURE:-$HERE/fixtures/wordstat}
+FIXTURE=$(cd "${INLINE_EVAL_FIXTURE:-$HERE/fixtures/wordstat}" && pwd)
 
 usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
