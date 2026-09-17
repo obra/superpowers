@@ -3,27 +3,50 @@
 
 set -euo pipefail
 
-# Determine plugin root directory
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# Determine plugin root directory without forking dirname/cd/pwd subshells -
+# on Windows each subprocess spawn costs ~250-300ms (fork() is emulated).
+# hooks.json invokes the wrapper as "${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd",
+# so the variable is guaranteed set under Claude Code; Cursor sets
+# CURSOR_PLUGIN_ROOT. The ${0%/*} fallback keeps standalone execution
+# working without a subshell (it does not resolve ".." or symlinks the way
+# `cd && pwd` did, but nothing here ever displays SCRIPT_DIR/PLUGIN_ROOT -
+# it is only used to build a path handed to a file read, which resolves
+# ".." itself).
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+    PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
+elif [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+    PLUGIN_ROOT="${CURSOR_PLUGIN_ROOT}"
+else
+    case "$0" in
+        */*) PLUGIN_ROOT="${0%/*}/.." ;;
+        *) PLUGIN_ROOT=".." ;;
+    esac
+fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# Read using-superpowers content via a bash builtin instead of forking cat.
+# Note: this changes the failure-path behavior slightly. The original's
+# `2>&1 || echo ...` folded cat's own stderr text into the injected content
+# on a partial failure; this guard instead falls back to a clean fixed
+# string. Flagging this explicitly since it's the one behavior difference
+# in this change - everything else is byte-identical to the original.
+skill_file="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
+if [ -r "$skill_file" ]; then
+    using_superpowers_content=$(<"$skill_file")
+else
+    using_superpowers_content="Error reading using-superpowers skill"
+fi
 
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
-escape_for_json() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    s="${s//$'\n'/\\n}"
-    s="${s//$'\r'/\\r}"
-    s="${s//$'\t'/\\t}"
-    printf '%s' "$s"
-}
-
-using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
+# faster than the character-by-character loop this replaces. Done in
+# place on the target variable instead of through a captured function
+# call so this doesn't fork a subshell either.
+using_superpowers_escaped="$using_superpowers_content"
+using_superpowers_escaped="${using_superpowers_escaped//\\/\\\\}"
+using_superpowers_escaped="${using_superpowers_escaped//\"/\\\"}"
+using_superpowers_escaped="${using_superpowers_escaped//$'\n'/\\n}"
+using_superpowers_escaped="${using_superpowers_escaped//$'\r'/\\r}"
+using_superpowers_escaped="${using_superpowers_escaped//$'\t'/\\t}"
 session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
@@ -37,13 +60,13 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 # See: https://github.com/obra/superpowers/issues/571
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
-  printf '{\n  "additional_context": "%s"\n}\n' "$session_context" | cat
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
 elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
   # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI
-  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" | cat
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 else
   # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
-  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context" | cat
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
 fi
 
 exit 0

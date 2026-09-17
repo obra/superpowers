@@ -217,6 +217,38 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+# Missing SKILL.md: falls back to a clean fixed string, without folding a
+# stderr "No such file" / "cat:" message from the failed read into the
+# injected context.
+missing_skill_root="$TEST_ROOT/missing-skill-root"
+mkdir -p "$missing_skill_root"
+missing_skill_home="$(make_home missing-skill)"
+assert_command_output \
+    "SessionStart falls back cleanly when SKILL.md is missing" \
+    "nested" \
+    "Error reading using-superpowers skill" \
+    "No such file"$'\037'"cat:" \
+    "$missing_skill_home" \
+    CLAUDE_PLUGIN_ROOT="$missing_skill_root" \
+    bash "$HOOK_UNDER_TEST"
+
+# CLAUDE_PLUGIN_ROOT must be authoritative for locating the hook's own
+# files, not merely consulted for the output JSON shape. Point it at a
+# second plugin root with distinguishable content and confirm the hook
+# reads from there rather than from $0's real location.
+divergent_root="$TEST_ROOT/divergent-plugin-root"
+mkdir -p "$divergent_root/skills/using-superpowers"
+printf '%s\n' "MARKER-DIVERGENT-PLUGIN-ROOT-CONTENT" >"$divergent_root/skills/using-superpowers/SKILL.md"
+divergent_home="$(make_home divergent-plugin-root)"
+assert_command_output \
+    "SessionStart honors CLAUDE_PLUGIN_ROOT over \$0's real location" \
+    "nested" \
+    "MARKER-DIVERGENT-PLUGIN-ROOT-CONTENT" \
+    "Red Flags" \
+    "$divergent_home" \
+    CLAUDE_PLUGIN_ROOT="$divergent_root" \
+    bash "$HOOK_UNDER_TEST"
+
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
     exit 1
