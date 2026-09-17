@@ -26,6 +26,9 @@ PRICE = {  # $/MTok: input, output
     # Mantle (Claude on AWS) ids. Priced here at Anthropic first-party list
     # rates for the same model so arms stay comparable; Bedrock bills
     # separately and may differ. Opus 4.8 is the same tier as Opus 5.
+    "us.anthropic.claude-opus-5": (5.00, 25.00),
+    "us.anthropic.claude-sonnet-5": (2.00, 10.00),
+    "us.anthropic.claude-opus-4-8": (5.00, 25.00),
     "anthropic.claude-opus-4-8": (5.00, 25.00),
     "anthropic.claude-opus-5": (5.00, 25.00),
     "anthropic.claude-sonnet-5": (2.00, 10.00),

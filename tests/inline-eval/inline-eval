@@ -43,12 +43,15 @@
 #                         stripped from the worker's copy
 #   INLINE_EVAL_ENV_FILE  file holding ANTHROPIC_API_KEY=... (default <repo>/evals/.env)
 #   INLINE_EVAL_MODEL     extra `--model` for the worker (default: harness default)
-#   INLINE_EVAL_BACKEND   "api" (default: ANTHROPIC_API_KEY from the env file) or
-#                         "mantle" (Claude on AWS via the Bedrock Mantle endpoint:
-#                         needs AWS_BEARER_TOKEN_BEDROCK in the environment or the
-#                         env file, plus INLINE_EVAL_REGION, default us-east-1; the
-#                         model must be a Mantle id such as anthropic.claude-opus-4-8,
-#                         so set INLINE_EVAL_MODEL)
+#   INLINE_EVAL_BACKEND   "api" (default: ANTHROPIC_API_KEY from the env file);
+#                         "bedrock" (Amazon Bedrock with the AWS CLI's default
+#                         credentials via SigV4: CLAUDE_CODE_USE_BEDROCK=1, region
+#                         INLINE_EVAL_REGION default us-east-1; model must be an
+#                         inference-profile id such as us.anthropic.claude-opus-5,
+#                         so set INLINE_EVAL_MODEL); or
+#                         "mantle" (Bedrock Mantle endpoint with a bearer token:
+#                         needs AWS_BEARER_TOKEN_BEDROCK; model such as
+#                         anthropic.claude-opus-4-8)
 #
 # Artifacts per rep live in $INLINE_EVAL_DIR/reps/<arm>-<n>/:
 #   repo/         the scratch git repo the worker works in
@@ -226,14 +229,16 @@ cmd_start() {
       echo "started $(worker "$arm" "$n") (codex); wait with: $0 wait $arm $n"
       return ;;
   esac
-  local key="" bearer=""
+  local key="" bearer="" sigv4=""
   case "$BACKEND" in
-    api)    key=$(api_key) ;;
-    mantle) bearer=$(bedrock_bearer); [ -n "${INLINE_EVAL_MODEL:-}" ] || die "mantle backend needs INLINE_EVAL_MODEL (a Mantle model id such as anthropic.claude-opus-4-8)" ;;
-    *)      die "unknown INLINE_EVAL_BACKEND: $BACKEND (api|mantle)" ;;
+    api)     key=$(api_key) ;;
+    bedrock) sigv4=1; [ -n "${INLINE_EVAL_MODEL:-}" ] || die "bedrock backend needs INLINE_EVAL_MODEL (an inference-profile id such as us.anthropic.claude-opus-5)"
+             aws sts get-caller-identity >/dev/null 2>&1 || die "bedrock backend: AWS CLI has no working default credentials" ;;
+    mantle)  bearer=$(bedrock_bearer); [ -n "${INLINE_EVAL_MODEL:-}" ] || die "mantle backend needs INLINE_EVAL_MODEL (a Mantle model id such as anthropic.claude-opus-4-8)" ;;
+    *)       die "unknown INLINE_EVAL_BACKEND: $BACKEND (api|bedrock|mantle)" ;;
   esac
   seed_config_dir "$dir/cfg" "$dir/repo" "$key"
-  echo "backend: $BACKEND${bearer:+ region=$REGION}" | tee -a "$dir/plugin.txt"
+  echo "backend: $BACKEND${sigv4:+ region=$REGION}${bearer:+ region=$REGION}" | tee -a "$dir/plugin.txt"
   local extra=()
   local model=${INLINE_EVAL_MODEL:-}
   [ "$arm" = "spikesonnet" ] && model=${model:-sonnet}
@@ -247,8 +252,11 @@ cmd_start() {
   use_rep_tmux "$arm" "$n"
   # Quorum's Mantle path (evals/src/agents/index.ts seedClaudeMantle) sets exactly
   # these three variables and no API key; the per-rep tmux server inherits them.
+  # bedrock: Claude Code's native Bedrock path with SigV4 from ~/.aws (the worker
+  # keeps the operator's HOME). mantle: quorum's seedClaudeMantle variables.
   CLAUDE_CONFIG_DIR="$dir/cfg" ANTHROPIC_API_KEY="$key" \
-    CLAUDE_CODE_USE_MANTLE="${bearer:+1}" AWS_REGION="${bearer:+$REGION}" AWS_BEARER_TOKEN_BEDROCK="$bearer" \
+    CLAUDE_CODE_USE_BEDROCK="$sigv4" \
+    CLAUDE_CODE_USE_MANTLE="${bearer:+1}" AWS_REGION="${sigv4:+$REGION}${bearer:+$REGION}" AWS_BEARER_TOKEN_BEDROCK="$bearer" \
     "$CSD" launch "$(worker "$arm" "$n")" "$dir/repo" -- ${extra[@]+"${extra[@]}"}
   "$(shim "$arm" "$n")" send "$(prompt_for "$arm")"
   echo "started $(worker "$arm" "$n"); wait with: $0 wait $arm $n"
