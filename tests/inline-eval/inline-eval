@@ -23,6 +23,8 @@
 #              (tests/inline-eval/fixtures/review-focus-wordstat.md appended)
 #   sddrf    — sdd, with the same Review Focus section appended
 #   cxbare   — Codex CLI (csd --harness codex), no superpowers, "execute the plan"
+#   wpplan   — this checkout; the prompt asks writing-plans to write plan.md from
+#              design.md (use with fixtures/wordstat-design-only)
 #   cxspike  — Codex CLI with this checkout loaded as a local plugin marketplace,
 #              inline prompt. Codex workers get a fresh CODEX_HOME from csd (auth
 #              + generated config only), so these are clean by construction.
@@ -72,11 +74,11 @@ usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 die() { echo "inline-eval: $*" >&2; exit 1; }
 
 [ -x "$CSD" ] || die "csd not found at $CSD (claude-session-driver plugin moved?)"
-[ -f "$FIXTURE/plan.md" ] || die "fixture missing plan.md: $FIXTURE"
+[ -f "$FIXTURE/plan.md" ] || [ -f "$FIXTURE/design.md" ] || die "fixture missing plan.md or design.md: $FIXTURE"
 
 plugin_dir_for() {
   case "$1" in
-    spike|sdd|spikesonnet|spikerf|sddrf) echo "$REPO_ROOT" ;;
+    spike|sdd|spikesonnet|spikerf|sddrf|wpplan) echo "$REPO_ROOT" ;;
     bare|barerev|barerevs|barefork|cxbare) echo "" ;;
     cxspike) echo "$REPO_ROOT" ;;
     dev)
@@ -87,7 +89,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf|cxbare|cxspike)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf|wpplan|cxbare|cxspike)" ;;
   esac
 }
 
@@ -152,6 +154,7 @@ prompt_for() {
   local common='This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
   case "$1" in
     sdd|sddrf)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
+    wpplan) echo "Here is the design for a small package, in design.md. Use the superpowers:writing-plans skill to write the implementation plan and save it as plan.md in this directory (not under docs/). This is a local scratch repo with no remote; work directly on main. Do not implement anything; when the plan is saved, tell me and stop." ;;
     bare|cxbare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
     barerev)  echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the opus model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
     barerevs) echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the sonnet model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;
