@@ -12,6 +12,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Codex App](#codex-app)
   - [Codex CLI](#codex-cli)
   - [Cursor](#cursor)
+  - [Bob IDE](#ibm-bob)
   - [Devin CLI](#devin-cli)
   - [Factory Droid](#factory-droid)
   - [Gemini CLI](#gemini-cli)
@@ -246,6 +247,23 @@ pi -e /path/to/superpowers
 ```
 
 The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
+
+### IBM Bob
+
+IBM Bob has no plugin marketplace. Install by cloning this repository and running
+the install script, which copies skills and wires the bootstrap hook:
+
+```bash
+bash /path/to/superpowers/.bob-plugin/scripts/install.sh
+```
+
+For a global install (all Bob projects):
+
+```bash
+bash /path/to/superpowers/.bob-plugin/scripts/install.sh --global
+```
+
+- Detailed docs: [docs/README.bob.md](docs/README.bob.md)
 
 ### Hermes Agent
 

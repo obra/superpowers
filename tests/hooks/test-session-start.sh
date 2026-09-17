@@ -217,6 +217,48 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+# =============================================================================
+# Bob IDE plain-text output tests
+#
+# Bob's SessionStart hook emits plain text (not JSON). These tests invoke
+# hooks/session-start-bob directly and use inline grep/string checks rather
+# than assert_command_output (which requires JSON output).
+# =============================================================================
+
+BOB_HOOK_UNDER_TEST="$REPO_ROOT/hooks/session-start-bob"
+
+bob_output="$(echo '{"event":"SessionStart","session_id":"test-123"}' | bash "$BOB_HOOK_UNDER_TEST" 2>&1)" || {
+    fail "Bob SessionStart hook exited non-zero"
+    echo "    output: $bob_output" | sed 's/^/      /'
+}
+
+if [[ -n "$bob_output" ]]; then
+    pass "Bob SessionStart hook produces non-empty output"
+else
+    fail "Bob SessionStart hook produces non-empty output"
+fi
+
+if echo "$bob_output" | grep -q "EXTREMELY_IMPORTANT"; then
+    pass "Bob output contains EXTREMELY_IMPORTANT"
+else
+    fail "Bob output contains EXTREMELY_IMPORTANT"
+    echo "    output:" && echo "$bob_output" | sed 's/^/      /'
+fi
+
+if echo "$bob_output" | grep -q "using-superpowers"; then
+    pass "Bob output contains using-superpowers"
+else
+    fail "Bob output contains using-superpowers"
+    echo "    output:" && echo "$bob_output" | sed 's/^/      /'
+fi
+
+if [[ "${bob_output:0:1}" != "{" ]]; then
+    pass "Bob output is plain text (does not start with {)"
+else
+    fail "Bob output is plain text (does not start with {)"
+    echo "    first char was '{' — output is JSON, not plain text"
+fi
+
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
     exit 1
