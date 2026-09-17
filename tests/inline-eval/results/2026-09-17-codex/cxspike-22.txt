@@ -1,0 +1,16 @@
+# rep cxspike-22  (codex; events=65)
+tool calls                         31           Bash=27, collaborationwait_agent=2, collaborationspawn_agent=1, collaborationsend_message=1
+skill loads (SKILL.md reads)       4            executing-plans; finishing-a-development-branch; test-driven-development; verification-before-completion
+subagent spawns                    1            
+test runs                          14           
+task counter: RED run / GREEN run  yes / yes    test<impl
+task formatter: RED run / GREEN run yes / yes    test<impl
+task cli: RED run / GREEN run      yes / yes    test<impl
+ledger (progress.md) touches       4            
+helper/script invocations          6            
+commits (incl. fixture)            5            
+suite in repo                      OK           
+probe utf8-crash                   exit=1 UnicodeDecodeError: 'utf-8' codec can't dec 
+wall clock (s)                     138          
+user_prompt_submit events          1            
+tokens (codex, cumulative)         4697         in=963818 cached_in=913664 reasoning=209
