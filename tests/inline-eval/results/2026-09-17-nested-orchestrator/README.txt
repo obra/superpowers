@@ -28,3 +28,17 @@ the Opus share down to about a dollar. Its risks are the ones the
 reference names — a mid-tier orchestrator, a fix wave whose re-review
 does not re-probe — and one it does not: the rulings list has to survive
 two hand-offs to reach the partner.
+
+Wall clock (first to last transcript timestamp), same backend and fixture:
+  sddnest 17-23 min   sddrf (session-run SDD) 24-46 min
+  spike (inline) 7.5-11 min   barerev (bare + one Opus review) 9-15 min
+
+Post-session interview of rep 2 (claude --resume on the session, asked
+"what would have gotten you to ..." for each failure): see
+sddnest-2.interview.md. In short: the session audited the orchestrator's
+claims (git log, status, suite exit) and never ran the program; the
+"over-broad exception handling" finding carried no failure scenario, so
+the fix narrowed to the one case the spec names and the re-review
+confirmed "addressed" from the diff without asking what the fix made
+newly reachable; the rulings list was paraphrased because it was empty,
+and the session named the fix itself: relay a file, not composed prose.
