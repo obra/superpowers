@@ -1,0 +1,13 @@
+===== MAIN rollout-2026-09-17T10-59-31-01a0b086-11f8-7240-b  assistant msgs=7 execs=19
+  MAIN: I’m using executing-plans with TDD; implementation will stay inline, with one final independent review as the skill requires.
+
+  MAIN: All three tasks are committed, and the six planned tests pass. The final review is checking edge cases before I close out the work.
+
+  MAIN: Review found that CRLF files lose characters during reading and invalid UTF-8 causes an uncaught exception. I’ll add failing tests for both, then fix them in one pass.
+
+  MAIN: Both fixes are committed, and all eight tests pass. I’m using finishing-a-development-branch to close out the work on main and remove the temporary execution files.
+
+  MAIN: Done. The plan is implemented and committed on main. Final review fixes are included, all 8 tests pass, and the working tree is clean.
+
+===== REVIEWER rollout-2026-09-17T11-00-59-01a0b087-6ada-7ac0-8  assistant msgs=1 execs=3
+  REPORT: ### Strengths All three planned modules and required tests are present. The CLI composes the actual counter and formatter functions cleanly, uses only the standard library, and handles missing files correctly. All six tests pass. ### Issues **Important — character counts lose CRLF whitespace** `wordstat/cli.py:16`: Default text-mode newline translation converts `\r\n` to `\n` before counting characters. A file containing `b"a\r\nb\r\n"` reports `chars: 4`, although it contains six characters. This violates the design’s character count including whitespace. Open with `newline=""` and add a CRLF integration test. **Minor — decoding errors escape the CLI** `wordstat/cli.py:18`: The exception handler catches `OSError` but not `UnicodeDecodeError`. A file containing invalid UTF-8 produces an uncaught exception instead of an error message and return code. Although invalid encoding behavior is unspecified, catching `UnicodeError` alongside `OSError` would provide consistent file-read error handling; add a corresponding test if adopted. ### Recommendations Preserve original newline characters when reading files and verify the resulting report with a CRLF fixture. Existing LF tests remain useful. ### Assessment **Ready to merge? With fixes.** The implementation satisfies the explicit task structure and required tests, but newline translation causes incorrect statistics for valid CRLF text files. Fix that before marking the plan complete.

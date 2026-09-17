@@ -27,10 +27,11 @@ wins. A transaction matching no rule has no category.
 - Prints the report (below) to stdout and returns 0.
 - If TRANSACTIONS cannot be read, prints `ledgerlite: cannot read <path>: <reason>`
   to stderr and returns 1.
-- If any row is malformed — wrong column count, an unparseable date, or an
-  amount that is not a decimal number — prints
-  `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns 2. The
-  whole file is rejected; nothing is printed to stdout.
+- If any row is malformed — wrong column count, an unparseable date, an
+  amount that is not a decimal number, or an amount with more than two
+  fractional digits (`1.005` is malformed; `1.5` and `1.50` are fine) —
+  prints `ledgerlite: <path>:<line>: <what is wrong>` to stderr and returns
+  2. The whole file is rejected; nothing is printed to stdout.
 - `--opening` defaults to `0`. `--rules` is optional; without it every
   transaction is uncategorized.
 

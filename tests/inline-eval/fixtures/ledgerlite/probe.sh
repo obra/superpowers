@@ -29,5 +29,16 @@ if [ "$code" -eq 0 ] && [ "$out" = $'uncategorized: 12.00\n\nclosing balance: 12
 else
   echo "interface-mismatch: exit=$code $(printf '%s' "$out" | tail -n 1 | cut -c1-80)"; rc=1
 fi
+# amount-precision: design.md says an amount with more than two fractional
+#   digits is malformed (exit 2). The plan's Task 2 lists the other malformed
+#   cases and its tests never exercise this one; Decimal("1.005") parses fine,
+#   so the natural implementation silently accepts it.
+printf 'date,amount,description\n2026-03-01,1.005,precise\n' > "$tmp/prec.csv"
+out=$(python3 -c "import sys; from ledgerlite.cli import main; sys.exit(main(['report', '$tmp/prec.csv']))" 2>&1); code=$?
+if [ "$code" -eq 2 ] && printf '%s' "$out" | grep -q "prec.csv:2"; then
+  echo "amount-precision: handled"
+else
+  echo "amount-precision: exit=$code $(printf '%s' "$out" | tail -n 1 | cut -c1-80)"; rc=1
+fi
 rm -r "$tmp"
 exit $rc
