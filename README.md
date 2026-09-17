@@ -22,6 +22,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Pi](#pi)
   - [Qwen Code](#qwen-code)
   - [Hermes Agent](#hermes-agent)
+- [Muse](#muse)
 - [The Basic Workflow](#the-basic-workflow)
 - [When Something Goes Wrong](#when-something-goes-wrong)
 - [Community](#community)
@@ -275,6 +276,21 @@ hermes plugins install obra/superpowers --enable
 Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
+
+### Muse
+
+Superpowers is available as a native Muse plugin — same repo, same skills, all harnesses.
+
+Install from this repository:
+
+```bash
+muse plugins install ./.muse-plugin
+# or from a marketplace snapshot
+muse marketplace add superpowers ./.muse-plugin
+muse plugins install superpowers@superpowers-dev
+```
+
+The plugin registers all 16 skills and the `SessionStart` bootstrap hook — `using-superpowers` is injected automatically every session with no per-session opt-in, alongside Claude Code, Codex, Cursor, Gemini, Pi, and the rest. Version is tracked in `.version-bump.json` so `scripts/bump-version.sh` keeps it in sync.
 
 ## The Basic Workflow
 
