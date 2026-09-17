@@ -101,11 +101,12 @@ skills/
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see SDO section for why)
   - Keep under 500 characters if possible
+  - **Always wrap `description` in double quotes.** Plain scalars containing `: ` (colon + space) are invalid YAML and cause the skill to be silently ignored by the CLI (e.g. `npx skills add`). Safe convention: always quote, regardless of content.
 
 ```markdown
 ---
 name: Skill-Name-With-Hyphens
-description: Use when [specific triggering conditions and symptoms]
+description: "Use when [specific triggering conditions and symptoms]"
 ---
 
 # Skill Name
@@ -146,6 +147,16 @@ Concrete results
 **Purpose:** Your agent reads the description to decide which skills to load for a given task. Make it answer: "Should I read this skill right now?"
 
 **Format:** Start with "Use when..." to focus on triggering conditions
+
+**YAML quoting:** Always wrap `description` in double quotes. An unquoted value with `: ` (colon + space) is parsed as a nested mapping, so the skill vanishes from discovery with no error.
+
+```yaml
+# ❌ BAD — broken if description contains ": "
+description: Use when configuring X for production applications: tuning and sizing
+
+# ✅ GOOD
+description: "Use when configuring X for production applications: tuning and sizing"
+```
 
 **CRITICAL: Description = When to Use, NOT What the Skill Does**
 
@@ -636,6 +647,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 **GREEN Phase - Write Minimal Skill:**
 - [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
 - [ ] YAML frontmatter with required `name` and `description` fields (max 1024 chars; see [spec](https://agentskills.io/specification))
+- [ ] `description` wrapped in double quotes (required if it contains `: `; safe to always quote)
 - [ ] Description starts with "Use when..." and includes specific triggers/symptoms
 - [ ] Description written in third person
 - [ ] Keywords throughout for search (errors, symptoms, tools)
