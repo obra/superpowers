@@ -45,6 +45,8 @@
 #                         stripped from the worker's copy
 #   INLINE_EVAL_ENV_FILE  file holding ANTHROPIC_API_KEY=... (default <repo>/evals/.env)
 #   INLINE_EVAL_MODEL     extra `--model` for the worker (default: harness default)
+#   INLINE_EVAL_PLUGIN_DIR a checkout to load instead of this one on the plugin arms
+#                         (skill-wording variants; e.g. a worktree with one edit)
 #   INLINE_EVAL_BACKEND   "api" (default: ANTHROPIC_API_KEY from the env file);
 #                         "bedrock" (Amazon Bedrock with the AWS CLI's default
 #                         credentials via SigV4: CLAUDE_CODE_USE_BEDROCK=1, region
@@ -78,9 +80,8 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 
 plugin_dir_for() {
   case "$1" in
-    spike|sdd|spikesonnet|spikerf|sddrf|wpplan) echo "$REPO_ROOT" ;;
+    spike|sdd|spikesonnet|spikerf|sddrf|wpplan|cxspike) echo "${INLINE_EVAL_PLUGIN_DIR:-$REPO_ROOT}" ;;
     bare|barerev|barerevs|barefork|cxbare) echo "" ;;
-    cxspike) echo "$REPO_ROOT" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
       if [ ! -d "$wt" ]; then
