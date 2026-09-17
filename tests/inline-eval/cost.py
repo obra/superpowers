@@ -23,6 +23,9 @@ PRICE = {  # $/MTok: input, output
     "claude-opus-5": (5.00, 25.00),
     "claude-sonnet-5": (2.00, 10.00),
     "claude-haiku-4-5": (1.00, 5.00),
+    # Bedrock resolves Claude Code's "sonnet" alias to Sonnet 4.5. Not priced in
+    # the cached API reference; assumed the Sonnet 4.6 rate ($3/$15) it lists.
+    "claude-sonnet-4-5": (3.00, 15.00),
     # Mantle (Claude on AWS) ids. Priced here at Anthropic first-party list
     # rates for the same model so arms stay comparable; Bedrock bills
     # separately and may differ. Opus 4.8 is the same tier as Opus 5.
