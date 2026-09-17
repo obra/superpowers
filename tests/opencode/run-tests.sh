@@ -42,9 +42,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --test, -t NAME    Run only the specified test"
             echo "  --help, -h         Show this help"
             echo ""
-            echo "Tests:"
-            echo "  test-plugin-loading.sh  Verify plugin installation and structure"
-            echo "  test-bootstrap-caching.sh  Verify bootstrap content caching"
+echo "Tests:"
+echo "  test-plugin-loading.sh  Verify plugin installation and structure"
+echo "  test-bootstrap-caching.sh  Verify bootstrap content caching"
+echo "  test-compaction-reinject.sh  Verify bootstrap re-injection after compaction"
             echo "  test-tools.sh           Test use_skill and find_skills tools (integration)"
             echo "  test-priority.sh        Test skill priority resolution (integration)"
             exit 0
@@ -61,6 +62,7 @@ done
 tests=(
     "test-plugin-loading.sh"
     "test-bootstrap-caching.sh"
+    "test-compaction-reinject.sh"
 )
 
 # Integration tests (require OpenCode)
