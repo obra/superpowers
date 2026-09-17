@@ -21,7 +21,7 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
 
-Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
+Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item when task tracking is available; otherwise work through the checklist directly.
 
 ## Skill Priority
 

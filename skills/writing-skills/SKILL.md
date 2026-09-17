@@ -626,7 +626,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 ## Skill Creation Checklist (TDD Adapted)
 
-**IMPORTANT: Create a todo for EACH checklist item below.**
+**IMPORTANT: Create a todo for EACH checklist item below when task tracking is available. Otherwise, work through the checklist below directly.**
 
 **RED Phase - Write Failing Test:**
 - [ ] Create pressure scenarios (3+ combined pressures for discipline skills)

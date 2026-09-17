@@ -80,7 +80,7 @@ digraph process {
         "Any load-bearing finding?" [shape=diamond];
         "Rule and continue; stop only if every path forward is a guess" [shape=box];
         "Park findings in ledger with rulings" [shape=box];
-        "Append completion to ledger, mark todo complete" [shape=box];
+        "Append completion to ledger; mark todo complete if available" [shape=box];
     }
 
     "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
@@ -97,22 +97,22 @@ digraph process {
     "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
     "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
     "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
-    "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
+    "Spec ✅ and quality approved?" -> "Append completion to ledger; mark todo complete if available" [label="yes"];
     "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
     "Finding conflicts with plan text?" -> "Rule on the conflict, ledger the ruling" [label="yes"];
     "Rule on the conflict, ledger the ruling" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model";
     "Finding conflicts with plan text?" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [label="no"];
     "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" -> "Dispatch scoped re-review (./re-review-prompt.md)";
     "Dispatch scoped re-review (./re-review-prompt.md)" -> "All findings addressed?";
-    "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
+    "All findings addressed?" -> "Append completion to ledger; mark todo complete if available" [label="yes"];
     "All findings addressed?" -> "R = 5?" [label="no"];
     "R = 5?" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [label="no - next round"];
     "R = 5?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
     "Adjudicate each open finding" -> "Any load-bearing finding?";
     "Any load-bearing finding?" -> "Rule and continue; stop only if every path forward is a guess" [label="yes"];
     "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
-    "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
-    "Append completion to ledger, mark todo complete" -> "More tasks remain?";
+    "Park findings in ledger with rulings" -> "Append completion to ledger; mark todo complete if available";
+    "Append completion to ledger; mark todo complete if available" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
@@ -131,7 +131,8 @@ partner's explicit consent.
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
-a ledger file, not only in todos.
+a ledger file. If task tracking is unavailable, the ledger is the
+sole task tracker.
 
 - Each plan owns a workspace: at skill start, run this skill's
   `scripts/sdd-workspace PLAN_FILE` — it prints the plan's git-ignored
@@ -153,8 +154,9 @@ a ledger file, not only in todos.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
 
-Read the plan once, note its context and Global Constraints, and create a
-todo per task. If the plan names a Spec, read that too: the spec is the
+Read the plan once, note its context and Global Constraints. If task
+tracking is available, create a todo per task; otherwise use the ledger alone.
+If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
@@ -438,9 +440,9 @@ message as your other bookkeeping:
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
   tripped breaker
 
-Then mark the todo complete and move on. Never move to the next task while
-the review has open Critical/Important issues that are neither fixed nor
-parked-with-ruling at the cap.
+Then mark the todo complete if task tracking is available and move on. Never
+move to the next task while the review has open Critical/Important issues that
+are neither fixed nor parked-with-ruling at the cap.
 
 ## Final Review
 
@@ -508,7 +510,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Setup: worktree verified]
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
 [Resolve workspace: scripts/sdd-workspace docs/superpowers/plans/feature-plan.md — no ledger inside, fresh start]
-[Create todos for all tasks]
+[Create todos for all tasks if task tracking is available; otherwise use the ledger alone]
 
 Task 1: Hook installation script
 
