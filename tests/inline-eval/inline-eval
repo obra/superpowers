@@ -43,6 +43,12 @@
 #                         stripped from the worker's copy
 #   INLINE_EVAL_ENV_FILE  file holding ANTHROPIC_API_KEY=... (default <repo>/evals/.env)
 #   INLINE_EVAL_MODEL     extra `--model` for the worker (default: harness default)
+#   INLINE_EVAL_BACKEND   "api" (default: ANTHROPIC_API_KEY from the env file) or
+#                         "mantle" (Claude on AWS via the Bedrock Mantle endpoint:
+#                         needs AWS_BEARER_TOKEN_BEDROCK in the environment or the
+#                         env file, plus INLINE_EVAL_REGION, default us-east-1; the
+#                         model must be a Mantle id such as anthropic.claude-opus-4-8,
+#                         so set INLINE_EVAL_MODEL)
 #
 # Artifacts per rep live in $INLINE_EVAL_DIR/reps/<arm>-<n>/:
 #   repo/         the scratch git repo the worker works in
@@ -82,10 +88,24 @@ plugin_dir_for() {
   esac
 }
 
+BACKEND=${INLINE_EVAL_BACKEND:-api}
+REGION=${INLINE_EVAL_REGION:-us-east-1}
+
+env_or_file() {  # $1 = var name: environment wins, then the env file
+  local v=${!1:-}
+  if [ -z "$v" ] && [ -f "$ENV_FILE" ]; then v=$(grep "^$1=" "$ENV_FILE" | head -1 | cut -d= -f2-); fi
+  echo "$v"
+}
+
 api_key() {
-  [ -f "$ENV_FILE" ] || die "no env file at $ENV_FILE (set INLINE_EVAL_ENV_FILE)"
-  local k; k=$(grep '^ANTHROPIC_API_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2-)
-  [ -n "$k" ] || die "ANTHROPIC_API_KEY is empty in $ENV_FILE"
+  local k; k=$(env_or_file ANTHROPIC_API_KEY)
+  [ -n "$k" ] || die "ANTHROPIC_API_KEY is not set and not in $ENV_FILE"
+  echo "$k"
+}
+
+bedrock_bearer() {
+  local k; k=$(env_or_file AWS_BEARER_TOKEN_BEDROCK)
+  [ -n "$k" ] || die "INLINE_EVAL_BACKEND=mantle needs AWS_BEARER_TOKEN_BEDROCK in the environment or $ENV_FILE"
   echo "$k"
 }
 
@@ -94,7 +114,7 @@ api_key() {
 # dialog — csd cannot answer any of them. Field names and shapes were read
 # back from a config dir after walking the wizard by hand on 2.1.273.
 seed_config_dir() {
-  local cfg=$1 repo=$2 key=$3
+  local cfg=$1 repo=$2 key=$3   # key may be empty (mantle backend: no API key)
   mkdir -p "$cfg"
   python3 - "$cfg" "$repo" "$key" "$(claude --version | awk '{print $1}')" <<'PY'
 import json, os, sys
@@ -102,9 +122,10 @@ cfg, repo, key, version = sys.argv[1:5]
 d = {
     "hasCompletedOnboarding": True,
     "lastOnboardingVersion": version,
-    "customApiKeyResponses": {"approved": [key[-20:]], "rejected": []},
     "projects": {os.path.realpath(repo): {"hasTrustDialogAccepted": True}},
 }
+if key:
+    d["customApiKeyResponses"] = {"approved": [key[-20:]], "rejected": []}
 json.dump(d, open(os.path.join(cfg, ".claude.json"), "w"), indent=2)
 PY
 }
@@ -176,8 +197,14 @@ cmd_start() {
       echo "started $(worker "$arm" "$n") (codex); wait with: $0 wait $arm $n"
       return ;;
   esac
-  local key; key=$(api_key)
+  local key="" bearer=""
+  case "$BACKEND" in
+    api)    key=$(api_key) ;;
+    mantle) bearer=$(bedrock_bearer); [ -n "${INLINE_EVAL_MODEL:-}" ] || die "mantle backend needs INLINE_EVAL_MODEL (a Mantle model id such as anthropic.claude-opus-4-8)" ;;
+    *)      die "unknown INLINE_EVAL_BACKEND: $BACKEND (api|mantle)" ;;
+  esac
   seed_config_dir "$dir/cfg" "$dir/repo" "$key"
+  echo "backend: $BACKEND${bearer:+ region=$REGION}" | tee -a "$dir/plugin.txt"
   local extra=()
   local model=${INLINE_EVAL_MODEL:-}
   [ "$arm" = "spikesonnet" ] && model=${model:-sonnet}
@@ -189,7 +216,10 @@ cmd_start() {
     echo "plugin: none (bare)" | tee "$dir/plugin.txt"
   fi
   use_rep_tmux "$arm" "$n"
+  # Quorum's Mantle path (evals/src/agents/index.ts seedClaudeMantle) sets exactly
+  # these three variables and no API key; the per-rep tmux server inherits them.
   CLAUDE_CONFIG_DIR="$dir/cfg" ANTHROPIC_API_KEY="$key" \
+    CLAUDE_CODE_USE_MANTLE="${bearer:+1}" AWS_REGION="${bearer:+$REGION}" AWS_BEARER_TOKEN_BEDROCK="$bearer" \
     "$CSD" launch "$(worker "$arm" "$n")" "$dir/repo" -- ${extra[@]+"${extra[@]}"}
   "$(shim "$arm" "$n")" send "$(prompt_for "$arm")"
   echo "started $(worker "$arm" "$n"); wait with: $0 wait $arm $n"

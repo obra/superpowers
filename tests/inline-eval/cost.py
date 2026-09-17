@@ -23,6 +23,13 @@ PRICE = {  # $/MTok: input, output
     "claude-opus-5": (5.00, 25.00),
     "claude-sonnet-5": (2.00, 10.00),
     "claude-haiku-4-5": (1.00, 5.00),
+    # Mantle (Claude on AWS) ids. Priced here at Anthropic first-party list
+    # rates for the same model so arms stay comparable; Bedrock bills
+    # separately and may differ. Opus 4.8 is the same tier as Opus 5.
+    "anthropic.claude-opus-4-8": (5.00, 25.00),
+    "anthropic.claude-opus-5": (5.00, 25.00),
+    "anthropic.claude-sonnet-5": (2.00, 10.00),
+    "anthropic.claude-haiku-4-5": (1.00, 5.00),
 }
 CACHE_READ = 0.10
 CACHE_WRITE = 1.25
