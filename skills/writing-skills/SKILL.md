@@ -371,6 +371,35 @@ pptx/
 ```
 When: Reference material too large for inline
 
+### Moving Content Into a Skill
+
+Relative paths mean nothing on their own - they resolve against the file holding them. Moving content to a different depth invalidates every relative reference inside it.
+
+**Re-resolve links mechanically, never by counting `../` by eye:**
+
+```bash
+# From the moved file's directory, assert every relative target exists
+d=$(dirname "$FILE")
+grep -o ']([^)]*)' "$FILE" | sed 's/^](//;s/)$//' | while read -r l; do
+  case "$l" in http*|\#*|mailto:*|"") continue;; esac
+  [ -e "$d/${l%%#*}" ] || echo "DANGLING: $l"
+done
+```
+
+A link that is one `../` short still renders as a link. The count is not something you verify by looking at it.
+
+Read the output - this is a heuristic, not a parser, so `](` inside a fenced code block shows up as a false positive.
+
+**Then grep the moved text for prose cross-references:**
+
+```bash
+grep -n 'above\|below\|earlier\|later' "$FILE"
+```
+
+"The section above" has no referent once that section lives in a different file. No link checker can catch this - only reading can.
+
+**Why this matters:** a dangling link fails silently. The agent follows it, finds nothing, and proceeds without the context it was supposed to have. No error, no failing test.
+
 ## The Iron Law (Same as TDD)
 
 ```
@@ -660,6 +689,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Common mistakes section
 - [ ] No narrative storytelling
 - [ ] Supporting files only for tools or heavy reference
+- [ ] Content moved from another file: every relative link re-resolved against the new location and verified to exist; prose cross-references (`above`, `below`, `earlier`, `later`) re-read for lost referents
 
 **Deployment:**
 - [ ] Commit skill to git and push to your fork (if configured)
