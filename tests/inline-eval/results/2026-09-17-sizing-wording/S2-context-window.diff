@@ -1,0 +1,23 @@
+diff --git a/skills/writing-plans/SKILL.md b/skills/writing-plans/SKILL.md
+index c7a6548..7e29763 100644
+--- a/skills/writing-plans/SKILL.md
++++ b/skills/writing-plans/SKILL.md
+@@ -40,11 +40,15 @@ fresh reviewer's gate. When drawing task boundaries: fold setup,
+ configuration, scaffolding, and documentation steps into the task whose
+ deliverable needs them; split only where a reviewer could meaningfully
+ reject one task while approving its neighbor. Each task ends with an
+-independently testable deliverable.
++independently testable deliverable, and is at most one context window of
++work: a fresh implementer reads the brief and the files the task touches,
++implements, tests, and recovers from one wrong approach without running
++out of room.
+ 
+-## Bite-Sized Task Granularity
++## Step Granularity
+ 
+-**Each step is one action (2-5 minutes):**
++**Each step is one action with a checkable result** — a command and its
++expected output, or a file written:
+ - "Write the failing test" - step
+ - "Run it to make sure it fails" - step
+ - "Implement the minimal code to make the test pass" - step

@@ -1,0 +1,13 @@
+diff --git a/skills/writing-plans/SKILL.md b/skills/writing-plans/SKILL.md
+index c7a6548..acf1f15 100644
+--- a/skills/writing-plans/SKILL.md
++++ b/skills/writing-plans/SKILL.md
+@@ -44,7 +44,7 @@ independently testable deliverable.
+ 
+ ## Bite-Sized Task Granularity
+ 
+-**Each step is one action (2-5 minutes):**
++**Each step is one action (10-20 minutes):**
+ - "Write the failing test" - step
+ - "Run it to make sure it fails" - step
+ - "Implement the minimal code to make the test pass" - step
