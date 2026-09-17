@@ -1,0 +1,10 @@
+## Review Focus
+
+- Missing file: write an error message to stderr and return 1 without printing a report to stdout.
+- Empty file: print `words: 0`, `lines: 0`, and `chars: 0`, then return 0.
+- File with one unterminated line: count it as one line.
+- Blank lines or consecutive newlines: count each actual line, while ignoring only the empty final line created by a trailing newline.
+- Whitespace-only or irregularly spaced text: count tokens separated by spaces, tabs, or newlines, not empty fields.
+- Unicode text and whitespace: count Python characters rather than encoded bytes and recognize whitespace for word splitting.
+- Stats dictionaries with a different insertion order: always render `words`, `lines`, then `chars`, with no trailing newline.
+- Missing or extra path arguments: let argument parsing reject them rather than attempting file processing.

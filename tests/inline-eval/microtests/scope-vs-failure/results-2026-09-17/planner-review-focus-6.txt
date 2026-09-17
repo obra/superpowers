@@ -1,0 +1,9 @@
+## Review Focus
+
+- Missing file: write an error message to stderr and return exit code 1.
+- Missing or extra path arguments: `argparse` rejects them because exactly one positional `path` is required.
+- Whitespace-only text and non-space separators such as tabs/newlines: `count_words` counts whitespace-separated tokens and returns 0 when none exist.
+- Single-line text without a newline: `count_lines` returns 1.
+- Newline-only text: `count_lines` does not count the trailing empty segment as an additional line.
+- Unicode text: `count_chars` counts Python characters, including Unicode characters and whitespace.
+- Zero-valued statistics: `format_report` preserves the required `words`, `lines`, `chars` order and renders each value as `0`.

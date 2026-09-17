@@ -1,0 +1,8 @@
+## Review Focus
+
+- Missing file: `cli.main` writes an explanatory message to stderr, produces no stdout report, and returns 1.
+- Non-space whitespace and repeated whitespace: `count_words` treats tabs, newlines, and runs of whitespace as separators without creating empty tokens.
+- Single-line text: `count_lines("a")` and `count_lines("a\n")` both return 1.
+- Blank lines: `count_lines` counts interior blank lines while ignoring only the empty final line created by a trailing newline.
+- Whitespace and Unicode characters: `count_chars` includes whitespace and counts Python text characters, not encoded bytes.
+- Zero-valued statistics: `format_report` preserves the specified key order and renders each zero normally.

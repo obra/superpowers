@@ -1,0 +1,9 @@
+## Review Focus
+
+- Whitespace-only and mixed-whitespace text (tabs, newlines, repeated spaces) — `count_words` treats every whitespace run as a separator and returns no empty tokens.
+- A non-empty single line with no newline — `count_lines` returns 1.
+- Leading or consecutive newlines — `count_lines` counts the resulting blank lines, while only a trailing newline avoids adding an extra final line.
+- A file containing only one or more newline characters — line counting follows the same trailing-newline rule.
+- A missing input file — `cli.main` writes an explanatory message to stderr, emits no report to stdout, and returns 1.
+- No path or more than one path argument — `argparse` rejects the invocation because exactly one positional path is required.
+- Unicode text — `count_chars` counts Python string characters, including Unicode characters and whitespace.

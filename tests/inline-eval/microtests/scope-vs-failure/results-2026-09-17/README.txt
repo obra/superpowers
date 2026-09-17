@@ -76,3 +76,21 @@ the sessions rank first, a test or a spec line naming the case, is an
 enumeration done elsewhere. That is the Review Focus mechanism
 (planner enumerates implied cases once, with the spec open), which moved
 Sonnet 4.5 implementers 3/3 under SDD.
+
+PLANNER SIDE: gpt-5.6-sol at low effort asked to write the plan's Review
+Focus section from design.md + plan.md (writing-plans' instruction
+verbatim), 6 reps: 6-9 items each, undecodable input in 0/6 (items are
+spec-adjacent: empty file, unterminated line, blank lines, whitespace,
+argparse). The fresh Opus 5 planner ranked it 3rd of 10.
+
+Where the enumeration of what the spec implies actually happened today:
+  Opus 5 final reviewer with the template       11/11 found it (grading varied)
+  Opus 5 planner writing Review Focus            1/1 (ranked 3rd of 10)
+  Sonnet 4.5 implementers handed the list        3/3 implemented it
+  gpt-6-astra final reviewer                     1/2 readable cases (once Minor, once "not specified")
+  gpt-5.6-sol low: implementer (v0-v4)           0/30 with any wording, 2/6 enumerated-then-ruled-out
+  gpt-5.6-sol low: planner                       0/6
+  gpt-5.6-sol low: bare TUI whole-plan sessions  6/6 by idiom, frame-dependent, unexplained
+The lever is which model, at what effort, is asked to enumerate, and
+whether its scoping decisions are written where a human sees them. Not
+the executor's wording.

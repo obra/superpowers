@@ -1,0 +1,10 @@
+## Review Focus
+
+- Single-line text without a newline — `count_lines("a")` should return `1`.
+- Words separated by tabs, newlines, or repeated whitespace — `count_words` should count whitespace-separated tokens without producing empty words.
+- Missing file — `cli.main` should write an error message to stderr as well as return `1`.
+- Empty file through the CLI — it should print zero for words, lines, and characters and return `0`.
+- Blank lines within text — each blank line should count as a line, while a trailing newline should not create an extra final line.
+- Newline and tab characters — `count_chars` should include them in the character count.
+- Unicode text — `count_words`, `count_lines`, and `count_chars` should operate on Python characters and Unicode whitespace consistently.
+- Zero-valued statistics — `format_report` should preserve the specified key order and render each zero normally.

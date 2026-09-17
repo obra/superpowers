@@ -1,0 +1,11 @@
+## Review Focus
+
+- Missing file: `main([path])` writes an explanatory message to stderr and returns `1` without printing a report.
+- Missing positional path: `argparse` reports the usage error and exits with its standard nonzero status.
+- Empty file: the CLI prints `words: 0`, `lines: 0`, and `chars: 0`, then returns `0`.
+- Whitespace-only text: `count_words` returns `0`, while `count_chars` includes every whitespace character.
+- Tabs, repeated spaces, and newlines between words: `count_words` treats any run of whitespace as a separator.
+- Single nonempty line without a newline: `count_lines` returns `1`.
+- Blank lines within text: `count_lines` counts them as lines while still ignoring only the empty final line created by a trailing newline.
+- Unicode text: `count_chars` counts Python characters, including Unicode characters, and `count_words` uses whitespace separation.
+- Zero-valued statistics: `format_report` preserves the specified `words`, `lines`, `chars` order and emits exactly three lines with no trailing newline.
