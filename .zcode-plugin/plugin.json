@@ -1,0 +1,24 @@
+{
+  "name": "superpowers",
+  "version": "6.3.0",
+  "description": "An agentic skills framework and software development methodology.",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "brainstorming",
+    "subagent-driven-development",
+    "skills",
+    "planning",
+    "tdd",
+    "debugging",
+    "code-review",
+    "workflow"
+  ],
+  "skills": "skills",
+  "hooks": "./hooks/hooks-zcode.json"
+}
