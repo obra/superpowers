@@ -279,16 +279,30 @@ turn loses the bootstrap — start a fresh session if skills stop triggering.
 
 ### Muse
 
-Superpowers is available as a native Muse plugin — same repo, same skills, all harnesses.
+Superpowers is available as a native Muse plugin — same repo, same skills, all harnesses. The `using-superpowers` bootstrap is injected via the native `SessionStart` hook alongside Claude Code, Codex, Cursor, Gemini, Pi, and the rest — no per-session opt-in.
 
-Install from this repository:
+- Install from a local checkout:
 
-```bash
-muse plugins install ./
-muse plugins approve superpowers
-```
+  ```bash
+  muse plugins install ./
+  muse plugins approve superpowers
+  ```
 
-The plugin registers all 16 skills and the `SessionStart` bootstrap hook — `using-superpowers` is injected automatically every session with no per-session opt-in, alongside Claude Code, Codex, Cursor, Gemini, Pi, and the rest. Hooks require approval on first install. Version is tracked in `.version-bump.json` so `scripts/bump-version.sh` keeps it in sync.
+  Or clone and install:
+
+  ```bash
+  git clone https://github.com/obra/superpowers.git
+  muse plugins install ./superpowers
+  muse plugins approve superpowers
+  ```
+
+- Update later:
+
+  ```bash
+  muse plugins update superpowers
+  ```
+
+Restart any active Muse sessions after installing so the `SessionStart` hook takes effect — skills are active immediately, hooks require approval on first install. To verify, start a fresh session and send `Let's make a react todo list` — a working install auto-triggers `brainstorming` before any code is written. Version is tracked in `.version-bump.json` so `scripts/bump-version.sh` keeps it in sync.
 
 ## The Basic Workflow
 
