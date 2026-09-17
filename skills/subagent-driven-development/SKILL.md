@@ -26,15 +26,16 @@ The primary agent already has the implementation plan, the repository context, t
 7. Fix problems immediately.
 8. Re-test after fixes.
 9. Continue to the next task.
-10. Run the full relevant test suite after all tasks are complete.
-11. Inspect the complete working tree.
-12. Use `git status` and `git diff`.
-13. Explicitly inspect untracked files.
-14. Compare the implementation against the original plan and acceptance criteria.
-15. Fix anything discovered.
-16. Perform final verification.
-17. Report what was implemented and tested.
-18. Stop and return control to the user.
+10. At meaningful milestones, perform a checkpoint review of the accumulated work (see Checkpoint Reviews below).
+11. Run the full relevant test suite after all tasks are complete.
+12. Inspect the complete working tree.
+13. Use `git status` and `git diff`.
+14. Explicitly inspect untracked files.
+15. Compare the implementation against the original plan and acceptance criteria.
+16. Fix anything discovered.
+17. Perform final verification.
+18. Report what was implemented and tested.
+19. Stop and return control to the user.
 
 Do not automatically delegate every task to a subagent. Delegation is a deliberate, occasional choice, not a step in this loop.
 
@@ -83,7 +84,7 @@ The purpose of task structure is efficient engineering progress, not ceremony.
 
 ## Testing
 
-After each task, run the most relevant focused verification available. Possible verification includes:
+After each task, run the most relevant focused verification available. Use `superpowers:verification-strategy` to decide what level and kind of verification is actually proportional to the change — a doc tweak and a refactor don't warrant the same evidence. Possible verification includes:
 
 * unit tests
 * integration tests
@@ -135,6 +136,153 @@ Check the following for every task:
 * Relevant tests pass.
 * Additional tests are added when appropriate.
 * Existing tests or assumptions have not been invalidated.
+
+---
+
+## Checkpoint Reviews
+
+Self-review checks each task in isolation. A checkpoint review periodically checks the *accumulated* work — several completed tasks together — to catch architectural, integration, requirement, and scope problems before they compound. It is not a reviewer-agent gate and does not run after every task.
+
+### When to checkpoint
+
+Use engineering judgement. A checkpoint is normally appropriate when:
+
+* a coherent feature/component has been completed
+* several closely related tasks have accumulated
+* a foundational change is complete and later tasks depend on it
+* a significant integration boundary has been crossed
+* a high-risk architectural/security change has just been completed
+* the implementation plan explicitly identifies a review point
+* roughly 2-4 related tasks have been completed without another natural checkpoint
+
+These are examples, not a fixed rule. Do NOT adopt a fixed "review every N tasks" policy — a single large or risky task can justify an immediate checkpoint, and several small tasks that form one coherent change can be reviewed together.
+
+```
+Execute tasks
+      ↓
+Focused verification + self-review per task
+      ↓
+Meaningful milestone reached?
+      ↓
+NO → Continue
+      ↓
+YES
+      ↓
+Checkpoint review of accumulated changes
+      ↓
+Requirements / architecture / integration / scope check
+      ↓
+Scope drift check
+      ↓
+Comment hygiene review
+      ↓
+Independent review (optional)
+      ↓
+Problems found?
+   ↓             ↓
+  YES            NO
+   ↓              ↓
+Fix + test       Continue
+   ↓
+Re-review checkpoint if the fixes materially changed the reviewed area
+      ↓
+Continue
+```
+
+### What a checkpoint review examines
+
+Review the accumulated work since the previous checkpoint (or since implementation began, for the first checkpoint). Inspect the actual current working tree as needed. Do NOT use commits, staging, or Git history as review checkpoints.
+
+**Requirements** — Does the implementation still match the plan? Are acceptance criteria being satisfied? Has any requirement been missed or unintentionally changed?
+
+**Integration** — Do the completed pieces fit together correctly? Are interfaces and assumptions consistent? Have earlier decisions created problems for upcoming tasks?
+
+**Architecture** — Is the implementation still following the intended design? Has unnecessary complexity appeared? Has the implementation drifted from the plan?
+
+**Scope** — Are changes still within the intended scope? Are unrelated changes appearing? Is temporary/debug code accumulating?
+
+**Tests** — Are focused tests still meaningful? Are important integration cases covered? Is any new behaviour insufficiently verified? Use `superpowers:verification-strategy` to judge what level and kind of verification is actually proportional to the accumulated change, rather than defaulting to "re-run everything" or "looks fine."
+
+### Checkpoint scope check
+
+At a checkpoint, also decide whether the accumulated changes are still within the requested scope, using `superpowers:scope-drift-check`. Classify what's changed since the previous checkpoint:
+
+* Required and genuinely necessary Supporting changes stay.
+* Incidental improvements are named as potential follow-up work rather than folded in silently.
+* Unrelated changes are removed from this task or split out.
+
+The current explicit scope is whatever the user has actually authorized in the conversation so far — not necessarily the original wording of the request, if the user has since expanded it.
+
+This is normally performed by the primary agent, the same as the rest of the checkpoint review — do not automatically spawn a subagent for it. An independent reviewer remains optional, per the existing review policy below.
+
+### Checkpoint comment hygiene
+
+At a checkpoint, also inspect comments introduced or materially changed since the previous checkpoint (see `superpowers:comment-hygiene`). Ask:
+
+* Did the implementation add verbose explanatory comments?
+* Are comments describing recent implementation history rather than durable facts?
+* Are obvious comments restating the code?
+* Can a comment be shortened without losing important information?
+* Should code structure or naming be improved instead?
+* Are there useful comments documenting constraints, invariants, workarounds, or tricky reasoning that should remain?
+
+Clean up unnecessary comment bloat before continuing, then run the relevant verification. This is normally performed by the primary agent, the same as the rest of the checkpoint review — do not automatically spawn a subagent for comment cleanup. An independent reviewer remains optional, per the existing review policy below.
+
+### Self-review vs. independent review
+
+A checkpoint review does NOT automatically mean spawning another agent. The default is the primary agent reviewing the accumulated work itself, using the criteria above.
+
+An independent reviewer (via `superpowers:requesting-code-review`) may be worth requesting when the accumulated change is large, the architecture is complex, the change is security-sensitive, independent reasoning would materially improve confidence, or the user explicitly requests it. Do not automatically dispatch a reviewer at every checkpoint.
+
+### Fixing checkpoint findings
+
+If a checkpoint identifies a real problem:
+
+1. Understand the problem.
+2. Fix it in the primary session.
+3. Run the relevant verification.
+4. Self-review the affected area again.
+5. Continue.
+
+Do not automatically spawn a fixer agent. Do not require a second reviewer for every fix — a re-review is appropriate only when the fix materially changes the reviewed area, the original issue was high-risk, independent review was explicitly requested, or another review would materially improve confidence.
+
+### Relationship to task self-review and final verification
+
+Three levels, each serving a different purpose:
+
+* **Task self-review** — checks the individual task immediately; catches local mistakes quickly.
+* **Checkpoint review** — checks several completed tasks together; catches integration, architecture, scope, and requirement drift.
+* **Final verification** — checks the complete implementation before hand-off.
+
+```
+Task
+ ↓
+Implement
+ ↓
+Focused test
+ ↓
+Task self-review
+ ↓
+Next task
+ ↓
+...
+ ↓
+Meaningful milestone
+ ↓
+Checkpoint review
+ ↓
+Scope drift check
+ ↓
+Comment hygiene
+ ↓
+Fix + verify
+ ↓
+Continue
+ ↓
+Final verification
+```
+
+Checkpoint reviews must not introduce Git mutations — they inspect the current working tree the same way self-review and final verification do; see Git Safety below.
 
 ---
 
@@ -293,6 +441,9 @@ After all tasks are complete:
 11. Check for missing tests.
 12. Check for generated files that should not exist.
 13. Check whether documentation should have been updated.
+14. Perform a final comment-hygiene pass over comments introduced or modified during the implementation (see `superpowers:comment-hygiene`) — a lightweight quality pass, not a rewrite of pre-existing repository comments.
+15. Confirm the final implementation still satisfies the requested scope, using `superpowers:scope-drift-check` — Required and Supporting changes stay; Incidental or Unrelated additions are reported as potential follow-up rather than left in silently.
+16. Confirm the verification actually carried out is proportional to the change, using `superpowers:verification-strategy` — state plainly what was verified, what wasn't, and why, rather than implying blanket certainty.
 
 If anything is wrong:
 
@@ -402,7 +553,7 @@ This change exists to avoid repeatedly reconstructing context across agents. Ind
 
 ## Final Summary
 
-> Plan → Implement directly → Test → Self-review → Fix → Test → Continue → Final verification → Inspect working tree → Stop
+> Plan → Implement directly → Test → Self-review → Fix → Test → Continue → Checkpoint review + comment hygiene at meaningful milestones → Final verification → Inspect working tree → Stop
 
 > The primary agent owns implementation quality.
 

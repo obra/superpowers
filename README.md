@@ -1,151 +1,348 @@
-# Superpowers
+# Superpowers (personal fork)
 
-Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
+This is [Callum Marks'](https://github.com/CallumMarksClik/superpowers) personal fork of [Superpowers](https://github.com/obra/superpowers), a software development methodology for Claude Code built on composable skills. This fork keeps the skill library but deliberately leans the workflow toward direct, primary-agent execution instead of heavy subagent orchestration, and adds a durable-storage system that can write specs/plans to an ObsidianRAG vault instead of (or as well as) the filesystem.
+
+**Everything in this README describes this fork's behaviour.** Upstream `obra/superpowers` is a different, independently-evolving codebase and may work differently.
 
 ## Table of Contents
 
-- [How it works](#how-it-works)
-- [Commercial Services](#commercial-services)
-- [Getting Started](#installation)
-  - [Claude Code](#claude-code)
-- [The Basic Workflow](#the-basic-workflow)
-- [Community](#community)
-- [What's Inside](#whats-inside)
-- [Philosophy](#philosophy)
-- [Contributing](#contributing)
+- [What This Fork Is](#what-this-fork-is)
+- [Installation](#installation)
+- [Verify Installation](#verify-installation)
+- [Core Workflow](#core-workflow)
+- [Custom Skills](#custom-skills)
+- [Durable Storage](#durable-storage)
+- [Local Configuration](#local-configuration)
+- [Configuring ObsidianRAG](#configuring-obsidianrag)
+- [ObsidianRAG Storage Structure](#obsidianrag-storage-structure)
+- [Project Naming](#project-naming)
+- [Filename Convention](#filename-convention)
+- [Specs and Plans](#specs-and-plans)
+- [Default vs ObsidianRAG](#default-vs-obsidianrag)
+- [Internal `.superpowers` State](#internal-superpowers-state)
+- [ObsidianRAG Integration Details](#obsidianrag-integration-details)
+- [Usage Examples](#usage-examples)
 - [Updating](#updating)
+- [Uninstalling](#uninstalling)
+- [Development / Contributing](#development--contributing)
 - [License](#license)
-- [Visual companion telemetry](#visual-companion-telemetry)
 
-## How it works
+## What This Fork Is
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+Upstream Superpowers already walks you from a rough idea through a spec, a plan, and implementation. This fork keeps that shape but changes *who does the work and how much ceremony surrounds it*. The principles actually implemented here:
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+- **Primary-agent execution by default** — tasks are implemented directly in the primary agent's own context; subagents are opt-in, not a per-task default (`subagent-driven-development`).
+- **Avoiding unnecessary subagent orchestration** — dispatching a subagent (for review, for genuinely parallel work) is a deliberate choice made because it adds concrete value, never a mandatory pipeline step.
+- **No automatic Git commits** — no skill in this fork runs `git commit`. That's always the user's call.
+- **No automatic Git staging** — same for `git add`. Skills report what changed; the user decides what to stage.
+- **No unnecessary Git history mutation** — skills that touch the working tree (comment-hygiene passes, checkpoint reviews) are explicitly forbidden from `git reset`, `restore`, `checkout --`, `rebase`, `merge`, `cherry-pick`, `stash`, `push`, or creating/deleting branches or worktrees.
+- **Independent review is optional and should provide concrete value** — `requesting-code-review` is reached for when a second perspective would materially improve confidence (security-sensitive, architecturally complex, explicitly requested), not as a gate after every task.
+- **Proportional verification rather than blindly running everything** — `verification-strategy` picks what to check based on what actually changed and what could regress, instead of defaulting to the full test suite or skipping checks because "it's small."
+- **Scope-drift checking** — `scope-drift-check` classifies accumulated work as Required, Supporting, Incidental, or Unrelated at checkpoints, so a task doesn't quietly grow beyond what was authorized.
+- **Comment hygiene** — `comment-hygiene` keeps comments introduced during a task focused on durable, non-obvious information rather than narrating what just happened.
+- **Token/context efficiency** — the workflow was redesigned around one continuous primary-agent context instead of a default per-task subagent fan-out, so routine work doesn't pay the cost of spinning up and re-explaining context to fresh agents.
+- **Preserving the user's existing working-tree changes** — every skill's Git Safety section defers staging/history decisions to the user; nothing here resets or discards uncommitted work.
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
-
-Next up, once you say "go", your agent works through the plan directly — implementing each task, testing it, and self-reviewing it before moving on. Subagents and independent code review remain available any time they'd add real value (a second opinion on a risky change, genuinely parallel work), but they're an optional tool your agent reaches for deliberately, not a mandatory pipeline. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
-
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
-## Commercial Services
-
-If you're using Superpowers in enterprise and could benefit from commercial support, additional tooling, or managed spending, please don't hesitate to drop us a line at sales@primeradiant.com.
+This section is a summary of philosophy, not a replacement for the individual skills — see [Custom Skills](#custom-skills) below and the `skills/` directory for the actual behaviour-shaping content.
 
 ## Installation
 
-### Claude Code
+**Prerequisites:** Claude Code CLI installed (`claude --version` works).
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
+This fork ships its own self-contained plugin marketplace at `.claude-plugin/marketplace.json` (marketplace name `superpowers-dev`, one plugin, `superpowers`, sourced from the repo root). That's a different marketplace from either of upstream's — installing from this fork is not the same as running the official-marketplace or `obra/superpowers-marketplace` install commands in upstream's docs.
 
-#### Official Marketplace
+Clone the fork, then register it as a local marketplace and install the plugin from it:
 
-- Install the plugin from Anthropic's official marketplace:
+```bash
+git clone https://github.com/CallumMarksClik/superpowers.git
+```
 
-  ```bash
-  /plugin install superpowers@claude-plugins-official
-  ```
+```
+/plugin marketplace add /path/to/your/clone/of/superpowers
+/plugin install superpowers@superpowers-dev
+```
 
-#### Superpowers Marketplace
+(Once your changes are pushed, `/plugin marketplace add CallumMarksClik/superpowers` works the same way directly from GitHub, without a local clone.)
 
-The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
+This is a user-level install, same as any other Claude Code plugin — Claude Code caches installed plugin content under `~/.claude/plugins/cache/superpowers-dev/superpowers/<version>/`, the same pattern used for `~/.claude/plugins/cache/claude-plugins-official/superpowers/<version>/`. Skills are auto-discovered from the plugin's `skills/*/SKILL.md` files; a `SessionStart` hook (`hooks/hooks.json`) additionally injects the `using-superpowers` skill directly into every new session so skill-checking behaviour doesn't depend on the model deciding to look it up.
 
-- Register the marketplace:
+**Installing this fork vs. upstream:** `superpowers@claude-plugins-official` (Anthropic's official marketplace) and `superpowers@superpowers-marketplace` (`obra/superpowers-marketplace`) both install Jesse Vincent's unmodified upstream Superpowers — a different codebase from this fork. All three register a plugin literally named `superpowers`, so only enable one at a time; running two `superpowers` plugins together will produce duplicate/conflicting skill definitions.
 
-  ```bash
-  /plugin marketplace add obra/superpowers-marketplace
-  ```
+## Verify Installation
 
-- Install the plugin from this marketplace:
+There's no dedicated verification script in this repo — installation is a Claude Code plugin operation, so verify it the same way you'd verify any plugin:
 
-  ```bash
-  /plugin install superpowers@superpowers-marketplace
-  ```
+- Run `/plugin list` (or `claude plugin list` from a shell) and confirm `superpowers` is listed as installed from the `superpowers-dev` marketplace (not `claude-plugins-official`).
+- Ask Claude what skills it has available, or explicitly reference `superpowers:durable-storage`, `superpowers:comment-hygiene`, `superpowers:scope-drift-check`, or `superpowers:verification-strategy` — these four don't exist in upstream Superpowers, so their presence confirms this fork (not upstream) is what's active.
+- Confirm the cached copy exists on disk: `~/.claude/plugins/cache/superpowers-dev/superpowers/<version>/skills/durable-storage/SKILL.md`.
 
-## The Basic Workflow
+## Core Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+1. **brainstorming** — activates before writing code for anything non-trivial. Refines a rough idea through questions, presents the design in reviewable sections, and (via `durable-storage`) writes the approved spec to its configured destination.
+2. **writing-plans** — turns an approved spec into a task-by-task implementation plan, saved via the same `durable-storage` destination logic.
+3. **subagent-driven-development** — implements the plan directly in the primary agent, one task at a time: focused verification (per `verification-strategy`) and self-review after each task. At meaningful milestones (a coherent feature done, several related tasks accumulated, a risky change just landed) it runs a **checkpoint review**: `scope-drift-check`, `comment-hygiene`, and optionally an independent review — not after every single task.
+4. **Final verification** — before hand-off: full relevant test suite, working-tree inspection (`git status`/`git diff`, untracked files), comparison against the plan, a final comment-hygiene pass, a final scope-drift check, and an explicit statement of what was and wasn't verified.
+5. **finishing-a-development-branch** — reports what it finds in the working tree and stops. Staging, committing, pushing, merging, and branch/worktree cleanup are entirely the user's call.
 
-2. **writing-plans** - Activates with approved design. Breaks work into meaningful, independently verifiable tasks. Every task has exact file paths, concrete implementation detail, and verification steps.
+The workflow is proportional, not a forced ceremony: a small, unambiguous change can skip straight to implementation and a quick self-review; a large or risky one earns the full brainstorm → plan → checkpoint-reviewed implementation path. See `skills/using-superpowers/SKILL.md` for how skill-checking itself is triggered.
 
-3. **subagent-driven-development** or **executing-plans** - Activates with plan. Implements tasks directly in the primary agent, one at a time, with focused verification and self-review after each. Subagents are optional and used only when they provide concrete value — never a mandatory per-task dispatch.
+## Custom Skills
 
-4. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, refactor.
+Skills that exist only in this fork (not upstream Superpowers):
 
-5. **requesting-code-review** - An optional capability, reached for when a change is security-sensitive, architecturally complex, high-risk, or the user asks for a second opinion — not a required gate after every task.
+### Comment Hygiene (`skills/comment-hygiene`)
+Runs during checkpoint reviews and before final hand-off. Keeps comments focused on durable, non-obvious information — constraints, invariants, workarounds, surprising-but-necessary reasoning — and removes or shortens comments that just narrate what changed, restate obvious code, or read as a changelog embedded in source. Judgement-based, not a linter; only touches comments introduced or modified during the current task.
 
-6. **using-git-worktrees** - An optional isolation technique for when it genuinely helps (e.g. running two plans side by side), not a default step of planning or execution.
+### Scope Drift Check (`skills/scope-drift-check`)
+Runs at checkpoints and final verification. Classifies accumulated work into four buckets — **Required**, **Supporting** (necessary but not the literal ask — the reason must be stated), **Incidental** (useful but not required — named as follow-up, not folded in silently), **Unrelated** (removed or split out). Checks against the *current* authorized intent, which can legitimately expand mid-conversation — it flags silent self-directed expansion, not user-authorized expansion.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Runs final verification, inspects the working tree, reports what it finds, and stops — staging, committing, pushing, merging, and branch/worktree cleanup are entirely the user's call.
+### Verification Strategy (`skills/verification-strategy`)
+Decides *what* to verify before a change is claimed complete, based on what actually changed and what could realistically regress — not a fixed "run the full suite" or "it's small, skip it" default. Distinguishes four states: verified, appropriate-but-not-yet-done, unavailable, and unnecessary — and requires saying explicitly which applies rather than implying blanket certainty.
 
-**The agent checks for relevant skills before any task.** Mandatory skill *invocation*, not a mandatory subagent/review/worktree pipeline — most of the work above happens through direct implementation.
+### Durable Storage (`skills/durable-storage`)
+The single place that decides where a spec or plan gets written and what it's named, for both `brainstorming` and `writing-plans` — so neither skill duplicates that logic. Supports a filesystem default and an optional ObsidianRAG-backed provider, configured per user in `.superpowers/config.json`. See [Durable Storage](#durable-storage) below for the full picture.
 
-## Community
+### Modified Subagent-Driven Development (`skills/subagent-driven-development`)
+Still direct, primary-agent execution by default — the fork's core change already existed here. What's new: **Checkpoint Reviews**, run at meaningful milestones (not every task) on the accumulated work rather than a single task. A checkpoint reviews requirements/integration/architecture/scope/tests, runs `scope-drift-check` and `comment-hygiene`, and optionally an independent reviewer if the accumulated change genuinely warrants it. This sits as a middle tier between per-task self-review and the final pre-hand-off verification, which now also explicitly runs a comment-hygiene pass, a scope-drift check, and a `verification-strategy` confirmation before reporting completion.
 
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
+`brainstorming`, `writing-plans`, and `requesting-code-review` were also updated: the first two now get their save destination/filename from `durable-storage` instead of hardcoding a date-prefixed path, and `requesting-code-review` recognizes a checkpoint (not just a single task) as a valid reason to request independent review.
 
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
+## Durable Storage
 
-## What's Inside
+Specs and plans are durable artifacts. This fork supports two ways to store them:
 
-### Skills Library
+1. **Default durable storage** — the filesystem, always available, no external dependency.
+2. **Optional configured durable storage** — an ObsidianRAG vault, used only if you explicitly configure it.
 
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+**The default requires no ObsidianRAG setup at all.** With no configuration present, storage is:
 
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
+```text
+docs/superpowers/specs/<filename>.md
+docs/superpowers/plans/<filename>.md
+```
 
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Direct execution of a plan in a separate or resumable session
-- **dispatching-parallel-agents** - Concurrent subagent workflows, for genuinely independent parallel work
-- **requesting-code-review** - Optional independent code review, for when a second perspective adds real value
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Optional isolated workspace, when isolation genuinely helps
-- **finishing-a-development-branch** - Verify, inspect the working tree, report, and hand off — the user owns Git history
-- **subagent-driven-development** - Direct execution of a plan in the current session, with optional subagents
+Switching to the `obsidian-rag` provider is opt-in — see [Configuring ObsidianRAG](#configuring-obsidianrag).
 
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+## Local Configuration
 
-## Philosophy
+Configuration lives at:
 
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
+```text
+.superpowers/config.json
+```
 
-Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
+This is **local, personal configuration** — `.superpowers/` is already gitignored at the repo root (see `.gitignore`). Concretely:
 
-## Contributing
+- It should never be committed.
+- It can contain personal details (your ObsidianRAG vault name).
+- Every user/machine can have their own `.superpowers/config.json` independently — nobody else's config is affected.
+- If the file, or the `durableStorage` key, is missing or unreadable, behaviour is exactly the `"default"` provider — there's no broken/undefined state.
+- It's local to your Superpowers environment, not part of the repo's tracked content.
+- Pulling updates to this fork, or reinstalling the plugin, never touches or requires committing your personal storage configuration.
 
-The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across all of the coding agents we support.
+The implemented schema (`skills/durable-storage/SKILL.md`):
 
-1. Fork the repository
-2. Switch to the 'dev' branch
-3. Create a branch for your work
-4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
+```json
+{
+  "durableStorage": {
+    "provider": "default"
+  }
+}
+```
 
-Skill-behavior tests use the drill eval harness from [superpowers-evals](https://github.com/prime-radiant-inc/superpowers-evals/), cloned into `evals/` — see `evals/README.md` for setup. Plugin-infrastructure tests live at `tests/` and run via the relevant `run-*.sh` or `npm test`.
+or, configured for ObsidianRAG:
 
-See `skills/writing-skills/SKILL.md` for the complete guide.
+```json
+{
+  "durableStorage": {
+    "provider": "obsidian-rag",
+    "obsidianRag": {
+      "vault": "Memories_ClikWork",
+      "root": "Superpowers"
+    }
+  }
+}
+```
+
+- `provider` — `"default"` (filesystem) or `"obsidian-rag"`.
+- `obsidianRag.vault` — required when `provider` is `"obsidian-rag"`. The vault's logical **name** exactly as your ObsidianRAG MCP server configures it (check its `help` tool) — never a filesystem path.
+- `obsidianRag.root` — folder under the vault root that holds all Superpowers artifacts. Defaults to `Superpowers` if omitted.
+
+## Configuring ObsidianRAG
+
+There's no dedicated slash command for this — `durable-storage`'s frontmatter description ("Use when configuring durable-storage behaviour...") lets it auto-trigger when you ask Claude to configure durable storage or set up ObsidianRAG, or you can invoke it explicitly (`superpowers:durable-storage`).
+
+What the skill actually does when configuring:
+
+1. Asks which provider you want (default, or ObsidianRAG with a vault name).
+2. If ObsidianRAG: checks that its MCP tools are actually reachable in this environment (e.g. its `help` tool responds) *before* switching the provider. If they're not reachable, it says so plainly and does not write the config.
+3. If reachable, calls `help` and checks the requested vault name appears in the configured vaults. If it doesn't, it tells you (likely a typo, or the vault isn't set up yet) and lets you confirm before proceeding.
+4. Writes `.superpowers/config.json` with the requested settings.
+5. Reports exactly what changed — previous provider → new provider, and vault/root if applicable.
+6. Does not stage or commit `.superpowers/config.json` — same Git-safety rule as every other skill here.
+
+**The physical Obsidian vault filesystem path is never required.** Superpowers only ever talks to Obsidian through the ObsidianRAG MCP interface — it doesn't know or need to know where the vault actually lives on disk.
+
+## ObsidianRAG Storage Structure
+
+Inside the configured vault, artifacts live under the configured `root` (default `Superpowers`), with one folder per project directly underneath it — **there is no `Projects/` directory anywhere in the path**:
+
+```text
+<root>/
+└── <ProjectName>/
+    ├── Specs/
+    └── Plans/
+```
+
+Concretely, with the default root and two projects (`ObsidianRAG` and this fork's own `Superpowers`):
+
+```text
+Superpowers/
+├── ObsidianRAG/
+│   ├── Specs/
+│   └── Plans/
+│
+└── Superpowers/
+    ├── Specs/
+    └── Plans/
+```
+
+`Specs/` and `Plans/` sit directly under `<root>/<ProjectName>/` — the project is a direct child of the configured root, nothing sits between them.
+
+## Project Naming
+
+`<ProjectName>` is derived from the repository being worked on:
+
+1. Inside a Git repository: the top-level directory's name (`basename "$(git rev-parse --show-toplevel)"`).
+2. Otherwise: the current working directory's name.
+3. If neither is reliable, `durable-storage` doesn't invent one — it asks the user for the project name.
+
+The name is used as-is for the path segment (not slugified or renamed beyond what's required to be a valid path component). Jira has no bearing on the project name — it only ever affects the *filename* (below).
+
+## Filename Convention
+
+Applies identically to specs and plans, on both the default and ObsidianRAG providers.
+
+**Branch has a Jira key.** Looking for a generic Jira-style pattern (project prefix of ≥2 letters, a hyphen, digits — e.g. `CLIK-1234`, `PROJ-42`; matched case-insensitively but no project prefix is hardcoded) in the current Git branch name:
+
+- Exactly one distinct key found → `<KEY>-<kebab-case-description>.md`, e.g. `CLIK-1234-prompt-compiler.md`. The key's original case is preserved; the description is a lowercase kebab-case summary of the actual work, not a raw copy of the branch name.
+- More than one distinct key found, with no reliable way to pick the primary one → don't guess, ask the user.
+
+**No Jira key found.** A concise, human-friendly kebab-case description of the work, e.g. `prompt-compiler.md`, `superpowers-storage-configuration.md`, `project-aware-multi-vault-support.md`.
+
+**Filename stability.** The filename is decided once, when the spec/plan is first created, and is never renamed afterward — not because the plan was revised, not because the team's understanding of the task evolved. Work that turns into something genuinely different gets a new artifact with its own filename, not a rename of the existing one.
+
+## Specs and Plans
+
+Two artifact types, stored in parallel `Specs/`/`Plans/` locations (filesystem or ObsidianRAG):
+
+- **Spec** — what's being built and why; the desired behaviour, produced by `brainstorming`.
+- **Plan** — how the work will actually be implemented, task by task, produced by `writing-plans`.
+
+Example (ObsidianRAG provider, root `Superpowers`, project `ObsidianRAG`):
+
+```text
+Superpowers/ObsidianRAG/Specs/CLIK-1234-multi-vault-support.md
+Superpowers/ObsidianRAG/Plans/CLIK-1234-multi-vault-support.md
+```
+
+There is no separate Decisions artifact type — just Specs and Plans.
+
+## Default vs ObsidianRAG
+
+| Provider | Storage | Requires ObsidianRAG |
+|---|---|---|
+| `default` | `docs/superpowers/specs/` and `docs/superpowers/plans/` in the current repo | No |
+| `obsidian-rag` | `<root>/<ProjectName>/Specs/` and `Plans/` in the configured vault | Yes |
+
+The filename convention above is shared identically across both providers — switching providers changes *where* the file goes, never how it's named.
+
+## Internal `.superpowers` State
+
+`.superpowers/` is **not** the durable artifact store and is **not** the Obsidian vault — don't confuse the two:
+
+- `.superpowers/config.json` — your local durable-storage provider configuration (see [Local Configuration](#local-configuration)).
+- Other `.superpowers/` contents (e.g. the brainstorming visual-companion's session directories) are pre-existing local/internal Superpowers execution state — ephemeral or persist-for-review-only. `durable-storage` explicitly does not govern or redirect this into ObsidianRAG.
+
+Both live under the same gitignored `.superpowers/` directory, but they're different concerns: one is durable-storage *configuration*, the other is unrelated internal state that predates this feature.
+
+## ObsidianRAG Integration Details
+
+What's actually implemented, nothing more:
+
+- Uses the vault configured in `.superpowers/config.json` explicitly — never auto-discovers or guesses a vault.
+- Writes/rewrites notes through the ObsidianRAG MCP's `write_note` tool. Overwriting an existing spec/plan mid-session (e.g. incorporating review feedback before user approval) is expected — specs/plans are whole documents, regenerated in full, not appended to.
+- Constructs the path as `<root>/<ProjectName>/Specs|Plans/<filename>.md`.
+- Passes `vault` explicitly from config — deliberately does **not** use ObsidianRAG's own `project` parameter for this, since that routes across a separate, pre-curated set of vaults tied to named projects, a different concept from the `<ProjectName>` path segment here.
+- Never references a physical Obsidian vault filesystem path.
+- Leaves indexing/search over what gets written to ObsidianRAG itself (e.g. its own `index_notes` tool) — this skill's job ends at writing the note.
+- If the provider is `obsidian-rag` but its MCP tools are unreachable when a write is actually attempted, it stops and says so — it never silently falls back to the filesystem default or reports a write that didn't happen.
+
+## Usage Examples
+
+**Normal task** (no forced ceremony for something small and unambiguous):
+> "Fix the login redirect bug — it's sending users to `/dashboard` instead of the page they came from."
+
+**Creating a spec:**
+> "Let's design multi-vault support for ObsidianRAG."
+
+Triggers `brainstorming`, which asks clarifying questions, presents the design in sections, and — via `durable-storage` — saves it. With no config: `docs/superpowers/specs/project-aware-multi-vault-support.md`. On branch `CLIK-1234-multi-vault`: `docs/superpowers/specs/CLIK-1234-multi-vault-support.md`.
+
+**Creating a plan** (after the spec is approved):
+> "Write the implementation plan for this."
+
+Triggers `writing-plans`, saved alongside the spec's naming, e.g. `docs/superpowers/plans/CLIK-1234-multi-vault-support.md`.
+
+**Configuring ObsidianRAG durable storage:**
+> "Configure durable storage to use my ObsidianRAG vault Memories_ClikWork."
+
+Triggers `durable-storage`'s setup flow (confirms the MCP is reachable, confirms the vault exists, writes `.superpowers/config.json`).
+
+**Resulting ObsidianRAG path** for the plan above, once configured with `root: "Superpowers"`:
+```text
+Superpowers/<ProjectName>/Plans/CLIK-1234-multi-vault-support.md
+```
+
+**Filename examples:** `CLIK-1234-prompt-compiler.md` (Jira branch) vs. `prompt-compiler.md` (no Jira key).
 
 ## Updating
 
-Superpowers updates are somewhat coding-agent dependent, but are often automatic.
+This fork has no build step — skills are plain Markdown read directly from the plugin's `skills/` directory, so there's nothing to compile. To update:
+
+```bash
+cd /path/to/your/clone/of/superpowers
+git pull
+```
+
+Then, so Claude Code actually picks up the change:
+
+```
+/plugin update superpowers@superpowers-dev
+```
+
+(a restart is required for the update to apply). If that ever doesn't pick up local edits, `/plugin uninstall superpowers@superpowers-dev` followed by `/plugin install superpowers@superpowers-dev` forces a clean re-read.
+
+Updating never touches, requires, or overwrites `.superpowers/config.json` in any of your project repos — it's local and gitignored, so it survives pulls and reinstalls untouched.
+
+## Uninstalling
+
+This repo has no custom uninstall script (`scripts/` only contains `bump-version.sh` and `lint-shell.sh`). Uninstalling is a standard Claude Code plugin operation:
+
+```
+/plugin uninstall superpowers@superpowers-dev
+/plugin marketplace remove superpowers-dev
+```
+
+This only removes the installed plugin and its marketplace registration — it does not touch `.superpowers/config.json` or `docs/superpowers/` in any project you were using it with; those are ordinary files in that project's own repo.
+
+## Development / Contributing
+
+See `CLAUDE.md` for the actual contributor guidelines (Claude Code-only scope, PR requirements, skill-change evaluation process). In short:
+
+- Skill-behaviour tests: `tests/claude-code/run-skill-tests.sh` (see `tests/claude-code/README.md`).
+- Shell lint / version-drift checks: `scripts/lint-shell.sh`, `scripts/bump-version.sh --check`.
+- Nothing in this workflow stages or commits automatically — review your own working tree (`git status` / `git diff`) before deciding what to stage, same as any other change here.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Visual companion telemetry
-
-Because skills and plugins don't provide any feedback to creators, we have no idea how many of you are using Superpowers. By default, the Prime Radiant logo on brainstorming's optional visual companion feature is loaded from our website. It includes the version of Superpowers in use. It does not include any details about your project, prompt, or coding agent. We don't see your clicks or anything about what you're building. This helps us have a rough idea of how many folks are using Superpowers and which version of Superpowers they're using. It's 100% optional. To disable this, set the environment variable `SUPERPOWERS_DISABLE_TELEMETRY` to any true value. Superpowers also honors Claude Code's `DISABLE_TELEMETRY` and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` opt-outs.
+MIT License — see `LICENSE` for details.

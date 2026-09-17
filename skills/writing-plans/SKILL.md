@@ -17,7 +17,7 @@ Plan for direct implementation, not agent orchestration: the plan should read cl
 
 **Context:** Plans execute in the current working tree by default. Isolation via `superpowers:using-git-worktrees` is an optional technique for when it genuinely helps (e.g. running two plans side by side) — it is not a default requirement of planning or execution.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** determined by `superpowers:durable-storage` — defaults to `docs/superpowers/plans/<filename>.md` when no custom provider is configured
 - (User preferences for plan location override this default)
 
 ## Scope Check

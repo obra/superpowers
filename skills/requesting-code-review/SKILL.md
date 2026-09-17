@@ -21,6 +21,9 @@ Good reasons to request independent review:
 - changes with significant compatibility impact
 - explicit user request
 - the primary agent recognizes that independent reasoning would materially improve confidence
+- a meaningful implementation checkpoint (see `subagent-driven-development`'s Checkpoint Reviews), where the accumulated changes are large, architecturally complex, security-sensitive, or would otherwise benefit from independent confidence before continuing with dependent work
+
+Independent review may be requested at a meaningful implementation checkpoint to evaluate accumulated changes before continuing with dependent work. A checkpoint review — self- or independent — considers the accumulated changes since the previous checkpoint, or since implementation began if it is the first checkpoint; it is not scoped to a single task.
 
 None of these are checklist requirements. This skill is not automatically invoked after every task in `subagent-driven-development` or `executing-plans`, and it is not a required gate in `finishing-a-development-branch`. If none of the above genuinely applies, self-review is enough — continue normally.
 
