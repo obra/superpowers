@@ -1,0 +1,3 @@
+===== MAIN rollout-2026-09-17T12-02-30-01a0b0bf-bb00-7070-a  assistant msgs=4 execs=7
+  MAIN: I included `UnicodeError` to handle input that cannot be decoded as UTF-8: `read_text(encoding="utf-8")` can raise `UnicodeDecodeError`, which is a subclass of `UnicodeError`. That was a small defensive choice beyond the explicit requirements. It wasn’t prompted by the plan or your prompt, and I didn’t add a test for that case.
+

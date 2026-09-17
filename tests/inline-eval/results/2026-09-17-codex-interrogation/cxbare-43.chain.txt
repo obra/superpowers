@@ -1,0 +1,3 @@
+===== MAIN rollout-2026-09-17T12-03-16-01a0b0c0-6eb1-73c2-9  assistant msgs=4 execs=7
+  MAIN: It was a deliberate consideration of undecodable input: `read_text(encoding="utf-8")` can raise `UnicodeDecodeError`, which is a subclass of `UnicodeError`. Catching it makes that failure produce a stderr message and return 1. The plan and prompt did not specifically request this behavior. I added it as a small robustness extension; catching `UnicodeDecodeError` would have been more precise.
+
