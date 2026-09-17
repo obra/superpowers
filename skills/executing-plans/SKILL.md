@@ -62,3 +62,5 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- Commits stay local — no push/pull/fetch unless the plan or your human partner says so. At each checkpoint glance at `git status -sb`: a branch tracking or ahead of a shared branch (main/dev/production) is a stop-and-fix, not a footnote
+- Never rewrite a shared branch (`git push --force*` to main/dev/production) to undo a mistake — a forward-only `git revert` is the only remedy you apply yourself; anything more is your human partner's call
