@@ -52,6 +52,77 @@ const normalizePath = (p, homeDir) => {
 // every agent step.  See #1202 for the full analysis.
 let _bootstrapCache = undefined; // undefined = not yet loaded, null = file missing
 
+// --- Task-subagent (child session) detection --------------------------------
+//
+// #2160: the bootstrap drives controller workflows (brainstorming, planning,
+// approval cycles). Injecting it into task subagent sessions makes workers
+// restart design/approval cycles for work the parent already authorised; the
+// <SUBAGENT-STOP> note inside the bootstrap relies on model compliance, which
+// is not reliable. Detect child sessions structurally instead: OpenCode task
+// sessions are created with a parentID, so when the session carrying the
+// message has a parentID we skip bootstrap injection. Skills stay registered
+// for every session — workers keep explicit access to execution skills.
+
+// sessionID -> is-child decision. parentID never changes for a session, so
+// the result is cached for life and the injection hook (which fires on every
+// agent step) pays only one client roundtrip per session.
+const _childSessionCache = new Map();
+
+// sessionIDs whose lookup failure has already been logged. Failed lookups are
+// deliberately not cached (so they can recover), which means the hook retries
+// every step; without this guard a persistently failing session would log an
+// error on every single step.
+const _lookupFailureLogged = new Set();
+
+const logLookupFailure = (sessionID, reason) => {
+  if (_lookupFailureLogged.has(sessionID)) return;
+  _lookupFailureLogged.add(sessionID);
+  console.error('[superpowers] session lookup failed, treating session as top-level:', reason);
+};
+
+const isChildSession = async (fetchSession, sessionID) => {
+  if (!sessionID) return false; // unknown session: keep current behavior
+  if (_childSessionCache.has(sessionID)) return _childSessionCache.get(sessionID);
+
+  let result;
+  try {
+    result = await fetchSession(sessionID);
+  } catch (err) {
+    // Fail open: on lookup errors keep injecting (previous behavior) and do
+    // not cache, so a transient failure can recover on the next step.
+    logLookupFailure(sessionID, err);
+    return false;
+  }
+
+  // The V1 SDK only throws on non-2xx when called with { throwOnError: true }
+  // (sdk error-interceptor.ts); without it an error resolves as
+  // { data: undefined, error, response } and never reaches the catch above.
+  // Treat that shape as a lookup failure too and never cache it — otherwise
+  // one transient error would pin a child session as top-level for its whole
+  // life and re-inject the controller bootstrap every step (#2160).
+  if (!result || (typeof result === 'object' && result.error)) {
+    logLookupFailure(sessionID, result && result.error ? result.error : result);
+    return false;
+  }
+
+  // The V1 SDK returns { data: Session }; V2's ctx returns the record itself.
+  // Prefer .data whenever it is a non-null object — Session records have no
+  // `data` field, so the shapes stay unambiguous even if the envelope happens
+  // to carry its own parentID key.
+  const session = result && typeof result === 'object' && result.data && typeof result.data === 'object'
+    ? result.data
+    : result;
+  const isChild = Boolean(session && typeof session === 'object' && session.parentID);
+
+  if (isChild) {
+    // One-time visibility: a missing bootstrap in a subagent session should
+    // be explainable from the logs instead of failing silently.
+    console.log('[superpowers] skipping controller bootstrap for task subagent session:', sessionID);
+  }
+  _childSessionCache.set(sessionID, isChild);
+  return isChild;
+};
+
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
@@ -131,6 +202,18 @@ ${toolMapping}
       // This prevents double injection when OpenCode passes an already
       // transformed in-memory message array through the hook again.
       if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
+      // #2160: never restart the controller workflow inside task subagent
+      // (child) sessions. V1 passes no input to this hook (verified in the
+      // 1.18.x bundle: trigger(..., {}, {messages})), so take the sessionID
+      // from the message record itself.
+      if (client && await isChildSession(
+        // throwOnError makes the SDK throw on non-2xx so HTTP errors reach
+        // the catch path; isChildSession's result.error check still covers
+        // versions/callers that ignore the flag.
+        (id) => client.session.get({ path: { id } }, { throwOnError: true }),
+        firstUser.info.sessionID,
+      )) return;
 
       const ref = firstUser.parts[0];
       firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
