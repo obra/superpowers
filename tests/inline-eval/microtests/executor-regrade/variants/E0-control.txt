@@ -1,0 +1,4 @@
+Sort the findings before you act on any of them. The reviewer's severity labels are advice; the gate is yours. Then:
+
+- **Critical and Important** enter the fix pass.
+- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>` and to your final message under "Deferred minors". Minors never enter the fix pass.

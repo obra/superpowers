@@ -262,11 +262,11 @@ labels are advice; the gate is yours. Its "Declined to judge" list is
 yours too: every line there is a ruling you make and ledger, exactly like
 a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
 <what a reasonable person using this software gets, and why that stands
-or why it is now a finding> — <cost if wrong>`. Re-grade first: a finding labeled
-Minor that describes an unhandled exception, a traceback reaching the
-user, data loss, or a wrong result on valid input is Important, whatever
-the label says — reviewers have filed crashes as Minor because the spec
-did not mention the input that triggers them. Then:
+or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect: the
+spec is a vision document, and a finding's grade is what a reasonable
+person using this software gets if it ships, not whether the spec names
+the input that triggers it — a reviewer who set a finding at Minor
+because the spec was silent has graded the spec, not the effect. Then:
 
 - **Critical and Important** enter the fix pass.
 - **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
@@ -316,7 +316,7 @@ Use superpowers:finishing-a-development-branch.
 | "I read my own diff carefully; the final reviewer is redundant" | Same author, same blind spots. The reviewer is the only fresh context this run buys. |
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
 | "Subagents are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
-| "The reviewer said Minor, so it's Minor" | A traceback is Important whatever the label. Re-grade, then gate. |
+| "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
 | "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
 | "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them; your partner decides. |
 

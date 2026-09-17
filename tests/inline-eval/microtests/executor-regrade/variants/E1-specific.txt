@@ -1,0 +1,4 @@
+Sort the findings before you act on any of them. The reviewer's severity labels are advice; the gate is yours. Re-grade first: a finding labeled Minor that describes an unhandled exception, a traceback reaching the user, data loss, or a wrong result on valid input is Important, whatever the label says — reviewers have filed crashes as Minor because the spec did not mention the input that triggers them. Then:
+
+- **Critical and Important** enter the fix pass.
+- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>` and to your final message under "Deferred minors". Minors never enter the fix pass.
