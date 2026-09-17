@@ -1,0 +1,8 @@
+Ranked by how reliably they would have changed my choice:
+
+1. A required test writing invalid UTF-8 bytes and asserting `main([path])` returns 1, writes stderr, and emits no traceback.
+2. A design.md requirement: “File-open, read, and decoding failures must print a message to stderr and return 1.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` from reading the file.”
+4. A pre-implementation check: “Enumerate exceptions from opening and reading with `encoding='utf-8'`; map each to the specified failure behavior.”
+
+A final review could have caught it afterward, but would not have changed the initial clause.

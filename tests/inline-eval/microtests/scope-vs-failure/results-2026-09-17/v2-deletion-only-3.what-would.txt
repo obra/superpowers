@@ -1,0 +1,6 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test: write `b"\xff"` to a temporary file; assert `main([path])` returns 1, writes to stderr, and raises no exception.
+2. A design.md requirement: “Read files as UTF-8; filesystem errors and decoding errors must produce a stderr message and return 1.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` when reading the file.”
+4. A pre-implementation check: “Enumerate exceptions from opening **and decoding** input, and map each to the CLI’s failure contract.”
+A final review targeting invalid encodings could have caught it afterward, but would not have changed the initial `except` choice.

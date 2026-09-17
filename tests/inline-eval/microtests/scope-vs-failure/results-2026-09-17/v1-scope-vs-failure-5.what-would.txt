@@ -1,0 +1,5 @@
+1. Most reliable: a required test using invalid UTF-8 bytes, asserting stderr output and return code 1 without an exception.
+2. An explicit Task 3 instruction: “Catch both `OSError` and `UnicodeError` when reading the file; print the error to stderr and return 1.”
+3. A design.md requirement: “Unreadable files, including decoding failures, use the missing-file error shape.”
+4. A pre-implementation check: “List the exceptions `read_text()` can raise and deliberately handle each expected input failure.”
+5. The instruction already in AGENTS.md: unnamed inputs must fail deliberately “in the same shape the spec uses for the failures it does name.” That already required this behavior; I failed to apply it to decoding errors.

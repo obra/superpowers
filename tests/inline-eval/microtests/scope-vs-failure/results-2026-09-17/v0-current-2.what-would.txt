@@ -1,0 +1,6 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test using a file containing `b"\xff"`, asserting `main([path]) == 1` and a message on stderr. Passing it would require handling decoding failure.
+2. A design.md requirement: “File-open, file-read, and UTF-8 decoding failures must print a message to stderr and return 1.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` when reading the file.”
+4. A pre-implementation check: “List exceptions from both `open()` and `source.read()` and map each to the required CLI behavior.”
+A final review explicitly checking invalid UTF-8 could have caught it afterward, but would not have changed that initial choice.

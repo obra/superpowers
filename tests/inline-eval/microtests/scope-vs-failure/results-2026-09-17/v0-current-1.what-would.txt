@@ -1,0 +1,4 @@
+1. A required test: invalid UTF-8 bytes → `main([path])` returns 1, writes a message to stderr, and emits no traceback. This would most reliably have forced the change.
+2. A line in `design.md`: “File opening, reading, and decoding failures must produce a stderr message and return 1, including `UnicodeDecodeError`.”
+3. A Task 3 implementation instruction: “Catch both `OSError` and `UnicodeDecodeError` around file reading.”
+4. A pre-commit check: “Run the CLI against invalid UTF-8 and verify controlled failure.” This would catch the omission after writing the clause.

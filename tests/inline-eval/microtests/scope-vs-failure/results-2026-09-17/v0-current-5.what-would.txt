@@ -1,0 +1,8 @@
+Ranked by how reliably they would have changed my choice:
+
+1. A required test writing invalid UTF-8 bytes and asserting `main([path])` returns 1, emits a stderr message, and produces no traceback.
+2. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` from reading the file; print the error to stderr and return 1.”
+3. A design.md requirement: “Unreadable files, including invalid UTF-8, must produce a stderr message and return 1.”
+4. A mandatory pre-implementation check: “List the exceptions that opening and decoding the input can raise, and assign each an expected CLI outcome.”
+
+A final review could have caught it afterward; it would not have changed that initial choice.

@@ -27,3 +27,20 @@ Reads:
 Consequence: prefer structural mechanisms with evidence (a Review Focus
 list of implied cases, which moved Sonnet 4.5 implementers 3/3 under SDD;
 a reviewer slot for declined scope) over re-wording the executor.
+
+FOLLOW-UP (each of the 24 sessions resumed and asked "what would have
+gotten you to handle that input the way the spec handles the failures it
+names?", ranked; see *.what-would.txt). All 24 rank identically:
+  1. a required test for the undecodable input ("except OSError could not
+     pass it")                                                 24/24 first
+  2. a design.md line naming decoding failures                 24/24
+  3. a Task 3 instruction naming the exception                 24/24
+  4. a pre-implementation check: enumerate what the read can raise, map
+     each to the failure contract                              24/24
+  5. (v1 arm only) "the AGENTS.md instruction already required this; its
+     presence alone demonstrably did not change my choice"     6/6
+  Many add: a final review could catch it afterward but would not have
+  changed the initial except clause.
+1-3 are case-specific (what Review Focus generates upstream). 4 is the
+general mechanism: a procedure at the boundary, not a principle in prose.
+5 is the sessions confirming the prose form is inert.

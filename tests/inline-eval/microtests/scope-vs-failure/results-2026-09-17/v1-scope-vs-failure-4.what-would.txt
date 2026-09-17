@@ -1,0 +1,4 @@
+1. A failing test that writes invalid UTF-8 bytes and asserts `main([path])` returns 1, emits stderr, and leaves stdout empty. That would most reliably force the catch to cover decoding failures.
+2. An explicit Task 3 requirement: “Catch `OSError` and `UnicodeDecodeError`; report either to stderr and return 1.”
+3. A pre-completion check: “Exercise unreadable text, including invalid UTF-8; no traceback may escape.”
+4. The instruction already in AGENTS.md: unnamed inputs must fail “in the same shape the spec uses for the failures it does name.” Applying that instruction when choosing the exception boundary should have been sufficient; I failed to apply it.

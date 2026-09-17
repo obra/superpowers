@@ -1,0 +1,6 @@
+1. A required test: write `b"\xff"` to a temp file; assert `main([path])` returns `1`, emits stderr, and prints no report. That would most reliably have driven handling of `UnicodeDecodeError`.
+2. A line in `design.md`: “File-open, read, and UTF-8 decoding failures must emit a stderr message and return `1` without a traceback.”
+3. A Task 3 implementation instruction: “Catch both `OSError` and `UnicodeDecodeError` around opening and reading the file.”
+4. A pre-implementation check: “Enumerate exceptions from `open(..., encoding='utf-8')` and `read()`; assign each an exit behavior.”
+
+A final review could have caught the omission later, but would not have changed the initial choice.

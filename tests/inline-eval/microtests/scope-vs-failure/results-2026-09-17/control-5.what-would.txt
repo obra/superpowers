@@ -1,0 +1,7 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test writing invalid UTF-8 bytes and asserting `main([path])` returns 1, writes to stderr, and raises no exception.
+2. A design.md requirement: “Unreadable files, including UTF-8 decoding failures, must produce a stderr message and return 1.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` from opening or reading the file.”
+4. A required review check: “Exercise invalid UTF-8 input and verify the same error contract as missing files.”
+
+The original design explicitly named only missing files; I didn’t extend that contract to decoding failures.

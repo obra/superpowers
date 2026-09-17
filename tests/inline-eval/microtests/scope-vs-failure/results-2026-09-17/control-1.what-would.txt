@@ -1,0 +1,7 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test writing invalid UTF-8 bytes and asserting `main([path])` returns 1, writes an error to stderr, and raises no exception.
+2. A design.md requirement: “File access and UTF-8 decoding failures must print a message to stderr and return 1.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` when reading the file.”
+4. A review check before committing: “Run the CLI against invalid UTF-8 input and verify the same error behavior as for a missing file.”
+
+The test would have been strongest because catching only `OSError` could not pass it.

@@ -1,0 +1,5 @@
+1. A required test using invalid UTF-8 bytes, asserting stderr output and return value `1`, would most reliably have driven me to catch `UnicodeDecodeError`.
+2. A Task 3 instruction: “Catch both `OSError` and `UnicodeDecodeError`; report either to stderr and return `1`.”
+3. A design requirement: “All file-opening and text-decoding failures produce a stderr message and return `1`.”
+4. A pre-implementation check: “Enumerate exceptions from `open(..., encoding='utf-8')` and `read()`; assign each the specified failure behavior.”
+The existing AGENTS.md instruction already required deliberate handling of unnamed inputs in the spec’s failure shape. It should have been sufficient; I failed to apply it to decoding.

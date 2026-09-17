@@ -1,0 +1,6 @@
+Ranked by reliability:
+1. A required test feeding invalid UTF-8 bytes and asserting stderr output and return code 1; it would fail with `except OSError`.
+2. An explicit Task 3 instruction: “Catch `UnicodeDecodeError` as well as `OSError`; report either to stderr and return 1.”
+3. A design requirement: “Unreadable files, including invalid UTF-8, produce a stderr message and return 1.”
+4. A pre-completion check requiring an invalid-UTF-8 fixture.
+5. The instruction already in AGENTS.md: unnamed inputs must fail deliberately “in the same shape the spec uses for the failures it does name.” That already required this behavior; I failed to apply it.

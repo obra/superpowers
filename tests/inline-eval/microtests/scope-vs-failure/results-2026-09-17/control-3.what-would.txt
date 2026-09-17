@@ -1,0 +1,6 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test writing invalid UTF-8 bytes and asserting `main([path]) == 1`, a stderr message, and no traceback.
+2. A design.md requirement: “Unreadable files, including UTF-8 decoding failures, must produce a stderr message and return 1.”
+3. A plan step: “Handle both `OSError` and `UnicodeDecodeError` from opening or reading the file.”
+4. A review check: “Verify the error path with an existing file containing invalid UTF-8.”
+The original explicit failure requirement named only missing files; the concrete additions above would have extended my implementation beyond that case.

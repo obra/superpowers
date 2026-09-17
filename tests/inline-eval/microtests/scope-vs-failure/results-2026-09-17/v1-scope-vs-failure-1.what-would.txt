@@ -1,0 +1,5 @@
+1. Most reliable: a required test using invalid UTF-8 bytes, asserting a stderr message and return value `1` without an exception.
+2. An explicit Task 3 instruction: “Catch both `OSError` and `UnicodeDecodeError` when reading the file; report either to stderr and return `1`.”
+3. A design requirement: “All file-open and text-decoding failures use the same stderr-message-and-return-1 behavior.”
+4. A mandatory check before implementation: enumerate failures from `open(..., encoding="utf-8")` and `read()`, and test their handling.
+5. The existing AGENTS.md instruction already required deliberate handling of unnamed inputs in the spec’s failure shape. Applying that instruction concretely to decoding should have changed my choice; its presence alone demonstrably did not.

@@ -1,0 +1,4 @@
+1. A required test: write `b"\xff"` to a temp file; assert `main([path])` returns 1, writes a diagnostic to stderr, and does not raise. This would most reliably have forced handling `UnicodeDecodeError`.
+2. A line in `design.md`: “Unreadable files, including invalid UTF-8, must produce a stderr message and return 1 without a traceback.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` from file reading.”
+4. A pre-implementation check: “Enumerate failures of the chosen read operation and map each to the CLI error contract.” This would have prompted the missing case, but less reliably than an explicit requirement or test.

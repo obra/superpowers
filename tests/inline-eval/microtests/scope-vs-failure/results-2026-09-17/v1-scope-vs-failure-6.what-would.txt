@@ -1,0 +1,6 @@
+1. Most reliable: a required test writing invalid UTF-8 bytes, then asserting `main([path])` returns 1, writes stderr, and leaves stdout empty.
+2. An explicit Task 3 instruction: “Catch `UnicodeDecodeError` as well as `OSError`; both produce a stderr message and return 1.”
+3. A design requirement: “Files that cannot be decoded as UTF-8 use the same failure behavior as missing files.”
+4. A pre-completion check exercising a binary file through `main`.
+
+Your existing AGENTS.md already required deliberate handling of unnamed inputs in the spec’s failure shape. That was sufficient authority; I failed to apply it to decoding.

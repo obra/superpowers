@@ -1,0 +1,6 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test that writes invalid UTF-8 bytes and asserts `main([path])` returns 1, emits a stderr message, and raises no exception.
+2. A design.md requirement: “Read files as UTF-8; filesystem errors and decoding errors must produce a stderr message and return 1.”
+3. A Task 3 implementation instruction: “Catch both `OSError` and `UnicodeDecodeError` around reading the file.”
+4. A pre-implementation check: “Enumerate exceptions from opening and decoding input; assign each an error response.”
+A final review checking malformed file contents could have caught it afterward, but would not have changed that initial choice.

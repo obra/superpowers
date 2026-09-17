@@ -1,0 +1,7 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test supplying invalid UTF-8 bytes and asserting a stderr message and return value `1`.
+2. A line in `design.md`: “Unreadable files, including UTF-8 decoding failures, must produce a stderr message and return `1`.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` when reading the file.”
+4. A required review check: “Verify missing-file and invalid-UTF-8 behavior before committing.”
+
+The test would have been strongest because catching only `OSError` could not pass it.

@@ -1,0 +1,6 @@
+Ranked by how reliably they would have changed my choice:
+1. A required test: write `b"\xff"` to a temp file; assert `main([path])` returns 1, writes stderr, and raises no exception.
+2. A design.md requirement: “File-open, read, and decoding failures must produce a stderr message and return 1.”
+3. A Task 3 instruction: “Handle both `OSError` and `UnicodeDecodeError` when reading the file.”
+4. A pre-implementation check: “Enumerate exceptions from `read_text()` and map each to the CLI’s failure behavior.”
+The test would have been strongest: the required RED→GREEN gate would have exposed the incomplete handler before commit.
