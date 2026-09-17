@@ -21,6 +21,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [OpenCode](#opencode)
   - [Pi](#pi)
   - [Hermes Agent](#hermes-agent)
+  - [Oh My Pi (OMP)](#oh-my-pi-omp)
 - [The Basic Workflow](#the-basic-workflow)
 - [When Something Goes Wrong](#when-something-goes-wrong)
 - [Community](#community)
@@ -30,6 +31,7 @@ Superpowers is a complete software development methodology for your coding agent
 - [Updating](#updating)
 - [License](#license)
 - [Visual companion telemetry](#visual-companion-telemetry)
+
 
 ## How it works
 
@@ -258,6 +260,22 @@ hermes plugins install obra/superpowers --enable
 Restart any active Hermes sessions after installing. Note: Hermes has no
 post-compaction hook, so a very long session that compacts over its first
 turn loses the bootstrap — start a fresh session if skills stop triggering.
+
+### Oh My Pi (OMP)
+
+Install Superpowers from Git through omp's native plugin manager:
+
+```bash
+omp plugin install github:obra/superpowers
+```
+
+For local development, link an absolute path to this checkout:
+
+```bash
+omp plugin link /absolute/path/to/superpowers
+```
+
+OMP uses its native manifest plus built-in lowercase `task` subagents and built-in lowercase `todo` tracking. See the [OMP installation guide](.omp/INSTALL.md) for verification, diagnostics, and removal.
 
 ## The Basic Workflow
 

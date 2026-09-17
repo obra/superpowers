@@ -128,6 +128,9 @@ installer. Factory's Droid, for example, consumes the Claude Code plugin via its
 own `plugin install` command and needs no new files here. Before building,
 check whether the harness can simply load an existing manifest. A port that adds
 nothing to this repo but a paragraph in the README is a perfectly good outcome.
+Compatibility manifests may be consumed by child or fork harnesses. For
+first-class support, when the child exposes a native manifest or adapter contract
+and behavior differs, use and verify that native boundary.
 
 ---
 
