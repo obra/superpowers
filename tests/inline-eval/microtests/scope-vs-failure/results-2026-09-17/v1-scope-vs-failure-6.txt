@@ -1,0 +1,7 @@
+arm=v1-scope-vs-failure rep=6
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m following the executing-plans workflow for Task 3, with your explicit exceptions for workspace/ledger, final review, and working on main. I’ll first read the plan, design, and required TDD/verification guidance. exec /bin/zsh -lc "pwd && rg --files -g 'plan.md' -g 'design.md' -g 'AGENTS.md' -g 'SKILL.md' -g '"'!**/.git/**'"' . .. /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers

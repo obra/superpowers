@@ -1,0 +1,7 @@
+arm=v0-current rep=3
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m following the executing-plans workflow for Task 3, with your explicit exceptions for workspace/ledger, final review, and working on main. I’ll inspect the plan, design, and current tree, then run the task test RED→GREEN and commit it. exec /bin/zsh -lc "pwd && rg --files -g 'plan.md' -g 'design.md' -g 'AGENTS.md' -g 'wordstat/**' -g 'test*' -g '*test*' && git status --short --branch && sed -n 

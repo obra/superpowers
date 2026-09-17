@@ -1,0 +1,7 @@
+arm=v2-deletion-only rep=4
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’ll execute Task 3 inline, using the plan and design as authority. Per your exception, I’ll skip the unavailable bookkeeping and final reviewer, and work directly on `main`. exec /bin/zsh -lc "pwd && git status --short --branch && sed -n '1,240p' plan.md && sed -n '1,240p' design.md && rg --files" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-636ccf40

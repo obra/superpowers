@@ -1,0 +1,7 @@
+arm=control rep=6
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’ll inspect the plan, design notes, repository instructions, and existing implementation/tests, then implement Task 3, run the relevant test suite, and commit it on `main`. exec /bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g 'plan.md' -g 'design.md' -g '"'!**/.git/**'"' && git status --short --branch" in /private/tmp/claude-501/-Users-jesse-git-superpowers-superpowers/a8a313bf-7410-41ce-9036-6

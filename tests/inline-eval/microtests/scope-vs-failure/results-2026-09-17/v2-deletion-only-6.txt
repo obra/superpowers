@@ -1,0 +1,7 @@
+arm=v2-deletion-only rep=6
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m following the executing-plans workflow for Task 3, with your explicit exceptions for the helper scripts, ledger, final review, and working directly on main. I’ll inspect the plan/design and load the required TDD guidance first. exec /bin/zsh -lc "sed -n '1,240p' plan.md && sed -n '1,240p' design.md && find .. -path '*test-driven-development/SKILL.md' -o -path '*verification-before-completion/S

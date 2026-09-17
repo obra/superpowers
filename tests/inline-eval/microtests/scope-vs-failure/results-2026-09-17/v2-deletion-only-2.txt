@@ -1,0 +1,7 @@
+arm=v2-deletion-only rep=2
+except: except OSError 
+open: read_text(encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m following the executing-plans task loop, with your explicit exceptions for helpers, ledger, final review, and working on main. I’ll read the plan/design and applicable repo instructions, then run Task 3 test-first through commit. exec /bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g 'plan.md' -g 'design.md' -g 'SKILL.md' -g '"'!node_modules'"' | sort && git status --short --branch && sed -n '

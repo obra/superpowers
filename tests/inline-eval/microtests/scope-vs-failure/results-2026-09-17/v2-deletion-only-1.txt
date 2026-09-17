@@ -1,0 +1,7 @@
+arm=v2-deletion-only rep=1
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m applying the repository’s executing-plans rules with your stated exceptions: Task 3 only, direct on main, no ledger helpers or final reviewer. I’ll inspect the plan, design, and current tree before starting the required RED→GREEN cycle. exec /bin/zsh -lc "pwd && rg --files -g 'plan.md' -g 'design.md' -g 'AGENTS.md' -g 'wordstat/**' -g 'tests/**' && git status --short --branch && sed -n '1,260p

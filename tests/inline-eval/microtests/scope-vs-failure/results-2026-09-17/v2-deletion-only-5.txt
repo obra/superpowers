@@ -1,0 +1,7 @@
+arm=v2-deletion-only rep=5
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m using the repository’s executing-plans workflow, with your stated exceptions for helpers, ledger, final review, and working directly on main. I’ll read Task 3 and the TDD guidance, then implement, test, and commit it. exec /bin/zsh -lc "pwd && rg --files -g 'plan.md' -g 'design.md' -g 'AGENTS.md' -g 'SKILL.md' -g '*test*' -g 'wordstat/**' | sort && find .. -path '*test-driven-development/SKILL

@@ -1,0 +1,7 @@
+arm=v1-scope-vs-failure rep=1
+except: except OSError 
+open: open(args.path, encoding="utf-8") 
+decode-test: 0
+0
+commits: 2
+final: I’m following the repository’s executing-plans workflow for Task 3, with your explicit exceptions for the helper bookkeeping, final review, and main-branch work. I’ll inspect the plan/design and current tree, then run the task test-first and commit it. exec /bin/zsh -lc "pwd && rg --files -g 'plan.md' -g 'design.md' -g 'AGENTS.md' -g 'wordstat/**' -g 'tests/**' && git status --short --branch && se
