@@ -1,0 +1,16 @@
+# rep cxbare-1  (codex; events=109)
+tool calls                         53           Bash=31, collaborationwait_agent=9, apply_patch=6, collaborationfollowup_task=4, collaborationspawn_agent=2, collaborationsend_message=1
+skill loads (SKILL.md reads)       5            
+subagent spawns                    2            
+test runs                          15           
+task counter: RED run / GREEN run  yes / yes    test<impl
+task formatter: RED run / GREEN run yes / yes    test<impl
+task cli: RED run / GREEN run      yes / yes    test<impl
+ledger (progress.md) touches       0            
+helper/script invocations          0            
+commits (incl. fixture)            4            
+suite in repo                      OK           
+probe utf8-crash                   exit=1 UnicodeDecodeError: 'utf-8' codec can't dec 
+wall clock (s)                     136          
+user_prompt_submit events          1            
+tokens (codex, cumulative)         2048         in=858252 cached_in=829440 reasoning=142

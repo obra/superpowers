@@ -192,7 +192,22 @@ cmd_start() {
       # migration modal that swallows the first prompt (no turn, no SessionStart,
       # no registration). Pin a current model until csd is fixed.
       export CSD_CODEX_MODEL=${CSD_CODEX_MODEL:-gpt-5.6-sol}
-      "$CSD" launch --harness codex "$(worker "$arm" "$n")" "$dir/repo" -- -c "features.multi_agent=true" ${cx[@]+"${cx[@]}"}
+      # Codex also discovers skills under ~/.agents/skills, relative to HOME, which
+      # csd leaves as the operator's home. A rep on this machine read the installed
+      # superpowers from there instead of the checkout under test, and the "bare"
+      # arm was not bare. Give the worker a scratch HOME holding only what csd and
+      # git need: the Codex auth file (csd copies it from $HOME/.codex), the csd
+      # consent marker, and a git identity for the fixture commits.
+      local home="$dir/home"
+      mkdir -p "$home/.codex" "$home/.claude"
+      cp "$HOME/.codex/auth.json" "$home/.codex/auth.json"
+      cp "$HOME/.claude/.claude-session-driver-consent" "$home/.claude/" 2>/dev/null || true
+      printf '[user]\n\tname = inline-eval\n\temail = inline-eval@example.com\n' > "$home/.gitconfig"
+      # Codex seeds every fresh CODEX_HOME with OpenAI's curated marketplace, which
+      # carries a released superpowers; keep it disabled so the only copy in the
+      # session is the checkout under test (or none, for the bare arm).
+      HOME="$home" "$CSD" launch --harness codex "$(worker "$arm" "$n")" "$dir/repo" -- \
+        -c "features.multi_agent=true" -c "plugins.\"superpowers@openai-curated\".enabled=false" ${cx[@]+"${cx[@]}"}
       "$(shim "$arm" "$n")" send "$(prompt_for "$arm")"
       echo "started $(worker "$arm" "$n") (codex); wait with: $0 wait $arm $n"
       return ;;
