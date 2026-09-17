@@ -1,0 +1,4 @@
+# boundary: read the requested text file
+#   valid file contents              -> test_main_prints_report_and_returns_zero
+#   missing file                     -> test_main_returns_one_for_missing_file
+#   other read or decoding failures  -> ruled out: the design specifies only missing-file behavior

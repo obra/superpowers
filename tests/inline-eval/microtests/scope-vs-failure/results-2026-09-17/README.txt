@@ -59,3 +59,20 @@ test or a ledgered ruling"), 6 reps:
   ledger bookkeeping" waiver swallowed the rulings. Form lesson: a
   required slot in an artifact they already produce (the test file), not
   a rule about a step.
+
+v4-boundary-slot (the list as a required comment block at the top of the
+test file, one line per failure, each -> test or ruling; "other errors"
+disallowed), 6 reps:
+  except OSError 3, except FileNotFoundError 3; decode test 0/6.
+  5/6 produced the block. Its content was the cases the plan already
+  names (readable file, missing path) and nothing else: the slot forced
+  the shape, not the enumeration. See *.boundary.txt.
+Reading across v1, v3, v4 and the 24 follow-ups: on gpt-5.6-sol at low
+effort, a principle, a process step, and an artifact slot all fail at the
+same place, generating failure modes the spec does not name. The
+enumeration is the hard step, and it does not happen inside the
+implementer at this effort no matter how the instruction is shaped. What
+the sessions rank first, a test or a spec line naming the case, is an
+enumeration done elsewhere. That is the Review Focus mechanism
+(planner enumerates implied cases once, with the spec open), which moved
+Sonnet 4.5 implementers 3/3 under SDD.

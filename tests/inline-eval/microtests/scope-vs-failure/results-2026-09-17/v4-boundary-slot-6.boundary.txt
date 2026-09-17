@@ -1,0 +1,7 @@
+# boundary: parse command-line arguments
+#   missing path argument -> ruled out: argparse owns usage errors; the design requires one path
+# boundary: read the requested text file
+#   path does not exist -> test_missing_file_returns_one
+#   other read error -> ruled out: the design specifies only missing-file behavior
+# boundary: write the report to stdout
+#   report is not printed exactly -> test_file_prints_report_and_returns_zero

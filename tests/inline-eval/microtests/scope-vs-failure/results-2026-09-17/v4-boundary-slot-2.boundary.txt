@@ -1,0 +1,2 @@
+# boundary: read the file named by the positional path argument
+#   file does not exist -> test_missing_file_returns_one_and_reports_error

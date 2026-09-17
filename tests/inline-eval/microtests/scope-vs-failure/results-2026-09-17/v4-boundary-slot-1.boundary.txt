@@ -1,0 +1,3 @@
+# boundary: read the path supplied on the command line
+#   readable text file              -> test_main_prints_report_and_returns_zero
+#   path does not exist             -> test_main_returns_one_for_missing_file

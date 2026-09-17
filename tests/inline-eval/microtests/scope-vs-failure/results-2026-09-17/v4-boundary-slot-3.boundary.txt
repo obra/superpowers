@@ -1,0 +1,3 @@
+# boundary: read the file named by the command-line path
+#   path cannot be opened          -> test_missing_file_returns_one
+#   file contains undecodable data -> ruled out: the design specifies text files only
