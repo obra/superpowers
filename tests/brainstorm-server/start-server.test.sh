@@ -109,6 +109,26 @@ else
 fi
 
 echo ""
+echo "--- start-server.sh remote bind safety ---"
+
+captured=$(bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --host 0.0.0.0 2>&1 || true)
+if echo "$captured" | grep -q 'Refusing non-loopback HTTP bind without --insecure-remote'; then
+  pass "rejects non-loopback HTTP binds without explicit acknowledgement"
+else
+  fail "rejects non-loopback HTTP binds without explicit acknowledgement" \
+       "expected remote bind safety error, got: $captured"
+fi
+
+captured=$(PATH="$TEST_DIR/fake-bin:$PATH" \
+  bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --host 0.0.0.0 --insecure-remote --foreground 2>&1 || true)
+if echo "$captured" | grep -q 'FOREGROUND_MODE=true'; then
+  pass "allows explicitly acknowledged non-loopback binds"
+else
+  fail "allows explicitly acknowledged non-loopback binds" \
+       "expected fake node to run after acknowledgement, got: $captured"
+fi
+
+echo ""
 echo "--- Results: $passed passed, $failed failed ---"
 if [[ $failed -gt 0 ]]; then
   exit 1
