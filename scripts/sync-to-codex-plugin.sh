@@ -55,6 +55,7 @@ EXCLUDES=(
   "/.gitignore"
   "/.gitmodules"
   "/.kimi-plugin/"
+  "/.kiro/"
   "/.opencode/"
   "/.pi/"
   "/.pre-commit-config.yaml"

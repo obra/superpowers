@@ -176,6 +176,7 @@ write_upstream_fixture() {
     mkdir -p \
         "$repo/.codex-plugin" \
         "$repo/.kimi-plugin" \
+        "$repo/.kiro/agents" \
         "$repo/.private-journal" \
         "$repo/assets" \
         "$repo/evals/drill" \
@@ -237,6 +238,12 @@ EOF
 }
 EOF
 
+    cat > "$repo/.kiro/agents/superpowers.md" <<'EOF'
+---
+description: Kiro-only fixture
+---
+EOF
+
     cat > "$repo/assets/superpowers-small.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>
 EOF
@@ -293,6 +300,7 @@ EOF
     git -C "$repo" add \
         .codex-plugin/plugin.json \
         .kimi-plugin/plugin.json \
+        .kiro/agents/superpowers.md \
         .gitignore \
         .gitmodules \
         .pre-commit-config.yaml \
@@ -445,13 +453,16 @@ write_stale_ignored_destination_fixture() {
 
     mkdir -p \
         "$repo/plugins/superpowers/.kimi-plugin" \
+        "$repo/plugins/superpowers/.kiro/agents" \
         "$repo/plugins/superpowers/.private-journal"
     printf 'fixture keep\n' > "$repo/plugins/superpowers/.fixture-keep"
     printf '{"name":"stale-kimi"}\n' > "$repo/plugins/superpowers/.kimi-plugin/plugin.json"
+    printf '%s\n' 'stale Kiro agent' > "$repo/plugins/superpowers/.kiro/agents/superpowers.md"
     printf 'stale ignored leak\n' > "$repo/plugins/superpowers/.private-journal/leak.txt"
     git -C "$repo" add \
         plugins/superpowers/.fixture-keep \
-        plugins/superpowers/.kimi-plugin/plugin.json
+        plugins/superpowers/.kimi-plugin/plugin.json \
+        plugins/superpowers/.kiro/agents/superpowers.md
 
     commit_fixture "$repo" "Initial stale ignored destination fixture"
 }
@@ -652,6 +663,7 @@ main() {
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
+    assert_not_contains "$preview_section" ".kiro/agents/superpowers.md" "Preview excludes Kiro agent config from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
@@ -681,6 +693,7 @@ main() {
     echo "Convergence assertions..."
     assert_equals "$stale_preview_status" "0" "Stale ignored destination preview exits successfully"
     assert_matches "$stale_preview_section" "\\*deleting +\\.kimi-plugin/plugin\\.json" "Preview deletes stale Kimi manifest from Codex plugin"
+    assert_matches "$stale_preview_section" "\\*deleting +\\.kiro/agents/superpowers\\.md" "Preview deletes stale Kiro agent config from Codex plugin"
     assert_matches "$stale_preview_section" "\\*deleting +\\.private-journal/leak\\.txt" "Preview deletes stale ignored destination file"
 
     echo ""
