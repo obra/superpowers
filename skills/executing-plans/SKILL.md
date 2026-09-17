@@ -258,7 +258,11 @@ weaker than a fresh reviewer, and your human partner decides whether that
 is enough before merge.
 
 Sort the findings before you act on any of them. The reviewer's severity
-labels are advice; the gate is yours. Re-grade first: a finding labeled
+labels are advice; the gate is yours. Its "Declined to judge" list is
+yours too: every line there is a ruling you make and ledger, exactly like
+a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
+<what a reasonable person using this software gets, and why that stands
+or why it is now a finding> — <cost if wrong>`. Re-grade first: a finding labeled
 Minor that describes an unhandled exception, a traceback reaching the
 user, data loss, or a wrong result on valid input is Important, whatever
 the label says — reviewers have filed crashes as Minor because the spec

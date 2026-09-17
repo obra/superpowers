@@ -80,9 +80,14 @@ include this section.]
 
 [Input classes and failure modes the spec implies but no task's tests
 exercise — one line each, naming the input or condition and the behavior
-the spec implies for it, ordered by how likely each is to bite a user.
-Written here, once, with the spec in front of you; the final reviewer
-checks each deliberately instead of rediscovering them.]
+a reasonable person would expect, ordered by how likely each is to bite
+that person. The spec is a vision document: it says what the software
+must do, not everything it will meet, and its silence on an input is not
+permission for that input to break the program. Write the list here,
+once, with the spec in front of you. Then, for each line, add the test
+that pins it to the task that owns the code, in that task's own step
+style; a line that stays only a line is one the final reviewer checks
+deliberately instead of rediscovering.]
 
 ---
 ```
@@ -156,7 +161,7 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-**4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? Everything the spec implies and no test covers goes in the Review Focus section. An empty section means you checked and found none, not that you skipped the check.
+**4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? Everything the spec implies and no test covers goes in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
