@@ -711,6 +711,18 @@ Then:
   - If neither works, the harness cannot be cleanly supported yet — **say so**
     and raise it, rather than hand-editing the user's config.
 
+- **Packagers can strip executable bits — skill prose invokes bundled scripts
+  through their interpreter.** Some marketplace packaging and install paths
+  lose Unix file modes: the Codex marketplace cache delivered the SDD helpers
+  as `0644` (#2040, #2134), and the MiniMax Code marketplace ships every file
+  as mode `600`. A bare `scripts/foo.sh` or `./foo.js` in a skill then fails
+  with `Permission denied` on that harness even though the repo's tree records
+  `100755`. So every script invocation in `skills/**/*.md` is spelled through
+  its interpreter — `bash scripts/start-server.sh …`, `bash
+  scripts/review-package …`, `node ./render-graphs.js …` — and a script that
+  runs a sibling script needs the same treatment (#2134). Don't "tidy" the
+  prefixes away, and don't reach for a packaging-side `chmod`: the mode loss
+  happens on the consumer's side, so only the invocation form survives it.
 - **Write install docs.** A `docs/README.<harness>.md` and/or a
   `.<harness>/INSTALL.md` (see `docs/README.opencode.md` and
   `.opencode/INSTALL.md`), plus an install section in the top-level `README.md`.
@@ -822,6 +834,8 @@ Use this as the live index; when in doubt, read the files, not this table.
   that mechanism *is* reading `SKILL.md` — say so explicitly in the mapping
   (Part 5).
 - **`.sh` on Windows.** Keep hook scripts extensionless (Part 7).
+- **Bare `scripts/foo.sh` in skill prose.** Packagers can strip exec bits
+  (Part 6). Invoke bundled scripts as `bash scripts/foo.sh` / `node scripts/foo.js`.
 - **Unregistered version.** A new manifest not added to `.version-bump.json`
   ships stale (Part 6).
 - **Editing skills to fit the harness.** Never. The fix goes in the tool mapping.
