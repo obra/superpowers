@@ -1,0 +1,31 @@
+# Lifecycle report: foo
+
+- Outcome: **PASS**
+- Workflow: `sdd`
+- Plan: `docs/superpowers/plans/foo.md`
+- Run: `20260818T120000Z-a1b2c3d4e5f6-7f31c9ab`
+- Created: 2026-08-18T12:00:00.000Z
+
+## Headline metrics
+
+| Metric | Value |
+| --- | --- |
+| Tasks | 9 |
+| Completed | 9 |
+| First-pass success | 77.8% |
+| Autonomous completion | 100.0% |
+| Fix rounds | 3 |
+| Fix rounds/task | 0.33 |
+| Critical findings | 0 |
+| Important findings | 4 |
+| Blocked tasks | 0 |
+| Parked findings | 1 |
+| Tests passed | 146/146 |
+| Final review | PASS |
+
+## Findings
+
+- **F-001** [IMPORTANT/ADDRESSED] Finding 1
+- **F-002** [IMPORTANT/ADDRESSED] Finding 2
+- **F-003** [IMPORTANT/OPEN] Recorded follow-up
+- **F-004** [IMPORTANT/PARKED] Final follow-up

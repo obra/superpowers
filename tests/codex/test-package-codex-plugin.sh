@@ -163,9 +163,11 @@ assert_contains "$output" "SHA-256:" "reports archive checksum"
 extract_archive "$archive" "$extracted"
 
 archive_paths="$(list_archive "$archive" | normalize_archive_paths)"
-unexpected_pattern='(^superpowers/|^\.agents/|^hooks/|package\.json$|^\.git|^\.pytest_cache|^\.ruff_cache|^scripts/|^tests/|^docs/|^evals/|^lib/|^\.claude|^\.cursor|^\.kimi|^\.opencode|^\.pi|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^RELEASE-NOTES\.md$|^CHANGELOG\.md$)'
+unexpected_pattern='(^superpowers/|^\.agents/|^hooks/|package\.json$|^\.git|^\.pytest_cache|^\.ruff_cache|^scripts/|^tests/|^docs/|^evals/|^\.claude|^\.cursor|^\.kimi|^\.opencode|^\.pi|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^RELEASE-NOTES\.md$|^CHANGELOG\.md$)'
 assert_not_matches "$archive_paths" "$unexpected_pattern" "archive excludes source-only paths"
 assert_contains "$archive_paths" ".codex-plugin/plugin.json" "archive includes Codex manifest"
+assert_contains "$archive_paths" "bin/superpowers.mjs" "archive includes metrics CLI"
+assert_contains "$archive_paths" "lib/metrics/cli.mjs" "archive includes metrics runtime"
 assert_contains "$archive_paths" "skills/brainstorming/SKILL.md" "archive includes skills"
 assert_contains "$archive_paths" "skills/brainstorming/agents/openai.yaml" "archive includes OpenAI skill metadata"
 assert_contains "$archive_paths" "assets/app-icon.png" "archive includes app icon"
@@ -183,6 +185,12 @@ if [[ -x "$extracted/skills/subagent-driven-development/scripts/task-brief" ]]; 
   pass "archive preserves executable script mode"
 else
   fail "archive preserves executable script mode"
+fi
+
+if [[ -x "$extracted/bin/superpowers.mjs" ]]; then
+  pass "archive preserves metrics CLI executable mode"
+else
+  fail "archive preserves metrics CLI executable mode"
 fi
 
 zip_times="$(python3 - "$archive" <<'PY'

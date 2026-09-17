@@ -75,7 +75,6 @@ EXCLUDES=(
   "/commands/"
   "/docs/"
   "/evals/"
-  "/lib/"
   "/scripts/"
   "/tests/"
   "/tmp/"
