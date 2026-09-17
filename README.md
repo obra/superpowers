@@ -9,6 +9,7 @@ Superpowers is a complete software development methodology for your coding agent
 - [Getting Started](#installation)
   - [Claude Code](#claude-code)
   - [Antigravity](#antigravity)
+  - [AtomCode](#atomcode)
   - [Codex App](#codex-app)
   - [Codex CLI](#codex-cli)
   - [Cursor](#cursor)
@@ -89,6 +90,27 @@ agy plugin install https://github.com/obra/superpowers
 
 Antigravity runs the plugin's session-start hook, so Superpowers is active from
 the first message. Reinstall with the same command to update.
+
+### AtomCode
+
+Register the Superpowers marketplace and install the plugin from it:
+
+```bash
+atomcode plugin marketplace add https://github.com/obra/superpowers-marketplace
+atomcode plugin install superpowers@superpowers-marketplace
+```
+
+Trust the plugin's hooks so the session-start bootstrap runs:
+
+```bash
+atomcode plugin trust superpowers
+```
+
+Restart AtomCode. The plugin's session-start hook injects the
+`using-superpowers` bootstrap at the start of every session, and AtomCode's
+native `use_skill` tool loads the skills.
+
+Detailed docs: [docs/README.atomcode.md](docs/README.atomcode.md)
 
 ### Codex App
 

@@ -293,6 +293,7 @@ part of the installed extension** — never substitute "edit the user's global
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
 | has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
+| natively consumes the Claude Code plugin format (CC `plugin.json` + `hooks.json`, `skills/` discovery, `CLAUDE_PLUGIN_ROOT`) | existing manifest — no new files | AtomCode (`.claude-plugin/` + `hooks/hooks.json`; hooks need a one-time trust step) |
 
 Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
 holds — the bootstrap rides the install mechanism, never a user-config edit).
@@ -792,6 +793,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
 | OpenCode | `.opencode/plugins/superpowers.js` (declared via root `package.json` `main`) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` plugin git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
+| AtomCode | `.claude-plugin/plugin.json` + `hooks/hooks.json` (CC-format, read natively — no AtomCode-specific files) | SessionStart shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`); AtomCode exports `CLAUDE_PLUGIN_ROOT` and injects the parsed context | `references/atomcode-tools.md` | `tests/atomcode/` | marketplace (`atomcode plugin marketplace add` + `atomcode plugin install`); hooks require `atomcode plugin trust` |
 
 ## Appendix B — Gotchas that have bitten porters
 
