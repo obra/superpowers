@@ -69,6 +69,7 @@ EXCLUDES=(
   "/GEMINI.md"
   "/RELEASE-NOTES.md"
   "/gemini-extension.json"
+  "/index.js"
   "/package.json"
 
   # Directories not shipped by canonical Codex plugins
