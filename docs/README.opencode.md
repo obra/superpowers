@@ -4,7 +4,11 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 
 ## Installation
 
-Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
+OpenCode V2 requires version 2.0.4 or later.
+
+### OpenCode V1
+
+Use the existing V1 plugin configuration:
 
 ```json
 {
@@ -12,8 +16,23 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 }
 ```
 
-Restart OpenCode (`opencode2 service restart` on V2). The plugin installs
-through OpenCode's plugin manager and registers all skills.
+### OpenCode V2 (2.0.4 or later)
+
+Use the V2 plugin configuration:
+
+```json
+{
+  "plugins": ["superpowers@git+https://github.com/obra/superpowers.git"]
+}
+```
+
+For a local V2 installation, configure the repository directory containing
+`index.js`. OpenCode 2.0.4 and 2.0.7 reject a configured direct JavaScript-file
+path. Discovered plugin symlinks remain supported.
+
+Restart OpenCode. V2 uses the `opencode` command; `opencode2` may be available
+as an alias. The plugin installs through OpenCode's plugin manager and
+registers all skills.
 
 Verify by asking: "Tell me about your superpowers"
 
@@ -86,13 +105,10 @@ and Bun versions pin that resolved git dependency in a lockfile or cache, so a
 restart may not pick up the newest Superpowers commit. If updates do not appear,
 clear OpenCode's package cache or reinstall the plugin.
 
-To pin a specific version, use a branch or tag:
+### V2 (`opencode` 2.0.4 or later)
 
-```json
-{
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
-}
-```
+For V2, a pin must reference a release or immutable commit containing this
+integration.
 
 ## How It Works
 
@@ -101,9 +117,18 @@ The plugin does two things, using host-flavor-specific APIs:
 1. **Registers the skills directory** so OpenCode discovers all superpowers skills without symlinks or manual config.
     - **V1:** via the `config` hook, injecting into `config.skills.paths`
     - **V2:** via the `setup()` function using `ctx.skill.transform()` (V2 native API, confirmed active at runtime)
-2. **Injects bootstrap context** into the first user message of each conversation, adding superpowers awareness. The bootstrap includes a tool mapping that is also flavor-specific: V1 sessions get the V1 tool names below, V2 sessions get the V2 names.
+2. **Injects bootstrap context** with a flavor-specific tool mapping: V1 sessions get the V1 tool names below, and V2 sessions get the V2 names.
     - **V1:** via `experimental.chat.messages.transform` hook
     - **V2:** via `ctx.session.hook("context")` — the V2 equivalent (confirmed active at runtime)
+
+Controller sessions receive the using-superpowers bootstrap in transient model
+context. Delegated child sessions keep access to native skills but do not receive
+the controller bootstrap. A manual fork without a parent session keeps controller
+behavior. After V2 native compaction removes all user messages, the plugin appends
+a transient bootstrap message after the checkpoint; saved history is unchanged.
+
+If session lookup fails, the plugin keeps bootstrap for that request and retries
+on the next request. Failed lookups are not cached as controller decisions.
 
 ### Tool Mapping
 
@@ -120,23 +145,21 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
-**V2 (`opencode2` beta):**
+**V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
 
 - "Create a todo" → V2 has no todo tool of any kind; the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
 - `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool
 - "Read a file" → `read`
-- "Create / overwrite a file" → `write`
-- "Edit a file" → `edit` for targeted changes, or `patch` with `patchText` (same patch format as V1's `apply_patch`) when a skill speaks in patch format
-- "Delete a file" → `patch` (via `patchText`) or a `shell` `rm`
+- "Create, edit, or delete files" → use `patch` with `patchText` when available; otherwise use `write` to create or overwrite files, `edit` for targeted changes, and `shell` for deletion
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 - "Search the web" → `websearch`
 
-In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely; `read`, `write`, `edit`, `grep`, `glob`, `webfetch`, `websearch`, and `skill` keep their V1 names (`write`/`edit`/`websearch` replace V1's `apply_patch`-only path, `apply_patch`-only mutation habits, and V1's lack of a search tool respectively).
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely. The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
 
-(V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the 2.0.3 tool catalog served by a live v2.0.3 service via `/api/plugin`.)
+(V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the OpenCode 2.0.4 and 2.0.7 host contracts.)
 
 ## Troubleshooting
 
@@ -151,7 +174,7 @@ opencode run --print-logs "hello" 2>&1 | grep -i superpowers
 **V2:** Check the server log:
 
 ```
-opencode2 service status
+opencode service status
 ```
 
 Then inspect `~/.local/share/opencode/log/opencode.log`, filtering for `role=server`.
@@ -171,11 +194,22 @@ package:
 npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
 ```
 
-Then use the installed package path in `opencode.json`:
+Then use the installed package path in `opencode.json` for your OpenCode
+version:
+
+**V1:**
 
 ```json
 {
   "plugin": ["~/.config/opencode/node_modules/superpowers"]
+}
+```
+
+**V2 (2.0.4 or later):**
+
+```json
+{
+  "plugins": ["~/.config/opencode/node_modules/superpowers"]
 }
 ```
 
@@ -188,7 +222,7 @@ Then use the installed package path in `opencode.json`:
 ### Bootstrap not appearing
 
 - **V1:** Check OpenCode version supports `experimental.chat.messages.transform` hook. Restart OpenCode after config changes.
-- **V2:** The plugin uses `ctx.session.hook("context")` for bootstrap injection. Verify the plugin loaded via `opencode2 api get /api/plugin`. Restart with `opencode2 service restart` after config changes.
+- **V2:** The plugin uses `ctx.session.hook("context")` for bootstrap injection. Verify the plugin loaded via `opencode api get /api/plugin`. Restart with `opencode service restart` after config changes. The `opencode2` command may be available as an alias.
 
 ## Getting Help
 

@@ -6,7 +6,11 @@
 
 ## Installation
 
-Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
+OpenCode V2 requires version 2.0.4 or later.
+
+### OpenCode V1
+
+Use the existing V1 plugin configuration:
 
 ```json
 {
@@ -14,8 +18,23 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 }
 ```
 
-Restart OpenCode (`opencode2 service restart` on V2). The plugin installs
-through OpenCode's plugin manager and registers all skills.
+### OpenCode V2 (2.0.4 or later)
+
+Use the V2 plugin configuration:
+
+```json
+{
+  "plugins": ["superpowers@git+https://github.com/obra/superpowers.git"]
+}
+```
+
+For a local V2 installation, configure the repository directory containing
+`index.js`. OpenCode 2.0.4 and 2.0.7 reject a configured direct JavaScript-file
+path. Discovered plugin symlinks remain supported.
+
+Restart OpenCode. V2 uses the `opencode` command; `opencode2` may be available
+as an alias. The plugin installs through OpenCode's plugin manager and
+registers all skills.
 
 Verify by asking: "Tell me about your superpowers"
 
@@ -50,18 +69,17 @@ use skill tool to load brainstorming
 
 ## Updating
 
-OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
+### OpenCode V1
+
+OpenCode V1 installs Superpowers through a git-backed package spec. Some OpenCode
 and Bun versions pin that resolved git dependency in a lockfile or cache, so a
 restart may not pick up the newest Superpowers commit. If updates do not appear,
 clear OpenCode's package cache or reinstall the plugin.
 
-To pin a specific version:
+### OpenCode V2
 
-```json
-{
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.3.0"]
-}
-```
+For V2, a pin must reference a release or immutable commit containing this
+integration.
 
 ## Troubleshooting
 
@@ -83,11 +101,22 @@ package:
 npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
 ```
 
-Then use the installed package path in `opencode.json`:
+Then use the installed package path in `opencode.json` for your OpenCode
+version:
+
+**V1:**
 
 ```json
 {
   "plugin": ["~/.config/opencode/node_modules/superpowers"]
+}
+```
+
+**V2 (2.0.4 or later):**
+
+```json
+{
+  "plugins": ["~/.config/opencode/node_modules/superpowers"]
 }
 ```
 
@@ -111,15 +140,13 @@ Skills speak in actions ("create a todo", "dispatch a subagent", "read a file").
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
-**V2 (`opencode2` beta):**
+**V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
 
 - "Create a todo" → V2 has no todo tool; track the plan in a markdown file instead
 - `Subagent (general-purpose):` template → `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool
 - "Read a file" → `read`
-- "Create / overwrite a file" → `write`
-- "Edit a file" → `edit` for targeted changes, or `patch` (same patch format, via `patchText`) when a skill speaks in patch format
-- "Delete a file" → `patch` (via `patchText`) or a `shell` `rm`
+- "Create, edit, or delete files" → use `patch` with `patchText` when available; otherwise use `write` to create or overwrite files, `edit` for targeted changes, and `shell` for deletion
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`

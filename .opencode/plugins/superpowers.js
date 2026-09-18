@@ -60,7 +60,7 @@ const extractAndStripFrontmatter = (content) => {
 };
 
 // Tool mapping injected into the bootstrap, differentiated by host flavor.
-// V1 (OpenCode 1.18.x) and V2 (OpenCode 2.x beta) expose different built-in
+// V1 (OpenCode 1.18.x) and V2 (OpenCode 2.0.4/2.0.7) expose different built-in
 // tools, so each flavor's injection path picks its own constant below.
 // Exported for tests (tests/opencode/test-bootstrap-caching.mjs).
 
@@ -82,16 +82,15 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 // V2 built-ins: no todo tool at all; task → subagent (agent name in 'agent',
 // continuation via sessionID); apply_patch → patch (patchText, same patch
 // format); bash → shell. read, write, edit, grep, glob, webfetch, websearch,
-// and skill all exist under those names (verified against the 2.0.3 tool
-// catalog served by /api/plugin).
+// and skill all exist under those names (verified against the 2.0.4 and 2.0.7
+// host contracts).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
 - Invoke a skill → OpenCode's native \`skill\` tool
 - Read files → \`read\`
-- Create or overwrite a file → \`write\`
-- Edit files → \`edit\` for targeted changes, or \`patch\` with \`patchText\` (same patch format) when a skill speaks in patch format or deletes files
+- Create, edit, or delete files → use \`patch\` with \`patchText\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`shell\` for deletion
 - Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`
