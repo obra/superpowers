@@ -1,0 +1,6 @@
+{
+  "tasks": {"counter": "test_counter", "formatter": "test_formatter", "cli": "test_cli"},
+  "impl_dir": "wordstat",
+  "test_marker": "unittest",
+  "suite": "python3 -m unittest discover -p \"test_*.py\""
+}
