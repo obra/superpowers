@@ -279,6 +279,13 @@ cmd_start() {
 # early. Worse, csd reports "idle" for a moment between the turn's stop
 # event and the subagent's first tool call. Loop until the worker has been
 # idle for a sustained stretch.
+pending_background_agents() {  # arm n: true if the last turn record reports pending background agents
+  local dir; dir=$(rep_dir "$1" "$2")
+  local f; f=$(ls -S "$dir"/cfg/projects/*/*.jsonl 2>/dev/null | head -1)
+  [ -n "$f" ] || return 1
+  grep '"subtype":"turn_duration"' "$f" | tail -1 | grep -q '"pendingBackgroundAgentCount":[1-9]'
+}
+
 cmd_wait() {
   local arm=$1 n=$2 secs=${3:-2400}
   use_rep_tmux "$arm" "$n"
@@ -291,6 +298,11 @@ cmd_wait() {
       st=$("$s" status)
       [ "$st" = "working" ] && break
     done
+    # A session that ended its turn with background agents pending is not
+    # done: Claude Code re-invokes it when they finish. Keep waiting.
+    if [ "$st" != "working" ] && pending_background_agents "$arm" "$n"; then
+      st="working"; sleep 60
+    fi
     echo "$st"
     [ "$st" = "working" ] || break
   done
