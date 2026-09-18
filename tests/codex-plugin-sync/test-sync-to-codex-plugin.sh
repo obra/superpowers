@@ -196,6 +196,10 @@ write_upstream_fixture() {
 }
 EOF
 
+    cat > "$repo/index.js" <<'EOF'
+export { default } from "./.opencode/plugins/superpowers.js";
+EOF
+
     cat > "$repo/.gitignore" <<'EOF'
 .private-journal/
 EOF
@@ -303,6 +307,7 @@ EOF
         hooks/run-hook.cmd \
         hooks/session-start \
         hooks/session-start-codex \
+        index.js \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
@@ -664,6 +669,7 @@ main() {
     assert_not_contains "$preview_section" "evals/" "Preview excludes eval harness"
     assert_not_contains "$preview_section" ".gitmodules" "Preview excludes repo submodule metadata"
     assert_not_contains "$preview_section" ".pre-commit-config.yaml" "Preview excludes repo pre-commit config"
+    assert_not_contains "$preview_section" "index.js" "Preview excludes OpenCode root entrypoint"
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
