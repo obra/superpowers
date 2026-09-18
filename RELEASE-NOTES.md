@@ -2,7 +2,7 @@
 
 ## v6.4.0 (2026-09-18)
 
-Two new skills: `diagnosing-superpowers` figures out what went wrong in a session, and `proving-it-works-with-a-movie` records proof that software actually runs. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. Superpowers now runs on Muse and Qwen Code, and on OpenCode 2.0.
+Two new skills: `diagnosing-superpowers` figures out what went wrong in a session, and `proving-it-works-with-a-movie` records proof that software actually runs. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. It also adds three new harnesses: OpenCode 2.0, Muse, and Qwen Code.
 
 ### New Skills
 
@@ -38,13 +38,13 @@ Two new skills: `diagnosing-superpowers` figures out what went wrong in a sessio
 
 - **Plans with the same basename no longer share a workspace.** `docs/alpha/plan.md` and `docs/beta/plan.md` resolved to one directory and `task-brief` silently overwrote the other plan's brief. Each workspace now records its owning plan; a collision gets its own directory. Existing workspaces are adopted in place. (#2138, #2045)
 - **`review-package` rejects empty or non-descendant `BASE..HEAD` ranges** (exit 3), so an implementer that committed to the wrong branch can't produce a "clean" review of nothing. (#2136, #2050)
+- **On Claude Code, the controller can run one layer down,** as a nested subagent on a mid-tier model. It measured about half the cost and wall clock. It's opt-in: ask for it, or tell your agent your session model is too expensive to spend on coordination. (#2320)
 
-### Harness Support
+### New Harness Support
 
 - **OpenCode 2.0.4+** is supported alongside V1. Skills register through V2's native API, and the bootstrap survives continuation, restart, forks, and compaction. Delegated child sessions no longer receive the controller's bootstrap. (#2106, #2306)
 - **Muse**: native plugin manifest and SessionStart hook. `muse plugins install ./` then `muse plugins approve superpowers`. (#2317)
 - **Qwen Code** added to the install docs: `qwen extensions install obra/superpowers`. (#2132)
-- **Claude Code** can run the subagent-driven controller one layer down, as a nested subagent on a mid-tier model. It measured about half the cost and wall clock. It's opt-in: ask for it, or tell your agent your session model is too expensive to spend on coordination. (#2320)
 
 ### Fixes
 
