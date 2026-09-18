@@ -54,6 +54,8 @@
 #                         reach the worker (the per-rep tmux server inherits the
 #                         environment) and remap the skills' model aliases on Bedrock,
 #                         e.g. ANTHROPIC_DEFAULT_SONNET_MODEL=us.anthropic.claude-sonnet-5
+#   INLINE_EVAL_PROMPT    the worker's first message, replacing the arm's default
+#                         (e.g. to execute a plan SET rather than plan.md)
 #   INLINE_EVAL_PLUGIN_DIR a checkout to load instead of this one on the plugin arms
 #                         (skill-wording variants; e.g. a worktree with one edit)
 #   INLINE_EVAL_BACKEND   "api" (default: ANTHROPIC_API_KEY from the env file);
@@ -161,6 +163,7 @@ use_rep_tmux() {
 }
 
 prompt_for() {
+  if [ -n "${INLINE_EVAL_PROMPT:-}" ]; then echo "$INLINE_EVAL_PROMPT"; return; fi
   local common='This is a local scratch repo with no remote: work directly on main here, no worktree or branch needed. When the plan is complete, tell me it is done.'
   case "$1" in
     sdd|sddrf)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
