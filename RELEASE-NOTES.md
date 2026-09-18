@@ -2,7 +2,7 @@
 
 ## v6.4.0 (2026-09-18)
 
-Two new skills: `diagnosing-superpowers` figures out what went wrong in a session, and `proving-it-works-with-a-movie` records proof that software actually runs. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development.
+Two new skills: `diagnosing-superpowers` figures out what went wrong in a session, and `proving-it-works-with-a-movie` records proof that software actually runs. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. Superpowers now runs on Muse and Qwen Code, and on OpenCode 2.0.
 
 ### New Skills
 
