@@ -57,9 +57,11 @@ review; ledgerlite, 3 reps per plan, run 3 at a time.
 
                     terse                full                 loosened (terse plan)
 probes              9/9                  9/9                  9/9
-USD                 10.51 9.59 17.98     11.04 11.10 10.87    11.84 + (172, 173 below)
-  of which Opus     6.84-15.47           7.80-8.23            9.77
-dispatches          16-18                17                   15
+USD                 10.51 9.59 17.98     11.04 11.10 10.87    11.84 16.70 13.99
+  of which Opus     6.84-15.47           7.80-8.23            9.77-14.12
+dispatches          16-18                17                   15-17
+wall clock          40-87 min            46-58 min            45-95 min
+No Haiku spend in any rep: the alias remap held.
 
 Same as arm 1: the plan's completeness does not change an SDD outcome
 with Sonnet 5 implementers, and the controller is 70-85% of the cost.
