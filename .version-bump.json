@@ -17,6 +17,7 @@
       "CHANGELOG.md",
       "RELEASE-NOTES.md",
       "node_modules",
+      "evals",
       ".git",
       ".version-bump.json",
       "scripts/bump-version.sh"
