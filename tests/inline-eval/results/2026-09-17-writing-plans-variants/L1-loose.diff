@@ -1,0 +1,51 @@
+diff --git a/skills/subagent-driven-development/SKILL.md b/skills/subagent-driven-development/SKILL.md
+index 6a2a5d8..400635c 100644
+--- a/skills/subagent-driven-development/SKILL.md
++++ b/skills/subagent-driven-development/SKILL.md
+@@ -268,7 +268,9 @@ and fix-round diffs need it.
+   paste accumulated prior-task summaries ("state after Tasks 1-3") into
+   later dispatches — a real session's dispatch hit 42k chars of which 99%
+   was pasted history. A fresh subagent needs its task, the interfaces it
+-  touches, and the global constraints. Nothing else.
++  touches, and the plan's shared header (the brief carries it), plus the
++  spec's path so it can read the intent behind its task when the brief
++  leaves a choice open. Not the session's history.
+ - The dispatch carries the no-subagents contract (it is in the
+   implementer template): the implementer never dispatches subagents —
+   not helpers, and never a reviewer. Review arrives from you, after the
+diff --git a/skills/subagent-driven-development/implementer-prompt.md b/skills/subagent-driven-development/implementer-prompt.md
+index 5c8ecd6..7ab3f7a 100644
+--- a/skills/subagent-driven-development/implementer-prompt.md
++++ b/skills/subagent-driven-development/implementer-prompt.md
+@@ -13,7 +13,9 @@ Subagent (general-purpose):
+     ## Task Description
+ 
+     Read your task brief first: [BRIEF_FILE]
+-    It contains the full task text from the plan.
++    It contains the plan's shared header and the full task text. The spec
++    behind the plan is at [SPEC_FILE]; read it when the brief leaves a
++    choice open, so you decide from the intent rather than guess.
+ 
+     ## Context
+ 
+diff --git a/skills/subagent-driven-development/scripts/task-brief b/skills/subagent-driven-development/scripts/task-brief
+index 612e14a..c926343 100755
+--- a/skills/subagent-driven-development/scripts/task-brief
++++ b/skills/subagent-driven-development/scripts/task-brief
+@@ -25,11 +25,16 @@ else
+   out="$dir/task-${n}-brief.md"
+ fi
+ 
++# The brief is the task's text plus the plan's shared header: every section
++# before Task 1 (goal, architecture, global constraints, file structure), so
++# a task need not repeat what the plan states once for all tasks.
+ awk -v n="$n" '
+   /^```/ { infence = !infence }
+   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
+     intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
++    seen_task = 1
+   }
++  !seen_task { print }
+   intask { print }
+ ' "$plan" > "$out"
+ 

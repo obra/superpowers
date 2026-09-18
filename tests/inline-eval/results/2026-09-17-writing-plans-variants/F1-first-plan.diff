@@ -1,0 +1,13 @@
+diff --git a/skills/writing-plans/SKILL.md b/skills/writing-plans/SKILL.md
+index 78c7126..03b7273 100644
+--- a/skills/writing-plans/SKILL.md
++++ b/skills/writing-plans/SKILL.md
+@@ -22,6 +22,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
+ 
+ If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+ 
++Write the first plan, then stop and hand it off for execution (below). The second plan is written after the first has produced running code, in its own session: what the first plan's execution teaches changes the second plan, and a set of plans written together is the largest document this skill can produce with nothing yet run.
++
+ ## File Structure
+ 
+ Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
