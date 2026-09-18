@@ -174,15 +174,24 @@ const isChildSession = async (fetchSession, sessionID) => {
   let isChild = false;
   try {
     const result = await fetchSession(sessionID);
-    // Defensive dual-shape unwrap: fetchers may return the session record
-    // itself (V2 ctx) or an SDK envelope { data: Session } (V1 client). An
-    // envelope never carries parentID at the top level, so if `result` has
-    // one it already IS the session record — never unwrap past it.
-    const session = result && typeof result === 'object' && result.data && typeof result.data === 'object' && !('parentID' in result)
-      ? result.data
-      : result;
-    // parentID presence is the child-session signal on both flavors.
-    isChild = Boolean(session && typeof session === 'object' && session.parentID);
+    // V1 returns a successful SDK envelope while V2 returns a direct session
+    // record. Validate both shapes before classifying or caching the result;
+    // resolved SDK errors must follow the same fail-open path as rejections.
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+      throw new Error('Session lookup returned no usable record');
+    }
+    if (result.error != null || result.response?.ok === false) {
+      throw new Error('Session lookup was unsuccessful');
+    }
+    const session = 'data' in result ? result.data : result;
+    if (!session || typeof session !== 'object' || Array.isArray(session) || session.id !== sessionID) {
+      throw new Error('Session lookup returned an invalid session identity');
+    }
+    if (session.parentID !== undefined &&
+        (typeof session.parentID !== 'string' || session.parentID.length === 0)) {
+      throw new Error('Session lookup returned an invalid parent identity');
+    }
+    isChild = session.parentID !== undefined;
   } catch (err) {
     // Fail open: on lookup errors keep injecting (previous behavior) and do
     // not cache, so a transient failure can recover on the next step.
