@@ -1,0 +1,579 @@
+diff --git a/skills/executing-plans/SKILL.md b/skills/executing-plans/SKILL.md
+index 49077ad..8b7b06d 100644
+--- a/skills/executing-plans/SKILL.md
++++ b/skills/executing-plans/SKILL.md
+@@ -32,9 +32,12 @@ without stopping.
+ **Rulings, not stalls.** Conflicts, ambiguities, plan defects — decide them.
+ The spec is the binding authority, the plan is its argument, and your
+ judgment settles what neither answers. Record every decision in the ledger
+-as `Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+-going. Deviating from the plan without a ledgered ruling is a decision made
+-in secret.
++as `Ruling: <what you decided> — <why> — <what it costs if wrong> — <plans
++touched: none, or a later plan's file and the line that changes>`, and keep
++going. A plan touched is edited now, before the next task: a later plan
++that still says the old name, signature, or value will be executed as
++written. Deviating from the plan without a ledgered ruling is a decision
++made in secret.
+ 
+ Four things stop you, and only these: an irreversible or destructive
+ operation; a security-sensitive action; a side effect outside this worktree
+@@ -107,6 +110,11 @@ digraph process {
+ 
+ ## Setup
+ 
++A plan is one file, or a directory (`00-header.md` plus one `NN-<task>.md`
++per task, the form writing-plans writes). Every script below takes either;
++"the plan" means the whole of it, and "the header" means the part above
++Task 1 or `00-header.md`.
++
+ Ensure the work happens in an isolated workspace: use
+ superpowers:using-git-worktrees to create one or verify the existing one.
+ Never start implementation on a main/master branch without your human
+@@ -123,7 +131,7 @@ The workspace and ledger are shared with superpowers:subagent-driven-development
+ and the new one resumes from the same ledger.
+ 
+ - Each plan owns a workspace: at skill start, run
+-  `../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` — it
++  `../subagent-driven-development/scripts/sdd-workspace PLAN` — it
+   prints the plan's git-ignored directory
+   (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to every
+   artifact for THIS plan: ledger, briefs, review packages. Another plan's
+@@ -136,7 +144,7 @@ and the new one resumes from the same ledger.
+   recollection. A ledger whose first line names a different plan file is
+   another plan's progress: leave it and start your own, fresh.
+ - Create the ledger with its identity as the first line:
+-  `# SDD ledger — plan: <plan file path>`.
++  `# SDD ledger — plan: <plan path>`.
+ - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
+   if that happens, recover from `git log`.
+ 
+@@ -169,7 +177,7 @@ in the workspace and read its tail; read a brief, not the whole plan.
+ 
+ ### 1. Take the task
+ 
+-- Run this skill's `scripts/task-start PLAN_FILE N`. It prints the brief
++- Run this skill's `scripts/task-start PLAN N`. It prints the brief
+   path and BASE (the commit the task's range is cut from) in one call.
+   Read the brief for every task, including ones you remember from setup:
+   what you remember is a summary, the brief has the exact values,
+@@ -221,7 +229,7 @@ the claim. If any item is missing, the task is not complete: finish it.
+ 
+ ### 4. Complete the task
+ 
+-Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
++Run this skill's `scripts/task-done PLAN N BASE -- <test command>`
+ with the test command the brief names for the whole task. It runs the
+ tests, keeps the full output in the workspace, prints the tail, and — only
+ if they pass — appends the completion line to the ledger:
+@@ -233,7 +241,7 @@ mark the todo complete and take the next task.
+ 
+ ## Final Review
+ 
+-Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
++Run `../subagent-driven-development/scripts/review-package PLAN MERGE_BASE HEAD`
+ (MERGE_BASE = the commit the branch started from, e.g.
+ `git merge-base main HEAD`) and review from the file it prints.
+ 
+@@ -293,9 +301,20 @@ in the rulings list. There is no second fix pass.
+ Before you delete anything, collect every ledger line containing
+ `Ruling:` into your final message under "Rulings I made", in the order you
+ made them, each with what it costs if wrong, and every `minor (deferred)`
+-line under "Deferred minors". Both lists are exhaustive. Your final
+-message is the only place the decisions you took on your human partner's
+-behalf — and the findings you chose not to act on — reach them.
++line under "Deferred minors". Both lists are exhaustive. Then, under
++"Remaining plans", the Plan Set lines after this plan (`None` if there are
++none): this plan being complete is not the project being complete. Your
++final message is the only place the decisions you took on your human
++partner's behalf — and the findings you chose not to act on — reach them.
++
++When a plan follows this one in the Plan Set, finishing this plan means
++starting that one, under the same method and in this session: the set was
++reviewed once, and only the four stops stop you. Before its Task 1, run
++`scripts/plan-boundary NEXT_PLAN` (this skill's directory): it names
++every identifier the plan's Consumes lines take from earlier plans that
++the code as built does not contain. Fix each one in the plan file, ledger
++it as a ruling, and re-run until it prints `boundary: clean`. The plan runs
++as written after that, so a name it still gets wrong is executed wrong.
+ 
+ When the final review is clean and its fixes are committed, delete this
+ plan's workspace directory — the git history is the record now. Sibling
+@@ -367,6 +386,8 @@ Deferred minors:
+ - README lacks a usage example
+ - recovery.js could split verify/repair into two files
+ 
++Remaining plans: None
++
+ [Delete this plan's workspace — the record now lives in git]
+ 
+ Using superpowers:finishing-a-development-branch.
+diff --git a/skills/executing-plans/scripts/plan-boundary b/skills/executing-plans/scripts/plan-boundary
+new file mode 100755
+index 0000000..1c10d64
+--- /dev/null
++++ b/skills/executing-plans/scripts/plan-boundary
+@@ -0,0 +1,35 @@
++#!/usr/bin/env bash
++# Check the next plan against the code as built before starting it. Collects
++# every backticked identifier in the plan's task-level `Consumes` lines (the
++# Plan Set section lists other plans' consumption and is skipped), drops the ones this plan itself produces
++# (its `Produces` lines and the functions/types its code blocks define), and
++# reports each remaining name that does not occur in the repository's source
++# outside plans/ and docs/. A hit is a plan that says what the code does not:
++# fix the plan, re-run until it prints "boundary: clean".
++#
++# Usage: plan-boundary PLAN_FILE
++# Exit: 0 when clean, 1 when any consumed name is missing, 2 on usage error.
++set -euo pipefail
++[ $# -eq 1 ] || { echo "usage: plan-boundary PLAN_FILE" >&2; exit 2; }
++plan=$1; [ -e "$plan" ] || { echo "no such plan: $plan" >&2; exit 2; }
++if [ -d "$plan" ]; then tmp=$(mktemp); cat "$plan"/00-header.md "$plan"/[0-9][0-9]-*.md > "$tmp" 2>/dev/null; planname=$(basename "$plan"); plan=$tmp; else planname=$(basename "$plan"); fi
++root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
++idents() {  # backticked spans on stdin -> identifiers, one per line; paths and files skipped
++  grep -o '`[^`]*`' | tr -d '`' | grep -v -e '/' -e '\.md$' | grep -o '[A-Za-z_][A-Za-z0-9_]*' | sort -u
++}
++stop='^(and|or|the|from|of|in|a|an|to|with|for|int|string|bool|byte|rune|error|nil|true|false|func|type|struct|var|const|Plan|Task|Tasks|plans|md|s|m|g|t|x|y|dt|None|self|str|list|dict|float|Decimal|date|datetime|time|Duration)$'
++# task-level Consumes lines, plus this plan's own entry in the Plan Set section
++# (the other entries list what other plans consume and are skipped)
++body=$(awk '/^## Plan Set/{skip=1;next} /^## /{skip=0} !skip' "$plan")
++own=$(awk '/^## Plan Set/{f=1;next} /^## /{f=0} f' "$plan" | grep -F -- "$planname" || true)
++consumes=$( { printf '%s\n' "$body" | grep -i -A8 'Consumes'; printf '%s\n' "$own"; } | idents | grep -v -E "$stop" || true)
++produces=$( { printf '%s\n' "$body" | grep -i -A8 'Produces' | idents; awk '/^```/{f=!f;next} f' "$plan" | grep -o -E '^(func(tion)? (\([^)]*\) )?[A-Za-z_][A-Za-z0-9_]*|type [A-Za-z_][A-Za-z0-9_]*|class [A-Za-z_][A-Za-z0-9_]*|def [A-Za-z_][A-Za-z0-9_]*)' | awk '{print $NF}'; } | sort -u || true)
++names=$(comm -23 <(echo "$consumes") <(echo "$produces"))
++[ -n "$names" ] || { echo "boundary: no names consumed from earlier plans in $plan"; exit 0; }
++missing=0; found=0
++while IFS= read -r n; do
++  [ -n "$n" ] || continue
++  if git -C "$root" grep -q -w -- "$n" -- ':!plans/*' ':!docs/*' ':!*.md' 2>/dev/null; then found=$((found+1)); else echo "missing in code: $n  (consumed by $plan)"; missing=1; fi
++done <<< "$names"
++[ $missing -eq 0 ] && { echo "boundary: clean ($found consumed names found in code)"; exit 0; }
++exit 1
+diff --git a/skills/executing-plans/scripts/task-done b/skills/executing-plans/scripts/task-done
+index dd09871..161e4a6 100755
+--- a/skills/executing-plans/scripts/task-done
++++ b/skills/executing-plans/scripts/task-done
+@@ -4,7 +4,7 @@
+ # only if the command succeeded — append the completion line to the ledger.
+ # A failing command records nothing: the task is not complete.
+ #
+-# Usage: task-done PLAN_FILE TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]
++# Usage: task-done PLAN TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]   (PLAN: file or directory)
+ #   BASE is the SHA task-start printed; the completion line records BASE..HEAD.
+ # Exit: the test command's exit status.
+ set -euo pipefail
+diff --git a/skills/executing-plans/scripts/task-start b/skills/executing-plans/scripts/task-start
+index fab75b5..bddb0f5 100755
+--- a/skills/executing-plans/scripts/task-start
++++ b/skills/executing-plans/scripts/task-start
+@@ -5,7 +5,7 @@
+ # cut from. One tool call instead of two, because every call in an inline
+ # session is a turn that re-reads the whole context.
+ #
+-# Usage: task-start PLAN_FILE TASK_NUMBER
++# Usage: task-start PLAN TASK_NUMBER   (PLAN: the plan file, or a plan directory)
+ # Prints:
+ #   brief: <path to the task's brief file>
+ #   base:  <full SHA of HEAD>
+diff --git a/skills/subagent-driven-development/SKILL.md b/skills/subagent-driven-development/SKILL.md
+index 6a2a5d8..7ad97bb 100644
+--- a/skills/subagent-driven-development/SKILL.md
++++ b/skills/subagent-driven-development/SKILL.md
+@@ -20,7 +20,9 @@ ledger and the tool results carry the record.
+ ambiguities, plan defects, a cap you would have asked to exceed — decide
+ them. The spec is the binding authority, the plan is its argument, and your
+ judgment settles what neither answers. Record every decision in the ledger as
+-`Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
++`Ruling: <what you decided> — <why> — <what it costs if wrong> — <plans
++touched: none, or a later plan's file and the line that changes; edit that
++plan now, before the next dispatch>`, and keep
+ going. A wrong ruling costs rework your human partner can see and undo; a
+ session parked on a question costs their whole day and buys nothing.
+ 
+@@ -134,7 +136,7 @@ sequences — the single most expensive failure observed. Track progress in
+ a ledger file, not only in todos.
+ 
+ - Each plan owns a workspace: at skill start, run this skill's
+-  `scripts/sdd-workspace PLAN_FILE` — it prints the plan's git-ignored
++  `scripts/sdd-workspace PLAN` — it prints the plan's git-ignored
+   directory (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to
+   every artifact for THIS plan: ledger, briefs, reports, review packages.
+   Another plan's directory is never yours to read or write.
+@@ -146,7 +148,7 @@ a ledger file, not only in todos.
+   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
+   plan's progress: leave it in place and start your own, fresh.
+ - Create the ledger with its identity as the first line:
+-  `# SDD ledger — plan: <plan file path>`.
++  `# SDD ledger — plan: <plan path>`.
+ - The ledger is your recovery map: the commits it names exist in git even
+   when your context no longer remembers creating them. After compaction,
+   trust the ledger and `git log` over your own recollection.
+@@ -249,7 +251,7 @@ Record BASE (`git rev-parse HEAD`) before dispatching — the review package
+ and fix-round diffs need it.
+ 
+ - **Task brief:** before dispatching an implementer, run this skill's
+-  `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
++  `scripts/task-brief PLAN N` — it extracts the task's full text to a
+   uniquely named file and prints the path. Compose the dispatch so the
+   brief stays the single source of
+   requirements. Your dispatch should contain: (1) one line on where this
+@@ -287,7 +289,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
+ 
+ Implementer subagents report one of four statuses. Handle each appropriately:
+ 
+-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
++**DONE:** Generate the review package (`scripts/review-package PLAN BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+ 
+ **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+ 
+@@ -314,7 +316,7 @@ required. Implementer self-review never replaces the task review; both are
+ needed.
+ 
+ - Hand the reviewer its diff as a file: run this skill's
+-  `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
++  `scripts/review-package PLAN BASE HEAD` and pass the reviewer the file path
+   it prints (or, without bash: `git log --oneline`, `git diff --stat`,
+   and `git diff -U10` for the range, redirected to one uniquely named
+   file). The output never enters your own context, and the reviewer sees
+@@ -393,7 +395,7 @@ output; dispatch the re-review once all three are present. Name the
+ covering test files in the fix message — a one-line fix does not need the
+ whole suite.
+ 
+-**The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
++**The re-review is scoped.** Run `scripts/review-package PLAN FIX_BASE HEAD`
+ where FIX_BASE is the head the previous review saw, and dispatch
+ [re-review-prompt.md](re-review-prompt.md) with the findings list, the
+ brief, the report file, and the printed diff path. The re-reviewer verdicts
+@@ -445,7 +447,7 @@ parked-with-ruling at the cap.
+ ## Final Review
+ 
+ The final whole-branch review gets a package too: run
+-`scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
++`scripts/review-package PLAN MERGE_BASE HEAD` (MERGE_BASE = the commit the
+ branch started from, e.g. `git merge-base main HEAD`) and include the
+ printed path in the final review dispatch, so the final reviewer reads
+ one file instead of re-deriving the branch diff with git commands. Dispatch
+@@ -460,7 +462,7 @@ with the complete findings list — not one fixer per finding.
+ Per-finding fixers each rebuild context and re-run suites; a real
+ session's final-review fix wave cost more than all its tasks combined.
+ Then run exactly one scoped re-review of the fix wave
+-(`scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
++(`scripts/review-package PLAN FIX_BASE HEAD` over the fix range,
+ [re-review-prompt.md](re-review-prompt.md)).
+ Adjudicate any residual findings as in the task loop's breaker: park with
+ rulings, or rule on the load-bearing ones and ledger what you decided. Only
+@@ -477,7 +479,15 @@ with what it costs if wrong. The list is exhaustive: if the ledger holds a
+ ruling, the list holds it. That list is the only place the decisions you
+ took on your human partner's behalf reach them — they read it and rework
+ whatever you got wrong. A ruling that dies with the workspace was a decision
+-made in secret.
++made in secret. Then, under "Remaining plans", the Plan Set lines after this
++plan (`None` if there are none): this plan being complete is not the
++project being complete. When a plan follows this one, finishing this plan
++means starting that one, under the same method and in this session: the
++set was reviewed once, and only the four stops stop you. Before its Task 1,
++run `../executing-plans/scripts/plan-boundary NEXT_PLAN`: it names
++every identifier the plan's Consumes lines take from earlier plans that the
++code as built does not contain. Fix each one in the plan file, ledger it as
++a ruling, and re-run until it prints `boundary: clean`.
+ 
+ When the final whole-branch review is clean and its fixes are merged,
+ delete this plan's workspace (`rm -rf <workspace>`) — the git history is
+@@ -524,7 +534,7 @@ Implementer: [Later]
+   - Self-review: Found I missed --force flag, added it
+   - Committed
+ 
+-[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
++[Run review-package PLAN BASE HEAD; dispatch task reviewer with the printed path]
+ Task reviewer: Spec ✅ - all requirements met, nothing extra.
+   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
+ 
+@@ -539,7 +549,7 @@ Implementer: [No questions]
+   - 8/8 tests passing
+   - Committed
+ 
+-[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
++[Run review-package PLAN BASE HEAD; dispatch task reviewer with the printed path]
+ Task reviewer: Spec ❌:
+   - Missing: Progress reporting (spec says "report every 100 items")
+   Issues (Important): Magic number (100)
+@@ -548,7 +558,7 @@ Task reviewer: Spec ❌:
+ Implementer: Added progress reporting, extracted PROGRESS_INTERVAL constant.
+   Re-ran test/recovery.test.js — 10/10 passing. Fix report appended.
+ 
+-[Run review-package PLAN_FILE FIX_BASE HEAD; dispatch scoped re-review]
++[Run review-package PLAN FIX_BASE HEAD; dispatch scoped re-review]
+ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
+   Magic number — ADDRESSED (src/recovery.js:7). New breakage: none.
+   Verdict: all findings addressed.
+@@ -559,7 +569,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
+ ...
+ 
+ [After all tasks]
+-[Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
++[Run review-package PLAN MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
+ Final reviewer: All requirements met. Deferred minors triaged: none block merge.
+ 
+ [Delete this plan's workspace — the record now lives in git]
+diff --git a/skills/subagent-driven-development/scripts/review-package b/skills/subagent-driven-development/scripts/review-package
+index 31852e2..038b42f 100755
+--- a/skills/subagent-driven-development/scripts/review-package
++++ b/skills/subagent-driven-development/scripts/review-package
+@@ -17,7 +17,7 @@ fi
+ plan=$1
+ base=$2
+ head=$3
+-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
++[ -e "$plan" ] || { echo "no such plan: $plan" >&2; exit 2; }
+ 
+ git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+ git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+diff --git a/skills/subagent-driven-development/scripts/sdd-workspace b/skills/subagent-driven-development/scripts/sdd-workspace
+index 4e2d168..052503a 100755
+--- a/skills/subagent-driven-development/scripts/sdd-workspace
++++ b/skills/subagent-driven-development/scripts/sdd-workspace
+@@ -26,9 +26,9 @@ if [ $# -ne 1 ]; then
+ fi
+ 
+ plan=$1
+-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
++[ -e "$plan" ] || { echo "no such plan: $plan" >&2; exit 2; }
+ 
+-slug=$(basename "$plan" .md)
++slug=$(basename "$plan" .md)   # a plan directory keeps its own name
+ [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
+   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
+ 
+diff --git a/skills/subagent-driven-development/scripts/task-brief b/skills/subagent-driven-development/scripts/task-brief
+index 612e14a..65d35b7 100755
+--- a/skills/subagent-driven-development/scripts/task-brief
++++ b/skills/subagent-driven-development/scripts/task-brief
+@@ -16,7 +16,7 @@ fi
+ 
+ plan=$1
+ n=$2
+-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
++[ -e "$plan" ] || { echo "no such plan: $plan" >&2; exit 2; }
+ 
+ if [ $# -eq 3 ]; then
+   out=$3
+@@ -25,6 +25,14 @@ else
+   out="$dir/task-${n}-brief.md"
+ fi
+ 
++if [ -d "$plan" ]; then
++  # directory plan: the shared header, then this task's own file
++  task=$(ls "$plan"/[0-9][0-9]-*.md 2>/dev/null | awk -v n="$n" '{ f=$0; sub(/.*\//,"",f); if (f+0==n) print $0 }' | head -1)
++  [ -n "$task" ] || { echo "task ${n} not found in ${plan} (no [0-9][0-9]-*.md numbered ${n})" >&2; exit 3; }
++  { [ -f "$plan/00-header.md" ] && cat "$plan/00-header.md"; echo; cat "$task"; } > "$out"
++  echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"
++  exit 0
++fi
+ awk -v n="$n" '
+   /^```/ { infence = !infence }
+   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
+diff --git a/skills/writing-plans/SKILL.md b/skills/writing-plans/SKILL.md
+index 78c7126..70351e0 100644
+--- a/skills/writing-plans/SKILL.md
++++ b/skills/writing-plans/SKILL.md
+@@ -7,21 +7,25 @@ description: Use when you have a spec or requirements for a multi-step task, bef
+ 
+ ## Overview
+ 
+-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+-
+-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
++Write implementation plans for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact test, and that they will make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, which tests prove each task. Document those. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+ 
+ **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+ 
+ **Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+ 
+-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
++**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>/`, a
++directory: `00-header.md` holds everything above the first task (the header
++below), and each task is its own file, `NN-<task-name>.md`, numbered in
++execution order from `01`. A task file is what an implementer reads; the
++header is what every task shares. Nothing is repeated between them.
+ - (User preferences for plan location override this default)
+ 
+ ## Scope Check
+ 
+ If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+ 
++Write every plan the spec needs before handing off, and put the Plan Set section (header, below) in each one, so the set is reviewed once and an executor running any plan knows what follows it and what it must keep true.
++
+ ## File Structure
+ 
+ Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
+@@ -42,18 +46,18 @@ deliverable needs them; split only where a reviewer could meaningfully
+ reject one task while approving its neighbor. Each task ends with an
+ independently testable deliverable.
+ 
+-## Bite-Sized Task Granularity
++## Step Granularity
+ 
+-**Each step is one action (2-5 minutes):**
++**Each step is one action with a checkable result:**
+ - "Write the failing test" - step
+ - "Run it to make sure it fails" - step
+ - "Implement the minimal code to make the test pass" - step
+ - "Run the tests and make sure they pass" - step
+ - "Commit" - step
+ 
+-## Plan Document Header
++## Plan Header (`00-header.md`)
+ 
+-**Every plan MUST start with this header:**
++**Every plan's header file MUST contain this:**
+ 
+ ```markdown
+ # [Feature Name] Implementation Plan
+@@ -88,10 +92,20 @@ break the program. Write the list here, once, with the spec in front of
+ you. Then, for each line, add the test that pins it to the task that
+ owns the code, in that task's own step style.]
+ 
++## Plan Set
++
++[When the spec needs more than one plan (Scope Check), every plan in the
++set, in execution order, one line each: the plan file, what it covers,
++and what it consumes from the plans before it. The same list in every
++plan. `None` when this is the only plan. Executors run the set in this
++order and keep the later plans true: a ruling that changes a name, a
++signature, or a value a later plan consumes is applied to that plan
++before the next task starts.]
++
+ ---
+ ```
+ 
+-## Task Structure
++## Task File (`NN-<task-name>.md`)
+ 
+ ````markdown
+ ### Task N: [Component Name]
+@@ -120,12 +134,11 @@ def test_specific_behavior():
+ Run: `pytest tests/path/test.py::test_name -v`
+ Expected: FAIL with "function not defined"
+ 
+-- [ ] **Step 3: Write minimal implementation**
++- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
+ 
+-```python
+-def function(input):
+-    return expected
+-```
++One line on the approach when the signature and the test leave a choice
++(which library call, which data structure); a code block only for an
++algorithm they do not determine.
+ 
+ - [ ] **Step 4: Run test to verify it passes**
+ 
+@@ -140,28 +153,43 @@ git commit -m "feat: add specific feature"
+ ```
+ ````
+ 
+-## No Placeholders
++## What a Step Contains
+ 
+-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+-- "TBD", "TODO", "implement later", "fill in details"
+-- "Add appropriate error handling" / "add validation" / "handle edge cases"
+-- "Write tests for the above" (without actual test code)
+-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
+-- Steps that describe what to do without showing how (code blocks required for code steps)
+-- References to types, functions, or methods not defined in any task
++A step is done when the implementer can write exactly one reasonable thing
++from it. That is the whole requirement: unambiguous, not complete. Each kind
++of step carries what makes it unambiguous and nothing more:
++
++- **A test step:** the test's name and its assertions, as code, with the
++  spec's exact values in them.
++- **A code step:** the exact signature (name, parameters, return type), the
++  file it lives in, and the specific values the spec pins. The implementer
++  writes the body. A body appears only for an algorithm the signature and
++  tests do not determine, or for exact copy the spec fixes.
++- **A verification step:** the command to run and the output that means it
++  passed.
++- **A reference to another task:** that task's Interfaces block says what
++  to use; the plan does not repeat that task's code.
++
++A plan is the set of decisions the implementer cannot make alone. A plan
++longer than the code it describes has written the code instead. Lines that
++decide nothing ("TBD", "handle edge cases", "add appropriate validation",
++"write tests for the above", a type or function no task defines) are the
++opposite failure, and the self-review catches both.
+ 
+ ## Self-Review
+ 
+-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
++After writing the complete plan (header and every task file), look at the spec with fresh eyes and check the plan against it; `cat` the directory in order to see it whole. This is a checklist you run yourself — not a subagent dispatch.
+ 
+ **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+ 
+-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
++**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both.
+ 
+ **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+ 
+ **4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
+ 
++**5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
++
+ If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+ 
+ ## Execution Handoff
+diff --git a/skills/writing-plans/plan-document-reviewer-prompt.md b/skills/writing-plans/plan-document-reviewer-prompt.md
+deleted file mode 100644
+index 1c12c1d..0000000
+--- a/skills/writing-plans/plan-document-reviewer-prompt.md
++++ /dev/null
+@@ -1,49 +0,0 @@
+-# Plan Document Reviewer Prompt Template
+-
+-Use this template when dispatching a plan document reviewer subagent.
+-
+-**Purpose:** Verify the plan is complete, matches the spec, and has proper task decomposition.
+-
+-**Dispatch after:** The complete plan is written.
+-
+-```
+-Subagent (general-purpose):
+-  description: "Review plan document"
+-  prompt: |
+-    You are a plan document reviewer. Verify this plan is complete and ready for implementation.
+-
+-    **Plan to review:** [PLAN_FILE_PATH]
+-    **Spec for reference:** [SPEC_FILE_PATH]
+-
+-    ## What to Check
+-
+-    | Category | What to Look For |
+-    |----------|------------------|
+-    | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
+-    | Spec Alignment | Plan covers spec requirements, no major scope creep |
+-    | Task Decomposition | Tasks have clear boundaries, steps are actionable |
+-    | Buildability | Could an engineer follow this plan without getting stuck? |
+-
+-    ## Calibration
+-
+-    **Only flag issues that would cause real problems during implementation.**
+-    An implementer building the wrong thing or getting stuck is an issue.
+-    Minor wording, stylistic preferences, and "nice to have" suggestions are not.
+-
+-    Approve unless there are serious gaps — missing requirements from the spec,
+-    contradictory steps, placeholder content, or tasks so vague they can't be acted on.
+-
+-    ## Output Format
+-
+-    ## Plan Review
+-
+-    **Status:** Approved | Issues Found
+-
+-    **Issues (if any):**
+-    - [Task X, Step Y]: [specific issue] - [why it matters for implementation]
+-
+-    **Recommendations (advisory, do not block approval):**
+-    - [suggestions for improvement]
+-```
+-
+-**Reviewer returns:** Status, Issues (if any), Recommendations
