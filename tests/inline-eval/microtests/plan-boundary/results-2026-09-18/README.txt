@@ -14,3 +14,5 @@ inside long sessions mid-flow, after a final review and a fix pass, which
 a single-shot cannot stage. So the micro-test does not discriminate, and
 the boundary-script gate is judged by the full plan-set run instead. The
 interviews of the two failing sessions are the evidence for its form.
+
+X3 (script arm): same ceiling; see the rows in summary.txt and the outputs.

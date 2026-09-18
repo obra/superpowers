@@ -17,3 +17,9 @@ X2-boundary-scan-3     2 3 2
 X2-boundary-scan-4     2 3 2 
 X2-boundary-scan-5     2 3 1 
 X2-boundary-scan-6     3 4 1 
+X3-boundary-script-1   2 3 1 
+X3-boundary-script-2   2 3 1 
+X3-boundary-script-3   2 3 1 
+X3-boundary-script-4   2 3 1 
+X3-boundary-script-5   2 3 1 
+X3-boundary-script-6   2 3 1 
