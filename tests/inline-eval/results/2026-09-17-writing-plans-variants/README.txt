@@ -33,3 +33,17 @@ here did not do). Neither planner dispatched drafter subagents: the
 parallel-drafter orchestration in the first report was the parent's
 invention, not something the skill induces, so "one document, one author"
 is not testable here and stays a proposal.
+
+N1-recipe ("What a Step Contains" replaces "No Placeholders"):
+  cosmic-tetris (capped 40 min)
+                 plans   lines   Go lines  steps  tests  USD    min
+    wpplans-11   5 of 5  8,983   6,093     254    338    11.46  41.7   (finished)
+    wpplans-12   3 of 5  5,985   3,666     185    214     5.34  27.6   (stopped itself)
+  ledgerlite (baseline under the five-line RF wording: 1,371-1,475 lines, 66-79 tests)
+    wpplan-51    707 lines   403 py   50 tests   $0.99   4.7 min
+    wpplan-52    774 lines   428 py   47 tests   $1.49   6.4 min
+    wpplan-53    938 lines   554 py   68 tests   $1.37   6.1 min
+  Roughly halves the plan on both fixtures (ledgerlite 707-938 vs 1,371-1,475;
+  cosmic 9k for all five plans vs 11k for three) with the implied cases still
+  named 3/3. The recipe keeps full test code by design, and tests are now
+  most of the fenced lines: the test count is the remaining volume driver.
