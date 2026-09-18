@@ -65,3 +65,28 @@ Q2-reader-recipe (Q1 + N1):
   about half an hour, against an extrapolated 17-18k lines and 75 minutes
   under the current wording (the report's real session: 19,393 lines,
   5h14m). Tests are ~90% of the remaining fenced code (T1 tests that).
+
+F1-first-plan ("write the first plan, then stop and hand off"), cosmic, 2 reps:
+  both wrote ONE plan (the engine phase), 3,120 / 3,256 lines, 82 / 91
+  tests, 20-22 min, $4.40 / $3.95, then handed off. Works as a brake 2/2;
+  the plan it writes is baseline-sized (current wording underneath).
+
+P1-proportion (self-review item 5: plan length vs spec; bodies -> signatures
+and test assertions when code blocks dominate), current wording otherwise:
+  cosmic, 2 reps, both finished on their own:
+    wpplans-51  3 plans covering all five phases   2,968 lines   842 Go   223 tests   16.8 min   $3.57
+    wpplans-52  5 plans + a 29-line overview       3,615 lines 1,003 Go   284 tests   19.0 min   $4.62
+      (498-921 lines per plan: the report's "five plans of 400 lines")
+  ledgerlite: 756 / 853 / 934 lines, 49-54 tests, implied cases 8/9
+  The largest effect of any single edit: a full plan set for the report's
+  spec in ~3-3.6k lines and under 20 minutes, against 17-18k lines and 75
+  minutes extrapolated for the current wording. Consistent with the earlier
+  finding that a stated bound is the form that moves Opus's volume where
+  prose principles do not. The plans keep the Interfaces blocks (the part
+  the report's author found useful) and shrink code to signatures.
+
+Execution check, Q2 (reader + recipe) ledgerlite plan from wpplan-71 (675
+lines), inline on Sonnet 5, 3 reps: 9/9 probes handled, suite green,
+$2.36 / $2.77 / $2.50 (hand-written terse plan: $2.89; Opus full plan:
+$3.71). A skill-written terse plan executes as well as the hand-written one.
+An execution check of a P1 plan (wpplan-81) is running (spike 111-113).
