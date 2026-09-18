@@ -55,6 +55,7 @@ Two new skills: `diagnosing-superpowers` figures out what went wrong in a sessio
 
 - `docs/testing.md` describes the Quorum eval lab, replacing stale Drill references and commands. (#2135)
 - README: a "When Something Goes Wrong" section pointing at `diagnosing-superpowers`.
+- **`AGENTS.md` is now the canonical contributor guidelines.** `CLAUDE.md` is a one-line reference to it. `AGENTS.md` used to be a symlink to `CLAUDE.md`, which Muse's installer rejects. (#2317)
 - Adopted the Prime Radiant Community Code of Conduct. (#2122)
 
 ## v6.3.0 (2026-08-12)
