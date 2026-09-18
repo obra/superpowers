@@ -2,12 +2,13 @@
 
 ## v6.4.0 (2026-09-18)
 
-Two new skills: `diagnosing-superpowers` figures out what went wrong in a session, and `proving-it-works-with-a-movie` records proof that software actually runs. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. It also adds support for three new harnesses: OpenCode 2.0, Muse, and Qwen Code.
+The new `diagnosing-superpowers` skill figures out what went wrong in a session. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. This release also adds support for three new harnesses: OpenCode 2.0, Muse, and Qwen Code.
+
+The `proving-it-works-with-a-movie` import (#2214) has been reverted because its code quality does not meet the release bar; the movie skill is not included.
 
 ### New Skills
 
 - **`diagnosing-superpowers`**: when a session goes wrong (repeated work, an ignored plan, a skill that didn't fire, a surprising bill), ask your agent to "figure out what went wrong with superpowers in this session." It pins down the problem with you, reads the transcripts on disk, and reports what happened with `path:line` evidence for every finding. On request it builds a scrubbed bundle or drafts a GitHub issue for your approval, with the cited evidence left intact. Works on the current session or a past one. (#2236, #2287)
-- **`proving-it-works-with-a-movie`**: record a demo, screencast, or proof video of software actually running. Four routes (browser motion, terminal, composited stills, a reel rendered from a run's own log), narration and subtitles, and a `check-movie` gate that catches the defects nobody notices until someone watches: a frozen picture, narration over a dead screen, dropped words. Everything shown actually ran. Needs `ffmpeg` and `uv`, plus Chrome or Edge for title cards. Terminal recordings also need `ttyd`, and browser motion uses Playwright; the voice and transcription models download on first use. Works on macOS, Linux, and native Windows. (#2214, #2275)
 
 ### Executing Plans
 
