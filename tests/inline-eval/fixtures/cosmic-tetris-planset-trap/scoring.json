@@ -1,0 +1,1 @@
+{"tasks": {}, "impl_dir": "internal", "test_marker": "testing", "suite": "go test ./... 2>&1 | tail -3"}

@@ -1,0 +1,1 @@
+The C3 (plan-set) writing-plans output for cosmic-tetris (wpplans-91: five plans), with a planted cross-plan conflict: plans 1 and 2 call the engine time entry point Tick where the spec and plans 3-5 say Advance. Executed as a SET (INLINE_EVAL_PROMPT names plans/), to test rulings that touch later plans and continuation past plan 1.
