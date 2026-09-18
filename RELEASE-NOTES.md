@@ -1,21 +1,25 @@
 # Superpowers Release Notes
 
-## v6.4.0 (2026-09-17)
+## v6.4.0 (2026-09-18)
+
+Two new skills: `diagnosing-superpowers` figures out what went wrong in a session, and `proving-it-works-with-a-movie` records proof that software actually runs. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development.
 
 ### New Skills
 
-- **`diagnosing-superpowers`**: when a session goes wrong (repeated work, an ignored plan, a skill that didn't fire, a surprising bill), ask your agent to "figure out what went wrong with superpowers in this session." It pins down the problem with you, reads the transcripts on disk, and reports what happened with `path:line` evidence for every finding. On request it builds a scrubbed bundle or drafts a GitHub issue for your approval; scrubbing keeps the cited evidence intact so a maintainer can verify the report. Works on the current session or a past one. (#2236, #2287)
-- **`proving-it-works-with-a-movie`**: record a demo, screencast, or proof video of software actually running. Four routes (browser motion, terminal, composited stills, a reel rendered from a run's own log), narration and subtitles, and a `check-movie` gate that catches the defects nobody notices until someone watches: a frozen picture, narration over a dead screen, dropped words. It never stages or reenacts a beat. Needs `uv` and `ffmpeg`; works on macOS, Linux, and native Windows. (#2214, #2275)
+- **`diagnosing-superpowers`**: when a session goes wrong (repeated work, an ignored plan, a skill that didn't fire, a surprising bill), ask your agent to "figure out what went wrong with superpowers in this session." It pins down the problem with you, reads the transcripts on disk, and reports what happened with `path:line` evidence for every finding. On request it builds a scrubbed bundle or drafts a GitHub issue for your approval, with the cited evidence left intact. Works on the current session or a past one. (#2236, #2287)
+- **`proving-it-works-with-a-movie`**: record a demo, screencast, or proof video of software actually running. Four routes (browser motion, terminal, composited stills, a reel rendered from a run's own log), narration and subtitles, and a `check-movie` gate that catches the defects nobody notices until someone watches: a frozen picture, narration over a dead screen, dropped words. Everything shown actually ran. Needs `ffmpeg` and `uv`, and some routes need more; works on macOS, Linux, and native Windows. (#2214, #2275)
 
 ### Executing Plans
 
-- **Inline execution is now a real mode.** `executing-plans` was a 64-line stub that measured the same as running with no plugin at all. It is rebuilt: the session implements every task itself under the same workspace, ledger, and stopping rules as subagent-driven development, then dispatches one fresh whole-branch review on the most capable model. `task-start` and `task-done` helpers keep the ledger and test log honest. It is the cheapest way to run a plan and runs well on a mid-tier session model. The old batch-with-human-checkpoints behavior is gone. (#2318)
+**Heads up:** `executing-plans` no longer stops every few tasks to check in with you. It runs the whole plan, then gets one review at the end.
+
+- **Native (inline) execution is now a real mode.** `executing-plans` was a 64-line stub that measured the same as running with no plugin at all. It is rebuilt: the session implements every task itself under the same workspace, ledger, and stopping rules as subagent-driven development, then dispatches one fresh whole-branch review on the most capable model. `task-start` and `task-done` helpers keep the ledger and test log honest. It is the cheapest way to run a plan and runs well on a mid-tier session model. (#2318)
+- **The plan handoff offers two approaches, Subagent-driven and Native,** says what each costs, and recommends one for this plan with a reason drawn from the plan. If you already chose one, it keeps your choice. (#2258, #2318)
 
 ### Writing Plans
 
 - **You review the saved plan before anything runs.** Approving an idea or a scope no longer counts as approving a plan you haven't seen. (#2258)
-- **The execution handoff names two approaches, Subagent-driven and Native,** says what each costs, and recommends one for this plan with a reason drawn from the plan. If you already chose a method, it keeps your choice and asks only for the plan review. (#2258, #2318)
-- **Plans carry a Review Focus section**: the five inputs or failure modes the spec implies but no task's tests exercise, each pinned by a test in the task that owns the code. In evals every implementer shipped the same crash on an input the spec implied but never named. (#2319)
+- **Plans carry a Review Focus section**: up to five inputs or failure modes the spec implies but no task's tests exercise, each pinned by a test in the task that owns the code. In evals, every implementer shipped the same crash on an input the spec implied but never named; this section exists to catch that. (#2319)
 
 ### Brainstorming
 
@@ -23,12 +27,12 @@
 
 ### Code Review
 
-- **Reviewers treat the spec as a vision document.** Behavior the spec is silent on is graded by what a reasonable person using the software would expect, so a crash on an unnamed input no longer slides through as Minor. A "Declined to judge" list makes every scoping decision visible, and the executor rules on each line. (#2319)
+- **Reviewers judge behavior the spec doesn't mention by what a reasonable user would expect,** so a crash on an unnamed input no longer slides through as Minor. A "Declined to judge" list shows what the reviewer skipped, and the session running the plan decides each one. (#2319)
 - The multi-commit `BASE_SHA` alternative is now `git merge-base origin/main HEAD`. A bare `origin/main` showed main's newer files as phantom deletions once main moved past the branch point. (#2133, #2118)
 
 ### Test-Driven Development
 
-- **The project's suite defines green, not just your test file.** When a task named one test file, sessions ran anything beyond it in 1 of 12 probe runs and never saw a broken neighbor. The skill now says to run the project's test command and report every failure by name, including ones you didn't cause. (#2110)
+- **The project's suite defines green, not just your test file.** When a task named one test file, sessions ran only that file in 11 of 12 probe runs, so a broken test next door went unseen. The skill now says to run the project's test command and report every failure by name, including ones you didn't cause. (#2110)
 
 ### Subagent-Driven Development
 
@@ -40,7 +44,7 @@
 - **OpenCode 2.0.4+** is supported alongside V1. Skills register through V2's native API, and the bootstrap survives continuation, restart, forks, and compaction. Delegated child sessions no longer receive the controller's bootstrap. (#2106, #2306)
 - **Muse**: native plugin manifest and SessionStart hook. `muse plugins install ./` then `muse plugins approve superpowers`. (#2317)
 - **Qwen Code** added to the install docs: `qwen extensions install obra/superpowers`. (#2132)
-- **Claude Code** gets a platform reference describing an opt-in nested orchestrator: running the subagent-driven controller one layer down on a mid-tier model measured about half the cost and wall clock. (#2320)
+- **Claude Code** can run the subagent-driven controller one layer down, as a nested subagent on a mid-tier model. It measured about half the cost and wall clock. It's opt-in: ask for it, or tell your agent your session model is too expensive to spend on coordination. (#2320)
 
 ### Fixes
 
@@ -51,7 +55,6 @@
 
 - `docs/testing.md` describes the Quorum eval lab, replacing stale Drill references and commands. (#2135)
 - README: a "When Something Goes Wrong" section pointing at `diagnosing-superpowers`.
-- `AGENTS.md` is now the regular file and `CLAUDE.md` points at it; Muse's installer rejects symlinks.
 - Adopted the Prime Radiant Community Code of Conduct. (#2122)
 
 ## v6.3.0 (2026-08-12)
