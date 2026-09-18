@@ -20,6 +20,8 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+Write every plan the spec needs before handing off, and put the Plan Set section (header, below) in each one, so the set is reviewed once and an executor running any plan knows what follows it and what it must keep true.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
@@ -85,6 +87,16 @@ meet, and its silence on an input is not permission for that input to
 break the program. Write the list here, once, with the spec in front of
 you. Then, for each line, add the test that pins it to the task that
 owns the code, in that task's own step style.]
+
+## Plan Set
+
+[When the spec needs more than one plan (Scope Check), every plan in the
+set, in execution order, one line each: the plan file, what it covers,
+and what it consumes from the plans before it. The same list in every
+plan. `None` when this is the only plan. Executors run the set in this
+order and keep the later plans true: a ruling that changes a name, a
+signature, or a value a later plan consumes is applied to that plan
+before the next task starts.]
 
 ---
 ```

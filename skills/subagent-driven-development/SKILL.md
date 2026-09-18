@@ -477,7 +477,11 @@ with what it costs if wrong. The list is exhaustive: if the ledger holds a
 ruling, the list holds it. That list is the only place the decisions you
 took on your human partner's behalf reach them — they read it and rework
 whatever you got wrong. A ruling that dies with the workspace was a decision
-made in secret.
+made in secret. Then, under "Remaining plans", the Plan Set lines after this
+plan (`None` if there are none): this plan being complete is not the
+project being complete. When a plan follows this one, finishing this plan
+means starting that one, under the same method and in this session: the
+set was reviewed once, and only the four stops stop you.
 
 When the final whole-branch review is clean and its fixes are merged,
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
