@@ -101,17 +101,22 @@ skills. This behavior is unchanged by the migration.
 
 ## Updating
 
-### V1 (`opencode`)
-
 OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
 and Bun versions pin that resolved git dependency in a lockfile or cache, so a
 restart may not pick up the newest Superpowers commit. If updates do not appear,
 clear OpenCode's package cache or reinstall the plugin.
 
-### V2 (`opencode` 2.0.4 or later)
+To pin a specific version, add a tag or commit to the spec (same form for the
+V1 `plugin` key and the V2 `plugins` key):
 
-For V2, a pin must reference a release or immutable commit containing this
-integration.
+```json
+{
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.3.0"]
+}
+```
+
+On V2, pin a tag or commit that includes OpenCode V2 support; `v6.3.0` and
+earlier releases load only on V1.
 
 ## How It Works
 
@@ -127,8 +132,11 @@ The plugin does two things, using host-flavor-specific APIs:
 Controller sessions receive the using-superpowers bootstrap in transient model
 context. Delegated child sessions keep access to native skills but do not receive
 the controller bootstrap. A manual fork without a parent session keeps controller
-behavior. After V2 native compaction removes all user messages, the plugin appends
-a transient bootstrap message after the checkpoint; saved history is unchanged.
+behavior. When V2 native compaction retains earlier user messages (the default
+`compaction.keep.tokens` budget), the bootstrap goes into the first retained user
+message ahead of the checkpoint, as in an uncompacted session. When compaction
+removes all user messages, the plugin appends a transient bootstrap message after
+the checkpoint. Saved history is unchanged either way.
 
 If session lookup fails, the plugin keeps bootstrap for that request and retries
 on the next request. Failed lookups are not cached as controller decisions.
@@ -174,13 +182,14 @@ In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_
 opencode run --print-logs "hello" 2>&1 | grep -i superpowers
 ```
 
-**V2:** Check the server log:
+**V2:** Plugins load in the background server, whose logs `--print-logs` only
+shows with `--standalone`:
 
 ```
-opencode service status
+opencode run --standalone --print-logs "hello" 2>&1 | grep -i superpowers
 ```
 
-Then inspect `~/.local/share/opencode/log/opencode.log`, filtering for `role=server`.
+Or inspect `~/.local/share/opencode/log/opencode.log`, filtering for `role=server`.
 
 Also verify the plugin path in your `opencode.json` is correct and that you're
 running a recent version of OpenCode.
@@ -197,14 +206,15 @@ package:
 npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
 ```
 
-Then use the installed package path in `opencode.json` for your OpenCode
-version:
+Then use the absolute path of the installed package in `opencode.json` for your
+OpenCode version. OpenCode does not expand `~`; a `~/...` entry is treated as a
+package name, not a local directory.
 
 **V1:**
 
 ```json
 {
-  "plugin": ["~/.config/opencode/node_modules/superpowers"]
+  "plugin": ["C:\\Users\\<you>\\.config\\opencode\\node_modules\\superpowers"]
 }
 ```
 
@@ -212,7 +222,7 @@ version:
 
 ```json
 {
-  "plugins": ["~/.config/opencode/node_modules/superpowers"]
+  "plugins": ["C:\\Users\\<you>\\.config\\opencode\\node_modules\\superpowers"]
 }
 ```
 

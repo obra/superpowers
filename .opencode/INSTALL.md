@@ -69,23 +69,31 @@ use skill tool to load brainstorming
 
 ## Updating
 
-### OpenCode V1
-
-OpenCode V1 installs Superpowers through a git-backed package spec. Some OpenCode
+OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
 and Bun versions pin that resolved git dependency in a lockfile or cache, so a
 restart may not pick up the newest Superpowers commit. If updates do not appear,
 clear OpenCode's package cache or reinstall the plugin.
 
-### OpenCode V2
+To pin a specific version, add a tag or commit to the spec (same form for the
+V1 `plugin` key and the V2 `plugins` key):
 
-For V2, a pin must reference a release or immutable commit containing this
-integration.
+```json
+{
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.3.0"]
+}
+```
+
+On V2, pin a tag or commit that includes OpenCode V2 support; `v6.3.0` and
+earlier releases load only on V1.
 
 ## Troubleshooting
 
 ### Plugin not loading
 
-1. Check logs: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`
+1. Check logs. V1: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`.
+   V2 loads plugins in the background server, so add `--standalone`:
+   `opencode run --standalone --print-logs "hello" 2>&1 | grep -i superpowers`,
+   or inspect `~/.local/share/opencode/log/opencode.log` filtering for `role=server`.
 2. Verify the plugin line in your `opencode.json`
 3. Make sure you're running a recent version of OpenCode
 
@@ -101,14 +109,15 @@ package:
 npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
 ```
 
-Then use the installed package path in `opencode.json` for your OpenCode
-version:
+Then use the absolute path of the installed package in `opencode.json` for your
+OpenCode version. OpenCode does not expand `~`; a `~/...` entry is treated as a
+package name, not a local directory.
 
 **V1:**
 
 ```json
 {
-  "plugin": ["~/.config/opencode/node_modules/superpowers"]
+  "plugin": ["C:\\Users\\<you>\\.config\\opencode\\node_modules\\superpowers"]
 }
 ```
 
@@ -116,7 +125,7 @@ version:
 
 ```json
 {
-  "plugins": ["~/.config/opencode/node_modules/superpowers"]
+  "plugins": ["C:\\Users\\<you>\\.config\\opencode\\node_modules\\superpowers"]
 }
 ```
 
