@@ -1,0 +1,1 @@
+Same design and probes as fixtures/ledgerlite; the hand-written terse plan split into a directory: plan/00-header.md plus one file per task. Executors and scripts under test must accept a plan directory (sizing/D1-dirplan).
