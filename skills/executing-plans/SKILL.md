@@ -293,9 +293,15 @@ in the rulings list. There is no second fix pass.
 Before you delete anything, collect every ledger line containing
 `Ruling:` into your final message under "Rulings I made", in the order you
 made them, each with what it costs if wrong, and every `minor (deferred)`
-line under "Deferred minors". Both lists are exhaustive. Your final
-message is the only place the decisions you took on your human partner's
-behalf — and the findings you chose not to act on — reach them.
+line under "Deferred minors". Both lists are exhaustive. Then, under
+"Remaining plans", the Plan Set lines after this plan (`None` if there are
+none): this plan being complete is not the project being complete. Your
+final message is the only place the decisions you took on your human
+partner's behalf — and the findings you chose not to act on — reach them.
+
+When a plan follows this one in the Plan Set, finishing this plan means
+starting that one, under the same method and in this session: the set was
+reviewed once, and only the four stops stop you.
 
 When the final review is clean and its fixes are committed, delete this
 plan's workspace directory — the git history is the record now. Sibling
@@ -366,6 +372,8 @@ Rulings I made:
 Deferred minors:
 - README lacks a usage example
 - recovery.js could split verify/repair into two files
+
+Remaining plans: None
 
 [Delete this plan's workspace — the record now lives in git]
 
