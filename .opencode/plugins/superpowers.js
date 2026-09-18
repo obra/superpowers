@@ -25,8 +25,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
 
 // Simple frontmatter extraction (avoid dependency on skills-core for
-// bootstrap). Handles plain `key: value` lines, quoted values, YAML block
-// scalar markers (`>`, `|`) with indented continuation lines, and CRLF line
+// bootstrap). Handles plain `key: value` lines, quoted values (including
+// quotes that close on an indented continuation line), YAML block scalar
+// markers (`>`, `|`) with indented continuation lines, and CRLF line
 // endings. Not a full YAML parser — nested maps flatten into their parent
 // key's value, which is fine for the name/description fields consumed here.
 const extractAndStripFrontmatter = (content) => {
@@ -43,7 +44,7 @@ const extractAndStripFrontmatter = (content) => {
     const colonIdx = line.indexOf(':');
     if (colonIdx > 0 && !/^\s/.test(line)) {
       const key = line.slice(0, colonIdx).trim();
-      const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
+      const value = line.slice(colonIdx + 1).trim();
       // Block scalar markers (>, |, optionally with +/- chomping) carry no
       // value themselves; the indented lines that follow do.
       frontmatter[key] = /^(>[+-]?|\|[+-]?)$/.test(value) ? '' : value;
@@ -54,6 +55,13 @@ const extractAndStripFrontmatter = (content) => {
       // enough for the single-line name/description fields consumed here.
       frontmatter[lastKey] = `${frontmatter[lastKey]} ${line.trim()}`.trim();
     }
+  }
+
+  // A quoted value may close on a continuation line, so unquote only once
+  // the value is fully assembled: strip exactly one matching surrounding
+  // pair and leave unbalanced quotes alone.
+  for (const key of Object.keys(frontmatter)) {
+    frontmatter[key] = frontmatter[key].replace(/^(["'])([\s\S]*)\1$/, '$2');
   }
 
   return { frontmatter, content: body };

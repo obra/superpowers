@@ -17,5 +17,6 @@ node "$SCRIPT_DIR/test-skill-registration.mjs" "$OPENCODE_CONFIG_DIR/plugins/sup
 
 echo "  [PASS] Skill payloads match the 2.0.4 Skill.Info contract"
 echo "  [PASS] A rejected draft.add() skips one skill without aborting the rest"
+echo "  [PASS] Quoted and multi-line frontmatter values register unquoted"
 echo ""
 echo "=== All skill registration tests passed ==="

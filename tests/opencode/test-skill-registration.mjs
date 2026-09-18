@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { pathToFileURL } from 'url';
 
@@ -65,6 +66,11 @@ for (const skill of added) {
   if (typeof skill.content !== 'string' || !skill.content.trim()) failures.push(`skill "${skill.id}" missing non-empty "content"`);
   if ('description' in skill && typeof skill.description !== 'string') {
     failures.push(`skill "${skill.id}": "description" must be a string when present`);
+  } else if ('description' in skill && /["']$/.test(skill.description)) {
+    failures.push(`skill "${skill.id}": description ends with a dangling quote: ${JSON.stringify(skill.description)}`);
+  }
+  if (typeof skill.content === 'string' && skill.content.startsWith('---')) {
+    failures.push(`skill "${skill.id}": content still starts with the frontmatter delimiter`);
   }
 }
 
@@ -110,6 +116,59 @@ if (typeof survivingContextHook !== 'function') {
     (part) => part.type === 'text' && part.text.startsWith('<EXTREMELY_IMPORTANT>\nYou have superpowers.')
   ).length;
   if (count !== 1) failures.push(`expected surviving bootstrap once, got ${count}`);
+}
+
+// --- Run 3: quoted and multi-line frontmatter values ---------------------
+// The description is what the host shows in its skill list. A quoted value
+// that wraps onto indented continuation lines must register as one unquoted
+// line, so exercise each layout against a synthetic install: a copy of the
+// plugin next to fixture skills, laid out like a real package root.
+const frontmatterFixtures = {
+  'multi-line-double': {
+    frontmatter: 'description: "Use when foo happens\n  and bar continues\n  and baz ends"',
+    expected: 'Use when foo happens and bar continues and baz ends',
+  },
+  'multi-line-single': {
+    frontmatter: "description: 'Use when foo happens\n  and bar continues\n  and baz ends'",
+    expected: 'Use when foo happens and bar continues and baz ends',
+  },
+  'single-line-quoted': {
+    frontmatter: 'description: "Plain quoted"',
+    expected: 'Plain quoted',
+  },
+  'block-scalar': {
+    frontmatter: 'description: >\n  Folded line one\n  line two',
+    expected: 'Folded line one line two',
+  },
+};
+const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'superpowers-frontmatter-'));
+try {
+  const fixturePlugin = path.join(fixtureRoot, '.opencode', 'plugins', 'superpowers.js');
+  fs.mkdirSync(path.dirname(fixturePlugin), { recursive: true });
+  fs.copyFileSync(pluginPath, fixturePlugin);
+  for (const [id, { frontmatter }] of Object.entries(frontmatterFixtures)) {
+    const skillDir = path.join(fixtureRoot, 'skills', id);
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), `---\nname: ${id}\n${frontmatter}\n---\n# Title\n\nBody.\n`);
+  }
+  const fixtureMod = await import(pathToFileURL(fixturePlugin).href);
+  const fixtureAdded = [];
+  await fixtureMod.default.setup(makeCtx({ add: (skill) => fixtureAdded.push(skill) }));
+  for (const [id, { expected }] of Object.entries(frontmatterFixtures)) {
+    const skill = fixtureAdded.find((s) => s.id === id);
+    if (!skill) {
+      failures.push(`fixture "${id}": expected setup() to register it`);
+      continue;
+    }
+    if (skill.description !== expected) {
+      failures.push(`fixture "${id}": expected description ${JSON.stringify(expected)}, got ${JSON.stringify(skill.description)}`);
+    }
+    if (skill.content.startsWith('---')) {
+      failures.push(`fixture "${id}": content still starts with the frontmatter delimiter`);
+    }
+  }
+} finally {
+  fs.rmSync(fixtureRoot, { recursive: true, force: true });
 }
 
 const result = {
