@@ -89,4 +89,6 @@ Execution check, Q2 (reader + recipe) ledgerlite plan from wpplan-71 (675
 lines), inline on Sonnet 5, 3 reps: 9/9 probes handled, suite green,
 $2.36 / $2.77 / $2.50 (hand-written terse plan: $2.89; Opus full plan:
 $3.71). A skill-written terse plan executes as well as the hand-written one.
-An execution check of a P1 plan (wpplan-81) is running (spike 111-113).
+Execution check, P1 (proportion) ledgerlite plan from wpplan-81 (756 lines),
+inline on Sonnet 5, 3 reps: 9/9 probes handled, suite green, $2.91 / $3.06 /
+$2.67. Both skill-written terse plans execute as well as the hand-written one.
