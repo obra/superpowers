@@ -190,12 +190,33 @@ assert.equal(bootstrapCount(recoveredChild), 0);
 assert.equal(recoveredChild.messages.length, 1);
 assert.equal(retryChild.lookups.length, 2);
 
+const newPromptAfterCheckpoint = compactedEvent('new-prompt-after-checkpoint-root');
+newPromptAfterCheckpoint.messages.push({ role: 'user', content: [{ type: 'text', text: 'Continue' }] });
+await compactedRoot.invoke(newPromptAfterCheckpoint);
+assert.equal(bootstrapCount(newPromptAfterCheckpoint), 1);
+assert.equal(newPromptAfterCheckpoint.messages.length, 2);
+assert.equal(newPromptAfterCheckpoint.messages[1].content.length, 2);
+
 const retainedUser = compactedEvent('retained-user-root');
-retainedUser.messages.push({ role: 'user', content: [{ type: 'text', text: 'Continue' }] });
+retainedUser.messages.unshift({ role: 'user', content: [{ type: 'text', text: 'Keep going' }] });
+const retainedCheckpoint = structuredClone(retainedUser.messages[1]);
 await compactedRoot.invoke(retainedUser);
 assert.equal(bootstrapCount(retainedUser), 1);
 assert.equal(retainedUser.messages.length, 2);
-assert.equal(retainedUser.messages[1].content.length, 2);
+assert.equal(retainedUser.messages[0].content.length, 2);
+assert.ok(retainedUser.messages[0].content[0].text.startsWith(marker));
+assert.equal(retainedUser.messages[0].content[1].text, 'Keep going');
+assert.deepEqual(retainedUser.messages[1], retainedCheckpoint);
+await compactedRoot.invoke(retainedUser);
+assert.equal(bootstrapCount(retainedUser), 1);
+assert.equal(retainedUser.messages.length, 2);
+
+const retainedUserChild = compactedEvent('retained-user-child');
+retainedUserChild.messages.unshift({ role: 'user', content: [{ type: 'text', text: 'Keep going' }] });
+const originalRetainedUserChild = structuredClone(retainedUserChild);
+await compactedChild.invoke(retainedUserChild);
+assert.equal(bootstrapCount(retainedUserChild), 0);
+assert.deepEqual(retainedUserChild, originalRetainedUserChild);
 const empty = { sessionID: 'empty', messages: [] };
 await compactedRoot.invoke(empty);
 assert.deepEqual(empty.messages, []);
