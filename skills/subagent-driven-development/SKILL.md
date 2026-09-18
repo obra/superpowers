@@ -64,6 +64,7 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
+        "Write dispatched line to ledger (Task N: dispatched base, brief)" [shape=box];
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
@@ -90,7 +91,8 @@ digraph process {
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Setup: worktree, ledger check, read plan, pre-flight review" -> "Write dispatched line to ledger (Task N: dispatched base, brief)";
+    "Write dispatched line to ledger (Task N: dispatched base, brief)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
@@ -113,7 +115,7 @@ digraph process {
     "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
     "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
     "Append completion to ledger, mark todo complete" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Write dispatched line to ledger (Task N: dispatched base, brief)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
@@ -139,12 +141,20 @@ a ledger file, not only in todos.
   every artifact for THIS plan: ledger, briefs, reports, review packages.
   Another plan's directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, tasks with a `Task <N>: complete` line are DONE
-  — do not re-dispatch them; resume at the first task without one. A task
-  whose last line is a fix round is mid-loop: resume the loop at the next
-  round. A ledger whose first line names a different plan file — or a stray
-  ledger at the old flat path `.superpowers/sdd/progress.md` — is another
-  plan's progress: leave it in place and start your own, fresh.
+  line names your plan file, each task's last line tells you its state:
+  - `complete` → DONE. Do not re-dispatch.
+  - `dispatched` → interrupted mid-flight. Do not re-dispatch blind. Run
+    `git log <base>..HEAD` using the base from that line:
+    - No commits → the implementer landed nothing. Re-dispatch normally.
+    - Commits present → the work exists but was never reviewed. Generate
+      the review package with the recorded base
+      (`bash scripts/review-package PLAN_FILE <base> HEAD`) and dispatch
+      the task reviewer, entering the normal review loop at that point.
+  - No line → never started. Dispatch normally.
+  A task whose last line is a fix round is mid-loop: resume the loop at the
+  next round. A ledger whose first line names a different plan file — or a
+  stray ledger at the old flat path `.superpowers/sdd/progress.md` — is
+  another plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
 - The ledger is your recovery map: the commits it names exist in git even
@@ -245,8 +255,10 @@ child is noticed within minutes, not at the end of the session.
 
 ### 1. Dispatch the implementer
 
-Record BASE (`git rev-parse HEAD`) before dispatching — the review package
-and fix-round diffs need it.
+Record BASE (`git rev-parse HEAD`) and append
+`Task <N>: dispatched (base <base7>, brief <brief-path>) <ISO-timestamp>`
+to the ledger before dispatching — the review package and fix-round diffs
+need it, and the ledger line is the durable record that survives an outage.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `bash scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -287,7 +299,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the base from the `dispatched` ledger line — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -512,6 +524,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 Task 1: Hook installation script
 
+[Ledger: Task 1: dispatched (base a1b2c3d, brief .superpowers/sdd/feature-plan/task-1-brief.md) 2026-09-12T18:40Z]
 [Run task-brief for Task 1; dispatch implementer with brief + report paths + context]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
