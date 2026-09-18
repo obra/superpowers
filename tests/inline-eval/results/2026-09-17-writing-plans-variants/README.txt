@@ -92,3 +92,12 @@ $3.71). A skill-written terse plan executes as well as the hand-written one.
 Execution check, P1 (proportion) ledgerlite plan from wpplan-81 (756 lines),
 inline on Sonnet 5, 3 reps: 9/9 probes handled, suite green, $2.91 / $3.06 /
 $2.67. Both skill-written terse plans execute as well as the hand-written one.
+
+T1-test-lines (Q2 + tests as one line each: name, call, expected; the
+implementer writes the test file), ledgerlite:
+  wpplan-91  394 lines   64 test lines   $0.84   implied cases 3/3
+  wpplan-92  384 lines   65 test lines   $0.61   2/3
+  wpplan-93  352 lines   81 test lines   $0.82   3/3
+  No fenced code at all in two of three. The plan is Interfaces blocks,
+  a "Pinned decisions" list the planner added on its own, and one-line
+  tests. Cosmic reps and the execution check (spike 101-103) follow.
