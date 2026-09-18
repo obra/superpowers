@@ -103,7 +103,8 @@ implementer writes the test file), ledgerlite:
   tests. Cosmic reps and the execution check (spike 101-103) follow.
   cosmic:
     wpplans-61  3 plans, all five phases   3,073 lines   26 Go lines   39 tasks   27.7 min   $6.03
-    wpplans-62  died at 5.5 min (a synthetic harness message, no plan); replaced by wpplans-63
+    wpplans-62  died at 5.5 min (Bedrock "unexpected error", no plan); replaced by
+    wpplans-63  3 plans, all five phases   2,257 lines   55 Go lines   37 tasks   17.1 min   $4.15
   Execution check, T1 ledgerlite plan from wpplan-91 (394 lines, no code),
   inline on Sonnet 5, 3 reps: 9/9 probes, suite green, the executor wrote
   66-69 tests from the one-line list, $3.36 / $3.14 / $2.89, 13 min each.
