@@ -11,13 +11,14 @@ import { pathToFileURL } from 'url';
 // the whole plugin ("Plugin disabled after skill.transform failed") and
 // takes the bootstrap hook down with it — see PR #2106 review by 80avin.
 
-const [, , pluginPath] = process.argv;
+const [, , inputPath] = process.argv;
 
-if (!pluginPath) {
+if (!inputPath) {
   console.error('Usage: node test-skill-registration.mjs PLUGIN_PATH');
   process.exit(2);
 }
 
+const pluginPath = fs.realpathSync(inputPath);
 const skillsDir = path.resolve(path.dirname(pluginPath), '../../skills');
 const mod = await import(pathToFileURL(pluginPath).href);
 
@@ -75,11 +76,15 @@ for (const skill of added) {
 const hostileId = added.length > 1 ? added[Math.floor(added.length / 2)].id : null;
 const survived = [];
 let setupThrew = null;
+let survivingContextHook;
 try {
   await mod.default.setup(makeCtx({
     add: (skill) => {
       if (skill.id === hostileId) throw new Error('Simulated Skill.Info decode failure');
       survived.push(skill.id);
+    },
+    onHook: (name, callback) => {
+      if (name === 'context') survivingContextHook = callback;
     },
   }));
 } catch (err) {
@@ -92,6 +97,19 @@ if (setupThrew) {
   if (JSON.stringify(survived.sort()) !== JSON.stringify(expectedSurvivors.sort())) {
     failures.push(`expected all non-rejected skills to still register when one draft.add() throws, got ${JSON.stringify(survived)}`);
   }
+}
+if (typeof survivingContextHook !== 'function') {
+  failures.push('expected bootstrap hook to survive a rejected skill');
+} else {
+  const event = {
+    sessionID: 'registration-survival-root',
+    messages: [{ role: 'user', content: [{ type: 'text', text: 'Continue' }] }],
+  };
+  await survivingContextHook(event);
+  const count = event.messages.flatMap((message) => message.content).filter(
+    (part) => part.type === 'text' && part.text.startsWith('<EXTREMELY_IMPORTANT>\nYou have superpowers.')
+  ).length;
+  if (count !== 1) failures.push(`expected surviving bootstrap once, got ${count}`);
 }
 
 const result = {
@@ -113,7 +131,7 @@ if (failures.length > 0) {
 
 console.log(JSON.stringify(result, null, 2));
 
-function makeCtx({ add }) {
+function makeCtx({ add, onHook = () => {} }) {
   return {
     skill: {
       transform: async (fn) => {
@@ -121,7 +139,7 @@ function makeCtx({ add }) {
       },
     },
     session: {
-      hook: async () => {},
+      hook: async (name, callback) => onHook(name, callback),
       get: async ({ sessionID }) => ({ id: sessionID }), // top-level: no parentID
     },
   };
