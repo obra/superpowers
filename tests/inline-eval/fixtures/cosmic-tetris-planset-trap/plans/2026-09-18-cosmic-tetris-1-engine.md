@@ -491,7 +491,7 @@ git commit -m "feat(game): game state, event stream, movement and kicked rotatio
 
 ---
 
-### Task 6: Advance — gravity, soft drop, ghost and lock delay
+### Task 6: Tick — gravity, soft drop, ghost and lock delay
 
 **Files:**
 - Modify: `internal/game/game.go`
@@ -536,13 +536,13 @@ func (g *Game) Tick(dt time.Duration) []Event {
 - [ ] **Step 1: Write the failing tests**
 
 ```go
-func TestAdvanceBelowIntervalDoesNothing(t *testing.T)
+func TestTickBelowIntervalDoesNothing(t *testing.T)
 // g := New(1); y := g.Active.Y; g.Tick(100*time.Millisecond); Active.Y == y, no events
 
-func TestAdvanceAtIntervalDropsOneRow(t *testing.T)
+func TestTickAtIntervalDropsOneRow(t *testing.T)
 // g.Tick(800*time.Millisecond) => one PieceMoved, Active.Y == y+1
 
-func TestAdvanceHugeDtIsBoundedAndLeavesPieceGrounded(t *testing.T)
+func TestTickHugeDtIsBoundedAndLeavesPieceGrounded(t *testing.T)
 // g.Tick(10*time.Second) returns in well under a second, emits at most maxCatchUpSteps+3 events,
 // GravityAccumulator < g.Interval(), and the piece is either locked or resting on the floor
 
@@ -569,7 +569,7 @@ func TestLockResetsAreCapped(t *testing.T)
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `go test ./internal/game/ -run TestAdvance -v`
+Run: `go test ./internal/game/ -run TestTick -v`
 Expected: FAIL — undefined `Tick`.
 
 - [ ] **Step 3: Implement `Tick`, `SoftDrop`, `GhostY`, `Interval` and a stub `lock()`**
@@ -755,7 +755,7 @@ git commit -m "feat(game): hold, game over and deterministic replay"
 ```go
 func TestLongRandomSessionStaysConsistent(t *testing.T)
 // For seeds 1..20: drive 5000 pseudo-random inputs (from a separate local rand, so the
-// game RNG is untouched) with 16ms Advance steps between them. After every step assert:
+// game RNG is untouched) with 16ms Tick steps between them. After every step assert:
 //   - every cell of g.Active.Cells() is in bounds
 //   - g.Board has no complete row left uncleared
 //   - len(g.Next) == NextCount

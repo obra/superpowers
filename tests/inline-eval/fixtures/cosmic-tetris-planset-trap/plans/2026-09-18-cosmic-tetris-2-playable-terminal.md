@@ -630,7 +630,7 @@ func TestResizeToDegenerateSizesDoesNotPanic(t *testing.T)
 // feed WindowSizeMsg {0,0}, {1,1}, {39,23}, {200,60}, {34,19} in sequence, calling View()
 // after each => no panic; at {34,19} the content contains "TOO SMALL"
 
-func TestFrameAdvancesGravity(t *testing.T)
+func TestFrameTicksGravity(t *testing.T)
 // feed two FrameMsgs one second apart => Active.Y increased; m.Elapsed == 1s
 
 func TestFirstFrameHasZeroDelta(t *testing.T)
