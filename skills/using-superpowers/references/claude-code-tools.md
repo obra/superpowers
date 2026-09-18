@@ -2,9 +2,9 @@
 
 Claude Code is the reference harness: skills speak its vocabulary
 (`Agent` for a subagent dispatch, todos, `Skill`). These notes cover the
-two places Claude Code can run a plan cheaper than the skills' default
-shape. Both are opt-in by your human partner; neither changes what the
-skills require.
+one place Claude Code can run a plan cheaper than the skills' default
+shape. It is opt-in by your human partner and changes nothing the skills
+require.
 
 ## Cheaper orchestration for subagent-driven development
 
@@ -27,29 +27,3 @@ you relay it, not summarize it.
 
 Do this only for a whole plan. Nesting a single task's dispatch buys
 nothing and adds a seat.
-
-## Workflows
-
-Claude Code's Workflow tool runs a multi-agent script (sequential and
-parallel agent stages, each with its own model) whose orchestration is
-paid for by the script, not by a model reading every result. It is
-opt-in: your human partner types `ultracode` in a prompt, runs
-`/effort ultracode` for the session, or turns it on in `/config`. A skill
-cannot opt in on their behalf, and a workflow never starts because a
-skill would benefit from one.
-
-When they have opted in and a plan is ready, the
-superpowers:subagent-driven-development task loop maps onto a workflow:
-one stage per task in plan order, each stage an implementer agent
-followed by a task-reviewer agent (the skill's prompt templates, with
-brief, report, and review-package paths as the script computes them),
-with the fix rounds as a bounded loop inside the stage and the cap's
-residual findings returned as data rather than adjudicated in-script.
-Adjudication, the final whole-branch review, and the rulings list stay
-with you after the workflow returns — those are judgment, not
-orchestration. Load the `workflow-authoring` skill before writing the
-script.
-
-This mapping has not been run at scale. Treat it as the shape to try,
-not a tested recipe, and report what it cost against the skill's default
-shape.
