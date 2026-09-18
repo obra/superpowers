@@ -48,6 +48,10 @@
 #                         stripped from the worker's copy
 #   INLINE_EVAL_ENV_FILE  file holding ANTHROPIC_API_KEY=... (default <repo>/evals/.env)
 #   INLINE_EVAL_MODEL     extra `--model` for the worker (default: harness default)
+#   ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL  exported in the calling shell, these
+#                         reach the worker (the per-rep tmux server inherits the
+#                         environment) and remap the skills' model aliases on Bedrock,
+#                         e.g. ANTHROPIC_DEFAULT_SONNET_MODEL=us.anthropic.claude-sonnet-5
 #   INLINE_EVAL_PLUGIN_DIR a checkout to load instead of this one on the plugin arms
 #                         (skill-wording variants; e.g. a worktree with one edit)
 #   INLINE_EVAL_BACKEND   "api" (default: ANTHROPIC_API_KEY from the env file);
