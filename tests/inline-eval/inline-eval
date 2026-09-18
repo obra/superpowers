@@ -22,6 +22,8 @@
 #   spikerf  — spike, with the plan carrying a Review Focus section
 #              (tests/inline-eval/fixtures/review-focus-wordstat.md appended)
 #   sddrf    — sdd, with the same Review Focus section appended
+#   wpplans  — like wpplan, but the design may need several plans (the skill's
+#              scope check); they go under plans/ in the repo
 #   sddnest  — sdd, but the partner says the session model is too expensive
 #              for coordination (the nested-orchestrator shape in
 #              using-superpowers/references/claude-code-tools.md)
@@ -87,7 +89,7 @@ die() { echo "inline-eval: $*" >&2; exit 1; }
 
 plugin_dir_for() {
   case "$1" in
-    spike|sdd|spikesonnet|spikerf|sddrf|sddnest|wpplan|cxspike) echo "${INLINE_EVAL_PLUGIN_DIR:-$REPO_ROOT}" ;;
+    spike|sdd|spikesonnet|spikerf|sddrf|sddnest|wpplan|wpplans|cxspike) echo "${INLINE_EVAL_PLUGIN_DIR:-$REPO_ROOT}" ;;
     bare|barerev|barerevs|barefork|cxbare) echo "" ;;
     dev)
       local wt="$EVAL_DIR/plugin-dev"
@@ -97,7 +99,7 @@ plugin_dir_for() {
       fi
       [ -f "$wt/.claude-plugin/plugin.json" ] || die "dev checkout at $wt is not a plugin"
       echo "$wt" ;;
-    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf|sddnest|wpplan|cxbare|cxspike)" ;;
+    *) die "unknown arm: $1 (dev|spike|sdd|bare|barerev|barerevs|barefork|spikesonnet|spikerf|sddrf|sddnest|wpplan|wpplans|cxbare|cxspike)" ;;
   esac
 }
 
@@ -163,6 +165,7 @@ prompt_for() {
   case "$1" in
     sdd|sddrf)  echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end — dispatch a fresh subagent per task with a review after each, and a final review at the end. $common" ;;
     sddnest) echo "I have a plan at plan.md, with design context in design.md. Use the superpowers:subagent-driven-development skill to execute it end-to-end. My session model is too expensive to spend on coordination, so run the orchestration on a cheaper model the way the Claude Code reference in using-superpowers describes. $common" ;;
+    wpplans) echo "Here is the approved design for a project, in design.md. Use the superpowers:writing-plans skill to write the implementation plan or plans and save them under plans/ in this directory (not under docs/). This is a local scratch repo with no remote; work directly on main. Do not implement anything; when the plans are saved, tell me and stop." ;;
     wpplan) echo "Here is the design for a small package, in design.md. Use the superpowers:writing-plans skill to write the implementation plan and save it as plan.md in this directory (not under docs/). This is a local scratch repo with no remote; work directly on main. Do not implement anything; when the plan is saved, tell me and stop." ;;
     bare|cxbare) echo "I have a plan at plan.md, with design context in design.md. Execute it. $common" ;;
     barerev)  echo "I have a plan at plan.md, with design context in design.md. Execute it. When every task is done, dispatch one fresh subagent on the opus model to review the whole diff against plan.md and design.md, fix anything Critical or Important it finds, then tell me it is done. $common" ;;

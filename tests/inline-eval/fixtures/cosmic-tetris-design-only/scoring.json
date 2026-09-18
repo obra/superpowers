@@ -1,0 +1,1 @@
+{"tasks": {}, "impl_dir": "internal", "test_marker": "testing", "suite": "ls plans/*.md plan.md 2>/dev/null | wc -l"}
