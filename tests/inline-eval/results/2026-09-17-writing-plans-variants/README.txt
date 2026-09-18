@@ -20,3 +20,16 @@ planning run; a 19,393-line plan set for a 1,894-line spec):
 Fixtures: cosmic-tetris-design-only (the report's spec, planning capped at
 40 min, wpplans arm) and ledgerlite-design-only (wpplan arm). Baseline is
 the current wording on both. Results land in a sibling directory.
+
+Baseline, cosmic-tetris, current wording, Opus 5 via Bedrock, capped at
+40 minutes of wall clock (both were still writing when stopped):
+                 plans   lines    Go lines   steps   tests   USD    drafter dispatches
+  wpplans-1      3 of 5  10,894   8,570      194     295     7.93   0
+  wpplans-2      3 of 5  10,206   8,576      151     285     7.29   0
+About 230 lines a minute; the full five-plan set extrapolates to roughly
+17-18k lines and 75 minutes, i.e. the report's 19,393 lines reproduced at
+eval scale (its 5h14m included Ruff and scratch verification the planner
+here did not do). Neither planner dispatched drafter subagents: the
+parallel-drafter orchestration in the first report was the parent's
+invention, not something the skill induces, so "one document, one author"
+is not testable here and stays a proposal.
