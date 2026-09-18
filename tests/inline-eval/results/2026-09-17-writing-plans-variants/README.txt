@@ -47,3 +47,21 @@ N1-recipe ("What a Step Contains" replaces "No Placeholders"):
   cosmic 9k for all five plans vs 11k for three) with the implied cases still
   named 3/3. The recipe keeps full test code by design, and tests are now
   most of the fenced lines: the test count is the remaining volume driver.
+
+Q1-reader (capable-reader overview, No Placeholders unchanged):
+  cosmic (capped 40 min): 2 and 3 of 5 plans, 6,085 / 5,164 lines, still
+    writing at the cap (about 3,000 lines per plan, same as baseline)
+  ledgerlite: 1,067-1,203 lines, 57-70 tests (baseline 1,371-1,475 / 66-79)
+  The framing alone trims ledgerlite by ~20% and does nothing on cosmic.
+
+Q2-reader-recipe (Q1 + N1):
+  cosmic: both reps finished on their own in 32-35 min with THREE plans that
+    cover all five phases (the planner merged engine+terminal or effects+
+    polish): 7,451 and 5,979 lines, 282 / 211 tests, $7.81 / $11.22.
+    Recipe-alone rep 12 did the same (3 plans, 5,985 lines, 27.6 min).
+  ledgerlite: 675-956 lines, 46-66 tests: the same as recipe alone.
+  The reader framing adds nothing on top of the recipe. The recipe is the
+  change: a complete plan set for the report's spec in 6-7.5k lines and
+  about half an hour, against an extrapolated 17-18k lines and 75 minutes
+  under the current wording (the report's real session: 19,393 lines,
+  5h14m). Tests are ~90% of the remaining fenced code (T1 tests that).
