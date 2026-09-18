@@ -284,7 +284,7 @@ turn loses the bootstrap — start a fresh session if skills stop triggering.
 
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+4. **subagent-driven-development** or **executing-plans** - Activates with plan. Either dispatches a fresh subagent per task with a review after each (most thorough), or implements every task inline in the current session with one fresh review of the whole branch at the end (cheapest).
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
@@ -326,7 +326,7 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
+- **executing-plans** - Inline plan execution: one context, one final review
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
