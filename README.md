@@ -22,7 +22,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Pi](#pi)
   - [Qwen Code](#qwen-code)
   - [Hermes Agent](#hermes-agent)
-- [Muse](#muse)
+  - [Muse](#muse)
 - [The Basic Workflow](#the-basic-workflow)
 - [When Something Goes Wrong](#when-something-goes-wrong)
 - [Community](#community)
