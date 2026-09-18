@@ -169,3 +169,12 @@ next is a boundary check instead of a per-ruling duty: before starting the
 next plan, scan its Consumes lines against the code as built (the
 pre-flight scan executing-plans already runs against the spec, pointed at
 the previous plan's output), and fix the plan there.
+Interviews (claude --resume, "what would have gotten you to ..."): both
+sessions read the four-slot ruling format as the shape of a good sentence,
+not four fields, and folded "plans touched" into prose; neither grepped
+later plans; both said a cross-plan check would be run if it had the same
+force as the intra-plan pre-flight scan: a named, required step with an
+artifact, ideally scripted ("I follow scripted, gated steps far more
+reliably than open-ended advice"). Correction to the read above: spike-152
+did fix plan 2's task-level `m.Game.Tick(dt)` line; the Tick mentions left
+are Bubble Tea's own tea.Tick and a test name.
