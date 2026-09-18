@@ -79,12 +79,11 @@ V1 `plugin` key and the V2 `plugins` key):
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.3.0"]
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.4.0"]
 }
 ```
 
-On V2, pin a tag or commit that includes OpenCode V2 support; `v6.3.0` and
-earlier releases load only on V1.
+On V2, pin `v6.4.0` or later; `v6.3.0` and earlier releases load only on V1.
 
 ## Troubleshooting
 
