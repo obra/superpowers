@@ -94,7 +94,10 @@ description: Use when [condition] - [what it does]
 
 Create project-specific skills in `.opencode/skills/` within your project.
 
-**Skill Priority:** Project skills > Personal skills > Superpowers skills
+**V2 Skill Priority:** Project skills > Personal skills > Superpowers skills. On
+tested V1 1.18.31, bundled Superpowers skills take precedence when a personal
+or project skill has the same name; use distinct names for personal and project
+skills. This behavior is unchanged by the migration.
 
 ## Updating
 
