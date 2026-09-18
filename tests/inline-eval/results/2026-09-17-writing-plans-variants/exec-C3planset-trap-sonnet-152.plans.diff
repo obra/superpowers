@@ -1,0 +1,35 @@
+diff --git a/plans/2026-09-18-cosmic-tetris-1-engine.md b/plans/2026-09-18-cosmic-tetris-1-engine.md
+index 70e8d5b..cee8484 100644
+--- a/plans/2026-09-18-cosmic-tetris-1-engine.md
++++ b/plans/2026-09-18-cosmic-tetris-1-engine.md
+@@ -39,7 +39,7 @@ Input classes the spec implies but does not describe, most likely to bite first.
+ Run in this order. A ruling that changes a name, signature, or value a later plan consumes is applied to that plan's file before the next task starts.
+ 
+ 1. `plans/2026-09-18-cosmic-tetris-1-engine.md` — headless deterministic engine in `internal/game`. Consumes: nothing.
+-2. `plans/2026-09-18-cosmic-tetris-2-playable-terminal.md` — Bubble Tea app, canvas renderer, layout, HUD, hold/next/ghost, CLI flags, pause/help/game-over card, golden tests. Consumes Plan 1's `game.Game`, `Tick`, `Event`, `Board`, `Piece`, `GhostY`.
++2. `plans/2026-09-18-cosmic-tetris-2-playable-terminal.md` — Bubble Tea app, canvas renderer, layout, HUD, hold/next/ghost, CLI flags, pause/help/game-over card, golden tests. Consumes Plan 1's `game.Game`, `Advance`, `Event`, `Board`, `Piece`, `GhostY`.
+ 3. `plans/2026-09-18-cosmic-tetris-3-cosmic-foundation.md` — `internal/fx` (particles, starfield), animated border, piece trails, `internal/flavor` mission control. Consumes Plan 1's `Event`/`Cell` and Plan 2's `render.Canvas`, `render.Layout`, `render.Snapshot`, `app.Model`.
+ 4. `plans/2026-09-18-cosmic-tetris-4-violence.md` — hard-drop impact, screen shake, line supernova, shockwaves, hyperdrive, four-line sequence, combo/level overlays. Consumes Plan 3's `fx.World` and the render FX layer.
+ 5. `plans/2026-09-18-cosmic-tetris-5-polish.md` — boot sequence, game-over black hole, ASCII/no-FX guarantees, §45 details, README, definition-of-done sweep. Consumes everything above.
+diff --git a/plans/2026-09-18-cosmic-tetris-2-playable-terminal.md b/plans/2026-09-18-cosmic-tetris-2-playable-terminal.md
+index 0fdcf45..2e1868c 100644
+--- a/plans/2026-09-18-cosmic-tetris-2-playable-terminal.md
++++ b/plans/2026-09-18-cosmic-tetris-2-playable-terminal.md
+@@ -36,7 +36,7 @@
+ Run in this order. A ruling that changes a name, signature, or value a later plan consumes is applied to that plan's file before the next task starts.
+ 
+ 1. `plans/2026-09-18-cosmic-tetris-1-engine.md` — headless deterministic engine in `internal/game`. Consumes: nothing.
+-2. `plans/2026-09-18-cosmic-tetris-2-playable-terminal.md` — Bubble Tea app, canvas renderer, layout, HUD, hold/next/ghost, CLI flags, pause/help/game-over card, golden tests. Consumes Plan 1's `game.Game`, `Tick`, `Event`, `Board`, `Piece`, `GhostY`.
++2. `plans/2026-09-18-cosmic-tetris-2-playable-terminal.md` — Bubble Tea app, canvas renderer, layout, HUD, hold/next/ghost, CLI flags, pause/help/game-over card, golden tests. Consumes Plan 1's `game.Game`, `Advance`, `Event`, `Board`, `Piece`, `GhostY`.
+ 3. `plans/2026-09-18-cosmic-tetris-3-cosmic-foundation.md` — `internal/fx` (particles, starfield), animated border, piece trails, `internal/flavor` mission control. Consumes Plan 1's `Event`/`Cell` and Plan 2's `render.Canvas`, `render.Layout`, `render.Snapshot`, `app.Model`.
+ 4. `plans/2026-09-18-cosmic-tetris-4-violence.md` — hard-drop impact, screen shake, line supernova, shockwaves, hyperdrive, four-line sequence, combo/level overlays. Consumes Plan 3's `fx.World` and the render FX layer.
+ 5. `plans/2026-09-18-cosmic-tetris-5-polish.md` — boot sequence, game-over black hole, ASCII/no-FX guarantees, §45 details, README, definition-of-done sweep. Consumes everything above.
+@@ -592,7 +592,7 @@ Bindings (§8): left `left`/`h`/`a`; right `right`/`l`/`d`; soft drop `down`/`j`
+ - `tea.WindowSizeMsg` → store `Width`/`Height` only.
+ - `tea.ColorProfileMsg` → `m.Render.Mode = render.ModeFor(msg.Profile, m.Opts.ASCII)`.
+ - `tea.KeyPressMsg` → act immediately, never wait for a tick (§8, §36). Quit returns `tea.Quit`; help toggles `ShowHelp`; pause toggles `PhasePlaying`/`PhasePaused`; restart rebuilds `m.Game = game.New(m.Seed)` and resets `Phase`. Movement keys are ignored unless `Phase == PhasePlaying`.
+-- `FrameMsg` → `dt := min(msg.Now.Sub(m.LastFrame), MaxFrameDelta)` (0 when `LastFrame` is zero), store `LastFrame`, then: when playing, `m.Elapsed += dt` and `m.Game.Tick(dt)`; when paused, `m.Elapsed += dt / 10` and no `Tick` (§30). If `m.Game.Over`, set `Phase = PhaseGameOver`. Always return `FrameCmd()`.
++- `FrameMsg` → `dt := min(msg.Now.Sub(m.LastFrame), MaxFrameDelta)` (0 when `LastFrame` is zero), store `LastFrame`, then: when playing, `m.Elapsed += dt` and `m.Game.Advance(dt)`; when paused, `m.Elapsed += dt / 10` and no `Advance` (§30). If `m.Game.Over`, set `Phase = PhaseGameOver`. Always return `FrameCmd()`.
+ - `View()` returns `v := tea.NewView(render.Render(m.Snapshot(), m.Render)); v.AltScreen = true`.
+ 
+ Repeated movement while a key is held (§8) comes from terminal auto-repeat: each repeat is another `tea.KeyPressMsg`, handled immediately. No DAS timer.

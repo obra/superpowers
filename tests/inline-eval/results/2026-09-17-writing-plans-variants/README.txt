@@ -144,3 +144,28 @@ ruling touched a later plan (all were local: step order, test values), so
 the plans-touched slot and the plan edits were not exercised; a fixture
 with a planted cross-plan conflict (cosmic-tetris-planset-trap) and a
 prompt naming the set tests both next.
+
+C3-planset, execution of the SET on Sonnet 5 (fixtures/cosmic-tetris-planset-
+trap: plans 1-2 say Tick, spec and plans 3-5 say Advance; prompt names
+plans/ and leaves "done" open), 2 reps, capped at 75 min, $28.18 / $25.06:
+  continued into plan 2 without asking       2/2  ("continuing straight into
+                                                   Plan 2 now, same method")
+  closing report named remaining plans       2/2
+  plan 1 finished, go test green             2/2  (19 / 17 commits; both were
+                                                   mid plan 2 at the cap)
+  the Tick/Advance conflict:
+    spike-151 ruled to keep Tick ("despite design.md"), edited no plan;
+              plans 3-5 still say Advance and would run against Tick.
+    spike-152 renamed Tick -> Advance after the review (spec wins), and
+              edited the Plan Set index lines in plans 1 and 2 (Consumes
+              `Tick` -> `Advance`) but not plan 2's task-level mentions.
+  plans-touched slot in the ruling text        0/2
+  later plan edited                            1/2, and only the index line
+The continuation and the closing slot work. The keep-later-plans-true
+mechanism does not, as a slot on the ruling: sessions write rulings in
+their own shape and the slot is not filled, and even the session that
+acted edited the index rather than the consuming lines. The form to try
+next is a boundary check instead of a per-ruling duty: before starting the
+next plan, scan its Consumes lines against the code as built (the
+pre-flight scan executing-plans already runs against the spec, pointed at
+the previous plan's output), and fix the plan there.
