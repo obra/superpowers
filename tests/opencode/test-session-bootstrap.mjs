@@ -141,4 +141,63 @@ for (const flavor of ['v1', 'v2']) {
   assert.deepEqual(unknown.lookups, []);
 }
 
+function compactedEvent(sessionID) {
+  return {
+    sessionID,
+    system: [],
+    messages: [{
+      role: 'assistant',
+      content: [{ type: 'compaction', provider: 'fixture', encrypted: 'opaque-checkpoint' }],
+    }],
+  };
+}
+
+const compactedRoot = await makeHarness('v2', (id) => ({ id }));
+const rootEvent = compactedEvent('compacted-root');
+const checkpoint = structuredClone(rootEvent.messages[0]);
+await compactedRoot.invoke(rootEvent);
+assert.equal(bootstrapCount(rootEvent), 1);
+assert.deepEqual(rootEvent.messages[0], checkpoint);
+assert.equal(rootEvent.messages.length, 2);
+assert.equal(rootEvent.messages[1].role, 'user');
+assert.deepEqual(rootEvent.system, []);
+await compactedRoot.invoke(rootEvent);
+assert.equal(bootstrapCount(rootEvent), 1);
+assert.equal(rootEvent.messages.length, 2);
+const freshRootEvent = compactedEvent('compacted-root');
+await compactedRoot.invoke(freshRootEvent);
+assert.equal(bootstrapCount(freshRootEvent), 1);
+assert.deepEqual(compactedRoot.lookups, ['compacted-root']);
+
+const compactedChild = await makeHarness('v2', (id) => ({ id, parentID: 'parent' }));
+const childEvent = compactedEvent('compacted-child');
+const originalChild = structuredClone(childEvent);
+await compactedChild.invoke(childEvent);
+assert.equal(bootstrapCount(childEvent), 0);
+assert.deepEqual(childEvent, originalChild);
+assert.deepEqual(compactedChild.lookups, ['compacted-child']);
+
+const retryChild = await makeHarness('v2', (id, call) => {
+  if (call === 1) throw new Error('temporary lookup failure');
+  return { id, parentID: 'parent' };
+});
+const unknownChild = compactedEvent('retry-compacted-child');
+await retryChild.invoke(unknownChild);
+assert.equal(bootstrapCount(unknownChild), 1);
+const recoveredChild = compactedEvent('retry-compacted-child');
+await retryChild.invoke(recoveredChild);
+assert.equal(bootstrapCount(recoveredChild), 0);
+assert.equal(recoveredChild.messages.length, 1);
+assert.equal(retryChild.lookups.length, 2);
+
+const retainedUser = compactedEvent('retained-user-root');
+retainedUser.messages.push({ role: 'user', content: [{ type: 'text', text: 'Continue' }] });
+await compactedRoot.invoke(retainedUser);
+assert.equal(bootstrapCount(retainedUser), 1);
+assert.equal(retainedUser.messages.length, 2);
+assert.equal(retainedUser.messages[1].content.length, 2);
+const empty = { sessionID: 'empty', messages: [] };
+await compactedRoot.invoke(empty);
+assert.deepEqual(empty.messages, []);
+
 console.log('Session classification, recovery and cache lifetime passed');

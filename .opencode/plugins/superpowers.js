@@ -334,8 +334,8 @@ async function setup(ctx) {
         const bootstrap = getBootstrapContent(V2_MAPPING);
         if (!bootstrap || !event.messages || !event.messages.length) return;
         const firstUser = event.messages.find(m => m.role === 'user');
-        if (!firstUser || !firstUser.content || !firstUser.content.length) return;
-        if (firstUser.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+        if (firstUser && (!firstUser.content || !firstUser.content.length)) return;
+        if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
 
         // #2160: the context event carries the sessionID directly. Skip the
         // controller bootstrap when this prompt belongs to a task subagent
@@ -345,7 +345,13 @@ async function setup(ctx) {
           event.sessionID,
         )) return;
 
-        firstUser.content.unshift({ type: 'text', text: bootstrap });
+        // Native compaction can leave only an opaque checkpoint. Keep it
+        // intact and append the transient bootstrap as a user message.
+        if (firstUser) {
+          firstUser.content.unshift({ type: 'text', text: bootstrap });
+        } else {
+          event.messages.push({ role: 'user', content: [{ type: 'text', text: bootstrap }] });
+        }
       } catch (err) {
         // Never let hook callback errors break the request pipeline.
         console.error('[superpowers] context hook failed:', err);
