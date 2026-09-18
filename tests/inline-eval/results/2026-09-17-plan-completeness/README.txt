@@ -15,5 +15,12 @@ Confound noted in fixtures/ledgerlite-full/README.txt: the terse plan's
 planted Interfaces mismatch is not in the Opus plan; the Sonnet 5 session
 resolved it 3/3 anyway.
 
-Wave 2 (inline, wordstat) and the SDD half (terse / full / loosened
-isolation, Sonnet 5 implementers) follow below when they land.
+Wave 2: inline, wordstat, 3 reps per plan.
+                      terse (40 lines)             Opus-written (515 lines, 25 tests)
+utf8 probe handled    3/3                          3/3
+USD median            $1.30                        $1.96
+wall clock            6.5-9.0 min                  7.0-8.2 min
+Same outcome, terse at 66% of the cost.
+
+The SDD half (terse / full / loosened isolation, Sonnet 5 implementers)
+follows below when it lands.
