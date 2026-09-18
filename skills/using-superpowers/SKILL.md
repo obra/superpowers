@@ -63,3 +63,29 @@ If your harness appears here, read its reference file for special instructions:
 ## User Instructions
 
 User instructions (CLAUDE.md, AGENTS.md, GEMINI.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
+
+## Per-Skill Configuration
+
+Projects and teams customize Superpowers skills through optional config
+files, read automatically when you invoke the skill — no forking, no
+wrapper skills:
+
+- `<repo-root>/.superpowers/config/<skill>.md` — refinements for one skill
+  (e.g. `.superpowers/config/receiving-code-review.md`)
+- `<repo-root>/.superpowers/config/superpowers.md` — refinements for
+  every Superpowers skill
+
+**When you invoke a skill**, check both paths before applying it. If a
+file exists, read it and treat it as an extension of the skill: custom
+output formats, extra logging, team-specific wording, project parameters.
+Missing files cost one stat — proceed with the skill unchanged.
+
+**Precedence when guidance conflicts:** user instructions > per-skill
+config > global config > the skill's own text. Config refines how a skill
+applies; it does not license skipping the skill's gate (reviews, tests,
+verification still run). If you cannot satisfy a skill requirement and a
+config refinement at the same time, follow the skill and note the
+unresolved conflict to your human partner.
+
+**Do not read these files at session start** — read them when the skill
+invokes, so projects that never use a skill never pay for its config.

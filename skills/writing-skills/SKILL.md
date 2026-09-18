@@ -56,6 +56,9 @@ The entire skill creation process follows RED-GREEN-REFACTOR.
 - One-off solutions
 - Standard practices well-documented elsewhere
 - Project-specific conventions (put in your instructions file)
+- Project- or team-specific customizations of an existing Superpowers skill
+  (put in `.superpowers/config/<skill>.md` — see
+  using-superpowers:per-skill-configuration; no fork or wrapper needed)
 - Mechanical constraints (if it's enforceable with regex/validation, automate it—save documentation for judgment calls)
 
 ## Skill Types
