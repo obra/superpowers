@@ -6,7 +6,7 @@
 
 **Testing skills is just TDD applied to process documentation.**
 
-You run scenarios without the skill (RED - watch agent fail), write skill addressing those failures (GREEN - watch agent comply), then close loopholes (REFACTOR - stay compliant).
+You run scenarios without the skill (RED - watch agent fail), write skill addressing those failures (GREEN - watch agent comply, and for artifact-producing skills verify the artifact achieves what the skill exists for), then close loopholes (REFACTOR - stay compliant).
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill prevents the right failures.
 
@@ -83,7 +83,11 @@ Run this WITHOUT a TDD skill. Agent chooses B or C and rationalizes:
 
 Write skill addressing the specific baseline failures you documented. Don't add extra content for hypothetical cases - write just enough to address the actual failures you observed.
 
-Run same scenarios WITH skill. Agent should now comply.
+Run same scenarios WITH skill. Agent should now comply. For skills that
+produce an artifact (a document, a config, a fix), compliance alone is
+not GREEN — verify the artifact achieves what the skill exists for,
+measured against the baseline. If you cannot measure it, record that the
+outcome is unverified; do not let silence imply it was checked.
 
 If agent still fails: skill is unclear or incomplete. Revise and re-test.
 
@@ -318,6 +322,7 @@ Before deploying skill, verify you followed RED-GREEN-REFACTOR:
 - [ ] Wrote skill addressing specific baseline failures
 - [ ] Ran scenarios WITH skill
 - [ ] Agent now complies
+- [ ] For artifact-producing skills: verified the artifact achieves what the skill exists for (measured against baseline), or recorded explicitly that the outcome is unverified
 
 **REFACTOR Phase:**
 - [ ] Identified NEW rationalizations from testing
@@ -362,7 +367,7 @@ Tests pass once ≠ bulletproof.
 | **RED** | Run scenario without skill | Agent fails, document rationalizations |
 | **Verify RED** | Capture exact wording | Verbatim documentation of failures |
 | **GREEN** | Write skill addressing failures | Agent now complies with skill |
-| **Verify GREEN** | Re-test scenarios | Agent follows rule under pressure |
+| **Verify GREEN** | Re-test scenarios | Agent follows rule under pressure — and, for artifact-producing skills, the artifact does what the skill exists for |
 | **REFACTOR** | Close loopholes | Add counters for new rationalizations |
 | **Stay GREEN** | Re-verify | Agent still complies after refactoring |
 
