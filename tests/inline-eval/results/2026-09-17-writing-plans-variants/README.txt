@@ -128,3 +128,19 @@ C3-planset (C1 without the first-plan rule; all plans up front, each with a
 Plan Set section; rulings carry a plans-touched slot and edit later plans;
 executors continue into the next plan) runs next: cosmic x2, then the
 first plan executed on Sonnet 5 x2 with the set present.
+
+C3-planset, cosmic, planning (all plans up front, each with a Plan Set section):
+  wpplans-91  5 plans   3,436 lines total (456-787 each)   1,509 Go   255 tests   $5.15
+  wpplans-92  3 plans   3,775 lines (1,079-1,562 each)     1,450 Go   264 tests   $4.91
+  Plan Set section present in every plan, 8/8.
+C3-planset, execution of plan 1 (engine, 10 tasks, Go) inline on Sonnet 5,
+plan.md = plan 1 with the set in plans/, prompt "execute plan.md ... tell me
+when the plan is complete", 2 reps: 11 commits each, go test green, Opus
+final review + fix pass, $11.23 / $11.99. Closing message carried
+"Remaining plans" naming plans 2-5 as not started, 2/2 ("say the word if
+you'd like me to continue into Plan 2"). Neither continued: the prompt
+said the plan, singular, and user instructions outrank the skill. No
+ruling touched a later plan (all were local: step order, test values), so
+the plans-touched slot and the plan edits were not exercised; a fixture
+with a planted cross-plan conflict (cosmic-tetris-planset-trap) and a
+prompt naming the set tests both next.
