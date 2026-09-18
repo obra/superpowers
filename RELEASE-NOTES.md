@@ -1,10 +1,10 @@
 # Superpowers Release Notes
 
-## v6.4.0 (2026-09-18)
+## v6.4.1 (2026-09-18)
+
+v6.4.0 was never shipped. v6.4.1 is the first release with these changes. It holds back the new `proving-it-works-with-a-movie` skill, which is getting cleanup and robustness work and will return in a later release.
 
 The new `diagnosing-superpowers` skill figures out what went wrong in a session. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. This release also adds support for three new harnesses: OpenCode 2.0, Muse, and Qwen Code.
-
-The `proving-it-works-with-a-movie` import (#2214) has been reverted because its code quality does not meet the release bar; the movie skill is not included.
 
 ### New Skills
 
