@@ -110,3 +110,21 @@ implementer writes the test file), ledgerlite:
   66-69 tests from the one-line list, $3.36 / $3.14 / $2.89, 13 min each.
   The plan with no code executes as well as every other form; the executor
   spends about fifty cents more writing the tests itself.
+
+C1-combined (recipe with "verification step", proportion item, capable-
+reader framing, first-plan-then-stop, reviewer prompt deleted, no time
+unit):
+  ledgerlite: 551 / 475 / 527 lines, 44 / 36 / 39 tests, 3.5-3.7 min,
+    $0.71-0.81, implied cases 3/3. Smaller than any single-change arm: the
+    changes compound.
+  cosmic: wpplans-71 wrote one plan (first-plan rule) covering phases 1+2,
+    1,336 lines, 554 Go, 85 tests, 10.8 min, $2.54, then handed off;
+    wpplans-72 died at 3.8 min on a Bedrock "unexpected error" (the second
+    such loss today), not replaced because C3 supersedes C1's first-plan rule.
+  Execution check, wpplan-121's plan (551 lines) inline on Sonnet 5, 3 reps:
+    9/9 probes, suite green, $3.27 / $2.86 / $2.85, 11-13 min.
+
+C3-planset (C1 without the first-plan rule; all plans up front, each with a
+Plan Set section; rulings carry a plans-touched slot and edit later plans;
+executors continue into the next plan) runs next: cosmic x2, then the
+first plan executed on Sonnet 5 x2 with the set present.
