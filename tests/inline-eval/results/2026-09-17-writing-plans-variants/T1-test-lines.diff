@@ -1,0 +1,95 @@
+diff --git a/skills/writing-plans/SKILL.md b/skills/writing-plans/SKILL.md
+index 78c7126..3db0632 100644
+--- a/skills/writing-plans/SKILL.md
++++ b/skills/writing-plans/SKILL.md
+@@ -7,9 +7,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
+ 
+ ## Overview
+ 
+-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+-
+-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
++Write implementation plans for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact test, and that they will make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, which tests prove each task. Document those. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+ 
+ **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+ 
+@@ -107,25 +105,21 @@ owns the code, in that task's own step style.]
+   and return types. A task's implementer sees only their own task; this
+   block is how they learn the names and types neighboring tasks use.]
+ 
+-- [ ] **Step 1: Write the failing test**
++- [ ] **Step 1: Write the failing tests in `tests/exact/path/to/test.py`**
+ 
+-```python
+-def test_specific_behavior():
+-    result = function(input)
+-    assert result == expected
+-```
++- `test_specific_behavior`: `function(input)` -> `expected`
++- `test_rejects_bad_input`: `function(bad)` raises `SpecificError` with `.line == 2`
+ 
+ - [ ] **Step 2: Run test to verify it fails**
+ 
+ Run: `pytest tests/path/test.py::test_name -v`
+ Expected: FAIL with "function not defined"
+ 
+-- [ ] **Step 3: Write minimal implementation**
++- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
+ 
+-```python
+-def function(input):
+-    return expected
+-```
++One line on the approach when the signature and the test leave a choice
++(which library call, which data structure); a code block only for an
++algorithm they do not determine.
+ 
+ - [ ] **Step 4: Run test to verify it passes**
+ 
+@@ -140,15 +134,29 @@ git commit -m "feat: add specific feature"
+ ```
+ ````
+ 
+-## No Placeholders
++## What a Step Contains
+ 
+-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+-- "TBD", "TODO", "implement later", "fill in details"
+-- "Add appropriate error handling" / "add validation" / "handle edge cases"
+-- "Write tests for the above" (without actual test code)
+-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
+-- Steps that describe what to do without showing how (code blocks required for code steps)
+-- References to types, functions, or methods not defined in any task
++A step is done when the implementer can write exactly one reasonable thing
++from it. That is the whole requirement: unambiguous, not complete. Each kind
++of step carries what makes it unambiguous and nothing more:
++
++- **A test step:** one line per test: its name, then the call and the
++  expected result with the spec's exact values, e.g.
++  `test_same_date_keeps_input_order: order_by_date([d1:a, d1:b]) -> [a, b]`.
++  The implementer writes the test file; the plan does not.
++- **A code step:** the exact signature (name, parameters, return type), the
++  file it lives in, and the specific values the spec pins. The implementer
++  writes the body. A body appears only for an algorithm the signature and
++  tests do not determine, or for exact copy the spec fixes.
++- **A command step:** the command and the output that means it passed.
++- **A reference to another task:** that task's Interfaces block says what
++  to use; the plan does not repeat that task's code.
++
++A plan is the set of decisions the implementer cannot make alone. A plan
++longer than the code it describes has written the code instead. Lines that
++decide nothing ("TBD", "handle edge cases", "add appropriate validation",
++"write tests for the above", a type or function no task defines) are the
++opposite failure, and the self-review catches both.
+ 
+ ## Self-Review
+ 
+@@ -156,7 +164,7 @@ After writing the complete plan, look at the spec with fresh eyes and check the
+ 
+ **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+ 
+-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
++**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both.
+ 
+ **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+ 
