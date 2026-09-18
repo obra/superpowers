@@ -119,7 +119,9 @@ class FilmGridTests(unittest.TestCase):
             self.assertEqual([f.name for f in files], [f"f{i:05d}.png" for i in range(frames)])
             self.assertEqual(files[2].read_bytes(), files[1].read_bytes(), "missed slot repeats the last frame")
             self.assertNotEqual(files[3].read_bytes(), files[2].read_bytes())
-            self.assertEqual(frames, 7, "1.0 s to the prompt plus 0.4 s hold at 5 fps")
+            # Captures add 0.01 s and sleeps 0.02 s, so the clock sits on odd
+            # hundredths: the prompt is seen at 1.01 s and the hold ends at 1.41 s.
+            self.assertEqual(frames, 8, "slots 0.0 s through 1.4 s fall before the 1.41 s endpoint")
 
     def test_filming_stops_at_the_deadline_while_the_command_runs(self):
         module = recorder()
