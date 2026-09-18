@@ -101,3 +101,11 @@ implementer writes the test file), ledgerlite:
   No fenced code at all in two of three. The plan is Interfaces blocks,
   a "Pinned decisions" list the planner added on its own, and one-line
   tests. Cosmic reps and the execution check (spike 101-103) follow.
+  cosmic:
+    wpplans-61  3 plans, all five phases   3,073 lines   26 Go lines   39 tasks   27.7 min   $6.03
+    wpplans-62  died at 5.5 min (a synthetic harness message, no plan); replaced by wpplans-63
+  Execution check, T1 ledgerlite plan from wpplan-91 (394 lines, no code),
+  inline on Sonnet 5, 3 reps: 9/9 probes, suite green, the executor wrote
+  66-69 tests from the one-line list, $3.36 / $3.14 / $2.89, 13 min each.
+  The plan with no code executes as well as every other form; the executor
+  spends about fifty cents more writing the tests itself.
