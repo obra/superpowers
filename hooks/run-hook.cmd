@@ -1,8 +1,20 @@
-: << 'CMDBLOCK'
+:; command -v bash >/dev/null 2>&1 || exit 0
+:; [ $# -ge 1 ] || exit 0
+:; SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+:; SCRIPT_NAME="$1"; shift; exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
 @echo off
 REM Cross-platform polyglot wrapper for hook scripts.
-REM On Windows: cmd.exe runs the batch portion, which finds and calls bash.
-REM On Unix: the shell interprets this as a script (: is a no-op in bash).
+REM On Unix: POSIX shells execute the ":;" lines above and exec away before
+REM reaching this batch block (":" is a no-op; cmd.exe treats lines starting
+REM with ":" as labels and skips them). If bash or the script name is
+REM missing, the wrapper exits 0 silently - hooks are optional context, never
+REM a session breaker.
+REM On Windows: cmd.exe runs this batch portion, which finds and calls bash.
+REM
+REM Heredocs are banned in this file and every hooks/ executable: bash 5.1+
+REM delivers them via a pre-fork pipe write that deadlocks on macOS under
+REM pipe pressure (issue #571). tests/hooks/test-no-heredocs-in-hooks.sh is
+REM the fence.
 REM
 REM Hook scripts use extensionless filenames (e.g. "session-start" not
 REM "session-start.sh") so Claude Code's Windows auto-detection -- which
@@ -35,12 +47,4 @@ if %ERRORLEVEL% equ 0 (
 )
 
 REM No bash found - exit silently rather than error
-REM (plugin still works, just without SessionStart context injection)
 exit /b 0
-CMDBLOCK
-
-# Unix: run the named script directly
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCRIPT_NAME="$1"
-shift
-exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
