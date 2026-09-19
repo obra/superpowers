@@ -140,6 +140,11 @@ and the new one resumes from the same ledger.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
   if that happens, recover from `git log`.
 
+**Interactive Task Board Companion (optional):**
+If the user prefers a browser-based task board to track execution in real time (similar to the visual companion in brainstorming), you can offer the `project-taskboard` companion:
+> "I can run a local task board in your browser to visualize the plan hierarchy and execution progress as tasks complete. Would you like me to open that?"
+If accepted, start the companion with `python3 skills/project-taskboard/scripts/taskboard.py start --root .superpowers/taskboard --project-root .`. The board automatically watches plan files, displays task completion states, and reflects execution progress.
+
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve

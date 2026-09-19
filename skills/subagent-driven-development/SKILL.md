@@ -153,6 +153,11 @@ a ledger file, not only in todos.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
 
+**Interactive Task Board Companion (optional):**
+If the user wants a visual dashboard to inspect the overall hierarchy and progress across subagent dispatches, you can offer the `project-taskboard` companion:
+> "I can run a local task board in your browser to visualize the plan hierarchy and subagent task progress in real time. Would you like me to open that?"
+If accepted, start it with `python3 skills/project-taskboard/scripts/taskboard.py start --root .superpowers/taskboard --project-root .`. It continuously watches plan checkbox completions and accepts live status updates from subagents.
+
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve

@@ -1,0 +1,8 @@
+interface:
+  display_name: "通用项目任务看板"
+  short_description: "Create and update a hierarchical project task board"
+  brand_color: "#0877FF"
+  default_prompt: "使用 $project-taskboard 从任务规格生成一个可更新的项目看板。"
+
+policy:
+  allow_implicit_invocation: true
