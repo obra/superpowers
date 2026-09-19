@@ -17,7 +17,7 @@ fi
 plan=$1
 base=$2
 head=$3
-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+[ -e "$plan" ] || { echo "no such plan: $plan" >&2; exit 2; }
 
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }

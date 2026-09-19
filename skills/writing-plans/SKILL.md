@@ -13,7 +13,11 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>/`, a
+directory: `00-header.md` holds everything above the first task (the header
+below), and each task is its own file, `NN-<task-name>.md`, numbered in
+execution order from `01`. A task file is what an implementer reads; the
+header is what every task shares. Nothing is repeated between them.
 - (User preferences for plan location override this default)
 
 ## Scope Check
@@ -51,9 +55,9 @@ independently testable deliverable.
 - "Run the tests and make sure they pass" - step
 - "Commit" - step
 
-## Plan Document Header
+## Plan Header (`00-header.md`)
 
-**Every plan MUST start with this header:**
+**Every plan's header file MUST contain this:**
 
 ```markdown
 # [Feature Name] Implementation Plan
@@ -101,7 +105,7 @@ before the next task starts.]
 ---
 ```
 
-## Task Structure
+## Task File (`NN-<task-name>.md`)
 
 ````markdown
 ### Task N: [Component Name]
@@ -174,7 +178,7 @@ opposite failure, and the self-review catches both.
 
 ## Self-Review
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+After writing the complete plan (header and every task file), look at the spec with fresh eyes and check the plan against it; `cat` the directory in order to see it whole. This is a checklist you run yourself — not a subagent dispatch.
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 

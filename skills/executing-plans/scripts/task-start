@@ -5,7 +5,7 @@
 # cut from. One tool call instead of two, because every call in an inline
 # session is a turn that re-reads the whole context.
 #
-# Usage: task-start PLAN_FILE TASK_NUMBER
+# Usage: task-start PLAN TASK_NUMBER   (PLAN: the plan file, or a plan directory)
 # Prints:
 #   brief: <path to the task's brief file>
 #   base:  <full SHA of HEAD>
