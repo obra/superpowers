@@ -1,0 +1,3 @@
+We've been chasing this flaky login test for an hour. Every fix we try just moves the failure around.
+
+I think we need proper root-cause analysis before trying another patch — trace from the symptom back to the source instead of guessing. Can you take that approach?

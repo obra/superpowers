@@ -1,113 +1,81 @@
 #!/usr/bin/env bash
 # Extended multi-turn test with more conversation history
-# This tries to reproduce the failure by building more context
+# Usage: ./run-extended-multiturn-test.sh
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+LIB_DIR="$SCRIPT_DIR/../lib"
 
-TIMESTAMP=$(date +%s)
-OUTPUT_DIR="/tmp/superpowers-tests/${TIMESTAMP}/explicit-skill-requests/extended-multiturn"
-mkdir -p "$OUTPUT_DIR"
+# shellcheck source=../lib/common.sh
+source "$LIB_DIR/common.sh"
+# shellcheck source=../lib/assertions.sh
+source "$LIB_DIR/assertions.sh"
+# shellcheck source=../lib/run-claude.sh
+source "$LIB_DIR/run-claude.sh"
 
-PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/superpowers/plans"
+init_test_run "explicit-skill-requests" "extended-multiturn"
+create_auth_system_plan
+
+TURN1_LOG="$OUTPUT_DIR/turn1.json"
+TURN2_LOG="$OUTPUT_DIR/turn2.json"
+TURN3_LOG="$OUTPUT_DIR/turn3.json"
+TURN4_LOG="$OUTPUT_DIR/turn4.json"
+FINAL_LOG="$OUTPUT_DIR/turn5.json"
 
 echo "=== Extended Multi-Turn Test ==="
 echo "Output dir: $OUTPUT_DIR"
-echo "Plugin dir: $PLUGIN_DIR"
+echo "Plugin dir: $PLUGIN_ROOT"
 echo ""
 
-cd "$PROJECT_DIR"
-
-# Turn 1: Start brainstorming
 echo ">>> Turn 1: Brainstorming request..."
-claude -p "I want to add user authentication to my app. Help me think through this." \
-    --plugin-dir "$PLUGIN_DIR" \
-    --dangerously-skip-permissions \
-    --max-turns 3 \
-    --output-format stream-json \
-    > "$OUTPUT_DIR/turn1.json" 2>&1 || true
+run_claude_stream_json "$TURN1_LOG" \
+    "I want to add user authentication to my app. Help me think through this." \
+    3
 echo "Done."
 
-# Turn 2: Answer a brainstorming question
 echo ">>> Turn 2: Answering questions..."
-claude -p "Let's use JWT tokens with 24-hour expiry. Email/password registration." \
-    --continue \
-    --plugin-dir "$PLUGIN_DIR" \
-    --dangerously-skip-permissions \
-    --max-turns 3 \
-    --output-format stream-json \
-    > "$OUTPUT_DIR/turn2.json" 2>&1 || true
+run_claude_stream_json_continue "$TURN2_LOG" \
+    "Let's use JWT tokens with 24-hour expiry. Email/password registration." \
+    3
 echo "Done."
 
-# Turn 3: Ask to write a plan
 echo ">>> Turn 3: Requesting plan..."
-claude -p "Great, write this up as an implementation plan." \
-    --continue \
-    --plugin-dir "$PLUGIN_DIR" \
-    --dangerously-skip-permissions \
-    --max-turns 3 \
-    --output-format stream-json \
-    > "$OUTPUT_DIR/turn3.json" 2>&1 || true
+run_claude_stream_json_continue "$TURN3_LOG" \
+    "Great, write this up as an implementation plan." \
+    3
 echo "Done."
 
-# Turn 4: Confirm plan looks good
 echo ">>> Turn 4: Confirming plan..."
-claude -p "The plan looks good. What are my options for executing it?" \
-    --continue \
-    --plugin-dir "$PLUGIN_DIR" \
-    --dangerously-skip-permissions \
-    --max-turns 2 \
-    --output-format stream-json \
-    > "$OUTPUT_DIR/turn4.json" 2>&1 || true
+run_claude_stream_json_continue "$TURN4_LOG" \
+    "The plan looks good. What are my options for executing it?" \
+    2
 echo "Done."
 
-# Turn 5: THE CRITICAL TEST
 echo ">>> Turn 5: Requesting subagent-driven-development..."
-FINAL_LOG="$OUTPUT_DIR/turn5.json"
-claude -p "subagent-driven-development, please" \
-    --continue \
-    --plugin-dir "$PLUGIN_DIR" \
-    --dangerously-skip-permissions \
-    --max-turns 2 \
-    --output-format stream-json \
-    > "$FINAL_LOG" 2>&1 || true
+run_claude_stream_json_continue "$FINAL_LOG" \
+    "subagent-driven-development, please" \
+    2
 echo "Done."
 echo ""
 
 echo "=== Results ==="
 
-# Check final turn
-SKILL_PATTERN='"skill":"([^"]*:)?subagent-driven-development"'
-if grep -q '"name":"Skill"' "$FINAL_LOG" && grep -qE "$SKILL_PATTERN" "$FINAL_LOG"; then
-    echo "PASS: Skill was triggered"
+TRIGGERED=false
+if assert_skill_triggered "$FINAL_LOG" "subagent-driven-development"; then
     TRIGGERED=true
-else
-    echo "FAIL: Skill was NOT triggered"
-    TRIGGERED=false
-
-    # Show what was invoked instead
-    echo ""
-    echo "Tools invoked in final turn:"
-    grep '"type":"tool_use"' "$FINAL_LOG" | jq -r '.content[] | select(.type=="tool_use") | .name' 2>/dev/null | head -10 || \
-    grep -o '"name":"[^"]*"' "$FINAL_LOG" | head -10 || echo "  (none found)"
 fi
 
-echo ""
-echo "Skills triggered:"
-grep -o '"skill":"[^"]*"' "$FINAL_LOG" 2>/dev/null | sort -u || echo "  (none)"
+print_skill_trigger_summary "$FINAL_LOG" "Turn 5"
+assert_no_premature_tools "$FINAL_LOG" "Turn 5"
+show_first_assistant_message "$FINAL_LOG" "Turn 5"
 
 echo ""
-echo "Final turn response (first 500 chars):"
-grep '"type":"assistant"' "$FINAL_LOG" | head -1 | jq -r '.message.content[0].text // .message.content' 2>/dev/null | head -c 500 || echo "  (could not extract)"
+echo "Final log: $FINAL_LOG"
+echo "Timestamp: $TIMESTAMP"
 
-echo ""
-echo "Logs in: $OUTPUT_DIR"
-
-if [ "$TRIGGERED" = "true" ]; then
+if [ "$TRIGGERED" = true ]; then
     exit 0
-else
-    exit 1
 fi
+
+exit 1
