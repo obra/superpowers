@@ -353,8 +353,20 @@ Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
 
 ### 4. The fix loop
 
-The loop triggers when the review reports spec ❌, any Critical or Important
-finding, or a ⚠️ item you confirmed as a real gap.
+The loop triggers when the review reports spec ❌, a **Needs fixes** quality
+verdict, any Critical or Important finding under a Needs-fixes verdict, or
+a ⚠️ item you confirmed as a real gap.
+
+**Approved closes the task.** If spec is ✅ and quality is Approved, mark
+the task complete — do not dispatch a fix or a re-review solely because
+Important text appeared under the Approve verdict. Approved + Important is
+a reviewer-contract violation (see task-reviewer-prompt.md: Approved is
+compatible only with Minor and Forward risks); the honest reading is that
+the reviewer judged the item non-blocking, so route it that way: ledger it
+as `Task <N>: minor (deferred): <one-liner>` or a forward risk the final
+whole-branch review will see, and if a later task builds on that area,
+carry a pointer to the ledger entry in its dispatch. Re-running the loop
+on an accepted deliverable wastes a full implementer + reviewer round.
 
 Before the loop starts, two routes leave it immediately:
 
@@ -441,6 +453,14 @@ message as your other bookkeeping:
 Then mark the todo complete and move on. Never move to the next task while
 the review has open Critical/Important issues that are neither fixed nor
 parked-with-ruling at the cap.
+An Approved verdict with deferred minors or forward risks is complete:
+record them in the ledger and move on.
+
+**Polish after Approve.** A trivial amend (comment, naming, a log line)
+after an Approved verdict does not reopen the task review. Keep it truly
+trivial — no logic changes — and rely on the final whole-branch review,
+which sees the whole diff, to cover it. Anything beyond trivial goes
+through the loop or gets parked like any other finding.
 
 ## Final Review
 
@@ -497,6 +517,7 @@ Use superpowers:finishing-a-development-branch.
 | "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
+| "Important text under Approved — reopen the loop" | Approved is the reviewer's final word on acceptance. Route the item as a deferred minor or forward risk; the loop reopens only for Needs fixes, spec ❌, or Critical/Important under a Needs-fixes verdict. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
 | "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
 
@@ -527,8 +548,10 @@ Implementer: [Later]
 [Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
+  Forward risks: install script assumes a single user (Task 3 adds multi-user mode — revisit there)
 
 [Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
+[Ledger: Task 1: minor (deferred): single-user assumption — carry pointer into Task 3 dispatch]
 
 Task 2: Recovery modes
 
