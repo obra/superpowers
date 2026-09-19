@@ -15,7 +15,8 @@
 #   --open                Auto-open the browser on the first screen (use only
 #                         after the user approves the visual companion).
 #   --foreground          Run server in the current terminal (no backgrounding).
-#   --background          Force background mode (overrides Codex auto-foreground).
+#   --background          Force background mode (overrides Codex/Cursor/Windows
+#                         auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -94,8 +95,29 @@ is_windows_like_shell() {
   return 1
 }
 
+is_cursor_agent() {
+  # Cursor sets these in agent Shell tool environments. Detached/nohup children
+  # are reaped when the launching tool call exits — same failure mode as Codex.
+  if [[ -n "${CURSOR_AGENT:-}" ]]; then
+    return 0
+  fi
+  if [[ "${CURSOR_EXTENSION_HOST_ROLE:-}" == "agent-exec" ]]; then
+    return 0
+  fi
+  return 1
+}
+
+foreground_retry_hint() {
+  echo "$SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground"
+}
+
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  FOREGROUND="true"
+fi
+
+# Cursor reaps nohup children after the Shell tool call completes. Auto-foreground.
+if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]] && is_cursor_agent; then
   FOREGROUND="true"
 fi
 
@@ -168,7 +190,16 @@ fi
 
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
-  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.cjs "--brainstorm-server-id=$SERVER_ID" &
+  if is_cursor_agent; then
+    # Agents must keep this process alive via an async/persistent shell
+    # (Cursor: block_until_ms: 0), then read state/server-info + curl the URL.
+    echo '{"type":"hint","message":"Cursor detected: launch with block_until_ms:0 (async shell), then read state/server-info and curl the url before sharing it"}' >&2
+  fi
+  # Tee into server.log so async harnesses can discover startup via server-info
+  # and the log file even while this shell blocks on wait.
+  touch "$LOG_FILE"
+  env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" \
+    node server.cjs "--brainstorm-server-id=$SERVER_ID" > >(tee "$LOG_FILE") 2>&1 &
   SERVER_PID=$!
   echo "$SERVER_PID" > "$PID_FILE"
   wait "$SERVER_PID"
@@ -181,6 +212,16 @@ nohup env BRAINSTORM_DIR="$SESSION_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"
+
+http_ready() {
+  local url="$1"
+  local code
+  if ! command -v curl >/dev/null 2>&1; then
+    return 0
+  fi
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 1 "$url" 2>/dev/null || true)"
+  [[ "$code" == "200" ]]
+}
 
 # Wait for server-started message (check log file)
 for _ in {1..50}; do
@@ -195,10 +236,32 @@ for _ in {1..50}; do
       sleep 0.1
     done
     if [[ "$alive" != "true" ]]; then
-      echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
+      echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $(foreground_retry_hint)\"}"
       exit 1
     fi
-    grep "server-started" "$LOG_FILE" | head -1
+
+    started_line="$(grep "server-started" "$LOG_FILE" | head -1)"
+    started_url="$(printf '%s\n' "$started_line" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p')"
+    if [[ -n "$started_url" ]]; then
+      ready="false"
+      for _ in {1..30}; do
+        if http_ready "$started_url"; then
+          ready="true"
+          break
+        fi
+        if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+          break
+        fi
+        sleep 0.1
+      done
+      if [[ "$ready" != "true" ]]; then
+        kill "$SERVER_PID" 2>/dev/null || true
+        echo "{\"error\": \"Server started but HTTP readiness check failed. Retry in a persistent terminal with: $(foreground_retry_hint)\"}"
+        exit 1
+      fi
+    fi
+
+    printf '%s\n' "$started_line"
     exit 0
   fi
   sleep 0.1
