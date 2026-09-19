@@ -1,0 +1,69 @@
+diff --git a/plans/2026-09-18-cosmic-tetris-engine/00-header.md b/plans/2026-09-18-cosmic-tetris-engine/00-header.md
+index 56590f2..dc533d6 100644
+--- a/plans/2026-09-18-cosmic-tetris-engine/00-header.md
++++ b/plans/2026-09-18-cosmic-tetris-engine/00-header.md
+@@ -4,7 +4,7 @@
+ 
+ **Goal:** Build the headless, deterministic falling-block engine in `internal/game`: pieces, board, 7-bag, movement, wall kicks, gravity, lock delay, line clearing, hold, scoring, and game over, with no rendering and no clock reads.
+ 
+-**Architecture:** One Go package, `internal/game`, holding plain structs and pure-ish functions. `Game` owns all mutable state plus its own `*rand.Rand`. Two entry points drive it: `Apply(Input)` for player actions and `Tick(dt)` for elapsed time. Both return `[]Event`, which is the engine's only outbound channel — later plans (renderer, FX) consume events and never reach into state. Nothing in this package imports Bubble Tea, Lip Gloss, or `time.Now()`.
++**Architecture:** One Go package, `internal/game`, holding plain structs and pure-ish functions. `Game` owns all mutable state plus its own `*rand.Rand`. Two entry points drive it: `Apply(Input)` for player actions and `Advance(dt)` for elapsed time. Both return `[]Event`, which is the engine's only outbound channel — later plans (renderer, FX) consume events and never reach into state. Nothing in this package imports Bubble Tea, Lip Gloss, or `time.Now()`.
+ 
+ **Tech Stack:** Go 1.26, standard library only (`math/rand`, `time` for `time.Duration` arithmetic).
+ 
+@@ -16,7 +16,7 @@
+ - Third-party dependencies for the whole project are exactly `charm.land/bubbletea/v2`, `charm.land/lipgloss/v2`, `charm.land/bubbles/v2`. This plan adds none of them — `internal/game` is standard library only.
+ - Repository layout is fixed by §33. The one addition is `internal/game/events.go`, so event types do not crowd `game.go`.
+ - Board: width 10, height 22, visible rows 20 (`y=2..21`), hidden spawn rows `y=0..1`. `y` increases downward.
+-- `internal/game` never calls `time.Now()`. All time enters through `Tick(dt time.Duration)` (§49.2).
++- `internal/game` never calls `time.Now()`. All time enters through `Advance(dt time.Duration)` (§49.2).
+ - Game RNG drives the 7-bag and nothing else. `Seed int64` is recorded for display and restart; `rng *rand.Rand` is unexported (§49.6).
+ - Combo counts consecutive placements that clear ≥1 line; first clearing placement sets combo to 1; a placement clearing nothing resets it to 0. Bonus = `50 × (combo - 1) × level` (§49.1).
+ - Base clear values: 1 line `100 × level`, 2 lines `300 × level`, 3 lines `500 × level`, 4 lines `800 × level` (§13).
+@@ -29,16 +29,16 @@
+ 
+ ## Review Focus
+ 
+-- A single `Tick(dt)` carrying more than one gravity interval (a lag spike or a slow terminal) must apply every drop the elapsed time earns, not one — otherwise the game silently slows down whenever the host stutters. Test in Task 6.
+-- `Tick(0)` and `Tick(-1)` (clock skew, duplicate frame) must be no-ops that return no events rather than looping or rewinding accumulators. Test in Task 6.
++- A single `Advance(dt)` carrying more than one gravity interval (a lag spike or a slow terminal) must apply every drop the elapsed time earns, not one — otherwise the game silently slows down whenever the host stutters. Test in Task 6.
++- `Advance(0)` and `Advance(-1)` (clock skew, duplicate frame) must be no-ops that return no events rather than looping or rewinding accumulators. Test in Task 6.
+ - Input and time arriving after `GameOver` must be ignored, not panic and not move a piece inside a full board. Test in Task 8.
+-- A very high level (say 99) must not drive the gravity interval to zero — `Tick` loops on the interval, and a zero interval hangs the process. Test in Task 4.
++- A very high level (say 99) must not drive the gravity interval to zero — `Advance` loops on the interval, and a zero interval hangs the process. Test in Task 4.
+ - Non-contiguous completed rows (rows 5 and 9 complete, 6–8 not) must collapse to the right result; a naive shift-by-one loop gets this wrong. Test in Task 2.
+ 
+ ## Plan Set
+ 
+ 1. `plans/2026-09-18-cosmic-tetris-engine/` — headless deterministic engine, `internal/game`. Consumes: nothing.
+-2. `plans/2026-09-18-cosmic-tetris-terminal/` — CLI, Bubble Tea app, renderer, layouts, pause/restart/game-over panel, golden tests (`cmd/cosmic-tetris`, `internal/app`, `internal/render`). Consumes from plan 1: `game.New`, `Game.Apply`, `Game.Tick`, `Game.Ghost`, `Game.Reset`, `Event`, `Board`, `Piece`.
++2. `plans/2026-09-18-cosmic-tetris-terminal/` — CLI, Bubble Tea app, renderer, layouts, pause/restart/game-over panel, golden tests (`cmd/cosmic-tetris`, `internal/app`, `internal/render`). Consumes from plan 1: `game.New`, `Game.Apply`, `Game.Advance`, `Game.Ghost`, `Game.Reset`, `Event`, `Board`, `Piece`.
+ 3. `plans/2026-09-18-cosmic-tetris-fx-foundation/` — `internal/fx` (world, particles, starfield), animated border, piece trails, `internal/flavor` mission control. Consumes from plans 1–2: `game.Event`, `render.Scene`, `render.Render`.
+ 4. `plans/2026-09-18-cosmic-tetris-fx-violence-polish/` — hard-drop impact, supernova line clears, shockwaves, hyperdrive, four-line sequence, combo/level escalation, boot sequence, black-hole game over, help overlay, ASCII / `--no-fx` / `--reduced-motion` goldens, README. Consumes from plans 1–3: `fx.World` accessors, `render.Render` pipeline, `flavor.Channel`.
+ 
+diff --git a/plans/2026-09-18-cosmic-tetris-fx-foundation/00-header.md b/plans/2026-09-18-cosmic-tetris-fx-foundation/00-header.md
+index 7442211..aa071e5 100644
+--- a/plans/2026-09-18-cosmic-tetris-fx-foundation/00-header.md
++++ b/plans/2026-09-18-cosmic-tetris-fx-foundation/00-header.md
+@@ -36,7 +36,7 @@
+ ## Plan Set
+ 
+ 1. `plans/2026-09-18-cosmic-tetris-engine/` — headless deterministic engine, `internal/game`. Consumes: nothing.
+-2. `plans/2026-09-18-cosmic-tetris-terminal/` — CLI, Bubble Tea app, renderer, layouts, pause/restart/game-over panel, golden tests. Consumes from plan 1: `game.New`, `Game.Apply`, `Game.Tick`, `Game.Ghost`, `Game.Reset`, `Game.Snapshot`, `Event`.
++2. `plans/2026-09-18-cosmic-tetris-terminal/` — CLI, Bubble Tea app, renderer, layouts, pause/restart/game-over panel, golden tests. Consumes from plan 1: `game.New`, `Game.Apply`, `Game.Advance`, `Game.Ghost`, `Game.Reset`, `Game.Snapshot`, `Event`.
+ 3. `plans/2026-09-18-cosmic-tetris-fx-foundation/` — `internal/fx` (world, particles, starfield), animated border, piece trails, `internal/flavor` mission control. Consumes from plans 1–2: `game.Event`, `render.Scene`, `render.Render`, `render.Palette`, `app.Model`.
+ 4. `plans/2026-09-18-cosmic-tetris-fx-violence-polish/` — hard-drop impact, supernova line clears, shockwaves, hyperdrive, four-line sequence, combo/level escalation, boot sequence, black-hole game over, help overlay, ASCII / `--no-fx` / `--reduced-motion` goldens, README. Consumes from plans 1–3: `fx.World` accessors and `Emit`, `render.composite`, `flavor.Channel`.
+ 
+diff --git a/plans/2026-09-18-cosmic-tetris-fx-foundation/04-composite-and-app-wiring.md b/plans/2026-09-18-cosmic-tetris-fx-foundation/04-composite-and-app-wiring.md
+index 1a459f7..d44b549 100644
+--- a/plans/2026-09-18-cosmic-tetris-fx-foundation/04-composite-and-app-wiring.md
++++ b/plans/2026-09-18-cosmic-tetris-fx-foundation/04-composite-and-app-wiring.md
+@@ -44,7 +44,7 @@ type Scene struct {
+ 
+ Stars never draw inside the board box: `starMarks` filters out any mark whose column falls in `[l.BoardLeft, l.BoardLeft+l.BoardWidth)` on a board row (§15's readability rule, enforced structurally rather than by tuning density).
+ 
+-App wiring: `Model` gains `FX *fx.World`, created in `New` as `fx.NewWorld(cfg.Seed+1, fx.Config{Enabled: cfg.FX, ReducedMotion: cfg.ReducedMotion})` and left `nil` when `!cfg.FX`. `handleFrame` calls `FX.Observe(events, snapshot)` with the events `Game.Tick` and `Game.Apply` returned, then `FX.Step(dt)` — or `FX.StepPaused(dt)` when paused. `handleKey` collects the events from `Game.Apply` and passes them to `Observe` in the same call. A window-size message calls `FX.Resize`.
++App wiring: `Model` gains `FX *fx.World`, created in `New` as `fx.NewWorld(cfg.Seed+1, fx.Config{Enabled: cfg.FX, ReducedMotion: cfg.ReducedMotion})` and left `nil` when `!cfg.FX`. `handleFrame` calls `FX.Observe(events, snapshot)` with the events `Game.Advance` and `Game.Apply` returned, then `FX.Step(dt)` — or `FX.StepPaused(dt)` when paused. `handleKey` collects the events from `Game.Apply` and passes them to `Observe` in the same call. A window-size message calls `FX.Resize`.
+ 
+ - [ ] **Step 1: Write the failing test**
+ 

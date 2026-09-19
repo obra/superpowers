@@ -30,3 +30,23 @@ things it was for: a task is one file an implementer reads, a ruling that
 touches a later plan is an edit to one small file, and a session resuming
 after compaction has the task in front of it, not line 2,900 of a document.
 The gated plan-set run (boundary script before each next plan) follows.
+
+Gated plan-set run: the directory-form cosmic set (wpplans-101) with the
+Tick/Advance conflict planted in plans 1-2, executed as a SET inline on
+Sonnet 5 under D1 (scripts/plan-boundary required before each next plan),
+2 reps capped at 75 min (~$27 each):
+  spike-191  ruled for the spec (Advance), edited plans 1-2 (header and
+             Plan Set lines Tick -> Advance), ran plan-boundary before
+             plan 2: "clean (8 consumed names found in code)"; plans 3-5
+             already said Advance. Continued into plan 2; 18 commits.
+  spike-192  ruled for the plan (kept Tick), edited plans 2-5's Plan Set
+             and header lines Advance -> Tick so the later plans match the
+             code; ran plan-boundary several times (one flagged pass, then
+             clean). Continued into plan 2; 18 commits.
+  Both: go test green, continuation 2/2, plan set consistent with the code
+  2/2 (a few prose/test-name mentions of the old name remain), the gate
+  run before plan 2 2/2. Against the per-ruling slot form: 0/2 slot,
+  1/2 partial edit. Rep 192's direction (plan over spec) is a ruling the
+  partner reads in the rulings list; the mechanism kept the set true
+  either way. Not yet done: the script checks only the next plan; the
+  "all later plans, names attributed to completed plans" refinement.

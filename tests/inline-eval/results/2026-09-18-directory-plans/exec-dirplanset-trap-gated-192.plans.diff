@@ -1,0 +1,91 @@
+diff --git a/plans/2026-09-18-cosmic-tetris-terminal/00-header.md b/plans/2026-09-18-cosmic-tetris-terminal/00-header.md
+index 9ecb111..ad7dd2a 100644
+--- a/plans/2026-09-18-cosmic-tetris-terminal/00-header.md
++++ b/plans/2026-09-18-cosmic-tetris-terminal/00-header.md
+@@ -4,7 +4,7 @@
+ 
+ **Goal:** Turn the engine into a genuinely good playable terminal game: CLI flags, Bubble Tea event loop, immediate keyboard input, board/ghost/hold/next/stats rendering, three responsive layouts, pause, restart, and a game-over panel — with golden snapshot tests. No cosmic effects yet.
+ 
+-**Architecture:** `cmd/cosmic-tetris/main.go` parses flags and starts the Bubble Tea program. `internal/app` owns the Bubble Tea `Model`: one 60 Hz frame clock, elapsed-time `dt` fed to `game.Advance`, and key messages applied to `game.Apply` the instant they arrive. `internal/render` is a pure function of a `render.Scene` value to a string — it imports `internal/game` but never `internal/app`, which keeps the dependency graph acyclic and makes every layout snapshot-testable without a terminal.
++**Architecture:** `cmd/cosmic-tetris/main.go` parses flags and starts the Bubble Tea program. `internal/app` owns the Bubble Tea `Model`: one 60 Hz frame clock, elapsed-time `dt` fed to `game.Tick`, and key messages applied to `game.Apply` the instant they arrive. `internal/render` is a pure function of a `render.Scene` value to a string — it imports `internal/game` but never `internal/app`, which keeps the dependency graph acyclic and makes every layout snapshot-testable without a terminal.
+ 
+ **Tech Stack:** Go 1.26, `charm.land/bubbletea/v2`, `charm.land/lipgloss/v2`.
+ 
+@@ -18,7 +18,7 @@
+ - The renderer never mutates game state (§37). `Render` takes `Scene` by value and only reads through its `*game.Game`.
+ - One logical cell = 2 terminal columns × 1 row. Block glyph `██` in full/reduced mode, `[]` in ASCII. Ghost glyph `░░` in full/reduced, `··` in ASCII (§49.4). Pieces use a bright foreground on filled glyphs, never a background pair; the active piece renders one step brighter than locked cells.
+ - Visible board = rows `y=2..21` of the 22-row board, 20 rows × 10 cells (§5).
+-- Render targets ~60 Hz from a single animation clock: one `tea.Tick` at `16 * time.Millisecond`. Gravity is elapsed-time based through `game.Advance(dt)`; input never waits for a tick (§36, §44).
++- Render targets ~60 Hz from a single animation clock: one `tea.Tick` at `16 * time.Millisecond`. Gravity is elapsed-time based through `game.Tick(dt)`; input never waits for a tick (§36, §44).
+ - CLI surface is exactly: `cosmic-tetris`, `--seed N`, `--ascii`, `--no-fx`, `--reduced-motion`, `--help` (§49.5). No other flags.
+ - Minimum usable terminal ~40×24; below that show the too-small notice (§31). Resize is handled live and never panics.
+ - Golden tests compare ANSI-stripped output (§41). §4's mockup is mood, not geometry — the goldens are the binding layout contract (§49.7).
+@@ -28,15 +28,15 @@
+ ## Review Focus
+ 
+ - A `WindowSizeMsg` of `0×0` or `1×1` (some terminals and multiplexers send one on startup or while detaching) must produce the too-small notice, not a panic or a negative-width string build. Test in Task 6.
+-- A very large terminal (300×100) must keep the board at its fixed cell size and centre it, rather than stretching the board or leaving the HUD floating at a stale position. Test in Task 7.
+-- Several key messages arriving between two frames (key repeat, a held arrow, a paste) must each apply to the game in order — dropping to one input per frame is exactly the control lag §44 forbids. Test in Task 2.
++- A very large terminal (300×100) must keep the board at its fixed cell size and centre it, rather than stretching the board or leaving the HUD floating at a stale position. Test in Task 6.
++- Several key messages arriving between two frames (key repeat, a held arrow, a paste) must each apply to the game in order — dropping to one input per frame is exactly the control lag §44 forbids. Test in Task 7.
+ - An odd terminal width with a 2-column cell grid must not shear the board border; the layout has to round down to whole cells. Test in Task 6.
+-- Unrecognized keys and `ctrl+c` must be handled — unknown keys ignored with no state change, `ctrl+c` quitting like `q`. Test in Task 2.
++- Unrecognized keys and `ctrl+c` must be handled — unknown keys ignored with no state change, `ctrl+c` quitting like `q`. Test in Task 7.
+ 
+ ## Plan Set
+ 
+ 1. `plans/2026-09-18-cosmic-tetris-engine/` — headless deterministic engine, `internal/game`. Consumes: nothing.
+-2. `plans/2026-09-18-cosmic-tetris-terminal/` — CLI, Bubble Tea app, renderer, layouts, pause/restart/game-over panel, golden tests (`cmd/cosmic-tetris`, `internal/app`, `internal/render`). Consumes from plan 1: `game.New`, `Game.Apply`, `Game.Advance`, `Game.Ghost`, `Game.Reset`, `Game.Snapshot`, `Event`, `Board`, `Piece`.
++2. `plans/2026-09-18-cosmic-tetris-terminal/` — CLI, Bubble Tea app, renderer, layouts, pause/restart/game-over panel, golden tests (`cmd/cosmic-tetris`, `internal/app`, `internal/render`). Consumes from plan 1: `game.New`, `Game.Apply`, `Game.Tick`, `Game.Ghost`, `Game.Reset`, `Game.Snapshot`, `Event`, `Board`, `Piece`.
+ 3. `plans/2026-09-18-cosmic-tetris-fx-foundation/` — `internal/fx` (world, particles, starfield), animated border, piece trails, `internal/flavor` mission control. Consumes from plans 1–2: `game.Event`, `render.Scene`, `render.Render`.
+ 4. `plans/2026-09-18-cosmic-tetris-fx-violence-polish/` — hard-drop impact, supernova line clears, shockwaves, hyperdrive, four-line sequence, combo/level escalation, boot sequence, black-hole game over, help overlay, ASCII / `--no-fx` / `--reduced-motion` goldens, README. Consumes from plans 1–3: `fx.World` accessors, `render.Render` pipeline, `flavor.Channel`.
+ 
+diff --git a/plans/2026-09-18-cosmic-tetris-terminal/06-render-pipeline-and-goldens.md b/plans/2026-09-18-cosmic-tetris-terminal/06-render-pipeline-and-goldens.md
+index d35e8df..aff5b14 100644
+--- a/plans/2026-09-18-cosmic-tetris-terminal/06-render-pipeline-and-goldens.md
++++ b/plans/2026-09-18-cosmic-tetris-terminal/06-render-pipeline-and-goldens.md
+@@ -43,7 +43,7 @@ func golden(t *testing.T, name, got string)
+ 
+ func TestRenderGoldens(t *testing.T)
+ // a deterministic scene: g := game.New(8675309), then a fixed script of
+-//   ~12 Apply/Advance calls (recorded in the test) so the board has locked cells,
++//   ~12 Apply/Tick calls (recorded in the test) so the board has locked cells,
+ //   a hold, a non-zero score, and Mission set to "GRAVITY REMAINS MOSTLY LEGAL"
+ // subtests, each with its own golden file:
+ //   "wide"    80×30
+diff --git a/plans/2026-09-18-cosmic-tetris-terminal/07-model-keys-update.md b/plans/2026-09-18-cosmic-tetris-terminal/07-model-keys-update.md
+index 5279ce1..38f32cf 100644
+--- a/plans/2026-09-18-cosmic-tetris-terminal/07-model-keys-update.md
++++ b/plans/2026-09-18-cosmic-tetris-terminal/07-model-keys-update.md
+@@ -8,7 +8,7 @@
+ - Test: `internal/app/update_test.go`
+ 
+ **Interfaces:**
+-- Consumes: `Config` (Task 1); `render.Scene`, `render.Phase`, `render.Options`, `render.ResolveMode` (Task 2), `render.Render` (Task 6); `game.New`, `Game.Apply`, `Game.Advance`, `Game.Reset`, `Game.Snapshot`, `game.Input*`, `game.Event` (plan 1).
++- Consumes: `Config` (Task 1); `render.Scene`, `render.Phase`, `render.Options`, `render.ResolveMode` (Task 2), `render.Render` (Task 6); `game.New`, `Game.Apply`, `Game.Tick`, `Game.Reset`, `Game.Snapshot`, `game.Input*`, `game.Event` (plan 1).
+ - Produces:
+ ```go
+ // messages.go
+@@ -42,7 +42,7 @@ func (m *Model) Scene() render.Scene
+ 
+ // update.go
+ func (m *Model) handleKey(s string) tea.Cmd   // returns tea.Quit for the quit binding, nil otherwise
+-func (m *Model) handleFrame(now time.Time)    // dt = now - LastFrame, clamped to MaxFrameDt, then Game.Advance
++func (m *Model) handleFrame(now time.Time)    // dt = now - LastFrame, clamped to MaxFrameDt, then Game.Tick
+ const MaxFrameDt = 100 * time.Millisecond
+ ```
+ 
+@@ -59,11 +59,11 @@ restart:   r                   help:      ?
+ quit:      q, esc, ctrl+c
+ ```
+ 
+-`FrameMsg` is the only message type this plan defines. §36 also sketches `GravityMsg` and `GameEventMsg`, but §36 itself prefers one animation clock, and the engine returns its events synchronously from `Apply` and `Advance` — so a second timer and an event message would both be dead weight. If a later need appears, it goes in `messages.go` beside `FrameMsg`.
++`FrameMsg` is the only message type this plan defines. §36 also sketches `GravityMsg` and `GameEventMsg`, but §36 itself prefers one animation clock, and the engine returns its events synchronously from `Apply` and `Tick` — so a second timer and an event message would both be dead weight. If a later need appears, it goes in `messages.go` beside `FrameMsg`.
+ 
+ `MaxFrameDt` clamps a resumed-from-suspend gap so the player does not lose a stack to a laptop lid. It is a presentation-layer decision: the engine still applies exactly the `dt` it is handed.
+ 
+-Phases: `Paused` freezes gameplay — `handleFrame` accumulates `Elapsed` but skips `Game.Advance`. `p` toggles `PhasePlaying`/`PhasePaused`. `r` calls `Game.Reset()` and returns to `PhasePlaying` from any phase. Inputs other than pause/restart/help/quit are ignored unless `Phase == PhasePlaying`. `GameOver` in the returned events sets `Phase = render.PhaseGameOver`.
++Phases: `Paused` freezes gameplay — `handleFrame` accumulates `Elapsed` but skips `Game.Tick`. `p` toggles `PhasePlaying`/`PhasePaused`. `r` calls `Game.Reset()` and returns to `PhasePlaying` from any phase. Inputs other than pause/restart/help/quit are ignored unless `Phase == PhasePlaying`. `GameOver` in the returned events sets `Phase = render.PhaseGameOver`.
+ 
+ - [ ] **Step 1: Write the failing test**
+ 
