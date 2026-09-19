@@ -22,6 +22,30 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Two Plan Shapes
+
+Before mapping files, classify the plan's shape and say the
+classification out loud — "this composes three subsystems, so I'll plan
+it skeleton-first" — so your human partner can override it:
+
+- **Task-by-task (default)** — tasks build the feature a component at a
+  time, each step carrying the actual content the engineer needs. Use it
+  for changes to code that already exists, for a spec that touches one
+  subsystem, and whenever the alternative's conditions do not clearly
+  hold. The rest of this skill describes this shape.
+- **Skeleton-first (alternative)** — Task 1 is the thinnest end-to-end
+  slice through every subsystem the spec composes; later tasks widen it
+  one component at a time, each from a contract rather than written-out
+  code. Use it when the spec composes more than one subsystem AND a
+  running end-to-end slice early is worth a longer total build. Read
+  [skeleton-first-plans.md](skeleton-first-plans.md) before writing one
+  — it adds one line to the plan header and replaces this skill's task
+  granularity, task template, and plan-failure list.
+
+When in doubt, plan task-by-task. Skeleton-first buys an earlier running
+system and pays for it in total wall clock; it is a trade, not an
+upgrade.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
