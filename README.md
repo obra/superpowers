@@ -239,10 +239,10 @@ already use it in another harness.
 Install Superpowers through OpenClaw's plugin manager:
 
 ```bash
-openclaw plugins install git:github.com/obra/superpowers@main --force --accept-capabilities
+openclaw plugins install git:github.com/obra/superpowers@main
 ```
 
-The native plugin registers the skills and loads `using-superpowers` automatically when an agent starts. The flags acknowledge a third-party Git source and its declared capabilities in a noninteractive shell; they do not change session behavior. See [docs/README.openclaw.md](docs/README.openclaw.md) for verification and local development.
+Review the Git source and declared capabilities when OpenClaw prompts. The native plugin registers the skills and loads `using-superpowers` automatically when an agent starts. Update a tracked installation with `openclaw plugins update superpowers`. See [docs/README.openclaw.md](docs/README.openclaw.md) for non-interactive installation, verification, and local development.
 
 ### Pi
 

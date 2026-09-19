@@ -5,10 +5,18 @@ OpenClaw needs both the Superpowers skill catalog and an automatic bootstrap. Th
 ## Install
 
 ```bash
-openclaw plugins install git:github.com/obra/superpowers@main --force --accept-capabilities
+openclaw plugins install git:github.com/obra/superpowers@main
 ```
 
-OpenClaw asks for confirmation when installing third-party Git code and accepting its capabilities interactively. `--force` and `--accept-capabilities` supply those acknowledgements in a noninteractive shell. Restart a running Gateway after installation so it loads the new plugin. If you use an explicit `plugins.allow` policy, the install command adds `superpowers` to that list.
+Review the third-party Git source and declared capabilities when OpenClaw prompts. Restart a running Gateway after installation so it loads the new plugin. If you use an explicit `plugins.allow` policy, the install command adds `superpowers` to that list.
+
+### Non-interactive installation
+
+After reviewing the source and declared capabilities, use these flags in CI or another non-interactive shell to acknowledge the same prompts:
+
+```bash
+openclaw plugins install git:github.com/obra/superpowers@main --force --accept-capabilities
+```
 
 Check the installation:
 
@@ -24,12 +32,22 @@ Let's make a react todo list
 
 The agent should read `brainstorming/SKILL.md` before creating or changing code. A list of skill names alone does not prove the bootstrap is active.
 
+## Update
+
+Git installations are tracked by OpenClaw. To update Superpowers from the Git source and branch selected during installation, run:
+
+```bash
+openclaw plugins update superpowers
+```
+
+OpenClaw may ask you to review newly declared capabilities. Check the loaded plugin afterward with `openclaw plugins inspect superpowers --runtime`.
+
 ## Local development
 
 From a Superpowers checkout, install a link to the plugin:
 
 ```bash
-openclaw plugins install --link /path/to/superpowers --force --accept-capabilities
+openclaw plugins install --link /path/to/superpowers
 ```
 
 The plugin has no runtime package dependencies or build step. Its entry point reads the installed `using-superpowers/SKILL.md` and OpenClaw mapping once when the plugin starts. Changes to either file require restarting the Gateway.
