@@ -75,6 +75,16 @@ Follow this priority order. Explicit user preference always beats observed files
 
 3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
 
+**Using the OS temp directory.** If you want worktrees the OS reaps on its own, put them under a `worktrees/` directory inside the temp dir:
+
+```bash
+"${TMPDIR:-/tmp}/superpowers/worktrees/<branch-name>"
+```
+
+The `worktrees/` path component matters: `finishing-a-development-branch` decides what it owns by path, so a worktree under `worktrees/` still gets cleaned up. Put it somewhere else in the temp dir and cleanup will treat it as someone else's and leave it — with the branch still attached to it.
+
+Suits short-lived branches. Don't use it for work you want to keep: `$TMPDIR` is reaped on a schedule you don't control (aggressively so on macOS), and if the directory disappears mid-branch you'll need `git worktree prune` to clear the stale registration.
+
 #### Safety Verification (project-local directories only)
 
 **MUST verify directory is ignored before creating worktree:**
