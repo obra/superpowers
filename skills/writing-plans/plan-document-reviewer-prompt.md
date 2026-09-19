@@ -19,6 +19,7 @@ Subagent (general-purpose):
 
     | Category | What to Look For |
     |----------|------------------|
+    | Opening Summary | First two lines are brief `WHAT changed` and `WHY` bullets; WHY cites current evidence/root cause/data |
     | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
@@ -31,7 +32,9 @@ Subagent (general-purpose):
     Minor wording, stylistic preferences, and "nice to have" suggestions are not.
 
     Approve unless there are serious gaps — missing requirements from the spec,
-    contradictory steps, placeholder content, or tasks so vague they can't be acted on.
+    missing or bloated WHAT/WHY opening bullets, WHY without evidence/root-cause
+    data, contradictory steps, placeholder content, or tasks so vague they can't
+    be acted on.
 
     ## Output Format
 
