@@ -24,7 +24,7 @@ echo "test-antigravity-tools: checking Antigravity tool mapping"
 [ -f "$MAPPING" ] || fail "tool mapping missing at $MAPPING"
 
 # --- Core action→tool mappings are documented -------------------------------
-for tool in write_to_file replace_file_content invoke_subagent; do
+for tool in write_to_file replace_file_content invoke_subagent ask_question; do
   grep -q "$tool" "$MAPPING" \
     || fail "mapping does not document the '$tool' tool"
 done
