@@ -107,6 +107,11 @@ digraph process {
 
 ## Setup
 
+A plan is one file, or a directory (`00-header.md` plus one `NN-<task>.md`
+per task, the form writing-plans writes). Every script below takes either;
+"the plan" means the whole of it, and "the header" means the part above
+Task 1 or `00-header.md`.
+
 Ensure the work happens in an isolated workspace: use
 superpowers:using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
@@ -123,7 +128,7 @@ The workspace and ledger are shared with superpowers:subagent-driven-development
 and the new one resumes from the same ledger.
 
 - Each plan owns a workspace: at skill start, run
-  `../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` — it
+  `../subagent-driven-development/scripts/sdd-workspace PLAN` — it
   prints the plan's git-ignored directory
   (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to every
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
@@ -136,7 +141,7 @@ and the new one resumes from the same ledger.
   recollection. A ledger whose first line names a different plan file is
   another plan's progress: leave it and start your own, fresh.
 - Create the ledger with its identity as the first line:
-  `# SDD ledger — plan: <plan file path>`.
+  `# SDD ledger — plan: <plan path>`.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
   if that happens, recover from `git log`.
 
@@ -169,7 +174,7 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-- Run this skill's `scripts/task-start PLAN_FILE N`. It prints the brief
+- Run this skill's `scripts/task-start PLAN N`. It prints the brief
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
   what you remember is a summary, the brief has the exact values,
@@ -221,7 +226,7 @@ the claim. If any item is missing, the task is not complete: finish it.
 
 ### 4. Complete the task
 
-Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
+Run this skill's `scripts/task-done PLAN N BASE -- <test command>`
 with the test command the brief names for the whole task. It runs the
 tests, keeps the full output in the workspace, prints the tail, and — only
 if they pass — appends the completion line to the ledger:
@@ -233,7 +238,7 @@ mark the todo complete and take the next task.
 
 ## Final Review
 
-Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
+Run `../subagent-driven-development/scripts/review-package PLAN MERGE_BASE HEAD`
 (MERGE_BASE = the commit the branch started from, e.g.
 `git merge-base main HEAD`) and review from the file it prints.
 
@@ -301,7 +306,12 @@ partner's behalf — and the findings you chose not to act on — reach them.
 
 When a plan follows this one in the Plan Set, finishing this plan means
 starting that one, under the same method and in this session: the set was
-reviewed once, and only the four stops stop you.
+reviewed once, and only the four stops stop you. Before its Task 1, run
+`scripts/plan-boundary NEXT_PLAN` (this skill's directory): it names
+every identifier the plan's Consumes lines take from earlier plans that
+the code as built does not contain. Fix each one in the plan file, ledger
+it as a ruling, and re-run until it prints `boundary: clean`. The plan runs
+as written after that, so a name it still gets wrong is executed wrong.
 
 When the final review is clean and its fixes are committed, delete this
 plan's workspace directory — the git history is the record now. Sibling

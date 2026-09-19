@@ -4,7 +4,7 @@
 # only if the command succeeded — append the completion line to the ledger.
 # A failing command records nothing: the task is not complete.
 #
-# Usage: task-done PLAN_FILE TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]
+# Usage: task-done PLAN TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]   (PLAN: file or directory)
 #   BASE is the SHA task-start printed; the completion line records BASE..HEAD.
 # Exit: the test command's exit status.
 set -euo pipefail

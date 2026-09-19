@@ -16,7 +16,7 @@ fi
 
 plan=$1
 n=$2
-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+[ -e "$plan" ] || { echo "no such plan: $plan" >&2; exit 2; }
 
 if [ $# -eq 3 ]; then
   out=$3
@@ -27,6 +27,14 @@ else
   out="$dir/task-${n}-brief.md"
 fi
 
+if [ -d "$plan" ]; then
+  # directory plan: the shared header, then this task's own file
+  task=$(ls "$plan"/[0-9][0-9]-*.md 2>/dev/null | awk -v n="$n" '{ f=$0; sub(/.*\//,"",f); if (f+0==n) print $0 }' | head -1)
+  [ -n "$task" ] || { echo "task ${n} not found in ${plan} (no [0-9][0-9]-*.md numbered ${n})" >&2; exit 3; }
+  { [ -f "$plan/00-header.md" ] && cat "$plan/00-header.md"; echo; cat "$task"; } > "$out"
+  echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"
+  exit 0
+fi
 awk -v n="$n" '
   /^```/ { infence = !infence }
   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Check the next plan against the code as built before starting it.
+#
+# Collects every backticked identifier in the plan's task-level `Consumes`
+# lines and in its own Plan Set entry, drops the ones this plan itself
+# produces (its `Produces` lines and the functions/types its code blocks
+# define), and reports each remaining name that does not occur in the
+# repository's source outside plans/ and docs/. Then, for every plan that
+# comes after it in the same directory, checks the names its Plan Set entry
+# attributes to plans already complete ("from plan K: ...", K before the next
+# plan), so a ruling in the plan just finished cannot leave a later plan
+# consuming a name the code does not have. A hit is a plan that says what the
+# code does not: fix the plan, re-run until it prints "boundary: clean".
+#
+# A plan is a file or a directory (00-header.md plus NN-<task>.md files).
+#
+# Usage: plan-boundary NEXT_PLAN
+# Exit: 0 when clean, 1 when any consumed name is missing, 2 on usage error.
+set -euo pipefail
+[ $# -eq 1 ] || { echo "usage: plan-boundary NEXT_PLAN" >&2; exit 2; }
+next=${1%/}; [ -e "$next" ] || { echo "no such plan: $next" >&2; exit 2; }
+root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+stop='^(and|or|the|from|of|in|a|an|to|with|for|int|string|bool|byte|rune|error|nil|true|false|func|type|struct|var|const|Plan|Task|Tasks|plan|plans|md|s|m|g|t|x|y|dt|None|self|str|list|dict|float|Decimal|date|datetime|time|Duration)$'
+idents() {  # backticked spans on stdin -> identifiers, one per line; paths and files skipped
+  grep -o '`[^`]*`' | tr -d '`' | grep -v -e '/' -e '\.md$' | grep -o '[A-Za-z_][A-Za-z0-9_]*' | sort -u
+}
+plan_text() { if [ -d "$1" ]; then cat "$1"/00-header.md "$1"/[0-9][0-9]-*.md 2>/dev/null; else cat "$1"; fi; }
+in_code() { git -C "$root" grep -q -w -- "$1" -- ':!plans/*' ':!docs/*' ':!*.md' 2>/dev/null; }
+missing=0; found=0
+check() {  # names on stdin, label
+  local n; while IFS= read -r n; do [ -n "$n" ] || continue
+    if in_code "$n"; then found=$((found+1)); else echo "missing in code: $n  (consumed by $1)"; missing=1; fi
+  done
+}
+# 1. the next plan: task-level Consumes plus its own Plan Set entry, minus what it produces
+name=$(basename "$next"); text=$(plan_text "$next")
+body=$(printf '%s\n' "$text" | awk '/^## Plan Set/{skip=1;next} /^## /{skip=0} !skip')
+own=$(printf '%s\n' "$text" | awk '/^## Plan Set/{f=1;next} /^## /{f=0} f' | grep -F -- "$name" || true)
+consumes=$( { printf '%s\n' "$body" | grep -i -A8 'Consumes'; printf '%s\n' "$own"; } | idents | grep -v -E "$stop" || true)
+produces=$( { printf '%s\n' "$body" | grep -i -A8 'Produces' | idents; printf '%s\n' "$body" | awk '/^```/{f=!f;next} f' | grep -o -E '^(func(tion)? (\([^)]*\) )?[A-Za-z_][A-Za-z0-9_]*|type [A-Za-z_][A-Za-z0-9_]*|class [A-Za-z_][A-Za-z0-9_]*|def [A-Za-z_][A-Za-z0-9_]*)' | awk '{print $NF}'; } | sort -u || true)
+check "$name" < <(comm -23 <(echo "$consumes") <(echo "$produces"))   # no pipe: check must set missing/found in this shell
+# 2. every later plan in the same directory: names its Plan Set entry attributes to plans already complete
+parent=$(dirname "$next"); idx=0; k=0
+for p in $(ls -d "$parent"/* 2>/dev/null | sort); do k=$((k+1)); [ "${p%/}" = "$next" ] && idx=$k; done
+if [ "$idx" -gt 0 ]; then k=0
+  for p in $(ls -d "$parent"/* 2>/dev/null | sort); do
+    k=$((k+1)); [ "$k" -gt "$idx" ] || continue
+    pn=$(basename "$p"); entry=$(plan_text "$p" | awk '/^## Plan Set/{f=1;next} /^## /{f=0} f' | grep -F -- "$pn" || true)
+    [ -n "$entry" ] || continue
+    # segments "from plan K: `a`, `b`" (or "Plan K's `a`") for K before the next plan
+    names=$(printf '%s\n' "$entry" | grep -o -i -E "(from plans? [0-9]+[^\`]*|plan [0-9]+'s)[^;.]*" | while IFS= read -r seg; do
+      kk=$(printf '%s' "$seg" | grep -o -E '[0-9]+' | head -1); [ -n "$kk" ] && [ "$kk" -lt "$idx" ] || continue
+      printf '%s\n' "$seg" | idents | grep -v -E "$stop" || true
+    done | sort -u)
+    check "$pn (from plans before $name)" <<< "$names"
+  done
+fi
+[ $missing -eq 0 ] && { echo "boundary: clean ($found consumed names found in code)"; exit 0; }
+exit 1
