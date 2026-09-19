@@ -141,7 +141,7 @@ tar_extracted="$TEST_ROOT/tar-extracted"
 write_metadata_fixture "$metadata_source"
 
 source_hooks="$(python3 -c 'import json; print(json.load(open("'"$REPO_ROOT"'/.codex-plugin/plugin.json")).get("hooks"))')"
-assert_equals "$source_hooks" "{}" "source Codex manifest suppresses local hook auto-discovery"
+assert_equals "$source_hooks" "./hooks/hooks-codex.json" "source Codex manifest declares the Codex hook config"
 
 if output="$("$SCRIPT_UNDER_TEST" --allow-dirty --metadata-source "$metadata_source" --output "$archive" 2>&1)"; then
   pass "package script exits successfully"
@@ -163,10 +163,13 @@ assert_contains "$output" "SHA-256:" "reports archive checksum"
 extract_archive "$archive" "$extracted"
 
 archive_paths="$(list_archive "$archive" | normalize_archive_paths)"
-unexpected_pattern='(^superpowers/|^\.agents/|^hooks/|package\.json$|^\.git|^\.pytest_cache|^\.ruff_cache|^scripts/|^tests/|^docs/|^evals/|^lib/|^\.claude|^\.cursor|^\.kimi|^\.opencode|^\.pi|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^RELEASE-NOTES\.md$|^CHANGELOG\.md$)'
+unexpected_pattern='(^superpowers/|^\.agents/|^hooks/hooks\.json$|^hooks/hooks-cursor\.json$|^hooks/session-start$|package\.json$|^\.git|^\.pytest_cache|^\.ruff_cache|^scripts/|^tests/|^docs/|^evals/|^lib/|^\.claude|^\.cursor|^\.kimi|^\.opencode|^\.pi|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^RELEASE-NOTES\.md$|^CHANGELOG\.md$)'
 assert_not_matches "$archive_paths" "$unexpected_pattern" "archive excludes source-only paths"
 assert_contains "$archive_paths" ".codex-plugin/plugin.json" "archive includes Codex manifest"
 assert_contains "$archive_paths" "skills/brainstorming/SKILL.md" "archive includes skills"
+assert_contains "$archive_paths" "hooks/hooks-codex.json" "archive includes Codex hook config"
+assert_contains "$archive_paths" "hooks/session-start-codex" "archive includes Codex hook script"
+assert_contains "$archive_paths" "hooks/run-hook.cmd" "archive includes hook runner"
 assert_contains "$archive_paths" "skills/brainstorming/agents/openai.yaml" "archive includes OpenAI skill metadata"
 assert_contains "$archive_paths" "assets/app-icon.png" "archive includes app icon"
 assert_contains "$archive_paths" "assets/superpowers-small.svg" "archive includes composer icon"
