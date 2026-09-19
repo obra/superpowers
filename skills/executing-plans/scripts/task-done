@@ -45,7 +45,20 @@ if [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
-last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1)
+# The result field is evidence, so prefer the run's own summary counts. TAP
+# output (node --test, and any TAP reporter) ends with the duration line, so
+# its last line states how long the run took, not whether it passed. Fall back
+# to the last line for runners that print no TAP summary.
+tap_count() {
+  sed -n "s/^#[[:space:]]*$1[[:space:]]\{1,\}\([0-9][0-9]*\)[[:space:]]*$/\1/p" "$log" | tail -n 1
+}
+total=$(tap_count tests)
+passed=$(tap_count pass)
+if [ -n "$total" ] && [ -n "$passed" ]; then
+  last="$passed/$total pass"
+else
+  last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1)
+fi
 [ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
 line="Task $n: complete (commits $(git rev-parse --short=7 "$base")..$(git rev-parse --short=7 HEAD), tests: $cmd → $last)"
 printf '%s\n' "$line" >> "$ledger"
