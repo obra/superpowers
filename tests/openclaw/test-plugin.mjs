@@ -61,12 +61,12 @@ test('agent bootstrap includes the complete skill and OpenClaw tool mapping befo
   assert.equal(event.context.bootstrapFiles.length, 2, 'repeated hook invocation must not duplicate bootstrap');
 });
 
-test('bootstrap survives an empty initial workspace and later compaction', async () => {
+test('bootstrap reinjects when invoked again with empty bootstrap files', async () => {
   const bootstrap = await registeredBootstrap();
-  for (const action of ['first turn', 'post compaction']) {
+  for (let invocation = 1; invocation <= 2; invocation++) {
     const event = { type: 'agent', action: 'bootstrap', context: { bootstrapFiles: [] } };
     await bootstrap(event);
-    assert.equal(event.context.bootstrapFiles.length, 1, `${action} must receive bootstrap`);
+    assert.equal(event.context.bootstrapFiles.length, 1, `invocation ${invocation} must receive bootstrap`);
     assert.match(event.context.bootstrapFiles[0].content, /You have superpowers/);
   }
 });
