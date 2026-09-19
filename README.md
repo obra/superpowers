@@ -19,6 +19,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Grok Build CLI](#grok-build-cli)
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
+  - [OpenClaw](#openclaw)
   - [Pi](#pi)
   - [Qwen Code](#qwen-code)
   - [Hermes Agent](#hermes-agent)
@@ -232,6 +233,16 @@ already use it in another harness.
   ```
 
 - Detailed docs: [docs/README.opencode.md](docs/README.opencode.md)
+
+### OpenClaw
+
+Install Superpowers through OpenClaw's plugin manager:
+
+```bash
+openclaw plugins install git:github.com/obra/superpowers@main --force --accept-capabilities
+```
+
+The native plugin registers the skills and loads `using-superpowers` automatically when an agent starts. The flags acknowledge a third-party Git source and its declared capabilities in a noninteractive shell; they do not change session behavior. See [docs/README.openclaw.md](docs/README.openclaw.md) for verification and local development.
 
 ### Pi
 
