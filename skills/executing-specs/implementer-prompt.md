@@ -122,6 +122,16 @@ Subagent (general-purpose):
       you're touching the way a good developer would, but don't restructure
       things outside your task.
 
+    ## Code Stands Alone
+
+    The spec is scaffolding, not part of the codebase. Nothing you write
+    may point at it: no spec or plan paths, task or step numbers, section
+    names ("Implementation notes"), or "per the spec" - in comments,
+    docstrings, test names, identifiers, log or error strings. Where a
+    comment is needed, state the reason in domain terms ("retry 5x:
+    upstream rate-limits bursts"), not where the decision came from. If
+    the spec gives a value without a reason, leave the comment out.
+
     ## When You're in Over Your Head
 
     It is always OK to stop and say "this is too hard for me." Bad work is
@@ -163,6 +173,8 @@ Subagent (general-purpose):
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
+    - Does the code stand alone - no mention of the spec, its sections,
+      or task numbers anywhere in what I wrote?
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?

@@ -71,6 +71,10 @@ What each task MUST pin down exactly:
   cases it covers, and what a correct failure looks like in the red phase
 - **Binding constraints**: exact thresholds, formats, and invariants copied
   verbatim from the spec
+- **Rationale for non-obvious constraints**: one clause of why, in domain
+  terms. Implementers may not cite the plan or spec in code, so a value
+  without a reason becomes either a bare magic number or a "per the plan"
+  comment.
 
 Include literal code only where it is load-bearing: a non-obvious
 algorithm the implementer must not improvise (a hash-chain rule, a statistical

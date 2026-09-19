@@ -27,9 +27,34 @@ else
   out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
 fi
 
+# Added lines that cite the spec/plan (paths, task numbers, "per the spec").
+# Candidates only - the reviewer judges each. Spec/plan docs are skipped.
+provenance_leaks() {
+  git diff -U0 "${base}..${head}" -- . ':(exclude)docs/specs' ':(exclude)docs/plans' | awk '
+    /^\+\+\+ / { file = substr($0, 7); next }
+    /^@@ / { split($3, a, ","); line = substr(a[1], 2) + 0; next }
+    /^\+/ {
+      l = tolower(substr($0, 2))
+      if (l ~ /docs\/(specs|plans)\// ||
+          l ~ /(^|[^a-z])task[ _-]?[0-9]+/ ||
+          l ~ /(^|[^a-z])(per|see|from|in|by|to) the (spec|plan|design doc|brainstorm)/ ||
+          l ~ /(^|[^a-z])(spec|plan)(.s)? (section|§)/ ||
+          l ~ /implementation[ _-]notes|global[ _-]constraints/)
+        printf "%s:%d: %s\n", file, line, substr($0, 2)
+      line++
+    }
+  '
+}
+
 {
   echo "# Review package: ${base}..${head}"
   echo
+  leaks=$(provenance_leaks)
+  if [ -n "$leaks" ]; then
+    echo "## Provenance leaks (candidates)"
+    echo "$leaks"
+    echo
+  fi
   echo "## Commits"
   git log --oneline "${base}..${head}"
   echo

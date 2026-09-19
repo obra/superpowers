@@ -110,6 +110,15 @@ Subagent (general-purpose):
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this change contributed.)
 
+    **Provenance:**
+    - Does anything added cite the plan or spec — a doc path, a task or step
+      number, a section name, "per the plan" — in comments, docstrings, test
+      names, identifiers, strings, or commit subjects? The diff file lists
+      grep candidates under "Provenance leaks" when it found any; judge each
+      (a job queue's "task 3" is not a leak) and look for paraphrased ones
+      the grep cannot see. Each real leak is Important: the code must explain
+      itself in domain terms, because the plan is not part of the codebase.
+
     Your report should point at evidence: file:line references for every
     finding and for any check you would otherwise answer with a bare
     "yes." A tight report that cites lines gives the controller everything

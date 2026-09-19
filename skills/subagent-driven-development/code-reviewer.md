@@ -79,6 +79,15 @@ Subagent (general-purpose):
     - DRY without premature abstraction?
     - Edge cases handled?
 
+    **Provenance:**
+    - Does anything added cite the spec or plan - a doc path, a task or
+      step number, a section name, "per the spec" - in comments,
+      docstrings, test names, identifiers, or strings? A review package
+      lists grep candidates under "Provenance leaks" when it found any;
+      judge each and look for paraphrased ones the grep cannot see. Each
+      real leak is Important: the code must explain itself in domain
+      terms, because the spec and plan are not part of the codebase.
+
     **Architecture:**
     - Sound design decisions?
     - Reasonable scalability and performance?

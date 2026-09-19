@@ -81,6 +81,16 @@ Subagent (general-purpose):
     - In existing codebases, follow established patterns. Improve code you're touching
       the way a good developer would, but don't restructure things outside your task.
 
+    ## Code Stands Alone
+
+    The plan and spec are scaffolding, not part of the codebase. Nothing you
+    commit may point at them: no spec or plan paths, task or step numbers,
+    section names ("Global Constraints"), or "per the plan" - in comments,
+    docstrings, test names, identifiers, log or error strings, or commit
+    messages. Where a comment is needed, state the reason in domain terms
+    ("retry 5x: upstream rate-limits bursts"), not where the decision came
+    from. If the brief gives a value without a reason, leave the comment out.
+
     ## When You're in Over Your Head
 
     It is always OK to stop and say "this is too hard for me." Bad work is worse than
@@ -116,6 +126,8 @@ Subagent (general-purpose):
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
+    - Does the code stand alone — no mention of the plan, the spec, or task
+      numbers in code, tests, or commit messages?
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
