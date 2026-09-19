@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "name": "superpowers",
+  "displayName": "Superpowers",
+  "version": "6.4.1",
+  "description": "Core skills library for Muse: TDD, debugging, collaboration patterns, and proven techniques",
+  "compat": {
+    "source": "native",
+    "manifestDir": ".muse-plugin"
+  },
+  "capabilities": {
+    "skills": [
+      {
+        "id": "brainstorming",
+        "path": "skills/brainstorming/SKILL.md"
+      },
+      {
+        "id": "diagnosing-superpowers",
+        "path": "skills/diagnosing-superpowers/SKILL.md"
+      },
+      {
+        "id": "dispatching-parallel-agents",
+        "path": "skills/dispatching-parallel-agents/SKILL.md"
+      },
+      {
+        "id": "executing-plans",
+        "path": "skills/executing-plans/SKILL.md"
+      },
+      {
+        "id": "finishing-a-development-branch",
+        "path": "skills/finishing-a-development-branch/SKILL.md"
+      },
+      {
+        "id": "receiving-code-review",
+        "path": "skills/receiving-code-review/SKILL.md"
+      },
+      {
+        "id": "requesting-code-review",
+        "path": "skills/requesting-code-review/SKILL.md"
+      },
+      {
+        "id": "subagent-driven-development",
+        "path": "skills/subagent-driven-development/SKILL.md"
+      },
+      {
+        "id": "systematic-debugging",
+        "path": "skills/systematic-debugging/SKILL.md"
+      },
+      {
+        "id": "test-driven-development",
+        "path": "skills/test-driven-development/SKILL.md"
+      },
+      {
+        "id": "using-git-worktrees",
+        "path": "skills/using-git-worktrees/SKILL.md"
+      },
+      {
+        "id": "using-superpowers",
+        "path": "skills/using-superpowers/SKILL.md"
+      },
+      {
+        "id": "verification-before-completion",
+        "path": "skills/verification-before-completion/SKILL.md"
+      },
+      {
+        "id": "writing-plans",
+        "path": "skills/writing-plans/SKILL.md"
+      },
+      {
+        "id": "writing-skills",
+        "path": "skills/writing-skills/SKILL.md"
+      }
+    ],
+    "commands": [],
+    "hooks": [
+      {
+        "id": "session-start",
+        "event": "SessionStart",
+        "command": [
+          "sh",
+          "hooks/session-start"
+        ],
+        "timeoutMs": 5000
+      }
+    ],
+    "mcpServers": [],
+    "reminders": []
+  }
+}

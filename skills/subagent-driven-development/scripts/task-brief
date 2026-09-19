@@ -21,7 +21,9 @@ n=$2
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  # Invoke via bash rather than direct exec: some extractors (Python zipfile)
+  # strip Unix exec bits when unpacking marketplace packages (#2040).
+  dir=$("${BASH:-bash}" "$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
   out="$dir/task-${n}-brief.md"
 fi
 
