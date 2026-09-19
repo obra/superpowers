@@ -484,6 +484,12 @@ delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
 
+If the run ends any other way — abandoned, compacted mid-run, or stopped
+before the final review came back clean — leave this plan's workspace in
+place. The ledger and reports are the only copy of what was decided;
+finishing-a-development-branch preserves a surviving workspace instead of
+silently removing it with the worktree.
+
 Use superpowers:finishing-a-development-branch.
 
 ## Common Rationalizations
