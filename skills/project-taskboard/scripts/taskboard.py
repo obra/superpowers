@@ -592,6 +592,16 @@ def probe(url: str) -> dict | None:
         return None
 
 
+def _project_port(project_root: Path | None, default_port: int = 47832) -> int:
+    if not project_root:
+        return default_port
+    canonical = str(project_root.expanduser().resolve())
+    # 基于项目绝对路径哈希衍生端口，分布在 47832..47899 范围
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    offset = int(digest[:4], 16) % 68
+    return 47832 + offset
+
+
 def _plan_signature(project_root: Path) -> tuple:
     signature = []
     for path in discover_superpowers_plans(project_root):
@@ -666,8 +676,15 @@ def cmd_start(args):
     if args.project_root:
         sync_project_plans(root, args.project_root, args.project)
     validate_board(root)
-    url = f"http://{args.host}:{args.port}"
+    port = args.port if args.port != 47832 or not args.project_root else _project_port(args.project_root)
+    url = f"http://{args.host}:{port}"
     existing = probe(url)
+    if existing:
+        if existing.get("project") != (args.project or root.name):
+            # 端口冲突，换用由 root 决定的独立端口
+            port = _project_port(root)
+            url = f"http://{args.host}:{port}"
+            existing = probe(url)
     if existing:
         print(f"复用现有任务看板：{url}/")
         return
@@ -675,7 +692,7 @@ def cmd_start(args):
     process = subprocess.Popen(
         [
             sys.executable, str(Path(__file__).resolve()), "serve", "--root", str(root),
-            "--host", args.host, "--port", str(args.port),
+            "--host", args.host, "--port", str(port),
             *(["--project-root", str(args.project_root), "--project", args.project, "--watch-interval", str(args.watch_interval)] if args.project_root else []),
         ],
         cwd=root,
