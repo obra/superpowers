@@ -508,6 +508,27 @@ async function runTests() {
     assert(exited, 'idle shutdown must still fire despite a flood of unauthenticated requests');
   });
 
+  await test('idle shutdown exits 0 when the session dir was removed', async () => {
+    const dir = fs.mkdtempSync('/tmp/bs-life-');
+    const srv = spawn('node', [SERVER], { env: { ...process.env, BRAINSTORM_PORT: 3420, BRAINSTORM_DIR: dir, BRAINSTORM_IDLE_TIMEOUT_MS: 400, BRAINSTORM_LIFECYCLE_CHECK_MS: 100 } });
+    let out = ''; srv.stdout.on('data', d => out += d.toString());
+    let err = ''; srv.stderr.on('data', d => err += d.toString());
+    let code = null; srv.on('exit', c => { code = c; });
+    for (let i = 0; i < 60 && !out.includes('server-started'); i++) await sleep(50);
+
+    // The session dir can be cleaned up while the server sits idle. Shutdown
+    // bookkeeping is best effort: if writing state/server-stopped throws, the
+    // cleanup below it never runs and the process dies on an uncaught exception.
+    fs.rmSync(dir, { recursive: true, force: true });
+
+    for (let i = 0; i < 40 && code === null; i++) await sleep(100);
+    if (code === null) await killAndWait(srv);
+    fs.rmSync(dir, { recursive: true, force: true });
+
+    assert.strictEqual(code, 0, `idle shutdown must exit 0 with the session dir gone, got ${code}: ${err}`);
+    assert(!/ENOENT/.test(err), `shutdown must not throw ENOENT, got: ${err}`);
+  });
+
   console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
   if (failed > 0) process.exit(1);
 }
