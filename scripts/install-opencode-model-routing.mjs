@@ -33,14 +33,14 @@ try {
 
   for (const { source } of copies) ensureFile(source);
 
-  const collisions = copies.filter(({ destination }) => fs.existsSync(destination));
+  const collisions = copies.filter(({ destination }) => destinationExists(destination));
   if (collisions.length > 0) {
     for (const { destination } of collisions) console.error(`Collision: ${destination}`);
     process.exit(1);
   }
 
   for (const { source, destination } of copies) {
-    fs.copyFileSync(source, destination);
+    fs.copyFileSync(source, destination, fs.constants.COPYFILE_EXCL);
     console.log(destination);
   }
 } catch (error) {
@@ -54,4 +54,14 @@ function ensureDirectory(target) {
 
 function ensureFile(target) {
   if (!fs.statSync(target).isFile()) throw new Error(`Expected profile file: ${target}`);
+}
+
+function destinationExists(target) {
+  try {
+    fs.lstatSync(target);
+    return true;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
 }
