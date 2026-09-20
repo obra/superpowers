@@ -217,6 +217,36 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+# Regression for #2310: Claude Code can spawn SessionStart:startup hooks with
+# a broken/empty PATH (anthropics/claude-code#43127). session-start and
+# run-hook.cmd's Unix half both shell out to external binaries (dirname, cat)
+# that an empty PATH cannot resolve, even though bash itself was invoked by
+# absolute path. Every call here should use bash's own builtins/redirection
+# instead, so an empty PATH must not change the result.
+bash_bin="$(command -v bash)"
+
+broken_path_home="$(make_home broken-path)"
+assert_command_output \
+    "session-start with empty PATH still emits nested additionalContext" \
+    "nested" \
+    "" \
+    "" \
+    "$broken_path_home" \
+    PATH="" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" "$HOOK_UNDER_TEST"
+
+broken_path_wrapper_home="$(make_home broken-path-wrapper)"
+assert_command_output \
+    "run-hook.cmd with empty PATH still dispatches session-start" \
+    "nested" \
+    "" \
+    "" \
+    "$broken_path_wrapper_home" \
+    PATH="" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" "$WRAPPER_UNDER_TEST" session-start
+
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
     exit 1
