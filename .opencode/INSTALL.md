@@ -45,30 +45,52 @@ profiles. The installer only copies profiles into the OpenCode `agents`
 directory, does not modify `opencode.json` or `opencode.jsonc`, and refuses to
 overwrite an existing profile if it finds a collision.
 
+Run the following commands from the root of your checked-out fork directory,
+which contains `scripts/install-opencode-model-routing.mjs`. These profiles
+are supplied by this fork; OpenCode's plugin manager does not create a
+project-local `node_modules/superpowers` directory for this command.
+
 **PowerShell:**
 
 ```powershell
-node .\node_modules\superpowers\scripts\install-opencode-model-routing.mjs --config-dir "$HOME\.config\opencode"
+node .\scripts\install-opencode-model-routing.mjs --config-dir "$HOME\.config\opencode"
 opencode models
 ```
 
 **POSIX:**
 
 ```bash
-node ./node_modules/superpowers/scripts/install-opencode-model-routing.mjs --config-dir "$HOME/.config/opencode"
+node ./scripts/install-opencode-model-routing.mjs --config-dir "$HOME/.config/opencode"
 opencode models
 ```
 
 The installed roles and models are:
 
 - `superpowers-expert` — `zai-org/GLM-5.3`
-- `superpowers-main` — `z-ai/glm-5.3`
+- `superpowers-main` — `z-ai/glm-5.3-flash`
 - `superpowers-economic` — `xiaomi/mimo-v2.5`
 - `superpowers-economic-fast` — `deepseek/deepseek-v4-flash`
 
-If a requested role is unavailable, OpenCode falls back to `general`. To
-uninstall the routing profiles, remove only the `agents/superpowers-*.md`
-files (for example, `rm -f "$HOME/.config/opencode/agents/superpowers-"*.md`).
+For a new MAIN session, select the model explicitly (works in either shell):
+
+```text
+opencode run --model z-ai/glm-5.3-flash "Implement the next task"
+```
+
+Alternatively, set the root `model` field in your own OpenCode configuration
+to `"z-ai/glm-5.3-flash"`. Switching an existing session's primary agent
+does not change its selected model.
+
+If a requested role is unavailable, the Superpowers controller falls back to
+`general` and states that model-role routing is not installed.
+
+To uninstall routing, remove only the four copied profiles from the
+`--config-dir` directory you selected:
+
+- `agents/superpowers-expert.md`
+- `agents/superpowers-main.md`
+- `agents/superpowers-economic.md`
+- `agents/superpowers-economic-fast.md`
 
 OpenCode uses its own plugin install. If you also use Claude Code, Codex, or
 another harness, install Superpowers separately for each one.

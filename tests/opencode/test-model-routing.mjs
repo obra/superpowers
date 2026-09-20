@@ -10,7 +10,7 @@ const repoRoot = path.resolve(testDir, '..', '..');
 const installer = path.join(repoRoot, 'scripts', 'install-opencode-model-routing.mjs');
 const profiles = [
   ['superpowers-expert.md', 'zai-org/GLM-5.3'],
-  ['superpowers-main.md', 'z-ai/glm-5.3'],
+  ['superpowers-main.md', 'z-ai/glm-5.3-flash'],
   ['superpowers-economic.md', 'xiaomi/mimo-v2.5'],
   ['superpowers-economic-fast.md', 'deepseek/deepseek-v4-flash'],
 ];
@@ -22,23 +22,59 @@ const { V1_MAPPING, V2_MAPPING } = await import(pathToFileURL(path.join(repoRoot
 
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'superpowers-model-routing-'));
 try {
+  for (const args of [
+    ['--config-dir', '--config-dir'],
+    ['--config-dir', '--help'],
+    ['--config-dir', '-x'],
+    ['--config-dir', 'first', '--config-dir', 'second'],
+    ['--config-dir'],
+    ['--config-dir', ''],
+    ['positional'],
+    ['--config-dir', 'first', 'positional'],
+  ]) {
+    const invalid = runInstaller(...args);
+    assert.notEqual(invalid.status, 0, `installer must reject ${JSON.stringify(args)}`);
+    assert.match(invalid.stderr, /Usage:.*--config-dir/, 'invalid arguments must print usage');
+    assert.deepEqual(fs.readdirSync(tempRoot), [], 'invalid arguments must not create files or directories');
+  }
+
   for (const guidePath of openCodeGuides) {
     const guide = fs.readFileSync(path.join(repoRoot, guidePath), 'utf8');
     for (const requiredText of [
       'install-opencode-model-routing.mjs',
       'opencode models',
-      'superpowers-expert',
-      'superpowers-economic-fast',
-      'zai-org/GLM-5.3',
-      'deepseek/deepseek-v4-flash',
     ]) {
       assert.match(guide, new RegExp(escapeRegExp(requiredText)), `${guidePath} must document ${requiredText}`);
     }
+    for (const [name, model] of profiles) {
+      assert.match(
+        guide,
+        new RegExp('`' + escapeRegExp(name.replace(/\.md$/, '')) + '`[^\\n]*`' + escapeRegExp(model) + '`'),
+        `${guidePath} must document the exact ${name} role/model pair`,
+      );
+    }
     assert.match(
       guide,
-      /does not modify[\s\S]{0,100}?opencode\.jsonc|opencode\.jsonc[\s\S]{0,100}?does not modify/i,
-      `${guidePath} must state that the installer does not modify opencode.jsonc`,
+      /does not modify `opencode\.json` or `opencode\.jsonc`/,
+      `${guidePath} must state that the installer does not modify either config file`,
     );
+    assert.match(guide, /checked-out fork directory/, `${guidePath} must identify the installer checkout`);
+    assert.match(guide, /```powershell\s+node \.\\scripts\\install-opencode-model-routing\.mjs --config-dir "\$HOME\\\.config\\opencode"/, `${guidePath} must provide a checkout-relative PowerShell command`);
+    assert.match(guide, /```bash\s+node \.\/scripts\/install-opencode-model-routing\.mjs --config-dir "\$HOME\/\.config\/opencode"/, `${guidePath} must provide a checkout-relative POSIX command`);
+    assert.doesNotMatch(guide, /node_modules[\\/]superpowers[\\/]scripts[\\/]install-opencode-model-routing/, `${guidePath} must not assume a plugin-manager node_modules location`);
+    assert.match(guide, /new (?:MAIN )?session[\s\S]{0,150}opencode run --model z-ai\/glm-5\.3-flash/, `${guidePath} must show explicit MAIN session model selection`);
+    assert.match(guide, /root `model`[\s\S]{0,150}z-ai\/glm-5\.3-flash/, `${guidePath} must document the root model alternative`);
+    assert.match(guide, /(?:Switching|Changing)[\s\S]{0,60}existing session[\s\S]{0,60}agent[\s\S]{0,60}does not change[\s\S]{0,60}model/, `${guidePath} must distinguish primary-agent changes from session model selection`);
+    assert.match(guide, /unavailable[\s\S]{0,100}falls back to\s+`general`/, `${guidePath} must document general fallback`);
+    assert.match(
+      guide,
+      /remove only the four (?:copied|installed) profiles/,
+      `${guidePath} must limit removal to the four installed profiles`,
+    );
+    for (const [name] of profiles) {
+      assert.match(guide, new RegExp('`agents/' + escapeRegExp(name) + '`'), `${guidePath} must name the exact removal target ${name}`);
+    }
+    assert.doesNotMatch(guide, /rm[^\n]*superpowers-[^\n]*\*/, `${guidePath} must not use a broad routing-profile removal glob`);
   }
 
   for (const role of [
@@ -53,6 +89,9 @@ try {
   ]) {
     assert.match(V2_MAPPING, new RegExp(escapeRegExp(role)), `V2 routing must include ${role}`);
   }
+  assert.match(V2_MAPPING, /only when it is available in the subagent catalog/, 'V2 routing must require catalog availability');
+  assert.match(V2_MAPPING, /If the needed role is unavailable, invoke `subagent` with `agent: "general"`/, 'V2 routing must use the general agent when a role is missing');
+  assert.match(V2_MAPPING, /state that model-role routing is not installed/, 'V2 routing must disclose missing installation');
   assert.match(V1_MAPPING, /`task` with `subagent_type: "general"`/, 'V1 routing must retain the general task mapping');
   assert.doesNotMatch(V1_MAPPING, /superpowers-expert/, 'V1 routing must not include V2 model profiles');
 
@@ -129,7 +168,7 @@ fs.copyFileSync = function(source, destination, mode) {
     assert.ok(!fs.existsSync(path.join(writeCollisionConfig, 'agents', name)), `write collision must not copy ${name}`);
   }
 
-  console.log('PASS: OpenCode model routing installer accepts only the documented interface and copies atomically');
+  console.log('PASS: OpenCode model routing validates its interface, profiles, bootstrap, and guides without overwriting user files');
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
 }
@@ -138,7 +177,7 @@ function runInstaller(...args) {
   let extraEnv = {};
   if (args.length > 0 && typeof args.at(-1) === 'object') extraEnv = args.pop();
   return spawnSync(process.execPath, [installer, ...args], {
-    cwd: repoRoot,
+    cwd: tempRoot,
     encoding: 'utf8',
     env: { ...process.env, ...extraEnv },
   });

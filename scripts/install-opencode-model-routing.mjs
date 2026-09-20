@@ -10,7 +10,7 @@ const profileNames = [
 ];
 
 const args = process.argv.slice(2);
-if (args.length !== 2 || args[0] !== '--config-dir' || !args[1]) {
+if (args.length !== 2 || args[0] !== '--config-dir' || !args[1] || args[1].startsWith('-')) {
   console.error('Usage: node scripts/install-opencode-model-routing.mjs --config-dir <path>');
   process.exit(1);
 }
