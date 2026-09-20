@@ -9,10 +9,22 @@ AGY="${AGY_BIN:-}"
 
 # Keep the packaging contract covered even where agy is unavailable (CI).
 test -f "$REPO_ROOT/plugin.json" || { echo "FAIL: Antigravity plugin manifest is missing" >&2; exit 1; }
-grep -Eq '"name"[[:space:]]*:[[:space:]]*"superpowers"' "$REPO_ROOT/plugin.json" || {
-  echo "FAIL: Antigravity plugin manifest has no superpowers name" >&2
-  exit 1
+node - "$REPO_ROOT/plugin.json" <<'NODE'
+const fs = require('node:fs');
+
+let manifest;
+try {
+  manifest = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+} catch (error) {
+  console.error(`FAIL: Antigravity plugin manifest is invalid JSON: ${error.message}`);
+  process.exit(1);
 }
+
+if (manifest.name !== 'superpowers') {
+  console.error('FAIL: Antigravity plugin manifest has no superpowers name');
+  process.exit(1);
+}
+NODE
 test -f "$REPO_ROOT/rules/superpowers.md" || { echo "FAIL: Antigravity bootstrap rule is missing" >&2; exit 1; }
 grep -q '^trigger: always_on$' "$REPO_ROOT/rules/superpowers.md" || {
   echo "FAIL: Antigravity bootstrap rule is not always on" >&2

@@ -34,7 +34,7 @@ grep -q '`research`' "$MAPPING" \
   || fail "mapping does not document the built-in 'research' subagent type"
 
 # --- Task tracking documents the 'task' artifact mechanism ------------------
-grep -q 'task artifact' "$MAPPING" \
+grep -qE '^\| Task tracking .*\|.*task artifact.*\|$' "$MAPPING" \
   || fail "mapping does not document task tracking as a 'task' artifact"
 
 # --- SKILL.md Platform Adaptation links the mapping -------------------------
