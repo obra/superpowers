@@ -18,16 +18,31 @@ grep -q '^trigger: always_on$' "$REPO_ROOT/rules/superpowers.md" || {
   echo "FAIL: Antigravity bootstrap rule is not always on" >&2
   exit 1
 }
+rule_content="$(cat "$REPO_ROOT/rules/superpowers.md")"
 for relative_path in \
   ../skills/using-superpowers/SKILL.md \
   ../skills/using-superpowers/references/antigravity-tools.md; do
   included_file="$REPO_ROOT/rules/$relative_path"
-  test -f "$included_file" || { echo "FAIL: bootstrap include target is missing: $included_file" >&2; exit 1; }
-  grep -Fxq "@$relative_path" "$REPO_ROOT/rules/superpowers.md" || {
-    echo "FAIL: bootstrap rule does not include $included_file" >&2
+  test -f "$included_file" || { echo "FAIL: bootstrap source is missing: $included_file" >&2; exit 1; }
+  source_content="$(cat "$included_file")"
+  if [[ "$rule_content" != *"$source_content"* ]]; then
+    echo "FAIL: bootstrap rule does not inline $included_file" >&2
     exit 1
-  }
+  fi
 done
+if grep -q '^@\.\./skills/using-superpowers/' "$REPO_ROOT/rules/superpowers.md"; then
+  echo "FAIL: bootstrap rule still relies on lazy @ references" >&2
+  exit 1
+fi
+if [ "$(wc -c < "$REPO_ROOT/rules/superpowers.md")" -gt 12000 ]; then
+  echo "FAIL: Antigravity bootstrap rule exceeds the documented size limit" >&2
+  exit 1
+fi
+if ! cmp -s "$REPO_ROOT/rules/superpowers.md" \
+    <(bash "$REPO_ROOT/scripts/generate-antigravity-rule.sh" /dev/stdout); then
+  echo "FAIL: Antigravity bootstrap rule differs from its generated source" >&2
+  exit 1
+fi
 
 if [ -z "$AGY" ]; then
   AGY="$(command -v agy || true)"
@@ -66,6 +81,10 @@ done
 test -n "$INSTALLED" || { echo "FAIL: agy did not install the plugin in a supported profile path" >&2; exit 1; }
 test -f "$INSTALLED/plugin.json"
 test -f "$INSTALLED/rules/superpowers.md"
+cmp -s "$INSTALLED/rules/superpowers.md" "$REPO_ROOT/rules/superpowers.md" || {
+  echo "FAIL: agy changed the generated bootstrap rule during installation" >&2
+  exit 1
+}
 test -f "$INSTALLED/skills/using-superpowers/SKILL.md"
 test -f "$INSTALLED/skills/using-superpowers/references/antigravity-tools.md"
 test -f "$INSTALLED/skills/brainstorming/SKILL.md"
