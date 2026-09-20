@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate the Antigravity (agy) tool mapping. The companion plugin-install test
+# Validate the Antigravity tool mapping. The companion plugin-install test
 # covers the root manifest and always-on bootstrap rule. This test checks
 # subagent dispatch via invoke_subagent (self/research types), task tracking via
 # a task artifact, and SKILL.md pointing at the mapping.
@@ -34,7 +34,7 @@ grep -q '`research`' "$MAPPING" \
   || fail "mapping does not document the built-in 'research' subagent type"
 
 # --- Task tracking documents the 'task' artifact mechanism ------------------
-grep -qE 'ArtifactType.*task|task. artifact' "$MAPPING" \
+grep -q 'task artifact' "$MAPPING" \
   || fail "mapping does not document task tracking as a 'task' artifact"
 
 # --- SKILL.md Platform Adaptation links the mapping -------------------------

@@ -292,7 +292,7 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| installs always-on rules as plugin components | C via the plugin installer | Antigravity CLI (`plugin.json` + generated `rules/superpowers.md`; verify inline content in a clean session — Part 6) |
+| installs always-on rules as plugin components | C via the plugin directory | Antigravity 2.0, CLI, IDE (`plugin.json` + generated `rules/superpowers.md`; verify inline content in a clean session — Part 6) |
 
 Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
 holds — the bootstrap rides the install mechanism, never a user-config edit).
@@ -526,7 +526,7 @@ honors the rule rather than breaking it. Distinguish three cases:
    the way `references/pi-tools.md` states it.
 
    **For the bootstrap itself, use an installable always-on surface (Part 6).**
-   Antigravity CLI installs `rules/superpowers.md`, whose `trigger: always_on`
+   Antigravity's plugin loads `rules/superpowers.md`, whose `trigger: always_on`
    rule contains the `using-superpowers` content and tool mapping. Generate the
    rule from their canonical files with `scripts/generate-antigravity-rule.sh`.
    Verify a unique marker in each inlined source reaches the model without a
@@ -679,7 +679,8 @@ it. Distribution differs per harness ecosystem — find yours:
 | External marketplace fork, synced by script | Codex | `scripts/sync-to-codex-plugin.sh` rsyncs the tracked plugin files into a separate fork repo and opens a PR. Read its include/exclude list so you ship the right tree (it deliberately drops repo-internal dirs and other harnesses' dotdirs). |
 | Git-URL extension install | Gemini, Kimi Code, OpenCode | Users install from a git URL (`gemini extensions install …`; Kimi Code `/plugins install …`; an `opencode.json` `plugin` array entry). Document the exact command. |
 | Package-manifest fields | pi | Declared through fields in the repo-root `package.json`; users install via the harness's package command. |
-| Local installer (plugin install) | Antigravity CLI (`agy`) | `agy plugin install` installs the repository's root `plugin.json`, `skills/`, and generated `rules/superpowers.md`. The always-on rule carries the bootstrap and tool mapping through the plugin mechanism. |
+| Local installer (plugin install) | Antigravity CLI (`agy`) | `agy plugin install` installs a local repository directory containing root `plugin.json`, `skills/`, and generated `rules/superpowers.md`. The always-on rule carries the bootstrap and tool mapping through the plugin mechanism. |
+| Plugin directory | Antigravity 2.0 and IDE | Place the repository at `<workspace>/.agents/plugins/superpowers/` or `~/.gemini/config/plugins/superpowers/`. The same always-on rule loads on these surfaces. |
 
 Then:
 
@@ -699,7 +700,7 @@ Then:
     **Verify with a marker** that the installer keeps the file and the harness
     loads it; a successful install alone does not prove activation.
   - **Ship an always-on plugin rule when the harness supports it.** Antigravity
-    CLI installs `rules/superpowers.md` with `trigger: always_on`. A 2.0 marker
+    installs `rules/superpowers.md` with `trigger: always_on`. A 2.0 marker
     test showed that the rule's own text was present but relative `@` references
     were not expanded into context. Generate the rule with the bootstrap and
     mapping inlined from their canonical files, and test first-turn activation
@@ -803,7 +804,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
-| Antigravity CLI | root `plugin.json` + generated `rules/superpowers.md` | installed always-on rule inlines bootstrap + mapping | `references/antigravity-tools.md` | `tests/antigravity/` + clean-session acceptance | `agy plugin install` |
+| Antigravity 2.0, CLI, IDE | root `plugin.json` + generated `rules/superpowers.md` | installed always-on rule inlines bootstrap + mapping | `references/antigravity-tools.md` (IDE has no general subagent tool in tested 2.5.5) | `tests/antigravity/` + clean-session acceptance on each surface | CLI: `agy plugin install` with local directory; 2.0/IDE: plugin directory |
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
 | OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook("context")` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
