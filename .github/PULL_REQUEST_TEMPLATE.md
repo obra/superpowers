@@ -2,6 +2,9 @@
 BEFORE SUBMITTING: Read every word of this template. PRs that leave
 sections blank, contain multiple unrelated changes, or show no evidence
 of human involvement will be closed without review.
+This PR is public. Use repository-relative paths or placeholders for local
+paths. Omit unrelated private request context, and scrub logs and transcripts
+before including them. Keep the evidence needed to verify the change.
 -->
 
 > **This PR MUST target the `dev` branch, not `main`.** `main` is the
@@ -18,13 +21,23 @@ of human involvement will be closed without review.
 |-------|-------|
 | Your model + version | |
 | Harness + version | |
-| All plugins installed | |
+| Plugins used or relevant to this contribution | |
 | Human partner who reviewed this diff | |
+
+<!-- Name plugins whose skills or tools were used, whose instructions
+     materially shaped the work, or that evidence implicates in the problem;
+     include versions when known. Mark uncertain involvement as such. Write
+     "none" if none were involved. Mere installation or catalog listing does
+     not count. -->
 
 ## What problem are you trying to solve?
 <!-- Describe the specific problem you encountered. If this was a session
      issue, include: what you were doing, what went wrong, the model's
-     exact failure mode, and ideally a transcript or session log.
+     exact failure mode, and ideally a scrubbed transcript or session log.
+     Describe only the technical request relevant to the failure; leave out
+     unrelated activities and private context, even in a paraphrase. Quote
+     only the smallest necessary excerpt with your partner's approval. Use
+     generic local paths.
 
      "Improving" something is not a problem statement. What broke? What
      failed? What was the user experience that motivated this? -->
@@ -84,7 +97,11 @@ of human involvement will be closed without review.
          Let's make a react todo list
 
      A working integration auto-triggers the `brainstorming` skill before
-     any code is written. Paste the complete transcript below.
+     any code is written. Paste the complete acceptance-test transcript below,
+     with private paths, identifiers, secrets, and unrelated session content
+     redacted. Preserve the acceptance prompt, event order, and evidence that
+     brainstorming triggered before code was written. Explain any redaction
+     that limits verification.
 
      These are NOT real integrations and PRs that ship them will be closed:
 
@@ -101,14 +118,15 @@ of human involvement will be closed without review.
 <summary>Clean-session transcript for "Let's make a react todo list"</summary>
 
 ```
-paste the complete transcript here
+paste the complete sanitized acceptance-test transcript here
 ```
 
 </details>
 
 ## Evaluation
-- What was the initial prompt you (or your human partner) used to start
-  the session that led to this change?
+- What technical goal led to this change? Omit unrelated activities and
+  private context from your human partner's prompt. Quote only a necessary
+  excerpt with their approval.
 - How many eval sessions did you run AFTER making the change?
 - How did outcomes change compared to before the change?
 
@@ -129,9 +147,11 @@ paste the complete transcript here
 
 ## Human review
 - [ ] A human has reviewed the COMPLETE proposed diff before submission
+- [ ] A human has reviewed the public PR text and any attached evidence for
+      private paths, unrelated plugins, and unnecessary prompt content
 
 <!--
-STOP. If the checkbox above is not checked, do not submit this PR.
+STOP. If either human-review checkbox above is not checked, do not submit this PR.
 
 PRs will be closed without review if they:
 - Show no evidence of human involvement

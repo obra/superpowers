@@ -146,7 +146,8 @@ A port is finished when **all** of these are true:
    > Let's make a react todo list
 
    auto-triggers the `brainstorming` skill *before any code is written*. Capture
-   the full transcript — the PR requires it.
+   the full transcript — the PR requires a sanitized copy that preserves
+   the sequence and proof of skill activation.
 5. Tests cover the integration (Part 5) and pass.
 6. A real user can install it through the harness's own mechanism (not by
    hand-copying files), and the version is tracked in `.version-bump.json` where
@@ -778,9 +779,11 @@ dispatcher pattern.
 
 - Target the **`dev`** branch. One harness per PR.
 - Fill in the PR template's **"New harness support"** section and paste the
-  complete acceptance-test transcript (the "Let's make a react todo list"
-  session showing `brainstorming` auto-triggering). A PR without this proof will
-  be closed.
+  complete sanitized acceptance-test transcript (the "Let's make a react todo
+  list" session showing `brainstorming` auto-triggering). Replace private
+  paths and identifiers with placeholders, keep the event order and relevant
+  tool output, and explain any redaction that limits verification. A PR
+  without this proof will be closed.
 - Superpowers is a zero-dependency plugin. Don't add a third-party runtime
   dependency. Adding a new harness is the one carve-out the contributor rules
   allow, and even then keep it to what the integration strictly requires —

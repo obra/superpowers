@@ -4,14 +4,18 @@ Title: <skill or symptom>: <one-line observable> (<harness>)
 
 ## Environment (required)
 
+Use included transcript line markers or public URLs for provenance. If neither
+can be shared, write "local evidence not supplied" and state the limitation.
+Do not copy local session, archive, or installation paths into this public draft.
+
 | Field | Value | Provenance / supporting evidence |
 |-------|-------|-------------------------------|
-| Superpowers version | <version> (<sha or "not a checkout">) | <historical evidence / unverified snapshot / current observation / unknown>; <location> |
-| Harness (Claude Code, Cursor, etc.) | <harness> | <label>; <location> |
-| Harness version | <version> | <label>; <location> |
-| Your model + version | <model ids seen> | <label>; <location> |
-| All plugins installed | <list> | <label>; <location> |
-| OS + shell | <os version>, <shell> | <label>; <location> |
+| Superpowers version | <version> (<sha or "not a checkout">) | <historical evidence / unverified snapshot / current observation / unknown>; <transcript line or public URL> |
+| Harness (Claude Code, Cursor, etc.) | <harness> | <label>; <transcript line or public URL> |
+| Harness version | <version> | <label>; <transcript line or public URL> |
+| Your model + version | <model ids seen> | <label>; <transcript line or public URL> |
+| Plugins used or relevant to this diagnosis | <names and versions, "none", or "unknown"> | <label>; <transcript line or public source> |
+| OS + shell | <os version>, <shell> | <label>; <transcript line or public URL> |
 
 ## Is this a Superpowers issue or a platform issue?
 
@@ -22,12 +26,14 @@ involvement is below; it does not establish cause.
 
 ## What happened?
 
-<Problem statement, then the triage verdict, with `path:line` citations
-rewritten as `transcript line <n>`.>
+<Technical problem statement without unrelated private context, then the
+triage verdict. Cite `transcript line <n>` only if a sanitized supporting
+excerpt or bundle is included; otherwise state that evidence remains local
+and public verification is limited.>
 
 ## Steps to reproduce
 
-1. <first human prompt, scrubbed>
+1. <technical request only; omit unrelated private context even in paraphrase>
 2. <the turns leading to the problem, one line each>
 3. <the observable>
 
@@ -41,11 +47,14 @@ rewritten as `transcript line <n>`.>
 
 ## Debug log or conversation transcript
 
-Session id(s): <ids>. Delivered local archive: <path, redaction level <level>
-| none built>. Attached bundle: <no claim; attach only after approval>.
+Scrubbed bundle: <attached after approval | available locally but not attached
+| none built>. Redaction level: <level | not applicable>.
+Sanitized supporting evidence: <minimum excerpt with transcript line markers
+that supports the claim | not supplied; public verification is limited>.
 Superpowers involvement per the diagnosis report: <possible | likely>, with
-evidence at <transcript lines>. This report does not propose a fix.
+evidence at <transcript lines if included publicly | local evidence not
+included>. This report does not propose a fix.
 
 ---
 Filed with the `diagnosing-superpowers` skill. Model, harness, harness
-version, and installed plugins are listed above.
+version, and relevant plugins are listed above.

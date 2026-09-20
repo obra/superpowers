@@ -7,13 +7,14 @@ Created: <ISO timestamp>
 
 <One paragraph. Names the session(s), the turn range if known, what was
 expected, what happened, and the observable that matters: wall-clock,
-tokens, repeated actions, a specific unexpected action.>
+tokens, repeated actions, a specific unexpected action. Include only the
+technical context relevant to the diagnosis; omit unrelated private requests.>
 
 Goal is a superpowers bug report: yes | no
 
 ## Sessions
 
-| Role | Session id | Absolute path | Lines | Bytes | Longest line (bytes) | First prompt (first 120 chars) | First timestamp |
+| Role | Session id | Absolute path | Lines | Bytes | Longest line (bytes) | First prompt technical summary (omit unrelated context) | First timestamp |
 |---|---|---|---|---|---|---|---|
 | main | | | | | | | |
 | subagent | | | | | | | |
@@ -40,7 +41,7 @@ unavailable. Missing original paths do not erase retained copies. Current
 versions/mtimes do not establish historical versions; one captured skill body
 does not authenticate an entire installation.
 
-- Other plugins / extensions / MCP servers configured: <list, or "none found">
+- Other plugins / extensions / MCP servers used in the session, whose instructions materially shaped the work, or implicated by evidence in the problem: <list with reason, "none found", or "unknown">. Mere installation or catalog listing does not count.
 - Instruction files present (paths only): <list>
 
 ## Context-safety rules for every reader of these files

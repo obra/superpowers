@@ -20,7 +20,7 @@ what would raise it. No statement about what superpowers should do.>
 - Models seen:
 - Superpowers install root / version / git sha:
 - Skill files read or injected (sha1 table from the case file):
-- Other plugins, extensions, MCP servers:
+- Other plugins, extensions, MCP servers used, materially instructing the work, or implicated by evidence (with reason):
 - Instruction files present (paths only):
 
 Label every environment field and skill observation as historical evidence,
@@ -36,10 +36,12 @@ Rejected candidates: <id — path — why>, or "none".
 
 ## 5. Timeline (REQUIRED)
 
-One row per human-typed prompt. Events column lists skills invoked,
-subagents dispatched, compaction, errors, resumes, aborts.
+One row per human-typed prompt. Summarize only the technical request relevant
+to the diagnosis; write `[unrelated request omitted]` for unrelated turns.
+Events column lists skills invoked, subagents dispatched, compaction, errors,
+resumes, aborts.
 
-| Turn | Line | Time | Request (one line) | Events |
+| Turn | Line | Time | Relevant request (one line) | Events |
 |---|---|---|---|---|
 
 ## 6. Findings (REQUIRED, one subsection per dimension)

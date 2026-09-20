@@ -8,13 +8,19 @@ labels: bug
 BEFORE FILING: Search open AND closed issues. The Windows SessionStart
 hook alone has been reported 29 times. If your issue already exists,
 add a comment or reaction to the existing one instead.
+Use generic paths and include only the technical request relevant to the
+failure. Omit unrelated private context even when paraphrasing. Scrub logs
+and transcripts while preserving the evidence needed to reproduce the failure.
 -->
 
 - [ ] I searched existing issues and this is not a duplicate
 
 ## Environment (required)
 <!-- Required. We assume an agent filed this report — tell us which one and
-     where it ran. We weigh reports by what produced them. -->
+     where it ran. We weigh reports by what produced them. List plugins whose
+     skills or tools were used, whose instructions materially shaped the work,
+     or that evidence implicates in the failure. Mere installation or catalog
+     listing does not count. -->
 
 | Field | Value |
 |-------|-------|
@@ -22,7 +28,7 @@ add a comment or reaction to the existing one instead.
 | Harness (Claude Code, Cursor, etc.) | |
 | Harness version | |
 | Your model + version | |
-| All plugins installed | |
+| Plugins used or relevant to this failure | |
 | OS + shell | |
 
 ## Is this a Superpowers issue or a platform issue?
@@ -52,4 +58,5 @@ add a comment or reaction to the existing one instead.
 ## Debug log or conversation transcript
 <!-- A debug log or conversation transcript showing the issue is the
      single most helpful thing you can include. Without one, we're
-     guessing. Screenshots of error output are also useful. -->
+     guessing. Screenshots of error output are also useful. Redact private
+     paths, identifiers, secrets, and unrelated prompts before sharing. -->
