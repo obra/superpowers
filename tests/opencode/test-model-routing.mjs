@@ -14,10 +14,33 @@ const profiles = [
   ['superpowers-economic.md', 'xiaomi/mimo-v2.5'],
   ['superpowers-economic-fast.md', 'deepseek/deepseek-v4-flash'],
 ];
+const openCodeGuides = [
+  '.opencode/INSTALL.md',
+  'docs/README.opencode.md',
+];
 const { V1_MAPPING, V2_MAPPING } = await import(pathToFileURL(path.join(repoRoot, '.opencode/plugins/superpowers.js')).href);
 
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'superpowers-model-routing-'));
 try {
+  for (const guidePath of openCodeGuides) {
+    const guide = fs.readFileSync(path.join(repoRoot, guidePath), 'utf8');
+    for (const requiredText of [
+      'install-opencode-model-routing.mjs',
+      'opencode models',
+      'superpowers-expert',
+      'superpowers-economic-fast',
+      'zai-org/GLM-5.3',
+      'deepseek/deepseek-v4-flash',
+    ]) {
+      assert.match(guide, new RegExp(escapeRegExp(requiredText)), `${guidePath} must document ${requiredText}`);
+    }
+    assert.match(
+      guide,
+      /does not modify[\s\S]{0,100}?opencode\.jsonc|opencode\.jsonc[\s\S]{0,100}?does not modify/i,
+      `${guidePath} must state that the installer does not modify opencode.jsonc`,
+    );
+  }
+
   for (const role of [
     'superpowers-expert',
     'superpowers-main',

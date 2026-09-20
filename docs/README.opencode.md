@@ -36,6 +36,38 @@ registers all skills.
 
 Verify by asking: "Tell me about your superpowers"
 
+### Model routing (OpenCode V2)
+
+Set up the providers that enable the models below before installing the
+profiles. The installer only copies profiles into the OpenCode `agents`
+directory, does not modify `opencode.json` or `opencode.jsonc`, and refuses to
+overwrite an existing profile if it finds a collision.
+
+**PowerShell:**
+
+```powershell
+node .\node_modules\superpowers\scripts\install-opencode-model-routing.mjs --config-dir "$HOME\.config\opencode"
+opencode models
+```
+
+**POSIX:**
+
+```bash
+node ./node_modules/superpowers/scripts/install-opencode-model-routing.mjs --config-dir "$HOME/.config/opencode"
+opencode models
+```
+
+The installed roles and models are:
+
+- `superpowers-expert` — `zai-org/GLM-5.3`
+- `superpowers-main` — `z-ai/glm-5.3`
+- `superpowers-economic` — `xiaomi/mimo-v2.5`
+- `superpowers-economic-fast` — `deepseek/deepseek-v4-flash`
+
+If a requested role is unavailable, OpenCode falls back to `general`. To
+uninstall the routing profiles, remove only the `agents/superpowers-*.md`
+files (for example, `rm -f "$HOME/.config/opencode/agents/superpowers-"*.md`).
+
 ### Migrating from the old symlink-based install (V1)
 
 If you previously installed superpowers using `git clone` and symlinks, remove the old setup:
