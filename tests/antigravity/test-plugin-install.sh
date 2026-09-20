@@ -67,6 +67,7 @@ test -n "$INSTALLED" || { echo "FAIL: agy did not install the plugin in a suppor
 test -f "$INSTALLED/plugin.json"
 test -f "$INSTALLED/rules/superpowers.md"
 test -f "$INSTALLED/skills/using-superpowers/SKILL.md"
+test -f "$INSTALLED/skills/using-superpowers/references/antigravity-tools.md"
 test -f "$INSTALLED/skills/brainstorming/SKILL.md"
 
 echo "PASS: agy installed the bootstrap rule and skills through its plugin mechanism ($INSTALLED)"
