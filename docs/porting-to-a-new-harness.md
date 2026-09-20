@@ -292,7 +292,7 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
+| installs always-on rules as plugin components | C via the plugin installer | Antigravity CLI (`plugin.json` + `rules/superpowers.md`; verify rule activation in a clean session — Part 6) |
 
 Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
 holds — the bootstrap rides the install mechanism, never a user-config edit).
@@ -525,11 +525,11 @@ honors the rule rather than breaking it. Distinguish three cases:
    the file-read tool when the skill applies** — the sanctioned mechanism here,
    the way `references/pi-tools.md` states it.
 
-   **For the bootstrap itself, prefer a declared context file (Part 6).** If the
-   harness has a `contextFileName`-style manifest field — as Antigravity does —
-   ship a generated context file through the installer: it's guaranteed-loaded and
-   carries both the `using-superpowers` content and the tool mapping. That is the
-   strong, preferred path.
+   **For the bootstrap itself, use an installable always-on surface (Part 6).**
+   Antigravity CLI installs `rules/superpowers.md`, whose `trigger: always_on`
+   rule includes the `using-superpowers` content and tool mapping. Verify the
+   includes reach the model in a clean session; simply copying the rule is not
+   proof that it activates.
 
    **Fallback — the surfaced skill index.** If there's no context-file field but
    the harness surfaces each installed skill's name + description at session start,
@@ -678,14 +678,14 @@ it. Distribution differs per harness ecosystem — find yours:
 | External marketplace fork, synced by script | Codex | `scripts/sync-to-codex-plugin.sh` rsyncs the tracked plugin files into a separate fork repo and opens a PR. Read its include/exclude list so you ship the right tree (it deliberately drops repo-internal dirs and other harnesses' dotdirs). |
 | Git-URL extension install | Gemini, Kimi Code, OpenCode | Users install from a git URL (`gemini extensions install …`; Kimi Code `/plugins install …`; an `opencode.json` `plugin` array entry). Document the exact command. |
 | Package-manifest fields | pi | Declared through fields in the repo-root `package.json`; users install via the harness's package command. |
-| Local installer (plugin install) | Antigravity (`agy`) | A small `install.sh` that runs the harness's own `agy plugin install` against a staging dir holding the manifest, the skills, and a generated `contextFileName` context file (the bootstrap). Everything arrives through the install mechanism — *not* by editing the user's config (see below). |
+| Local installer (plugin install) | Antigravity CLI (`agy`) | `agy plugin install` installs the repository's root `plugin.json`, `skills/`, and `rules/superpowers.md`. The always-on rule includes the bootstrap and tool mapping through the plugin mechanism. |
 
 Then:
 
 - **A plugin installer may silently strip *undeclared* files — so make the
   bootstrap a file the installer *recognizes*, never a user-config edit.** A
   `plugin install` typically copies only the components it knows about
-  (skills/agents/commands/mcp/hooks/context) and discards anything else, so a
+  (skills/agents/rules/commands/mcp/hooks/context) and discards anything else, so a
   context file the manifest doesn't declare just vanishes from the install. The
   fix is **not** to give up and write into the user's config (**rule 2**) — it's
   to declare the bootstrap as a recognized component. In escalation order:
@@ -694,14 +694,14 @@ Then:
     session), that is the strongest clean bootstrap: declare it, and the installer
     preserves it *and* the harness loads it. Generate it at install time from the
     live `using-superpowers/SKILL.md` + the tool mapping (wrapped in
-    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts. This is what
-    `.antigravity-plugin/install.sh` does — `agy plugin install` reports
-    `✔ context : ANTIGRAVITY.md`, and a clean session reads `using-superpowers`'s
-    SKILL.md, loads `brainstorming`, and enters the brainstorming flow before any
-    code. **Verify with a marker** that the installer keeps the file and the
-    harness loads it: one porter wrongly concluded it couldn't, because they
-    shipped the file *without* declaring `contextFileName` and it was stripped as
-    unrecognized.
+    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts.
+    **Verify with a marker** that the installer keeps the file and the harness
+    loads it; a successful install alone does not prove activation.
+  - **Ship an always-on plugin rule when the harness supports it.** Antigravity
+    CLI installs `rules/superpowers.md` with `trigger: always_on`. Relative
+    `@`-includes load the installed bootstrap and tool mapping without copying
+    either body or editing the user's global rules. Verify both includes and the
+    first-turn skill trigger in a clean session.
   - **Otherwise lean on the installed `using-superpowers` skill itself.** If the
     harness surfaces each installed skill's name + description at session start,
     the `using-superpowers` description ("Use when starting any conversation…")
@@ -801,6 +801,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
+| Antigravity CLI | root `plugin.json` + `rules/superpowers.md` | installed always-on rule `@`-includes bootstrap + mapping | `references/antigravity-tools.md` | `tests/antigravity/` + clean-session acceptance | `agy plugin install` |
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
 | OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook("context")` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
