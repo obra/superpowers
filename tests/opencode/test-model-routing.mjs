@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(testDir, '..', '..');
@@ -14,9 +14,25 @@ const profiles = [
   ['superpowers-economic.md', 'xiaomi/mimo-v2.5'],
   ['superpowers-economic-fast.md', 'deepseek/deepseek-v4-flash'],
 ];
+const { V1_MAPPING, V2_MAPPING } = await import(pathToFileURL(path.join(repoRoot, '.opencode/plugins/superpowers.js')).href);
 
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'superpowers-model-routing-'));
 try {
+  for (const role of [
+    'superpowers-expert',
+    'superpowers-main',
+    'superpowers-economic',
+    'superpowers-economic-fast',
+    'architecture',
+    'implementation',
+    'exploration',
+    'general',
+  ]) {
+    assert.match(V2_MAPPING, new RegExp(escapeRegExp(role)), `V2 routing must include ${role}`);
+  }
+  assert.match(V1_MAPPING, /`task` with `subagent_type: "general"`/, 'V1 routing must retain the general task mapping');
+  assert.doesNotMatch(V1_MAPPING, /superpowers-expert/, 'V1 routing must not include V2 model profiles');
+
   const missingArgs = runInstaller();
   assert.notEqual(missingArgs.status, 0, 'installer without arguments must fail');
   assert.match(`${missingArgs.stdout}\n${missingArgs.stderr}`, /--config-dir/, 'missing-argument error must mention --config-dir');

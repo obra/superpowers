@@ -96,6 +96,7 @@ export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
+- V2 model-role routing: select a named role only when it is available in the subagent catalog: \`superpowers-expert\` for architecture, difficult debugging, security analysis, and final review; \`superpowers-main\` for implementation; \`superpowers-economic\` for exploration and routine work; \`superpowers-economic-fast\` for short, low-risk checks. If the needed role is unavailable, invoke \`subagent\` with \`agent: "general"\` and state that model-role routing is not installed.
 - Invoke a skill → OpenCode's native \`skill\` tool
 - Read files → \`read\`
 - Create, edit, or delete files → use \`patch\` with \`patchText\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`shell\` for deletion
