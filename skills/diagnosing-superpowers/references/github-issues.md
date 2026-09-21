@@ -21,10 +21,21 @@ curl -s -H "Accept: application/vnd.github+json" \
 
 Without curl, hand over `https://github.com/obra/superpowers/issues?q=<terms>`.
 
-## File
+## Public draft
 
-Write the filled `templates/issue.md` to the workspace and show the exact
-text. After approval:
+Extract only minimum public evidence from the complete local diagnosis into a
+separate `templates/issue.md` draft, or a separate comment draft for the
+closest existing issue. Scrub either under `references/redaction-policy.md`;
+the `PROPRIETARY` list is not an exhaustive confidentiality check. Have an
+independent auditor use `prompts/scrub-audit.md` with DRAFT set to the public
+text file. Audit each separate public evidence excerpt or text attachment as
+another DRAFT; audit any bundle attachment as BUNDLE. Resolve every miss or
+uncertainty before showing the exact text and attachment list. Give the auditor
+the unchanged local case as SOURCE_CASE for these diagnosis-derived artifacts;
+it is read-only and is never attached. Do not rewrite the local case or report.
+If a draft or attachment changes or is renamed after audit, repeat the affected
+audit and show the revised artifact for approval. Post only the reviewed bytes;
+verify the published text and attachments match them. For a new issue:
 
 ```bash
 gh issue create --repo obra/superpowers --title "<title>" --body-file <path> \

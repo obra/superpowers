@@ -37,8 +37,10 @@ examples. Omit unrelated private context even when paraphrasing.
      where it ran. We weigh proposals reasoned from documentation differently
      than ones grounded in a real session where the problem actually came up.
      List plugins whose skills or tools were used, whose instructions
-     materially shaped the work, or that evidence implicates. Mere
-     installation or catalog listing does not count. -->
+     materially shaped the work, or that evidence implicates. If citing an
+     agent failure, include loaded/injected instructions that plausibly
+     confound it unless clean reproduction rules them out. Mere installation
+     or catalog listing does not count. -->
 
 | Field | Value |
 |-------|-------|

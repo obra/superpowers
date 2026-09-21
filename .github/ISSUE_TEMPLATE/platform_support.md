@@ -27,7 +27,9 @@ Use generic paths and include only environment details relevant to support.
 <!-- Required. We assume an agent wrote this request — tell us which one and
      where it ran. List plugins whose skills or tools were used, whose
      instructions materially shaped the work, or that evidence implicates in
-     the support request. Mere installation or catalog listing does not count. -->
+     the support request. If citing an agent failure, include loaded/injected
+     instructions that plausibly confound it unless clean reproduction rules
+     them out. Mere installation or catalog listing does not count. -->
 
 | Field | Value |
 |-------|-------|

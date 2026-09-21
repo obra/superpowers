@@ -10,16 +10,18 @@ The skill fills the sections below from the session transcript and hands
 you a prefilled link; review every line before you submit, and attach the
 scrubbed bundle if you built one. For anything else, use Bug Report.
 Remove local paths, unrelated private request context (including paraphrases),
-identifiers, and unrelated plugins from the public issue while retaining
-evidence of the failure.
+and unrelated plugins from the public issue. Pseudonymize session, task, and
+correlation IDs consistently while retaining evidence of the failure.
 -->
 
 - [ ] I searched existing issues and this is not a duplicate
 
 ## Environment (required)
 <!-- List plugins used in the diagnosed session, whose instructions materially
-     shaped it, or implicated by evidence. Mere installation or catalog listing
-     does not count. -->
+     shaped it, or implicated by evidence. Include loaded/injected instructions
+     that plausibly confound the finding unless a clean reproduction rules them
+     out; distinguish possible confounders from causes. Mere installation or
+     catalog listing does not count. -->
 
 | Field | Value |
 |-------|-------|

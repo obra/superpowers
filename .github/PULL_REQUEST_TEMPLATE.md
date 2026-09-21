@@ -3,8 +3,9 @@ BEFORE SUBMITTING: Read every word of this template. PRs that leave
 sections blank, contain multiple unrelated changes, or show no evidence
 of human involvement will be closed without review.
 This PR is public. Use repository-relative paths or placeholders for local
-paths. Omit unrelated private request context, and scrub logs and transcripts
-before including them. Keep the evidence needed to verify the change.
+paths. Pseudonymize session/task/correlation IDs consistently. Omit unrelated
+private request context, and scrub logs and transcripts before including them.
+Keep the evidence needed to verify the change.
 -->
 
 > **This PR MUST target the `dev` branch, not `main`.** `main` is the
@@ -27,8 +28,10 @@ before including them. Keep the evidence needed to verify the change.
 <!-- Name plugins whose skills or tools were used, whose instructions
      materially shaped the work, or that evidence implicates in the problem;
      include versions when known. Mark uncertain involvement as such. Write
-     "none" if none were involved. Mere installation or catalog listing does
-     not count. -->
+     "none" if none were involved. For observed agent behavior, include
+     loaded/injected instructions that plausibly confound the finding unless
+     a clean reproduction rules them out; label them as possible, not proven,
+     causes. Mere installation or catalog listing does not count. -->
 
 ## What problem are you trying to solve?
 <!-- Describe the specific problem you encountered. If this was a session

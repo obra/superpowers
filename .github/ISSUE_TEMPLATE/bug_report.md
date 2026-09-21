@@ -19,8 +19,10 @@ and transcripts while preserving the evidence needed to reproduce the failure.
 <!-- Required. We assume an agent filed this report — tell us which one and
      where it ran. We weigh reports by what produced them. List plugins whose
      skills or tools were used, whose instructions materially shaped the work,
-     or that evidence implicates in the failure. Mere installation or catalog
-     listing does not count. -->
+     or that evidence implicates in the failure. Include loaded/injected
+     instructions that plausibly confound the observation unless a clean
+     reproduction rules them out. Label possible confounders as uncertain;
+     mere installation or catalog listing does not count. -->
 
 | Field | Value |
 |-------|-------|
@@ -59,4 +61,5 @@ and transcripts while preserving the evidence needed to reproduce the failure.
 <!-- A debug log or conversation transcript showing the issue is the
      single most helpful thing you can include. Without one, we're
      guessing. Screenshots of error output are also useful. Redact private
-     paths, identifiers, secrets, and unrelated prompts before sharing. -->
+     paths, secrets, and unrelated prompts before sharing; use stable aliases
+     for session, task, and correlation IDs. -->

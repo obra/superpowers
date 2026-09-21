@@ -2,6 +2,13 @@ Title: <skill or symptom>: <one-line observable> (<harness>)
 
 - [x] I searched existing issues and this is not a duplicate (searched: <query terms>; closest: <#n title, or "none">)
 
+Public draft: extract the minimum evidence needed to understand and verify the
+claim from the complete local report. Do not copy its timeline, prompt text,
+plugin inventory, or local paths wholesale. Scrub and audit this draft with
+`references/redaction-policy.md` before showing it for approval, whether or
+not a bundle exists. If required evidence cannot be shared safely, state the
+public verification limit instead of exposing it.
+
 ## Environment (required)
 
 Use included transcript line markers or public URLs for provenance. If neither
@@ -14,7 +21,7 @@ Do not copy local session, archive, or installation paths into this public draft
 | Harness (Claude Code, Cursor, etc.) | <harness> | <label>; <transcript line or public URL> |
 | Harness version | <version> | <label>; <transcript line or public URL> |
 | Your model + version | <model ids seen> | <label>; <transcript line or public URL> |
-| Plugins used or relevant to this diagnosis | <names and versions, "none", or "unknown"> | <label>; <transcript line or public source> |
+| Plugins used or relevant to this diagnosis | <used plugins and plausible loaded/injected confounders, with status and versions; "none" or "unknown"> | <label>; <transcript line or public source; note clean reproduction or uncertainty> |
 | OS + shell | <os version>, <shell> | <label>; <transcript line or public URL> |
 
 ## Is this a Superpowers issue or a platform issue?
