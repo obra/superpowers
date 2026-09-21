@@ -30,6 +30,7 @@ and transcripts while preserving the evidence needed to reproduce the failure.
 | Harness (Claude Code, Cursor, etc.) | |
 | Harness version | |
 | Your model + version | |
+| Superpowers skills loaded, used, or implicated | |
 | Plugins used or relevant to this failure | |
 | OS + shell | |
 
@@ -45,6 +46,13 @@ and transcripts while preserving the evidence needed to reproduce the failure.
 
 ## What happened?
 <!-- Be specific. "It doesn't work" is not a bug report. -->
+
+## Original initiating prompt (required for agent-session reports)
+<!-- Preserve the original wording and order of safe spans. Replace private
+     paths, identifiers, secrets, and unrelated request spans with stable
+     placeholders; mark omissions instead of paraphrasing. Include a scrubbed
+     transcript line marker when available. If no agent session exists, state
+     that and explain how the failure was reproduced. -->
 
 ## Steps to reproduce
 1.

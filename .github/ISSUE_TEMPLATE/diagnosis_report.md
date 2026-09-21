@@ -29,6 +29,7 @@ correlation IDs consistently while retaining evidence of the failure.
 | Harness (Claude Code, Cursor, etc.) | |
 | Harness version | |
 | Your model + version | |
+| Superpowers skills loaded, used, or implicated | |
 | Plugins used or relevant to this diagnosis | |
 | OS + shell | |
 
@@ -37,6 +38,12 @@ correlation IDs consistently while retaining evidence of the failure.
 - [ ] I confirmed this issue does not occur without Superpowers installed
 
 ## What happened?
+
+## Original initiating prompt (redacted, required)
+<!-- Keep the original safe wording and order from the diagnosed session.
+     Replace private paths, identifiers, secrets, and unrelated request spans
+     with stable placeholders and mark omissions. Include a scrubbed transcript
+     line marker if supplied. Do not substitute a summary for the prompt. -->
 
 ## Steps to reproduce
 1.

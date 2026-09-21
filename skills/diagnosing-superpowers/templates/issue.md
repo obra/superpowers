@@ -21,6 +21,7 @@ Do not copy local session, archive, or installation paths into this public draft
 | Harness (Claude Code, Cursor, etc.) | <harness> | <label>; <transcript line or public URL> |
 | Harness version | <version> | <label>; <transcript line or public URL> |
 | Your model + version | <model ids seen> | <label>; <transcript line or public URL> |
+| Superpowers skills loaded, used, or implicated | <skill names and versions, with status; "none" or "unknown"> | <label>; <transcript line or public source> |
 | Plugins used or relevant to this diagnosis | <used plugins and plausible loaded/injected confounders, with status and versions; "none" or "unknown"> | <label>; <transcript line or public source; note clean reproduction or uncertainty> |
 | OS + shell | <os version>, <shell> | <label>; <transcript line or public URL> |
 
@@ -28,8 +29,10 @@ Do not copy local session, archive, or installation paths into this public draft
 
 - [ ] I confirmed this issue does not occur without Superpowers installed
 
-The reporter has not tried reproducing without superpowers. Evidence for
-involvement is below; it does not establish cause.
+<Check the box only if a clean reproduction without Superpowers supports it;
+cite the sanitized evidence. Otherwise leave it unchecked and state whether
+reproduction was not attempted or inconclusive. Involvement evidence alone
+does not establish cause.>
 
 ## What happened?
 
@@ -37,6 +40,14 @@ involvement is below; it does not establish cause.
 triage verdict. Cite `transcript line <n>` only if a sanitized supporting
 excerpt or bundle is included; otherwise state that evidence remains local
 and public verification is limited.>
+
+## Original initiating prompt (redacted, required)
+
+<Copy the original safe wording in order from the local case. Replace private
+paths, identifiers, secrets, and unrelated spans with stable placeholders;
+mark omissions instead of paraphrasing. Cite a sanitized transcript line
+marker if included; otherwise state that the original remains local and the
+public evidence is limited.>
 
 ## Steps to reproduce
 

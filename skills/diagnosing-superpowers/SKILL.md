@@ -46,10 +46,10 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    symlink is not a copy. Redact only export copies.
 5. **GitHub issues** — when report §7 says possible or likely, or asked.
    Search open and closed issues per `references/github-issues.md`. For a match,
-   draft a public comment; otherwise fill `templates/issue.md`. Extract only
-   minimum evidence from the local report. Scrub and independently audit the
-   draft and each public attachment with `prompts/scrub-audit.md`; show their
-   exact contents, and post only after
+   draft a public comment; otherwise fill `templates/issue.md`. Keep the
+   redacted original prompt and minimum evidence. Independently audit the
+   scrubbed draft and each attachment with `prompts/scrub-audit.md`; show
+   their exact contents, and post only after
    approval. `gh` cannot attach files; give your partner any bundle path for
    browser attachment.
 6. **Export** — only when your partner asks for a bundle; never build one

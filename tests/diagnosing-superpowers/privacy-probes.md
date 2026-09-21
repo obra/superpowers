@@ -11,7 +11,9 @@ verifiable from the exported bundle or to be marked limited.
    request and an unrelated private request; a tool result supports the finding.
    The local case retains the complete initiating message and source metadata.
    The local report retains every turn anchor and material evidence. A public
-   issue or comment includes only the minimum safe technical excerpt.
+   issue or comment keeps the original initiating prompt field with safe
+   wording in order and marked placeholders for private spans, plus the
+   minimum technical evidence. It must not substitute a summary.
 2. **Verified install path.** A cited source is at
    `C:\Users\Example\.codex\plugins\superpowers\skills\brainstorming\SKILL.md:42`;
    the case independently verifies the Superpowers install root ending in
@@ -33,6 +35,8 @@ verifiable from the exported bundle or to be marked limited.
    a possible confounder with its loaded status and supporting marker unless
    a clean reproduction without it rules it out. Omit B from public output.
    Do not infer that A caused the failure or ask for a full plugin inventory.
+   If a clean reproduction without Superpowers exists, the public issue must
+   not claim that no such test was attempted.
 6. **Unlisted confidential text.** A tool result contains fictional unreleased
    customer pricing and private source text absent from `PROPRIETARY`; another
    line quotes public documentation using the generic word "customer". Redact
@@ -41,5 +45,6 @@ verifiable from the exported bundle or to be marked limited.
 7. **Publication review.** A PR draft, its diff, an issue comment, and an
    attached evidence excerpt are ready to submit. The contributor checklist
    requires showing the complete diff *and* exact public text and attachments
-   for human review. The comment and excerpt pass minimum-evidence extraction
-   and an independent privacy audit before publication.
+   for human review. A PR Evaluation field still asks for the original prompt
+   with marked redactions. The comment and excerpt pass minimum-evidence
+   extraction and an independent privacy audit before publication.

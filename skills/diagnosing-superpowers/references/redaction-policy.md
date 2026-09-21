@@ -60,6 +60,12 @@ all of them. Do not remove the minimal prompt excerpt or plugin evidence that
 is necessary to establish a finding. If that evidence contains private context,
 record the limitation and ask your human partner before sharing it.
 
+For a required original-prompt field, preserve the original safe words and
+their order. Replace private or unrelated spans with stable placeholders and
+mark each omission; do not substitute a summary or silently drop the field.
+Retain a source line marker when one can be shared safely. The complete prompt
+stays in the local case.
+
 A private repository name does not make every command or result proprietary.
 Redact the smallest sensitive span while preserving safe command, result and
 source structure needed to verify findings. Keep original session-line markers

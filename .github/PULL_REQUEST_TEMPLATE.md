@@ -22,6 +22,7 @@ Keep the evidence needed to verify the change.
 |-------|-------|
 | Your model + version | |
 | Harness + version | |
+| Superpowers skills used or implicated | |
 | Plugins used or relevant to this contribution | |
 | Human partner who reviewed this diff | |
 
@@ -127,9 +128,11 @@ paste the complete sanitized acceptance-test transcript here
 </details>
 
 ## Evaluation
-- What technical goal led to this change? Omit unrelated activities and
-  private context from your human partner's prompt. Quote only a necessary
-  excerpt with their approval.
+- What was the initial prompt you (or your human partner) used to start
+  the session that led to this change? Keep its original safe wording and
+  order; replace private paths, identifiers, secrets, and unrelated spans
+  with stable placeholders rather than paraphrasing. Mark each omission.
+  If no agent session led to the change, say why.
 - How many eval sessions did you run AFTER making the change?
 - How did outcomes change compared to before the change?
 

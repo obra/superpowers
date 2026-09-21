@@ -25,8 +25,10 @@ Without curl, hand over `https://github.com/obra/superpowers/issues?q=<terms>`.
 
 Extract only minimum public evidence from the complete local diagnosis into a
 separate `templates/issue.md` draft, or a separate comment draft for the
-closest existing issue. Scrub either under `references/redaction-policy.md`;
-the `PROPRIETARY` list is not an exhaustive confidentiality check. Have an
+closest existing issue. Keep the required original initiating prompt as a
+redacted verbatim excerpt with marked omissions, not a summary. Scrub each
+under `references/redaction-policy.md`; the `PROPRIETARY` list is not an
+exhaustive confidentiality check. Have an
 independent auditor use `prompts/scrub-audit.md` with DRAFT set to the public
 text file. Audit each separate public evidence excerpt or text attachment as
 another DRAFT; audit any bundle attachment as BUNDLE. Resolve every miss or
