@@ -363,6 +363,9 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
+**Growth**
+- **marketing-mindset** - Deciding what marketing work is worth doing: exchange rules, three-month horizon, fast tests with kill dates
+
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
