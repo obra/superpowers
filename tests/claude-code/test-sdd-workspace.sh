@@ -129,6 +129,100 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    # --- task-brief ends a task at the next same-or-shallower heading ---
+    cat > "$repo/plan-sections.md" <<'PLAN'
+# Plan With Trailing Sections
+
+## Global Constraints
+
+Constraints text.
+
+### Task 1: First thing
+
+First-task requirement.
+
+#### Notes for Task 1
+
+Nested detail belongs to task 1.
+
+### Task 2: Last thing
+
+Last-task requirement.
+
+## Self-review
+
+Author-only checklist, not a task step.
+
+## Done when
+
+Plan-level exit criteria.
+PLAN
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sections.md 2 >/dev/null )
+    local last_brief="$repo/.superpowers/sdd/plan-sections/task-2-brief.md"
+    if grep -q "Last-task requirement." "$last_brief" 2>/dev/null \
+        && ! grep -q "Author-only checklist" "$last_brief" 2>/dev/null \
+        && ! grep -q "Plan-level exit criteria" "$last_brief" 2>/dev/null; then
+        pass "task-brief stops the last task at the next plan-level section"
+    else
+        fail "task-brief stops the last task at the next plan-level section"
+        echo "    brief: $(cat "$last_brief" 2>/dev/null)"
+    fi
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sections.md 1 >/dev/null )
+    local first_brief="$repo/.superpowers/sdd/plan-sections/task-1-brief.md"
+    if grep -q "Nested detail belongs to task 1." "$first_brief" 2>/dev/null \
+        && ! grep -q "Last-task requirement." "$first_brief" 2>/dev/null; then
+        pass "task-brief keeps a task's deeper sub-headings and stops at the next task"
+    else
+        fail "task-brief keeps a task's deeper sub-headings and stops at the next task"
+        echo "    brief: $(cat "$first_brief" 2>/dev/null)"
+    fi
+
+    # --- ambiguous fencing keeps the old, safe behaviour ---
+    # The embedded document's inner bare ``` closes the outer fence per
+    # CommonMark, so the two fence parses disagree from there on. A heading
+    # after that point must not cut the task short.
+    cat > "$repo/plan-embedded.md" <<'PLAN'
+# Plan With An Embedded Document
+
+### Task 1: Write the new skill file
+
+Replace the file with:
+
+```markdown
+# Some Skill
+
+## Overview
+
+Prose.
+
+```bash
+echo hi
+```
+
+## Step 2
+
+More embedded prose.
+```
+
+LAST_LINE: still part of task 1.
+
+### Task 2: Something else
+
+Other work.
+PLAN
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-embedded.md 1 >/dev/null )
+    local embedded_brief="$repo/.superpowers/sdd/plan-embedded/task-1-brief.md"
+    if grep -q "LAST_LINE: still part of task 1." "$embedded_brief" 2>/dev/null \
+        && ! grep -q "Other work." "$embedded_brief" 2>/dev/null; then
+        pass "task-brief does not cut a task on a heading inside ambiguous fencing"
+    else
+        fail "task-brief does not cut a task on a heading inside ambiguous fencing"
+        echo "    brief: $(cat "$embedded_brief" 2>/dev/null)"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

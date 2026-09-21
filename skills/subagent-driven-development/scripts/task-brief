@@ -27,10 +27,41 @@ else
   out="$dir/task-${n}-brief.md"
 fi
 
+# A task runs from its "Task N" heading to the next Task heading, or to the
+# next heading of level 2 or deeper that is not deeper than the task's own
+# heading. Without that second terminator every trailing section of the plan
+# (Self-review, Done when, Final gate) is appended to the last task's brief.
+# Level-1 lines never end a task: a plan's own title is level 1 and sits
+# above every task.
+#
+# Cutting a task short is the expensive mistake, so the new terminator only
+# fires where the line is certainly not inside an example. Plans embed whole
+# markdown documents, and their fencing is often ambiguous (a bare ``` inside
+# a ```markdown block closes it, however it was meant), so a second, stricter
+# fence parse runs alongside the existing one: `cfence` follows CommonMark
+# (opening character and length, up to three spaces of indentation, a
+# backtick info string containing a backtick is not a fence, and only the
+# same character at the same or greater length with nothing else on the line
+# closes it). A heading ends a task only when both parses agree it is outside
+# a fence. Where they disagree the old behaviour stands, so nothing this
+# script already extracted gets shorter by accident.
 awk -v n="$n" '
+  /^ ? ? ?(```|~~~)/ {
+    line = $0; sub(/^ +/, "", line)
+    c = substr(line, 1, 1)
+    l = 0; while (substr(line, l + 1, 1) == c) l++
+    if (!cfence) { if (c == "~" || substr(line, l + 1) !~ /`/) { cfence = 1; cc = c; cl = l } }
+    else if (c == cc && l >= cl && substr(line, l + 1) ~ /^[ \t]*$/) { cfence = 0 }
+  }
   /^```/ { infence = !infence }
-  !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
-    intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+  !infence && /^#+[ \t]/ {
+    match($0, /^#+/); lvl = RLENGTH
+    if ($0 ~ /^#+[ \t]+Task[ \t]+[0-9]+/) {
+      intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+      tasklvl = lvl
+    } else if (intask && !cfence && lvl > 1 && lvl <= tasklvl) {
+      intask = 0
+    }
   }
   intask { print }
 ' "$plan" > "$out"
