@@ -137,10 +137,22 @@ Subagent (general-purpose):
     "yes." A tight report that cites lines gives the controller everything
     it needs.
 
-    Your final message is the report itself: begin directly with the
-    spec-compliance verdict. Every line is a verdict, a finding with
-    file:line, or a check you ran — no preamble, no process narration,
-    no closing summary.
+    ## Where Your Report Goes
+
+    Write the full report to [REVIEW_FILE], in the Output Format below.
+    Writing that one file is the only write you make: the read-only rule
+    above still binds the checkout.
+
+    Number every finding as you list it: C1, C2 for Critical, I1, I2 for
+    Important, M1, M2 for Minor, CV1, CV2 for the cannot-verify items. The
+    controller names findings by those ids when it dispatches the fix, so
+    the ids in the file and the ids in your final message must match.
+
+    Your final message is the verdict block below, and nothing else. No
+    preamble, no process narration, no closing summary, no strengths: the
+    controller acts on the block and opens the file when a finding needs
+    its detail. A full report in the final message stays in the
+    controller's context for the rest of the run.
 
     ## Calibration
 
@@ -158,7 +170,7 @@ Subagent (general-purpose):
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
-    ## Output Format
+    ## Output Format (the review file)
 
     ### Spec Compliance
 
@@ -185,6 +197,23 @@ Subagent (general-purpose):
     **Task quality:** [Approved | Needs fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
+
+    ## Your Final Message
+
+    These lines, in this order, and nothing else:
+
+        Spec: ✅ | ❌
+        Quality: Approved | Needs fixes
+        C1 <one-liner> file:line
+        I1 <one-liner> file:line
+        M1 <one-liner>
+        CV1 <what the controller must check>
+        Report: [REVIEW_FILE]
+
+    One line per Critical and Important finding, one per Minor, one per
+    cannot-verify item, in the order the file lists them, same ids. When a
+    severity has no findings, its lines are absent. Everything else you
+    wrote is in the file.
 ```
 
 **Placeholders:**
@@ -197,11 +226,16 @@ Subagent (general-purpose):
   are already in this template)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
+- `[REVIEW_FILE]`: REQUIRED: where the reviewer writes its full report
+  (`<workspace>/task-N-review.md`, beside the brief and the report); the
+  controller reads it only when a verdict line sends it there
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`bash scripts/review-package PLAN_FILE BASE HEAD` prints the unique
   path it wrote; the package never enters the controller's context)
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+**Reviewer returns:** a verdict block: the two verdicts, one line per
+Critical, Important, Minor and cannot-verify finding with its id, and the
+review file path. The full report (Spec Compliance, Strengths, Issues,
+Assessment) is in the review file.
