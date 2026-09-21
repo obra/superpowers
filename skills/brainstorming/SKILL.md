@@ -13,87 +13,93 @@ design, and get your human partner's approval.
 
 ## Establish Shared Understanding
 
-The outcome of brainstorming is an understanding your human partner can
-recognize and correct, grounded in what they want to accomplish.
+The outcome of brainstorming is a shared contract your human partner can
+recognize and correct, grounded in what they want to accomplish and what
+must be observably true for the work to count as correct.
 
 1. **Discover intent.** Use the request and available context to identify
    the intended outcome, who it is for, and what success looks like. When
    that information is missing, ask one focused question about purpose or
-   intended use before proposing features or an approach. Knowing the app
-   genre does not tell you why your partner wants it. Gathering missing
-   requirements does not ask them to authorize the task again.
+   intended use before proposing features or an approach.
 2. **Write back your understanding.** Summarize the intended outcome,
-   relevant constraints, and success criteria in a short note your partner
-   can assess. Separate what they said from assumptions. Invite correction
-   and incorporate their answer before treating this as the design brief.
-3. **Carry intent into the design.** Preserve the agreed understanding in
-   the selected path's design artifact: the written spec for architectural
-   work, or the in-chat design/probe for bounded work and spikes. Check
-   proposed features and technical choices against that understanding.
+   relevant constraints, success criteria, and assumptions in a short note
+   your partner can assess. Separate facts from assumptions and invite
+   correction.
+3. **Define acceptance.** Before selecting an implementation approach,
+   capture the acceptance obligations that constrain correctness. Scale the
+   artifact to the path: a Probe Contract for spikes, a Mini Acceptance
+   Contract for bounded work, and a Full Acceptance Contract for
+   architectural work. Define observable outcomes, important invariants,
+   critical failure semantics, and blocking behavioral ambiguity. Do not
+   design exhaustive test cases here. See `acceptance-contract.md`.
+4. **Carry intent and acceptance into the design.** Check proposed features
+   and technical choices against both the agreed intent and the acceptance
+   obligations. Critical obligations must map to a design mechanism.
 
-When the request already supplies the purpose and constraints, reflect
-that understanding instead of asking the same questions again. Keep the
-note concise; its accuracy and the opportunity to correct it matter.
+When the request already supplies the purpose, constraints, and acceptance
+facts, reflect them instead of asking the same questions again. Scale
+acceptance effort to behavioral risk, not document size.
 
 <HARD-GATE>
 Before taking any implementation action, including invoking an
 implementation skill, writing product code, scaffolding, installing
 product dependencies, or creating an external project, complete the
-selected path's prerequisites:
+selected path's quality and approval prerequisites:
 
-- Spike: the human partner approves the question and probe.
-- Bounded: the human partner approves the short in-chat design.
-- Architectural: the human partner reviews and approves the written spec,
-  then reviews the written implementation plan and selects its execution
-  method. Conversational design approval only permits writing the spec;
-  written-spec approval only permits invoking writing-plans.
+- Spike: the question, Probe Contract, and probe plan are explicit and the
+  human partner approves them.
+- Bounded: the Mini Acceptance Contract and short in-chat design are
+  explicit and the human partner approves them.
+- Architectural: the Full Acceptance Contract exists, Acceptance Challenge
+  is complete, Acceptance Readiness is **READY**, the human partner reviews
+  and approves the written spec, then reviews the implementation plan and
+  selects its execution method. Conversational design approval only permits
+  writing the spec; written-spec approval only permits invoking writing-plans.
 
-A reply approves the stage actually presented. Approval of an idea or
-feature scope does not approve artifacts that do not exist yet. Resume
-at the earliest incomplete stage; do not turn one approval into permission
-to skip the rest of the selected path. Read-only project exploration is
-allowed while those prerequisites remain incomplete.
+Human approval does not make an acceptance-incomplete artifact ready.
+A reply approves only the stage actually presented. Resume at the earliest
+incomplete stage; do not turn one approval into permission to skip the rest
+of the selected path. Read-only project exploration is allowed while those
+prerequisites remain incomplete.
 </HARD-GATE>
+
+
 
 ## Three Paths
 
 Before your first question, classify the request and say the
-classification out loud — "this looks bounded, so I'll present a short
-design here rather than write a spec" — so your human partner can
-override it:
+classification out loud so your human partner can override it:
 
 - **Spike** — a feasibility question ("can we...", "is it possible...",
-  "quick and dirty is fine") whose output is an answer, not code you
-  keep. Present the question and what you'll try in 2-3 sentences, get
-  a nod, then find out as cheaply as correctness allows. No design
-  doc, no spec file. Report findings as a recommendation; anything you
-  built stays labeled throwaway.
-- **Bounded** — a well-scoped change to code that already exists in
-  this repo: a new flag, a small endpoint, a one-file fix.
-  Understanding the kind of app is not enough — bounded means the flow
-  you are changing is already here to read. If there is no existing
-  flow to change, the task is not bounded. Ask the clarifying
-  questions that matter, present a short design IN CHAT (a few
-  sentences to a few short paragraphs), and STOP. Implementation
-  starts only after your human partner says yes to that design — a
-  bounded task's approval is as hard a gate as an architectural
-  one. No spec file, no implementation plan document.
-- **Architectural** — new projects, new subsystems, changes that
-  restructure how components fit together or alter interfaces others
-  depend on. Follow the full process: questions, approaches, sectioned
-  design, written spec, then the writing-plans skill.
+  "quick and dirty is fine") whose output is an answer, not code you keep.
+  Define a lightweight **Probe Contract**: question/hypothesis, evidence,
+  success/failure criteria, and decision rule. Get approval, then investigate
+  as cheaply as correctness allows. Anything built stays throwaway.
+- **Bounded** — a well-scoped change to code that already exists in this
+  repo. Ask the clarifying questions that matter, state a **Mini Acceptance
+  Contract** and short design IN CHAT, and STOP. The mini contract captures
+  only the changed behavior, relevant must-remain-true invariants, and
+  critical failure semantics. Implementation starts only after approval.
+  No spec file or implementation-plan document.
+- **Architectural** — new projects, new subsystems, or changes that
+  restructure how components fit together or alter interfaces others depend
+  on. Follow the full process: context, questions, **Full Acceptance
+  Contract**, approaches evaluated against acceptance, design, Acceptance
+  Challenge, written spec, Acceptance Readiness, then writing-plans.
 
 When in doubt between two paths, take the heavier one. The ratchet is
-one-way: hidden complexity discovered mid-task upgrades the path —
-stop, say so, and step up. Nothing downgrades mid-task.
+one-way: hidden complexity discovered mid-task upgrades the path — stop,
+say so, and step up. Nothing downgrades mid-task. Acceptance depth follows
+the selected path; it does not justify expanding feature scope.
 
-## Anti-Pattern: "Too Simple To Need Approval"
+## Anti-Pattern: "Too Simple To Need Acceptance"
 
-Every path ends with your human partner approving the required design
-before implementation. A bounded change may need only two sentences in
-chat. A new todo-list project is architectural and requires the written
-spec and planning handoffs. Scale the artifact to the selected path;
-complete that path's reviews before implementation.
+Every path defines the acceptance artifact appropriate to its risk and gets
+human approval before implementation. A bounded change may need only a few
+lines of Mini Acceptance Contract plus a short design; it does not need a
+full spec. A new project is architectural and requires the full contract,
+written spec, readiness gate, and planning handoff. Scale the artifact;
+never skip the correctness contract.
 
 ## Red Flags
 
@@ -106,6 +112,10 @@ complete that path's reviews before implementation.
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
 | "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
 | "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
+| "The success criteria are obvious; tests can define them later" | Tests cannot repair an undefined correctness contract. Define the path-sized acceptance artifact before design/implementation. |
+| "The requirement is ambiguous, but I can choose the reasonable interpretation" | If the choice changes observable behavior or acceptance semantics, it is a behavioral decision for the human partner. |
+| "Acceptance means listing every edge case" | No. Capture only obligations that materially constrain correctness, design, or release confidence. |
+| "The user approved the design, so Acceptance Readiness is unnecessary" | Approval and artifact readiness are separate gates; one does not substitute for the other. |
 
 ## Checklist
 
@@ -114,87 +124,86 @@ your path and complete them in order.
 
 **Spike:**
 1. **Explore project context** — enough to frame the probe
-2. **Present question + probe plan** — 2-3 sentences
-3. **Get approval** — a nod is enough
-4. **Investigate** — as cheaply as correctness allows
-5. **Report findings** — a recommendation; label anything built as throwaway
+2. **Define Probe Contract** — hypothesis/question, evidence, success,
+   failure, decision rule
+3. **Present probe plan + contract** — keep it brief
+4. **Get approval**
+5. **Investigate**
+6. **Report evidence + decision** — label anything built as throwaway
 
 **Bounded:**
 1. **Explore project context** — check files, docs, recent commits
-2. **Ask clarifying questions** — one at a time, the ones that matter
-3. **Present short design in chat** — approach, files touched, testing
-4. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate
-5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
+2. **Ask clarifying questions** — one at a time, only what matters
+3. **Define Mini Acceptance Contract** — changed behavior, relevant
+   invariants, critical failure semantics
+4. **Present short design in chat** — approach, files touched, verification
+5. **Get approval** — STOP and wait for an explicit yes
+6. **Implement** — normal development workflow; TDD applies; no plan doc
 
 **Architectural:**
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+1. **Explore project context**
+2. **Offer the visual companion just-in-time** when a genuinely visual
+   question arises
+3. **Ask clarifying questions** — purpose, constraints, success criteria,
+   behavioral decisions
+4. **Define Full Acceptance Contract** — critical behavior, observable
+   oracles, invariants, failure obligations, NFR obligations, unknowns
+5. **Propose 2-3 approaches** — evaluate trade-offs and acceptance fit
+6. **Present design** — architecture plus Acceptance -> Design traceability
+7. **Run Acceptance Challenge** — counterexample, boundary, state,
+   regression
+8. **Write design doc**
+9. **Spec self-review**
+10. **Run Acceptance Readiness Gate** — must be READY
+11. **User reviews written spec**
+12. **Transition to implementation** — invoke writing-plans
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
-    "Classify: spike / bounded / architectural" [shape=diamond];
-    "Present question + probe (2-3 sentences)" [shape=box];
-    "Ask clarifying questions (bounded)" [shape=box];
-    "Present short design in chat" [shape=box];
+    "Classify path" [shape=diamond];
+    "Probe Contract" [shape=box];
+    "Mini Acceptance Contract" [shape=box];
+    "Full Acceptance Contract" [shape=box];
+    "Approaches + design" [shape=box];
+    "Acceptance Challenge" [shape=box];
+    "Acceptance Ready?" [shape=diamond];
     "Human approves?" [shape=diamond];
-    "Investigate; report recommendation" [shape=doublecircle];
-    "Implement via normal workflow (no plan doc)" [shape=doublecircle];
-    "Explore project context" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
-    "Hidden complexity? Upgrade path" [shape=box];
+    "Investigate spike" [shape=doublecircle];
+    "Implement bounded" [shape=doublecircle];
+    "Write spec" [shape=box];
+    "Invoke writing-plans" [shape=doublecircle];
 
-    "Classify: spike / bounded / architectural" -> "Present question + probe (2-3 sentences)" [label="spike"];
-    "Classify: spike / bounded / architectural" -> "Ask clarifying questions (bounded)" [label="bounded"];
-    "Classify: spike / bounded / architectural" -> "Explore project context" [label="architectural"];
-    "Present question + probe (2-3 sentences)" -> "Human approves?";
-    "Ask clarifying questions (bounded)" -> "Present short design in chat";
-    "Present short design in chat" -> "Human approves?";
-    "Human approves?" -> "Investigate; report recommendation" [label="spike: yes"];
-    "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
-    "Hidden complexity? Upgrade path" -> "Classify: spike / bounded / architectural";
-    "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "Classify path" -> "Probe Contract" [label="spike"];
+    "Classify path" -> "Mini Acceptance Contract" [label="bounded"];
+    "Classify path" -> "Full Acceptance Contract" [label="architectural"];
+    "Probe Contract" -> "Human approves?";
+    "Mini Acceptance Contract" -> "Human approves?";
+    "Human approves?" -> "Investigate spike" [label="spike yes"];
+    "Human approves?" -> "Implement bounded" [label="bounded yes"];
+    "Full Acceptance Contract" -> "Approaches + design";
+    "Approaches + design" -> "Acceptance Challenge";
+    "Acceptance Challenge" -> "Write spec";
+    "Write spec" -> "Acceptance Ready?";
+    "Acceptance Ready?" -> "Full Acceptance Contract" [label="no: clarify/revise"];
+    "Acceptance Ready?" -> "Human approves?" [label="yes"];
+    "Human approves?" -> "Invoke writing-plans" [label="architectural yes"];
 }
 ```
 
-**Terminal states are path-bound.** Architectural: the ONLY skill you
-invoke after brainstorming is writing-plans — never frontend-design,
-mcp-builder, or any other implementation skill. Bounded: after
-approval, implementation proceeds directly through the normal
-development workflow; no plan document. Spike: the terminal state is a
-reported recommendation.
+**Terminal states are path-bound.** Architectural: after acceptance-ready
+spec approval, the ONLY skill you invoke is writing-plans. Bounded: after
+approval, implementation proceeds directly through the normal development
+workflow; no plan document. Spike: the terminal state is an evidence-backed
+recommendation.
 
 ## The Process
 
-The subsections below serve the bounded and architectural paths (a
-spike stops at "present the probe, get a nod"). Sections from
-**Exploring approaches** onward are architectural-path depth — for
-bounded work, context plus a few questions plus a short in-chat design
-is the whole process.
+The subsections below serve the bounded and architectural paths. A spike
+uses only the Probe Contract and probe workflow. Architectural depth begins
+with approach comparison; bounded work stops after a Mini Acceptance Contract,
+short design, and approval.
 
 **Understanding the idea:**
 
@@ -205,11 +214,30 @@ is the whole process.
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+- Separate behavioral decisions from implementation choices. A behavioral
+  ambiguity changes observable behavior, business rules, state transitions,
+  data correctness, failure semantics, security/permission behavior,
+  compatibility, or acceptance thresholds. Do not silently resolve it;
+  expose it as a Decision / Unknown for the human partner. Implementation
+  ambiguity may be resolved when it cannot change acceptance semantics.
+
+**Defining acceptance:**
+
+- Define what must be observably true before selecting the final approach.
+- Use the path-specific contract in `acceptance-contract.md`.
+- Capture only obligations that materially constrain correctness, design
+  choices, or release confidence.
+- Do not enumerate every imaginable edge case and do not generate exhaustive
+  test cases here.
+- For existing code, capture must-remain-true behavior as invariants when the
+  change could regress it.
 
 **Exploring approaches:**
 
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
+- Evaluate each serious option against the critical acceptance obligations;
+  call out obligations it cannot satisfy or can satisfy only with added mechanisms
 - Lead with your recommended option and explain why
 - YAGNI ruthlessly - remove unnecessary features from every approach and design
 
@@ -218,8 +246,25 @@ is the whole process.
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
+- Cover: architecture, components, data/state flow, failure semantics,
+  Acceptance -> Design traceability, and verification intent
+- For each critical obligation, identify the design mechanism responsible for
+  satisfying it
 - Be ready to go back and clarify if something doesn't make sense
+
+**Acceptance Challenge:**
+
+Before finalizing an architectural spec, try to falsify the design with four
+focused probes:
+
+1. **Counterexample** — can the listed acceptance conditions appear satisfied
+   while the intended user outcome is still wrong?
+2. **Boundary** — is there a boundary condition that changes a design decision?
+3. **State** — is a critical state transition undefined or contradictory?
+4. **Regression** — can the new behavior violate an existing invariant?
+
+Add or revise only obligations that materially affect correctness or design.
+Do not turn this into open-ended edge-case brainstorming.
 
 **Design for isolation and clarity:**
 
@@ -233,6 +278,8 @@ is the whole process.
 - Explore the current structure before proposing changes. Follow existing patterns.
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
+- Identify existing behavior that must remain true when the change can affect it;
+  represent those as explicit invariants rather than assuming regression safety.
 
 ## After the Design (architectural path)
 
@@ -241,20 +288,46 @@ is the whole process.
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
+- The spec must carry the agreed intent, Acceptance Contract, design,
+  Acceptance -> Design mapping, Acceptance Challenge results, and verification
+  intent. Do not expand these into exhaustive test cases.
 - Commit the design document to git
 
 **Spec Self-Review:**
-After writing the spec document, look at it with fresh eyes:
+After writing the spec document, review it against the contract:
 
-1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
-2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
-3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
-4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+1. **Intent alignment:** Does the design still achieve the stated intended outcome?
+2. **Acceptance completeness:** Does every critical outcome have an acceptance obligation?
+3. **Oracle check:** Could an independent observer determine PASS/FAIL for each critical obligation?
+4. **Invariant check:** Are relevant must-remain-true behaviors explicit?
+5. **Failure semantics:** Are critical failures defined rather than implied?
+6. **Counterexample check:** Could all ACs appear satisfied while the real outcome is wrong?
+7. **Behavioral ambiguity:** Any unresolved behavioral ambiguity is a blocking Decision / Unknown; do not pick an interpretation silently.
+8. **Traceability:** Can every critical obligation point to the design mechanism responsible for it?
+9. **Consistency and scope:** Any contradiction, scope creep, or multi-subsystem spec that should be decomposed?
+10. **Placeholder scan:** Any TBD/TODO or vague blocking language?
 
-Fix any issues inline. No need to re-review — just fix and move on.
+Fix non-decision issues inline. Surface blocking behavioral decisions to the
+human partner.
+
+**Acceptance Readiness Gate:**
+
+The architectural spec is **Acceptance Ready** only when:
+
+- intended outcome is explicit;
+- critical behavior obligations exist;
+- each critical obligation has an observable oracle/evidence condition;
+- critical failure semantics and relevant invariants are explicit;
+- blocking behavioral ambiguities are zero;
+- critical Acceptance -> Design mappings exist; and
+- high-risk counterexample/boundary/state/regression probes have been considered.
+
+If any condition fails, report **NOT READY** with the blocking items and return
+to clarification/acceptance/design. Only a **READY** spec may proceed to the
+user review gate and then writing-plans.
 
 **User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+After the spec self-review and Acceptance Readiness Gate pass, ask the user to review the written spec before proceeding:
 
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
