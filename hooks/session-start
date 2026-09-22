@@ -3,27 +3,39 @@
 
 set -euo pipefail
 
-# Determine plugin root directory
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# Determine plugin root directory. The host already exports the plugin root
+# (CLAUDE_PLUGIN_ROOT under Claude Code, CURSOR_PLUGIN_ROOT under Cursor), so
+# avoid subshells here: on Windows each $(...) spawn costs ~2.7 s.
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+    PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
+elif [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+    PLUGIN_ROOT="${CURSOR_PLUGIN_ROOT}"
+else
+    # Standalone execution fallback, without a subshell.
+    case "$0" in
+        */*) PLUGIN_ROOT="${0%/*}/.." ;;
+        *)   PLUGIN_ROOT=".." ;;
+    esac
+fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# Read using-superpowers content. $(<file) is a bash builtin, so this reads
+# the file without spawning a cat process.
+skill_file="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
+if [ -r "$skill_file" ]; then
+    using_superpowers_content=$(<"$skill_file")
+else
+    using_superpowers_content="Error reading using-superpowers skill"
+fi
 
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude
 # faster than the character-by-character loop this replaces.
-escape_for_json() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    s="${s//$'\n'/\\n}"
-    s="${s//$'\r'/\\r}"
-    s="${s//$'\t'/\\t}"
-    printf '%s' "$s"
-}
+using_superpowers_escaped="${using_superpowers_content//\\/\\\\}"
+using_superpowers_escaped="${using_superpowers_escaped//\"/\\\"}"
+using_superpowers_escaped="${using_superpowers_escaped//$'\n'/\\n}"
+using_superpowers_escaped="${using_superpowers_escaped//$'\r'/\\r}"
+using_superpowers_escaped="${using_superpowers_escaped//$'\t'/\\t}"
 
-using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
@@ -38,16 +50,16 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 # See: https://github.com/obra/superpowers/issues/571
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
-  printf '{\n  "additional_context": "%s"\n}\n' "$session_context" | cat
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
 elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ] && [ -z "${MUSE_PLUGIN_ROOT:-}" ]; then
   # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI/MUSE_PLUGIN_ROOT
-  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" | cat
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 elif [ -n "${MUSE_PLUGIN_ROOT:-}" ]; then
   # Muse sets MUSE_PLUGIN_ROOT — try Claude-style nested output for Muse Spark
-  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" | cat
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 else
   # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
-  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context" | cat
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
 fi
 
 exit 0
