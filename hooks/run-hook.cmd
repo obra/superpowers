@@ -1,5 +1,9 @@
 : << 'CMDBLOCK'
 @echo off
+REM Enable delayed expansion so !ERRORLEVEL! inside parenthesized blocks is
+REM evaluated when `exit /b` actually runs (right after the bash process),
+REM not when the block is parsed.
+setlocal EnableDelayedExpansion
 REM Cross-platform polyglot wrapper for hook scripts.
 REM On Windows: cmd.exe runs the batch portion, which finds and calls bash.
 REM On Unix: the shell interprets this as a script (: is a no-op in bash).
@@ -20,21 +24,21 @@ set "HOOK_DIR=%~dp0"
 REM Try Git for Windows bash in standard locations
 if exist "C:\Program Files\Git\bin\bash.exe" (
     "C:\Program Files\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
     "C:\Program Files (x86)\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 REM Try per-user Git for Windows install (installed without admin rights)
 if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" (
     "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if exist "%LOCALAPPDATA%\Programs\Git\usr\bin\bash.exe" (
     "%LOCALAPPDATA%\Programs\Git\usr\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 REM Try bash on PATH (e.g. MSYS2, Cygwin), skipping the WindowsApps WSL launcher stub
@@ -42,7 +46,7 @@ for /f "delims=" %%b in ('where bash 2^>nul') do (
     echo %%b | findstr /i "WindowsApps" >nul
     if errorlevel 1 (
         "%%b" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-        exit /b %ERRORLEVEL%
+        exit /b !ERRORLEVEL!
     )
 )
 
