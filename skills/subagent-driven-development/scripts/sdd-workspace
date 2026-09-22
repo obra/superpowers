@@ -38,6 +38,19 @@ fi
 plan=$1
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
+# Keep path comparisons and printed paths in the same namespace as Git. Git for
+# Windows reports repository roots as drive-letter paths, while plain `pwd`
+# reports MSYS paths such as `/c/...`; mixing them breaks plan ownership
+# markers and gives callers paths that PowerShell cannot consume directly.
+absolute_dir() {
+  local path
+  if path=$(pwd -W 2>/dev/null); then
+    printf '%s\n' "$path"
+  else
+    pwd -P
+  fi
+}
+
 slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
@@ -48,7 +61,7 @@ base="$root/.superpowers/sdd"
 # Normalize the plan path (physical directory, so relative/absolute/../
 # spellings of one plan compare equal) and express it as the marker value:
 # repo-relative when the plan lives under the repo root, absolute otherwise.
-plan_dir=$(CDPATH= cd -- "$(dirname "$plan")" && pwd -P)
+plan_dir=$(CDPATH= cd -- "$(dirname "$plan")" && absolute_dir)
 plan_abs="$plan_dir/$(basename "$plan")"
 case "$plan_abs" in
   "$root"/*) plan_id=${plan_abs#"$root"/} ;;
@@ -79,4 +92,4 @@ if ! owns "$dir"; then
 fi
 
 printf '*\n' > "$base/.gitignore"
-CDPATH= cd -- "$dir" && pwd
+CDPATH= cd -- "$dir" && absolute_dir
