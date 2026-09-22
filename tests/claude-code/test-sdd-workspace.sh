@@ -17,15 +17,27 @@ fail() {
     FAILURES=$((FAILURES + 1))
 }
 
-# Push a path through the same `cd ... && pwd` normalization that
-# sdd-workspace's own printed output goes through, so both sides of a
-# string comparison are guaranteed to be spelled identically. On Windows
-# Git Bash/MSYS, `git rev-parse --show-toplevel` (Windows-style,
-# C:/Users/...) and `cd ... && pwd` (MSYS-style, /c/Users/...) can print
-# different spellings of the identical physical directory; on Linux/macOS
-# this is a no-op since the two already agree (module the resolved-symlink
-# /var -> /private/var case handled by the mktemp comment above).
-physical_path() { (cd "$1" && pwd); }
+absolute_dir() {
+    local path physical
+    physical=$(pwd -P)
+    case "${OSTYPE-}" in
+        msys*|cygwin*|win32*)
+            if command -v cygpath >/dev/null 2>&1; then
+                cygpath -w -m "$physical"
+                return
+            fi
+            if path=$(pwd -W 2>/dev/null); then
+                printf '%s\n' "$path"
+                return
+            fi
+            ;;
+    esac
+    printf '%s\n' "$physical"
+}
+
+# Match the path spelling used by sdd-workspace for comparisons on every
+# supported shell, including Git Bash/MSYS on Windows.
+physical_path() { (cd "$1" && absolute_dir); }
 
 cleanup() {
     if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
@@ -351,7 +363,7 @@ PLAN
     mkdir -p "$TEST_ROOT/outside"
     printf '# Remote\n\n## Task 1: Remote\n\nRemote.\n' > "$TEST_ROOT/outside/remote-plan.md"
     local outside_abs dir_out
-    outside_abs="$(cd "$TEST_ROOT/outside" && pwd -P)/remote-plan.md"
+    outside_abs="$(cd "$TEST_ROOT/outside" && absolute_dir)/remote-plan.md"
     dir_out="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" "$TEST_ROOT/outside/remote-plan.md")"
     if [[ "$dir_out" == "$repo/.superpowers/sdd/remote-plan" \
         && "$(cat "$dir_out/plan-path" 2>/dev/null)" == "$outside_abs" ]]; then
