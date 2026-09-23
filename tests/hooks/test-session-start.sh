@@ -164,6 +164,22 @@ else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
 fi
 
+if node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const entry = hooks.hooks.SessionStart[0].hooks[0];
+const powershell = entry.powershell;
+if (typeof powershell !== "string" || !/run-hook\.cmd" session-start$/.test(powershell)) {
+  console.error(`unexpected SessionStart powershell command: ${JSON.stringify(powershell)}`);
+  process.exit(1);
+}
+' "$REPO_ROOT/hooks/hooks.json"; then
+    pass "hooks.json registers SessionStart powershell command for VS Code Copilot"
+else
+    fail "hooks.json registers SessionStart powershell command for VS Code Copilot"
+fi
+
+claude_home="$(make_home claude-code)"
+
 claude_home="$(make_home claude-code)"
 assert_command_output \
     "Claude Code emits nested SessionStart additionalContext" \
