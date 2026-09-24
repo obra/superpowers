@@ -18,6 +18,17 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+## The Plan Is a Document
+
+Your deliverable is the plan file, and you write it the way you would write
+a design document. Read the spec, the existing code, and library docs and
+version metadata. Then write each task's code directly into the plan and
+check it by reading: against the spec, against the interfaces earlier tasks
+produce, and against the Self-Review checklist below. The code first runs
+when an implementer executes its task; that task's test cycle and review
+are where compile errors and bugs surface. Planning ends when the plan file
+is written and self-reviewed.
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
