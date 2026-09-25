@@ -23,7 +23,12 @@ Subagent (general-purpose):
 
     ## The Findings Under Verification
 
-    [FINDINGS]
+    They are in the previous review's file: [FINDINGS_FILE]
+
+    Verdict exactly these ids, and only these: [FINDING_IDS]
+
+    Read those sections of the file. A finding the list does not name is
+    not yours to judge: the controller ruled on it or ledgered it.
 
     ## The Fix
 
@@ -71,45 +76,76 @@ Subagent (general-purpose):
     specific doubt that no existing run answers — and then a focused test,
     never a package-wide suite.
 
-    ## Output Format
+    ## Where Your Report Goes
 
-    Your final message is the report itself: begin directly with the first
-    finding's verdict. Every line is a verdict, a finding with file:line,
-    or a check you ran — no preamble, no process narration.
+    Write the full report to [REVIEW_FILE], in the Output Format below.
+    Writing that one file is the only write you make: the read-only rule
+    above still binds the checkout.
+
+    Your final message is the verdict block, and nothing else: no preamble,
+    no process narration, no evidence the block does not ask for. The
+    controller acts on the block and opens the file when a verdict needs
+    its detail. A full report in the final message stays in the
+    controller's context for the rest of the run.
+
+    ## Output Format (the review file)
 
     ### Finding Verdicts
 
-    For each finding in The Findings Under Verification, in order:
-    - **[finding one-liner]** — ADDRESSED | NOT ADDRESSED, with file:line
-      evidence. "Attempted" is not addressed: the specific defect must no
-      longer exist.
+    For each id you were given, in order, keeping its id:
+    - **[id] [finding one-liner]** — ADDRESSED | NOT ADDRESSED, with
+      file:line evidence. "Attempted" is not addressed: the specific defect
+      must no longer exist.
 
     ### New Breakage in the Fix Diff
 
-    Anything the fix itself broke or introduced, with severity
-    (Critical/Important/Minor) and file:line. "None" if clean.
+    Anything the fix itself broke or introduced, numbered NEW1, NEW2, with
+    severity (Critical/Important/Minor) and file:line. "None" if clean.
 
     ### Out-of-Scope Observations
 
-    Issues you noticed entirely outside the fix diff. Non-blocking; the
-    controller ledgers these for the final review. "None" if none.
+    Issues you noticed entirely outside the fix diff, numbered OOS1, OOS2.
+    Non-blocking; the controller ledgers these for the final review. "None"
+    if none.
 
     ### Verdict
 
     **Fix round:** [All findings addressed, no new Critical/Important
     breakage | Findings remain open] — list the open ones.
+
+    ## Your Final Message
+
+    These lines, in this order, and nothing else:
+
+        C1 ADDRESSED | NOT ADDRESSED file:line
+        NEW1 <new Critical or Important breakage in the fix diff> file:line
+        OOS1 <out-of-scope observation>
+        Round: all addressed | open <ids>
+        Report: [REVIEW_FILE]
+
+    One line per finding id you were given, in the order you were given
+    them, keeping each id. Evidence beyond the file:line, and everything
+    else you wrote, is in the file.
 ```
 
 **Placeholders:**
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
   re-reviews of small fix diffs take a cheap-to-mid tier
 - `[BRIEF_FILE]` — the task brief file (same file the implementer worked from)
-- `[FINDINGS]` — the Critical/Important findings and spec gaps from the
-  previous review, copied verbatim, one per bullet
+- `[FINDINGS_FILE]`: the file the previous review wrote its findings to
+  (`<workspace>/task-N-review.md` for round 1, the previous round's
+  re-review file afterwards); the findings travel as a path and ids, never
+  re-typed into the prompt
+- `[FINDING_IDS]`: the ids still open from that file (`C1, I2, CV1`),
+  which are the only findings this round verdicts
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
+- `[REVIEW_FILE]`: where this re-review writes its full report
+  (`<workspace>/task-N-review-R.md`, R = the fix round)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 
-**Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
-new breakage in the fix diff, out-of-scope observations, and a round verdict.
+**Re-reviewer returns:** a verdict block: one line per finding id
+(ADDRESSED / NOT ADDRESSED), one per new breakage, one per out-of-scope
+observation, the round verdict, and the review file path. The evidence is
+in the review file.

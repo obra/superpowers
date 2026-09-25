@@ -38,6 +38,9 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
+- `{REVIEW_FILE}` - Optional. A file for the full report, so only a short
+  verdict block comes back. Name one when an agent requests the review and
+  keeps working afterwards; leave it out when you read the report yourself.
 
 **3. Act on feedback:**
 - Fix Critical issues immediately

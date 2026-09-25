@@ -118,10 +118,12 @@ Subagent (general-purpose):
 
     ## After Review Findings
 
-    If the task review finds issues, you will be resumed with the findings.
-    Fix them, re-run the tests that cover the amended code, and append a fix
-    report to your report file: what you changed, the covering tests you
-    ran, the command, and the output. Reviewers will not re-run tests for
+    If the task review finds issues, you get a review file path and the ids
+    of the findings you own (C1, I2, and so on). Read those sections of the
+    review file, fix exactly those findings, re-run the tests that cover the
+    amended code, and append a fix report to your report file: what you
+    changed, the covering tests you ran, the command, and the output.
+    Answer each id by its id. Reviewers will not re-run tests for
     you — your report is the test evidence. Then reply with the same short
     status contract as your first report.
 

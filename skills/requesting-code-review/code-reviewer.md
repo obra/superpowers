@@ -103,6 +103,25 @@ Subagent (general-purpose):
     If you find issues with the plan itself rather than the implementation,
     say so.
 
+    ## Where Your Report Goes
+
+    If the dispatch names a [REVIEW_FILE], write the full report there in
+    the Output Format below, number every finding as you list it (C1, C2
+    for Critical, I1, I2 for Important, M1, M2 for Minor), and make your
+    final message only this block:
+
+        Ready to merge: Yes | No | With fixes
+        C1 <one-liner> file:line
+        I1 <one-liner> file:line
+        M1 <one-liner>
+        Report: [REVIEW_FILE]
+
+    Writing that one file is the only write you make: the read-only rule
+    above still binds the checkout. Whoever dispatched you acts on the
+    block and opens the file when a finding needs its detail, so the ids in
+    the file and in the block must match. With no [REVIEW_FILE] in the
+    dispatch, your final message is the report itself.
+
     ## Output Format
 
     ### Strengths
@@ -156,8 +175,15 @@ Subagent (general-purpose):
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
+- `[REVIEW_FILE]` (optional): a file for the full report. Name one when
+  the requester is an agent that keeps working afterwards (the final
+  whole-branch review in subagent-driven-development), so the report does
+  not spend the rest of the session in its context. Leave it out when a
+  human reads the report directly.
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+**Reviewer returns:** Strengths, Issues (Critical / Important / Minor),
+Recommendations, Assessment. They go in the final message, or into
+`[REVIEW_FILE]` with a verdict block in the final message when one is named.
 
 ## Example Output
 
