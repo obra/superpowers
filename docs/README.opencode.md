@@ -111,7 +111,7 @@ V1 `plugin` key and the V2 `plugins` key):
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.4.1"]
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v6.4.2"]
 }
 ```
 
