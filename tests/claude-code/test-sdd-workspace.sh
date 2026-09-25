@@ -17,6 +17,15 @@ fail() {
     FAILURES=$((FAILURES + 1))
 }
 
+absolute_dir() {
+    local path
+    if path=$(pwd -W 2>/dev/null); then
+        printf '%s\n' "$path"
+    else
+        pwd -P
+    fi
+}
+
 cleanup() {
     if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
         rm -rf "$TEST_ROOT"
@@ -339,7 +348,7 @@ PLAN
     mkdir -p "$TEST_ROOT/outside"
     printf '# Remote\n\n## Task 1: Remote\n\nRemote.\n' > "$TEST_ROOT/outside/remote-plan.md"
     local outside_abs dir_out
-    outside_abs="$(cd "$TEST_ROOT/outside" && pwd -P)/remote-plan.md"
+    outside_abs="$(cd "$TEST_ROOT/outside" && absolute_dir)/remote-plan.md"
     dir_out="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" "$TEST_ROOT/outside/remote-plan.md")"
     if [[ "$dir_out" == "$repo/.superpowers/sdd/remote-plan" \
         && "$(cat "$dir_out/plan-path" 2>/dev/null)" == "$outside_abs" ]]; then
