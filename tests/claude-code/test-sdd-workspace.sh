@@ -86,6 +86,27 @@ PLAN
   ```
 REQUIRED_END: brief must include this
 PLAN
+    # A fenced heading that carries a real task number: the next task's brief
+    # must start at its real heading and hold none of the task before it.
+    cat > "$repo/fence-next-task.md" <<'PLAN'
+### Task 1: Write a fixture
+
+````markdown
+```markdown
+### Task 2: Heading inside the fixture
+```
+````
+
+TASK1_END: step after the fixture
+
+### Task 2: Real task two
+
+TASK2_BODY
+PLAN
+    # CRLF line endings, as Git for Windows checks files out by default.
+    printf '%s\r\n' '## Task 1: CRLF plan' '' '```' '### Task 99: Example only' '```' \
+        'REQUIRED_END: brief must include this' '' '## Task 2: After the fence' 'TASK2_BODY' \
+        > "$repo/fence-crlf.md"
 
     # --- argument validation ---
     local rc=0
@@ -204,6 +225,37 @@ PLAN
         pass "task-brief: indented-fenced example does not end task early"
     else
         fail "task-brief: indented-fenced example does not end task early"
+    fi
+
+    # fenced heading with a real task number: Task 1 keeps its end, and
+    # Task 2's brief starts at the real heading with none of Task 1
+    fence_brief="$TEST_ROOT/fence-next-task-1.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-next-task.md 1 "$fence_brief") >/dev/null
+    if grep -q 'TASK1_END' "$fence_brief"; then
+        pass "task-brief: a fenced Task 2 heading does not end Task 1 early"
+    else
+        fail "task-brief: a fenced Task 2 heading does not end Task 1 early"
+    fi
+    fence_brief="$TEST_ROOT/fence-next-task-2.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-next-task.md 2 "$fence_brief") >/dev/null
+    if [[ "$(head -n 1 "$fence_brief")" == "### Task 2: Real task two" ]] \
+        && grep -q 'TASK2_BODY' "$fence_brief" \
+        && ! grep -q 'TASK1_END' "$fence_brief"; then
+        pass "task-brief: the next task's brief starts at its real heading, with none of Task 1"
+    else
+        fail "task-brief: the next task's brief starts at its real heading, with none of Task 1"
+        echo "    first line: $(head -n 1 "$fence_brief")"
+    fi
+
+    # CRLF plan: the fence still closes, so the task after it is found
+    rc=0
+    fence_brief="$TEST_ROOT/fence-crlf-2.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" fence-crlf.md 2 "$fence_brief") >/dev/null 2>&1 || rc=$?
+    if [[ "$rc" -eq 0 ]] && grep -q 'TASK2_BODY' "$fence_brief"; then
+        pass "task-brief: in a CRLF plan the fence closes and the next task is found"
+    else
+        fail "task-brief: in a CRLF plan the fence closes and the next task is found"
+        echo "    exit: $rc"
     fi
 
     # --- review-package takes the plan first and lands in its directory ---
