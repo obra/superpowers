@@ -2,7 +2,7 @@
 
 ## v6.4.2 (2026-09-25)
 
-`writing-plans` no longer builds your project to write the plan. On Opus 5.5, the old skill's demand for a complete code body in every step led the model to implement the whole product in a scratch directory, generate the plan from that code with a script, and replay the plan to verify it. That took about an hour and half a million tokens per plan, before any real work began. Plans now record decisions (signatures, test assertions, the spec's values) instead of code. Under the conditions of the original report, scratch builds dropped from 5/5 runs to 0/5, and plans came out at a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
+`writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
 
 ### Writing Plans
 
