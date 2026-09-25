@@ -51,6 +51,7 @@ hooks/
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "powershell": "& \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
             "shell": "bash",
             "async": false
           }
@@ -62,6 +63,15 @@ hooks/
 ```
 
 The path is quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces.
+
+### The `powershell` key
+
+VS Code Copilot runs hook commands through PowerShell regardless of the
+`shell` key (#2189), where a leading quoted path parses as a string expression
+and the trailing bareword is an error ("Unexpected token 'session-start'"). The
+optional `powershell` key gives those hosts the same dispatch with the `&`
+call operator; Claude Code and other harnesses ignore it. Harnesses that run
+the command via `cmd /c`, Git Bash, or a POSIX shell are unaffected.
 
 ## How `run-hook.cmd` Works at a High Level
 
