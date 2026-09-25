@@ -145,11 +145,16 @@ Subagent (general-purpose):
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
-    Important means this task cannot be trusted until it is fixed: incorrect
+    Important (Should Fix) means this task cannot be trusted until it is fixed: incorrect
     or fragile behavior, a missed requirement, or maintainability damage you
     would block a merge over — verbatim duplication of a logic block,
     swallowed errors, tests that assert nothing. "Coverage could be broader"
     and polish suggestions are Minor.
+    Severity and Assessment must agree: Approved is compatible only with
+    Minor findings and deferred risks. Any Critical or Important finding
+    means Needs fixes. If you find yourself writing Approved while an
+    Important remains, the item is either Minor, a deferred risk, or the
+    verdict is Needs fixes — pick one; never emit Approved + Important.
     If the plan or brief explicitly mandates something this rubric calls a
     defect (a test that asserts nothing, verbatim duplication of a logic
     block), that IS a finding — report it as Important, labeled
@@ -180,9 +185,20 @@ Subagent (general-purpose):
     For each issue: file:line, what's wrong, why it matters, how to fix
     (if not obvious).
 
+    ### Forward Risks / Deferred (non-blocking)
+
+    [Concerns that matter for a later task or the final whole-branch review
+    but do not block acceptance of THIS task — named, one line each, so the
+    controller can route them without reopening this task. Omit the section
+    if empty. Items here never block completion and never trigger a fix
+    round.]
+
     ### Assessment
 
     **Task quality:** [Approved | Needs fixes]
+    (Approved means no fixes are required to accept this task. It is
+    compatible only with Minor findings and Forward risks — never with
+    Critical or Important.)
 
     **Reasoning:** [1-2 sentence technical assessment]
 ```
@@ -204,4 +220,6 @@ Subagent (general-purpose):
   path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+(Critical/Important/Minor), Forward risks / deferred (non-blocking),
+Task quality verdict — where Approved is compatible only with Minor and
+Forward risks.
