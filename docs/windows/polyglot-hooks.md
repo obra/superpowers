@@ -77,12 +77,16 @@ afterward.
 
 1. The batch section validates the script name and resolves the hook directory
    from the dispatcher's own location.
-2. It tries bash in three places:
+2. It tries bash in five places:
    - `C:\Program Files\Git\bin\bash.exe`
    - `C:\Program Files (x86)\Git\bin\bash.exe`
-   - `bash` on `PATH` (MSYS2, Cygwin, or a non-default Git install)
+   - `%LOCALAPPDATA%\Programs\Git\bin\bash.exe` (per-user Git for Windows
+     install, no admin rights required)
+   - `%LOCALAPPDATA%\Programs\Git\usr\bin\bash.exe` (same per-user install)
+   - `bash` on `PATH` (MSYS2, Cygwin, or a non-default Git install); any
+     result under `WindowsApps` (the WSL launcher stub) is skipped
 3. If bash is found, it runs the named extensionless hook script from the hooks
-   directory.
+   directory and propagates the script's exit code.
 4. If no bash is found, the dispatcher exits `0` silently — the plugin
    continues working, it just skips the hook.
 5. `exit /b` stops CMD before it reaches the Unix section.
@@ -142,7 +146,7 @@ escape_for_json() {
 
 ### "bash is not recognized"
 
-CMD couldn't find bash in any of the three locations the dispatcher tries. The dispatcher exits silently (0) rather than erroring, so the hook is skipped. Install Git for Windows at the standard path or ensure `bash` is on `PATH`.
+CMD couldn't find bash in any of the five locations the dispatcher tries. The dispatcher exits silently (0) rather than erroring, so the hook is skipped. Install Git for Windows at the standard path or per-user path (`%LOCALAPPDATA%\Programs\Git`), or ensure `bash` is on `PATH` and not shadowed by the WindowsApps WSL stub.
 
 ### Hook runs on Unix but does nothing on Windows
 
