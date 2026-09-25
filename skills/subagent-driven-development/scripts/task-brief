@@ -28,7 +28,13 @@ else
 fi
 
 awk -v n="$n" '
-  /^```/ { infence = !infence }
+  /^ ? ? ?(```|~~~)/ {
+    s = $0; sub(/^ +/, "", s)
+    c = substr(s, 1, 1)
+    l = 0; while (substr(s, l + 1, 1) == c) l++
+    if (!infence) { if (c == "~" || substr(s, l + 1) !~ /`/) { infence = 1; fc = c; fl = l } }
+    else if (c == fc && l >= fl && substr(s, l + 1) ~ /^[ \t\r]*$/) { infence = 0 }
+  }
   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
     intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
   }
