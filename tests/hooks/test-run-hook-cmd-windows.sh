@@ -123,29 +123,71 @@ else
 fi
 
 # --- a bash under a WindowsApps directory (the Store WSL stub) is skipped ---
-apps="$TEST_ROOT/Microsoft/WindowsApps"
+apps_la="$TEST_ROOT/apps-localappdata"
+apps="$apps_la/Microsoft/WindowsApps"
 mkdir -p "$apps"
 apps_marker="$TEST_ROOT/windowsapps-ran"
 printf '@echo off\r\necho stub> "%s"\r\n' "$(cygpath -w "$apps_marker")" > "$apps/bash.cmd"
 run_hook "$sandbox" "$TEST_ROOT" probe-ok \
-    LOCALAPPDATA="$NO_LA" PATH="$apps:$SYS32_PATH:$GIT_USR_BIN"
+    LOCALAPPDATA="$(cygpath -w "$apps_la")" PATH="$apps:$SYS32_PATH:$GIT_USR_BIN"
 if [[ ! -e "$apps_marker" && "$OUT" == *probe-ran* ]]; then
     pass "bash under WindowsApps (Store WSL stub) is skipped"
 else
     fail "bash under WindowsApps (Store WSL stub) is skipped (stub ran: $([[ -e $apps_marker ]] && echo yes || echo no), out=$OUT)"
 fi
 
-# --- a bash.cmd in the current directory is never run ---
+# --- nothing in the current directory is run: not bash, not where ---
 plant="$TEST_ROOT/planted-cwd"
 mkdir -p "$plant"
-marker="$TEST_ROOT/planted-cwd-ran"
-printf '@echo off\r\necho planted> "%s"\r\n' "$(cygpath -w "$marker")" > "$plant/bash.cmd"
+for name in bash.cmd where.bat; do
+    printf '@echo off\r\necho planted> "%s"\r\n' "$(cygpath -w "$TEST_ROOT/ran-$name")" > "$plant/$name"
+done
 run_hook "$sandbox" "$plant" probe-ok \
     LOCALAPPDATA="$NO_LA" PATH="$SYS32_PATH:$GIT_USR_BIN"
-if [[ ! -e "$marker" && "$OUT" == *probe-ran* ]]; then
-    pass "bash.cmd in the current directory is not run"
+for name in bash.cmd where.bat; do
+    if [[ ! -e "$TEST_ROOT/ran-$name" && "$OUT" == *probe-ran* ]]; then
+        pass "$name in the current directory is not run"
+    else
+        fail "$name in the current directory is not run (ran: $([[ -e $TEST_ROOT/ran-$name ]] && echo yes || echo no), out=$OUT)"
+    fi
+done
+
+# --- PATH entries whose names cmd could misparse still work ---
+# fake_bash DIR: a bash.cmd that reports it ran.
+fake_bash() {
+    mkdir -p "$1"
+    printf '@echo off\r\necho fake-bash-ran\r\n' > "$1/bash.cmd"
+}
+for dir_name in 'caret^and%OS%percent' $'caf\u00e9-bin' 'extensionless'; do
+    dir="$TEST_ROOT/$dir_name"
+    case "$dir_name" in
+        extensionless)
+            # An extensionless "bash" first on PATH must be skipped.
+            mkdir -p "$dir"
+            printf 'not a program\n' > "$dir/bash"
+            fake_bash "$TEST_ROOT/after-extensionless"
+            path="$dir:$TEST_ROOT/after-extensionless:$SYS32_PATH"
+            ;;
+        *)
+            fake_bash "$dir"
+            path="$dir:$SYS32_PATH"
+            ;;
+    esac
+    run_hook "$sandbox" "$TEST_ROOT" probe-ok LOCALAPPDATA="$NO_LA" PATH="$path"
+    if [[ "$RC" -eq 0 && "$OUT" == *fake-bash-ran* ]]; then
+        pass "bash on PATH is found under $dir_name"
+    else
+        fail "bash on PATH is found under $dir_name (rc=$RC, out=$OUT)"
+    fi
+done
+
+# --- unset SystemRoot must not let the WSL launcher through ---
+run_hook "$sandbox" "$TEST_ROOT" probe-ok -u SystemRoot \
+    LOCALAPPDATA="$NO_LA" PATH="$SYS32_PATH:$GIT_USR_BIN"
+if [[ "$RC" -eq 0 && "$OUT" != *Subsystem* ]]; then
+    pass "unset SystemRoot does not run the WSL launcher"
 else
-    fail "bash.cmd in the current directory is not run (marker exists: $([[ -e $marker ]] && echo yes || echo no), out=$OUT)"
+    fail "unset SystemRoot does not run the WSL launcher (rc=$RC, out=$OUT)"
 fi
 
 # --- unset LOCALAPPDATA must not probe \Programs\Git on the current drive ---
