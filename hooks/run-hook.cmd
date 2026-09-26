@@ -28,10 +28,13 @@ REM check matters: with LOCALAPPDATA unset the path would collapse to
 REM \Programs\Git\... on the current drive, where any user can create it.
 if not defined BASH_EXE if defined LOCALAPPDATA if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" set "BASH_EXE=%LOCALAPPDATA%\Programs\Git\bin\bash.exe"
 
-REM bash on PATH (MSYS2, Cygwin, a non-default Git install). $PATH: keeps
-REM `where` from looking in the current directory, and :consider skips the
-REM WSL launchers, which fail when no Linux distro is installed.
-if not defined BASH_EXE for /f "delims=" %%B in ('where $PATH:bash 2^>nul') do if not defined BASH_EXE call :consider "%%B"
+REM bash on PATH (MSYS2, Cygwin, a non-default Git install). where.exe is
+REM called by full path and with $PATH: so neither it nor bash can come from
+REM the current directory. The filters use for-variable modifiers, which never
+REM re-expand the path, and skip extensionless matches and the WSL launchers
+REM (System32, Sysnative, the Store alias in WindowsApps), which fail when no
+REM Linux distro is installed.
+if not defined BASH_EXE if defined SystemRoot for /f "delims=" %%B in ('"%SystemRoot%\System32\where.exe" $PATH:bash 2^>nul') do if not defined BASH_EXE if not "%%~xB"=="" if /i not "%%~dpB"=="%SystemRoot%\System32\" if /i not "%%~dpB"=="%SystemRoot%\Sysnative\" if /i not "%%~dpB"=="%LOCALAPPDATA%\Microsoft\WindowsApps\" set "BASH_EXE=%%B"
 
 REM No bash found - exit silently rather than error
 REM (plugin still works, just without SessionStart context injection)
@@ -42,13 +45,6 @@ REM inside a block when it parses the block, which would lose the hook's
 REM exit code.
 "%BASH_EXE%" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
 exit /b %ERRORLEVEL%
-
-:consider
-set "CANDIDATE=%~1"
-if /i not "%CANDIDATE:\WindowsApps\=%"=="%CANDIDATE%" exit /b 0
-if /i "%CANDIDATE%"=="%SystemRoot%\System32\bash.exe" exit /b 0
-set "BASH_EXE=%CANDIDATE%"
-exit /b 0
 CMDBLOCK
 
 # Unix: run the named script directly
