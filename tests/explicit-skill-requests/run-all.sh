@@ -2,7 +2,7 @@
 # Run all explicit skill request tests
 # Usage: ./run-all.sh
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPTS_DIR="$SCRIPT_DIR/prompts"
@@ -14,49 +14,38 @@ PASSED=0
 FAILED=0
 RESULTS=""
 
-# Test: subagent-driven-development, please
-echo ">>> Test 1: subagent-driven-development-please"
-if "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/subagent-driven-development-please.txt"; then
-    PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: subagent-driven-development-please"
-else
-    FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: subagent-driven-development-please"
-fi
-echo ""
+run_case() {
+    local label="$1"
+    shift
 
-# Test: use systematic-debugging
-echo ">>> Test 2: use-systematic-debugging"
-if "$SCRIPT_DIR/run-test.sh" "systematic-debugging" "$PROMPTS_DIR/use-systematic-debugging.txt"; then
-    PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: use-systematic-debugging"
-else
-    FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: use-systematic-debugging"
-fi
-echo ""
+    echo ">>> Test: $label"
+    if "$@"; then
+        PASSED=$((PASSED + 1))
+        RESULTS="$RESULTS\nPASS: $label"
+    else
+        FAILED=$((FAILED + 1))
+        RESULTS="$RESULTS\nFAIL: $label"
+    fi
+    echo ""
+}
 
-# Test: please use brainstorming
-echo ">>> Test 3: please-use-brainstorming"
-if "$SCRIPT_DIR/run-test.sh" "brainstorming" "$PROMPTS_DIR/please-use-brainstorming.txt"; then
-    PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: please-use-brainstorming"
-else
-    FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: please-use-brainstorming"
-fi
-echo ""
+run_case "subagent-driven-development-please" \
+    "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/subagent-driven-development-please.txt"
 
-# Test: mid-conversation execute plan
-echo ">>> Test 4: mid-conversation-execute-plan"
-if "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/mid-conversation-execute-plan.txt"; then
-    PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: mid-conversation-execute-plan"
-else
-    FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: mid-conversation-execute-plan"
-fi
-echo ""
+run_case "use-systematic-debugging" \
+    "$SCRIPT_DIR/run-test.sh" "systematic-debugging" "$PROMPTS_DIR/use-systematic-debugging.txt"
+
+run_case "please-use-brainstorming" \
+    "$SCRIPT_DIR/run-test.sh" "brainstorming" "$PROMPTS_DIR/please-use-brainstorming.txt"
+
+run_case "mid-conversation-execute-plan" \
+    "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/mid-conversation-execute-plan.txt"
+
+run_case "handoff-with-manual" \
+    "$SCRIPT_DIR/run-test.sh" "systematic-debugging" "$PROMPTS_DIR/handoff-with-manual.txt"
+
+run_case "mid-conversation-technique-recognition" \
+    "$SCRIPT_DIR/run-test.sh" "systematic-debugging" "$PROMPTS_DIR/mid-conversation-technique-recognition.txt" 4
 
 echo "=== Summary ==="
 echo -e "$RESULTS"

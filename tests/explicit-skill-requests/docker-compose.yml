@@ -1,0 +1,10 @@
+services:
+  explicit-skill-requests:
+    image: node:22-bookworm
+    working_dir: /workspace/tests/explicit-skill-requests
+    volumes:
+      - ../..:/workspace:ro
+      - ${HOME}/.claude:/root/.claude:ro
+    environment:
+      - CLAUDE_CONFIG_DIR=/root/.claude
+    command: ["bash", "-lc", "apt-get update -qq && apt-get install -y -qq jq curl >/dev/null && npm install -g @anthropic-ai/claude-code && ./run-all.sh"]
