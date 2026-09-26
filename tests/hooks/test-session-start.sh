@@ -247,6 +247,51 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     "$bash_bin" "$WRAPPER_UNDER_TEST" session-start
 
+# Run by bare filename from inside hooks/ ($0 has no slash), the plugin root
+# must still resolve.
+bare_name_home="$(make_home bare-name)"
+assert_command_output \
+    "session-start run by bare filename from hooks/ still emits nested additionalContext" \
+    "nested" \
+    "" \
+    "" \
+    "$bare_name_home" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" -c 'cd "$1" && exec "$2" session-start' _ "$REPO_ROOT/hooks" "$bash_bin"
+
+bare_name_wrapper_home="$(make_home bare-name-wrapper)"
+assert_command_output \
+    "run-hook.cmd run by bare filename from hooks/ still dispatches session-start" \
+    "nested" \
+    "" \
+    "" \
+    "$bare_name_wrapper_home" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" -c 'cd "$1" && exec "$2" run-hook.cmd session-start' _ "$REPO_ROOT/hooks" "$bash_bin"
+
+# When cat is on PATH, the JSON must still go through it: the pipe absorbs
+# EPIPE on Windows + Git Bash (#1612). The stub records that it ran.
+cat_stub_dir="$TEST_ROOT/cat-stub/bin"
+cat_marker="$TEST_ROOT/cat-stub/used"
+mkdir -p "$cat_stub_dir"
+printf '#!%s\n: > "%s"\nexec /bin/cat "$@"\n' "$bash_bin" "$cat_marker" > "$cat_stub_dir/cat"
+chmod +x "$cat_stub_dir/cat"
+cat_stub_home="$(make_home cat-stub)"
+assert_command_output \
+    "session-start with cat on PATH emits nested additionalContext" \
+    "nested" \
+    "" \
+    "" \
+    "$cat_stub_home" \
+    PATH="$cat_stub_dir" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" "$HOOK_UNDER_TEST"
+if [[ -f "$cat_marker" ]]; then
+    pass "session-start pipes its JSON through cat when cat is on PATH"
+else
+    fail "session-start pipes its JSON through cat when cat is on PATH"
+fi
+
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
     exit 1
