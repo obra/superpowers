@@ -591,7 +591,8 @@ async function runTests() {
 
     // ========== Summary ==========
     console.log(`\n--- Results: ${passed} passed, ${failed} failed, ${skipped} skipped ---`);
-    if (failed > 0) process.exit(1);
+    // exitCode, not exit(): exit() would skip the finally below and orphan the server.
+    if (failed > 0) process.exitCode = 1;
 
   } finally {
     server.kill();
