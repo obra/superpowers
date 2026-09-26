@@ -134,7 +134,8 @@ PLAN
     ( cd "$repo" \
         && git "${git_id[@]}" commit -qm c1 \
         && printf 'y\n' > f && git add f \
-        && git "${git_id[@]}" commit -qm c2 )
+        && git "${git_id[@]}" commit -qm c2 \
+            -m $'Explain the first non-obvious change.\nExplain the second one.' )
     local rp_out rp_path
     rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD)"
     rp_path="$(printf '%s\n' "$rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
@@ -146,6 +147,13 @@ PLAN
             echo "    got: $rp_path"
             ;;
     esac
+
+    if grep -q '^    Explain the first non-obvious change\.$' "$rp_path" \
+        && grep -q '^    Explain the second one\.$' "$rp_path"; then
+        pass "review-package includes indented commit bodies"
+    else
+        fail "review-package includes indented commit bodies"
+    fi
 
     rc=0
     (cd "$repo" && "$SDD_SCRIPTS/review-package" HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
