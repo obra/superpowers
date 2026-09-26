@@ -3,6 +3,10 @@
 Report path: ~/.superpowers/diagnosing-superpowers/<session-id>/report.md
 Written: <ISO timestamp>
 
+Local evidence-complete report. Keep private but material details and exact
+supporting quotations here with source citations. The public issue and bundle
+are separately minimized, scrubbed copies; do not pre-redact this report.
+
 ## 1. Problem statement (REQUIRED)
 
 <Copied from the case file.>
@@ -20,7 +24,7 @@ what would raise it. No statement about what superpowers should do.>
 - Models seen:
 - Superpowers install root / version / git sha:
 - Skill files read or injected (sha1 table from the case file):
-- Other plugins, extensions, MCP servers:
+- Other plugins, extensions, MCP servers observed (from the case file, with provenance and loaded/injected, invoked, possible confounder, or merely listed status):
 - Instruction files present (paths only):
 
 Label every environment field and skill observation as historical evidence,
@@ -36,10 +40,14 @@ Rejected candidates: <id — path — why>, or "none".
 
 ## 5. Timeline (REQUIRED)
 
-One row per human-typed prompt. Events column lists skills invoked,
-subagents dispatched, compaction, errors, resumes, aborts.
+One row per human-typed prompt. Preserve the exact source `path:line` for every
+turn, including turns unrelated to the finding. Quote the original wording
+where it is material to a finding; otherwise summarize with the precise source
+reference so the full prompt remains retrievable locally. Do not replace a
+turn with `[unrelated request omitted]` in this local report. Events column
+lists skills invoked, subagents dispatched, compaction, errors, resumes, aborts.
 
-| Turn | Line | Time | Request (one line) | Events |
+| Turn | Source path:line | Time | Request or material quotation | Events |
 |---|---|---|---|---|
 
 ## 6. Findings (REQUIRED, one subsection per dimension)
@@ -52,6 +60,9 @@ Each finding:
   confidence: high | medium | low
 ```
 A dimension with nothing to report says `none found — checked: <what was checked>`.
+Keep all quotations, tool-result details and citations required to verify a
+finding locally, even when they contain private material. The bundle copy may
+redact that material and must record any resulting evidence limitation.
 
 ### 6.1 Skill timeline
 ### 6.2 Plan adherence

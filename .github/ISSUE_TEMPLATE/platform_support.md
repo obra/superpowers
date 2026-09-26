@@ -7,6 +7,7 @@ labels: new-harness
 <!--
 BEFORE FILING: Search existing issues — your IDE may already be
 requested or discussed.
+Use generic paths and include only environment details relevant to support.
 -->
 
 - [ ] I searched existing issues for this IDE/platform
@@ -24,11 +25,15 @@ requested or discussed.
 
 ## Environment (required)
 <!-- Required. We assume an agent wrote this request — tell us which one and
-     where it ran. -->
+     where it ran. List plugins whose skills or tools were used, whose
+     instructions materially shaped the work, or that evidence implicates in
+     the support request. If citing an agent failure, include loaded/injected
+     instructions that plausibly confound it unless clean reproduction rules
+     them out. Mere installation or catalog listing does not count. -->
 
 | Field | Value |
 |-------|-------|
 | Harness you currently use (Claude Code, Cursor, etc.) | |
 | Harness version | |
 | Your model + version | |
-| All plugins installed | |
+| Plugins used or relevant to this platform | |

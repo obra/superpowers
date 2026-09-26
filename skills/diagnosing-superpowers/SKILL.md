@@ -31,8 +31,8 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    first prompt and timestamp, and list every candidate you rejected with the
    reason, or "none". Enumerate subagent transcripts. Create
    `~/.superpowers/diagnosing-superpowers/<session-id>/`, tell your
-   partner the path, and fill `templates/case.md` there, following its
-   provenance rules for environment and skill observations.
+   partner the path, and fill `templates/case.md` with complete metadata
+   and provenance. Do not pre-scrub it.
 3. **Triage.** Read the region around the reported problem yourself. Then
    dispatch one analyst subagent per dimension in parallel, each given the
    case file path, `prompts/analyst-common.md`, and one dimension file from
@@ -41,24 +41,26 @@ Create a todo per step. Steps 5–7 run only on their stated condition.
    `quality-evidence.md`, `request-conflicts.md`, `cost-and-time.md`.
    Split a dimension by turn range when the transcript is long. Discard
    any returned finding without `path:line`.
-4. **Report.** Fill every section of `templates/report.md` in order, write
-   it to the workspace, show it, and give the path. Check what cited content
-   actually proves and preserve the supporting case; a symlink alias is not a
-   redundant copy.
-5. **GitHub issues** — when report §7 says possible or likely, or your
-   partner asks. Search open and closed issues for the symptoms per
-   `references/github-issues.md`. Show matches and suggest adding the
-   report to the closest. If none match, fill `templates/issue.md`, write
-   it to the workspace, show the exact text, and create the issue only
-   after approval. `gh` cannot attach files; if a bundle exists, give
-   your partner its path to attach in the browser.
+4. **Report.** Fill `templates/report.md` locally with complete evidence; show
+   it and give the path. Verify citations and preserve the supporting case; a
+   symlink is not a copy. Redact only export copies.
+5. **GitHub issues** — when report §7 says possible or likely, or asked.
+   Search open and closed issues per `references/github-issues.md`. For a match,
+   draft a public comment; otherwise fill `templates/issue.md`. Keep the
+   redacted original prompt and minimum evidence. Independently audit the
+   scrubbed draft and each attachment with `prompts/scrub-audit.md`; show
+   their exact contents, and post only after
+   approval. `gh` cannot attach files; give your partner any bundle path for
+   browser attachment.
 6. **Export** — only when your partner asks for a bundle; never build one
    unprompted. If the intake goal was a bug report, say once that a
    scrubbed bundle is available on request, then wait. Ask the redaction
    level, stating what each includes: skeleton (no tool-result bodies),
-   evidence (bodies only for cited events), full. Build the bundle per
-   `templates/bundle-README.md`, dispatch `prompts/scrub.md`, then
-   `prompts/scrub-audit.md`, repeating both until the audit returns CLEAN.
+   evidence (bodies only for cited events), full. Copy local files into a
+   separate bundle and render condensed transcripts per the chosen level.
+   Follow `templates/bundle-README.md`: run `prompts/scrub.md` to scrub and
+   minimize the copies, then `prompts/scrub-audit.md`; repeat until CLEAN.
+   Preserve originals.
    Complete the bundle template's evidence check and reconciliation before
    showing the final scrub log, file list, and privacy and evidence outcomes.
    Archive (`zip -r` or `tar -czf`) only after approval. With the archive
