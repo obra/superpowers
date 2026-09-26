@@ -350,6 +350,24 @@ PLAN
         echo "    marker: $(cat "$dir_out/plan-path" 2>/dev/null)"
     fi
 
+    # --- A repo's own committed .superpowers/sdd/.gitignore is left alone ---
+    git init -q -b main "$TEST_ROOT/own-ignore"
+    local own own_ignore
+    own="$(cd "$TEST_ROOT/own-ignore" && git rev-parse --show-toplevel)"
+    own_ignore=$'*\n!.gitignore\n!*/\n!*/progress.md'
+    mkdir -p "$own/.superpowers/sdd"
+    printf '%s\n' "$own_ignore" > "$own/.superpowers/sdd/.gitignore"
+    printf '# Plan\n\n## Task 1: One\n\nOne.\n' > "$own/plan.md"
+    (cd "$own" && git add -A && git -c user.name=t -c user.email=t@t commit -qm init)
+    (cd "$own" && "$SDD_SCRIPTS/sdd-workspace" plan.md >/dev/null)
+    if [[ "$(cat "$own/.superpowers/sdd/.gitignore")" == "$own_ignore" \
+        && -z "$(cd "$own" && git status --porcelain -- .superpowers/sdd/.gitignore)" ]]; then
+        pass "an existing .superpowers/sdd/.gitignore is not overwritten"
+    else
+        fail "an existing .superpowers/sdd/.gitignore is not overwritten"
+        echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
