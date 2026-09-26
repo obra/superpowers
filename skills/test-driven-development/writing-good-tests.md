@@ -38,6 +38,11 @@ expect(buildSearchQuery({ tag: 'urgent' })).toBe(expected);
 expect(buildSearchQuery({ tag: 'urgent' })).toBe('tag:"urgent"');
 ```
 
+**Prove the arranged input.** When setup relies on a platform or dependency to
+create the condition under test, assert the precondition or inspect the produced
+artifact with a narrow probe. A fixture built from assumed API behavior can stay
+green while exercising nothing.
+
 **No change detectors.** If only intentional decisions can fail a test —
 a constant's value, exact message wording, private structure — it fires
 on redesign and sleeps through bugs. Test the behavior that depends on
@@ -76,6 +81,9 @@ BEFORE writing the test body:
   Confirm the expected value is derived without the code under test.
   IF it reuses the code's logic or helpers:
     Replace it with a literal or hand-checked fixture
+
+  IF setup relies on a platform or dependency to create the condition:
+    Assert the precondition or inspect the produced artifact
 ```
 
 ## Principle 2: Exercise the Real Thing
@@ -168,12 +176,18 @@ should fail for each realistic mutation:
 A mutation nothing catches marks the behavior as unprotected — or the
 test as tautological.
 
+For a test whose purpose is handling a specific input condition — stripping,
+normalizing, rejecting, escaping, or retrying it — execute the mutation:
+temporarily disable that behavior, run the named test, observe the expected
+failure, then restore the code. For other tests, keep the mutation check mental.
+
 ## Quick Reference
 
 | When you... | Do |
 |-------------|-----|
 | Write any test | Name the break it catches — a bug, not a decision |
 | Build an expected value | Derive it by hand; never with the code under test |
+| Build input through a platform or dependency | Assert the precondition or inspect the artifact |
 | Test a script or document | Run it / pressure-test its consumer; never grep its text |
 | Reach for a dependency test | Test your boundary contract, not their documented mechanics |
 | Want to assert on a mocked element | Test the real component, or unmock it |
@@ -181,7 +195,7 @@ test as tautological.
 | Build a mock response | Mirror the real structure completely |
 | Need cleanup only tests use | Put it in test utilities |
 | Watch mock setup balloon | Switch to an integration test with real components |
-| Finish a test file | Run the mutation check |
+| Finish a test whose purpose is handling a specific input condition | Execute the mutation, observe failure, then restore |
 
 ## Warning Signs
 
@@ -189,6 +203,7 @@ test as tautological.
 - The test can fail only through a panic, crash, or missing selector
 - The test fails on every intentional change, never on accidental breakage
 - Expected values are hidden behind loops, builders, or helpers
+- A platform- or dependency-created condition was never inspected or asserted
 - The test greps source text, or asserts a removed symbol stays removed
 - The test would still matter if only the framework remained
 - The test exists for coverage, checking no side effect or outcome
