@@ -71,12 +71,14 @@ EXCLUDES=(
   "/gemini-extension.json"
   "/index.js"
   "/package.json"
+  "/plugin.json"
 
   # Directories not shipped by canonical Codex plugins
   "/commands/"
   "/docs/"
   "/evals/"
   "/lib/"
+  "/rules/"
   "/scripts/"
   "/tests/"
   "/tmp/"
