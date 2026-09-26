@@ -804,6 +804,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
 | OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook("context")` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
+| Oh My Pi (OMP) | `.omp/extensions/superpowers.ts` (root `package.json` `omp` field; OMP prefers it over `pi`) | in-process: package-root `skills/` discovered natively; `before_agent_start` reloads the bootstrap each run; `context` adds one owned user message to every request, after compaction and branch summaries | inline in `superpowers.ts` | `tests/omp/` | `omp plugin install` git spec or `omp plugin link` |
 
 ## Appendix B — Gotchas that have bitten porters
 
