@@ -10,6 +10,10 @@
 
 - **The multi-layer diagnostic example no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs; the example now reports only whether it's set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
 
+### Executing Plans
+
+- **`task-done` records tasks whose test command passes silently.** A passing command with no output made `task-done` exit 1 without writing the ledger line, so a finished task looked unfinished. The ledger now records `→ (no output)`. Thanks @KenM-BT for the report and Ada Sen for the fix. (#2385, #2388)
+
 ## v6.4.2 (2026-09-25)
 
 `writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
