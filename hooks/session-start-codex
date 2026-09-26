@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Codex SessionStart hook for the superpowers plugin.
+#
+# Codex re-fires SessionStart with source:"compact" after every context
+# compaction (verified on codex-cli 0.145.0). Compaction replaces the live
+# context with a summary, which sheds the using-superpowers bootstrap and any
+# active skill's instructions — the measured cause of mid-session dispatch
+# drift in long multi-agent runs. This hook re-injects the bootstrap at
+# exactly that moment, restoring the same re-injection Claude Code performs
+# via its "startup|clear|compact" SessionStart matcher.
+#
+# On source:"startup" it emits nothing: the native Codex plugin path owns
+# session-start injection, and duplicating it here would recreate the
+# redundancy that led to the original session-start-codex hook's removal.
+#
+# Codex injects raw hook stdout into the model's context (verified with
+# sentinel probes), so output is plain text — not the JSON envelopes other
+# harnesses require of hooks/session-start.
+#
+# A hook failure must never break a session: every path fails open to empty
+# output and exit 0.
+
+set -u
+
+payload="$(cat 2>/dev/null || true)"
+
+# Act only on post-compaction re-fires. Tolerate arbitrary whitespace around
+# the JSON colon; anything unparseable falls through to a silent no-op.
+if ! printf '%s' "$payload" | grep -qE '"source"[[:space:]]*:[[:space:]]*"compact"'; then
+    exit 0
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+using_superpowers_content="$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null)" || using_superpowers_content=""
+if [ -z "$using_superpowers_content" ]; then
+    exit 0
+fi
+
+# printf instead of heredocs throughout: heredocs hang on bash 5.3+.
+# See: https://github.com/obra/superpowers/issues/571
+printf '%s\n' "<EXTREMELY_IMPORTANT>"
+printf '%s\n\n' "You have superpowers."
+printf '%s\n\n' "**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**"
+printf '%s\n' "$using_superpowers_content"
+printf '%s\n\n' "</EXTREMELY_IMPORTANT>"
+printf '%s\n' "<CONTEXT_RESTORED>"
+printf '%s\n' "Your context was just summarized (compacted). The summary preserves your progress but not your working instructions — the files are authoritative."
+printf '%s\n' ""
+printf '%s\n' "Before your next tool call:"
+printf '%s\n' "- Re-read the SKILL.md of any skill you are mid-way through executing. If you are executing subagent-driven-development, re-read skills/subagent-driven-development/SKILL.md."
+printf '%s\n' "- On Codex, also re-read skills/using-superpowers/references/codex-tools.md and follow its dispatch rules on every spawn_agent call."
+printf '%s\n' "</CONTEXT_RESTORED>"
+
+exit 0
