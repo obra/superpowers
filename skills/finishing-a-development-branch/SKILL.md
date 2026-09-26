@@ -167,26 +167,28 @@ Step 2, from before that directory change.
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
 **If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** Superpowers
-created this worktree — we own cleanup:
+created this worktree — we own cleanup. Before removing, check for uncommitted
+work or an ignored SDD workspace (`.superpowers/sdd/`) whose rulings or reports
+exist nowhere else:
 
 ```bash
-git worktree remove "$WORKTREE_PATH"
-git worktree prune  # Self-healing: clean up any stale registrations
-```
-
-**If removal is refused** (`contains modified or untracked files`): the
-worktree holds files that exist nowhere else — uncommitted plans, notes,
-or scratch work. Never `--force` on your own initiative. Show your human
-partner what is at stake and ask:
-
-```bash
+# Check if uncommitted files or an SDD workspace exist in the worktree
 git -C "$WORKTREE_PATH" status --porcelain -uall
+[ -d "$WORKTREE_PATH/.superpowers/sdd" ] && [ "$(ls -A "$WORKTREE_PATH/.superpowers/sdd" 2>/dev/null)" ] && echo "Found surviving SDD workspace in $WORKTREE_PATH/.superpowers/sdd"
 ```
 
-```
-Worktree removal refused — these files were never committed:
+**If removal is refused** (`contains modified or untracked files`) or if a
+surviving SDD workspace (`.superpowers/sdd/`) contains uncommitted rulings or
+reports: the worktree holds files that exist nowhere else — uncommitted plans,
+notes, or scratch work. Ignored files (like `.superpowers/sdd/`) do not cause
+`git worktree remove` to refuse on its own, so never remove silently or
+`--force` on your own initiative. Show your human partner what is at stake and
+ask:
 
-<file list>
+```
+Worktree holds uncommitted files or an SDD decision ledger:
+
+<file list or .superpowers/sdd summary>
 
 1. Commit them to <branch> before cleanup
 2. Move them into <main repo root>
@@ -195,7 +197,12 @@ Worktree removal refused — these files were never committed:
 Which?
 ```
 
-Carry out the choice, then remove the worktree.
+Carry out the choice, then remove the worktree:
+
+```bash
+git worktree remove "$WORKTREE_PATH"
+git worktree prune  # Self-healing: clean up any stale registrations
+```
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.

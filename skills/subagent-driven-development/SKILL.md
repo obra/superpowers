@@ -482,7 +482,10 @@ made in secret.
 When the final whole-branch review is clean and its fixes are merged,
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
-alone.
+alone. If the run is abandoned, halted, or finished without a clean
+whole-branch review, do NOT delete the workspace — keep it intact so
+that ledger rulings and reviewer reports remain available for inspection
+or resumption.
 
 Use superpowers:finishing-a-development-branch.
 
