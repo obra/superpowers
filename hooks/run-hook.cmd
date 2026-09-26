@@ -40,7 +40,15 @@ exit /b 0
 CMDBLOCK
 
 # Unix: run the named script directly
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Splits $0 on its last / or \ (cmd passes Windows paths) instead of calling
+# dirname, and uses $BASH (bash's own absolute path, always set once bash is
+# running) instead of a PATH lookup for bash, so this keeps working when
+# Claude Code spawns the SessionStart hook with a broken/empty PATH
+# (anthropics/claude-code#43127).
+case "$0" in
+  */*|*\\*) SCRIPT_DIR="$(cd "${0%[/\\]*}" && pwd)" ;;
+  *) SCRIPT_DIR="$(pwd)" ;;
+esac
 SCRIPT_NAME="$1"
 shift
-exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+exec "${BASH:-bash}" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
