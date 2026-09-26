@@ -47,6 +47,18 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
+## Instrument Failures (Validating the Checker)
+
+Passing the gate requires an instrument that is capable of failing. Common instrument pitfalls:
+
+| Pitfall | Rule | Why |
+|---------|------|-----|
+| Positive control | Before acting on a negative reading ("0 matches", "not found"), prove the instrument hits on known positive input | A broken query/pattern matches nothing, giving false clean signals |
+| Reported ≠ verified | Validate state changes through an independent inspection path, not just the tool's return code | Tools reporting success may have performed a no-op or silently failed |
+| Surface coverage | Exercise actual target entrypoints (CLI flags, real runtime args), not just internal units | Passing tests on mock surfaces prove nothing about unexercised interfaces |
+| Silence ≠ success | Verify non-zero signals or explicit confirmation outputs | Crashed or unconfigured checkers produce silent exit 0 |
+| Absence checks | Use secondary verification to confirm non-regression and complete scope | Filtered or sandboxed checks are blind to deletions or out-of-scope breakage |
+
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
