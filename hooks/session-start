@@ -36,6 +36,14 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 #
 # Uses printf instead of heredoc to work around bash 5.3+ heredoc hang.
 # See: https://github.com/obra/superpowers/issues/571
+#
+# Each printf is piped through `cat` on purpose, to absorb EPIPE on Windows.
+# On Windows + Git Bash, the harness can close the hook's stdout before
+# printf finishes, and Git Bash's printf reports that EPIPE as
+# "printf: write error: Permission denied", which `set -euo pipefail` lets
+# escape as a startup diagnostic every session. Letting cat receive the
+# EPIPE keeps it out of the hook's error path. Keep the `| cat` even when
+# trimming subprocess spawns. See: https://github.com/obra/superpowers/issues/1612
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
   printf '{\n  "additional_context": "%s"\n}\n' "$session_context" | cat
