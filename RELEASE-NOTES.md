@@ -17,7 +17,6 @@
 ### Hooks
 
 - **SessionStart works when the harness starts it with a broken `PATH`.** The hooks no longer need `dirname`, `cat` or `bash` from `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
-
 - **Windows: `run-hook.cmd` finds a per-user Git for Windows install and skips the WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH` it skips the `bash.exe` WSL launchers that fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 (#1864) and @KaiyiQuan (#2365) for the fixes this combines. (#1863, #2393)
 - **Windows: `run-hook.cmd` no longer runs `bash` or `where` from the current directory.** A repository containing `bash.cmd` or `where.bat` could have had it run at session start. (#2393)
 - **Windows: hook exit codes now reach the harness.** `run-hook.cmd` used to report success even when the hook failed. (#2393)
