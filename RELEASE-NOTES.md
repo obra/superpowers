@@ -18,6 +18,10 @@
 
 - **SessionStart works when the harness starts it with a broken `PATH`.** The hooks no longer need `dirname`, `cat` or `bash` from `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
 
+### Requesting Code Review
+
+- **The example's base-SHA command survives skill arguments.** Claude Code substitutes `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which has no `$` token. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
+
 ## v6.4.2 (2026-09-25)
 
 `writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
