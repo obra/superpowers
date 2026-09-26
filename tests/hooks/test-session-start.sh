@@ -184,6 +184,15 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$WRAPPER_UNDER_TEST" session-start
 
+# With no bash available, the wrapper must fail open: silent, exit 0.
+if output="$(env -i PATH=/nonexistent /bin/sh "$WRAPPER_UNDER_TEST" session-start 2>&1)" \
+   && [ -z "$output" ]; then
+    pass "wrapper with no bash on PATH is silent and exits 0"
+else
+    fail "wrapper with no bash on PATH is silent and exits 0"
+    printf '%s\n' "$output" | head -3 | sed 's/^/    /'
+fi
+
 cursor_home="$(make_home cursor)"
 assert_command_output \
     "Cursor emits top-level additional_context only" \
