@@ -122,6 +122,19 @@ else
     fail "System32 bash.exe (WSL launcher) is skipped in favor of Git's bash on PATH (rc=$RC, out=$OUT)"
 fi
 
+# --- a bash under a WindowsApps directory (the Store WSL stub) is skipped ---
+apps="$TEST_ROOT/Microsoft/WindowsApps"
+mkdir -p "$apps"
+apps_marker="$TEST_ROOT/windowsapps-ran"
+printf '@echo off\r\necho stub> "%s"\r\n' "$(cygpath -w "$apps_marker")" > "$apps/bash.cmd"
+run_hook "$sandbox" "$TEST_ROOT" probe-ok \
+    LOCALAPPDATA="$NO_LA" PATH="$apps:$SYS32_PATH:$GIT_USR_BIN"
+if [[ ! -e "$apps_marker" && "$OUT" == *probe-ran* ]]; then
+    pass "bash under WindowsApps (Store WSL stub) is skipped"
+else
+    fail "bash under WindowsApps (Store WSL stub) is skipped (stub ran: $([[ -e $apps_marker ]] && echo yes || echo no), out=$OUT)"
+fi
+
 # --- a bash.cmd in the current directory is never run ---
 plant="$TEST_ROOT/planted-cwd"
 mkdir -p "$plant"
