@@ -1,0 +1,58 @@
+# Agentic Engineering Harness (Cursor)
+
+Cursor reads project rules from `.cursor/rules/*.mdc`. This rule applies the
+harness to the Cursor agent. The canonical contract is `AGENTS.md` at the repo
+root; this file is a thin shim that points at it and adds Cursor-specific
+behavior.
+
+---
+description: Agentic engineering harness — plan-first, verify, guardrails.
+globs: ["**/*"]
+alwaysApply: true
+---
+
+## Operating rules
+
+Follow the project's `AGENTS.md` at the repo root. It is the source of truth
+for workflow, guardrails, and verification. Its workflow (§3) and verification
+doctrine (§5) are mandatory, not suggestions — you cannot rationalize your way
+out of them. For any non-trivial task, fill in `templates/implementation-plan.md`
+before writing code, and work in an isolated worktree/branch (not on main).
+
+For **multi-ticket goals** with GitHub Issues, use `.agents/skills/orchestrated-delivery`
+(or the thin agent `code-coordinator` under `.claude/agents/`). Named agents only
+load skills — do not duplicate playbooks.
+
+## Workflow
+
+1. **Plan before implementing.** For any non-trivial change, produce a short
+   numbered plan with a verification step per item before writing code.
+2. **One logical change per step.** Keep steps small and independently
+   verifiable; commit after each passing step.
+3. **Tests before code where practical.** Write the test that defines
+   "correct" first, then implement to satisfy it.
+4. **Verify every step** by running the actual test/lint/build. Never claim a
+   step passed without running it.
+5. **On failure, diagnose root cause.** Do not patch symptoms or silence errors.
+
+## Guardrails
+
+- Never fabricate results, test output, or verification you did not run.
+- Never commit secrets (API keys, tokens, credentials).
+- Do not touch unrelated code.
+- Do not bypass a failing gate to make it "green."
+- Do not auto-promote — propose; a human reviews.
+
+## Verification
+
+- **Tests** verify deterministic behavior; **evals** verify trajectory and
+  quality for non-deterministic work.
+- The dangerous failure is code that "looks right" and "passes basic tests"
+  but is wrong. Verify integration points and edge cases, not just the happy
+  path.
+
+## Mode
+
+- Use **conductor** (line-by-line) for tricky logic and unfamiliar code; use
+  **orchestrator** (delegate and review) for well-specified tasks.
+- Vibe-coding is for disposable prototypes only, never production.

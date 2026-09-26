@@ -17,3 +17,6 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+/tkt-*/
+docs/agent_reports/
+docs/agent_scratch/
