@@ -25,6 +25,10 @@
 
 - **The example's base-SHA command survives skill arguments.** Claude Code substitutes `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which has no `$` token. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
 
+### Subagent-Driven Development
+
+- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to rewrite the file with `*` on every run, so a repo that commits its own (for example, to version `progress.md` ledgers) saw it reverted after each SDD run. The default is now written only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
+
 ## v6.4.2 (2026-09-25)
 
 `writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
