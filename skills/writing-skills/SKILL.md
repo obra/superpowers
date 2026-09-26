@@ -11,7 +11,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Personal skills live in your runtime's skills directory** (`~/.claude/skills/` on Claude Code) — see [codex-tools.md](../using-superpowers/references/codex-tools.md) or [gemini-tools.md](../using-superpowers/references/gemini-tools.md) for the path on those runtimes. Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias.
 
-You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
+You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply — and, for artifact-producing skills, the artifact achieves what the skill exists for), and refactor (close loopholes).
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
@@ -34,12 +34,13 @@ A **skill** is a reference guide for proven techniques, patterns, or tools. Skil
 | **Test case** | Pressure scenario with subagent |
 | **Production code** | Skill document (SKILL.md) |
 | **Test fails (RED)** | Agent violates rule without skill (baseline) |
-| **Test passes (GREEN)** | Agent complies with skill present |
+| **Test passes (GREEN), compliance** | Agent complies with skill present |
+| **Test passes (GREEN), outcome** | The artifact the agent produced achieves what the skill exists for — measured, not argued. Compliance without this is a proxy. |
 | **Refactor** | Close loopholes while maintaining compliance |
 | **Write test first** | Run baseline scenario BEFORE writing skill |
 | **Watch it fail** | Document exact rationalizations agent uses |
 | **Minimal code** | Write skill addressing those specific violations |
-| **Watch it pass** | Verify agent now complies |
+| **Watch it pass** | Verify agent now complies — and, for artifact-producing skills, verify the artifact does what the skill exists for |
 | **Refactor cycle** | Find new rationalizations → plug → re-verify |
 
 The entire skill creation process follows RED-GREEN-REFACTOR.
@@ -410,6 +411,11 @@ Different skill types need different test approaches:
 
 **Success criteria:** Agent follows rule under maximum pressure
 
+For discipline-enforcing skills, compliance IS the outcome — the rule
+exists to shape behavior, and an agent obeying it is the thing anyone
+cares about. The distinction below matters only for skills that produce
+an artifact.
+
 ### Technique Skills (how-to guides)
 
 **Examples:** condition-based-waiting, root-cause-tracing, defensive-programming
@@ -420,6 +426,7 @@ Different skill types need different test approaches:
 - Missing information tests: Do instructions have gaps?
 
 **Success criteria:** Agent successfully applies technique to new scenario
+**Outcome criteria:** The result of applying it is measurably better than the baseline result. If it cannot be measured, the skill must require the agent to say so explicitly rather than stay silent.
 
 ### Pattern Skills (mental models)
 
@@ -431,6 +438,7 @@ Different skill types need different test approaches:
 - Counter-examples: Do they know when NOT to apply?
 
 **Success criteria:** Agent correctly identifies when/how to apply pattern
+**Outcome criteria:** Artifacts produced with the pattern are measurably better (fewer defects, less complexity, faster change) than artifacts produced without it. If the improvement cannot be measured, the skill must require the agent to state that explicitly rather than stay silent.
 
 ### Reference Skills (documentation/APIs)
 
@@ -442,6 +450,7 @@ Different skill types need different test approaches:
 - Gap testing: Are common use cases covered?
 
 **Success criteria:** Agent finds and correctly applies reference information
+**Outcome criteria:** The work product built from the reference is correct (compiles, passes tests, matches the documented behavior). If correctness cannot be verified by running it, the skill must require the agent to flag what remains unverified rather than stay silent.
 
 ## Common Rationalizations for Skipping Testing
 
@@ -455,6 +464,8 @@ Different skill types need different test approaches:
 | "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
 | "Academic review is enough" | Reading ≠ using. Test application scenarios. |
 | "No time to test" | Deploying untested skill wastes more time fixing it later. |
+| "The agent followed the skill, so the skill works" | Compliance is not outcome. Measure what the artifact did. |
+| "The reasoning was careful, so the result is sound" | Careful reasoning is a hypothesis. Run it. |
 
 **All of these mean: Test before deploying. No exceptions.**
 
@@ -568,7 +579,11 @@ This is "watch the test fail" - you must see what agents naturally do before wri
 
 Write skill that addresses those specific rationalizations. Don't add extra content for hypothetical cases.
 
-Run same scenarios WITH skill. Agent should now comply.
+Run same scenarios WITH skill. Agent should now comply. For skills that
+produce an artifact (a document, a config, a fix), compliance alone is
+not GREEN — verify the artifact achieves what the skill exists for,
+measured against the baseline. If you cannot measure it, record that the
+outcome is unverified; do not let silence imply it was checked.
 
 ### REFACTOR: Close Loopholes
 
@@ -648,6 +663,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Code inline OR link to separate file
 - [ ] One excellent example (not multi-language)
 - [ ] Run scenarios WITH skill - verify agents now comply
+- [ ] For artifact-producing skills: verify the artifact does what the skill exists for (measured against baseline), or record explicitly that the outcome is unverified
 
 **REFACTOR Phase - Close Loopholes:**
 - [ ] Identify NEW rationalizations from testing
