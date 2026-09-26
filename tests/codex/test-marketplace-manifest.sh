@@ -52,25 +52,37 @@ if not plugin_manifest.exists():
 manifest = json.loads(plugin_manifest.read_text(encoding="utf-8"))
 assert_equal(manifest.get("name"), plugin.get("name"), "plugin manifest name")
 
-# Codex auto-discovers a plugin's hooks/hooks.json whenever the Codex manifest
-# has no `hooks` field: load_plugin_hooks falls back to a hardcoded
-# DEFAULT_HOOKS_CONFIG_FILE = "hooks/hooks.json" and registers it. That file is
-# the Claude Code SessionStart hook, it is tracked in this repo, and this
-# marketplace installs the whole repo root (source url "./"), so on Codex the
-# fallback re-registers the SessionStart hook and its install-time trust prompt.
-# Declaring an empty inline hooks object ({}) parses as an empty inline hook set
-# and suppresses the auto-discovery. An absent field, an empty array ([]), and
-# an empty inline list all collapse back to the fallback, so the value must be
-# exactly an empty object.
+# The Codex manifest must declare its hooks explicitly. An absent field makes
+# load_plugin_hooks fall back to a hardcoded DEFAULT_HOOKS_CONFIG_FILE =
+# "hooks/hooks.json" — the Claude Code SessionStart hook, which injects the
+# bootstrap at startup and must not run on Codex. The explicit pointer both
+# registers the Codex compaction re-injection hook and overrides that fallback.
 hooks_config = repo_root / "hooks" / "hooks.json"
 if not hooks_config.exists():
     raise AssertionError("hooks/hooks.json must exist (Claude Code SessionStart hook)")
 
 assert_equal(
     manifest.get("hooks"),
-    {},
-    "Codex manifest must declare empty hooks {} to suppress hooks/hooks.json auto-discovery",
+    "./hooks/hooks-codex.json",
+    "Codex manifest must point hooks at the Codex hook config (an absent field "
+    "falls back to auto-discovering the Claude Code hooks/hooks.json)",
 )
+
+codex_hooks_path = repo_root / "hooks" / "hooks-codex.json"
+if not codex_hooks_path.exists():
+    raise AssertionError("hooks/hooks-codex.json must exist (Codex manifest points at it)")
+
+codex_hooks = json.loads(codex_hooks_path.read_text(encoding="utf-8"))
+session_start = codex_hooks["hooks"]["SessionStart"]
+assert_equal(len(session_start), 1, "Codex SessionStart hook group count")
+assert_equal(session_start[0].get("matcher"), "compact", "Codex hook matcher")
+entry = session_start[0]["hooks"][0]
+assert_equal(entry.get("type"), "command", "Codex hook type")
+command = entry.get("command", "")
+if "${PLUGIN_ROOT}" not in command or not command.endswith("session-start-codex"):
+    raise AssertionError(
+        f"Codex hook command must run session-start-codex via ${{PLUGIN_ROOT}}: {command!r}"
+    )
 
 print("Codex marketplace manifest looks good")
 PY
