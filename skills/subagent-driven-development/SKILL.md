@@ -87,6 +87,7 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
+    "Offer spec-derived e2e verification (./spec-derived-e2e.md)" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
@@ -116,7 +117,8 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
+    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Offer spec-derived e2e verification (./spec-derived-e2e.md)";
+    "Offer spec-derived e2e verification (./spec-derived-e2e.md)" -> "Final review clean: delete this plan's workspace";
     "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
@@ -468,6 +470,16 @@ the four classes above stop you here. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
 finishing-a-development-branch presents the options.
 
+## Before Finishing: Offer E2E Verification
+
+After the final whole-branch review passes and before
+superpowers:finishing-a-development-branch, offer your human partner
+spec-derived e2e verification: scenario cards derived from the governing
+spec, run live against the built branch. If they accept — or asked for
+end-to-end verification earlier — follow
+[spec-derived-e2e.md](spec-derived-e2e.md). If they decline, proceed to
+finishing.
+
 ## Finish
 
 Before you delete anything, collect every ledger line containing `Ruling:` —
@@ -561,6 +573,9 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [After all tasks]
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
+
+You: "Would you like me to run spec-derived E2E verification against the built branch?"
+your human partner: "No — proceed to finishing."
 
 [Delete this plan's workspace — the record now lives in git]
 
