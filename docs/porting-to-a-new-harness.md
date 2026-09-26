@@ -468,6 +468,11 @@ of these actions (omit only what genuinely doesn't apply):
   flag needed to enable it
 - **create / update todos** (treat older `TodoWrite` references as this action)
 - **invoke a skill** — see Step 5
+- **ask your human partner a question** — decide this one on purpose, since
+  ports disagree: Kimi and Muse map it to a structured-question tool, Claude
+  Code keeps questions as plain text (#1773). If you map it to a tool, keep
+  plain text as the fallback — many harnesses drop that tool in headless mode
+  (Appendix B).
 
 **Get the real tool names from the harness; never invent them.** If the docs
 don't list them, the authoritative source is the harness itself: in a live
@@ -838,4 +843,8 @@ Use this as the live index; when in doubt, read the files, not this table.
   (Part 6). Invoke bundled scripts as `bash scripts/foo.sh` / `node scripts/foo.js`.
 - **Unregistered version.** A new manifest not added to `.version-bump.json`
   ships stale (Part 6).
+- **Ask-user tools vanish in headless mode.** `claude -p`, `copilot -p` and
+  `codex exec` don't offer theirs, so a one-prompt run can't show whether
+  brainstorming's questions reach the tool. Check the question phase in the
+  tmux session (Step 7).
 - **Editing skills to fit the harness.** Never. The fix goes in the tool mapping.
