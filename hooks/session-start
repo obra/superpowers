@@ -4,11 +4,13 @@
 set -euo pipefail
 
 # Determine plugin root directory.
-# ${0%/*} instead of dirname($0): this is a SessionStart:startup hook, so it
-# can run with a broken/empty PATH (anthropics/claude-code#43127) before any
-# PATH-repairing sibling hook in the same startup batch takes effect.
+# Splits $0 on its last / or \ (run-hook.cmd's cmd half passes a Windows
+# path), with no separator meaning the current directory. This avoids
+# dirname because a SessionStart:startup hook can run with a broken/empty
+# PATH (anthropics/claude-code#43127) before any PATH-repairing sibling hook
+# in the same startup batch takes effect.
 case "$0" in
-  */*) SCRIPT_DIR="$(cd "${0%/*}" && pwd)" ;;
+  */*|*\\*) SCRIPT_DIR="$(cd "${0%[/\\]*}" && pwd)" ;;
   *) SCRIPT_DIR="$(pwd)" ;;
 esac
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"

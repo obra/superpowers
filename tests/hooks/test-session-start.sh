@@ -269,6 +269,31 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     "$bash_bin" -c 'cd "$1" && exec "$2" run-hook.cmd session-start' _ "$REPO_ROOT/hooks" "$bash_bin"
 
+# run-hook.cmd's Windows half starts bash with a backslash path
+# (C:\...\hooks\session-start), so $0 can use \ as its separator. The skill
+# must still be found. On Windows use the real Windows path; elsewhere build
+# a plugin root whose hook is reached through a name containing a backslash.
+backslash_home="$(make_home backslash)"
+if command -v cygpath >/dev/null 2>&1; then
+    backslash_cwd="$REPO_ROOT"
+    backslash_hook="$(cygpath -w "$HOOK_UNDER_TEST")"
+else
+    backslash_cwd="$TEST_ROOT/backslash/root"
+    mkdir -p "$backslash_cwd"
+    ln -s "$REPO_ROOT/hooks" "$backslash_cwd/hooks"
+    ln -s "$REPO_ROOT/skills" "$backslash_cwd/skills"
+    ln -s "$REPO_ROOT/hooks/session-start" "$backslash_cwd/hooks\\session-start"
+    backslash_hook='hooks\session-start'
+fi
+assert_command_output \
+    "session-start reached through a backslash path still reads the skill" \
+    "nested" \
+    "" \
+    "Error reading using-superpowers skill" \
+    "$backslash_home" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" -c 'cd "$1" && exec "$2" "$3"' _ "$backslash_cwd" "$bash_bin" "$backslash_hook"
+
 # When cat is on PATH, the JSON must still go through it: the pipe absorbs
 # EPIPE on Windows + Git Bash (#1612). The stub records that it ran.
 cat_stub_dir="$TEST_ROOT/cat-stub/bin"
