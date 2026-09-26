@@ -127,6 +127,31 @@ PLAN
         echo "    got: $out"
     fi
 
+    # --- task-done: records a passing task whose test command prints nothing ---
+    # https://github.com/obra/superpowers/issues/2385 -- under `set -euo
+    # pipefail`, the ledger's `grep -v '^[[:space:]]*$' log | tail -n 1`
+    # exits 1 on an empty/blank log, which used to abort the whole script
+    # (silently, no ledger line) even though the test command itself passed.
+    ( cd "$repo" && echo y > work2.txt && git add work2.txt && git "${git_id[@]}" commit -qm "task 2" )
+    local head2
+    head2="$(cd "$repo" && git rev-parse HEAD)"
+    rc=0
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 2 "$head" -- true 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+        pass "task-done exits 0 when a passing test command prints nothing"
+    else
+        fail "task-done exits 0 when a passing test command prints nothing (got rc=$rc)"
+        echo "    got: $out"
+    fi
+    local expected2="Task 2: complete (commits ${head:0:7}..${head2:0:7}, tests: true → (no output))"
+    if [[ -f "$ledger" ]] && grep -qF "$expected2" "$ledger"; then
+        pass "task-done records a passing task that printed no output"
+    else
+        fail "task-done records a passing task that printed no output"
+        echo "    expected: $expected2"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
+    fi
+
     echo
     if [[ "$FAILURES" -eq 0 ]]; then
         echo "PASS"
