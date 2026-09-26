@@ -1,0 +1,13 @@
+{
+  "id": "superpowers",
+  "name": "Superpowers",
+  "description": "Skill workflows and automatic session bootstrap for coding agents",
+  "version": "6.4.1",
+  "skills": ["./skills"],
+  "activation": { "onStartup": true },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
