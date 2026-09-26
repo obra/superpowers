@@ -152,6 +152,8 @@ a ledger file, not only in todos.
   trust the ledger and `git log` over your own recollection.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
+- **NEVER run `git clean -fdx`, `rm -rf <repo-root>`, or `git rm` on tracked files without explicit human confirmation.** A clean can silently delete `AGENTS.md`, `README.md`, `pyproject.toml`, `config/*.yaml`, and other critical files that are git-tracked but easy to overlook. The cost of one accidental delete (even if recoverable from git) is higher than the convenience of a clean. When a subagent or step suggests it, STOP and ask your human partner.
+- **Protected files — never delete or overwrite without confirmation:** `AGENTS.md`, `README.md`, `LICENSE`, `pyproject.toml`, `setup.py`, `package.json`, `config/*.yaml`, `config/*.json`, `.env` (and any `.env.*`). If a task seems to require touching one of these, surface it to your human partner first.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
