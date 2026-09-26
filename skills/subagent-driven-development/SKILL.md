@@ -336,6 +336,7 @@ needed.
   if useful" without a concrete, task-specific reason
 - Do not ask a reviewer to re-run tests the implementer already ran on the
   same code — the implementer's report carries the test evidence
+- Do not ask a reviewer to establish a mechanical fact you can establish yourself in one command — whether a symbol has other call sites, whether files are byte-identical to a prior state, whether any added line exceeds a length limit, whether a snapshot file changed. Run it before dispatching and put the answer in the prompt as context. Reviewer turns are for judgment; a deterministic lookup spends several of them to reach a conclusion you could have handed over.
 - Do not pre-judge findings for the reviewer — never instruct a reviewer to
   ignore or not flag a specific issue. If you believe a finding would be a
   false positive, let the reviewer raise it and adjudicate it in the review
