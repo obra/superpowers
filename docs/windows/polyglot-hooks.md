@@ -82,10 +82,12 @@ afterward.
    - `C:\Program Files (x86)\Git\bin\bash.exe`
    - `%LOCALAPPDATA%\Programs\Git\bin\bash.exe` (a per-user Git for Windows
      install), only when `LOCALAPPDATA` is set
-   - `bash` on `PATH` (MSYS2, Cygwin, or a non-default Git install), found with
-     `where $PATH:bash` so the current directory is never searched. The WSL
-     launchers (`System32\bash.exe` and anything under `WindowsApps`) are
-     skipped, since they fail when no Linux distro is installed.
+   - `bash` on `PATH` (MSYS2, Cygwin, or a non-default Git install), found by
+     running `%SystemRoot%\System32\where.exe $PATH:bash`, so neither `where`
+     nor `bash` is taken from the current directory. The WSL launchers
+     (`bash.exe` in `System32`, `Sysnative`, or
+     `%LOCALAPPDATA%\Microsoft\WindowsApps`) and extensionless matches are
+     skipped, since the launchers fail when no Linux distro is installed.
 3. If bash is found, it runs the named extensionless hook script from the hooks
    directory and exits with the script's exit code.
 4. If no bash is found, the dispatcher exits `0` silently — the plugin
