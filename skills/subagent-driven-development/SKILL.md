@@ -190,8 +190,13 @@ Use the least powerful model that can handle each role to conserve cost and incr
 **Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
 
 **Architecture and design tasks**: use the most capable available model.
-The final whole-branch review is one of these — dispatch it on the most
-capable available model, not the session default.
+The final whole-branch review is one of these. Resolve "most capable
+available" mechanically: rank every model you can pass when dispatching —
+including the session's own model and any tier above the usual top tier —
+and pick the strict maximum. Cost-scaling does not apply to this dispatch.
+Pass the model explicitly even when the choice equals the session's model:
+explicitness rules out inheritance by omission, not the session's model
+itself.
 
 **Review tasks**: choose the model with the same judgment, scaled to the
 diff's size, complexity, and risk. A small mechanical diff does not need the
@@ -499,6 +504,7 @@ Use superpowers:finishing-a-development-branch.
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
 | "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
+| "The session model is expensive; the top standard tier is close enough for the final review" | The final review is the one dispatch where cost-scaling does not apply. Rank every model you can dispatch — the session's own model included — and pick the strict maximum. |
 
 ## Example Workflow
 
