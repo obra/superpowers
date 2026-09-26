@@ -27,11 +27,19 @@ if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
     exit /b %ERRORLEVEL%
 )
 
-REM Try bash on PATH (e.g. user-installed Git Bash, MSYS2, Cygwin)
-where bash >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    bash "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+REM Try per-user Git for Windows install (%LOCALAPPDATA%\Programs\Git)
+if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" (
+    "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b %ERRORLEVEL%
+)
+
+REM Try bash on PATH, skipping WindowsApps\bash.exe (the WSL stub)
+for /f "usebackq delims=" %%B in (`where bash 2^>nul`) do (
+    echo(%%B | findstr /i "WindowsApps" >nul 2>nul
+    if errorlevel 1 (
+        "%%B" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+        exit /b %ERRORLEVEL%
+    )
 )
 
 REM No bash found - exit silently rather than error
