@@ -14,6 +14,8 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md documentation variants.
 
+**Pressure-test fixtures (systematic-debugging):** See `examples/systematic-debugging/` for the academic + pressure scenarios and creation log used to harden that skill. Keep these out of `skills/systematic-debugging/` so skill installs do not ship persuasive "real scenario" prompts into runtime folders.
+
 ## When to Use
 
 Test skills that:

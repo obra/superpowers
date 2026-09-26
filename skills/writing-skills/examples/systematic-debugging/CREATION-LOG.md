@@ -1,3 +1,5 @@
+<!-- Historical creation log / test campaign notes for systematic-debugging. Not loaded as skill runtime content. -->
+
 # Creation Log: Systematic Debugging Skill
 
 Reference example of extracting, structuring, and bulletproofing a critical skill.
@@ -104,7 +106,7 @@ Bulletproof skill that:
 ## Usage Example
 
 When encountering a bug:
-1. Load skill: skills/debugging/systematic-debugging
+1. Load skill: skills/systematic-debugging
 2. Read overview (10 sec) - reminded of mandate
 3. Follow Phase 1 checklist - forced investigation
 4. If tempted to skip - see anti-pattern, stop
