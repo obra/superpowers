@@ -167,6 +167,82 @@
     }
     .mockup-body { padding: 1.5rem; }
 
+    /* ===== CONTRAST HELPERS ===== */
+    /*
+     * Fragment screens inherit this frame's OS-aware color scheme. In dark
+     * mode, light mockup regions need explicit foreground colors or their text
+     * can become unreadable. Prefer adding .light-surface or .dark-surface to
+     * preview regions with custom backgrounds.
+     */
+    .light-surface {
+      background: #ffffff;
+      color: #1d1d1f;
+    }
+    .light-surface h1,
+    .light-surface h2,
+    .light-surface h3,
+    .light-surface h4,
+    .light-surface p,
+    .light-surface span,
+    .light-surface li,
+    .light-surface strong,
+    .light-surface em,
+    .light-surface code {
+      color: inherit;
+    }
+    .light-surface .label {
+      color: #6e6e73;
+    }
+    .dark-surface {
+      background: #1d1d1f;
+      color: #f5f5f7;
+    }
+    .dark-surface h1,
+    .dark-surface h2,
+    .dark-surface h3,
+    .dark-surface h4,
+    .dark-surface p,
+    .dark-surface span,
+    .dark-surface li,
+    .dark-surface strong,
+    .dark-surface em,
+    .dark-surface code {
+      color: inherit;
+    }
+    .dark-surface .label {
+      color: #aeaeb2;
+    }
+
+    /*
+     * Fallback for common inline light backgrounds in quick fragments. This
+     * intentionally avoids buttons and inputs, so deliberately styled controls
+     * keep their own foreground colors.
+     */
+    #claude-content [style*="background:#fff"],
+    #claude-content [style*="background: #fff"],
+    #claude-content [style*="background:#ffffff"],
+    #claude-content [style*="background: #ffffff"],
+    #claude-content [style*="background:white"],
+    #claude-content [style*="background: white"] {
+      color: #1d1d1f;
+    }
+    #claude-content [style*="background:#fff"] :is(h1, h2, h3, h4, p, span, li, strong, em, code),
+    #claude-content [style*="background: #fff"] :is(h1, h2, h3, h4, p, span, li, strong, em, code),
+    #claude-content [style*="background:#ffffff"] :is(h1, h2, h3, h4, p, span, li, strong, em, code),
+    #claude-content [style*="background: #ffffff"] :is(h1, h2, h3, h4, p, span, li, strong, em, code),
+    #claude-content [style*="background:white"] :is(h1, h2, h3, h4, p, span, li, strong, em, code),
+    #claude-content [style*="background: white"] :is(h1, h2, h3, h4, p, span, li, strong, em, code) {
+      color: inherit;
+    }
+    #claude-content [style*="background:#fff"] .label,
+    #claude-content [style*="background: #fff"] .label,
+    #claude-content [style*="background:#ffffff"] .label,
+    #claude-content [style*="background: #ffffff"] .label,
+    #claude-content [style*="background:white"] .label,
+    #claude-content [style*="background: white"] .label {
+      color: #6e6e73;
+    }
+
     /* ===== SPLIT VIEW (side-by-side comparison) ===== */
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
