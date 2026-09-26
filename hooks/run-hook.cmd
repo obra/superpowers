@@ -15,27 +15,39 @@ if "%~1"=="" (
     exit /b 1
 )
 
+setlocal
 set "HOOK_DIR=%~dp0"
+set "BASH_EXE="
 
-REM Try Git for Windows bash in standard locations
-if exist "C:\Program Files\Git\bin\bash.exe" (
-    "C:\Program Files\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
-)
-if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
-    "C:\Program Files (x86)\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
-)
+REM Git for Windows in its standard system-wide locations
+if exist "C:\Program Files\Git\bin\bash.exe" set "BASH_EXE=C:\Program Files\Git\bin\bash.exe"
+if not defined BASH_EXE if exist "C:\Program Files (x86)\Git\bin\bash.exe" set "BASH_EXE=C:\Program Files (x86)\Git\bin\bash.exe"
 
-REM Try bash on PATH (e.g. user-installed Git Bash, MSYS2, Cygwin)
-where bash >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    bash "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
-)
+REM Per-user Git for Windows install (no admin rights needed). The defined
+REM check matters: with LOCALAPPDATA unset the path would collapse to
+REM \Programs\Git\... on the current drive, where any user can create it.
+if not defined BASH_EXE if defined LOCALAPPDATA if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" set "BASH_EXE=%LOCALAPPDATA%\Programs\Git\bin\bash.exe"
+
+REM bash on PATH (MSYS2, Cygwin, a non-default Git install). $PATH: keeps
+REM `where` from looking in the current directory, and :consider skips the
+REM WSL launchers, which fail when no Linux distro is installed.
+if not defined BASH_EXE for /f "delims=" %%B in ('where $PATH:bash 2^>nul') do if not defined BASH_EXE call :consider "%%B"
 
 REM No bash found - exit silently rather than error
 REM (plugin still works, just without SessionStart context injection)
+if not defined BASH_EXE exit /b 0
+
+REM Run bash outside any parenthesized block: cmd expands %ERRORLEVEL%
+REM inside a block when it parses the block, which would lose the hook's
+REM exit code.
+"%BASH_EXE%" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+exit /b %ERRORLEVEL%
+
+:consider
+set "CANDIDATE=%~1"
+if /i not "%CANDIDATE:\WindowsApps\=%"=="%CANDIDATE%" exit /b 0
+if /i "%CANDIDATE%"=="%SystemRoot%\System32\bash.exe" exit /b 0
+set "BASH_EXE=%CANDIDATE%"
 exit /b 0
 CMDBLOCK
 

@@ -78,7 +78,8 @@ run_hook() {
     local plugin="$1" cwd="$2" probe="$3"
     shift 3
     RC=0
-    OUT="$(cd "$cwd" && env "$@" cmd //c "$(cygpath -w "$plugin")\\hooks\\run-hook.cmd" "$probe" 2>&1)" || RC=$?
+    # tr drops the NUL bytes the WSL launcher prints (UTF-16 text).
+    OUT="$(cd "$cwd" && env "$@" cmd //c "$(cygpath -w "$plugin")\\hooks\\run-hook.cmd" "$probe" 2>&1 | tr -d '\000'; exit "${PIPESTATUS[0]}")" || RC=$?
 }
 
 SYS32_PATH="/c/Windows/System32"
