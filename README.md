@@ -83,14 +83,35 @@ The Superpowers marketplace provides Superpowers and some other related plugins 
 
 ### Antigravity
 
-Install Superpowers as a plugin from this repository:
+Install this repository as a plugin. Antigravity CLI installs a local plugin
+directory:
 
 ```bash
-agy plugin install https://github.com/obra/superpowers
+git clone https://github.com/obra/superpowers.git
+agy plugin install ./superpowers
 ```
 
-Antigravity runs the plugin's session-start hook, so Superpowers is active from
-the first message. Reinstall with the same command to update.
+For Antigravity 2.0 or the standalone IDE, place the repository as the plugin
+directory at `<workspace>/.agents/plugins/superpowers/` or
+`~/.gemini/config/plugins/superpowers/`. For a workspace install, run from the
+workspace root:
+
+```bash
+git clone https://github.com/obra/superpowers.git .agents/plugins/superpowers
+```
+
+All three surfaces load the plugin's always-on rule, which contains the
+`using-superpowers` bootstrap and Antigravity tool mapping. The rule is generated
+from their canonical files so both reach the model from the first message.
+Verified on Antigravity CLI (`agy`) 1.2.7 and 1.2.12, Antigravity 2.0 2.15.0,
+and IDE 2.5.5.
+Update the plugin directory to receive changes; for CLI, rerun
+`agy plugin install ./superpowers` afterward.
+
+The standalone IDE 2.5.5 loaded the bootstrap and auto-triggered
+`brainstorming` in a clean session. In that version, the agent had no general
+`invoke_subagent` tool, so skills requiring automatic subagent delegation have
+that limitation on the IDE.
 
 ### Codex App
 

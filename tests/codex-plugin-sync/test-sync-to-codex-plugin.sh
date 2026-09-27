@@ -180,6 +180,7 @@ write_upstream_fixture() {
         "$repo/assets" \
         "$repo/evals/drill" \
         "$repo/hooks" \
+        "$repo/rules" \
         "$repo/scripts" \
         "$repo/skills/example"
 
@@ -239,6 +240,18 @@ EOF
   "name": "superpowers",
   "version": "$MANIFEST_VERSION"
 }
+EOF
+
+    cat > "$repo/plugin.json" <<'EOF'
+{"name":"superpowers"}
+EOF
+
+    cat > "$repo/rules/superpowers.md" <<'EOF'
+---
+trigger: always_on
+---
+
+@../skills/using-superpowers/SKILL.md
 EOF
 
     cat > "$repo/assets/superpowers-small.svg" <<'EOF'
@@ -309,6 +322,8 @@ EOF
         hooks/session-start-codex \
         index.js \
         package.json \
+        plugin.json \
+        rules/superpowers.md \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
     git -C "$repo" add -f .private-journal/keep.txt
@@ -657,6 +672,8 @@ main() {
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
+    assert_not_matches "$preview_section" '(^|[[:space:]])plugin\.json([[:space:]]|$)' "Preview excludes Antigravity root manifest from Codex sync"
+    assert_not_contains "$preview_section" "rules/superpowers.md" "Preview excludes Antigravity rules from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
