@@ -103,6 +103,9 @@ git clone https://github.com/obra/superpowers.git .agents/plugins/superpowers
 All three surfaces load the plugin's always-on rule, which contains the
 `using-superpowers` bootstrap and Antigravity tool mapping. The rule is generated
 from their canonical files so both reach the model from the first message.
+Verified on Antigravity CLI (`agy`) 1.2.7, Antigravity 2.0 2.15.0, and IDE 2.5.5;
+older `agy` 1.1.x did not auto-discover the rule (installed `components: null`),
+so use `agy` 1.2.7 or later for the CLI path.
 Update the plugin directory to receive changes; for CLI, rerun
 `agy plugin install ./superpowers` afterward.
 

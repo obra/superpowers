@@ -46,8 +46,9 @@ if grep -q '^@\.\./skills/using-superpowers/' "$REPO_ROOT/rules/superpowers.md";
   echo "FAIL: bootstrap rule still relies on lazy @ references" >&2
   exit 1
 fi
+# Keep the always-on rule small enough to load on every session.
 if [ "$(wc -c < "$REPO_ROOT/rules/superpowers.md")" -gt 12000 ]; then
-  echo "FAIL: Antigravity bootstrap rule exceeds the documented size limit" >&2
+  echo "FAIL: Antigravity bootstrap rule exceeds the 12000-byte size guard" >&2
   exit 1
 fi
 if ! cmp -s "$REPO_ROOT/rules/superpowers.md" \
