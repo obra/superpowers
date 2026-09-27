@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "superpowers",
   "displayName": "Superpowers",
-  "version": "6.4.1",
+  "version": "6.4.2",
   "description": "Core skills library for Muse: TDD, debugging, collaboration patterns, and proven techniques",
   "compat": {
     "source": "native",
