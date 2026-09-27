@@ -457,10 +457,13 @@ An Approved verdict with deferred minors or forward risks is complete:
 record them in the ledger and move on.
 
 **Polish after Approve.** A trivial amend (comment, naming, a log line)
-after an Approved verdict does not reopen the task review. Keep it truly
-trivial — no logic changes — and rely on the final whole-branch review,
-which sees the whole diff, to cover it. Anything beyond trivial goes
-through the loop or gets parked like any other finding.
+after an Approved verdict does not reopen the task review. Route it to
+the implementer — resume the same agent with the one-line request, no
+findings list and no task re-review; the task is already accepted, and
+the final whole-branch review, which sees the whole diff, covers the
+polish. Never apply it in the controller session — the
+never-fix-findings-yourself rule has no polish exception. Anything beyond
+trivial goes through the loop or gets parked like any other finding.
 
 ## Final Review
 
@@ -550,8 +553,8 @@ Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
   Forward risks: install script assumes a single user (Task 3 adds multi-user mode — revisit there)
 
-[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
 [Ledger: Task 1: minor (deferred): single-user assumption — carry pointer into Task 3 dispatch]
+[Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
 
 Task 2: Recovery modes
 

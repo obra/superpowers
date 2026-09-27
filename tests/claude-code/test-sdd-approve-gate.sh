@@ -48,17 +48,23 @@ check "loop triggers require Needs-fixes verdict for C/I findings" \
 check "no fix/re-review solely for Important under Approve" \
   has 'do not dispatch a fix or a re-review solely because' "$SKILL"
 check "Approved + Important routed as deferred/forward risk" \
-  has 'minor (deferred)' "$SKILL"
+  has 'reviewer-contract violation' "$SKILL"
 check "complete-task allows Approved with deferred items" \
   has 'An Approved verdict with deferred minors or forward risks is complete' "$SKILL"
 check "polish-after-Approve path documented" \
   has 'Polish after Approve' "$SKILL"
+check "polish routes to the implementer, not the controller" \
+  has 'Route it to' "$SKILL"
+check "polish exception to never-fix-yourself is disclaimed" \
+  has 'no polish exception' "$SKILL"
 check "polish is covered by final whole-branch review" \
   has 'final whole-branch review' "$SKILL"
 check "rationalization: reopening approved task forbidden" \
-  has 'reopen the loop' "$SKILL"
+  has 'Approved is the reviewer' "$SKILL"
 check "example workflow shows a forward risk routed" \
   has 'Forward risks: install script assumes' "$SKILL"
+check "example writes deferred line before complete (last line stays complete)" \
+  bash -c "[ \$(grep -n 'Ledger: Task 1: minor' '$SKILL' | cut -d: -f1) -lt \$(grep -n 'Ledger: Task 1: complete' '$SKILL' | cut -d: -f1) ]"
 
 echo
 echo "=== $pass passed, $fail failed ==="
