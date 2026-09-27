@@ -7,7 +7,9 @@
     { "path": ".codex-plugin/plugin.json", "field": "version" },
     { "path": ".devin-plugin/plugin.json", "field": "version" },
     { "path": ".kimi-plugin/plugin.json", "field": "version" },
+    { "path": ".muse-plugin/plugin.json", "field": "version" },
     { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" },
+    { "path": ".muse-plugin/marketplace.json", "field": "plugins.0.version" },
     { "path": "gemini-extension.json", "field": "version" }
   ],
   "audit": {
@@ -15,6 +17,7 @@
       "CHANGELOG.md",
       "RELEASE-NOTES.md",
       "node_modules",
+      "evals",
       ".git",
       ".version-bump.json",
       "scripts/bump-version.sh"
