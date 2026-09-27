@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { copyFile, mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 
@@ -69,4 +70,18 @@ test('bootstrap reinjects when invoked again with empty bootstrap files', async 
     assert.equal(event.context.bootstrapFiles.length, 1, `invocation ${invocation} must receive bootstrap`);
     assert.match(event.context.bootstrapFiles[0].content, /You have superpowers/);
   }
+});
+
+test('plugin loads without skill files instead of throwing', async () => {
+  const tmp = await mkdtemp(join(tmpdir(), 'openclaw-missing-skills-'));
+  const stubPath = join(tmp, 'index.js');
+  await copyFile(pluginPath, stubPath);
+  const plugin = (await import(pathToFileURL(stubPath).href)).default;
+  const registrations = [];
+  plugin.register({
+    registerHook(event, handler, options) {
+      registrations.push({ event, handler, options });
+    },
+  });
+  assert.equal(registrations.length, 0, 'missing skill files must degrade to no bootstrap, not throw');
 });

@@ -9,9 +9,10 @@ function stripFrontmatter(content) {
 }
 
 function bootstrapContent() {
-  const skill = stripFrontmatter(readFileSync(skillPath, 'utf8'));
-  const mapping = readFileSync(mappingPath, 'utf8').trim();
-  return `<EXTREMELY_IMPORTANT>
+  try {
+    const skill = stripFrontmatter(readFileSync(skillPath, 'utf8'));
+    const mapping = readFileSync(mappingPath, 'utf8').trim();
+    return `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 The using-superpowers skill is included below and is already loaded for this session. Follow it now; do not load using-superpowers a second time.
@@ -20,6 +21,9 @@ ${skill}
 
 ${mapping}
 </EXTREMELY_IMPORTANT>`;
+  } catch {
+    return null;
+  }
 }
 
 export default {
@@ -27,6 +31,7 @@ export default {
   name: 'Superpowers',
   register(api) {
     const content = bootstrapContent();
+    if (!content) return;
 
     api.registerHook('agent:bootstrap', (event) => {
       const files = event.context.bootstrapFiles;
