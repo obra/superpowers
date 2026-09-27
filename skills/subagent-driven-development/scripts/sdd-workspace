@@ -46,8 +46,17 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
-if ! root=$(git rev-parse --show-toplevel 2>/dev/null); then
-  root=$PWD
+# Physical path, spelled the way pwd -P spells the plan path below: on Git
+# Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
+# repo-relative marker check needs both in the same form.
+#
+# A greenfield plan's Task 1 is "create the repo", so there may be no repo to
+# resolve yet: degrade to the current directory, which is where that task's
+# git init runs, so the path is unchanged once the repo exists.
+if toplevel=$(git rev-parse --show-toplevel 2>/dev/null); then
+  root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
+else
+  root=$(CDPATH='' cd -- "$PWD" && pwd -P)
   echo "sdd-workspace: no git repository yet, using $root/.superpowers/sdd until this plan's first task creates one" >&2
 fi
 base="$root/.superpowers/sdd"
@@ -55,7 +64,7 @@ base="$root/.superpowers/sdd"
 # Normalize the plan path (physical directory, so relative/absolute/../
 # spellings of one plan compare equal) and express it as the marker value:
 # repo-relative when the plan lives under the repo root, absolute otherwise.
-plan_dir=$(CDPATH= cd -- "$(dirname "$plan")" && pwd -P)
+plan_dir=$(CDPATH='' cd -- "$(dirname "$plan")" && pwd -P)
 plan_abs="$plan_dir/$(basename "$plan")"
 case "$plan_abs" in
   "$root"/*) plan_id=${plan_abs#"$root"/} ;;
@@ -85,5 +94,7 @@ if ! owns "$dir"; then
   fi
 fi
 
-printf '*\n' > "$base/.gitignore"
-CDPATH= cd -- "$dir" && pwd
+# Create-only: a repo may commit its own .gitignore here (e.g. to version
+# progress.md ledgers); overwriting it would revert that on every run.
+[ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
+CDPATH='' cd -- "$dir" && pwd

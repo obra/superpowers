@@ -1,5 +1,56 @@
 # Superpowers Release Notes
 
+## Unreleased
+
+### Brainstorming
+
+- **Visual companion screens containing `$'`, `$&` or similar are no longer corrupted.** The server inserted screen content with `String.replace`, which treats those sequences as replacement patterns, so content like `NT$'` spliced pieces of the frame into the page. Content is now inserted literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
+
+### Systematic Debugging
+
+- **The multi-layer diagnostic example no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs; the example now reports only whether it's set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
+
+### Executing Plans
+
+- **`task-done` records tasks whose test command passes silently.** A passing command with no output made `task-done` exit 1 without writing the ledger line, so a finished task looked unfinished. The ledger now records `→ (no output)`. Thanks @KenM-BT for the report and Ada Sen for the fix. (#2385, #2388)
+
+### Hooks
+
+- **SessionStart works when the harness starts it with a broken `PATH`.** The hooks no longer need `dirname`, `cat` or `bash` from `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
+- **Windows: `run-hook.cmd` finds a per-user Git for Windows install and skips the WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH` it skips the `bash.exe` WSL launchers that fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 (#1864) and @KaiyiQuan (#2365) for the fixes this combines. (#1863, #2393)
+- **Windows: `run-hook.cmd` no longer runs `bash` or `where` from the current directory.** A repository containing `bash.cmd` or `where.bat` could have had it run at session start. (#2393)
+- **Windows: hook exit codes now reach the harness.** `run-hook.cmd` used to report success even when the hook failed. (#2393)
+
+### Requesting Code Review
+
+- **The example's base-SHA command survives skill arguments.** Claude Code substitutes `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which has no `$` token. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
+
+### Subagent-Driven Development
+
+- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to rewrite the file with `*` on every run, so a repo that commits its own (for example, to version `progress.md` ledgers) saw it reverted after each SDD run. The default is now written only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
+
+- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. The root is now resolved the same way as the plan path. Found while landing the Windows test fixes from @t0domanh (#2149).
+
+### Hermes Agent
+
+- **Superpowers skills show their descriptions in Hermes' skill list.** Hermes lists plugin skills with the description passed to `register_skill`, which defaults to empty, and the plugin only passed a name and path, so every skill appeared blank and the model had nothing to choose on. Each skill's frontmatter description is now passed through. Thanks @pepijn-blom for the fix. (#2284)
+
+## v6.4.2 (2026-09-25)
+
+`writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
+
+### Writing Plans
+
+- **A plan records decisions. It's not a transcript of the code.** "What a Step Contains" replaces the "No Placeholders" section. A test step names the test and its assertions. A code step gives the exact signature, the file, and the spec's values, and includes a body only for an algorithm those don't determine. A verification step gives the command and its passing output. A reference to another task goes through that task's Interfaces block. Placeholders are still called out as the opposite failure. (#2333)
+- **Self-review checks proportion.** The plan compares its own length to the spec's. A plan several times longer than the spec is a transcript, and when code blocks dominate, bodies get replaced with signatures and test assertions. (#2333)
+- **The plan's reader is described as capable:** an engineer who writes idiomatic code once they know the exact interface and test. This replaces "zero context, questionable taste." Steps are now sized as "one action with a checkable result" instead of "2-5 minutes." (#2333)
+- Every plan written by the new skill executed 9/9 against planted-defect probes on Sonnet 5, the same result as full-code plans. (#2333)
+- Removed `plan-document-reviewer-prompt.md`. Nothing referenced it. (#2333)
+
+### Documentation
+
+- Removed `CLAUDE.md`. Claude Code now reads `AGENTS.md` directly, but only when no `CLAUDE.md` exists, so keeping the one-line pointer would have hidden the real guidelines.
+
 ## v6.4.1 (2026-09-18)
 
 v6.4.0 was never shipped. v6.4.1 is the first release with these changes. It holds back the new `proving-it-works-with-a-movie` skill, which is getting cleanup and robustness work and will return in a later release.
