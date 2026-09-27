@@ -33,6 +33,8 @@ main() {
     git init -q -b main "$TEST_ROOT/repo"
     local repo
     repo="$(cd "$TEST_ROOT/repo" && git rev-parse --show-toplevel)"
+    # Same spelling as the scripts print (pwd), not rev-parse's C:/... on Git Bash.
+    repo="$(cd "$repo" && pwd)"
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
 
     cat > "$repo/plan.md" <<'PLAN'
