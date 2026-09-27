@@ -50,7 +50,7 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 | System produced the log entry | Fresh entry written by the system acting | An entry your own hand-run probe wrote earlier |
-| "It never ran" (log empty) | Independent probe confirms the instrument works where the system runs | Silence from an instrument whose output path depends on env vars you never inspected |
+| "It never ran" (log empty) | Independent probe confirms the instrument works where the system runs (diagnostics written to hardcoded absolute paths) | Silence from an instrument whose output path depends on env vars you never inspected |
 | User's control/guard is broken | A must-fire case producing no visible effect, after ruling out what could absorb the signal | An ask-pattern command ran without a visible prompt |
 
 ## Red Flags - STOP
@@ -123,7 +123,7 @@ Skip any step = lying, not verifying
 
 **Reading absence:**
 ```
-✅ Independent positive probe in the target environment → then trust a zero as a real zero
+✅ Independent positive probe in the target environment → then trust a zero as a real zero. Make the probe interpretable by writing diagnostics to hardcoded absolute paths — never paths built from environment variables whose value in the target process you have not inspected. If you cannot establish where the target process writes (or cannot reach its environment), the honest report is "I cannot demonstrate it fired", never "it never ran"
 ❌ Empty log/zero matches → conclude the thing never happened
 ```
 
