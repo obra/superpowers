@@ -30,7 +30,9 @@ check "Gate Function: step count updated to 6" \
 check "Common Failures: hand-run row" \
   has 'An entry your own hand-run probe wrote earlier'
 check "Common Failures: silence-as-absence row" \
-  has 'Silence from an instrument whose output path depends on env vars'
+has 'Silence from an instrument whose output path depends on env vars'
+check "Common Failures: silence row carries the actionable probe requirement" \
+has 'Independent probe confirms the instrument works where the system runs'
 check "Common Failures: user-control row" \
   has 'An ask-pattern command ran without a visible prompt'
 
@@ -51,7 +53,11 @@ check "Rationalizations: must-not-be-running" \
 check "Key Patterns: diagnostic-probes pattern" \
   has 'clear it → let the system act'
 check "Key Patterns: reading-absence pattern" \
-  has 'Independent positive probe in the target environment'
+has 'Independent positive probe in the target environment'
+check "Key Patterns: hardcoded absolute paths mitigation present" \
+has 'hardcoded absolute paths'
+check "Key Patterns: unreachable-environment fallback wording" \
+has 'I cannot demonstrate it fired'
 check "Key Patterns: user-tooling pattern" \
   has 'enumerate what could swallow the signal'
 
