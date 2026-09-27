@@ -8,7 +8,7 @@ SKILL_SRC="$REPO_ROOT/skills/using-superpowers/SKILL.md"
 MAP_SRC="$REPO_ROOT/skills/using-superpowers/references/antigravity-tools.md"
 
 for src in "$SKILL_SRC" "$MAP_SRC"; do
-  test -r "$src" || { echo "FAIL: bootstrap source is missing or unreadable: $src" >&2; exit 1; }
+  test -s "$src" || { echo "FAIL: bootstrap source is missing or empty: $src" >&2; exit 1; }
 done
 
 render_rule() {
@@ -29,7 +29,7 @@ HEADER
   cat "$MAP_SRC"
 }
 
-if [[ "$OUTPUT" == /dev/* ]]; then
+if [[ "$OUTPUT" == /dev/stdout ]]; then
   render_rule > "$OUTPUT"
   exit 0
 fi
