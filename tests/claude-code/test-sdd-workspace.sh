@@ -223,6 +223,57 @@ PLAN
         echo "    brief: $(cat "$embedded_brief" 2>/dev/null)"
     fi
 
+    # --- a same-level heading is a sibling section, fenced or not ---
+    # Unfenced, it ends the task: writing-plans puts a task's steps in
+    # bullets, so a same-level heading after a task is the next section
+    # (Self-review, Done when), never part of the task. Inside a fence it
+    # is quoted text and never ends anything, which is how real plans
+    # carry "### Step 1.5" blocks to insert into a skill file.
+    cat > "$repo/plan-sibling.md" <<'PLAN'
+# Plan With Sibling Sections
+
+### Task 1: Insert a step into a skill file
+
+Insert this block after Step 1:
+
+```markdown
+### Step 1.5: Detect Environment
+
+Quoted body, part of task 1.
+```
+
+FENCED_TAIL: still part of task 1.
+
+### Task 2: Second thing
+
+Second-task requirement.
+
+### Rollout notes
+
+Sibling section, not part of task 2.
+PLAN
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sibling.md 1 >/dev/null )
+    local sibling_first="$repo/.superpowers/sdd/plan-sibling/task-1-brief.md"
+    if grep -q "Quoted body, part of task 1." "$sibling_first" 2>/dev/null \
+        && grep -q "FENCED_TAIL: still part of task 1." "$sibling_first" 2>/dev/null \
+        && ! grep -q "Second-task requirement." "$sibling_first" 2>/dev/null; then
+        pass "task-brief keeps a fenced same-level heading inside its task"
+    else
+        fail "task-brief keeps a fenced same-level heading inside its task"
+        echo "    brief: $(cat "$sibling_first" 2>/dev/null)"
+    fi
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sibling.md 2 >/dev/null )
+    local sibling_last="$repo/.superpowers/sdd/plan-sibling/task-2-brief.md"
+    if grep -q "Second-task requirement." "$sibling_last" 2>/dev/null \
+        && ! grep -q "Sibling section" "$sibling_last" 2>/dev/null; then
+        pass "task-brief ends a task at an unfenced same-level heading"
+    else
+        fail "task-brief ends a task at an unfenced same-level heading"
+        echo "    brief: $(cat "$sibling_last" 2>/dev/null)"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

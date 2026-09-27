@@ -51,7 +51,7 @@ awk -v n="$n" '
     c = substr(line, 1, 1)
     l = 0; while (substr(line, l + 1, 1) == c) l++
     if (!cfence) { if (c == "~" || substr(line, l + 1) !~ /`/) { cfence = 1; cc = c; cl = l } }
-    else if (c == cc && l >= cl && substr(line, l + 1) ~ /^[ \t]*$/) { cfence = 0 }
+    else if (c == cc && l >= cl && substr(line, l + 1) ~ /^[ \t\r]*$/) { cfence = 0 }
   }
   /^```/ { infence = !infence }
   !infence && /^#+[ \t]/ {
