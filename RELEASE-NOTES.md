@@ -29,6 +29,8 @@
 
 - **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to rewrite the file with `*` on every run, so a repo that commits its own (for example, to version `progress.md` ledgers) saw it reverted after each SDD run. The default is now written only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
 
+- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. The root is now resolved the same way as the plan path. Found while landing the Windows test fixes from @t0domanh (#2149).
+
 ## v6.4.2 (2026-09-25)
 
 `writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
