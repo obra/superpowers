@@ -43,9 +43,10 @@ Subagent (general-purpose):
     ## Declined to judge
 
     Before your verdict, list every behavior you considered and set aside
-    as outside the plan or spec, one line each, with the reason. The
-    executor rules on each line; nothing you set aside is dropped
-    silently. An empty list means you set nothing aside.
+    as outside the plan or spec, one line each, with the reason, under the
+    report's "Declined to judge" heading and as `D` lines in the verdict
+    block below. The executor rules on each line; nothing you set aside
+    is dropped silently. An empty list means you set nothing aside.
 
     ## Read-Only Review
 
@@ -114,6 +115,7 @@ Subagent (general-purpose):
         C1 <one-liner> file:line
         I1 <one-liner> file:line
         M1 <one-liner>
+        D1 <behavior set aside> because <reason>
         Report: [REVIEW_FILE]
 
     Writing that one file is the only write you make: the read-only rule
@@ -143,6 +145,10 @@ Subagent (general-purpose):
     - What's wrong
     - Why it matters
     - How to fix (if not obvious)
+
+    ### Declined to judge
+    [One line per behavior set aside as outside the plan or spec, with the
+    reason; "none" when you set nothing aside]
 
     ### Recommendations
     [Improvements for code quality, architecture, or process]

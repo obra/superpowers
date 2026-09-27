@@ -148,7 +148,10 @@ a ledger file, not only in todos.
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
   — do not re-dispatch them; resume at the first task without one. A task
   whose last line is a fix round is mid-loop: resume the loop at the next
-  round. A ledger whose first line names a different plan file — or a stray
+  round. When every task has a completion line, the work left is the Final
+  Review: resume there (a `Checkpoint: before final review` line says the
+  context was shed for it; its absence changes nothing). A ledger whose
+  first line names a different plan file — or a stray
   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
   plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
@@ -490,7 +493,8 @@ completion line since the last checkpoint, and once more before the final
 whole-branch review. Checkpoint only at a task boundary: the completion line
 appended, no fix round open, no implementer live.
 
-To checkpoint, append `Checkpoint: after Task <N>` to the ledger, print the
+To checkpoint, append `Checkpoint: after Task <N>` (or `Checkpoint: before
+final review`) to the ledger, print the
 compaction line on its own, tell your human partner to re-invoke this skill,
 and stop:
 
@@ -502,7 +506,8 @@ and stop:
 This is not the check-in or the progress summary Continuous execution
 forbids. You are not asking whether to go on. You are dropping context the
 ledger already holds, and Setup's ledger check resumes at the first task
-without a completion line. If your harness has no compaction command, use
+without a completion line, or at the Final Review when every task has one.
+If your harness has no compaction command, use
 its equivalent (a fresh session resumed from the ledger); if it has none,
 skip the checkpoint and keep going.
 

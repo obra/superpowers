@@ -59,7 +59,7 @@ Subagent (general-purpose):
 
     ## Scope
 
-    Your scope is the findings list and the fix diff. Verdict every finding.
+    Your scope is the ids you were given and the fix diff. Verdict those ids.
     Inspect the fix diff for new problems the fix itself introduced. Do NOT
     re-review code the fix did not touch: if you notice an issue entirely
     outside the fix diff, report it under Out-of-Scope Observations — it
