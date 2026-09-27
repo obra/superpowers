@@ -48,3 +48,12 @@ verifiable from the exported bundle or to be marked limited.
    for human review. A PR Evaluation field still asks for the original prompt
    with marked redactions. The comment and excerpt pass minimum-evidence
    extraction and an independent privacy audit before publication.
+8. **Public repository root and placeholder order.** A cited source sits under
+   a repository listed in `PUBLIC_REPOS` with case-verified containment; a
+   second path merely spells a public-looking name without verified
+   containment. Export the first as
+   `<PUBLIC_REPO_ROOT-n>/<safe-relative-file>:line` and replace the second in
+   full with a stable `<LOCAL_PATH-n>`. Number placeholders by first appearance
+   in copied `case.md`, then `report.md`, then remaining files in sorted
+   relative-path order, scanning each file's contents top to bottom before its
+   name.

@@ -32,8 +32,9 @@ Procedure:
    other machine path in full. A value first seen in `report.md` must receive
    the same alias in `transcripts/`.
 3. Rename files and directories containing raw IDs to file-safe `id-n` names,
-   update all references to their new names, and check the BUNDLE directory
-   itself has a generic name. Do not rename or edit anything outside BUNDLE.
+   update all references to their new names, rewrite cited session transcript
+   `path:line` values to their `transcripts/id-n.md [L<n>]` markers, and check
+   the BUNDLE directory itself has a generic name. Do not rename or edit anything outside BUNDLE.
 4. Recount placeholders in final non-log file contents and check final
    filenames for raw values. Write `BUNDLE/scrub-log.md` as a table of
    placeholder → category → count, noting file-safe ID aliases without their

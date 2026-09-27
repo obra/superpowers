@@ -26,7 +26,9 @@ Goal is a superpowers bug report: yes | no
 Record the main session's complete first human prompt and each subagent's
 complete parent dispatch below, with their exact source locations. Preserve
 line breaks and wording; do not summarize or truncate. Follow the
-context-safety rules when extracting them.
+context-safety rules when extracting them: the 500-character limit applies
+per read, so assemble the complete text from bounded chunks rather than
+truncating to a single slice.
 
 ### First initiating messages (local only)
 
