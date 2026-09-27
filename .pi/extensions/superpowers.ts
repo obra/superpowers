@@ -26,31 +26,25 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 	});
 
 	pi.on("session_compact", async (_event, ctx) => {
-		if (activeContextHasBootstrap(ctx.sessionManager)) {
+		const message = createBootstrapMessage();
+		if (!message) return;
+		if (activeContextHasBootstrap(ctx.sessionManager, message.content)) {
 			bootstrapPendingInRun = false;
 			return;
 		}
 		if (bootstrapPendingInRun) return;
-
-		const message = createBootstrapMessage();
-		if (!message) return;
 
 		pi.sendMessage(message, { deliverAs: "steer" });
 		bootstrapPendingInRun = !ctx.isIdle();
 	});
 
 	pi.on("before_agent_start", async (_event, ctx) => {
-		if (activeContextHasBootstrap(ctx.sessionManager)) return;
-
 		const message = createBootstrapMessage();
 		if (!message) return;
+		if (activeContextHasBootstrap(ctx.sessionManager, message.content) || bootstrapPendingInRun) return;
 
 		bootstrapPendingInRun = true;
 		return { message };
-	});
-
-	pi.on("agent_start", async () => {
-		bootstrapPendingInRun = false;
 	});
 
 	pi.on("message_end", async event => {
@@ -75,21 +69,21 @@ function createBootstrapMessage() {
 }
 
 function activeContextHasBootstrap(sessionManager: {
-	buildContextEntries?: () => ReadonlyArray<{ type?: unknown; customType?: unknown }>;
+	buildContextEntries?: () => ReadonlyArray<{ type?: unknown; customType?: unknown; content?: unknown }>;
 	buildSessionContext?: () => {
-		messages?: ReadonlyArray<{ role?: unknown; customType?: unknown }>;
+		messages?: ReadonlyArray<{ role?: unknown; customType?: unknown; content?: unknown }>;
 	};
-}): boolean {
+}, content: string): boolean {
 	const entries = sessionManager.buildContextEntries?.();
 	if (entries) {
 		return entries.some(
-			entry => entry.type === "custom_message" && entry.customType === BOOTSTRAP_CUSTOM_TYPE,
+			entry => entry.type === "custom_message" && entry.customType === BOOTSTRAP_CUSTOM_TYPE && entry.content === content,
 		);
 	}
 
 	const messages = sessionManager.buildSessionContext?.().messages;
 	return (
-		messages?.some(message => message.role === "custom" && message.customType === BOOTSTRAP_CUSTOM_TYPE) ?? false
+		messages?.some(message => message.role === "custom" && message.customType === BOOTSTRAP_CUSTOM_TYPE && message.content === content) ?? false
 	);
 }
 

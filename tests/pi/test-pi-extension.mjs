@@ -46,6 +46,14 @@ function textOf(message) {
     .join('\n');
 }
 
+async function currentBootstrapContent() {
+  const { handlers } = await loadExtension();
+  const result = await firstHandler(handlers, 'before_agent_start')(
+    { type: 'before_agent_start', prompt: 'Probe', systemPrompt: [] }, extensionContext(),
+  );
+  return result.message.content;
+}
+
 function extensionContext(activeEntries = [], idle = true) {
   return {
     isIdle: () => idle,
@@ -67,7 +75,7 @@ test('package.json declares a pi package with skills and extension resources', a
 test('extension registers persisted bootstrap lifecycle hooks without a context transform', async () => {
   const { handlers } = await loadExtension();
 
-  for (const event of ['resources_discover', 'session_start', 'session_compact', 'before_agent_start', 'agent_start', 'agent_end', 'message_end']) {
+  for (const event of ['resources_discover', 'session_start', 'session_compact', 'before_agent_start', 'agent_end', 'message_end']) {
     assert.equal((handlers.get(event) ?? []).length, 1, `missing ${event} handler`);
   }
   assert.equal((handlers.get('context') ?? []).length, 0, 'bootstrap must not prepend transient context');
@@ -105,10 +113,43 @@ test('startup persists one hidden bootstrap message across provider requests and
   const secondRun = await beforeAgentStart(
     { type: 'before_agent_start', prompt: 'Now write tests', systemPrompt: [] },
     extensionContext([
-      { id: 'bootstrap-startup', type: 'custom_message', customType: 'superpowers-bootstrap' },
+      { id: 'bootstrap-startup', type: 'custom_message', customType: 'superpowers-bootstrap', content: await currentBootstrapContent() },
     ]),
   );
   assert.equal(secondRun, undefined, 'persisted bootstrap should not be duplicated on later turns');
+});
+
+test('bootstrap round-trip writes one reusable active session entry', async () => {
+  const { handlers } = await loadExtension();
+  const beforeAgentStart = firstHandler(handlers, 'before_agent_start');
+  const entries = [];
+  const ctx = extensionContext(entries, false);
+  assert.equal(entries.length, 0);
+
+  const first = await beforeAgentStart({ type: 'before_agent_start', prompt: 'Start' }, ctx);
+  // Pi persists the returned custom message as a custom_message session entry.
+  entries.push({ type: 'custom_message', ...first.message });
+  await firstHandler(handlers, 'message_end')({ type: 'message_end', message: { role: 'custom', ...first.message } }, ctx);
+  assert.equal(entries.length, 1);
+
+  const second = await beforeAgentStart({ type: 'before_agent_start', prompt: 'Continue' }, ctx);
+  assert.equal(second, undefined);
+  assert.equal(entries.length, 1);
+});
+
+test('a resumed bootstrap with outdated content is replaced', async () => {
+  const { handlers } = await loadExtension();
+  const beforeAgentStart = firstHandler(handlers, 'before_agent_start');
+  const sessionCompact = firstHandler(handlers, 'session_compact');
+  const stale = extensionContext([{ type: 'custom_message', customType: 'superpowers-bootstrap', content: 'old release' }]);
+  const result = await beforeAgentStart({ type: 'before_agent_start', prompt: 'Resume' }, stale);
+  assert.equal(result.message.customType, 'superpowers-bootstrap');
+  assert.notEqual(result.message.content, 'old release');
+
+  const compacted = await loadExtension();
+  await firstHandler(compacted.handlers, 'session_compact')({ type: 'session_compact' }, stale);
+  assert.equal(compacted.sentMessages.length, 1, 'compaction replaces outdated bootstrap text');
+  assert.equal(compacted.sentMessages[0].message.content, result.message.content);
 });
 
 test('resumed sessions deduplicate against the active compaction-aware context', async () => {
@@ -121,7 +162,7 @@ test('resumed sessions deduplicate against the active compaction-aware context',
     { type: 'before_agent_start', prompt: 'Continue', systemPrompt: [] },
     extensionContext([
       { id: 'compaction-1', type: 'compaction', firstKeptEntryId: 'bootstrap-1' },
-      { id: 'bootstrap-1', type: 'custom_message', customType: 'superpowers-bootstrap' },
+      { id: 'bootstrap-1', type: 'custom_message', customType: 'superpowers-bootstrap', content: await currentBootstrapContent() },
     ]),
   );
   assert.equal(retainedBootstrap, undefined, 'a retained pre-compaction bootstrap remains model-visible');
@@ -144,13 +185,14 @@ test('resumed sessions deduplicate against the active compaction-aware context',
   const ompSessionStart = firstHandler(omp.handlers, 'session_start');
   const ompBeforeAgentStart = firstHandler(omp.handlers, 'before_agent_start');
   await ompSessionStart({ type: 'session_start', reason: 'resume' }, {});
+  const ompContent = await currentBootstrapContent();
 
   const ompBootstrap = await ompBeforeAgentStart(
     { type: 'before_agent_start', prompt: 'Continue', systemPrompt: [] },
     {
       sessionManager: {
         buildSessionContext: () => ({
-          messages: [{ role: 'custom', customType: 'superpowers-bootstrap' }],
+          messages: [{ role: 'custom', customType: 'superpowers-bootstrap', content: ompContent }],
         }),
       },
     },
@@ -183,7 +225,7 @@ test('idle compaction persists a replacement without starting a run', async () =
   const nextRun = await beforeAgentStart(
     { type: 'before_agent_start', prompt: 'Continue', systemPrompt: [] },
     extensionContext([
-      { id: 'bootstrap-idle', type: 'custom_message', customType: 'superpowers-bootstrap' },
+      { id: 'bootstrap-idle', type: 'custom_message', customType: 'superpowers-bootstrap', content: await currentBootstrapContent() },
     ]),
   );
   assert.equal(nextRun, undefined, 'the idle replacement is already persisted');
@@ -194,7 +236,6 @@ test('compaction distinguishes pending, retained, and removed bootstraps', async
   const sessionStart = firstHandler(handlers, 'session_start');
   const sessionCompact = firstHandler(handlers, 'session_compact');
   const beforeAgentStart = firstHandler(handlers, 'before_agent_start');
-  const agentStart = firstHandler(handlers, 'agent_start');
   const agentEnd = firstHandler(handlers, 'agent_end');
   const messageEnd = firstHandler(handlers, 'message_end');
 
@@ -208,14 +249,13 @@ test('compaction distinguishes pending, retained, and removed bootstraps', async
     { type: 'session_compact', compactionEntry: {}, fromExtension: false },
     extensionContext([], false),
   );
-  assert.equal(sentMessages.length, 0, 'pre-prompt compaction must not duplicate the pending bootstrap');
+  assert.equal(sentMessages.length, 0, 'compaction must not duplicate the uncommitted bootstrap');
 
-  await agentStart({ type: 'agent_start' }, {});
   await sessionCompact(
     { type: 'session_compact', compactionEntry: {}, fromExtension: false },
     extensionContext([
       { id: 'compaction-retained', type: 'compaction', firstKeptEntryId: 'bootstrap-retained' },
-      { id: 'bootstrap-retained', type: 'custom_message', customType: 'superpowers-bootstrap' },
+      { id: 'bootstrap-retained', type: 'custom_message', customType: 'superpowers-bootstrap', content: await currentBootstrapContent() },
     ], false),
   );
   assert.equal(sentMessages.length, 0, 'active compaction must reuse a retained bootstrap');
@@ -256,7 +296,7 @@ test('compaction distinguishes pending, retained, and removed bootstraps', async
   const nextRun = await beforeAgentStart(
     { type: 'before_agent_start', prompt: 'Continue', systemPrompt: [] },
     extensionContext([
-      { id: 'bootstrap-replacement', type: 'custom_message', customType: 'superpowers-bootstrap' },
+      { id: 'bootstrap-replacement', type: 'custom_message', customType: 'superpowers-bootstrap', content: await currentBootstrapContent() },
     ]),
   );
   assert.equal(nextRun, undefined, 'active compaction already persisted the replacement bootstrap');
@@ -267,7 +307,6 @@ test('pre-prompt compaction replaces a reused bootstrap in the current run', asy
   const sessionStart = firstHandler(handlers, 'session_start');
   const sessionCompact = firstHandler(handlers, 'session_compact');
   const beforeAgentStart = firstHandler(handlers, 'before_agent_start');
-  const agentStart = firstHandler(handlers, 'agent_start');
   const agentEnd = firstHandler(handlers, 'agent_end');
 
   await sessionStart({ type: 'session_start', reason: 'startup' }, {});
@@ -275,13 +314,12 @@ test('pre-prompt compaction replaces a reused bootstrap in the current run', asy
     { type: 'before_agent_start', prompt: 'Start', systemPrompt: [] },
     extensionContext(),
   );
-  await agentStart({ type: 'agent_start' }, {});
   await agentEnd({ type: 'agent_end', messages: [] }, {});
 
   const reused = await beforeAgentStart(
     { type: 'before_agent_start', prompt: 'Continue', systemPrompt: [] },
     extensionContext([
-      { id: 'bootstrap-reused', type: 'custom_message', customType: 'superpowers-bootstrap' },
+      { id: 'bootstrap-reused', type: 'custom_message', customType: 'superpowers-bootstrap', content: await currentBootstrapContent() },
     ]),
   );
   assert.equal(reused, undefined);
@@ -301,7 +339,6 @@ test('post-agent-end retry compaction queues bootstrap before continuation', asy
   const sessionStart = firstHandler(handlers, 'session_start');
   const sessionCompact = firstHandler(handlers, 'session_compact');
   const beforeAgentStart = firstHandler(handlers, 'before_agent_start');
-  const agentStart = firstHandler(handlers, 'agent_start');
   const agentEnd = firstHandler(handlers, 'agent_end');
 
   await sessionStart({ type: 'session_start', reason: 'startup' }, {});
@@ -309,7 +346,6 @@ test('post-agent-end retry compaction queues bootstrap before continuation', asy
     { type: 'before_agent_start', prompt: 'Start', systemPrompt: [] },
     extensionContext(),
   );
-  await agentStart({ type: 'agent_start' }, {});
   await agentEnd({ type: 'agent_end', messages: [] }, {});
 
   await sessionCompact(

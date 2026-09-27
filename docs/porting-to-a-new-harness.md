@@ -423,15 +423,15 @@ messages break some models (#894). Three things you must replicate:
 - **Dedup guard.** The injection callback can fire repeatedly. OpenCode's
   transform runs on *every* agent step, while pi's `before_agent_start` persists
   the returned custom message in session history. Before injecting, check whether
-  a bootstrap marker is already present and skip if so. On pi, inspect the active
-  session entries rather than raw history so a bootstrap removed by compaction
-  does not suppress its replacement. (The references pick different markers —
-  pi uses a custom message type, while OpenCode matches the
+  the active context already has the current bootstrap text. On pi, inspect the
+  active session entries rather than raw history so a bootstrap removed by
+  compaction, or retained from an older release, does not suppress its
+  replacement. (The references pick different markers — pi uses a custom message type plus exact content, while OpenCode matches the
   `EXTREMELY_IMPORTANT` tag.) Cache the bootstrap content at module level so
   you're not re-reading and re-parsing `SKILL.md` on every call (#1202).
 - **Compaction.** If the harness compacts/summarizes history, re-inject
-  afterward. pi leaves a retained or not-yet-committed bootstrap alone. When
-  compaction removes a persisted bootstrap, pi sends a hidden steering message:
+  afterward. pi leaves a retained current or not-yet-committed bootstrap alone.
+  When compaction removes a persisted bootstrap, pi sends a hidden steering message:
   an active or preparing run consumes it at the next model-call boundary, while
   an idle session appends it without starting a run. This also covers immediate
   overflow retries that bypass `before_agent_start`. OpenCode relies on its
