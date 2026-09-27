@@ -54,6 +54,8 @@ check "GREEN phase: compliance alone is not GREEN" \
   has 'compliance alone is' "$SKILL"
 check "GREEN phase: record unverified rather than silence" \
   has 'record that the' "$SKILL"
+check "GREEN phase: unverified record names the settling measurement" \
+  has 'naming the measurement that would settle it' "$SKILL"
 check "Checklist: artifact outcome verification item" \
   has 'For artifact-producing skills: verify the artifact' "$SKILL"
 
@@ -63,6 +65,8 @@ check "intro mentions artifact outcome" \
   has 'verify the artifact achieves what the skill exists for' "$TESTING"
 check "GREEN phase: outcome paragraph present" \
   has 'compliance alone is' "$TESTING"
+check "GREEN phase: unverified record names the settling measurement" \
+  has 'naming the measurement that would settle it' "$TESTING"
 check "GREEN checklist: artifact item" \
   has 'For artifact-producing skills: verified the artifact' "$TESTING"
 check "Verify-GREEN quick-ref row carries both dimensions" \

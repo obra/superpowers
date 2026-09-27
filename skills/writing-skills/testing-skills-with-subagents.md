@@ -87,7 +87,9 @@ Run same scenarios WITH skill. Agent should now comply. For skills that
 produce an artifact (a document, a config, a fix), compliance alone is
 not GREEN — verify the artifact achieves what the skill exists for,
 measured against the baseline. If you cannot measure it, record that the
-outcome is unverified; do not let silence imply it was checked.
+outcome is unverified — naming the measurement that would settle it and
+why it was not run; "unverified" without that record is the same silence
+in different words.
 
 If agent still fails: skill is unclear or incomplete. Revise and re-test.
 
