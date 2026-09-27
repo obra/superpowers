@@ -31,6 +31,10 @@
 
 - **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. The root is now resolved the same way as the plan path. Found while landing the Windows test fixes from @t0domanh (#2149).
 
+### Hermes Agent
+
+- **Superpowers skills show their descriptions in Hermes' skill list.** Hermes lists plugin skills with the description passed to `register_skill`, which defaults to empty, and the plugin only passed a name and path, so every skill appeared blank and the model had nothing to choose on. Each skill's frontmatter description is now passed through. Thanks @pepijn-blom for the fix. (#2284)
+
 ## v6.4.2 (2026-09-25)
 
 `writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
