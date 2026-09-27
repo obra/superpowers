@@ -12,6 +12,7 @@
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")/../../skills/subagent-driven-development" && pwd)"
+SKILL_MD="$SKILL_DIR/SKILL.md"
 PLAN_FILE=""
 pass=0
 fail=0
@@ -26,6 +27,8 @@ check() {
     fail=$((fail + 1))
   fi
 }
+
+has() { grep -q "$1" "$SKILL_MD"; }
 
 TEST_DIR=""
 setup_repo() {
@@ -55,6 +58,24 @@ EOF
 }
 
 echo "=== SDD in-flight ledger (#2293) ==="
+echo
+echo "Skill text pins (SKILL.md):"
+
+check "resume rule enumerates the dispatched state" \
+  has 'dispatched.*interrupted mid-flight'
+check "resume rule keys on each task's last line" \
+  has "each task's last line tells you its state"
+check "dispatched state checks git log with the recorded base" \
+  has 'git log <base>..HEAD'
+check "no-commits case routes to re-dispatch" \
+  has 'Re-dispatch normally'
+check "commits-present case routes to reviewer, not re-implementation" \
+  has 'was never reviewed'
+check "minor (deferred) state enumerated as done-like" \
+  has 'treat exactly like .complete.'
+check "dispatched ledger line format documented" \
+  has 'Task <N>: dispatched (base <base7>, brief <brief-path>)'
+
 
 # --- Scenario A: dispatched, implementer committed, session died before review
 echo
@@ -93,7 +114,7 @@ check "git log base..HEAD shows the implementer's commits" \
 check "review-package succeeds from the ledger's base" \
   bash "$SKILL_DIR/scripts/review-package" "$plan" "$dispatched_base" HEAD
 check "review package covers Task 2 (not empty range)" \
-  bash -c "grep -q 'Task 2' \"\$(ls .superpowers/sdd/feature-plan/review-*.diff | tail -1)\" || true"
+  bash -c 'f=$(ls .superpowers/sdd/feature-plan/review-*.diff 2>/dev/null | tail -1); [ -n "$f" ] && grep -q "file-two" "$f"'
 check "resume rule: dispatched + commits → do NOT re-dispatch (complete line absent)" \
   bash -c "! grep -q 'Task 2: complete' '$ledger'"
 rm -rf "$dir"

@@ -143,6 +143,8 @@ a ledger file, not only in todos.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, each task's last line tells you its state:
   - `complete` → DONE. Do not re-dispatch.
+  - `minor (deferred)` → the task was completed and its residual findings
+    were routed onward; treat exactly like `complete`. Do not re-dispatch.
   - `dispatched` → interrupted mid-flight. Do not re-dispatch blind. Run
     `git log <base>..HEAD` using the base from that line:
     - No commits → the implementer landed nothing. Re-dispatch normally.
