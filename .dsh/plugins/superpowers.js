@@ -27,8 +27,9 @@ const skillsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../skills
 const BOOTSTRAP_SKILL = 'using-superpowers';
 
 /**
- * Prompt order of the bootstrap. dsh reserves -100 for the harness identity,
- * 0 for the deployment persona and 100-199 for tool guidance, so 50 puts the
+ * Prompt order of the bootstrap. dsh reserves -1000 for the harness identity,
+ * 0 for the deployment persona and 1000+ for tool guidance (TOOL_* span
+ * 1000-2900 in @deepseek-ai/dsh-system-prompt), so 50 puts the
  * methodology after the persona and before the tools it governs.
  */
 const BOOTSTRAP_ORDER = 50;
