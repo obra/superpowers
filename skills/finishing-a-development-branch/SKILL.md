@@ -198,7 +198,8 @@ Worktree holds Superpowers scratch that was never finished:
 Which?
 ```
 
-Carry out the choice — option 2 stops here — then remove the worktree:
+Carry out the choice. If option 2 was chosen, stop here; otherwise, remove
+the worktree:
 
 ```bash
 git worktree remove "$WORKTREE_PATH"
