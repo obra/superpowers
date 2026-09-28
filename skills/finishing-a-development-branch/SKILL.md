@@ -123,6 +123,11 @@ tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
+Do not run Option 1's branch-deletion command after choosing Option 2: the
+branch remains checked out in the preserved worktree, so `git branch -d`
+will fail. Keep both the branch and worktree until the pull/merge request
+has been handled.
+
 Keep the worktree — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
@@ -174,7 +179,7 @@ self-ignoring `.gitignore`, and brainstorm mockups live under
 removal will not refuse for it:
 
 ```bash
-find "$WORKTREE_PATH/.superpowers" -type f 2>/dev/null
+find "$WORKTREE_PATH/.superpowers" -type f -not -name .gitignore 2>/dev/null
 ```
 
 **If that lists anything**: the worktree holds plan workspaces, progress
