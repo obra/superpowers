@@ -123,12 +123,10 @@ Subagent (general-purpose):
     **Tests:**
     - Do the new and changed tests verify real behavior, not mocks?
     - Are the task's edge cases covered?
-    - For every place the code decides *which thing it is looking at* from a
-      string -- a name compared for equality, a key prefix, a `split` -- write
-      down one input where two different things produce the same string, and
-      trace what the code does with it. If the trace misidentifies, that is a
-      finding even when the brief mandated the lookup; if no test pins it, that
-      is a finding too.
+    - For every place the code decides which thing it is looking at from the
+      shape of a string, write down one input where two different things
+      produce the same string and trace it. A misidentification is a finding
+      even when the brief mandated the lookup.
 
     **Structure:**
     - Does each file have one clear responsibility with a well-defined interface?
