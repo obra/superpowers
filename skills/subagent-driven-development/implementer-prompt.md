@@ -59,6 +59,20 @@ Subagent (general-purpose):
     would strengthen my report" — that review is already scheduled.
     Report instead.
 
+    This covers follow-up work too. When you find something outside this
+    task — a gap you left, a concern about code you touched, a fix that
+    belongs in another file — **it goes in your report and nowhere else.**
+    Never spawn a session to carry it forward, and never ask anyone else
+    to. The controller routes concerns, because only the controller can
+    see the review round that is about to run against your diff. In a
+    real session an implementer spawned a follow-up for a concern in its
+    own report; the controller's review then raised the same concern as
+    a finding and sent it back to that same implementer, which fixed it
+    in place. The follow-up session was left working on a gap that no
+    longer existed, in files three sessions were already writing to. Your
+    concern is not lost by staying in the report — the report is exactly
+    where the controller looks.
+
     ## Code Organization
 
     You reason best about code you can hold in context at once, and your edits are more

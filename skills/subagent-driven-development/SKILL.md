@@ -291,6 +291,15 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
+Routing concerns is yours alone, and every concern gets exactly one route.
+Ledger each one as you route it — `concern: <one line> → <fix now | review
+round | parked | follow-up session <id>>` — before you dispatch anything.
+Without that line you cannot tell, two rounds later, whether a finding the
+reviewer just raised is new or is a concern you already sent somewhere, and
+you will route it twice. **Before opening a fix round on any finding, check
+the ledger for a concern already covering it.** If one is parked or already
+routed, fold the finding into that route instead of starting a second one.
+
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
 **BLOCKED:** The implementer cannot complete the task. Assess the blocker:
@@ -304,6 +313,33 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 If the implementer asks questions — before starting or mid-task — answer
 clearly and completely, provide additional context if needed, and don't
 rush it into implementation.
+
+### 2b. Spawning follow-up sessions
+
+Only you spawn follow-ups, and only for work this plan will not do. A
+follow-up is a bet that a gap will still be open when someone picks it up —
+so make the bet checkable and make it cheap to fold.
+
+- **Ledger it first**, with the concern it came from, so a later review
+  round finds it before opening a second route to the same work.
+- **Write the premise into the dispatch, as something the session can
+  verify**: name the file, the symbol, and what makes the gap real
+  ("`flushQueue` at src/queue/worker.ts:180 still drops the retry count
+  on reconnect"). Not "fix the retry bug", which cannot be checked.
+- **Tell it to verify that premise before doing any work, and to stop and
+  report if the premise is already false.** A follow-up that finds its gap
+  closed has succeeded, not failed — it has told you the plan converged.
+- **Prefer a later task in this plan over a follow-up session.** A follow-up
+  is a second writer on the same tree with no ledger and no review gate.
+- **Never spawn one for something a review round could raise.** If your own
+  review would find it, let the review find it — that route already has a
+  fix loop and a re-review attached; a follow-up has neither.
+
+The failure this prevents is not hypothetical: an implementer's concern was
+spawned as a follow-up and raised as an Important review finding in the same
+round. The review fixed it in place while the follow-up session was still
+starting, and that session then spent its whole context discovering the work
+was done, in a checkout two other sessions were writing to.
 
 ### 3. Review the task
 
