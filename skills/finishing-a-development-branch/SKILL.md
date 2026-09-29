@@ -170,7 +170,11 @@ Step 2, from before that directory change.
 directory declared in your instructions:** Superpowers created this
 worktree — we own cleanup. (The declared directory is the same preference
 `using-git-worktrees` reads from your instructions file — it outranks the
-defaults there, so it outranks them here too.)
+defaults there, so it outranks them here too. Weaker signal than the
+defaults, though: a host may already keep their own worktrees in the
+declared directory. This applies to the worktree *this session* checked
+out — a pre-existing host worktree in the declared directory belongs to
+the host, not us.)
 
 ```bash
 git worktree remove "$WORKTREE_PATH"
@@ -226,4 +230,3 @@ place. If your platform provides a workspace-exit tool, use it.
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
-
