@@ -1,19 +1,18 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "u007-superpowers",
+  "description": "u007's fork of Superpowers, tuned for speed (installs in Claude Code and ocode)",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "u007",
+    "url": "https://github.com/u007"
   },
   "plugins": [
     {
       "name": "superpowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "description": "u007's fork of Superpowers: TDD, debugging, collaboration patterns and workflows, tuned for speed",
       "version": "6.4.2",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Jesse Vincent (upstream); fork by u007"
       }
     }
   ]

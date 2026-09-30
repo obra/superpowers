@@ -6,6 +6,7 @@ Superpowers is a complete software development methodology for your coding agent
 
 - [How it works](#how-it-works)
 - [Commercial Services](#commercial-services)
+- [Installing this fork](#installing-this-fork-u007superpowers)
 - [Getting Started](#installation)
   - [Claude Code](#claude-code)
   - [Antigravity](#antigravity)
@@ -48,6 +49,61 @@ There's a bunch more to it, but that's the core of the system. And because the s
 ## Commercial Services
 
 If you're using Superpowers in enterprise and could benefit from commercial support, additional tooling, or managed spending, please don't hesitate to drop us a line at sales@primeradiant.com.
+
+## Installing this fork (u007/superpowers)
+
+This is a fork of [obra/superpowers](https://github.com/obra/superpowers). The
+plugin keeps the name `superpowers`, so it is a drop-in replacement: its skills
+are still `superpowers:<skill>`. Install it **instead of** the upstream plugin,
+not alongside it.
+
+### ocode
+
+```text
+/plugin install github.com/u007/superpowers
+```
+
+ocode reads the Claude Code manifest (`.claude-plugin/plugin.json`) directly,
+loads the skills as `superpowers:*`, and runs the SessionStart hook that
+injects `using-superpowers`. A plugin installed in ocode wins over a Claude
+Code install with the same name, so this fork is used even if upstream
+superpowers is still installed in Claude Code. Turn it on or off with
+`/plugin enable superpowers` / `/plugin disable superpowers` (or the toggle in
+the web UI); that only changes ocode, never Claude Code. Update with
+`/plugin update superpowers`.
+
+### Claude Code
+
+Remove upstream superpowers first if you have it, so the two do not both
+register `superpowers:*` skills:
+
+```text
+/plugin uninstall superpowers@claude-plugins-official
+```
+
+(or `superpowers@superpowers-marketplace`, whichever you installed from). Then
+add this repo as a marketplace and install from it:
+
+```text
+/plugin marketplace add u007/superpowers
+/plugin install superpowers@u007-superpowers
+```
+
+Update later with `/plugin marketplace update u007-superpowers`. Anything
+Claude Code installs is also picked up by ocode automatically; install it in
+ocode as well only if you want ocode to track its own copy.
+
+### Local development
+
+Point either tool at a working copy to try changes before pushing:
+
+```text
+# ocode: copy the checkout into ocode's plugin dir
+/plugin install /path/to/superpowers
+
+# Claude Code: load it for one session
+claude --plugin-dir /path/to/superpowers
+```
 
 ## Installation
 
