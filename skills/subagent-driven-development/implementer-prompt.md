@@ -33,7 +33,9 @@ Subagent (general-purpose):
 
     Once you're clear on requirements:
     1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
+    2. Write tests at the task's risk: `Risk: high` (or unmarked) is
+       red-first TDD; `Risk: standard` writes each behavior's test alongside
+       the code and break-checks any it is unsure would fail
     3. Verify implementation works
     4. Commit your work
     5. Self-review (see below)
@@ -44,8 +46,10 @@ Subagent (general-purpose):
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    While iterating, run the focused test for what you're changing; before
+    committing, run the task's test command (the tests for the packages or
+    modules you touched). The project's full suite runs once, when the
+    branch is finished — not per task.
 
     ## You Do Not Dispatch Subagents
 

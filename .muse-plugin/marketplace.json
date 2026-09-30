@@ -9,7 +9,7 @@
     {
       "name": "superpowers",
       "description": "Core skills library for Muse: TDD, debugging, collaboration patterns, and proven techniques",
-      "version": "6.4.2",
+      "version": "6.4.2-u007.1",
       "source": "./",
       "author": {
         "name": "Jesse Vincent",

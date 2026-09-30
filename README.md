@@ -57,6 +57,29 @@ plugin keeps the name `superpowers`, so it is a drop-in replacement: its skills
 are still `superpowers:<skill>`. Install it **instead of** the upstream plugin,
 not alongside it.
 
+### What this fork changes
+
+Upstream applies its heaviest process to every change. This fork keeps it
+where it pays off, and scales it down everywhere else — one risk class per
+change (see `skills/using-superpowers`, "Right-Size the Process"):
+
+- **Trivial** (no behavior change): no brainstorming, plan or TDD cycle;
+  build and existing tests only.
+- **Standard** (bounded behavior change, none of the high-risk traits):
+  tests written alongside the code, with a quick break-check on any test
+  that might not fail without the change; a request that already pins the
+  design needs no separate design-approval round trip.
+- **High-risk** (bug fixes, edge-case logic, concurrency, persistence,
+  security, money, public APIs, untested refactors): unchanged — red-first
+  TDD, reproduce bugs first, per-task review.
+- **Architectural**: unchanged — brainstorming, spec, plan.
+
+Plans mark each task's risk and aim for fewer, larger tasks. Running the
+plan in the current session is the default; standard tasks skip the
+per-task review gate and are covered by the final whole-branch review.
+Tests run on the code you touched while iterating, and the full suite runs
+once, before "done".
+
 ### ocode
 
 ```text

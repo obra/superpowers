@@ -25,7 +25,8 @@ If you haven't run the verification command in this message, you cannot claim it
 BEFORE claiming any status or expressing satisfaction:
 
 1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
+2. RUN: Execute the command that proves THAT claim, fresh and complete
+   (see "Match the Command to the Claim")
 3. READ: Full output, check exit code, count failures
 4. VERIFY: Does output confirm the claim?
    - If NO: State actual status with evidence
@@ -34,6 +35,22 @@ BEFORE claiming any status or expressing satisfaction:
 
 Skip any step = lying, not verifying
 ```
+
+## Match the Command to the Claim
+
+Verification is scoped by what you are claiming, not by habit. A
+narrower claim needs a narrower command; the widest claim needs the
+widest command, run once.
+
+| Claim | Command |
+|-------|---------|
+| "This test passes" / "this step works" (mid-task) | That test, or the tests for the file/package you touched |
+| "Task N is complete" (in a plan) | The test command the task names |
+| "Done" / "ready for review" / "ready to merge" / committing the final change | The project's full suite + build + lint, once, as the last thing before the claim |
+
+Re-running the full suite after every edit is not extra safety — it is
+the slow loop this table replaces. Skipping the full run before a
+done/merge claim is the failure this skill exists to stop.
 
 ## Common Failures
 
@@ -68,7 +85,7 @@ Skip any step = lying, not verifying
 | "Linter passed" | Linter ≠ compiler |
 | "Agent said success" | Verify independently |
 | "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
+| "Partial check is enough" | For a mid-task claim about that part, yes. For "done", partial proves nothing |
 | "Different words so rule doesn't apply" | Spirit over letter |
 
 ## Key Patterns

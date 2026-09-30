@@ -42,7 +42,9 @@ product dependencies, or creating an external project, complete the
 selected path's prerequisites:
 
 - Spike: the human partner approves the question and probe.
-- Bounded: the human partner approves the short in-chat design.
+- Trivial: none — no behavior changes (see Trivial below).
+- Bounded: the human partner approves the short in-chat design, or their
+  request already specifies it (see Bounded below).
 - Architectural: the human partner reviews and approves the written spec,
   then reviews the written implementation plan and selects its execution
   method. Conversational design approval only permits writing the spec;
@@ -55,13 +57,17 @@ to skip the rest of the selected path. Read-only project exploration is
 allowed while those prerequisites remain incomplete.
 </HARD-GATE>
 
-## Three Paths
+## Four Paths
 
 Before your first question, classify the request and say the
 classification out loud — "this looks bounded, so I'll present a short
 design here rather than write a spec" — so your human partner can
 override it:
 
+- **Trivial** — no behavior change: copy, comments, docs, renames,
+  formatting, config values, dependency bumps. Say "this is trivial"
+  and do it; no design step. Anything that changes behavior is not
+  trivial.
 - **Spike** — a feasibility question ("can we...", "is it possible...",
   "quick and dirty is fine") whose output is an answer, not code you
   keep. Present the question and what you'll try in 2-3 sentences, get
@@ -78,6 +84,12 @@ override it:
   starts only after your human partner says yes to that design — a
   bounded task's approval is as hard a gate as an architectural
   one. No spec file, no implementation plan document.
+  **Pre-approved bounded:** when the request itself fixes what
+  changes, where, and how it should behave (it names the behavior,
+  not just the goal), and no real choice is left open, restate the
+  design in one or two sentences and proceed — the explicit request
+  is the approval. The moment a real choice appears (two reasonable
+  behaviors, an API shape, a data-model change), present it and stop.
 - **Architectural** — new projects, new subsystems, changes that
   restructure how components fit together or alter interfaces others
   depend on. Follow the full process: questions, approaches, sectioned
@@ -101,7 +113,8 @@ complete that path's reviews before implementation.
 |---------|---------|
 | "This is too simple to need a design" | Follow the selected path: a bounded change gets a short chat design; an architectural change gets the written spec and planning handoffs. |
 | "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
-| "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
+| "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Proceed without a reply only when the REQUEST pinned the design; "obvious to me" is not the same. |
+| "It's basically trivial" | Trivial means no behavior change. A one-line behavior change is bounded. |
 | "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
 | "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |

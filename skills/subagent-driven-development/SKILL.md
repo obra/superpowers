@@ -52,7 +52,7 @@ digraph when_to_use {
 
 **vs. Executing Plans (inline):**
 - Fresh subagent per task (no context pollution) instead of one context doing every task
-- Review after each task (spec compliance + code quality) instead of only at the end
+- Review after each high-risk task (spec compliance + code quality) instead of only at the end; standard tasks are reviewed once, in the final whole-branch review
 - Costs a fresh context per task and per review; inline costs one context plus one final reviewer
 - Both run in this session, share the same plan workspace and ledger, and never pause between tasks
 
@@ -68,6 +68,8 @@ digraph process {
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer implements, tests, commits, self-reviews" [shape=box];
+        "Task marked Risk: high (or unmarked)?" [shape=diamond];
+        "Record test evidence: ../executing-plans/scripts/task-done" [shape=box];
         "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
         "Spec ✅ and quality approved?" [shape=diamond];
         "Finding conflicts with plan text?" [shape=diamond];
@@ -95,7 +97,10 @@ digraph process {
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
     "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
+    "Implementer implements, tests, commits, self-reviews" -> "Task marked Risk: high (or unmarked)?";
+    "Task marked Risk: high (or unmarked)?" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [label="yes"];
+    "Task marked Risk: high (or unmarked)?" -> "Record test evidence: ../executing-plans/scripts/task-done" [label="no - standard"];
+    "Record test evidence: ../executing-plans/scripts/task-done" -> "More tasks remain?";
     "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
     "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
@@ -287,7 +292,13 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE, standard task:** no per-task review — the final whole-branch
+review covers it. Run `../executing-plans/scripts/task-done PLAN_FILE N BASE -- <test command>`
+with the test command the brief names; it re-runs the task's tests and,
+only if they pass, appends the completion line to the ledger. A failing
+run means the task is not done: resume the implementer with the output.
+
+**DONE, high-risk or unmarked task:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -307,9 +318,12 @@ rush it into implementation.
 
 ### 3. Review the task
 
-Per-task reviews are task-scoped gates. The broad review happens once, at the
-final whole-branch review. Never skip the task review, and never accept a
-report missing either verdict — spec compliance AND task quality are both
+Per-task reviews are task-scoped gates for **high-risk** tasks (the plan's
+`**Risk:** high`, or no risk marking at all — an unmarked plan predates
+risk marking and keeps a gate on every task). Standard tasks skip this
+gate; the broad review happens once, at the final whole-branch review,
+which is also the first review their code gets. Never skip a high-risk
+task's review, and never accept a report missing either verdict — spec compliance AND task quality are both
 required. Implementer self-review never replaces the task review; both are
 needed.
 
@@ -453,7 +467,9 @@ on the most capable available model (see Model Selection), using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
-fixed before merge.
+fixed before merge, and list the standard-risk tasks by number: this is
+their only review, so the reviewer checks their spec compliance as well as
+quality.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
@@ -496,7 +512,8 @@ Use superpowers:finishing-a-development-branch.
 | "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
 | "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
-| "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
+| "Reviews slow the loop down" | That is why standard tasks wait for the final review. A high-risk task without its review is unverified churn. |
+| "This high-risk task is really standard" | The plan's marking stands. Re-marking a task mid-run to skip its gate needs your human partner. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
 | "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
 

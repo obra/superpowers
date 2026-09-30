@@ -9,7 +9,7 @@
     {
       "name": "superpowers",
       "description": "u007's fork of Superpowers: TDD, debugging, collaboration patterns and workflows, tuned for speed",
-      "version": "6.4.2",
+      "version": "6.4.2-u007.1",
       "source": "./",
       "author": {
         "name": "Jesse Vincent (upstream); fork by u007"

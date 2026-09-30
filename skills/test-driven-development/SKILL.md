@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Use when implementing any feature or bugfix, before writing implementation code - red-first for high-risk code, tests alongside the code for standard changes
 ---
 
 # Test-Driven Development (TDD)
@@ -15,26 +15,51 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 ## When to Use
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+Every behavior change gets tests. How strictly they come first depends on
+the change's class (superpowers:using-superpowers, "Right-Size the
+Process"):
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+**High-risk — full red-green, the Iron Law applies:**
+- Bug fixes (reproduce the bug with a failing test before touching code)
+- Branching logic with edge cases: parsing, validation, calculations,
+  state machines
+- Concurrency, persistence and migrations, auth/security, money
+- Public API contracts other code depends on
+- Refactoring code that has no tests (write characterization tests first)
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+**Standard — tests alongside the code (see "Standard Changes" below):**
+- Wiring, glue, UI, a new flag or field, a small endpoint, plumbing an
+  existing value through — bounded changes with none of the traits above
 
-## The Iron Law
+**Trivial — no new test; run the existing ones:**
+- Copy, comments, docs, renames, formatting, config values, dependency
+  bumps, generated code, throwaway prototypes
+
+Unsure which class? Take the stricter one. Calling risky code "standard"
+to skip the red step is the rationalization this skill exists to stop.
+
+## Standard Changes
+
+Write the code and its tests in the same pass, then run the affected
+tests. What still holds:
+
+- Every new behavior has a test that asserts the behavior itself (a
+  value, a rendered state, a call made) — not merely that nothing threw.
+- A new test that passes on the first run proves little. For any test
+  whose assertion you are not sure would fail without your change,
+  break the change briefly (comment out the line, flip the condition),
+  watch the test fail, and restore it. That one check is cheaper than a
+  full red-first cycle and catches the same useless test.
+- Anything you discover mid-change that is high-risk (an edge case, a
+  bug) switches that part to the red-green cycle below.
+
+## The Iron Law (high-risk code)
 
 ```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+NO HIGH-RISK PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
-Write code before the test? Delete it. Start over.
+Wrote high-risk code before the test? Delete it. Start over.
 
 **No exceptions:**
 - Don't keep it as "reference"
@@ -175,16 +200,18 @@ npm test path/to/test.test.ts
 
 Confirm:
 - Test passes
-- Other tests still pass
+- The tests for the code you touched still pass (the file, package or
+  module — not the whole suite on every cycle)
 - Output pristine (no errors, warnings)
 
 **Test fails?** Fix code, not test.
 
 **Other tests fail?** Fix now.
 
-**"Other tests" means the project's suite, not just your file.** A
-green run of the test you wrote is not a green suite. Before you call
-the change done, run the project's test command (bare `pytest`,
+**Iterate on the affected tests; at the end, "other tests" means the
+project's suite, not just your file.** A green run of the test you wrote
+is not a green suite. Before you call the change done, run the project's
+full test command once (bare `pytest`,
 `npm test`, `cargo test` — whatever the repo uses) even when your task
 named only one test file. A scope statement in your task bounds the
 deliverable, not your verification. Any failure that run shows —
@@ -221,6 +248,11 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 
 ## Common Rationalizations
 
+These answer attempts to skip the red step on **high-risk** code. On a
+standard change, writing tests alongside the code is the rule, not a
+rationalization — but "too simple to test" never applies to any behavior
+change.
+
 | Excuse | Reality |
 |--------|---------|
 | "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
@@ -235,7 +267,7 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
-## Red Flags - STOP and Start Over
+## Red Flags - STOP and Start Over (high-risk code)
 
 - Code before test
 - Test after implementation
@@ -251,7 +283,9 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 - "TDD is dogmatic, I'm being pragmatic"
 - "This is different because..."
 
-**All of these mean: Delete code. Start over with TDD.**
+**For high-risk code, all of these mean: Delete code. Start over with TDD.**
+For a standard change, the fix is to add the missing behavioral test and
+check it can fail — see "Standard Changes".
 
 ## Example: Bug Fix
 
@@ -295,7 +329,8 @@ Extract validation for multiple fields if needed.
 Before marking work complete:
 
 - [ ] Every new function/method has a test
-- [ ] Watched each test fail before implementing
+- [ ] High-risk code: watched each test fail before implementing.
+      Standard change: each unsure test was seen to fail once (break-check)
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
 - [ ] All tests pass
@@ -303,7 +338,8 @@ Before marking work complete:
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered
 
-Can't check all boxes? You skipped TDD. Start over.
+Can't check all boxes? You skipped TDD. High-risk: start over. Standard:
+add what's missing.
 
 ## When Stuck
 
@@ -323,8 +359,10 @@ Never fix bugs without a test.
 ## Final Rule
 
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
+High-risk production code → test exists and failed first
+Standard change → behavioral test exists and can fail
+Otherwise → not done
 ```
 
-No exceptions without your human partner's permission.
+Downgrading a change to a lighter class once you have classified it needs
+your human partner's permission.

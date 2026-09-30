@@ -182,11 +182,20 @@ never in a call of its own.
 
 ### 2. Work the steps
 
-The plan's steps are already in RED-GREEN order; follow them in that
-order under superpowers:test-driven-development, loaded at setup. A test
-step's code is written first and run first. Watching it fail is a step,
-not a formality — a test that passes before the implementation exists is
-a finding about the test.
+Follow the steps in order under superpowers:test-driven-development,
+loaded at setup, at the task's `**Risk:**` marking:
+
+- **High-risk (or unmarked):** the steps are in RED-GREEN order. A test
+  step's code is written first and run first. Watching it fail is a step,
+  not a formality — a test that passes before the implementation exists
+  is a finding about the test.
+- **Standard:** write the change and its named tests together, then run
+  the task's tests. Break-check any test you are not sure would fail
+  without the change (TDD skill, "Standard Changes").
+
+While working a task, run the task's tests, not the whole suite; the
+full suite runs once, when finishing the branch
+(superpowers:finishing-a-development-branch).
 
 Every step that runs a command has an `Expected:` line. Run the command,
 read its output, and compare. Three outcomes:

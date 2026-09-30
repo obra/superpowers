@@ -23,6 +23,22 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
+## Right-Size the Process
+
+Check skills for every task, then scale the process to the change's risk —
+say the class out loud so your human partner can override it. The ratchet
+is one-way: when in doubt, or when a change grows, take the heavier class.
+
+| Class | What qualifies | Process |
+|-------|----------------|---------|
+| **Trivial** | No behavior change: copy/wording, comments, docs, renames, formatting, config values, dependency bumps, generated code | No brainstorming, no plan, no TDD cycle. Build/typecheck/lint, then the existing tests that cover the area. |
+| **Standard** | A bounded behavior change to existing code — wiring, UI, glue, a new flag or field, a small endpoint — with no high-risk trait below | Brainstorming's bounded path. Tests written alongside the code (superpowers:test-driven-development, "Standard changes"). Run only the affected tests while iterating. |
+| **High-risk** | Any bug fix; branching logic with edge cases (parsing, calculations, state machines); concurrency; persistence or migrations; auth/security; money; public API contracts; refactoring untested code | Full red-green TDD — a bug fix starts with superpowers:systematic-debugging and a failing reproduction. Per-task review when executing a plan. |
+| **Architectural** | New projects or subsystems, changes to how components fit together | Full brainstorming → spec → writing-plans. Each task in the plan is then Standard or High-risk. |
+
+Every class ends with superpowers:verification-before-completion: the full
+suite runs once before you claim the work is done, not after every edit.
+
 ## Skill Priority
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
@@ -44,7 +60,8 @@ These thoughts mean STOP—you're rationalizing:
 | "This doesn't need a formal skill" | If a skill exists, use it. |
 | "I remember this skill" | Skills evolve. Read current version. |
 | "This doesn't count as a task" | Action = task. Check for skills. |
-| "The skill is overkill" | Simple things become complex. Use it. |
+| "The skill is overkill" | Simple things become complex. Use it — at the size Right-Size the Process gives. |
+| "It's basically trivial" | Trivial means no behavior change. Anything that changes behavior is at least Standard. |
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
