@@ -51,9 +51,7 @@ main() {
     TEST_ROOT="$(mktemp -d)"
     trap cleanup EXIT
 
-    # Resolve repo to its physical path so string comparisons match the
-    # helper's output (git rev-parse --show-toplevel resolves symlinks; on
-    # macOS mktemp lives under /var -> /private/var).
+    # Resolve repo to the same path spelling as the helper's output.
     git init -q -b main "$TEST_ROOT/repo"
     local repo
     repo="$(cd "$TEST_ROOT/repo" && git rev-parse --show-toplevel)"

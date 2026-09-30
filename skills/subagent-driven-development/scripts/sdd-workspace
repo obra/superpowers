@@ -43,12 +43,21 @@ plan=$1
 # reports MSYS paths such as `/c/...`; mixing them breaks plan ownership
 # markers and gives callers paths that PowerShell cannot consume directly.
 absolute_dir() {
-  local path
-  if path=$(pwd -W 2>/dev/null); then
-    printf '%s\n' "$path"
-  else
-    pwd -P
-  fi
+  local path physical
+  physical=$(pwd -P)
+  case "${OSTYPE-}" in
+    msys*|cygwin*|win32*)
+      if command -v cygpath >/dev/null 2>&1; then
+        cygpath -w -m "$physical"
+        return
+      fi
+      if path=$(pwd -W 2>/dev/null); then
+        printf '%s\n' "$path"
+        return
+      fi
+      ;;
+  esac
+  printf '%s\n' "$physical"
 }
 
 slug=$(basename "$plan" .md)
