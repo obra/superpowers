@@ -205,6 +205,7 @@ is the whole process.
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+- Once you understand what they're describing, offer a prior-art search — don't just do it: "Is it ok if I search for prior art?" If they decline, move on. If they agree, look for existing tools, products, or features that match, then show them what you found: "Here are a dozen things that look like what you're describing — why are they wrong?" Follow up with "If this already existed, would you just use that one?" and "What's different than that prior thing?" Carry whatever makes their idea distinct into the design.
 
 **Exploring approaches:**
 
