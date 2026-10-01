@@ -49,8 +49,12 @@ check "no fix/re-review solely for Important under Approve" \
   has 'do not dispatch a fix or a re-review solely because' "$SKILL"
 check "Approved + Important routed as deferred/forward risk" \
   has 'reviewer-contract violation' "$SKILL"
+check "blocking rule is bound to a Needs-fixes verdict (not unconditional)" \
+  has 'under a \*\*Needs fixes\*\* verdict with open Critical/Important' "$SKILL"
 check "complete-task allows Approved with deferred items" \
-  has 'An Approved verdict with deferred minors or forward risks is complete' "$SKILL"
+  has 'deferred minors or forward risks is' "$SKILL"
+check "Approved-verdict C/I text points at reviewer-contract, not the loop" \
+  has 'not a reason to re-run' "$SKILL"
 check "polish-after-Approve path documented" \
   has 'Polish after Approve' "$SKILL"
 check "polish routes to the implementer, not the controller" \

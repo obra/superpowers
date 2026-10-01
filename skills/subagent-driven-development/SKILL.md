@@ -451,10 +451,12 @@ message as your other bookkeeping:
   tripped breaker
 
 Then mark the todo complete and move on. Never move to the next task while
-the review has open Critical/Important issues that are neither fixed nor
-parked-with-ruling at the cap.
-An Approved verdict with deferred minors or forward risks is complete:
-record them in the ledger and move on.
+the review is under a **Needs fixes** verdict with open Critical/Important
+issues that are neither fixed nor parked-with-ruling at the cap (or spec
+is ❌). Under an Approved verdict, open Critical/Important text is a
+reviewer-contract violation (see the fix loop), not a reason to re-run
+the loop — an Approved verdict with deferred minors or forward risks is
+complete: record them in the ledger and move on.
 
 **Polish after Approve.** A trivial amend (comment, naming, a log line)
 after an Approved verdict does not reopen the task review. Route it to
