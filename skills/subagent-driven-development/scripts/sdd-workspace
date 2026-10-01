@@ -42,16 +42,28 @@ slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
   || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
 
+# Resolve the repository that owns PLAN_FILE, not the caller's cwd: a
+# controller may legitimately invoke this script from a different git
+# worktree than the one holding the plan (each worktree of a repo has a
+# distinct toplevel, since they're separate working trees sharing one
+# object store), so the caller's cwd and the plan's own repo can disagree
+# (#2429). Fall back to the caller's cwd only when the plan itself is not
+# inside any git repository -- an out-of-repo plan's workspace has always
+# lived in the caller's own repo, and that contract is unchanged.
+#
 # Physical path, spelled the way pwd -P spells the plan path below: on Git
 # Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
 # repo-relative marker check needs both in the same form.
-root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
+plan_dir_raw=$(dirname "$plan")
+root=$(git -C "$plan_dir_raw" rev-parse --show-toplevel 2>/dev/null) \
+  || root=$(git rev-parse --show-toplevel)
+root=$(CDPATH='' cd -- "$root" && pwd -P)
 base="$root/.superpowers/sdd"
 
 # Normalize the plan path (physical directory, so relative/absolute/../
 # spellings of one plan compare equal) and express it as the marker value:
 # repo-relative when the plan lives under the repo root, absolute otherwise.
-plan_dir=$(CDPATH='' cd -- "$(dirname "$plan")" && pwd -P)
+plan_dir=$(CDPATH='' cd -- "$plan_dir_raw" && pwd -P)
 plan_abs="$plan_dir/$(basename "$plan")"
 case "$plan_abs" in
   "$root"/*) plan_id=${plan_abs#"$root"/} ;;
