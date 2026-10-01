@@ -212,6 +212,7 @@ is the whole process.
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
 - YAGNI ruthlessly - remove unnecessary features from every approach and design
+- Before cutting something, weigh it against the goals the user already stated for the request - if the cut removes the only way one of those goals gets met, ask about it instead of cutting it silently
 
 **Presenting the design:**
 
