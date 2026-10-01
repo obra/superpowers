@@ -225,6 +225,47 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- Cross-worktree invocation (#2429): called from the MAIN worktree
+    # with a PLAN_FILE that lives in the LINKED worktree, the workspace and
+    # the diff must belong to the plan's own worktree, not the caller's cwd.
+    # The two worktrees share one object database, so a SHA resolves
+    # identically from either -- only the *workspace location* exposes a
+    # cwd-vs-plan mismatch, exactly as in the real report.
+    printf 'z\n' > "$wt/tracked.txt"
+    ( cd "$wt" && git add tracked.txt && git "${git_id[@]}" commit -qm wt-change )
+    local wt_base wt_head
+    wt_base="$(cd "$wt" && git rev-parse HEAD~1)"
+    wt_head="$(cd "$wt" && git rev-parse HEAD)"
+
+    local cross_dir
+    cross_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" "$wt/plan-a.md")"
+    if [[ "$cross_dir" == "$wt_root/.superpowers/sdd/plan-a" ]]; then
+        pass "sdd-workspace resolves a cross-worktree PLAN_FILE to the plan's own worktree"
+    else
+        fail "sdd-workspace resolves a cross-worktree PLAN_FILE to the plan's own worktree"
+        echo "    got: $cross_dir"
+        echo "    want under: $wt_root"
+    fi
+
+    local cross_rp_out cross_rp_path
+    cross_rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" "$wt/plan-a.md" "$wt_base" "$wt_head")"
+    cross_rp_path="$(printf '%s\n' "$cross_rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    case "$cross_rp_path" in
+        "$wt_root/.superpowers/sdd/plan-a/review-"*.diff)
+            if grep -q 'tracked.txt' "$cross_rp_path" 2>/dev/null; then
+                pass "review-package resolves a cross-worktree PLAN_FILE to the plan's own worktree and diffs it"
+            else
+                fail "review-package resolves a cross-worktree PLAN_FILE to the plan's own worktree and diffs it"
+                echo "    diff path right but missing the worktree-local change: $cross_rp_path"
+            fi
+            ;;
+        *)
+            fail "review-package resolves a cross-worktree PLAN_FILE to the plan's own worktree and diffs it"
+            echo "    got: $cross_rp_path"
+            echo "    want under: $wt_root"
+            ;;
+    esac
+
     # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
     local stripped="$TEST_ROOT/stripped-scripts"
     mkdir -p "$stripped"
