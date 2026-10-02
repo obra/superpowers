@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Begin one task of an inline plan execution in a single call: extract the
+# task's brief (via subagent-driven-development's task-brief, so both skills
+# share one workspace) and record BASE, the commit the task's review range is
+# cut from. One tool call instead of two, because every call in an inline
+# session is a turn that re-reads the whole context.
+#
+# Usage: task-start PLAN_FILE TASK_NUMBER
+# Prints:
+#   brief: <path to the task's brief file>
+#   base:  <full SHA of HEAD>
+set -euo pipefail
+
+if [ $# -ne 2 ]; then
+  echo "usage: task-start PLAN_FILE TASK_NUMBER" >&2
+  exit 2
+fi
+
+plan=$1
+n=$2
+sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
+
+out=$("$sdd/task-brief" "$plan" "$n")
+brief=$(printf '%s\n' "$out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')
+[ -n "$brief" ] || { echo "task-brief did not report a path: $out" >&2; exit 1; }
+
+echo "brief: $brief"
+echo "base: $(git rev-parse HEAD)"

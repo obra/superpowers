@@ -9,11 +9,12 @@ def mock_ctx():
     ctx = MagicMock()
     ctx._hooks = {}
     ctx._skills = {}
+    ctx._descriptions = {}
 
     def register_hook(event, fn):
         ctx._hooks[event] = fn
 
-    def register_skill(name, path):
+    def register_skill(name, path, description="", frontmatter=None):
         # Mimic hermes' real register_skill, which calls path.exists() and
         # therefore breaks on a str (the bug that silently disabled the whole
         # plugin, found 2026-07-23). Keeping that fidelity here means a
@@ -24,6 +25,7 @@ def mock_ctx():
                 f"register_skill requires a pathlib.Path, got {type(path).__name__}"
             )
         ctx._skills[name] = path
+        ctx._descriptions[name] = description
 
     ctx.register_hook.side_effect = register_hook
     ctx.register_skill.side_effect = register_skill

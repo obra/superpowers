@@ -1,7 +1,7 @@
 ---
 name: IDE / Platform Support Request
 about: Request support for a new IDE, editor, or AI coding tool
-labels: platform-support
+labels: new-harness
 ---
 
 <!--
