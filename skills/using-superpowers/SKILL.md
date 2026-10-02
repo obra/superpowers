@@ -57,6 +57,7 @@ If your harness appears here, read its reference file for special instructions:
 - Codex: `references/codex-tools.md`
 - Pi: `references/pi-tools.md`
 - Antigravity: `references/antigravity-tools.md`
+- Bob IDE: see `references/bob-tools.md`
 - Hermes Agent: `references/hermes-tools.md`
 - Muse: `references/muse-tools.md`
 
