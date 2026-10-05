@@ -25,12 +25,11 @@ why?
 
 ## Your First Message
 
-Your first message is three things, in this order:
+Your first message is two things, in this order:
 
-1. One sentence saying back what you heard, in their words.
-2. One line letting them know that if they'd rather skip the questions and
+1. One line letting them know that if they'd rather skip the questions and
    have you just start, they can say so.
-3. One open question that gets them describing. Ask about a real moment
+2. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
    this existed?" or "Tell me about the people who'll be in the room."
 
@@ -70,8 +69,9 @@ offer to go look: their codebase or project, their own files and data,
 or the web. Say what you'd look for. They decide whether you go.
 
 **Think wide privately.** Before you propose anything, come up with
-several ideas and drop the weak ones. Show the comparison only when it
-helps them decide.
+several ideas and drop the weak ones, including any that fight what
+they've told you about why. Show the comparison only when it helps them
+decide.
 
 **Show, don't tell.** As things get concrete, use the visual companion
 (below) for diagrams, mockups, and throwaway prototypes.
@@ -119,7 +119,8 @@ could plan from without going back to your human partner. Cover:
 Otherwise, ask. Your human partner's preferences override both.
 
 **Builder check:** dispatch a fresh subagent with
-`builder-check-prompt.md` in this directory. Answer the questions it
+`builder-check-prompt.md` in this directory and wait for its answer
+before you reply to your human partner. Answer the questions it
 returns that you can answer from the conversation or the project, and
 drop the ones about details left to the builder. Bring the rest to your
 human partner, update the document, and check again. Without a subagent
