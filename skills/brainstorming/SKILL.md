@@ -28,7 +28,8 @@ why?
 Your first message is two things, in this order:
 
 1. One line letting them know that if they'd rather skip the questions and
-   have you just start, they can say so.
+   have you just start, they can say so. If they take you up on it, this
+   skill is done: do what they asked through the normal workflow.
 2. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
    this existed?" or "Tell me about the people who'll be in the room."
@@ -37,7 +38,8 @@ That's the whole message.
 
 ## The Conversation
 
-Ask one question per message. Use plain language, pitched just a little
+Each message ends with one question: a single sentence with no list of
+example answers hanging off it. Use plain language, pitched just a little
 above where your human partner is. Match their vocabulary; never use
 process jargon.
 
@@ -89,12 +91,14 @@ conversation.
 ## Play It Back
 
 When you think you understand, describe your understanding back in
-chunks of about 200-300 words. After each chunk, ask what's wrong or
-missing. Keep going until they say it's right.
+chunks of about 200-300 words. Mark anything you're guessing as your
+guess; only what they said goes in as theirs. After each chunk, ask
+what's wrong or missing. Keep going until they say it's right.
 
-When a chunk describes something they'll look at, show it alongside the
-words: offer the visual companion if you haven't yet, and put a mockup
-next to the description.
+When a chunk describes something they'll look at, show it. If they
+haven't seen the visual companion offer yet, make it first (as its own
+message, below). Once they've accepted, put a mockup next to the
+description.
 
 ## Size the Work
 
@@ -141,10 +145,14 @@ partner to read the document.
 <HARD-GATE>
 Nothing gets built until your human partner approves the full
 description: in chat for a small change, the document for a project.
+Building includes writing product code, scaffolding, installing
+dependencies, creating projects, and invoking an implementation skill.
+Reading and exploring are fine.
 
-The one exception is a spike they said yes to. It stays labeled
-throwaway. Keeping what it produced is a new request and comes back
-through this gate.
+Two exceptions. If they opted out of the questions, the skill is done
+and the gate goes with it. A spike they said yes to may be built; it
+stays labeled throwaway, and keeping what it produced is a new request
+that comes back through this gate.
 
 After a project's document is approved, the next step is the plan. For
 software, invoke superpowers:writing-plans and no other skill.

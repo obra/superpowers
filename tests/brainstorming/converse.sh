@@ -30,7 +30,9 @@ Writes OUT_DIR/ARM/SCENARIO/:
   tools.jsonl     every tool call the subject made, in order
   files.txt       files in the work dir at the end (and its git log)
   workdir         path of the work dir, left in place for inspection
-Prints one summary line when done. Read the transcript yourself.
+Prints one summary line when done, with ended= one of: human (the
+simulated human ended it), cap (hit MAX_TURNS), converse-failed,
+wait-timeout, human-failed. Read the transcript yourself.
 
 Requires: tmux, and claude-session-driver at CSD (default
 ~/git/claude-session-driver/skills/driving-claude-code-sessions/scripts/csd)
@@ -86,16 +88,18 @@ TRANSCRIPT="$DEST/transcript.md"
 EVENTS=$("$SHIM" events-file)
 msg=$(cat "$SDIR/opening.txt")
 : > "$TRANSCRIPT"
-turns=0 ended=no
+turns=0 ended=cap
 while [ "$turns" -lt "$MAX_TURNS" ]; do
   if [ "$msg" = "<<WAIT>>" ]; then
     # The subject resumes on its own when its background work finishes.
     "$SHIM" wait-for-turn 900 --after-line "$seen" > /dev/null \
-      || { echo "$ARM $SCENARIO: no follow-up turn after <<WAIT>> at turn $turns" >&2; break; }
-    reply=$("$SHIM" read-turn)
+      || { echo "$ARM $SCENARIO: no follow-up turn after <<WAIT>> at turn $turns" >&2; ended=wait-timeout; break; }
+    # read-turn includes the raw task notification (the subagent's full
+    # output); the human only sees what the subject said.
+    reply=$("$SHIM" read-turn | awk '/^\*\*Prompt:\*\*/{skip=1} skip && /<\/task-notification>/{skip=0; next} !skip')
   else
     printf '## HUMAN\n\n%s\n\n' "$msg" >> "$TRANSCRIPT"
-    reply=$("$SHIM" converse "$msg" 900) || { echo "$ARM $SCENARIO: subject converse failed at turn $turns" >&2; break; }
+    reply=$("$SHIM" converse "$msg" 900) || { echo "$ARM $SCENARIO: subject converse failed at turn $turns" >&2; ended=converse-failed; break; }
   fi
   seen=$(wc -l < "$EVENTS" | tr -d ' ')
   turns=$((turns + 1))
@@ -105,9 +109,9 @@ while [ "$turns" -lt "$MAX_TURNS" ]; do
         --append-system-prompt "$HUMAN_RULES$(cat "$SDIR/persona.md")" \
         "Here is the conversation so far. Write your next message.
 
-$(cat "$TRANSCRIPT")" < /dev/null)
+$(cat "$TRANSCRIPT")" < /dev/null) || { echo "$ARM $SCENARIO: simulated human failed at turn $turns" >&2; ended=human-failed; break; }
   msg=$(printf '%s' "$msg" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  if [ "$msg" = "<<END>>" ]; then ended=yes; break; fi
+  if [ "$msg" = "<<END>>" ]; then ended=human; break; fi
 done
 
 { (cd "$WORK" && find . -path ./.git -prune -o -type f -print | sort); echo "--- git log"; (cd "$WORK" && git log --oneline 2>/dev/null || true); } > "$DEST/files.txt"
