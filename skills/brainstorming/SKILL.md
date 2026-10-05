@@ -112,6 +112,12 @@ complete that path's reviews before implementation.
 Classify first, announce the path, then create a task for each item on
 your path and complete them in order.
 
+Those path todos are the only todos that exist while brainstorming
+runs. Do not create implementation todos ("write env.py", "add
+tests") until the path's prerequisites are approved. An
+implementation todo list appearing before approval means the
+HARD-GATE was skipped.
+
 **Spike:**
 1. **Explore project context** — enough to frame the probe
 2. **Present question + probe plan** — 2-3 sentences

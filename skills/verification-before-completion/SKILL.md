@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs, and at the END of any run whose last action was a commit, build, deploy, or test - requires running verification commands and confirming output before making any success claims, and never ending a run without a closing report; evidence before assertions always
 ---
 
 # Verification Before Completion
@@ -112,6 +112,30 @@ Skip any step = lying, not verifying
 - Committing, PR creation, task completion
 - Moving to next task
 - Delegating to agents
+- Ending a run whose last action was a commit, build, deploy, or test
+
+## Closing Report — never end a run silent
+
+A run whose last tool call was a commit, build, deploy, or test is
+not finished until you have said what happened. Silence reads as a
+hang, and your human partner will ask "so how did it go?" — which
+wastes their turn and yours.
+
+Before you stop, send one message containing:
+
+1. **What ran** — the verification command, and its real output
+   (pass/fail counts, exit code).
+2. **What changed** — files touched, decisions made.
+3. **What is left** — anything you did not verify, named explicitly.
+
+If the run failed, say so first and paste the error. If a claim is
+unverified, label it unverified rather than omitting it.
+
+```
+✅ [npm test] [82 passed] "Committed as abc1234. 82 tests pass.
+                    Unverified: Windows build."
+❌ [git commit] ...silence... "so how did it go?" "you there?"
+```
 
 **Rule applies to:**
 - Exact phrases
