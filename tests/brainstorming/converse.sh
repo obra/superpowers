@@ -34,7 +34,8 @@ Prints one summary line when done. Read the transcript yourself.
 
 Requires: tmux, and claude-session-driver at CSD (default
 ~/git/claude-session-driver/skills/driving-claude-code-sessions/scripts/csd)
-with consent granted (`csd grant-consent`).
+with consent granted (`csd grant-consent`), at a version that accepts
+Claude's folder-trust dialog when it defaults to "No, exit".
 EOF
 }
 
@@ -62,7 +63,10 @@ echo "$WORK" > "$DEST/workdir"
 (cd "$WORK" && git init -q && { [ ! -f "$SDIR/setup.sh" ] || bash "$SDIR/setup.sh"; })
 
 NAME="bs-$ARM-$SCENARIO-$$"
-SHIM=$("$CSD" launch "$NAME" "$WORK" -- --setting-sources project --strict-mcp-config --plugin-dir "$PLUGIN" 2> "$DEST/launch.log")
+if ! SHIM=$("$CSD" launch "$NAME" "$WORK" -- --setting-sources project --strict-mcp-config --plugin-dir "$PLUGIN" 2> "$DEST/launch.log"); then
+  echo "error: worker launch failed; see $DEST/launch.log" >&2
+  exit 1
+fi
 trap '"$SHIM" read-events --type pre_tool_use > "$DEST/tools.jsonl" 2>/dev/null || true; "$SHIM" stop >/dev/null 2>&1 || true' EXIT
 
 HUMAN_RULES='You are playing the human in a conversation with an AI assistant. Stay in character as described below. Reply with ONLY your next message to the assistant: no stage directions, no quotes, no commentary.

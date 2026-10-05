@@ -1,1 +1,0 @@
-Add a --quiet flag to the sync tool.
