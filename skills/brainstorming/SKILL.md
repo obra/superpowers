@@ -103,6 +103,9 @@ words. They can override it.
 
 If it grows mid-task, stop, say so, and step up a size.
 
+If this is really several independent projects, say so, agree on an
+order, and brainstorm them one at a time.
+
 ## The Written Design
 
 For a project, write a plain document a talented builder in the domain
