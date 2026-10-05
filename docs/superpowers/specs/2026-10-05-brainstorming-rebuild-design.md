@@ -140,7 +140,11 @@ human doesn't want to go through this process, they can just say so.
   the human: it answers what it can from context and drops questions about
   delegated details. Without a subagent tool, it runs the check itself.
 - A short hard gate stays: nothing gets built until the human approves the
-  full description.
+  full description. One exception: a spike the human said yes to. It stays
+  labeled throwaway. Keeping what it produced is a new request and goes
+  through the gate.
+- The builder check runs only on the written document. Small changes stay
+  in chat.
 - The trigger description keeps the strong "use before any creative work"
   wording. The opening check keeps trivial asks cheap.
 - The todo-list example from the old skill goes. The evals that encode the
