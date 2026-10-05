@@ -119,8 +119,8 @@ could plan from without going back to your human partner. Cover:
 Otherwise, ask. Your human partner's preferences override both.
 
 **Builder check:** dispatch a fresh subagent with
-`builder-check-prompt.md` in this directory and wait for its answer
-before you reply to your human partner. Answer the questions it
+`builder-check-prompt.md` in this directory. Don't hand the document to
+your human partner until the check is back. Answer the questions it
 returns that you can answer from the conversation or the project, and
 drop the ones about details left to the builder. Bring the rest to your
 human partner, update the document, and check again. Without a subagent

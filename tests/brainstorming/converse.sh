@@ -71,6 +71,8 @@ trap '"$SHIM" read-events --type pre_tool_use > "$DEST/tools.jsonl" 2>/dev/null 
 
 HUMAN_RULES='You are playing the human in a conversation with an AI assistant. Stay in character as described below. Reply with ONLY your next message to the assistant: no stage directions, no quotes, no commentary.
 
+Output exactly <<WAIT>> instead of a message when the assistant has said it is waiting on something still running (a reviewer, a background task) and you have nothing to add.
+
 Output exactly <<END>> instead of a message when any of these is true:
 - the assistant has finished what you asked for;
 - you have approved a description or design and the assistant has moved on to planning or building;
@@ -79,12 +81,21 @@ Output exactly <<END>> instead of a message when any of these is true:
 Your character:
 '
 TRANSCRIPT="$DEST/transcript.md"
+EVENTS=$("$SHIM" events-file)
 msg=$(cat "$SDIR/opening.txt")
 : > "$TRANSCRIPT"
 turns=0 ended=no
 while [ "$turns" -lt "$MAX_TURNS" ]; do
-  printf '## HUMAN\n\n%s\n\n' "$msg" >> "$TRANSCRIPT"
-  reply=$("$SHIM" converse "$msg" 900) || { echo "$ARM $SCENARIO: subject converse failed at turn $turns" >&2; break; }
+  if [ "$msg" = "<<WAIT>>" ]; then
+    # The subject resumes on its own when its background work finishes.
+    "$SHIM" wait-for-turn 900 --after-line "$seen" > /dev/null \
+      || { echo "$ARM $SCENARIO: no follow-up turn after <<WAIT>> at turn $turns" >&2; break; }
+    reply=$("$SHIM" read-turn)
+  else
+    printf '## HUMAN\n\n%s\n\n' "$msg" >> "$TRANSCRIPT"
+    reply=$("$SHIM" converse "$msg" 900) || { echo "$ARM $SCENARIO: subject converse failed at turn $turns" >&2; break; }
+  fi
+  seen=$(wc -l < "$EVENTS" | tr -d ' ')
   turns=$((turns + 1))
   printf '## AGENT\n\n%s\n\n' "$reply" >> "$TRANSCRIPT"
   msg=$(cd "$WORK" && claude -p --setting-sources project --disable-slash-commands --strict-mcp-config \
@@ -92,9 +103,10 @@ while [ "$turns" -lt "$MAX_TURNS" ]; do
         --append-system-prompt "$HUMAN_RULES$(cat "$SDIR/persona.md")" \
         "Here is the conversation so far. Write your next message.
 
-$(cat "$TRANSCRIPT")")
-  if [ "$(printf '%s' "$msg" | tr -d '[:space:]')" = "<<END>>" ]; then ended=yes; break; fi
+$(cat "$TRANSCRIPT")" < /dev/null)
+  msg=$(printf '%s' "$msg" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  if [ "$msg" = "<<END>>" ]; then ended=yes; break; fi
 done
 
-{ (cd "$WORK" && find . -path ./.git -prune -o -type f -print | sort); echo "--- git log"; (cd "$WORK" && git log --oneline 2>/dev/null); } > "$DEST/files.txt"
+{ (cd "$WORK" && find . -path ./.git -prune -o -type f -print | sort); echo "--- git log"; (cd "$WORK" && git log --oneline 2>/dev/null || true); } > "$DEST/files.txt"
 echo "$ARM $SCENARIO turns=$turns ended=$ended -> $DEST"
