@@ -73,8 +73,10 @@ several ideas and drop the weak ones, including any that fight what
 they've told you about why. Show the comparison only when it helps them
 decide.
 
-**Show, don't tell.** As things get concrete, use the visual companion
-(below) for diagrams, mockups, and throwaway prototypes.
+**Show, don't tell.** When the conversation turns to how something looks
+or is laid out (a screen, a page, a layout, a flow, a diagram, a room),
+that's the moment for the visual companion (below): mockups to react to,
+side-by-side options, throwaway prototypes they can click.
 
 **Spike to feel things out.** Agentic work is waterfall, but very, very
 fast. A quick throwaway build is often the cheapest way to learn what
@@ -89,6 +91,10 @@ conversation.
 When you think you understand, describe your understanding back in
 chunks of about 200-300 words. After each chunk, ask what's wrong or
 missing. Keep going until they say it's right.
+
+When a chunk describes something they'll look at, show it alongside the
+words: offer the visual companion if you haven't yet, and put a mockup
+next to the description.
 
 ## Size the Work
 
@@ -160,8 +166,8 @@ A browser tab for showing mockups, diagrams, and prototypes. It's a
 tool, not a mode: accepting it doesn't send every question to the
 browser.
 
-**Offer it just-in-time.** Offer the first time a question would be
-clearer shown than told, never upfront. The offer is its own message
+**Offer it just-in-time.** Offer it the first time the conversation
+turns to how something looks or is laid out, never upfront. The offer is its own message
 with nothing else in it:
 
 > "This next part might be easier if I show you — I can put together mockups, diagrams, and comparisons in a browser tab as we go. It's still new and can be token-intensive. Want me to? I'll open it for you."

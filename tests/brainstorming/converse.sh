@@ -71,6 +71,8 @@ trap '"$SHIM" read-events --type pre_tool_use > "$DEST/tools.jsonl" 2>/dev/null 
 
 HUMAN_RULES='You are playing the human in a conversation with an AI assistant. Stay in character as described below. Reply with ONLY your next message to the assistant: no stage directions, no quotes, no commentary.
 
+If the assistant offers to show you something in a browser, decline politely ("no thanks, text is fine") and carry on.
+
 Output exactly <<WAIT>> instead of a message when the assistant has said it is waiting on something still running (a reviewer, a background task) and you have nothing to add.
 
 Output exactly <<END>> instead of a message when any of these is true:
