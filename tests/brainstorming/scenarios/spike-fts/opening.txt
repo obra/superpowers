@@ -1,1 +1,0 @@
-Quick spike: can plain Python sqlite3 do full-text search fast enough over ~100k short notes? Just want to know if it's worth pursuing. Throwaway is fine.

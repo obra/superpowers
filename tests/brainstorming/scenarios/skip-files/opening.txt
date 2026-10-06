@@ -1,1 +1,0 @@
-Add a way to skip some files in the sync tool.
