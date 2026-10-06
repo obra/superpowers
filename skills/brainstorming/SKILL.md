@@ -78,10 +78,17 @@ several ideas and drop the weak ones, including any that fight what
 they've told you about why. Show the comparison only when it helps them
 decide.
 
-**Show, don't tell.** When the conversation turns to how something looks
-or is laid out (a screen, a page, a layout, a flow, a diagram, a room),
-that's the moment for the visual companion (below): mockups to react to,
-side-by-side options, throwaway prototypes they can click.
+**Show, don't tell.** Offer the visual companion (below) whenever seeing
+would help more than reading:
+
+- something they'll look at: a screen, a page, a printout, a sign
+- a layout or arrangement: of a screen, a room, a schedule
+- a flow or a sequence of steps
+- options that would look different from each other
+- a structure that's easier to see than read: a diagram, a timeline, a map
+
+Once they've accepted, use it for mockups to react to, side-by-side
+options, and throwaway prototypes they can click.
 
 **Spike to feel things out.** Agentic work is waterfall, but very, very
 fast. A quick throwaway build is often the cheapest way to learn what
@@ -102,10 +109,11 @@ the whole conversation; the last chunk covers whatever is left.
 Mark anything you're guessing as your guess; only what they said goes in
 as theirs. End each chunk by asking what's wrong or missing.
 
-When a chunk describes something they'll look at, show it. If they
-haven't seen the visual companion offer yet, make it first (as its own
-message, below). Once they've accepted, put a mockup next to the
-description.
+Before you send a chunk, check it: does it describe something they'll
+look at, like a page, a screen, a schedule, or a printout? If so, and
+they haven't seen the visual companion offer yet, send the offer instead
+(its own message, below) and hold the chunk for the next message. Once
+they've accepted, put a mockup next to the description.
 
 ## Size the Work
 
@@ -189,11 +197,11 @@ A browser tab for showing mockups, diagrams, and prototypes. It's a
 tool, not a mode: accepting it doesn't send every question to the
 browser.
 
-**Offer it just-in-time.** Offer it the first time the conversation
-turns to how something looks or is laid out, never upfront. The offer is its own message
-with nothing else in it:
+**Offer it just-in-time.** Offer it the first time one of the moments
+above comes up, never upfront. The offer is its own message with nothing
+else in it:
 
-> "This next part might be easier if I show you — I can put together mockups, diagrams, and comparisons in a browser tab as we go. It's still new and can be token-intensive. Want me to? I'll open it for you."
+> "This might be easier if I show you. Want me to open a browser tab with some mockups?"
 
 If they decline, stay in text and don't offer again unless they raise it.
 
