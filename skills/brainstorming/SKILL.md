@@ -43,8 +43,7 @@ example answers hanging off it. Use plain language, pitched just a little
 above where your human partner is. Match their vocabulary; never use
 process jargon.
 
-You write well. Be clear and concise. Lead with what matters. Avoid
-jargon.
+Be clear and concise. Lead with what matters. Avoid jargon.
 
 **Get them describing.** Open questions come first. Their own words carry
 intent that your options can't. Offer a short menu only when they're
