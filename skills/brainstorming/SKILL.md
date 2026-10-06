@@ -90,10 +90,14 @@ conversation.
 
 ## Play It Back
 
-When you think you understand, describe your understanding back in
-chunks of about 200-300 words. Mark anything you're guessing as your
-guess; only what they said goes in as theirs. After each chunk, ask
-what's wrong or missing. Keep going until they say it's right.
+Play back as you go. As soon as you understand one part well enough to
+describe it (what it's for and who it serves, say, or how one piece
+behaves), describe that part back in about 200-300 words, then return to
+questions about the next part. Playback and questions alternate through
+the whole conversation; the last chunk covers whatever is left.
+
+Mark anything you're guessing as your guess; only what they said goes in
+as theirs. End each chunk by asking what's wrong or missing.
 
 When a chunk describes something they'll look at, show it. If they
 haven't seen the visual companion offer yet, make it first (as its own
