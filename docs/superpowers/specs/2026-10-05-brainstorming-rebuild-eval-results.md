@@ -145,10 +145,57 @@ documents were often more concrete on mechanics.
 - The visual companion offer's "token-intensive" line confused non-technical
   users. That text is checked by the companion eval; left as is.
 
+## 4. After the blind test
+
+**Visual companion** (converse.sh). The offer now names the moments that call
+for it and drops the "token-intensive" line.
+
+| Scenario | Before | After |
+|---|---|---|
+| Habit tracker | about 1 in 2 | 3/3 |
+| Pottery booking | 0/3 | 3/3 |
+| Sync-tool flag, talk outline (nothing visual) | 0 | 0/4 |
+
+After the change, offers came at turns 3–7 and never upfront.
+
+**Writing style** (first-turn.sh, `prompts/style-*.txt`: a research
+report, an insurance question, and a security question; 5 reps each). Lines
+tested:
+- "Be clear and concise. Lead with the most important information. Avoid
+  jargon."
+- "Be clear and concise. Lead with what matters. Avoid jargon." (adopted)
+- that line plus "making sure your human partner reads and understands"
+- "You write well…"
+- "Channel your inner journalist"
+- "Channel your inner Hemingway"
+- "Write the way Walt Mossberg…"
+- "a seasoned wire-service reporter"
+- "a BA in Journalism from Wesleyan"
+- a five-point recipe
+- "fewest words that fully answer this person"
+
+Results on Opus:
+- Every variant, including no line, already led with the point.
+- No plain line moved length beyond noise.
+- Journalist identities added source attributions: 17–27 per 5 research
+  replies against 16 for the control, and 0–7 for plain lines.
+
+Five of the lines were also run on Sonnet, gpt-6-luna and gpt-6-astra (Codex
+CLI 0.157.1). No style line moved any model beyond noise. The model mattered
+far more than the wording:
+
+| Model | Research report, mean words |
+|---|---|
+| Opus | 350–400 |
+| Sonnet | 325–350 |
+| gpt-6-luna | 170–185 |
+| gpt-6-astra | 180–190 |
+
+gpt-6-astra cited heavily under every variant, including one link more
+specific than its notes.
+
 ## Known gaps
 
-- The visual companion is offered in about half of the runs where a screen is
-  being designed (it was offered in none before the change).
 - Offering a spike mid-conversation is untested. The spike scenario asks for
   a spike outright, so the skill doesn't load.
 - Not run on quorum or under any harness other than Claude Code.

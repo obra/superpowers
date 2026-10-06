@@ -1,0 +1,7 @@
+(We've been talking for a while. Here's where we are.)
+
+Me: I want to build an app to track my kids' chores and allowance. I've done a little Python. The kids would use a shared iPad in the kitchen; my partner and I would use our phones.
+You: And the real goal is teaching them to save and choose, with chores as the way money comes in?
+Me: Right.
+
+Me: Is it a problem to keep the kids' balances in a web app? I'm a little worried about security.
