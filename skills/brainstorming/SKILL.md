@@ -136,15 +136,23 @@ could plan from without going back to your human partner. Cover:
 Otherwise, ask. Your human partner's preferences override both.
 
 **Builder check:** dispatch a fresh subagent with
-`builder-check-prompt.md` in this directory. Don't hand the document to
-your human partner until the check is back. Answer the questions it
-returns that you can answer from the conversation or the project, and
-drop the ones about details left to the builder. Bring the rest to your
-human partner, update the document, and check again. Without a subagent
-tool, read the document as that builder yourself.
+`builder-check-prompt.md` in this directory. When you tell your human
+partner you're writing it up, say a reviewer will read it first and you
+may come back once with a few questions. Don't hand over the document
+until the check is back. Sort what the builder asks into three piles:
 
-When the builder has nothing important left to ask, ask your human
-partner to read the document.
+- **Answered already** by the conversation or the project: put the answer
+  in the document.
+- **Minor:** a sensible builder could settle it without changing what gets
+  built. Settle it yourself and mark it in the document as your call.
+- **Theirs:** only your human partner can answer it, and the answer changes
+  what gets built.
+
+Bring the "theirs" pile in one message, most important first. Update the
+document with their answers, then hand it over with a short list of the
+calls you made so they can check those while reading. That's the only
+round of questions the check produces. Without a subagent tool, read the
+document as that builder yourself.
 
 <HARD-GATE>
 Nothing gets built until your human partner approves the full
