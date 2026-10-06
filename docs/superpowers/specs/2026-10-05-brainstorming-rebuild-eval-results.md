@@ -194,6 +194,14 @@ far more than the wording:
 gpt-6-astra cited heavily under every variant, including one link more
 specific than its notes.
 
+**Reporting research.** Tested by sampling on the research prompt with all
+four models: "When you report what you found, give them the most important
+findings and offer the rest." (adopted). Replies offering the rest went from
+1/5 to 4/5 on Opus and to 3/5 on Sonnet. Opus reports went from 353 to 327
+words. Claude still treated nearly every finding as most important; the
+umbrella policy and the nonprofit libraries appeared in 5/5 replies either
+way. gpt-6-luna and gpt-6-astra didn't change.
+
 ## Known gaps
 
 - Offering a spike mid-conversation is untested. The spike scenario asks for
