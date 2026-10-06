@@ -1,0 +1,1 @@
+I want to build a platform for my pottery studio: class booking, a member portal, an online shop for finished pieces, and an email newsletter.
