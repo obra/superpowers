@@ -66,10 +66,33 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## 5. Don't commit with user consent
+## 5. Specs and Plans Record Decisions, Not Discussion
+
+**Challenge wrong input. Write only what we agreed.**
+
+When you create or update a spec or plan:
+- If my feedback is wrong or rests on a false premise, say so immediately. Do not comply silently.
+- Never write your correction into the document first. Raise it, brainstorm it with me, and wait for my decision.
+- Treat our discussion and decisions as final. Record only the decision.
+- Do not include initial ideas, rejected options, or "we first considered X, then refined to Y".
+
+The document states what we decided - not how we got there.
+
+### Context before IDs (speckit and other spec docs)
+
+Applies to `spec.md`, `plan.md`, `tasks.md`, `research.md`, `data-model.md`, checklists, and other docs under `specs/` or `sdd/`.
+
+- Never use a bare ID as the subject of a sentence or as a table label. This includes speckit IDs (`FR-001`, `SC-002`, `US1`, `T014`) and doc-local IDs (transition `T3`, state `S3`, invariant `I1`, principle `P6`, delta `D9`, decision `AD-13`).
+- Write the minimum plain meaning first. Then put the ID in parentheses after it.
+  - Bad: "T3 replaces the key."
+  - Good: "A registration with a new `registrationId` replaces the key (T3)."
+- In each new doc, add a short "Terms" list for the core nouns and a one-line key for the ID prefixes it uses.
+- Before you finish, check that each ID follows its meaning. A reader must understand the sentence without opening another doc.
+
+## 6. Don't commit with user consent
 
 Never create a commit automatically after writing specs or plans. Self-review first, then ask for user approval before committing.
 
-## 6. Simplified Technical English for output
+## 7. Simplified Technical English for output
 
-@./references/asd-ste100.md
+Load "references/asd-ste100.md"
