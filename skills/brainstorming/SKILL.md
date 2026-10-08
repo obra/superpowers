@@ -52,6 +52,15 @@ intent that your options can't. Offer a short menu only when they're
 stuck. When they say "just guess" or "what do you think?", propose
 something concrete.
 
+**Technology.** Find out early which technology choices they want to
+make and which they're handing to you, and match how deep you go to them.
+A technical partner may have strong views on the platform, language, or
+stack; talk it through. Someone who isn't technical is counting on you to
+choose: pick sensible defaults and say what you picked in plain words.
+When there's an existing project, base your defaults on what it already
+uses. Any choice you make goes in the design as your call, never as
+something they agreed to.
+
 **Ground to cover.** This is territory, not a script. Never read these
 out as questions:
 
@@ -187,7 +196,7 @@ software, invoke superpowers:writing-plans and no other skill.
 | Thought | Reality |
 |---------|---------|
 | "I'll offer options to save them effort" | Options steer. Ask them to describe it first. |
-| "I'll fill in sensible defaults" | Those defaults are your preferences. Ask, or ask whether they want you to choose. |
+| "I'll fill in sensible defaults" | Good. Say them out loud. A default they never heard is one they couldn't reject. |
 | "I should explain the process first" | Ask your question. The process shows itself. |
 | "They said 'sounds good' to the idea" | Approval covers what you showed them. A description you haven't written isn't approved. |
 | "The spike works, I'll keep building on it" | Keeping it is a new request. Back through the gate. |
