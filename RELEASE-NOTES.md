@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Antigravity
+
+- **`agy plugin install https://github.com/obra/superpowers` now installs Superpowers as a native Antigravity plugin.** The repo ships `.antigravity-plugin/plugin.json` with the Marketplace display name, logo and suggested prompts. Before, agy fell back to importing the repo as a Gemini CLI extension and rejected the copied Claude-format hooks file on every session with `invalid hook "hooks": command hook must specify 'command'`; that error is gone. The install command is unchanged.
+- **Superpowers bootstraps on Antigravity through skill discovery.** Antigravity has no session-start hook event, but it lists each installed skill's description, and `using-superpowers`' "Use when starting any conversation" gets the model to load it. Verified on agy 1.3.1 across 12 runs: "Let's make a react todo list" and "add a settings page" trigger brainstorming before any code, a failing test triggers systematic-debugging before any edit, and a second turn after an unrelated first turn still triggers brainstorming.
+
 ### Brainstorming
 
 - **Visual companion screens containing `$'`, `$&` or similar are no longer corrupted.** The server inserted screen content with `String.replace`, which treats those sequences as replacement patterns, so content like `NT$'` spliced pieces of the frame into the page. Content is now inserted literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
