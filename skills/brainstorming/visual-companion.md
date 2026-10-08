@@ -195,13 +195,28 @@ The frame template provides these CSS classes for your content:
 
 ### Cards (visual designs)
 
+`.card-image` centers a single preview object. For a mockup with multiple sections,
+wrap them in `.card-canvas`; it fills the image area and stacks direct children
+vertically.
+
 ```html
 <div class="cards">
   <div class="card" data-choice="design1" onclick="toggleSelect(this)">
-    <div class="card-image"><!-- mockup content --></div>
+    <div class="card-image">
+      <div class="card-canvas">
+        <div class="mockup-header">Project dashboard</div>
+        <div class="mock-nav">
+          <button class="mock-button">Overview</button>
+          <button class="mock-button">Activity</button>
+        </div>
+        <div class="mockup-body">
+          <div class="placeholder">Dashboard content</div>
+        </div>
+      </div>
+    </div>
     <div class="card-body">
-      <h3>Name</h3>
-      <p>Description</p>
+      <h3>Dashboard</h3>
+      <p>Header, navigation, and content preview.</p>
     </div>
   </div>
 </div>
