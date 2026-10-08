@@ -8,8 +8,8 @@ It is written in two layers. **Part 1–3** explain how the system works and how
 to tell whether a harness can be supported at all; read these before you touch
 anything. **Part 4–8** are a prescriptive procedure for an agent (supervised by
 a human partner) to execute the port end to end, through distribution. An
-appendix indexes the current reference integrations so you can copy the closest
-one.
+appendix gives worked examples of each integration shape so you can copy the
+closest one.
 
 The integration mechanism differs across harnesses, and it will keep changing.
 This guide deliberately teaches the **invariants** — the things that must be
@@ -790,9 +790,12 @@ dispatcher pattern.
 
 ---
 
-## Appendix A — Reference integrations (current)
+## Appendix A — Reference integrations (examples)
 
-Use this as the live index; when in doubt, read the files, not this table.
+One or more worked examples of each integration shape, to copy from. This is
+not a list of supported harnesses, and it isn't updated for each new one — the
+manifests in the repo are the source of truth. When in doubt, read the files,
+not this table.
 
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
