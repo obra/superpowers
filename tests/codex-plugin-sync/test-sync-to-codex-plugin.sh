@@ -175,7 +175,9 @@ write_upstream_fixture() {
 
     mkdir -p \
         "$repo/.codex-plugin" \
+        "$repo/.hermes-plugin" \
         "$repo/.kimi-plugin" \
+        "$repo/.muse-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
         "$repo/evals/drill" \
@@ -241,6 +243,9 @@ EOF
 }
 EOF
 
+    printf 'name: superpowers\nversion: %s\n' "$MANIFEST_VERSION" > "$repo/.hermes-plugin/plugin.yaml"
+    printf '{"name":"superpowers","version":"%s"}\n' "$MANIFEST_VERSION" > "$repo/.muse-plugin/plugin.json"
+
     cat > "$repo/assets/superpowers-small.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>
 EOF
@@ -296,7 +301,9 @@ EOF
 
     git -C "$repo" add \
         .codex-plugin/plugin.json \
+        .hermes-plugin/plugin.yaml \
         .kimi-plugin/plugin.json \
+        .muse-plugin/plugin.json \
         .gitignore \
         .gitmodules \
         .pre-commit-config.yaml \
@@ -657,6 +664,8 @@ main() {
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
+    assert_not_contains "$preview_section" ".hermes-plugin/plugin.yaml" "Preview excludes Hermes manifest from Codex sync"
+    assert_not_contains "$preview_section" ".muse-plugin/plugin.json" "Preview excludes Muse manifest from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
