@@ -95,6 +95,20 @@ BRANCH=$(git branch --show-current)
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
+## Native "visualize" vs. the brainstorming Visual Companion
+
+Codex's TUI has its own built-in inline-visualization feature (the
+`::codex-inline-vis{}` directive, internally called the "visualize"
+skill in the Codex source) that renders HTML/diagrams straight into
+the terminal. It is unrelated to `brainstorming`'s Visual Companion
+server and bypasses it entirely — no click capture, no choice
+events, nothing routes back into the conversation. There is no Codex
+config flag to disable it. If it fires during a brainstorming session
+instead of the companion, tell the agent explicitly to use the
+Visual Companion browser tab instead; `brainstorming/SKILL.md`'s
+Visual Companion section already carries this instruction, but a
+direct nudge in the moment reinforces it.
+
 ## Codex App Finishing
 
 When the sandbox blocks branch/push operations (detached HEAD in an

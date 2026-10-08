@@ -4,6 +4,7 @@
 
 ### Brainstorming
 
+- **The brainstorming skill now tells Codex not to use its own built-in inline visualizer for mockups.** Codex's TUI has a native inline-rendering feature (internally called the "visualize" skill) that looks like a visualization option but bypasses the Visual Companion entirely: no click capture, no choices routed back into the conversation. Found while testing the `dev` brainstorming rebuild in Codex. The Visual Companion section and the Codex platform-adaptation reference now say explicitly to use the companion's browser tab instead. (#2478)
 - **Visual companion screens containing `$'`, `$&` or similar are no longer corrupted.** The server inserted screen content with `String.replace`, which treats those sequences as replacement patterns, so content like `NT$'` spliced pieces of the frame into the page. Content is now inserted literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
 
 ### Systematic Debugging
