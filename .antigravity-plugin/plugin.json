@@ -1,7 +1,7 @@
 {
   "name": "superpowers",
   "displayName": "Superpowers",
-  "version": "6.4.2",
+  "version": "7.0.0",
   "description": "Make your coding agent a better engineer",
   "logo": "assets/antigravity-logo.png",
   "suggestedPrompts": [
