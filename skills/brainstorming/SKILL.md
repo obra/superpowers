@@ -29,8 +29,8 @@ Your first message is two things, in this order:
 
 1. One line letting them know that if they'd rather skip the questions and
    have you just start, they can say so. If they take you up on it, this
-   skill is done: state any significant how-it-gets-made choice —
-   platform, language, medium — in one plain line, then do what they
+   skill is done: state any significant how-it-gets-made choice
+   (platform, language, medium) in one plain line, then do what they
    asked through the normal workflow.
 2. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
