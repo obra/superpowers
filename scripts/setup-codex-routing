@@ -25,9 +25,11 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 command = f"{shlex.quote(sys.argv[2])} codex"
+# Forms this script has written: the current one and an earlier unquoted one.
+known = {command, f"{sys.argv[2]} codex"}
 config = json.loads(path.read_text()) if path.exists() else {}
 groups = config.setdefault("hooks", {}).setdefault("SessionStart", [])
-ours = [h for g in groups for h in g.get("hooks", []) if "toolbelt-load-routing" in h.get("command", "")]
+ours = [h for g in groups for h in g.get("hooks", []) if h.get("command") in known]
 if [h.get("command") for h in ours] == [command]:
     print(f"{path}: routing hook already registered")
     sys.exit(0)

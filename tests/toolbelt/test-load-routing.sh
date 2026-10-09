@@ -61,8 +61,10 @@ assert_equals "$commands" "other,$CODEX_HOME/hooks/toolbelt-load-routing codex" 
 export CODEX_HOME="$tmp/codex home"
 mkdir -p "$CODEX_HOME"
 # An earlier, unquoted registration is replaced rather than kept alongside.
-echo "{\"hooks\":{\"SessionStart\":[{\"hooks\":[{\"type\":\"command\",\"command\":\"$CODEX_HOME/hooks/toolbelt-load-routing codex\"}]}]}}" > "$CODEX_HOME/hooks.json"
+# A hook that merely mentions the loader's name is not ours and survives.
+echo "{\"hooks\":{\"SessionStart\":[{\"hooks\":[{\"type\":\"command\",\"command\":\"$CODEX_HOME/hooks/toolbelt-load-routing codex\"},{\"type\":\"command\",\"command\":\"echo toolbelt-load-routing configured\"}]}]}}" > "$CODEX_HOME/hooks.json"
 "$setup" >/dev/null
 commands=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print("\n".join(h["command"] for g in d["hooks"]["SessionStart"] for h in g["hooks"]))' "$CODEX_HOME/hooks.json")
-assert_equals "$(wc -l <<<"$commands" | tr -d ' ')" "1" "setup replaces an earlier registration of the loader"
-assert_equals "$(cd "$tmp/wt" && sh -c "$commands")" "$expected" "registered command runs from a path with a space"
+assert_equals "$(sed -n 1p <<<"$commands")" "echo toolbelt-load-routing configured" "setup keeps a hook that only mentions the loader"
+assert_equals "$(wc -l <<<"$commands" | tr -d ' ')" "2" "setup replaces an earlier registration of the loader"
+assert_equals "$(cd "$tmp/wt" && sh -c "$(sed -n 2p <<<"$commands")")" "$expected" "registered command runs from a path with a space"
