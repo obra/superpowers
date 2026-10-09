@@ -10,7 +10,7 @@ Agent routing is plain English, one file per orchestrating harness, instead of J
 - **One edit reaches every worktree.** The hook reads the file from the main checkout, not the current branch, so branches cut before a routing change no longer carry a stale copy.
 - **Codex needs one setup step.** Codex no longer runs plugin hooks: run `scripts/setup-codex-routing` once per machine, then trust the hook when Codex next starts.
 - **Breaking:** `.toolbelt/agents.json`, `skills/agent-routing/defaults.json`, and `resolve-agent` are removed. A plan's `## Agent Routing` section is now plain words that override the routing text for that plan.
-- Bundled Claude agents add Sonnet 5.5 and Haiku 5.5 on high effort (`sonnet-5-5-high`, `haiku-5-5-high`).
+- Bundled Claude agents add Sonnet 5.5 (low, medium, high, xhigh) and Haiku 5.5 (medium, high, xhigh).
 
 ## v7.13.0 (2026-09-23)
 

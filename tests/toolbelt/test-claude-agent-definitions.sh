@@ -17,8 +17,13 @@ expected = {
     "fable-5-1-medium": ("Claude Fable 5.1 on medium effort.", "claude-fable-5-1", "medium"),
     "fable-5-1-high": ("Claude Fable 5.1 on high effort.", "claude-fable-5-1", "high"),
     "fable-5-1-xhigh": ("Claude Fable 5.1 on xhigh effort.", "claude-fable-5-1", "xhigh"),
+    "sonnet-5-5-low": ("Claude Sonnet 5.5 on low effort.", "claude-sonnet-5-5", "low"),
+    "sonnet-5-5-medium": ("Claude Sonnet 5.5 on medium effort.", "claude-sonnet-5-5", "medium"),
     "sonnet-5-5-high": ("Claude Sonnet 5.5 on high effort.", "claude-sonnet-5-5", "high"),
+    "sonnet-5-5-xhigh": ("Claude Sonnet 5.5 on xhigh effort.", "claude-sonnet-5-5", "xhigh"),
+    "haiku-5-5-medium": ("Claude Haiku 5.5 on medium effort.", "claude-haiku-5-5", "medium"),
     "haiku-5-5-high": ("Claude Haiku 5.5 on high effort.", "claude-haiku-5-5", "high"),
+    "haiku-5-5-xhigh": ("Claude Haiku 5.5 on xhigh effort.", "claude-haiku-5-5", "xhigh"),
 }
 
 agent_dir = root / "agents"
