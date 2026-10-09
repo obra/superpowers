@@ -30,7 +30,7 @@ In Codex, read `references/codex-tools.md`.
 
 ## Agent Routing
 
-Before your first dispatch, invoke the agent-routing skill and load the session routing brief by following its skill-relative resolver instructions. Route by logical role from there; never pick a concrete agent yourself. If the brief cannot be loaded, stop and tell your human partner rather than guessing a route.
+Before your first dispatch, invoke the agent-routing skill. Route by logical role from the AGENT-ROUTING text injected at session start, or the skill's bundled default when none was; never pick a concrete agent yourself.
 
 ## User Instructions
 

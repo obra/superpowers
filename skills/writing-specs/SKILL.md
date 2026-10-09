@@ -48,6 +48,6 @@ Use the elements-of-style:writing-clearly-and-concisely skill if available. Save
 
 Wait. If they request changes, make them and self-review again; proceed only once they approve.
 
-**Alternate-harness review.** After that approval, resolve a `reviewer` with specialty `spec` through toolbelt:agent-routing, passing your harness as the author; if resolution fails, stop and tell your human partner. Dispatch the reviewer to check for gaps, ambiguity, or poor design. Small technical gaps — fix the spec and proceed. A rework large enough to change the idea — bring it to your human partner. Unsure — ask.
+**Alternate-harness review.** After that approval, route a `reviewer` with specialty `spec` through toolbelt:agent-routing, on a different harness than yours; if the routing names none, stop and tell your human partner. Dispatch the reviewer to check for gaps, ambiguity, or poor design. Small technical gaps — fix the spec and proceed. A rework large enough to change the idea — bring it to your human partner. Unsure — ask.
 
 **Then invoke the writing-plans skill.** Do NOT invoke any other skill.

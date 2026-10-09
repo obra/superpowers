@@ -26,7 +26,7 @@ Skills are code, not prose. They shape agent behavior, so edit them like code.
 
 This installs globally, so no file under `skills/` may hard-code anything about one repo. Per-project behavior comes from files in the consuming project, all optional:
 
-- `.toolbelt/agents.json` — agent routes, models, effort, custom instructions
+- `.toolbelt/routing/<harness>.md` — plain-English agent routing per orchestrating harness
 - `.toolbelt/pr-policy.md` — review providers to await, complexity lanes, timeouts
 - `.toolbelt/worktree-policy.md` — port ranges, sidecar containers, per-worktree resources
 - `docs/REVIEW-GUIDANCE.md` — review conventions, read when present

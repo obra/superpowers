@@ -46,7 +46,7 @@ Nothing is required. Each is optional and read only when present:
 
 | File | Purpose |
 |---|---|
-| `.toolbelt/agents.json` | Agent routes — harness, model, effort, custom instructions per role |
+| `.toolbelt/routing/<harness>.md` | Plain-English agent routing per orchestrating harness (`claude.md`, `codex.md`), read from the main checkout |
 | `.toolbelt/pr-policy.md` | Which review providers to await, complexity lanes, timeouts |
 | `.toolbelt/worktree-policy.md` | Port ranges, sidecar containers, and per-worktree resources so parallel worktrees don't collide |
 | `docs/REVIEW-GUIDANCE.md` | Project review conventions; implementers follow them and reviewers check against them |

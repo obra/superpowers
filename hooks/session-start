@@ -18,7 +18,7 @@ if [ ! -t 0 ]; then
 fi
 
 if [ "$source" = "compact" ]; then
-  using_toolbelt_content="Context was just compacted. Your toolbelt rules still apply: invoke a relevant skill before acting, route subagents by role from the session brief (re-run the resolver once only if the brief is gone), and continue from the ledger or handoff you were keeping rather than re-reading whole plans or specs. Re-invoke a skill only when its instructions are no longer in your context."
+  using_toolbelt_content="Context was just compacted. Your toolbelt rules still apply: invoke a relevant skill before acting, route subagents by the AGENT-ROUTING text (or the agent-routing skill's bundled default when none is loaded), and continue from the ledger or handoff you were keeping rather than re-reading whole plans or specs. Re-invoke a skill only when its instructions are no longer in your context."
 else
   # Read using-toolbelt content
   using_toolbelt_content=$(cat "${PLUGIN_ROOT}/skills/using-toolbelt/SKILL.md" 2>&1 || echo "Error reading using-toolbelt skill")

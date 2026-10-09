@@ -42,7 +42,7 @@ assert_contains "$skill" "there is no fixed image-count limit" "evidence size sc
 assert_contains "$skill" "one nearest previously passing unchanged state for each affected component" "fix rounds capture a minimum comparison"
 assert_contains "$skill" "a shared style or token change invalidates every consuming capture" "carry-forward invalidation"
 assert_contains "$skill" "pathways covered separately from raw screenshot count" "verdict reports pathways"
-assert_contains "$skill" "Resolve one \`reviewer\` with specialty \`ux\` via agent-routing" "routed ux reviewer"
+assert_contains "$skill" "Route one \`reviewer\` with specialty \`ux\` via agent-routing" "routed ux reviewer"
 assert_contains "$skill" "vision-capable model" "reviewer route must handle images"
 assert_contains "$skill" "without driving the browser" "reviewer judges images, not live UI"
 assert_contains "$skill" "docs/REVIEW-GUIDANCE.md" "reviewer-only guidance is offered to the reviewer"

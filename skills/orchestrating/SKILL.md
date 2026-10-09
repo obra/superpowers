@@ -14,7 +14,7 @@ This list is complete:
 - the approved plan, once
 - delivery and branch-lifecycle.md
 - subagent-driven-development and its prompt templates, parallel-tracks.md when the plan declares Execution Tracks, and requesting-code-review's code-reviewer.md
-- agent-routing and the session routing brief
+- agent-routing and the AGENT-ROUTING text
 - using-git-worktrees and `.toolbelt/worktree-policy.md`
 - ledgers and the paths that scripts print
 

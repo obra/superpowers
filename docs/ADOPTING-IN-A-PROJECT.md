@@ -8,7 +8,7 @@ and read only when present.
 
 | File | Purpose |
 |---|---|
-| `.toolbelt/agents.json` | Agent routes — harness, model, effort, and instructions per role. Schema in `skills/agent-routing/SKILL.md`; bundled defaults in `skills/agent-routing/defaults.json`. |
+| `.toolbelt/routing/claude.md`, `.toolbelt/routing/codex.md` | Plain-English agent routing for sessions orchestrated from that harness. Read from the main checkout, so one edit reaches every worktree. Bundled defaults in `skills/agent-routing/routing/`. Codex needs `scripts/setup-codex-routing` once per machine. |
 | `.toolbelt/pr-policy.md` | Which review providers to await, complexity lanes, timeouts. |
 | `.toolbelt/worktree-policy.md` | Port ranges and how to claim a non-conflicting set, sidecar containers and their naming, per-worktree data directories, teardown at finish. Read by `using-git-worktrees` before it creates anything. |
 | `.toolbelt/ux-policy.md` | How `ux-gate` and per-task smoke passes capture this app. Sections, each optional: **Launch** — the command that serves the app and the URL. **Auth** — how to obtain `storageState`, or the login steps. **Theme** — the `theme` object for the capture matrix. **Data** — seed or fixture commands and the actors to use. **Viewports and themes** — the supported set, overriding the defaults. **Allowed exceptions** — the `allowOverflow`, `allowOverlap`, and `allowLight` selectors. **Design reference** — the design-system doc, the catalog route, and any token or palette check command. The reviewer reads the doc and runs nothing. **Reference screens** — two routes. **Harness notes** — capture gotchas learned in this project. Absent, the gate infers Launch, Auth, and Theme and records each inference. |
@@ -18,14 +18,15 @@ and read only when present.
 `.toolbelt/` is also where scratch lands — `sdd/`, `quick/`, `brainstorm/`. Add it to
 `.gitignore`; the contents are regenerated.
 
-## Checking what a project actually resolves
+## Checking what a session will see
 
 ```bash
-<plugin-root>/skills/agent-routing/scripts/resolve-agent --project-root . --brief --harness claude
+<toolbelt-checkout>/hooks/load-routing claude
 ```
 
-If this fails, the correct behavior is to stop and escalate — never to fall back to an
-agent of your own choosing. Confirm that's what happens before trusting a config.
+Prints the `<AGENT-ROUTING>` block a session in the current directory receives, or
+nothing when the project has no routing file for that harness (the bundled default
+then applies).
 
 ## Verifying the install in a project
 

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Print the project's agent routing text for one harness.
+#
+# Reads .toolbelt/routing/<harness>.md from the main checkout, not the current
+# worktree, so one edit there reaches every branch and worktree. Prints nothing
+# when there is no such file; the agent-routing skill then uses its bundled
+# default. Never fails: a routing problem must not block session start.
+#
+# Usage: load-routing <harness>
+
+harness=${1:-}
+[ -n "$harness" ] || exit 0
+
+common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
+file="$(dirname "$common_dir")/.toolbelt/routing/${harness}.md"
+[ -r "$file" ] || exit 0
+
+printf '<AGENT-ROUTING source="%s">\n%s\n</AGENT-ROUTING>\n' "$file" "$(cat "$file")"
+exit 0

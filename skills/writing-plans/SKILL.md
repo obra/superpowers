@@ -105,7 +105,8 @@ contracts: the complete code, once. Tasks reference it.]
 
 ## Agent Routing
 
-[Optional: routes for the implementer, task reviewer, or final reviewer;
+[Optional, in plain words: routing for the implementer, task reviewer, or
+final reviewer that overrides the project's routing text for this plan;
 see toolbelt:agent-routing.]
 
 ## PR Boundaries
@@ -152,7 +153,7 @@ or the constraint and an instruction to escalate; omit if none]
 
 Check the plan against the spec yourself first: every requirement has a task, no task defers a decision, names and types agree across tasks, every trap is handled or flagged. Fix what you find.
 
-Then save the plan and have a different harness review it. Resolve a `reviewer` with specialty `plan` through toolbelt:agent-routing, passing your harness as the author; if resolution fails, stop and tell your human partner rather than choosing a reviewer yourself. Give it the plan and spec paths and ask it to judge:
+Then save the plan and have a different harness review it. Route a `reviewer` with specialty `plan` through toolbelt:agent-routing, on a different harness than yours; if the routing names none, stop and tell your human partner rather than choosing a reviewer yourself. Give it the plan and spec paths and ask it to judge:
 
 - spec coverage, with nothing extra
 - whether each task is bounded tightly enough that an implementer on a cheaper model makes no product or contract decision

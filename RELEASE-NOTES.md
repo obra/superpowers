@@ -2,6 +2,16 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v8.0.0 (2026-09-26)
+
+Agent routing is plain English, one file per orchestrating harness, instead of JSON behind a resolver script.
+
+- **Routing is text you edit.** A project writes `.toolbelt/routing/claude.md` and `.toolbelt/routing/codex.md` in its own words, including judgment calls like "low or medium depending on depth." A session-start hook injects the file for the running harness in an `<AGENT-ROUTING>` block, so a model never has to pick its own file. Bundled defaults live in `skills/agent-routing/routing/`.
+- **One edit reaches every worktree.** The hook reads the file from the main checkout, not the current branch, so branches cut before a routing change no longer carry a stale copy.
+- **Codex needs one setup step.** Codex no longer runs plugin hooks: run `scripts/setup-codex-routing` once per machine, then trust the hook when Codex next starts.
+- **Breaking:** `.toolbelt/agents.json`, `skills/agent-routing/defaults.json`, and `resolve-agent` are removed. A plan's `## Agent Routing` section is now plain words that override the routing text for that plan.
+- Bundled Claude agents add Sonnet 5.5 and Haiku 5.5 on high effort (`sonnet-5-5-high`, `haiku-5-5-high`).
+
 ## v7.13.0 (2026-09-23)
 
 Rewrites the workflow prompts for Opus 5.5: less restatement, and decisions move into the plan so implementers only write code.

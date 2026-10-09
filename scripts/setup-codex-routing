@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Install toolbelt's routing loader as a Codex SessionStart hook.
+#
+# Codex no longer runs hooks shipped inside plugins, so the loader is copied to
+# a stable path under CODEX_HOME (surviving plugin upgrades) and registered in
+# CODEX_HOME/hooks.json. Idempotent: re-running refreshes the copy and leaves
+# hooks.json alone once the entry exists. Codex asks you to trust a new hook
+# once, on the next interactive start.
+
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+codex_home=${CODEX_HOME:-$HOME/.codex}
+target="$codex_home/hooks/toolbelt-load-routing"
+
+mkdir -p "$codex_home/hooks"
+cp "$repo_root/hooks/load-routing" "$target"
+chmod +x "$target"
+
+python3 - "$codex_home/hooks.json" "$target codex" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path, command = Path(sys.argv[1]), sys.argv[2]
+config = json.loads(path.read_text()) if path.exists() else {}
+groups = config.setdefault("hooks", {}).setdefault("SessionStart", [])
+if any(h.get("command") == command for g in groups for h in g.get("hooks", [])):
+    print(f"{path}: routing hook already registered")
+    sys.exit(0)
+groups.append({"hooks": [{"type": "command", "command": command}]})
+path.write_text(json.dumps(config, indent=2) + "\n")
+print(f"{path}: registered routing hook")
+PY
+
+echo "Start Codex interactively once and trust the new SessionStart hook when asked."

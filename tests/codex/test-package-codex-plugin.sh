@@ -210,8 +210,8 @@ assert_contains "$archive_paths" ".codex-plugin/plugin.json" "archive includes C
 assert_contains "$archive_paths" "skills/brainstorming/SKILL.md" "archive includes skills"
 assert_contains "$archive_paths" "skills/brainstorming/agents/openai.yaml" "archive includes OpenAI skill metadata"
 assert_contains "$archive_paths" "skills/agent-routing/SKILL.md" "archive includes routing skill"
-assert_contains "$archive_paths" "skills/agent-routing/defaults.json" "archive includes routing defaults"
-assert_contains "$archive_paths" "skills/agent-routing/scripts/resolve-agent" "archive includes routing resolver"
+assert_contains "$archive_paths" "skills/agent-routing/routing/claude.md" "archive includes Claude routing default"
+assert_contains "$archive_paths" "skills/agent-routing/routing/codex.md" "archive includes Codex routing default"
 assert_contains "$archive_paths" "skills/agent-routing/agents/openai.yaml" "archive includes committed routing metadata"
 for ws_skill in quick-task pr-monitor ux-gate delivery; do
   assert_contains "$archive_paths" "skills/$ws_skill/SKILL.md" "archive includes $ws_skill skill"
@@ -237,12 +237,6 @@ if [[ -x "$extracted/skills/subagent-driven-development/scripts/task-brief" ]]; 
   pass "archive preserves executable script mode"
 else
   fail "archive preserves executable script mode"
-fi
-
-if [[ -x "$extracted/skills/agent-routing/scripts/resolve-agent" ]]; then
-  pass "archive preserves routing resolver executable mode"
-else
-  fail "archive preserves routing resolver executable mode"
 fi
 
 zip_times="$(python3 - "$archive" <<'PY'

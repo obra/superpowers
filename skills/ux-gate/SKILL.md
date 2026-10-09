@@ -50,7 +50,7 @@ Every mechanical finding at `should` or above goes to the fix loop before image 
 
 ## 4. Review
 
-Resolve one `reviewer` with specialty `ux` via agent-routing; use a vision-capable model. Send changed and new captures, useful crops or filmstrips, reference screens, and any unchanged capture needed to judge a criterion. Omit redundant images, but keep meaningful changes with a small pixel ratio.
+Route one `reviewer` with specialty `ux` via agent-routing; use a vision-capable model. Send changed and new captures, useful crops or filmstrips, reference screens, and any unchanged capture needed to judge a criterion. Omit redundant images, but keep meaningful changes with a small pixel ratio.
 
 Put images first, labelled `Image N: <tag>`, then criteria, mechanical results, the design-reference path, and the review file path (`.toolbelt/ux/<capture-dir>/review.md`). The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
 

@@ -17,6 +17,8 @@ expected = {
     "fable-5-1-medium": ("Claude Fable 5.1 on medium effort.", "claude-fable-5-1", "medium"),
     "fable-5-1-high": ("Claude Fable 5.1 on high effort.", "claude-fable-5-1", "high"),
     "fable-5-1-xhigh": ("Claude Fable 5.1 on xhigh effort.", "claude-fable-5-1", "xhigh"),
+    "sonnet-5-5-high": ("Claude Sonnet 5.5 on high effort.", "claude-sonnet-5-5", "high"),
+    "haiku-5-5-high": ("Claude Haiku 5.5 on high effort.", "claude-haiku-5-5", "high"),
 }
 
 agent_dir = root / "agents"
@@ -54,7 +56,7 @@ scan_for_obsolete_models() {
   local failure=$1
   shift
   local status=0
-  grep -rniE 'opus[ -]?4[.-]?8|opus-4-8|sonnet' "$@" >/dev/null || status=$?
+  grep -rniE 'opus[ -]?4[.-]?8|opus-4-8|sonnet[ -]?4' "$@" >/dev/null || status=$?
   case "$status" in
     0)
       echo "not ok - $failure" >&2

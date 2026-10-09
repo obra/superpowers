@@ -91,8 +91,8 @@ assert_no_model_names "$skill"
 [[ -f "$metadata" ]] || { echo "not ok - committed OpenAI metadata missing" >&2; exit 1; }
 assert_contains "$metadata" "display_name" "committed OpenAI metadata present"
 
-assert_contains "$routing" "Plan-supplied routes are explicit run overrides" "routing maps plan routes to explicit overrides"
-assert_contains "$routing" "plan, project, bundled" "routing documents public precedence"
+assert_contains "$routing" "overrides the routing text for that plan's work" "plan routing overrides the project routing text"
+assert_contains "$routing" "the routing text overrides the bundled default" "routing documents public precedence"
 
 assert_contains "$workflow" '`brainstorming` and `writing-plans`' "planning policy"
 assert_contains "$workflow" "one coherent delivery slice" "slice policy"
