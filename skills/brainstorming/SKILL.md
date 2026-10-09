@@ -29,7 +29,9 @@ Your first message is two things, in this order:
 
 1. One line letting them know that if they'd rather skip the questions and
    have you just start, they can say so. If they take you up on it, this
-   skill is done: do what they asked through the normal workflow.
+   skill is done: state any significant how-it-gets-made choice —
+   platform, language, medium — in one plain line, then do what they
+   asked through the normal workflow.
 2. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
    this existed?" or "Tell me about the people who'll be in the room."
@@ -72,8 +74,6 @@ out as questions:
 - prior art: what they've seen elsewhere, loved or hated
 - current state: what exists now, what they've tried
 - the details they care about
-- which parts of the *how* they want to decide, and which they'd rather
-  hand to whoever builds it
 
 **Questions that work** anchor in specifics: "Walk me through the last
 time...", "If it could only do one of these well, which?", "What would
