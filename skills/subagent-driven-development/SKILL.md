@@ -87,7 +87,7 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
+    "Final review clean: archive this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -116,8 +116,8 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: archive this plan's workspace";
+    "Final review clean: archive this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -470,19 +470,43 @@ finishing-a-development-branch presents the options.
 
 ## Finish
 
-Before you delete anything, collect every ledger line containing `Ruling:` —
-preflight rulings, parked findings, breaker adjudications, all of them — into
-your final message under "Rulings I made", in the order you made them, each
-with what it costs if wrong. The list is exhaustive: if the ledger holds a
-ruling, the list holds it. That list is the only place the decisions you
-took on your human partner's behalf reach them — they read it and rework
-whatever you got wrong. A ruling that dies with the workspace was a decision
-made in secret.
+Collect every ledger line containing `Ruling:` — preflight rulings, parked
+findings, breaker adjudications, all of them — into your final message under
+"Rulings I made", in the order you made them, each with what it costs if
+wrong. The list is exhaustive: if the ledger holds a ruling, the list holds
+it. Your human partner reads that list and reworks whatever you got wrong; a
+ruling they never see was a decision made in secret.
 
-When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
-the record now. Sibling directories belong to other plans; leave them
-alone.
+When the final whole-branch review is clean and its fixes are merged, the
+workspace stops being working state and becomes the record of how the work
+was done: the ledger with every ruling, each implementer's report with the
+test output it ran, and the review package each reviewer judged. Git history
+holds what changed. Only the workspace holds what was tried, what each
+reviewer said before the fix landed, and whether the tests were ever seen to
+fail. Keep it.
+
+**Never delete it on your own initiative.** Deleting the audit record is not
+cleanup, and the history does not stand in for it.
+
+A finished workspace left at its live path does collide with a later run of
+the same plan, whose Setup would read the finished ledger as progress.
+Archive it, which ends the collision and keeps the record:
+
+```bash
+ARCHIVE="$(dirname "$WORKSPACE")/archive/$(basename "$WORKSPACE")-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$(dirname "$ARCHIVE")"
+mv "$WORKSPACE" "$ARCHIVE"
+```
+
+The archive sits under the same self-ignoring `.gitignore` as the live
+workspaces, so it stays out of `git status` and out of commits. Name the
+archive path in your final message. Sibling directories belong to other
+plans; leave them alone.
+
+Delete a workspace only when your human partner asks for that workspace to
+be deleted. Name what goes with it — the ledger, the reports, the review
+packages — and wait for their answer. If you cannot reach them, archive and
+say so.
 
 Use superpowers:finishing-a-development-branch.
 
@@ -498,6 +522,7 @@ Use superpowers:finishing-a-development-branch.
 | "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
 | "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
+| "The work is merged, so the workspace is clutter" | It is the audit record — rulings, reports, the test output each implementer actually saw. Archive it. Delete only what your human partner asks you to delete. |
 | "The implementer spawned its own reviewer — free extra assurance" | It's a duplicate seat reviewing the same diff; the task review is the gate. A worker-spawned reviewer is a defect to flag, not rigor. |
 
 ## Example Workflow
@@ -562,7 +587,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Delete this plan's workspace — the record now lives in git]
+[Archive this plan's workspace to .superpowers/sdd/archive/feature-plan-20260918-143355/ — ledger, reports and review packages kept]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```
