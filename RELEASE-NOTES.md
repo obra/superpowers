@@ -1,44 +1,52 @@
 # Superpowers Release Notes
 
-## Unreleased
+## v7.0.0 (2026-10-09)
 
-### Antigravity
-
-- **`agy plugin install https://github.com/obra/superpowers` now installs Superpowers as a native Antigravity plugin.** The repo ships `.antigravity-plugin/plugin.json` with the Marketplace display name, logo and suggested prompts. Before, agy fell back to importing the repo as a Gemini CLI extension and rejected the copied Claude-format hooks file on every session with `invalid hook "hooks": command hook must specify 'command'`; that error is gone. The install command is unchanged.
-- **Superpowers bootstraps on Antigravity through skill discovery.** Antigravity has no session-start hook event, but it lists each installed skill's description, and `using-superpowers`' "Use when starting any conversation" gets the model to load it. Verified on agy 1.3.1 across 12 runs: "Let's make a react todo list" and "add a settings page" trigger brainstorming before any code, a failing test triggers systematic-debugging before any edit, and a second turn after an unrelated first turn still triggers brainstorming.
+Superpowers 7.0 rebuilds `brainstorming` from scratch around drawing out intent instead of routing and gating. It also lists Superpowers natively in the Antigravity Marketplace, fixes a run of Windows hook-dispatch bugs, and closes out several small reports from the community.
 
 ### Brainstorming
 
-- **Visual companion screens containing `$'`, `$&` or similar are no longer corrupted.** The server inserted screen content with `String.replace`, which treats those sequences as replacement patterns, so content like `NT$'` spliced pieces of the frame into the page. Content is now inserted literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
+The skill dropped from 2,613 words of process — upfront spike/bounded/architectural classification, a lettered A–E menu, a structured spec document and its own reviewer prompt — back down to drawing out intent. Measured on the old skill: every non-trivial opening led with 40–80 words of jargon, a one-line icon-color change got a 70–150-word design plus a confirmation question, and in multi-turn testing with simulated humans, 16–27 menu options per conversation steered people into plausible but wrong framings instead of surfacing what they actually wanted.
 
-### Systematic Debugging
+- **The first message is now one open question, not a classification.** No more sorting the request into spike/bounded/architectural before asking anything. The skill starts with a real, concrete question ("What's the moment you find yourself wishing this existed?") and sizes the work — quick task, in-chat change, or written design — only after it understands what's wanted. (#2463)
+- **The visual companion is offered earlier and without a caveat.** It's raised the first time seeing something would help more than reading about it, whenever that first comes up — not gated behind "architectural" work — and the offer no longer warns that it's "still new and can be token-intensive." (#2463)
+- **The written design is prose, not a form.** For a project, the skill now writes a plain document a talented builder could plan from, instead of filling in a fixed spec template. A new `builder-check-prompt.md` dispatches a subagent to read it as that builder and report only the questions a wrong guess would actually hurt, replacing the old spec-document reviewer. (#2463)
+- **The visual companion server itself is more robust.** Screen content containing `$'`, `$&`, or similar sequences no longer gets corrupted — the server used `String.replace`, which treats those as pattern tokens, and `NT$'`-style content spliced pieces of the frame into the page. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
+- **Brainstorming now asks which build/medium choices — platform, language, libraries, or materials — the user wants to make versus hand to the agent, and states its defaults in plain words for a novice instead of silently choosing them.** (#2482)
 
-- **The multi-layer diagnostic example no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs; the example now reports only whether it's set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
+### Subagent-Driven Development
+
+- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to rewrite the file with `*` on every run, so a repo that commits its own (for example, to version `progress.md` ledgers) saw it reverted after each SDD run. The default is now written only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
+- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. The root is now resolved the same way as the plan path. Found while landing Windows test fixes from @t0domanh.
 
 ### Executing Plans
 
 - **`task-done` records tasks whose test command passes silently.** A passing command with no output made `task-done` exit 1 without writing the ledger line, so a finished task looked unfinished. The ledger now records `→ (no output)`. Thanks @KenM-BT for the report and Ada Sen for the fix. (#2385, #2388)
 
-### Hooks
+### Windows
 
-- **SessionStart works when the harness starts it with a broken `PATH`.** The hooks no longer need `dirname`, `cat` or `bash` from `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
-- **Windows: `run-hook.cmd` finds a per-user Git for Windows install and skips the WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH` it skips the `bash.exe` WSL launchers that fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 (#1864) and @KaiyiQuan (#2365) for the fixes this combines. (#1863, #2393)
-- **Windows: `run-hook.cmd` no longer runs `bash` or `where` from the current directory.** A repository containing `bash.cmd` or `where.bat` could have had it run at session start. (#2393)
-- **Windows: hook exit codes now reach the harness.** `run-hook.cmd` used to report success even when the hook failed. (#2393)
+- **`run-hook.cmd` finds a per-user Git for Windows install and skips the WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH` it skips the `bash.exe` WSL launchers that fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 and @KaiyiQuan for the fixes this combines. (#1863, #1864, #2365, #2393)
+- **`run-hook.cmd` no longer runs `bash` or `where` from the current directory.** A repository containing `bash.cmd` or `where.bat` could have had it run at session start. (#2393)
+- **Windows hook exit codes now reach the harness.** `run-hook.cmd` used to report success even when the hook failed. (#2393)
 
-### Requesting Code Review
+### Harness Support
 
-- **The example's base-SHA command survives skill arguments.** Claude Code substitutes `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which has no `$` token. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
+- **Antigravity: `agy plugin install https://github.com/obra/superpowers` now installs Superpowers as a native Antigravity plugin,** listed in the Antigravity Marketplace. The repo ships `.antigravity-plugin/plugin.json` with the Marketplace display name, logo, and suggested prompts. Before, agy fell back to importing the repo as a Gemini CLI extension and rejected the copied Claude-format hooks file on every session with `invalid hook "hooks": command hook must specify 'command'`; that error is gone. The install command is unchanged. (#2479)
+- **Antigravity: Superpowers bootstraps through skill discovery.** Antigravity has no session-start hook event, but it lists each installed skill's description, and `using-superpowers`'s "Use when starting any conversation" gets the model to load it. Verified on agy 1.3.1 across 12 runs, including a second turn after an unrelated first turn. (#2479)
+- **Hermes Agent: skills show their descriptions in Hermes' skill list.** Hermes lists plugin skills with the description passed to `register_skill`, which defaults to empty, and the plugin only passed a name and path, so every skill appeared blank and the model had nothing to choose on. Each skill's frontmatter description is now passed through. Thanks @pepijn-blom for the fix. (#2284)
+- **Codex:** no user-visible Codex changes landed in this release.
 
-### Subagent-Driven Development
+### Fixes
 
-- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to rewrite the file with `*` on every run, so a repo that commits its own (for example, to version `progress.md` ledgers) saw it reverted after each SDD run. The default is now written only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
+- **SessionStart works when the harness starts it with a broken `PATH`.** The hooks no longer need `dirname`, `cat`, or `bash` from `PATH`, so a startup `PATH` that can't resolve them no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
+- **The `requesting-code-review` example's base-SHA command survives skill arguments.** Claude Code substitutes `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which has no `$` token. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
+- **The multi-layer diagnostic example in `systematic-debugging` no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs; the example now reports only whether it's set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
 
-- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. The root is now resolved the same way as the plan path. Found while landing the Windows test fixes from @t0domanh (#2149).
+### Breaking Changes
 
-### Hermes Agent
-
-- **Superpowers skills show their descriptions in Hermes' skill list.** Hermes lists plugin skills with the description passed to `register_skill`, which defaults to empty, and the plugin only passed a name and path, so every skill appeared blank and the model had nothing to choose on. Each skill's frontmatter description is now passed through. Thanks @pepijn-blom for the fix. (#2284)
+- **`spec-document-reviewer-prompt.md` is gone, replaced by `builder-check-prompt.md`.** If you dispatch the old brainstorming reviewer file directly, switch to the new one — it asks a different question (open "what would a builder still need?" instead of a structured spec review) and takes a document path, not a spec. (#2463)
+- **Brainstorming no longer classifies a request as spike/bounded/architectural before asking anything.** Anything that automated or scripted against that upfront three-way split (for example, expecting a lettered menu on the first reply) will see different behavior: an open question first, with sizing decided after intent is understood. (#2463)
+- **Windows: a failing hook now reports failure.** `run-hook.cmd` previously always exited 0; a workflow that depended on hook failures being silently swallowed will now see them. (#2393)
 
 ## v6.4.2 (2026-09-25)
 
