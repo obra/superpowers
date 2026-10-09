@@ -52,12 +52,13 @@ intent that your options can't. Offer a short menu only when they're
 stuck. When they say "just guess" or "what do you think?", propose
 something concrete.
 
-**Technology.** Find out early which technology choices they want to
-make and which they're handing to you, and match how deep you go to them.
-A technical partner may have strong views on the platform, language, or
-stack; talk it through. Someone who isn't technical is counting on you to
-choose: pick sensible defaults and say what you picked in plain words.
-When there's an existing project, base your defaults on what it already
+**How it gets made.** Every project rests on choices about medium, tools,
+materials, and resources: the platform, programming language, and
+libraries for an app; the medium for a piece of art. Find out early which
+of those choices they want to make, which they're handing to you, and what
+they already have to work with. Someone with strong views or skills will
+want to talk it through. Someone counting on you needs sensible defaults,
+said in plain words. When there's existing work, build on what it already
 uses. Any choice you make goes in the design as your call, never as
 something they agreed to.
 
