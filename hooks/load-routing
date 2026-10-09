@@ -11,8 +11,18 @@
 harness=${1:-}
 [ -n "$harness" ] || exit 0
 
+git_dir=$(git rev-parse --path-format=absolute --git-dir 2>/dev/null) || exit 0
 common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
-file="$(dirname "$common_dir")/.toolbelt/routing/${harness}.md"
+if [ "$git_dir" = "$common_dir" ]; then
+  # Already in the main checkout. Bare repositories have no top level.
+  root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+else
+  # A linked worktree. Trust the parent of the shared .git only when it really
+  # is that checkout's .git; unusual layouts fall back to the bundled default.
+  root=$(dirname "$common_dir")
+  [ "$root/.git" -ef "$common_dir" ] || exit 0
+fi
+file="$root/.toolbelt/routing/${harness}.md"
 [ -r "$file" ] || exit 0
 
 printf '<AGENT-ROUTING source="%s">\n%s\n</AGENT-ROUTING>\n' "$file" "$(cat "$file")"

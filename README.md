@@ -40,6 +40,8 @@ Search for `toolbelt` and select `Install Plugin`. Subagent dispatch needs multi
 multi_agent = true
 ```
 
+Codex does not run hooks shipped inside plugins, so project agent routing needs one more step. From a clone of this repository, run `scripts/setup-codex-routing` once per machine, then trust the new SessionStart hook when Codex next starts. Without it, Codex sessions use the bundled routing defaults.
+
 ## Per-project configuration
 
 Nothing is required. Each is optional and read only when present:

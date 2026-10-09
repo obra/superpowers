@@ -17,12 +17,14 @@ mkdir -p "$codex_home/hooks"
 cp "$repo_root/hooks/load-routing" "$target"
 chmod +x "$target"
 
-python3 - "$codex_home/hooks.json" "$target codex" <<'PY'
+python3 - "$codex_home/hooks.json" "$target" <<'PY'
 import json
+import shlex
 import sys
 from pathlib import Path
 
-path, command = Path(sys.argv[1]), sys.argv[2]
+path = Path(sys.argv[1])
+command = f"{shlex.quote(sys.argv[2])} codex"
 config = json.loads(path.read_text()) if path.exists() else {}
 groups = config.setdefault("hooks", {}).setdefault("SessionStart", [])
 if any(h.get("command") == command for g in groups for h in g.get("hooks", [])):
