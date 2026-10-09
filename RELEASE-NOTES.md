@@ -12,7 +12,7 @@ The skill dropped from 2,613 words of process — upfront spike/bounded/architec
 - **The visual companion is offered earlier and without a caveat.** It's raised the first time seeing something would help more than reading about it, whenever that first comes up — not gated behind "architectural" work — and the offer no longer warns that it's "still new and can be token-intensive." (#2463)
 - **The written design is prose, not a form.** For a project, the skill now writes a plain document a talented builder could plan from, instead of filling in a fixed spec template. A new `builder-check-prompt.md` dispatches a subagent to read it as that builder and report only the questions a wrong guess would actually hurt, replacing the old spec-document reviewer. (#2463)
 - **The visual companion server itself is more robust.** Screen content containing `$'`, `$&`, or similar sequences no longer gets corrupted — the server used `String.replace`, which treats those as pattern tokens, and `NT$'`-style content spliced pieces of the frame into the page. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
-- **Brainstorming now asks which build/medium choices — platform, language, libraries, or materials — the user wants to make versus hand to the agent, and states its defaults in plain words for a novice instead of silently choosing them.** (#2482)
+- **Brainstorming now asks which build/medium choices — platform, language, libraries, or materials — the user wants to make versus hand to the agent, and states its defaults in plain words for a novice instead of silently choosing them. If you skip the questions, it still states any big choice it makes before starting.** (#2482, #2483)
 
 ### Subagent-Driven Development
 
