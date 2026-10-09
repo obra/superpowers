@@ -27,9 +27,14 @@ path = Path(sys.argv[1])
 command = f"{shlex.quote(sys.argv[2])} codex"
 config = json.loads(path.read_text()) if path.exists() else {}
 groups = config.setdefault("hooks", {}).setdefault("SessionStart", [])
-if any(h.get("command") == command for g in groups for h in g.get("hooks", [])):
+ours = [h for g in groups for h in g.get("hooks", []) if "toolbelt-load-routing" in h.get("command", "")]
+if [h.get("command") for h in ours] == [command]:
     print(f"{path}: routing hook already registered")
     sys.exit(0)
+# Drop any earlier registration of this loader, then register the current one.
+for g in groups:
+    g["hooks"] = [h for h in g.get("hooks", []) if h not in ours]
+groups[:] = [g for g in groups if g["hooks"]]
 groups.append({"hooks": [{"type": "command", "command": command}]})
 path.write_text(json.dumps(config, indent=2) + "\n")
 print(f"{path}: registered routing hook")
