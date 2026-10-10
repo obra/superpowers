@@ -38,6 +38,7 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
+- `{MCP_SERVERS}` - The plan's `MCP Servers` line, or "none"
 
 **3. Act on feedback:**
 - Fix Critical issues immediately

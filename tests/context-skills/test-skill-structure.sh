@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Structural checks for the fork's context skills (skills/handover and
-# skills/obsidian): frontmatter, word budget, required sections, expected and
+# Structural checks for the fork's skills (skills/handover, skills/obsidian
+# and skills/recommending-mcp-servers): frontmatter, word budget, required sections, expected and
 # referenced files exist, helper scripts are executable in git, no
-# machine-specific paths, "your human partner" voice. Behavior is checked by
+# machine-specific paths, "your human partner" voice, and the MCP hooks in
+# brainstorming, writing-plans and requesting-code-review. Behavior is checked by
 # the scenario runs recorded in the implementation plan, not here.
 #
-# Usage: test-skill-structure.sh [SKILL...]   (default: handover obsidian)
+# Usage: test-skill-structure.sh [SKILL...]
+#   (default: handover obsidian recommending-mcp-servers)
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -22,7 +24,63 @@ expected_files() {
   case "$1" in
     handover) echo "SKILL.md scripts/handover-path scripts/handover-files" ;;
     obsidian) echo "SKILL.md note-templates.md scripts/vault-path scripts/vault-changes scripts/vault-mark-synced" ;;
+    recommending-mcp-servers) echo "SKILL.md" ;;
   esac
+}
+
+# has FILE FIXED-STRING LABEL — pass when FILE contains FIXED-STRING.
+has() {
+  if grep -qF -- "$2" "$1" 2>/dev/null; then pass "$3"; else fail "$3"; fi
+}
+
+# The MCP recommendation skill and the hooks that hand off to it.
+check_mcp_hooks() {
+  local f="$REPO_ROOT/skills/recommending-mcp-servers/SKILL.md"
+  has "$f" '~/.claude/superpowers/mcp-catalog.md' "mcp: catalog path"
+  has "$f" '| Server | Need | Verifies | Status |' "mcp: output table"
+  has "$f" 'No MCP servers recommended' "mcp: empty result"
+  # Procedure-only phrases: the Red Flags table repeats some keywords, so
+  # these must not be satisfiable by that table alone.
+  has "$f" 'the result is the line' "mcp: procedure states the empty result"
+  has "$f" 'or look at the `mcp__*` tools visible' "mcp: fallback to visible tools"
+  has "$f" 'Judge each server by capability, not by exact name' "mcp: status judged by capability"
+  has "$f" 'name the installed server' "mcp: a different server is named, not the catalog's"
+  has "$f" 'declines an entry, continue' "mcp: declined entries"
+  has "$f" 'rewrite or reorder existing entries' "mcp: hand-edited catalog"
+
+  local b="$REPO_ROOT/skills/brainstorming/SKILL.md"
+  has "$b" '6. **Recommend MCP servers**' "brainstorming: checklist step 6"
+  has "$b" '10. **Transition to implementation**' "brainstorming: checklist renumbered"
+  has "$b" 'superpowers:recommending-mcp-servers' "brainstorming: invokes the skill"
+  has "$b" '## MCP Servers' "brainstorming: spec section"
+  has "$b" '"User approves design?" -> "Recommend MCP servers" [label="yes"];' "brainstorming: flow edge in"
+  has "$b" '"Recommend MCP servers" -> "Write design doc";' "brainstorming: flow edge out"
+  has "$b" 'runs during brainstorming' "brainstorming: terminal-state clarification"
+
+  local w="$REPO_ROOT/skills/writing-plans/SKILL.md" ln_stack ln_mcp ln_spec
+  has "$w" '**MCP Servers:** [from the spec' "writing-plans: header line"
+  has "$w" 'superpowers:recommending-mcp-servers' "writing-plans: invokes without a spec"
+  has "$w" 'installs an MCP server' "writing-plans: no install tasks"
+  ln_stack="$(grep -nF '**Tech Stack:**' "$w" | head -1 | cut -d: -f1)"
+  ln_mcp="$(grep -nF '**MCP Servers:**' "$w" | head -1 | cut -d: -f1)"
+  ln_spec="$(grep -nF '**Spec:**' "$w" | head -1 | cut -d: -f1)"
+  if [ -n "$ln_mcp" ] && [ "${ln_stack:-0}" -lt "$ln_mcp" ] && [ "$ln_mcp" -lt "${ln_spec:-0}" ]; then
+    pass "writing-plans: MCP Servers line sits between Tech Stack and Spec"
+  else
+    fail "writing-plans: MCP Servers line sits between Tech Stack and Spec"
+  fi
+
+  local r="$REPO_ROOT/skills/requesting-code-review/SKILL.md"
+  local c="$REPO_ROOT/skills/requesting-code-review/code-reviewer.md"
+  has "$r" '{MCP_SERVERS}' "code-review: SKILL.md placeholder"
+  has "$c" '[MCP_SERVERS]' "code-review: template placeholder"
+  has "$c" '## MCP Servers' "code-review: template section"
+  has "$c" 'Do not write the MCP catalog' "code-review: reviewer never writes catalog"
+  has "$c" 'under Recommendations' "code-review: missing servers recommended"
+  has "$REPO_ROOT/skills/subagent-driven-development/SKILL.md" '`**MCP Servers:**` line as `[MCP_SERVERS]`' "sdd: final review fills MCP_SERVERS"
+  has "$REPO_ROOT/skills/executing-plans/SKILL.md" '`**MCP Servers:**` line as `[MCP_SERVERS]`' "executing-plans: final review fills MCP_SERVERS"
+  has "$REPO_ROOT/.muse-plugin/plugin.json" '"id": "recommending-mcp-servers"' "registered in the Muse manifest"
+  has "$REPO_ROOT/README.md" '**recommending-mcp-servers**' "listed in the README"
 }
 
 check_skill() {
@@ -35,6 +93,7 @@ check_skill() {
   for rel in $(expected_files "$name"); do
     if [ -f "$skill_dir/$rel" ]; then pass "$name: expected file present: $rel"; else fail "$name: expected file present: $rel"; fi
   done
+  [ "$name" = recommending-mcp-servers ] && check_mcp_hooks
   [ -f "$skill_md" ] || return
 
   # --- frontmatter ----------------------------------------------------------
@@ -105,7 +164,7 @@ check_skill() {
 }
 
 skills=("$@")
-[ ${#skills[@]} -gt 0 ] || skills=(handover obsidian)
+[ ${#skills[@]} -gt 0 ] || skills=(handover obsidian recommending-mcp-servers)
 for s in "${skills[@]}"; do check_skill "$s"; done
 
 echo

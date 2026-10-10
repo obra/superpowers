@@ -466,7 +466,8 @@ superpowers:requesting-code-review's
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge. Point it, too, at the pre-flight table's cross-task rows
 — what one task produces against what another consumes — so it checks the
-seams: each task reviewer saw one side of a seam, never both.
+seams: each task reviewer saw one side of a seam, never both. Pass the
+plan's `**MCP Servers:**` line as `[MCP_SERVERS]` (or "none").
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
