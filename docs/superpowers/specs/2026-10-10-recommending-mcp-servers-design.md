@@ -122,7 +122,8 @@ claims it lets the agent check), and `Install` (the harness command).
 
 - `SKILL.md`: new placeholder `{MCP_SERVERS}` — the plan's `MCP Servers`
   line, or "none".
-- `code-reviewer.md`: a short section:
+- `code-reviewer.md`: placeholder `[MCP_SERVERS]` (this file's bracket
+  convention), filled from `{MCP_SERVERS}`, and a short section:
   - For each listed server that is available in your session, use it to
     exercise the change and report what you verified, with evidence.
   - If a claim in the diff can only be verified with a server you do not
@@ -139,8 +140,8 @@ claims it lets the agent check), and `Install` (the harness command).
   - `skills/brainstorming/SKILL.md` contains
     `superpowers:recommending-mcp-servers` and `## MCP Servers`;
   - `skills/writing-plans/SKILL.md` contains `**MCP Servers:**`;
-  - `skills/requesting-code-review/SKILL.md` and `code-reviewer.md` both
-    contain `{MCP_SERVERS}`.
+  - `skills/requesting-code-review/SKILL.md` contains `{MCP_SERVERS}` and
+    `code-reviewer.md` contains `[MCP_SERVERS]`.
 - **Behavior check (writing-skills RED/GREEN, light)** — a subagent in a
   scratch repo with a temporary `HOME`, so the real catalog is never
   touched; baseline without the skill vs with it:
