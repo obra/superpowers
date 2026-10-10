@@ -19,6 +19,12 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
+git rev-parse --git-dir >/dev/null 2>&1 || {
+  echo "error: not a git repository — review-package needs the BASE and HEAD commits of the task under review." >&2
+  echo "A greenfield plan's first task creates the repo itself: run this from inside the repo once that task has committed." >&2
+  exit 2
+}
+
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
 
