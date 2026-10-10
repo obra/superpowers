@@ -4,6 +4,23 @@ sections blank, contain multiple unrelated changes, or show no evidence
 of human involvement will be closed without review.
 -->
 
+> **This PR MUST target the `dev` branch, not `main`.** `main` is the
+> released branch; active work lands on `dev` first. PRs opened against
+> `main` will be asked to retarget `dev` before review.
+
+## Who is submitting this PR? (required)
+<!-- Required. PRs that omit this will be closed. We assume an agent wrote
+     this PR — tell us which one and where it ran. We weigh contributions by
+     what produced them: content reasoned from documentation is held to a
+     different bar than work grounded in a real session. -->
+
+| Field | Value |
+|-------|-------|
+| Your model + version | |
+| Harness + version | |
+| All plugins installed | |
+| Human partner who reviewed this diff | |
+
 ## What problem are you trying to solve?
 <!-- Describe the specific problem you encountered. If this was a session
      issue, include: what you were doing, what went wrong, the model's

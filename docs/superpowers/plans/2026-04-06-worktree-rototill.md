@@ -275,23 +275,16 @@ If no native tool is available, create a worktree manually using git.
 
 Follow this priority order:
 
-1. **Check existing directories:**
+1. **Check your instructions for a worktree directory preference.** If specified, use it without asking.
+
+2. **Check existing project-local directories:**
    ```bash
    ls -d .worktrees 2>/dev/null     # Preferred (hidden)
    ls -d worktrees 2>/dev/null      # Alternative
    ```
    If found, use that directory. If both exist, `.worktrees` wins.
 
-2. **Check for existing global directory:**
-   ```bash
-   project=$(basename "$(git rev-parse --show-toplevel)")
-   ls -d ~/.config/superpowers/worktrees/$project 2>/dev/null
-   ```
-   If found, use it (backward compatibility with legacy global path).
-
-3. **Check your instructions for a worktree directory preference.** If specified, use it without asking.
-
-4. **Default to `.worktrees/`.**
+3. **Default to `.worktrees/`.**
 
 #### Safety Verification (project-local directories only)
 
@@ -305,16 +298,11 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
-Global directories (`~/.config/superpowers/worktrees/`) need no verification.
-
 #### Create the Worktree
 
 ```bash
-project=$(basename "$(git rev-parse --show-toplevel)")
-
 # Determine path based on chosen location
-# For project-local: path="$LOCATION/$BRANCH_NAME"
-# For global: path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+path="$LOCATION/$BRANCH_NAME"
 
 git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
@@ -387,7 +375,6 @@ Ready to implement <feature-name>
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
-| Global path exists | Use it (backward compat) |
 | Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
@@ -464,7 +451,7 @@ git commit -m "feat: rewrite using-git-worktrees with detect-and-defer (PRI-974)
 Step 0: GIT_DIR != GIT_COMMON detection (skip if already isolated)
 Step 0 consent: opt-in prompt before creating worktree (#991)
 Step 1a: native tool preference (short, first, declarative)
-Step 1b: git worktree fallback with hooks symlink and legacy path compat
+Step 1b: git worktree fallback with project-local directory policy
 Submodule guard prevents false detection
 Platform-neutral instruction file references (#1049)"
 ```
@@ -663,7 +650,7 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.worktrees/` or `~/.config/superpowers/worktrees/`:** Superpowers created this worktree — we own cleanup.
+**If worktree path is under `.worktrees/` or `worktrees/`:** Superpowers created this worktree — we own cleanup.
 
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
@@ -707,7 +694,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 **Cleaning up harness-owned worktrees**
 - **Problem:** Removing a worktree the harness created causes phantom state
-- **Fix:** Only clean up worktrees under `.worktrees/` or `~/.config/superpowers/worktrees/`
+- **Fix:** Only clean up worktrees under `.worktrees/` or `worktrees/`
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work

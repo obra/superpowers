@@ -1,0 +1,6 @@
+{
+  "name": "swe-skills",
+  "version": "6.1.1",
+  "description": "Software engineering skills for code review, interface design, behavior guidelines, and skill-library management",
+  "skills": "./skills/"
+}

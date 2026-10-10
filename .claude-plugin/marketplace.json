@@ -9,11 +9,21 @@
     {
       "name": "superpowers",
       "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-      "version": "5.1.0",
+      "version": "6.1.1",
       "source": "./",
       "author": {
         "name": "Jesse Vincent",
         "email": "jesse@fsck.com"
+      }
+    },
+    {
+      "name": "swe-skills",
+      "description": "Software engineering skills for code review, interface design, behavior guidelines, and skill-library management.",
+      "version": "6.1.1",
+      "source": "./plugins/swe-skills",
+      "author": {
+        "name": "Jesse Vincent",
+        "email": "me@sontieu.dev"
       }
     }
   ]

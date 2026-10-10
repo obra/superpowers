@@ -1,0 +1,34 @@
+{
+  "name": "superpowers-dev",
+  "interface": {
+    "displayName": "Superpowers Dev"
+  },
+  "plugins": [
+    {
+      "name": "superpowers",
+      "version": "6.1.1",
+      "source": {
+        "source": "url",
+        "url": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "swe-skills",
+      "version": "6.1.1",
+      "source": {
+        "source": "local",
+        "path": "./plugins/swe-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

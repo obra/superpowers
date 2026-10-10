@@ -175,8 +175,11 @@ write_upstream_fixture() {
 
     mkdir -p \
         "$repo/.codex-plugin" \
+        "$repo/.kimi-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
+        "$repo/evals/drill" \
+        "$repo/hooks" \
         "$repo/scripts" \
         "$repo/skills/example"
 
@@ -197,6 +200,23 @@ EOF
 .private-journal/
 EOF
 
+    cat > "$repo/.gitmodules" <<'EOF'
+[submodule "evals"]
+	path = evals
+	url = git@example.com:example/evals.git
+EOF
+
+    cat > "$repo/.pre-commit-config.yaml" <<'EOF'
+repos:
+  - repo: local
+    hooks:
+      - id: evals-check
+        name: evals check
+        entry: echo evals
+        language: system
+        files: ^evals/
+EOF
+
     if [[ "$with_pure_ignored" == "1" ]]; then
         cat >> "$repo/.gitignore" <<'EOF'
 ignored-cache/
@@ -210,11 +230,53 @@ EOF
 }
 EOF
 
+    cat > "$repo/.kimi-plugin/plugin.json" <<EOF
+{
+  "name": "superpowers",
+  "version": "$MANIFEST_VERSION"
+}
+EOF
+
     cat > "$repo/assets/superpowers-small.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>
 EOF
 
     printf 'png fixture\n' > "$repo/assets/app-icon.png"
+    printf 'eval harness fixture\n' > "$repo/evals/drill/README.md"
+
+    cat > "$repo/hooks/hooks-codex.json" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    cat > "$repo/hooks/session-start" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start fixture"
+EOF
+    cat > "$repo/hooks/session-start-codex" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start-codex fixture"
+EOF
+
+    cat > "$repo/hooks/run-hook.cmd" <<'EOF'
+@echo off
+echo run-hook fixture
+EOF
+    chmod +x "$repo/hooks/session-start" "$repo/hooks/session-start-codex" "$repo/hooks/run-hook.cmd"
 
     cat > "$repo/skills/example/SKILL.md" <<'EOF'
 # Example Skill
@@ -230,15 +292,67 @@ EOF
 
     git -C "$repo" add \
         .codex-plugin/plugin.json \
+        .kimi-plugin/plugin.json \
         .gitignore \
+        .gitmodules \
+        .pre-commit-config.yaml \
         assets/app-icon.png \
         assets/superpowers-small.svg \
+        evals/drill/README.md \
+        hooks/hooks-codex.json \
+        hooks/run-hook.cmd \
+        hooks/session-start \
+        hooks/session-start-codex \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
     git -C "$repo" add -f .private-journal/keep.txt
 
     commit_fixture "$repo" "Initial upstream fixture"
+}
+
+write_nested_upstream_fixture() {
+    local repo="$1"
+
+    mkdir -p \
+        "$repo/plugins/swe-skills/.codex-plugin" \
+        "$repo/plugins/swe-skills/skills/example" \
+        "$repo/skills/core-only" \
+        "$repo/scripts"
+
+    cp "$SYNC_SCRIPT_SOURCE" "$repo/scripts/sync-to-codex-plugin.sh"
+
+    cat > "$repo/plugins/swe-skills/.codex-plugin/plugin.json" <<EOF
+{
+  "name": "swe-skills",
+  "version": "$MANIFEST_VERSION",
+  "skills": "./skills/",
+  "hooks": {}
+}
+EOF
+
+    printf 'companion readme\\n' > "$repo/plugins/swe-skills/README.md"
+    printf 'companion license\\n' > "$repo/plugins/swe-skills/LICENSE"
+    printf 'nested companion skill\\n' > "$repo/plugins/swe-skills/skills/example/SKILL.md"
+    printf 'core-only skill\\n' > "$repo/skills/core-only/SKILL.md"
+
+    git -C "$repo" add \
+        plugins/swe-skills/.codex-plugin/plugin.json \
+        plugins/swe-skills/README.md \
+        plugins/swe-skills/LICENSE \
+        plugins/swe-skills/skills/example/SKILL.md \
+        scripts/sync-to-codex-plugin.sh \
+        skills/core-only/SKILL.md
+    commit_fixture "$repo" "Initial nested companion upstream fixture"
+}
+
+write_nested_destination_fixture() {
+    local repo="$1"
+
+    mkdir -p "$repo/plugins/swe-skills/skills/example"
+    printf 'destination companion skill\\n' > "$repo/plugins/swe-skills/skills/example/SKILL.md"
+    git -C "$repo" add plugins/swe-skills/skills/example/SKILL.md
+    commit_fixture "$repo" "Initial nested companion destination fixture"
 }
 
 write_destination_fixture() {
@@ -290,6 +404,7 @@ write_synced_destination_fixture() {
         "$repo/plugins/superpowers/.codex-plugin" \
         "$repo/plugins/superpowers/.private-journal" \
         "$repo/plugins/superpowers/assets" \
+        "$repo/plugins/superpowers/hooks" \
         "$repo/plugins/superpowers/skills/example/agents" \
         "$repo/plugins/superpowers/skills/example"
 
@@ -305,6 +420,40 @@ EOF
 EOF
 
     printf 'png fixture\n' > "$repo/plugins/superpowers/assets/app-icon.png"
+
+    cat > "$repo/plugins/superpowers/hooks/hooks-codex.json" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start-codex",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    cat > "$repo/plugins/superpowers/hooks/session-start" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start fixture"
+EOF
+    cat > "$repo/plugins/superpowers/hooks/session-start-codex" <<'EOF'
+#!/usr/bin/env sh
+echo "session-start-codex fixture"
+EOF
+
+    cat > "$repo/plugins/superpowers/hooks/run-hook.cmd" <<'EOF'
+@echo off
+echo run-hook fixture
+EOF
+    chmod +x "$repo/plugins/superpowers/hooks/session-start" "$repo/plugins/superpowers/hooks/session-start-codex" "$repo/plugins/superpowers/hooks/run-hook.cmd"
 
     cat > "$repo/plugins/superpowers/skills/example/SKILL.md" <<'EOF'
 # Example Skill
@@ -324,6 +473,10 @@ EOF
         plugins/superpowers/.codex-plugin/plugin.json \
         plugins/superpowers/assets/app-icon.png \
         plugins/superpowers/assets/superpowers-small.svg \
+        plugins/superpowers/hooks/hooks-codex.json \
+        plugins/superpowers/hooks/run-hook.cmd \
+        plugins/superpowers/hooks/session-start \
+        plugins/superpowers/hooks/session-start-codex \
         plugins/superpowers/skills/example/agents/openai.yaml \
         plugins/superpowers/skills/example/SKILL.md \
         plugins/superpowers/.private-journal/keep.txt
@@ -334,10 +487,15 @@ EOF
 write_stale_ignored_destination_fixture() {
     local repo="$1"
 
-    mkdir -p "$repo/plugins/superpowers/.private-journal"
+    mkdir -p \
+        "$repo/plugins/superpowers/.kimi-plugin" \
+        "$repo/plugins/superpowers/.private-journal"
     printf 'fixture keep\n' > "$repo/plugins/superpowers/.fixture-keep"
+    printf '{"name":"stale-kimi"}\n' > "$repo/plugins/superpowers/.kimi-plugin/plugin.json"
     printf 'stale ignored leak\n' > "$repo/plugins/superpowers/.private-journal/leak.txt"
-    git -C "$repo" add plugins/superpowers/.fixture-keep
+    git -C "$repo" add \
+        plugins/superpowers/.fixture-keep \
+        plugins/superpowers/.kimi-plugin/plugin.json
 
     commit_fixture "$repo" "Initial stale ignored destination fixture"
 }
@@ -368,6 +526,15 @@ run_preview() {
     local fake_bin="$3"
 
     PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" -n --local "$dest" 2>&1
+}
+
+run_nested_preview() {
+    local upstream="$1"
+    local dest="$2"
+    local fake_bin="$3"
+
+    PATH="$fake_bin:$PATH" "$BASH_UNDER_TEST" "$upstream/scripts/sync-to-codex-plugin.sh" -n --local "$dest" \
+        --plugin-root plugins/swe-skills --dest-rel plugins/swe-skills 2>&1
 }
 
 run_bootstrap_preview() {
@@ -421,8 +588,10 @@ write_bootstrap_destination_fixture() {
 
 main() {
     local upstream
+    local nested_upstream
     local mixed_only_upstream
     local dest
+    local nested_dest
     local dest_branch
     local mixed_only_dest
     local stale_dest
@@ -442,6 +611,9 @@ main() {
     local missing_manifest_output
     local mixed_only_status
     local mixed_only_output
+    local nested_status
+    local nested_output
+    local nested_section
     local stale_preview_status
     local stale_preview_output
     local stale_preview_section
@@ -460,8 +632,10 @@ main() {
     trap cleanup EXIT
 
     upstream="$TEST_ROOT/upstream"
+    nested_upstream="$TEST_ROOT/nested-upstream"
     mixed_only_upstream="$TEST_ROOT/mixed-only-upstream"
     dest="$TEST_ROOT/destination"
+    nested_dest="$TEST_ROOT/nested-destination"
     mixed_only_dest="$TEST_ROOT/mixed-only-destination"
     stale_dest="$TEST_ROOT/stale-destination"
     dirty_apply_dest="$TEST_ROOT/dirty-apply-destination"
@@ -476,6 +650,9 @@ main() {
     init_repo "$upstream"
     write_upstream_fixture "$upstream"
 
+    init_repo "$nested_upstream"
+    write_nested_upstream_fixture "$nested_upstream"
+
     init_repo "$mixed_only_upstream"
     write_upstream_fixture "$mixed_only_upstream" 0
 
@@ -484,6 +661,9 @@ main() {
     add_openai_agent_metadata_fixture "$dest"
     checkout_fixture_branch "$dest" "$dest_branch"
     dirty_tracked_destination_skill "$dest"
+
+    init_repo "$nested_dest"
+    write_nested_destination_fixture "$nested_dest"
 
     init_repo "$mixed_only_dest"
     write_destination_fixture "$mixed_only_dest"
@@ -511,6 +691,8 @@ main() {
     set +e
     preview_output="$(run_preview "$upstream" "$dest" "$fake_bin")"
     preview_status=$?
+    nested_output="$(run_nested_preview "$nested_upstream" "$nested_dest" "$fake_bin")"
+    nested_status=$?
     bootstrap_output="$(run_bootstrap_preview "$upstream" "$bootstrap_dest" "$fake_bin")"
     bootstrap_status=$?
     mixed_only_output="$(run_preview "$mixed_only_upstream" "$mixed_only_dest" "$fake_bin")"
@@ -527,6 +709,7 @@ main() {
     help_output="$(run_help "$upstream" "$fake_bin")"
     script_source="$(cat "$upstream/scripts/sync-to-codex-plugin.sh")"
     preview_section="$(printf '%s\n' "$preview_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
+    nested_section="$(printf '%s\n' "$nested_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
     stale_preview_section="$(printf '%s\n' "$stale_preview_output" | sed -n '/^=== Preview (rsync --dry-run) ===$/,/^=== End preview ===$/p')"
     dirty_skill_path="$dirty_apply_dest/plugins/superpowers/skills/example/SKILL.md"
     noop_openai_metadata_path="$noop_apply_dest/plugins/superpowers/skills/example/agents/openai.yaml"
@@ -537,17 +720,39 @@ main() {
     assert_contains "$preview_output" "Version:  $MANIFEST_VERSION" "Preview uses manifest version"
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
+    assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
+    assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
+    assert_contains "$preview_section" "hooks/session-start" "Preview includes session-start hook"
+    assert_contains "$preview_section" "hooks/session-start-codex" "Preview includes Codex session-start hook"
+    assert_contains "$preview_section" "hooks/run-hook.cmd" "Preview includes hook command wrapper"
     assert_contains "$preview_section" ".private-journal/keep.txt" "Preview includes tracked ignored file"
     assert_not_contains "$preview_section" ".private-journal/leak.txt" "Preview excludes ignored untracked file"
     assert_not_contains "$preview_section" "ignored-cache/" "Preview excludes pure ignored directories"
+    assert_not_contains "$preview_section" "evals/" "Preview excludes eval harness"
+    assert_not_contains "$preview_section" ".gitmodules" "Preview excludes repo submodule metadata"
+    assert_not_contains "$preview_section" ".pre-commit-config.yaml" "Preview excludes repo pre-commit config"
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
     assert_not_matches "$preview_section" "\\*deleting +skills/example/agents/openai\\.yaml" "Preview preserves destination-owned OpenAI agent metadata"
     assert_current_branch "$dest" "$dest_branch" "Preview leaves destination checkout on its original branch"
     assert_branch_absent "$dest" "sync/superpowers-*" "Preview does not create sync branch in destination checkout"
+
+    echo ""
+    echo "Nested companion assertions..."
+    if [[ "$nested_status" -ne 0 ]]; then
+        printf '%s\n' "$nested_output" | sed 's/^/      /'
+    fi
+    assert_equals "$nested_status" "0" "Nested companion preview exits successfully"
+    assert_contains "$nested_output" "Version:  $MANIFEST_VERSION" "Nested preview uses companion manifest version"
+    assert_contains "$nested_section" ".codex-plugin/plugin.json" "Nested preview includes companion manifest"
+    assert_contains "$nested_section" "skills/example/SKILL.md" "Nested preview includes companion skill"
+    assert_not_contains "$nested_section" "core-only/SKILL.md" "Nested preview excludes root core skill"
+    assert_not_contains "$nested_section" "plugins/superpowers" "Nested preview does not target core destination"
+    assert_current_branch "$nested_dest" "main" "Nested preview leaves destination checkout on its original branch"
+    assert_branch_absent "$nested_dest" "sync/swe-skills-*" "Nested preview does not create companion sync branch"
 
     echo ""
     echo "Mixed-directory assertions..."
@@ -558,6 +763,7 @@ main() {
     echo ""
     echo "Convergence assertions..."
     assert_equals "$stale_preview_status" "0" "Stale ignored destination preview exits successfully"
+    assert_matches "$stale_preview_section" "\\*deleting +\\.kimi-plugin/plugin\\.json" "Preview deletes stale Kimi manifest from Codex plugin"
     assert_matches "$stale_preview_section" "\\*deleting +\\.private-journal/leak\\.txt" "Preview deletes stale ignored destination file"
 
     echo ""
@@ -595,6 +801,8 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     echo ""
     echo "Help assertions..."
     assert_not_contains "$help_output" "--assets-src" "Help omits --assets-src"
+    assert_contains "$help_output" "--plugin-root PATH" "Help documents nested plugin source"
+    assert_contains "$help_output" "--dest-rel PATH" "Help documents nested destination path"
 
     echo ""
     echo "Source assertions..."

@@ -115,17 +115,12 @@ Full workflow execution test (~10-30 minutes):
 - Subagents follow the skill correctly
 - Final code is functional and tested
 
-#### test-requesting-code-review.sh
-Behavioral test for the code reviewer subagent (~5 minutes):
-- Builds a tiny project with a baseline commit
-- Adds a second commit that plants two real bugs (SQL injection, plaintext password handling)
-- Dispatches the code reviewer via the requesting-code-review skill
-- Verifies the reviewer flags the planted bugs at Critical/Important severity and refuses to approve
-
-**What it tests:**
-- The skill actually dispatches a working code reviewer subagent
-- The reviewer template produces reviewers that catch obvious security bugs
-- The reviewer is not sycophantic — it does not approve a diff with planted Critical issues
+#### test-worktree-native-preference.sh
+RED-GREEN-REFACTOR validation for the using-git-worktrees skill (~5 minutes):
+- RED: skill without Step 1a — agent should use `git worktree add`
+- GREEN: skill with Step 1a — agent should use the native EnterWorktree tool
+- PRESSURE: same as GREEN under urgency framing with pre-existing `.worktrees/`
+- Drill scenario `worktree-creation-under-pressure.yaml` covers the PRESSURE phase only
 
 ## Adding New Tests
 

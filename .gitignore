@@ -1,7 +1,19 @@
 .worktrees/
 .private-journal/
 .claude/
+.superpowers/
 .DS_Store
 node_modules/
 inspo
 triage/
+
+# Eval harness lives in its own repository, cloned into evals/ for local
+# development (see CLAUDE.md / README.md). It is not part of the published
+# plugin, so the whole directory is ignored here.
+evals/
+
+# Keep the nested companion OpenCode entry trackable despite the global .opencode ignore.
+!.opencode/
+!plugins/swe-skills/.opencode/
+!plugins/swe-skills/.opencode/plugins/
+!plugins/swe-skills/.opencode/plugins/swe-skills.js

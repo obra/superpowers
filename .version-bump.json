@@ -4,8 +4,18 @@
     { "path": ".claude-plugin/plugin.json", "field": "version" },
     { "path": ".cursor-plugin/plugin.json", "field": "version" },
     { "path": ".codex-plugin/plugin.json", "field": "version" },
+    { "path": ".kimi-plugin/plugin.json", "field": "version" },
     { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" },
-    { "path": "gemini-extension.json", "field": "version" }
+    { "path": ".claude-plugin/marketplace.json", "field": "plugins.1.version" },
+    { "path": "gemini-extension.json", "field": "version" },
+    { "path": "plugins/swe-skills/package.json", "field": "version" },
+    { "path": "plugins/swe-skills/.claude-plugin/plugin.json", "field": "version" },
+    { "path": "plugins/swe-skills/.cursor-plugin/plugin.json", "field": "version" },
+    { "path": "plugins/swe-skills/.codex-plugin/plugin.json", "field": "version" },
+    { "path": "plugins/swe-skills/.kimi-plugin/plugin.json", "field": "version" },
+    { "path": "plugins/swe-skills/gemini-extension.json", "field": "version" },
+    { "path": ".agents/plugins/marketplace.json", "field": "plugins.0.version" },
+    { "path": ".agents/plugins/marketplace.json", "field": "plugins.1.version" }
   ],
   "audit": {
     "exclude": [
@@ -14,7 +24,8 @@
       "node_modules",
       ".git",
       ".version-bump.json",
-      "scripts/bump-version.sh"
+      "scripts/bump-version.sh",
+      "2026-08-01-swe-skills-plugin-split.md"
     ]
   }
 }

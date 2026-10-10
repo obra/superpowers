@@ -1,0 +1,19 @@
+{
+  "name": "swe-skills",
+  "version": "6.1.1",
+  "description": "Software engineering guidance, code review, interface design, and skill-library practices.",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "software-engineering",
+    "code-review",
+    "design",
+    "workflow"
+  ],
+  "skills": "./skills/"
+}

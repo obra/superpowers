@@ -18,6 +18,8 @@
 #   ./scripts/sync-to-codex-plugin.sh -y                           # skip confirm
 #   ./scripts/sync-to-codex-plugin.sh --local PATH                 # existing checkout
 #   ./scripts/sync-to-codex-plugin.sh --base BRANCH                # default: main
+#   ./scripts/sync-to-codex-plugin.sh --plugin-root PATH            # default: .
+#   ./scripts/sync-to-codex-plugin.sh --dest-rel PATH              # default: plugins/superpowers
 #   ./scripts/sync-to-codex-plugin.sh --bootstrap                  # create plugin dir if missing
 #
 # Bootstrap mode: skips the "plugin must exist on base" requirement and creates
@@ -35,6 +37,8 @@ set -euo pipefail
 FORK="prime-radiant-inc/openai-codex-plugins"
 DEFAULT_BASE="main"
 DEST_REL="plugins/superpowers"
+PLUGIN_ROOT="."
+PLUGIN_NAME="superpowers"
 
 # Paths in upstream that should NOT land in the embedded plugin.
 # All patterns use a leading "/" to anchor them to the source root.
@@ -52,7 +56,11 @@ EXCLUDES=(
   "/.gitattributes"
   "/.github/"
   "/.gitignore"
+  "/.gitmodules"
+  "/.kimi-plugin/"
   "/.opencode/"
+  "/.pi/"
+  "/.pre-commit-config.yaml"
   "/.version-bump.json"
   "/.worktrees/"
   ".DS_Store"
@@ -69,7 +77,7 @@ EXCLUDES=(
   # Directories not shipped by canonical Codex plugins
   "/commands/"
   "/docs/"
-  "/hooks/"
+  "/evals/"
   "/lib/"
   "/scripts/"
   "/tests/"
@@ -133,6 +141,7 @@ append_git_ignored_file_excludes() {
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 UPSTREAM="$(cd "$SCRIPT_DIR/.." && pwd)"
+UPSTREAM_PLUGIN_ROOT="$UPSTREAM/$PLUGIN_ROOT"
 BASE="$DEFAULT_BASE"
 DRY_RUN=0
 YES=0
@@ -150,11 +159,22 @@ while [[ $# -gt 0 ]]; do
     -y|--yes)      YES=1; shift ;;
     --local)       LOCAL_CHECKOUT="$2"; shift 2 ;;
     --base)        BASE="$2"; shift 2 ;;
+    --plugin-root) PLUGIN_ROOT="$2"; shift 2 ;;
+    --dest-rel)    DEST_REL="$2"; shift 2 ;;
     --bootstrap)   BOOTSTRAP=1; shift ;;
     -h|--help)     usage 0 ;;
     *)             echo "Unknown arg: $1" >&2; usage 2 ;;
   esac
 done
+
+if [[ "$PLUGIN_ROOT" == "." || "$PLUGIN_ROOT" == "./" ]]; then
+  PLUGIN_ROOT="."
+  PLUGIN_NAME="superpowers"
+else
+  PLUGIN_ROOT="${PLUGIN_ROOT#./}"
+  PLUGIN_NAME="$(basename "$PLUGIN_ROOT")"
+fi
+UPSTREAM_PLUGIN_ROOT="$UPSTREAM/$PLUGIN_ROOT"
 
 # =============================================================================
 # Preflight
@@ -170,10 +190,11 @@ command -v python3 >/dev/null || die "python3 not found in PATH"
 gh auth status >/dev/null 2>&1 || die "gh not authenticated — run 'gh auth login'"
 
 [[ -d "$UPSTREAM/.git" ]]         || die "upstream '$UPSTREAM' is not a git checkout"
-[[ -f "$UPSTREAM/.codex-plugin/plugin.json" ]] || die "committed Codex manifest missing at $UPSTREAM/.codex-plugin/plugin.json"
+[[ -f "$UPSTREAM_PLUGIN_ROOT/.codex-plugin/plugin.json" ]] ||
+  die "committed Codex manifest missing at $PLUGIN_ROOT/.codex-plugin/plugin.json"
 
-# Read the upstream version from the committed Codex manifest.
-UPSTREAM_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$UPSTREAM/.codex-plugin/plugin.json")"
+# Read the upstream version from the selected plugin manifest.
+UPSTREAM_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$UPSTREAM_PLUGIN_ROOT/.codex-plugin/plugin.json")"
 [[ -n "$UPSTREAM_VERSION" ]] || die "could not read 'version' from committed Codex manifest"
 
 UPSTREAM_BRANCH="$(cd "$UPSTREAM" && git branch --show-current)"
@@ -304,9 +325,9 @@ prepare_preview_checkout
 
 TIMESTAMP="$(date -u +%Y%m%d-%H%M%S)"
 if [[ $BOOTSTRAP -eq 1 ]]; then
-  SYNC_BRANCH="bootstrap/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
+  SYNC_BRANCH="bootstrap/${PLUGIN_NAME}-${UPSTREAM_SHORT}-${TIMESTAMP}"
 else
-  SYNC_BRANCH="sync/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
+  SYNC_BRANCH="sync/${PLUGIN_NAME}-${UPSTREAM_SHORT}-${TIMESTAMP}"
 fi
 
 # =============================================================================
@@ -315,8 +336,10 @@ fi
 
 RSYNC_ARGS=(-av --delete --delete-excluded)
 for pat in "${EXCLUDES[@]}"; do RSYNC_ARGS+=(--exclude="$pat"); done
-append_git_ignored_directory_excludes
-append_git_ignored_file_excludes
+if [[ "$PLUGIN_ROOT" == "." ]]; then
+  append_git_ignored_directory_excludes
+  append_git_ignored_file_excludes
+fi
 
 copy_preserved_destination_metadata() {
   local destination="$1"
@@ -342,7 +365,7 @@ prepare_sync_source() {
   rm -rf "$SYNC_SOURCE"
   mkdir -p "$SYNC_SOURCE"
 
-  rsync "${RSYNC_ARGS[@]}" "$UPSTREAM/" "$SYNC_SOURCE/" >/dev/null
+  rsync "${RSYNC_ARGS[@]}" "$UPSTREAM_PLUGIN_ROOT/" "$SYNC_SOURCE/" >/dev/null
   copy_preserved_destination_metadata "$destination" "$SYNC_SOURCE"
 }
 
@@ -359,7 +382,11 @@ echo "Fork:     $FORK"
 echo "Base:     $BASE"
 echo "Branch:   $SYNC_BRANCH"
 if [[ $BOOTSTRAP -eq 1 ]]; then
-  echo "Mode:     BOOTSTRAP (creating plugins/superpowers/ when absent)"
+  if [[ "$PLUGIN_ROOT" == "." ]]; then
+    echo "Mode:     BOOTSTRAP (creating plugins/superpowers/ when absent)"
+  else
+    echo "Mode:     BOOTSTRAP (creating $DEST_REL/ when absent)"
+  fi
 fi
 echo ""
 echo "=== Preview (rsync --dry-run) ==="
@@ -419,7 +446,7 @@ if [[ $BOOTSTRAP -eq 1 ]]; then
   COMMIT_TITLE="bootstrap superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
   PR_BODY="Initial bootstrap of the superpowers plugin from upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
 
-Creates \`plugins/superpowers/\` by copying the tracked plugin files from upstream, including \`.codex-plugin/plugin.json\` and \`assets/\`.
+Creates \`plugins/superpowers/\` by copying the tracked plugin files from upstream, including \`.codex-plugin/plugin.json\`, \`assets/\`, and \`hooks/\`.
 
 Run via: \`scripts/sync-to-codex-plugin.sh --bootstrap\`
 Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
@@ -429,7 +456,7 @@ else
   COMMIT_TITLE="sync superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
   PR_BODY="Automated sync from superpowers upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
 
-Copies the tracked plugin files from upstream, including the committed Codex manifest and assets.
+Copies the tracked plugin files from upstream, including the committed Codex manifest, assets, and hooks.
 
 Run via: \`scripts/sync-to-codex-plugin.sh\`
 Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA

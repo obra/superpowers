@@ -1,0 +1,7 @@
+{
+  "name": "swe-skills",
+  "version": "6.1.1",
+  "description": "Software engineering skills for coding agents",
+  "skills": "./skills/",
+  "hooks": {}
+}
