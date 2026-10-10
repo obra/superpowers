@@ -64,6 +64,9 @@ independently testable deliverable.
 
 **Tech Stack:** [Key technologies/libraries]
 
+**MCP Servers:** [from the spec's MCP Servers section, or "none" — servers
+marked ➕ are prerequisites your human partner installs before execution]
+
 **Spec:** [path to the spec/design doc this plan implements — the plan
 argues from the spec, so the spec travels with it; executors read both]
 
@@ -88,6 +91,10 @@ owns the code, in that task's own step style.]
 
 ---
 ```
+
+When the spec has no `## MCP Servers` section, invoke
+`superpowers:recommending-mcp-servers` on the plan's scope first. A plan
+never contains a task in which the agent installs an MCP server.
 
 ## Task Structure
 
@@ -150,7 +157,8 @@ of step carries what makes it unambiguous and nothing more:
   writes the body. A body appears only for an algorithm the signature and
   tests do not determine, or for exact copy the spec fixes.
 - **A verification step:** the command to run and the output that means it
-  passed.
+  passed. Name the MCP server when it is how the step is verified (e.g.
+  "open /login via Playwright MCP; screenshot shows the form").
 - **A reference to another task:** that task's Interfaces block says what
   to use; the plan does not repeat that task's code.
 - **An assumption about a system outside the repo:** an API's execution or

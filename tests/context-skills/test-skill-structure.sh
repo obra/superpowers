@@ -52,6 +52,19 @@ check_mcp_hooks() {
   has "$b" '"User approves design?" -> "Recommend MCP servers" [label="yes"];' "brainstorming: flow edge in"
   has "$b" '"Recommend MCP servers" -> "Write design doc";' "brainstorming: flow edge out"
   has "$b" 'runs during brainstorming' "brainstorming: terminal-state clarification"
+
+  local w="$REPO_ROOT/skills/writing-plans/SKILL.md" ln_stack ln_mcp ln_spec
+  has "$w" '**MCP Servers:** [from the spec' "writing-plans: header line"
+  has "$w" 'superpowers:recommending-mcp-servers' "writing-plans: invokes without a spec"
+  has "$w" 'installs an MCP server' "writing-plans: no install tasks"
+  ln_stack="$(grep -nF '**Tech Stack:**' "$w" | head -1 | cut -d: -f1)"
+  ln_mcp="$(grep -nF '**MCP Servers:**' "$w" | head -1 | cut -d: -f1)"
+  ln_spec="$(grep -nF '**Spec:**' "$w" | head -1 | cut -d: -f1)"
+  if [ -n "$ln_mcp" ] && [ "${ln_stack:-0}" -lt "$ln_mcp" ] && [ "$ln_mcp" -lt "${ln_spec:-0}" ]; then
+    pass "writing-plans: MCP Servers line sits between Tech Stack and Spec"
+  else
+    fail "writing-plans: MCP Servers line sits between Tech Stack and Spec"
+  fi
 }
 
 check_skill() {
