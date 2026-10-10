@@ -43,6 +43,15 @@ check_mcp_hooks() {
   has "$f" 'by capability' "mcp: status judged by capability"
   has "$f" 'declines' "mcp: declined entries"
   has "$f" 'never rewrite' "mcp: hand-edited catalog"
+
+  local b="$REPO_ROOT/skills/brainstorming/SKILL.md"
+  has "$b" '6. **Recommend MCP servers**' "brainstorming: checklist step 6"
+  has "$b" '10. **Transition to implementation**' "brainstorming: checklist renumbered"
+  has "$b" 'superpowers:recommending-mcp-servers' "brainstorming: invokes the skill"
+  has "$b" '## MCP Servers' "brainstorming: spec section"
+  has "$b" '"User approves design?" -> "Recommend MCP servers" [label="yes"];' "brainstorming: flow edge in"
+  has "$b" '"Recommend MCP servers" -> "Write design doc";' "brainstorming: flow edge out"
+  has "$b" 'runs during brainstorming' "brainstorming: terminal-state clarification"
 }
 
 check_skill() {
