@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Structural checks for the fork's context skills (skills/handover and
-# skills/obsidian): frontmatter, word budget, required sections, expected and
+# Structural checks for the fork's skills (skills/handover, skills/obsidian
+# and skills/recommending-mcp-servers): frontmatter, word budget, required sections, expected and
 # referenced files exist, helper scripts are executable in git, no
-# machine-specific paths, "your human partner" voice. Behavior is checked by
+# machine-specific paths, "your human partner" voice, and the MCP hooks in
+# brainstorming, writing-plans and requesting-code-review. Behavior is checked by
 # the scenario runs recorded in the implementation plan, not here.
 #
-# Usage: test-skill-structure.sh [SKILL...]   (default: handover obsidian)
+# Usage: test-skill-structure.sh [SKILL...]
+#   (default: handover obsidian recommending-mcp-servers)
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -22,7 +24,25 @@ expected_files() {
   case "$1" in
     handover) echo "SKILL.md scripts/handover-path scripts/handover-files" ;;
     obsidian) echo "SKILL.md note-templates.md scripts/vault-path scripts/vault-changes scripts/vault-mark-synced" ;;
+    recommending-mcp-servers) echo "SKILL.md" ;;
   esac
+}
+
+# has FILE FIXED-STRING LABEL — pass when FILE contains FIXED-STRING.
+has() {
+  if grep -qF -- "$2" "$1" 2>/dev/null; then pass "$3"; else fail "$3"; fi
+}
+
+# The MCP recommendation skill and the hooks that hand off to it.
+check_mcp_hooks() {
+  local f="$REPO_ROOT/skills/recommending-mcp-servers/SKILL.md"
+  has "$f" '~/.claude/superpowers/mcp-catalog.md' "mcp: catalog path"
+  has "$f" '| Server | Need | Verifies | Status |' "mcp: output table"
+  has "$f" 'No MCP servers recommended' "mcp: empty result"
+  has "$f" 'mcp__' "mcp: fallback to visible tools"
+  has "$f" 'by capability' "mcp: status judged by capability"
+  has "$f" 'declines' "mcp: declined entries"
+  has "$f" 'never rewrite' "mcp: hand-edited catalog"
 }
 
 check_skill() {
@@ -35,6 +55,7 @@ check_skill() {
   for rel in $(expected_files "$name"); do
     if [ -f "$skill_dir/$rel" ]; then pass "$name: expected file present: $rel"; else fail "$name: expected file present: $rel"; fi
   done
+  [ "$name" = recommending-mcp-servers ] && check_mcp_hooks
   [ -f "$skill_md" ] || return
 
   # --- frontmatter ----------------------------------------------------------
@@ -105,7 +126,7 @@ check_skill() {
 }
 
 skills=("$@")
-[ ${#skills[@]} -gt 0 ] || skills=(handover obsidian)
+[ ${#skills[@]} -gt 0 ] || skills=(handover obsidian recommending-mcp-servers)
 for s in "${skills[@]}"; do check_skill "$s"; done
 
 echo
