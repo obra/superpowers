@@ -65,6 +65,14 @@ check_mcp_hooks() {
   else
     fail "writing-plans: MCP Servers line sits between Tech Stack and Spec"
   fi
+
+  local r="$REPO_ROOT/skills/requesting-code-review/SKILL.md"
+  local c="$REPO_ROOT/skills/requesting-code-review/code-reviewer.md"
+  has "$r" '{MCP_SERVERS}' "code-review: SKILL.md placeholder"
+  has "$c" '[MCP_SERVERS]' "code-review: template placeholder"
+  has "$c" '## MCP Servers' "code-review: template section"
+  has "$c" 'Do not write the MCP catalog' "code-review: reviewer never writes catalog"
+  has "$c" 'under Recommendations' "code-review: missing servers recommended"
 }
 
 check_skill() {

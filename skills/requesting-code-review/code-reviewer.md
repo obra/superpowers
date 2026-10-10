@@ -20,6 +20,16 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
+    ## MCP Servers
+
+    [MCP_SERVERS]
+
+    - For each listed server available in your session, use it to exercise
+      the change and report what you verified, with evidence.
+    - A claim you can verify only with a server you do not have goes
+      under Recommendations: the server and the claim it would verify.
+    - Do not write the MCP catalog.
+
     ## Git Range to Review
 
     **Base:** [BASE_SHA]
@@ -208,6 +218,7 @@ Subagent (general-purpose):
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
+- `[MCP_SERVERS]` — MCP servers from the plan, or "none"
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
