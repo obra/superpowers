@@ -109,6 +109,34 @@ else
 fi
 
 echo ""
+echo "--- start-server.sh rejects value-taking options given no value ---"
+
+# Each of these options reads "$2" then unconditionally runs "shift 2". With
+# only one argument left, bash's shift 2 fails and does NOT advance the
+# positional parameters, so "while [[ $# -gt 0 ]]" never terminates: the script
+# spins forever burning CPU, emitting nothing, and never exiting non-zero. The
+# hang happens during parsing, before any directory is created, so these
+# invocations leave nothing behind. Each must instead fail fast with the same
+# JSON error contract the unknown-flag branch already uses.
+for option in --project-dir --host --url-host --idle-timeout-minutes; do
+  parse_output="$(timeout 10 bash "$START_SCRIPT" "$option" 2>&1)"
+  parse_rc=$?
+
+  if [[ "$parse_rc" == "124" ]]; then
+    fail "$option without a value exits instead of hanging" \
+         "timed out after 10s (exit 124): the argument parse loop never terminated"
+  elif [[ "$parse_rc" == "0" ]]; then
+    fail "$option without a value exits instead of hanging" \
+         "expected non-zero exit, got 0. Output: $parse_output"
+  elif ! grep -q "\"error\".*$option" <<< "$parse_output"; then
+    fail "$option without a value exits instead of hanging" \
+         "expected a JSON error naming $option, got exit $parse_rc: $parse_output"
+  else
+    pass "$option without a value exits instead of hanging"
+  fi
+done
+
+echo ""
 echo "--- Results: $passed passed, $failed failed ---"
 if [[ $failed -gt 0 ]]; then
   exit 1
