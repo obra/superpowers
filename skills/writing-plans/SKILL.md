@@ -84,7 +84,13 @@ document: it says what the software must do, not everything it will
 meet, and its silence on an input is not permission for that input to
 break the program. Write the list here, once, with the spec in front of
 you. Then, for each line, add the test that pins it to the task that
-owns the code, in that task's own step style.]
+owns the code, in that task's own step style.
+
+Any step that decides which thing it is looking at from the shape of a
+string — a name compared for equality, a key prefix, a `split` on a
+delimiter — fails on the input where two different things produce the
+same string. Name that input here and pin it, or have the step carry
+identity as structured data instead.]
 
 ---
 ```
