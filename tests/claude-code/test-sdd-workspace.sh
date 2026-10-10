@@ -61,6 +61,21 @@ PLAN
 
 Do the other thing.
 PLAN
+    cat > "$repo/plan-alpha.md" <<'PLAN'
+# Parallel Plan
+
+## Task A1: First lane
+
+Do A1.
+
+## Task A10: Later in the same lane
+
+Do A10.
+
+## Task B2: Second lane
+
+Do B2.
+PLAN
 
     # --- argument validation ---
     local rc=0
@@ -138,6 +153,25 @@ PLAN
     else
         fail "task-brief writes its brief under the plan's workspace"
         echo "    got: $brief_path"
+    fi
+
+    local alpha_brief="$repo/alpha-brief.md"
+    if (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-alpha.md A1 "$alpha_brief" >/dev/null) \
+        && grep -q '^## Task A1:' "$alpha_brief" \
+        && grep -q '^Do A1\.$' "$alpha_brief" \
+        && ! grep -q '^## Task A10:' "$alpha_brief"; then
+        pass "task-brief extracts an alphanumeric task without absorbing its prefix neighbor"
+    else
+        fail "task-brief extracts an alphanumeric task without absorbing its prefix neighbor"
+    fi
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-alpha.md 'A.*' "$repo/invalid-brief.md" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "task-brief rejects non-alphanumeric task IDs"
+    else
+        fail "task-brief rejects non-alphanumeric task IDs"
+        echo "    exit: $rc"
     fi
 
     # --- review-package takes the plan first and lands in its directory ---
