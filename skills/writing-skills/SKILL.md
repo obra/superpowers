@@ -97,6 +97,7 @@ skills/
 - Max 1024 characters total
 - `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
 - `description`: Third-person, describes ONLY when to use (NOT what it does)
+  - Quote the value when it contains `: ` (colon + space): unquoted, YAML parses it as a key-value separator, the frontmatter breaks, and the CLI silently ignores the skill. When in doubt, always quote `description`.
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see SDO section for why)
@@ -169,6 +170,16 @@ description: Use when executing implementation plans with independent tasks in t
 
 # ✅ GOOD: Triggering conditions only
 description: Use when implementing any feature or bugfix, before writing implementation code
+```
+
+**YAML quoting:** If the description contains `: ` (colon + space), wrap it in double quotes. An unquoted `: ` is parsed as a YAML key-value separator, which breaks the frontmatter — the skill is then silently ignored (e.g. `npx skills add` lists `Found 0 skills` with no error).
+
+```yaml
+# ❌ BAD: Unquoted ": " is invalid YAML — skill silently ignored
+description: Use when configuring X for production applications: tuning and sizing
+
+# ✅ GOOD: Quoted — parses as a plain string
+description: "Use when configuring X for production applications: tuning and sizing"
 ```
 
 **Content:**
@@ -679,3 +690,4 @@ How future agents find your skill:
 6. **Loads example** (only when implementing)
 
 **Optimize for this flow** - put searchable terms early and often.
+
