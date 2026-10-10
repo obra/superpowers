@@ -8,6 +8,8 @@ labels: enhancement
 BEFORE FILING: Search open AND closed issues. Many features have been
 requested before — some were implemented differently, some are in
 progress, and some were intentionally declined.
+Describe only the relevant technical request and use generic paths in public
+examples. Omit unrelated private context even when paraphrasing.
 -->
 
 - [ ] I searched existing issues and this has not been proposed before
@@ -33,7 +35,12 @@ progress, and some were intentionally declined.
 ## Environment (required)
 <!-- Required. We assume an agent wrote this request — tell us which one and
      where it ran. We weigh proposals reasoned from documentation differently
-     than ones grounded in a real session where the problem actually came up. -->
+     than ones grounded in a real session where the problem actually came up.
+     List plugins whose skills or tools were used, whose instructions
+     materially shaped the work, or that evidence implicates. If citing an
+     agent failure, include loaded/injected instructions that plausibly
+     confound it unless clean reproduction rules them out. Mere installation
+     or catalog listing does not count. -->
 
 | Field | Value |
 |-------|-------|
@@ -41,7 +48,7 @@ progress, and some were intentionally declined.
 | Harness (Claude Code, Cursor, etc.) | |
 | Harness version | |
 | Your model + version | |
-| All plugins installed | |
+| Plugins used or relevant to this request | |
 
 ## Context
 <!-- Optional: the workflow where you hit this, links, transcripts. -->

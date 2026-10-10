@@ -11,9 +11,10 @@ Build the per-human-turn record of skill and plugin use, then look for gaps.
    file named `SKILL.md`. Record the line, the skill name, and the human turn it
    happened in.
 3. List every non-superpowers plugin, skill, agent type, MCP server, or
-   hook used. Use only the evidenced tool, attribution, agent-dispatch, MCP,
-   and hook meanings recorded in the case file; identify values associated
-   with something other than `superpowers`.
+   hook used, and each plugin whose instructions were loaded or injected into
+   the relevant session even without a tool call. Distinguish loaded from
+   invoked and merely catalog-listed. Use only evidenced tool, attribution,
+   injection, agent-dispatch, MCP, and hook meanings from the case file.
 4. For each human turn, compare the request text against the trigger
    descriptions of the superpowers skills installed (read
    `<install root>/skills/*/SKILL.md` frontmatter `description` lines; the
@@ -24,7 +25,10 @@ Build the per-human-turn record of skill and plugin use, then look for gaps.
      invocation in that turn (state which description matched and quote
      the request);
    - a skill invoked one or more turns after the matching request (late);
-   - each non-superpowers plugin/skill/tool used, with where.
+   - each non-superpowers plugin/skill/tool used, with where; note any loaded
+     or injected instructions that could confound the finding without claiming
+     they caused it. Record any clean reproduction without them; otherwise
+     state the uncertainty.
 
 Do not say whether a missed or late trigger was wrong. Report the match
 and the absence; the reader decides.
