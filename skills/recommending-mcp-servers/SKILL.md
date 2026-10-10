@@ -54,8 +54,10 @@ claims it lets you check), and `Install` (the harness command).
    harness's own command elsewhere, or look at the `mcp__*` tools visible
    in your session. Judge each server by capability, not by exact name —
    the same server can appear under different prefixes (for example
-   `mcp__playwright__…` or `mcp__plugin_playwright_…`). Mark each one
-   ✅ installed or ➕ to install.
+   `mcp__playwright__…` or `mcp__plugin_playwright_…`). When a different
+   installed server covers the need, name the installed server in the
+   row, not the catalog's. Mark each row ✅ installed or ➕ to install —
+   never ✅ on a row whose named server is not installed.
 4. **Return the table** — at most 5 servers, the ones that verify the most
    important claims:
 
@@ -92,3 +94,4 @@ claims it lets you check), and `Install` (the harness command).
 | "I'll fix up the catalog while I'm here" | Append approved entries only; never rewrite. |
 | "I'm sure this server exists, no need to ask" | Unapproved entries are how invented names get in. Show the draft first. |
 | "It's not in `claude mcp list` under that name" | Judge by capability; prefixes vary by install route. |
+| "Another server does this, so the catalog's one is ✅" | Name the server that is installed; the catalog's stays ➕. |

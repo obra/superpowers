@@ -254,7 +254,8 @@ Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE 
 available model — the whole-branch review is a judgment task — using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md), with the
-package path, the plan and spec paths, the plan's Review Focus section
+package path, the plan and spec paths, the plan's
+`**MCP Servers:**` line as `[MCP_SERVERS]` (or "none"), the plan's Review Focus section
 verbatim if it has one (the input classes and failure modes the plan's
 tests do not exercise — the reviewer checks each deliberately), and a
 pointer to the ledger's `Ruling:` lines so it can weigh the calls you

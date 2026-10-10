@@ -43,6 +43,10 @@
         "path": "skills/receiving-code-review/SKILL.md"
       },
       {
+        "id": "recommending-mcp-servers",
+        "path": "skills/recommending-mcp-servers/SKILL.md"
+      },
+      {
         "id": "requesting-code-review",
         "path": "skills/requesting-code-review/SKILL.md"
       },

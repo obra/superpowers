@@ -39,10 +39,14 @@ check_mcp_hooks() {
   has "$f" '~/.claude/superpowers/mcp-catalog.md' "mcp: catalog path"
   has "$f" '| Server | Need | Verifies | Status |' "mcp: output table"
   has "$f" 'No MCP servers recommended' "mcp: empty result"
-  has "$f" 'mcp__' "mcp: fallback to visible tools"
-  has "$f" 'by capability' "mcp: status judged by capability"
-  has "$f" 'declines' "mcp: declined entries"
-  has "$f" 'never rewrite' "mcp: hand-edited catalog"
+  # Procedure-only phrases: the Red Flags table repeats some keywords, so
+  # these must not be satisfiable by that table alone.
+  has "$f" 'the result is the line' "mcp: procedure states the empty result"
+  has "$f" 'or look at the `mcp__*` tools visible' "mcp: fallback to visible tools"
+  has "$f" 'Judge each server by capability, not by exact name' "mcp: status judged by capability"
+  has "$f" 'name the installed server' "mcp: a different server is named, not the catalog's"
+  has "$f" 'declines an entry, continue' "mcp: declined entries"
+  has "$f" 'rewrite or reorder existing entries' "mcp: hand-edited catalog"
 
   local b="$REPO_ROOT/skills/brainstorming/SKILL.md"
   has "$b" '6. **Recommend MCP servers**' "brainstorming: checklist step 6"
@@ -73,6 +77,10 @@ check_mcp_hooks() {
   has "$c" '## MCP Servers' "code-review: template section"
   has "$c" 'Do not write the MCP catalog' "code-review: reviewer never writes catalog"
   has "$c" 'under Recommendations' "code-review: missing servers recommended"
+  has "$REPO_ROOT/skills/subagent-driven-development/SKILL.md" '`**MCP Servers:**` line as `[MCP_SERVERS]`' "sdd: final review fills MCP_SERVERS"
+  has "$REPO_ROOT/skills/executing-plans/SKILL.md" '`**MCP Servers:**` line as `[MCP_SERVERS]`' "executing-plans: final review fills MCP_SERVERS"
+  has "$REPO_ROOT/.muse-plugin/plugin.json" '"id": "recommending-mcp-servers"' "registered in the Muse manifest"
+  has "$REPO_ROOT/README.md" '**recommending-mcp-servers**' "listed in the README"
 }
 
 check_skill() {
