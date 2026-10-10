@@ -22,6 +22,7 @@
 
 set -euo pipefail
 
+case ${1:-} in -h|--help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
 : "${CODEX_HOME:?CODEX_HOME must be set (csd sets it per worker)}"
 [ $# -ge 1 ] || { echo "usage: codex-with-plugin.sh PLUGIN_ROOT|curated [codex args...]" >&2; exit 2; }
 ROOT=$1; shift
@@ -45,7 +46,7 @@ if [ "$ROOT" != curated ]; then
     || fail "snapshotting $ROOT failed"
   { "$REAL" plugin marketplace add "$SNAP" && "$REAL" plugin add superpowers@superpowers-dev; } >> "$LOG" 2>&1 \
     || fail "installing $ROOT into $CODEX_HOME failed"
-  installed=$(find "$CODEX_HOME/plugins/cache/superpowers-dev" -path '*/skills/brainstorming/SKILL.md' | head -1)
+  installed=$(find "$CODEX_HOME/plugins/cache/superpowers-dev" -path '*/skills/brainstorming/SKILL.md' 2>/dev/null | head -1 || true)
   cmp -s "$installed" "$ROOT/skills/brainstorming/SKILL.md" \
     || fail "installed brainstorming skill ($installed) differs from $ROOT"
   KEEP=superpowers@superpowers-dev
@@ -75,8 +76,8 @@ fi
 if [ "${CODEX_PERMISSIONS:-}" = workspace-write ]; then
   args=()
   for a in "$@"; do [ "$a" = --dangerously-bypass-approvals-and-sandbox ] || args+=("$a"); done
-  # csd's event hooks run inside the sandbox and write under /tmp/csd-workers.
-  set -- -s workspace-write -a on-request -c 'sandbox_workspace_write.writable_roots=["/tmp/csd-workers"]' "${args[@]}"
+  # csd's event hooks run inside the sandbox and write under its worker dir.
+  set -- -s workspace-write -a on-request -c "sandbox_workspace_write.writable_roots=[\"${CSD_WORKER_DIR:-/tmp/csd-workers}\"]" "${args[@]}"
 fi
 
 exec "$REAL" "$@"

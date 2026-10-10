@@ -26,7 +26,8 @@ Usage: converse.sh -s SCENARIO -a ARM -P PLUGIN_DIR [-H HARNESS] [-t MAX_TURNS] 
   -P PLUGIN_DIR  Superpowers checkout to load as the plugin. With -H codex,
                  "curated" instead uses the account's curated release.
   -H HARNESS     claude (default), codex, or pi. Pi runs on PI_PROVIDER
-                 / PI_MODEL (default lunaroute / glm-5.3).
+                 / PI_MODEL (default lunaroute / glm-5.3); leave
+                 csd's CSD_PI_MODEL unset, or pi gets two --model flags.
                  Codex runs at
                  CODEX_EFFORT (default max) on csd's model, or
                  CSD_CODEX_MODEL if set, using REAL_CODEX_BIN if set.
@@ -44,7 +45,7 @@ Usage: converse.sh -s SCENARIO -a ARM -P PLUGIN_DIR [-H HARNESS] [-t MAX_TURNS] 
 
 TURN_TIMEOUT sets how many seconds one subject turn may take (default 900).
 
-Writes OUT_DIR/ARM/SCENARIO/ (plus codex-sessions/ for Codex):
+Writes OUT_DIR/ARM/SCENARIO/ (plus codex-sessions/ or pi-sessions/):
   transcript.md   the conversation
   tools.jsonl     every tool call the subject made, in order
   files.txt       files in the work dir at the end (and its git log)
@@ -54,10 +55,15 @@ Prints one summary line when done, with ended= one of: human (the
 simulated human ended it), cap (hit MAX_TURNS), converse-failed,
 wait-timeout, human-failed. Read the transcript yourself.
 
-Requires: tmux, jq, codex for -H codex, and claude-session-driver at CSD (default
+Requires: tmux, jq, codex for -H codex, pi for -H pi, and
+claude-session-driver 4.0.1 or later at CSD (default
 ~/git/claude-session-driver/skills/driving-claude-code-sessions/scripts/csd)
-with consent granted (`csd grant-consent`), at a version that accepts
-Claude's folder-trust dialog when it defaults to "No, exit".
+with consent granted (`csd grant-consent`).
+
+With -H claude, marks the run's work dir trusted in ~/.claude.json for the
+length of the run and removes that entry when the run ends. That's a
+rewrite of your real ~/.claude.json; a Claude Code session writing the file
+at the same instant can lose its write.
 EOF
 }
 
@@ -95,15 +101,20 @@ echo "$WORK" > "$DEST/workdir"
 git -C "$WORK" rev-parse -q --verify HEAD > "$DEST/base" || true
 
 NAME="bs-$ARM-$SCENARIO-$$"
-if [ "$HARNESS" = claude ]; then
-  # Claude asks whether to trust a new git repo, defaulting to "No, exit".
-  # Mark the work dir trusted in ~/.claude.json so the worker starts unattended.
-  # Parallel runs take a lock so one run's rewrite can't drop another's entry.
-  CLAUDE_JSON="$HOME/.claude.json"
+WORKERS=${CSD_WORKER_DIR:-/tmp/csd-workers}
+# Claude asks whether to trust a new git repo, defaulting to "No, exit".
+# Marking the work dir trusted in ~/.claude.json lets the worker start
+# unattended. Parallel runs take a lock so one run's rewrite can't drop
+# another's entry. Usage: claude_trust 'JQ_FILTER' (with $dir bound to WORK).
+CLAUDE_JSON="$HOME/.claude.json"
+claude_trust() {
   ( flock 9
-    jq --arg dir "$WORK" '.projects[$dir].hasTrustDialogAccepted = true' "$CLAUDE_JSON" > "$CLAUDE_JSON.converse.$$" \
+    jq --arg dir "$WORK" "$1" "$CLAUDE_JSON" > "$CLAUDE_JSON.converse.$$" \
       && mv "$CLAUDE_JSON.converse.$$" "$CLAUDE_JSON"
-  ) 9> "${TMPDIR:-/tmp}/converse-claude-json.lock" \
+  ) 9> "${TMPDIR:-/tmp}/converse-claude-json.lock"
+}
+if [ "$HARNESS" = claude ]; then
+  claude_trust '.projects[$dir].hasTrustDialogAccepted = true' \
     || { echo "error: could not mark $WORK trusted in $CLAUDE_JSON" >&2; exit 1; }
   LAUNCH=("$CSD" launch "$NAME" "$WORK" -- --setting-sources project --strict-mcp-config --plugin-dir "$PLUGIN")
 elif [ "$HARNESS" = pi ]; then
@@ -130,15 +141,18 @@ else
   LAUNCH=("$CSD" launch --harness codex "$NAME" "$WORK" -- -c "model_reasoning_effort=\"${CODEX_EFFORT:-max}\"" \
           -c tools.experimental_request_user_input.enabled=false -c features.apps=false ${CODEX_ARGS:-})
 fi
+untrust() { [ "$HARNESS" != claude ] || claude_trust 'del(.projects[$dir])' || true; }
 if ! SHIM=$("${LAUNCH[@]}" 2> "$DEST/launch.log"); then
+  untrust
   echo "error: worker launch failed; see $DEST/launch.log" >&2
   exit 1
 fi
-# csd deletes a Codex worker's CODEX_HOME on stop; keep its session logs.
+# csd deletes a Codex or Pi worker's home on stop; keep its session logs.
 trap '"$SHIM" read-events --type pre_tool_use > "$DEST/tools.jsonl" 2>/dev/null || true
-      [ "$HARNESS" != codex ] || cp -r "/tmp/csd-workers/homes/$NAME/sessions" "$DEST/codex-sessions" 2>/dev/null || true
-      [ "$HARNESS" != pi ] || cp -r "/tmp/csd-workers/homes/$NAME/sessions" "$DEST/pi-sessions" 2>/dev/null || true
-      "$SHIM" stop >/dev/null 2>&1 || true' EXIT
+      [ "$HARNESS" != codex ] || cp -r "$WORKERS/homes/$NAME/sessions" "$DEST/codex-sessions" 2>/dev/null || true
+      [ "$HARNESS" != pi ] || cp -r "$WORKERS/homes/$NAME/sessions" "$DEST/pi-sessions" 2>/dev/null || true
+      "$SHIM" stop >/dev/null 2>&1 || true
+      untrust' EXIT
 
 HUMAN_RULES='You are playing the human in a conversation with an AI assistant. Stay in character as described below. Reply with ONLY your next message to the assistant: no stage directions, no quotes, no commentary.
 

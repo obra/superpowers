@@ -21,7 +21,7 @@ Usage: batch.sh -x EXPERIMENT -s SCENARIO -P PLUGIN_DIR -o OUT_DIR [-n REPS] [-t
   -o OUT_DIR     Results root, shared across experiments.
   -n REPS        Parallel reps (default 5).
   -t MAX_TURNS   Passed to converse.sh (default 1: first turn only).
-  -H HARNESS     claude or codex (default codex).
+  -H HARNESS     claude, codex, or pi (default codex).
 EOF
 }
 

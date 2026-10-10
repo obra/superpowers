@@ -4,7 +4,8 @@
 # Use after converse.sh runs with -t 1: did the subject open a conversation
 # or start building? A run HELD when its first reply asks a question and
 # no new code files were left in the work dir; BUILT when code files exist;
-# OTHER for anything else (read those transcripts). Prints one line per run
+# OTHER for anything else (read those transcripts); NORUN when the run left
+# no transcript (its worker never launched). Prints one line per run
 # and a tally. Fixture files committed by a scenario's setup.sh don't count;
 # files the subject committed do. MIXED means Codex started with the
 # account's curated superpowers listed next to the one under test, so the
@@ -23,11 +24,14 @@ EOF
 
 [ $# -ge 1 ] && [ -d "$1" ] || { usage >&2; exit 2; }
 OUT=$1 ONLY=${2:-}
-held=0 built=0 other=0 mixed=0
+held=0 built=0 other=0 mixed=0 norun=0
 
 for dir in "$OUT"/*/*/; do
   dir=${dir%/}; run=${dir#"$OUT"/}
   [ -z "$ONLY" ] || [ "${run#*/}" = "$ONLY" ] || continue
+  if [ ! -f "$dir/transcript.md" ]; then
+    printf '%-6s %-28s\n' NORUN "$run"; norun=$((norun + 1)); continue
+  fi
   work=$(cat "$dir/workdir" 2>/dev/null || true)
   code=0
   if [ -d "$work" ]; then
@@ -44,11 +48,11 @@ for dir in "$OUT"/*/*/; do
   fi
   # The first reply's last line that asks something (Codex often adds a
   # footer citing the skill after its question).
-  last=$(awk '/^## AGENT/{a=1; next} /^## HUMAN/{if (a) exit} a && /\?/ {buf=$0} END {print buf}' "$dir/transcript.md" 2>/dev/null)
+  last=$(awk '/^## AGENT/{a=1; next} /^## HUMAN/{if (a) exit} a && /\?/ {buf=$0} END {print buf}' "$dir/transcript.md")
   # The main session's rollout is the earliest; subagents start later ones.
   first=$(find "$dir/codex-sessions" -name 'rollout*.jsonl' 2>/dev/null | sort | head -1 || true)
   copies=0
-  [ -z "$first" ] || copies=$(grep -m1 skills_instructions "$first" | grep -o -- '- superpowers:brainstorming:' | wc -l)
+  [ -z "$first" ] || copies=$(grep -m1 skills_instructions "$first" | grep -o -- '- superpowers:brainstorming:' | wc -l || true)
   if [ "$copies" -gt 1 ]; then
     verdict=MIXED; mixed=$((mixed + 1))
   elif [ "$code" -gt 0 ]; then verdict=BUILT; built=$((built + 1))
@@ -57,4 +61,4 @@ for dir in "$OUT"/*/*/; do
   fi
   printf '%-6s %-28s code=%-3s last: %s\n' "$verdict" "$run" "$code" "${last:0:110}"
 done
-echo "held=$held built=$built other=$other mixed=$mixed"
+echo "held=$held built=$built other=$other mixed=$mixed norun=$norun"

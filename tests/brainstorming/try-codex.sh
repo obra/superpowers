@@ -4,10 +4,10 @@
 # Use when you want to drive a brainstorming scenario yourself and see what
 # the eval subjects see: a fresh CODEX_HOME with only the superpowers under
 # test installed (account connectors and other plugins off), the scenario's
-# fixture work dir, the same model and effort, and optionally the
-# using-superpowers bootstrap preloaded. Prints the scenario's opening
-# message to paste in. Unlike eval runs, Codex runs with its default
-# sandbox and approvals, not YOLO mode.
+# fixture work dir, the model and effort our eval runs used, and optionally
+# the using-superpowers bootstrap preloaded. Prints the scenario's opening
+# message to paste in. Codex runs with its default sandbox and approvals,
+# as converse.sh runs do unless CODEX_PERMISSIONS=yolo.
 
 set -euo pipefail
 
@@ -25,10 +25,12 @@ Usage: try-codex.sh [-b] [-s SCENARIO] PLUGIN
 Environment:
   REAL_CODEX_BIN   codex to run (default: codex on PATH). The eval runs
                    used a build with openai/codex#51908.
-  CODEX_MODEL      Model (default gpt-6.1-sol).
+  CODEX_MODEL      Model (default CSD_CODEX_MODEL if set, else
+                   gpt-6.1-sol, the model our eval runs used).
   CODEX_EFFORT     Reasoning effort (default max).
 
-Leaves the work dir and CODEX_HOME under $TMPDIR (paths printed at exit).
+Leaves the work dir and CODEX_HOME under $TMPDIR (paths printed at exit),
+minus the copied ~/.codex/auth.json, which is removed when Codex exits.
 EOF
 }
 
@@ -69,9 +71,10 @@ printf '[projects."%s"]\ntrust_level = "trusted"\n' "$WORK" > "$CODEX_HOME/confi
 # superpowers and lists it beside the one under test (see
 # codex-with-plugin.sh). Say so, since that session didn't test PLUGIN alone.
 report() {
+  rm -f "$CODEX_HOME/auth.json"
   echo; echo "work dir: $WORK"; echo "codex home: $CODEX_HOME"
   local first
-  first=$(find "$CODEX_HOME/sessions" -name 'rollout*.jsonl' 2>/dev/null | sort | head -1)
+  first=$(find "$CODEX_HOME/sessions" -name 'rollout*.jsonl' 2>/dev/null | sort | head -1 || true)
   [ -n "$first" ] && [ "$(grep -m1 skills_instructions "$first" | grep -o -- '- superpowers:brainstorming:' | wc -l)" -gt 1 ] \
     && echo "WARNING: this session also listed the curated superpowers; it may have used that instead. Run again."
   return 0
@@ -84,6 +87,6 @@ echo "----"
 read -r -p "Press Enter to start Codex. "
 
 CODEX_BOOTSTRAP=$BOOT bash "$SCRIPT_DIR/codex-with-plugin.sh" "$PLUGIN" \
-  -C "$WORK" -m "${CODEX_MODEL:-gpt-6.1-sol}" \
+  -C "$WORK" -m "${CODEX_MODEL:-${CSD_CODEX_MODEL:-gpt-6.1-sol}}" \
   -c "model_reasoning_effort=\"${CODEX_EFFORT:-max}\"" \
   -c tools.experimental_request_user_input.enabled=false -c features.apps=false

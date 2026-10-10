@@ -20,7 +20,7 @@ Usage: matrix.sh -s SCENARIO -o OUT_DIR [-n REPS] [-t MAX_TURNS] [-H HARNESS] AR
   -o OUT_DIR     Results root (use a fresh one per matrix).
   -n REPS        Reps per arm (default 8).
   -t MAX_TURNS   Passed to converse.sh (default 1: first turn only).
-  -H HARNESS     claude or codex (default codex).
+  -H HARNESS     claude, codex, or pi (default codex).
   ARM=DIR        Arm label and the superpowers checkout it loads.
   ARM=DIR|ARGS   Same, plus extra codex flags for this arm only (CODEX_ARGS).
 EOF
@@ -38,7 +38,7 @@ shift $((OPTIND - 1))
 [ -n "$SCENARIO" ] && [ -n "$OUT" ] && [ $# -ge 1 ] || { usage >&2; exit 2; }
 for spec in "$@"; do
   dir=${spec#*=}; dir=${dir%%|*}
-  [[ "$spec" == *=* ]] && [ -d "$dir" ] || { echo "error: bad ARM=DIR: $spec" >&2; exit 2; }
+  [[ "$spec" == *=* ]] && { [ -d "$dir" ] || [ "$dir" = curated ]; } || { echo "error: bad ARM=DIR: $spec" >&2; exit 2; }
 done
 
 mkdir -p "$OUT/logs"

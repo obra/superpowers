@@ -13,11 +13,13 @@
 # 'Unknown provider'. This copies the real one in first.
 #
 # PI_PROVIDER and PI_MODEL pick the model (default lunaroute / glm-5.3).
+# Leave csd's CSD_PI_MODEL unset: csd would pass its own --model too.
 # Superpowers loads the way quorum's pi launcher loads it: the checkout as
 # an extension, and its skills directory with skill discovery off.
 
 set -euo pipefail
 
+case ${1:-} in -h|--help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
 : "${PI_CODING_AGENT_DIR:?PI_CODING_AGENT_DIR must be set (csd sets it per worker)}"
 PLUGIN=${1:?usage: pi-with-plugin.sh PLUGIN_ROOT [pi args...]}
 shift

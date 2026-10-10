@@ -36,7 +36,7 @@ for t in "$OUT"/*/*/transcript.md; do
     | grep -i -E "$PATTERN" | cut -c1-220 | head -n "$MAX" | sed 's/^/  /' || true
   if [ -f "$dir/files.txt" ]; then
     code=$(sed '/^--- git log/q' "$dir/files.txt" | grep -v -E '^--- |node_modules|^\./docs/|^\./\.' \
-           | grep -E '\.(js|ts|tsx|jsx|html|css|swift|py|json)$' | wc -l)
+           | grep -E '\.(js|ts|tsx|jsx|html|css|swift|py|json)$' | wc -l || true)
     echo "  [code files at end: $code]"
   fi
 done
