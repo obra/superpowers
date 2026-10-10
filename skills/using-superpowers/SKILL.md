@@ -55,6 +55,7 @@ If your harness appears here, read its reference file for special instructions:
 
 - Claude Code: `references/claude-code-tools.md`
 - Codex: `references/codex-tools.md`
+- OpenClaw: `references/openclaw-tools.md`
 - Pi: `references/pi-tools.md`
 - Antigravity: `references/antigravity-tools.md`
 - Hermes Agent: `references/hermes-tools.md`
