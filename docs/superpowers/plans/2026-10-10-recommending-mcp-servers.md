@@ -191,3 +191,18 @@ UNVERIFIED: whether a dispatched subagent can be pointed at a scratch catalog pa
 
 - Installing servers; upstream PR; non–Claude Code listing commands; pruning catalog entries.
 - Shipping: the installed plugin comes from GitHub `jounimn/superpowers`, so the hooks go live only after merging to the fork's `main`, pushing, and updating the plugin — handled by `superpowers:finishing-a-development-branch`, not this plan.
+
+## Behavior Results
+
+Run 2026-10-10: Sonnet subagents, scratch homes, `mcp__*` calls forbidden. The real catalog was absent before and after the runs, and no seeded scratch catalog changed.
+
+| # | RED (main skills) | GREEN (branch skills) | Pass | Evidence |
+|---|---|---|---|---|
+| A | No MCP section; 0 MCP mentions | `## MCP Servers`: 1 browser row naming 3 claims, ✅ | PASS | Rerun as A2 with an absolute catalog path: Playwright from the catalog, Postgres excluded ("does not apply to SQLite") |
+| B | 0 MCP mentions | `No MCP servers recommended`, with reasoning | PASS | No padding; no catalog draft |
+| C | 0 MCP mentions | Draft entry under Questions; asks for approval | PASS | The scratch catalog was still absent afterwards |
+| D | Playwright mentioned (it is in the plan line); no placeholder | `MCP_SERVERS` filled; Playwright under Recommendations with the unverified claim | PASS | Seed catalog unchanged. RED partly overlaps because the plan input already names the server |
+
+Harness note: in the first A and B GREEN runs, the agents read the shell's real `~`, not the scratch home. The probe only asked for a path, so it did not catch this. Neither run wrote anything. A2 passed after the prompt gave the catalog's absolute path.
+
+Observation: with "by capability", A2 marked the catalog's Playwright ✅ because a different browser server (claude-in-chrome) is installed. The capability is real, but the row names a server that is not installed.
