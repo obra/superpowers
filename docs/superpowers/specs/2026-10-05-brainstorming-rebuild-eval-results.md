@@ -9,7 +9,7 @@ simulated humans, and testers were all claude-opus-5-5. Subjects ran with
 `--setting-sources project --strict-mcp-config` plus `--plugin-dir` for the
 checkout under test, so no user CLAUDE.md, user plugins, or MCP servers.
 
-**Tools** (all in `tests/brainstorming/`):
+**Tools** (all in superpowers-evals, `quick-evals/brainstorming/`):
 - `first-turn.sh`: isolated `claude -p` samples of the opening message.
 - `converse.sh`: a claude-session-driver worker talks with a simulated human
   who has hidden intent (`scenarios/*/persona.md`).

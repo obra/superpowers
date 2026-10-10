@@ -1,1 +1,0 @@
-I want a little script that renames my photos by the date they were taken.
