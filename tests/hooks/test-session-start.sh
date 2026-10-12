@@ -294,28 +294,36 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     "$bash_bin" -c 'cd "$1" && exec "$2" "$3"' _ "$backslash_cwd" "$bash_bin" "$backslash_hook"
 
-# When cat is on PATH, the JSON must still go through it: the pipe absorbs
-# EPIPE on Windows + Git Bash (#1612). The stub records that it ran.
-cat_stub_dir="$TEST_ROOT/cat-stub/bin"
-cat_marker="$TEST_ROOT/cat-stub/used"
-mkdir -p "$cat_stub_dir"
-printf '#!%s\n: > "%s"\nexec /bin/cat "$@"\n' "$bash_bin" "$cat_marker" > "$cat_stub_dir/cat"
-chmod +x "$cat_stub_dir/cat"
-cat_stub_home="$(make_home cat-stub)"
-assert_command_output \
-    "session-start with cat on PATH emits nested additionalContext" \
-    "nested" \
-    "" \
-    "" \
-    "$cat_stub_home" \
-    PATH="$cat_stub_dir" \
-    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-    "$bash_bin" "$HOOK_UNDER_TEST"
-if [[ -f "$cat_marker" ]]; then
-    pass "session-start pipes its JSON through cat when cat is on PATH"
-else
-    fail "session-start pipes its JSON through cat when cat is on PATH"
-fi
+# EPIPE on Windows + Git Bash (#1612): the harness can close the hook's stdout
+# before the JSON is written. The hook must still exit 0 with nothing on
+# stderr, directly and through run-hook.cmd. The reader (:) exits without
+# reading, so the write usually lands on a closed pipe.
+assert_closed_stdout() {
+    local description="$1"
+    shift
+    local err_file="$TEST_ROOT/closed-stdout.err"
+    local status
+    set +e
+    env -i PATH="${PATH:-}" HOME="$TEST_ROOT" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" "$@" 2>"$err_file" | :
+    status="${PIPESTATUS[0]}"
+    set -e
+    if [[ "$status" -eq 0 && ! -s "$err_file" ]]; then
+        pass "$description"
+    else
+        fail "$description"
+        echo "    exit $status, stderr:"
+        sed 's/^/      /' "$err_file"
+    fi
+}
+
+for _ in 1 2 3; do
+    assert_closed_stdout \
+        "session-start exits 0 silently when stdout is closed early" \
+        "$bash_bin" "$HOOK_UNDER_TEST"
+    assert_closed_stdout \
+        "run-hook.cmd exits 0 silently when stdout is closed early" \
+        "$bash_bin" "$WRAPPER_UNDER_TEST" session-start
+done
 
 if [[ "$FAILURES" -gt 0 ]]; then
     echo "STATUS: FAILED ($FAILURES failure(s))"
