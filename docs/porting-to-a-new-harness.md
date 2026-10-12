@@ -292,10 +292,10 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| has a plugin install command and a manifest `contextFileName` (or equivalent) the installer keeps | C via the plugin installer | Antigravity (`.antigravity-plugin/` — `agy plugin install` ships a generated context file; verify the installer preserves it — Part 6) |
+| lists each installed skill's description, with no session-start event and no context-file field | skill-index bootstrap (Part 5 Step 5, case 2 fallback) | Antigravity (`.antigravity-plugin/plugin.json` + `skills/` only) |
 
-Most real harnesses fit one row cleanly; the last is the hybrid case (rule 2 still
-holds — the bootstrap rides the install mechanism, never a user-config edit).
+Most real harnesses fit one row cleanly; the last is the soft case — see Step 5's
+fallback caveats (rule 2 still holds — never a user-config edit).
 
 ---
 
@@ -525,11 +525,22 @@ honors the rule rather than breaking it. Distinguish three cases:
    the file-read tool when the skill applies** — the sanctioned mechanism here,
    the way `references/pi-tools.md` states it.
 
-   **For the bootstrap itself, prefer a declared context file (Part 6).** If the
-   harness has a `contextFileName`-style manifest field — as Antigravity does —
-   ship a generated context file through the installer: it's guaranteed-loaded and
-   carries both the `using-superpowers` content and the tool mapping. That is the
-   strong, preferred path.
+   **For the bootstrap itself, prefer something the harness loads every
+   session (Part 6)** — a declared context file where the manifest has a
+   `contextFileName`-style field. Antigravity has none, and its other options
+   cost more than they buy, so it uses the surfaced skill index below:
+   - Its hooks have no session-start event. `PreInvocation` runs before every
+     model call; an `ephemeralMessage` it injects is dropped on the next call,
+     and `invocationNum` resets on each user turn. A `userMessage` gated on
+     `invocationNum == 0` and `initialNumSteps == 1` injects exactly once per
+     conversation, but agy still starts the hook process on every model call.
+     `${PLUGIN_ROOT}` is not set in hooks (they run from the plugin root).
+     `hooks.json` must sit at the plugin root; no manifest field moves it.
+   - It loads `rules/*.md` from a plugin every session, but harnesses that
+     install from the git repo share its root, and Cursor is one of them: it
+     also loads any `rules/*.md` a plugin ships. A file in a shared plugin root
+     is visible to every harness that reads that root — check before adding
+     one.
 
    **Fallback — the surfaced skill index.** If there's no context-file field but
    the harness surfaces each installed skill's name + description at session start,
@@ -678,7 +689,7 @@ it. Distribution differs per harness ecosystem — find yours:
 | External marketplace fork, synced by script | Codex | `scripts/sync-to-codex-plugin.sh` rsyncs the tracked plugin files into a separate fork repo and opens a PR. Read its include/exclude list so you ship the right tree (it deliberately drops repo-internal dirs and other harnesses' dotdirs). |
 | Git-URL extension install | Gemini, Kimi Code, OpenCode | Users install from a git URL (`gemini extensions install …`; Kimi Code `/plugins install …`; an `opencode.json` `plugin` array entry). Document the exact command. |
 | Package-manifest fields | pi | Declared through fields in the repo-root `package.json`; users install via the harness's package command. |
-| Local installer (plugin install) | Antigravity (`agy`) | A small `install.sh` that runs the harness's own `agy plugin install` against a staging dir holding the manifest, the skills, and a generated `contextFileName` context file (the bootstrap). Everything arrives through the install mechanism — *not* by editing the user's config (see below). |
+| Git-URL plugin install + marketplace | Antigravity (`agy`) | Users run `agy plugin install https://github.com/obra/superpowers`. agy reads `.antigravity-plugin/plugin.json`, whose Marketplace fields (`displayName`, `logo`, `suggestedPrompts`, `version`, `author`) also drive the Antigravity Marketplace listing. Without that manifest, agy falls back to importing `gemini-extension.json`. |
 
 Then:
 
@@ -694,13 +705,9 @@ Then:
     session), that is the strongest clean bootstrap: declare it, and the installer
     preserves it *and* the harness loads it. Generate it at install time from the
     live `using-superpowers/SKILL.md` + the tool mapping (wrapped in
-    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts. This is what
-    `.antigravity-plugin/install.sh` does — `agy plugin install` reports
-    `✔ context : ANTIGRAVITY.md`, and a clean session reads `using-superpowers`'s
-    SKILL.md, loads `brainstorming`, and enters the brainstorming flow before any
-    code. **Verify with a marker** that the installer keeps the file and the
-    harness loads it: one porter wrongly concluded it couldn't, because they
-    shipped the file *without* declaring `contextFileName` and it was stripped as
+    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts.
+    **Verify with a marker** that the installer keeps the file and the
+    harness loads it: a file the manifest doesn't declare can be stripped as
     unrecognized.
   - **Otherwise lean on the installed `using-superpowers` skill itself.** If the
     harness surfaces each installed skill's name + description at session start,
@@ -711,6 +718,18 @@ Then:
   - If neither works, the harness cannot be cleanly supported yet — **say so**
     and raise it, rather than hand-editing the user's config.
 
+- **Packagers can strip executable bits — skill prose invokes bundled scripts
+  through their interpreter.** Some marketplace packaging and install paths
+  lose Unix file modes: the Codex marketplace cache delivered the SDD helpers
+  as `0644` (#2040, #2134), and the MiniMax Code marketplace ships every file
+  as mode `600`. A bare `scripts/foo.sh` or `./foo.js` in a skill then fails
+  with `Permission denied` on that harness even though the repo's tree records
+  `100755`. So every script invocation in `skills/**/*.md` is spelled through
+  its interpreter — `bash scripts/start-server.sh …`, `bash
+  scripts/review-package …`, `node ./render-graphs.js …` — and a script that
+  runs a sibling script needs the same treatment (#2134). Don't "tidy" the
+  prefixes away, and don't reach for a packaging-side `chmod`: the mode loss
+  happens on the consumer's side, so only the invocation form survives it.
 - **Write install docs.** A `docs/README.<harness>.md` and/or a
   `.<harness>/INSTALL.md` (see `docs/README.opencode.md` and
   `.opencode/INSTALL.md`), plus an install section in the top-level `README.md`.
@@ -784,13 +803,14 @@ Use this as the live index; when in doubt, read the files, not this table.
 
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
+| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | surfaced skill index: `using-superpowers`' description triggers it (no session-start hook event exists) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
 | Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; no adapter file needed | `tests/hooks/` | marketplace |
 | Codex | `.codex-plugin/plugin.json` (declares empty `hooks`) | native skill discovery (no session-start hook) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
-| OpenCode | `.opencode/plugins/superpowers.js` (declared via root `package.json` `main`) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` plugin git URL |
+| OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook("context")` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
 | pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
 
 ## Appendix B — Gotchas that have bitten porters
@@ -822,6 +842,8 @@ Use this as the live index; when in doubt, read the files, not this table.
   that mechanism *is* reading `SKILL.md` — say so explicitly in the mapping
   (Part 5).
 - **`.sh` on Windows.** Keep hook scripts extensionless (Part 7).
+- **Bare `scripts/foo.sh` in skill prose.** Packagers can strip exec bits
+  (Part 6). Invoke bundled scripts as `bash scripts/foo.sh` / `node scripts/foo.js`.
 - **Unregistered version.** A new manifest not added to `.version-bump.json`
   ships stale (Part 6).
 - **Editing skills to fit the harness.** Never. The fix goes in the tool mapping.
