@@ -134,7 +134,16 @@ command -v git >/dev/null || die "git not found in PATH"
 command -v jq >/dev/null || die "jq not found in PATH"
 command -v tar >/dev/null || die "tar not found in PATH"
 command -v gzip >/dev/null || die "gzip not found in PATH"
-command -v shasum >/dev/null || die "shasum not found in PATH"
+# shasum ships with macOS but not with every Linux base image (Fedora-family
+# distros package it separately in perl-Digest-SHA); coreutils sha256sum
+# computes the same digest.
+if command -v shasum >/dev/null; then
+  SHA256_CMD=(shasum -a 256)
+elif command -v sha256sum >/dev/null; then
+  SHA256_CMD=(sha256sum)
+else
+  die "shasum or sha256sum not found in PATH"
+fi
 if [[ "$FORMAT" == "zip" ]]; then
   command -v zip >/dev/null || die "zip not found in PATH"
   command -v unzip >/dev/null || die "unzip not found in PATH"
@@ -341,7 +350,7 @@ if [[ -n "$unexpected_paths" ]]; then
 fi
 
 entry_count="$(printf '%s\n' "$archive_paths" | wc -l | tr -d ' ')"
-checksum="$(shasum -a 256 "$OUTPUT" | awk '{print $1}')"
+checksum="$("${SHA256_CMD[@]}" "$OUTPUT" | awk '{print $1}')"
 
 echo "Archive: $OUTPUT"
 echo "Format:  $FORMAT"
