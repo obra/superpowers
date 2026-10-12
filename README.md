@@ -90,6 +90,8 @@ Install Superpowers as a global Command Code mod from this repository:
 cmd mods add -g obra/superpowers
 ```
 
+The installed package registers its `skills/` directory for `activate_skill`. `cmd mods update` refreshes the mod and those skills together.
+
 Update later with:
 
 ```bash

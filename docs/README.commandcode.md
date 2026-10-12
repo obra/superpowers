@@ -20,26 +20,29 @@ Update installed mods with:
 cmd mods update
 ```
 
-Start a fresh session after updating so the new checkout is loaded.
+Start a fresh session after updating so the new checkout is loaded. Skills stay in that checkout. There is no `cmd skills add` and no copy into `~/.commandcode/skills/`.
 
 ## How It Works
 
-`package.json` declares the Command Code mod:
+`package.json` declares the mod and the skills directory:
 
 ```json
 {
   "commandcode": {
-    "mods": ["./.commandcode/mods/superpowers.ts"]
+    "mods": ["./.commandcode/mods/superpowers.ts"],
+    "skills": ["./skills"]
   }
 }
 ```
 
-That mod does two things:
+The mod does two things:
 
-1. Injects the `using-superpowers` bootstrap at session start through `appendSystemPrompt`.
-2. Loads Command Code tool mapping from `skills/using-superpowers/references/commandcode-tools.md` on disk.
+1. Calls `cmd.addSkillsPath` on this package's `skills/` directory so Command Code's skill catalog includes Superpowers. `activate_skill` loads a skill by name from that catalog. The same directory is declared as `commandcode.skills`, which `cmd mods add` registers when it loads the package.
+2. Injects the `using-superpowers` bootstrap through `appendSystemPrompt`, including the tool mapping from `skills/using-superpowers/references/commandcode-tools.md`.
 
-Skills stay in this repository's `skills/` directory. There are no copied skills, no `cmd skills add`, and no extra slash commands.
+`appendSystemPrompt` is appended after the base system prompt on every round. The text is cached at module scope so those bytes stay stable; the prompt-prefix cache keys off them. That cache is load-bearing.
+
+Command Code also has `SessionStart` hooks (`settings.json` → `hooks.SessionStart` → `hookSpecificOutput.additionalContext`). That field is injected into the session's first user turn, so compaction can drop it. `appendSystemPrompt` stays in the system prompt across compaction, which is why this integration is a mod and not a SessionStart hook.
 
 ## Tool Mapping
 
@@ -47,7 +50,7 @@ Skills describe actions instead of hard-coding one runtime's tool names. On Comm
 
 [skills/using-superpowers/references/commandcode-tools.md](../skills/using-superpowers/references/commandcode-tools.md)
 
-**Blessed skill invoke path:** read `skills/<name>/SKILL.md` with `read_file` (or use `/skill-name` if already discovered).
+**Invoke a skill with `activate_skill` and the skill's `name`.** If the name collides with a built-in command, use `/skill:<name>`.
 
 ## Troubleshooting
 
@@ -60,11 +63,15 @@ Skills describe actions instead of hard-coding one runtime's tool names. On Comm
 ### Skills not triggering
 
 1. Confirm the mod is installed and enabled.
-2. Start a fresh session.
+2. Start a fresh session so the skill catalog reloads.
 3. Try the acceptance prompt: `Let's make a react todo list`. A working install should load `brainstorming` before writing code.
 
 ### Bootstrap text missing
 
-1. Confirm `package.json` still declares `"commandcode": { "mods": ["./.commandcode/mods/superpowers.ts"] }`.
+1. Confirm `package.json` still declares `"commandcode": { "mods": ["./.commandcode/mods/superpowers.ts"], "skills": ["./skills"] }`.
 2. Confirm `.commandcode/mods/superpowers.ts` is present in the installed package checkout.
 3. Update with `cmd mods update` and start a fresh session.
+
+### Bootstrap injected twice
+
+`appendSystemPrompt` and a `SessionStart` hook's `additionalContext` are separate channels. Command Code does not dedupe them. Do not also install a SessionStart hook that injects the using-superpowers bootstrap. This mod already injects it.

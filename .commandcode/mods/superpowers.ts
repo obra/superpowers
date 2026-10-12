@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { CommandCodeAPI } from "@commandcode/harness";
+import type { ModApi } from "@commandcode/harness";
 
 const EXTREMELY_IMPORTANT_MARKER = "<EXTREMELY_IMPORTANT>";
 const BOOTSTRAP_MARKER = "superpowers:using-superpowers bootstrap for commandcode";
@@ -17,9 +17,17 @@ const toolMappingPath = resolve(
 	"commandcode-tools.md",
 );
 
+// Load-bearing for appendSystemPrompt, not a read optimization. The hook runs
+// every round, and the provider prompt-prefix cache keys off the system
+// prompt bytes. A turn-to-turn change busts that cache. Module scope stays
+// stable for the process and re-reads disk on the next process start.
 let cachedBootstrap: string | null | undefined;
 
-export default function superpowersCommandCodeMod(cmd: CommandCodeAPI) {
+export default function superpowersCommandCodeMod(cmd: ModApi) {
+	// Absolute path: Command Code resolves relative addSkillsPath arguments
+	// against the mod file, and this checkout is what `cmd mods update`
+	// refreshes. package.json commandcode.skills declares the same directory.
+	cmd.addSkillsPath(skillsDir);
 	cmd.hooks({
 		appendSystemPrompt: () => getBootstrapContent() ?? "",
 	});
@@ -39,7 +47,7 @@ You have superpowers.
 
 The using-superpowers skill content is included below and is already loaded for this Command Code session. Follow it now. Do not try to load using-superpowers again.
 
-Skills live at ${skillsDir}. To invoke a skill, read its SKILL.md with read_file (or use /skill-name if already discovered). Reading SKILL.md is the blessed invoke path.
+Superpowers skills from this package are registered on Command Code's skill path (${skillsDir}). Invoke a skill with activate_skill and the skill's name. Tool names for other actions are in the mapping below.
 
 ${body}
 
