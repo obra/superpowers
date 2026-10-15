@@ -9,7 +9,7 @@
     {
       "name": "toolbelt",
       "description": "Personal agent-skills framework: brainstorming, specs, plans, subagent-driven development, review, and delivery.",
-      "version": "8.0.0",
+      "version": "9.0.0",
       "source": "./",
       "author": {
         "name": "Mike",

@@ -2,6 +2,19 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v9.0.0 (2026-10-14)
+
+Cuts the repeated checking and orchestrator churn that made long deliveries slow and expensive.
+
+- **Test what changed; CI runs the full suite.** Implementers, reviewers, and monitors run the tests related to the changed files plus incremental typecheck and lint. Publishing a PR no longer runs the full suite locally; merging locally without CI still does.
+- **First-run notes replace seen-red fights.** Implementers note each new test's first failing run. Reviewers judge whether the test is good, and never send work back only because the note is missing.
+- **Per-task review only for risky tasks.** Tasks touching money, auth, tenant scoping, migrations, or shared contracts carry `Review: per-task`; the rest are covered by the boundary's final review. One implementer may carry a whole boundary.
+- **Append-only ledger at gates.** `subagent-driven-development/scripts/ledger-append` writes timestamped lines; orchestrating owns the list of allowed lines. No per-turn status writes.
+- **Open questions don't stall the run.** Impactful questions go to your human partner, unblocked work continues, and anything blocking for a day is raised.
+- **Same-file boundaries combine or stack** under one monitor; task size limits are higher. Plans hold decisions, contracts, and risks, not implementation code. UX gate gets one fix round. Sweeps never block merges.
+- **Local-gate carry uses `git patch-id --verbatim`**, so whitespace changes no longer carry. Provider reviews run again on every new code head.
+- **Breaking:** plans no longer carry an `## Agent Routing` section. Routing comes only from the routing text (or your human partner's direct instruction); ledger routes are audit records.
+
 ## v8.0.0 (2026-09-26)
 
 Agent routing is plain English, one file per orchestrating harness, instead of JSON behind a resolver script.
