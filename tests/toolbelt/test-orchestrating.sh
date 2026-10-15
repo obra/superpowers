@@ -51,6 +51,9 @@ assert_contains "$implementer" "its Result is \`REBUTTED:\`" "implementer can re
 assert_contains "$rereview" "A \`REBUTTED\` row is ADDRESSED when its reasoning holds" "re-review judges rebuttals"
 assert_contains "$skill" "When a fix loop ends with findings still open, you rule on them" "open and rebutted findings are ruled on"
 assert_contains "$skill" "## Keep going" "orchestrator names the early stops to avoid"
+assert_contains "$skill" "scripts/ledger-append LEDGER_FILE" "ledger lines are appended by script"
+assert_contains "$skill" "only at a gate" "ledger writes happen at gates only"
+assert_contains "$skill" "never auto-merge or auto-decide it" "stale blockers go back to the human partner"
 assert_contains "$sdd" "**Wrong, or its rebuttal holds** — park it" "SDD lists the rulings"
 
 echo "PASS"

@@ -10,7 +10,7 @@ description: "Use before final review of new user flows or material changes to i
 
 ## Ownership
 
-A dispatched gate runner (role `errand`) runs this skill: it captures every round, dispatches the `ux` reviewer, and returns the verdict to its caller, which routes the review file to the owning implementer and resumes the runner for the recapture. Neither runner nor reviewer fixes anything. An implementer captures only its own task's smoke pass, a scripted check that never invokes this reviewer.
+A dispatched gate runner (role `errand`) runs this skill: it captures, dispatches the `ux` reviewer, and returns the verdict to its caller, which routes the review file to the owning implementer and resumes the runner for the recapture. Neither runner nor reviewer fixes anything. An implementer captures only its own task's smoke pass, a scripted check that never invokes this reviewer.
 
 ## 0. Runtime preflight
 
@@ -44,9 +44,9 @@ Read [matrix.md](matrix.md) for the input schema and actions. Write `.toolbelt/u
 
 Use the prototype ledger’s absolute baseline path when present; otherwise serve the base branch in isolation and capture the same matrix first, then stop that server. If no baseline can be served, omit `--baseline`, review all stills as `new`, and record the limitation. An inaccessible prototype baseline is missing evidence to resolve. Stills are `<pathway>-<step>-<state>-<width>-<theme>.png`. An incomplete step is a finding, not a skip. Exit 2 means capture did not run; resolve it before review.
 
-## 3. Mechanical findings first
+## 3. Mechanical findings
 
-Every mechanical finding at `should` or above goes to the fix loop before image review. Run any token or palette check the policy names and attach its output. An unavailable optional check is a reported limitation, not a pass.
+Run any token or palette check the policy names. Every mechanical finding at `should` or above joins the reviewer's findings in the fix round. An unavailable optional check is a reported limitation, not a pass.
 
 ## 4. Review
 
@@ -64,11 +64,11 @@ Put images first, labelled `Image N: <tag>`, then criteria, mechanical results, 
 
 Return that reply, with the head, to your caller; the caller never reads the review file.
 
-## 5. Fix loop
+## 5. Fix round
 
-The caller sends the owning implementer the review file path; the implementer fixes blockers and shoulds and lists nits in its report. Then rerun the capture script on the new head for affected pathways, including one nearest previously passing unchanged state for each affected component. Use `--pathway` and `--out .toolbelt/ux/head-<n>/`, comparing each pathway to its last capture.
+The caller sends the owning implementer the review file path; the implementer fixes every finding, nits included. Then rerun the capture script on the new head for affected pathways, including one nearest previously passing unchanged state for each affected component. Use `--pathway` and `--out .toolbelt/ux/head-<n>/`, comparing each pathway to its last capture.
 
-Carry unaffected evidence forward only while its rendered dependencies and fixtures are unchanged; a shared style or token change invalidates every consuming capture. Record carried versus recaptured evidence and its source head; send updates to the same reviewer thread. After two failed rounds, return the remaining findings and evidence for your human partner.
+Carry unaffected evidence forward only while its rendered dependencies and fixtures are unchanged; a shared style or token change invalidates every consuming capture. Record carried versus recaptured evidence and its source head; send updates to the same reviewer thread. There is no second round: return remaining blockers with their evidence for your human partner, and other findings as Minor findings or tickets.
 
 Report pathways covered separately from raw screenshot count.
 
@@ -76,5 +76,5 @@ Report pathways covered separately from raw screenshot count.
 
 - One primary UX reviewer by default; justify any other.
 - Do not manufacture states by editing app source; use isolated fixtures and seeded data.
-- Every round binds to the reviewed head; a new push invalidates prior evidence except recorded carry-forward and docs-only pushes.
+- Every capture binds to the reviewed head; a new push invalidates prior evidence except recorded carry-forward and docs-only pushes.
 - Run before the final gate verdict so fixes land in the reviewed head.

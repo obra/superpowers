@@ -4,13 +4,13 @@
 
 Resolve the installed SDD skill's `scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep `delivery.md` in the workspace it prints, and keep the starting worktree until every boundary closes. Each boundary's SDD ledger header records the absolute path of `delivery.md`.
 
-One line per boundary, updated in place as it moves:
+Lines are appended per orchestrating's What you write; the latest line for a boundary is its state. Append one when the boundary is prepared and each time its state changes:
 
 `Boundary <N>: branch <name>, base <branch>, fork <sha7>, workspace <SDD workspace path>, PR <#num|none>, state <prepared|open|merged|blocked>`
 
 Whoever moves a branch appends `Boundary <N>: rebased <old SHA> → <new SHA>`, so a later rebase can find the old head after compaction.
 
-The SDD ledger carries the gate evidence: SDD writes `Final review: clean at <SHA> ...`, and pr-monitor writes `Suite: passed at <SHA>, command <command>, output <path>` (or `Suite: docs-only`) when it publishes. After an interruption, reuse a recorded result only when its SHA is the current head; rerun only the gate whose evidence is missing or stale. Check the remote for an existing PR before publishing again.
+The SDD ledger carries the gate evidence SDD and pr-monitor record. After an interruption, reuse a recorded result only when its SHA is the current head; rerun only the gate whose evidence is missing or stale. Check the remote for an existing PR before publishing again.
 
 ## Rebases
 
@@ -28,7 +28,7 @@ Completed task reviews stand after a clean rebase; the final review runs on the 
 
 After the PR is confirmed merged and the issue tracker reconciled:
 
-1. Mark the boundary `merged` in the ledger.
+1. Append the boundary's `merged` line.
 2. Confirm the local branch head is the final head SHA the monitor returned. Anything beyond it is unpublished work: stop and ask your human partner.
 3. Release any teardown `.toolbelt/worktree-policy.md` defines (containers, ports, processes, per-worktree data). From the main repo root, `git worktree remove <path>` and `git worktree prune`, then `git branch -D <branch>` (a squash merge leaves its commits unmerged by ancestry).
 

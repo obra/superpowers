@@ -88,7 +88,7 @@ assert_contains 'at most one predecessor whose PR may still be open when the bou
 # Task shape.
 assert_contains "A task's **Files:** block lists every file" \
   "a task lists every file it touches"
-assert_contains 'up to roughly 15 files or 800 changed lines' "task size is a guideline"
+assert_contains 'past roughly 40 files or 2,500 changed lines, split it' "task size is a high tripwire, not a small target"
 assert_contains 'Split when two parts could run in parallel on disjoint files' \
   "bigger tasks never swallow parallel work"
 assert_contains 'For any boundary with more than three tasks, look for tracks' \
@@ -98,8 +98,13 @@ assert_contains '`checks-only`' "tasks can be verified by commands alone"
 assert_contains '**Verify:** test-first' "the task template names its verify mode"
 assert_contains 'Mechanical sweep:' "mechanical sweeps are marked and verified"
 assert_contains '**Proves:**' "each task lists the behaviors it must prove"
-assert_contains 'must be seen failing without the guard, whatever the task' \
-  "a guard's red is the failure seen without the guard, in every mode"
+assert_contains 'is test-first whatever the task' "a guard is test-first in every mode"
+assert_contains 'records each one'"'"'s first failing run in its report' \
+  "the implementer records first failing runs; review does not re-litigate them"
+assert_contains '`**Review:** per-task`; the rest are reviewed in the boundary' \
+  "risky tasks get per-task review, the rest the boundary's final review"
+assert_contains 'never the implementation code' "plans hold contracts, not code"
+assert_contains 'it never blocks other merges' "a sweep never blocks other merges"
 assert_contains 'Produces: none' \
   "a task with no downstream dependents says so"
 

@@ -5,7 +5,7 @@ description: Use when you are the session agent driving delivery, subagent-drive
 
 # Orchestrating
 
-You dispatch agents and rule on what they return. Agents read and work; you route file paths between them, so your context lasts the whole plan.
+You dispatch agents, route file paths between them, and rule on what they return, so your context lasts the whole plan.
 
 ## What you read
 
@@ -26,14 +26,18 @@ Briefs, reports, reviews, review packages, diffs, logs, test output, and capture
 
 ## How you dispatch
 
-Every dispatch names the skill or prompt template the agent follows, its inputs by path, its routed model (an omitted model inherits yours), and the return: status or verdict, head SHA, file path, and any decision needed, in under 12 lines unless findings need more. Don't restate a skill the agent reads itself.
+Every dispatch names the skill or prompt template the agent follows, its inputs by path, its routed model (an omitted model inherits yours), and the return: status or verdict, head SHA, file path, and any decision needed, in under 12 lines unless findings need more. Don't restate a skill the agent reads itself, or the routing file.
 
 Wait on an agent with one blocking call and act on its final message, not a notice that it finished. Between waits, never poll, sleep-loop, or schedule check-ins.
 
 ## What you rule on
 
-When a fix loop ends with findings still open, you rule on them; subagent-driven-development's fix loop lists the rulings. Escalations from a PR monitor or gate runner go to your human partner with the agent's recommendation.
+When a fix loop ends with findings still open, you rule on them; subagent-driven-development's fix loop lists the rulings. Escalations from a PR monitor or gate runner go to your human partner with the agent's recommendation, as does any question with real impact on the plan. Make tiny local choices yourself and note them.
+
+## What you write
+
+Append a ledger line with `../subagent-driven-development/scripts/ledger-append LEDGER_FILE "line"`, only at a gate: a review verdict, a finished fix round, a ruling, a blocker raised or cleared, a PR opened or merged, a boundary complete. Update the issue tracker inline or by script, not through an agent.
 
 ## Keep going
 
-Delivery runs long and mostly unattended. Stop for your human partner only when nothing can move without them: a blocked task you cannot unblock, an escalation, a decision the plan leaves open, or the end of the work. Put status notes in the same message as your next dispatch. A turn that ends on a summary announcing the next step, an offer to continue, a list of decisions that block nothing, or a milestone report stalls the run.
+Delivery runs long and mostly unattended. Keep doing all work an open question does not block; stop only when nothing can move without your human partner or the work is done. Raise a blocking PR or question untouched for a day to them again; never auto-merge or auto-decide it. Answer a notification that needs no decision in a short turn without status narration. Ending a turn on a summary of the next step, an offer to continue, or a milestone report stalls the run.
