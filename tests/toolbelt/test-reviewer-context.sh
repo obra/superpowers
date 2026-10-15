@@ -56,6 +56,8 @@ assert_not_contains "$implementer_prompt" 'smell-baseline' \
   "implementer prompt does not receive the smell baseline"
 
 assert_contains "$task_prompt" 'a realistic mutation no test' "task reviewer runs the mutation check"
+assert_contains "$task_prompt" 'a missing note alone is never a finding' "a missing first-run note never starts a fix loop"
+assert_not_contains "$task_prompt" 'mutate-and-revert' "no mutate-and-revert demand"
 assert_contains "$implementer_prompt" 'It is not the whole' "Proves is not the whole test list"
 assert_contains "$implementer_prompt" 'run its mutation check before you report' "implementers run the mutation check"
 

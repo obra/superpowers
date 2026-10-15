@@ -66,6 +66,7 @@ assert_contains "$skill" "**One topology writer.**" "only the monitor moves publ
 assert_contains "$skill" "**Merge bottom-up.**" "merge order is bottom-up"
 assert_contains "$skill" "--force-with-lease" "rebased layers are pushed with a lease"
 assert_contains "$skill" "carries forward through your own fix pushes" "local gate survives the monitor's own pushes"
+assert_contains "$skill" "unchanged carries forward the local gate and completed provider reviews" "a patch-identical rebase keeps provider reviews"
 assert_contains "$skill" "gh pr edit --base" "retarget fallback after a bottom merge"
 assert_contains "$skill" "Propagate upward through every PR above it, using each immediate parent's recorded old and new heads" \
   "a bottom merge propagates the rebase through every layer above"

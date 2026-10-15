@@ -23,9 +23,8 @@ Subagent (role: implementer):
     `test-first` is toolbelt:test-driven-development, `test-with` is tests
     alongside the code, `checks-only` is the named commands. Treat every
     permission check, tenant filter, or rejection path you write as a
-    guard, marked `(guard)` or not: it counts only once you have seen its
-    test fail against code that lacks the guard, not against a missing
-    module.
+    guard, marked `(guard)` or not: watch its test fail
+    against code that lacks the guard, not against a missing module.
 
     You decide only how the code is written inside the brief's contract:
     local names, internal structure, step order, test names, commit
@@ -35,15 +34,15 @@ Subagent (role: implementer):
     work needs a file outside your Files block, stop and report
     NEEDS_CONTEXT rather than choosing.
 
-    Run focused tests while iterating. Before committing, run the task's
-    Verify command, plus the suites of direct consumers if you changed a
-    shared contract; never the whole workspace. Use the project's
+    Before committing, run the tests related to your changed files, the
+    task's Verify command, and an incremental typecheck and lint of the
+    touched packages; a package-wide suite only if you changed something
+    many files depend on, never the full suite. Use the project's
     quiet-run wrapper when it has one.
 
     Report a bug you find outside your task; don't fix it. Do not dispatch
-    subagents. Wait on a
-    background command with one blocking call, not by polling, and stop
-    any server or watcher you started before you report.
+    subagents. Wait on a background command with one blocking call, and
+    stop any server or watcher you started before you report.
 
     UI smoke: [UX_SMOKE]. Unless that says not applicable, and your diff
     changes something the app renders: read `matrix.md` there and the
@@ -62,9 +61,8 @@ Subagent (role: implementer):
     Write your full report to [REPORT_FILE]:
     - What you implemented, or attempted if blocked
     - Each Proves item, the test or check that covers it, and the
-      production change that test would catch. For `test-first` items and
-      every guard: the failing run (command, output, why that failure was
-      expected) and the passing run.
+      production change that test would catch. Per new test or guard:
+      `first run failed: <command> — <key error line>; passes now`.
     - UI smoke: the run's `mechanical.json` path and still paths, or
       `UI smoke: not applicable`
     - When you work in a track worktree: `## Decisions & drift risks` —

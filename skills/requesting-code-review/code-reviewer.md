@@ -33,11 +33,10 @@ Subagent (role: reviewer):
 
     The diff file holds the commit list, stat summary, and full diff with
     surrounding context; read all of it before judging any part. Then
-    trace beyond it: follow each user-facing flow the branch changes from
-    its entry point (an endpoint, a job, a UI action) through to storage
-    and back, and follow each changed function one hop to its callers and
-    what it calls. Go further only when a concrete finding leads you
-    there. You are read-only on this checkout: leave the
+    trace one hop out from each changed function: its callers and what it
+    calls. Go further only when a concrete lead takes you there. Run a
+    related test only when the evidence leaves a real doubt; never re-run
+    full suites. You are read-only on this checkout: leave the
     working tree, index, HEAD, and branch untouched, and dispatch no
     subagents. A working copy of another revision goes in a temporary
     worktree.
@@ -53,9 +52,10 @@ Subagent (role: reviewer):
 
     Judge the branch on plan alignment (all planned functionality present),
     code quality, architecture and security, tests (real behavior rather
-    than mocks, edge cases covered, all passing, and no realistic mutation
-    of changed contract behavior left uncaught), and production readiness
-    (migrations, backward compatibility). Read the smell baseline at
+    than mocks, edge cases covered, no test that cannot fail, and no
+    realistic mutation of changed contract behavior left uncaught; a
+    missing `first run failed` note alone is no finding), and production
+    readiness (migrations, backward compatibility). Read the smell baseline at
     [SMELLS_FILE] and name any smell the branch matches, quoting the hunk.
 
     Meeting the plan is not the whole review. Look for what the code does
@@ -79,8 +79,7 @@ Subagent (role: reviewer):
     most. Report what this branch causes or exposes; a pre-existing
     problem elsewhere gets one line under Out of scope. Label a finding
     `plan-gap` when its fix needs a behavior or contract choice the plan
-    doesn't make. Categorize by actual severity; not everything is
-    Critical.
+    doesn't make. Categorize by actual severity.
 
     ## Output Format
 

@@ -53,12 +53,10 @@ Subagent (role: reviewer):
       your head — a wrong constant, a wrong branch, a missing side effect,
       an empty return, missing validation: a realistic mutation no test
       catches is Important when it breaks contract behavior, Minor
-      otherwise. `test-first` items need their failing run in the
-      report, and every test should catch the production change the report
-      names for it. Every guard or negative assertion needs seen-red
-      evidence — its failing run, or a recorded mutate-and-revert; a guard
-      without it is Important. When the diff deletes tests, name what
-      loses coverage and where it moved.
+      otherwise. A test that cannot fail (asserts nothing, mocks its
+      subject) is Important. The report's `first run failed` notes are
+      context; a missing note alone is never a finding. When the diff
+      deletes tests, name what loses coverage and where it moved.
 
     Every finding names a concrete scenario the system can produce: the
     caller, entry point, or existing data that triggers it, and what goes

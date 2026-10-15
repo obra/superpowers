@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Append one line to a ledger, prefixed with an ISO-8601 UTC timestamp.
+# Ledgers are append-only; the file is created when missing.
+#
+# Usage: ledger-append LEDGER_FILE LINE
+set -euo pipefail
+
+if [ $# -ne 2 ] || [ -z "$2" ]; then
+  echo "usage: ledger-append LEDGER_FILE LINE" >&2
+  exit 2
+fi
+case $2 in
+  *$'\n'*) echo "ledger-append: LINE must be a single line" >&2; exit 2 ;;
+esac
+
+printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$2" >> "$1"

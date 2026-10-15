@@ -21,7 +21,7 @@ If you wrote the code first, delete it and start from the test. Don't keep it op
 
 A bug fix is the same cycle: the failing test reproduces the bug, proving the fix and keeping it from coming back.
 
-A guard — a permission check, a tenant filter, a rejection path — must be seen failing against code that lacks the guard, not against a missing module. When the module does not exist yet, build the happy path first, then write the guard's test, watch it fail, and add the guard.
+A guard — a permission check, a tenant filter, a rejection path — must fail first against code that lacks the guard, not against a missing module: build the happy path first, then write the guard's test, watch it fail, and add the guard.
 
 ## Common rationalizations
 

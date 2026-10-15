@@ -9,9 +9,9 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Step 1: Verify tests
 
-Run the project's full test suite, unless one of these applies:
+Run the tests related to the files the branch changed from its base, plus an incremental typecheck and lint of the touched packages. CI runs the full suite before a PR merges; a local merge runs it after merging (Step 5). Skip this run when one of these applies:
 
-- **Exact-head evidence:** the caller supplies a full-suite run at the current head SHA: the command, its passing output with the final pass or exit state visible, and the SHA it ran against. Read that output yourself; it stands in for running the suite. A report missing the command, the output, or the SHA is a claim, not evidence.
+- **Exact-head evidence:** the caller supplies that run at the current head SHA: the command, its passing output with the final pass or exit state visible, and the SHA it ran against. Read that output yourself; it stands in for the run. A report missing the command, the output, or the SHA is a claim, not evidence.
 - **Docs-only:** every changed file is Markdown under `docs/**` or at the repository root, or `.toolbelt/**` scratch, and none is a file the application builds, renders, or serves, or that CI executes.
 
 Both exceptions require a clean worktree.
@@ -74,7 +74,7 @@ From the main repo root (Step 6):
 git checkout <base-branch>
 git pull
 git merge <feature-branch>
-<test command>
+<full test suite command>
 ```
 
 If the merged result fails its tests, stop and report. Otherwise clean up the worktree (Step 6), since a checked-out branch cannot be deleted, then `git branch -d <feature-branch>`.
@@ -86,7 +86,7 @@ git push -u origin <feature-branch>
 gh pr create --base <base-branch> --title <title> --body <body>
 ```
 
-"PR is open" is not a terminal state. Hand the PR to toolbelt:pr-monitor, unless pr-monitor is the one running this skill, in which case return the PR to it. The monitor requests reviews; requesting them here asks providers twice for the same head. Publishing never force-pushes. The worktree stays for PR feedback.
+"PR is open" is not a terminal state. Hand the PR to toolbelt:pr-monitor, unless pr-monitor is the one running this skill, in which case return the PR to it. Don't request reviews here; the monitor does. Publishing never force-pushes. The worktree stays for PR feedback.
 
 ### Keep as-is
 

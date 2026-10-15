@@ -54,8 +54,10 @@ assert_contains 'Implementers produce fresh evidence for their own claims' \
   "implementers never reuse evidence for their own claims"
 assert_contains 'Reviewers read that evidence instead of re-running it' \
   "reviewers reuse implementer evidence"
-assert_contains '**Workspace-wide suite:** once, when finishing-a-development-branch publishes the PR' \
-  "workspace suite runs once, at publication"
+assert_contains "The full suite is CI's; no implementer, reviewer, or monitor runs it" \
+  "no local gate runs the full suite"
+assert_contains 'Review the task now only if the plan marks it `Review: per-task`' \
+  "only risky tasks get a per-task review"
 assert_contains 'After the second round, rule on each finding still open' \
   "the fix loop is bounded at two rounds"
 assert_contains 'never extend the loop' \
