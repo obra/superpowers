@@ -41,6 +41,7 @@ assert_contains "$skill" "Record the reason for omitted dimensions" "excluded di
 assert_contains "$skill" "there is no fixed image-count limit" "evidence size scales with the feature"
 assert_contains "$skill" "one nearest previously passing unchanged state for each affected component" "fix rounds capture a minimum comparison"
 assert_contains "$skill" "a shared style or token change invalidates every consuming capture" "carry-forward invalidation"
+assert_contains "$skill" "There is no second round" "one capture-and-fix round"
 assert_contains "$skill" "pathways covered separately from raw screenshot count" "verdict reports pathways"
 assert_contains "$skill" "Route one \`reviewer\` with specialty \`ux\` via agent-routing" "routed ux reviewer"
 assert_contains "$skill" "vision-capable model" "reviewer route must handle images"

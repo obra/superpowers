@@ -14,7 +14,7 @@
 
 - Track ids are kebab-case branch/worktree names. `serial-N` tracks run in the primary worktree, named tracks in sub-worktrees.
 - Each track belongs to one PR boundary; all its tasks and its fork’s integration task stay within that boundary. Tasks appear once, in numeric order within each track.
-- `Depends on` names tracks, forming a DAG. Earlier-boundary dependencies must be present in the starting commit. Within the active boundary, a track is ready when all its dependencies are complete and reviewed.
+- `Depends on` names tracks, forming a DAG. Earlier-boundary dependencies must be present in the starting commit. Within the active boundary, a track is ready when all its dependencies are complete, with any per-task reviews clean.
 
 - **Disjoint file sets.** No file is created or modified by two concurrent tracks, including tests, fixtures, and generated-file sources.
 - **No contract-shaped work in tracks.** Migrations, shared schema, shared types, and shared API contracts belong in a mainline task before the fork — the **contract-freeze** pattern. A track consumes the frozen contract; it never changes it.

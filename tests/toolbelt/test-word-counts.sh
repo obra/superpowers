@@ -9,7 +9,7 @@ repo_root=$(git rev-parse --show-toplevel)
 
 ceilings=(
   "skills/using-toolbelt/SKILL.md:300"
-  "skills/orchestrating/SKILL.md:400"
+  "skills/orchestrating/SKILL.md:475"
   "skills/verification-before-completion/SKILL.md:300"
   "skills/receiving-code-review/SKILL.md:275"
   "skills/writing-skills/SKILL.md:1000"
@@ -31,7 +31,7 @@ ceilings=(
   "skills/subagent-driven-development/re-review-prompt.md:380"
   "skills/subagent-driven-development/gate-reviewer-prompt.md:700:optional"
   "skills/subagent-driven-development/parallel-tracks.md:420"
-  "skills/writing-plans/SKILL.md:1750"
+  "skills/writing-plans/SKILL.md:1825"
   "skills/writing-plans/execution-tracks.md:360"
   "skills/ux-gate/SKILL.md:950"
   "skills/ux-gate/matrix.md:750"

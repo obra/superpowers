@@ -23,15 +23,15 @@ Dispatch prompts never reassign these.
 
 | Work | Owner |
 |---|---|
-| Code, tests, commits, task reports, UI smoke of the touched pathway | Implementer, fresh per task |
+| Code, tests, commits, task reports, UI smoke of the touched pathway | Implementers |
 | Task reviews and the whole-branch final review | Reviewers |
 | Boundary UX capture and verdict | Gate runner with toolbelt:ux-gate, which dispatches a `ux` reviewer |
-| Workspace suite, PR publication, CI, provider reviews, PR fixes, published-branch rebases, merge | pr-monitor, one per chain |
+| PR publication, CI, provider reviews, PR fixes, published-branch rebases, merge | pr-monitor, one per chain |
 | Worktrees, unpublished-branch rebases, issue-tracker reconciliation, cleanup | You |
 
 ## 3. Execute each boundary
 
-1. **Branch point.** An independent boundary branches from the base branch. A dependent boundary's `Depends on` may name one predecessor still open as a PR: fetch its remote head and branch from that SHA; if it has merged, branch from the updated base branch. Every other dependency must already be merged. An approved interactive-design prototype keeps its own branch, worktree, and baseline and ships as one PR.
+1. **Branch point.** An independent boundary branches from the base branch. A dependent boundary stacks on its predecessor while that PR is open: fetch its remote head and branch from that SHA, joining its chain; once it has merged, branch from the updated base branch. Any other dependency sits lower in the same chain or has merged. An approved interactive-design prototype keeps its own branch, worktree, and baseline and ships as one PR.
 2. **Worktree.** Create it with toolbelt:using-git-worktrees on branch `<plan-slug>/pr-<N>` (the plan file's basename without date or extension, and the boundary number), and record the boundary in the ledger.
 3. **UX gate.** When the boundary meets ux-gate's entry condition (new user flows, material interaction, layout, or responsive changes, or an explicit UX-review request), give SDD the gate runner's route and what the runner needs: the changed pages, acceptance criteria, and environment. SDD adds the commit range when it dispatches. Routine cosmetic changes need no gate.
 4. **Execute** with toolbelt:subagent-driven-development, giving it the boundary number, its task set, the starting SHA, the resolved routes, and the gate runner if any. SDD's final review is the boundary's gate; add no other whole-branch review.
@@ -51,4 +51,4 @@ The first boundary of a chain starts its monitor in the background. A dependent 
 Keep delivering independent boundaries while monitors run, then wait for their returns. Never report the work complete or end the session while a monitor runs. On each return:
 
 - **Merged:** confirm the PR is `MERGED` on the remote, never commit ancestry; reconcile the issue tracker only when the plan is linked to one; then clean up per branch-lifecycle.md.
-- **Blocked or escalated:** take it to your human partner. A bottom PR closed without merging blocks its whole chain; start no more boundaries in it.
+- **Blocked or escalated:** take it to your human partner and keep delivering what it does not block. A bottom PR closed without merging blocks its whole chain; start no more boundaries in it.
