@@ -10,7 +10,7 @@ It starts the moment you fire up your coding agent. As soon as it sees you're bu
 
 Once the conversation has produced a design you've approved, it writes that into a spec, gates the spec with you and a reviewer from a different model family, then turns it into an implementation plan detailed enough that a subagent with no project context can execute it.
 
-Then it runs the plan: a fresh subagent per task, each one reviewed before the next begins, with a broad review gating the whole slice before it becomes a pull request. It's not unusual for this to run autonomously for a couple of hours without drifting from the plan.
+Then it runs the plan: implementers carry each pull-request-sized slice, risky tasks get their own review, and one independent review gates the whole slice before it becomes a pull request. It's not unusual for this to run autonomously for a couple of hours without drifting from the plan.
 
 The skills trigger themselves, so there's nothing to remember.
 
@@ -66,7 +66,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 
 4. **delivery** - Activates with an approved plan. Per PR boundary: creates a worktree, runs subagent-driven-development, then hands the branch to a pr-monitor that owns CI, review, fixes, and merge.
 
-5. **subagent-driven-development** - Run by delivery. A fresh implementer per task (test-first), a review after each task with up to two fix rounds, then a whole-branch review.
+5. **subagent-driven-development** - Run by delivery. Implementers carry the boundary's tasks (test-first); tasks touching money, auth, tenancy, migrations, or shared contracts get their own review, with up to two fix rounds; one whole-branch review covers the rest.
 
 6. **finishing-a-development-branch** - Run by the pr-monitor, or directly when you finish work by hand. Verifies tests, then merges, opens a PR, keeps, or discards the branch.
 

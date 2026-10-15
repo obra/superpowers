@@ -32,4 +32,4 @@ Subagent (role: implementer): "Fix batch-completion-behavior.test.ts failures"
 
 ## Integrate the results yourself
 
-Read each report. Check whether agents edited the same code, and re-verify the seams where their changes meet. Run the suites the waves touched, escalating by risk rather than running the whole workspace. Spot check the work: an agent can make a systematic error and report success.
+Read each report. Check whether agents edited the same code, and re-verify the seams where their changes meet. Run the checks toolbelt:verification-before-completion scopes for the changed files, plus focused checks where the waves' changes meet. Spot check the work: an agent can make a systematic error and report success.

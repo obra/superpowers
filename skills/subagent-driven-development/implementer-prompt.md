@@ -34,10 +34,8 @@ Subagent (role: implementer):
     work needs a file outside your Files block, stop and report
     NEEDS_CONTEXT rather than choosing.
 
-    Before committing, run the tests related to your changed files, the
-    task's Verify command, and an incremental typecheck and lint of the
-    touched packages; a package-wide suite only if you changed something
-    many files depend on, never the full suite. Use the project's
+    Before committing, run the task's Verify command and the checks
+    toolbelt:verification-before-completion scopes. Use the project's
     quiet-run wrapper when it has one.
 
     Report a bug you find outside your task; don't fix it. Do not dispatch

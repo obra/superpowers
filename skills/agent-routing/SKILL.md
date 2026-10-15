@@ -34,7 +34,7 @@ A reviewer always runs on a different harness from the one that wrote the work. 
 
 ## Precedence
 
-A plan's `## Agent Routing` section, in plain words, overrides the routing text for that plan's work; the routing text overrides the bundled default. A plan may route implementer, task-reviewer, and final-reviewer work, but never the session orchestrator.
+Your human partner's direct instruction wins; the routing text overrides the bundled default. Plans carry no routing, and a route recorded in a ledger is audit metadata that never overrides the current routing text.
 
 ## Provider-outage emergency override
 

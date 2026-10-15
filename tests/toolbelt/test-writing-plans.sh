@@ -99,8 +99,6 @@ assert_contains '**Verify:** test-first' "the task template names its verify mod
 assert_contains 'Mechanical sweep:' "mechanical sweeps are marked and verified"
 assert_contains '**Proves:**' "each task lists the behaviors it must prove"
 assert_contains 'is test-first whatever the task' "a guard is test-first in every mode"
-assert_contains 'records each one'"'"'s first failing run in its report' \
-  "the implementer records first failing runs; review does not re-litigate them"
 assert_contains '`**Review:** per-task`; the rest are reviewed in the boundary' \
   "risky tasks get per-task review, the rest the boundary's final review"
 assert_contains 'never the implementation code' "plans hold contracts, not code"

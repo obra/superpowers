@@ -32,12 +32,12 @@ Wait on an agent with one blocking call and act on its final message, not a noti
 
 ## What you rule on
 
-When a fix loop ends with findings still open, you rule on them; subagent-driven-development's fix loop lists the rulings. Escalations from a PR monitor or gate runner go to your human partner with the agent's recommendation, as does any question with real impact on the plan. Make tiny local choices yourself and note them.
+When a fix loop ends with findings still open, you rule on them with SDD's fix-loop rulings. Escalations from a PR monitor or gate runner go to your human partner with the agent's recommendation, as does any question with real impact on the plan. Make tiny local choices yourself and note them.
 
 ## What you write
 
-Append a ledger line with `../subagent-driven-development/scripts/ledger-append LEDGER_FILE "line"`, only at a gate: a review verdict, a finished fix round, a ruling, a blocker raised or cleared, a PR opened or merged, a boundary complete. Update the issue tracker inline or by script, not through an agent.
+Append a ledger line with `../subagent-driven-development/scripts/ledger-append LEDGER_FILE "line"`, only at a gate: an agent dispatched or returned, a review verdict, a finished fix round, a ruling, a blocker raised or cleared, a task complete, a track or branch created, merged, or rebased, a PR opened or merged, a boundary prepared or complete. Add `Next: <expected event>` with a gate; the latest wins. Never rewrite earlier lines. Update the issue tracker inline or by script, not through an agent.
 
 ## Keep going
 
-Delivery runs long and mostly unattended. Keep doing all work an open question does not block; stop only when nothing can move without your human partner or the work is done. Raise a blocking PR or question untouched for a day to them again; never auto-merge or auto-decide it. Answer a notification that needs no decision in a short turn without status narration. Ending a turn on a summary of the next step, an offer to continue, or a milestone report stalls the run.
+Keep doing all work an open question does not block; stop only when nothing can move without your human partner or the work is done. Raise a blocking PR or question untouched for a day to them again; never auto-merge or auto-decide it. Answer a notification that needs no decision in a short turn without status narration.

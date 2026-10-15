@@ -15,7 +15,7 @@ After an interruption, recover from the ledger, Git and worktree state, and live
 
 ## 2. Resolve routes
 
-Route every role with toolbelt:agent-routing; precedence is plan route, then project route, then bundled default. The plan's optional `## Agent Routing` section may route the implementer, task reviewer, and final reviewer (specialty `gate`); the session agent remains the orchestrator and is never plan-routed. The monitor, and the `errand` gate runner for a boundary that runs ux-gate, come from the project's routing text or the bundled default. If either reviewer lacks a route independent of the implementer, stop, unless agent-routing's outage override applies.
+Route every role with toolbelt:agent-routing: the implementer, task reviewer, final reviewer (specialty `gate`), monitor, and, for a boundary that runs ux-gate, the `errand` gate runner. The session agent remains the orchestrator. If either reviewer lacks a route independent of the implementer, stop, unless agent-routing's outage override applies.
 
 ## Who does what
 

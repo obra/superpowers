@@ -5,7 +5,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 # Writing Plans
 
-Write an implementation plan that implementers execute task by task, often in parallel and on cheaper models. Each implementer can read the codebase, but sees only the plan's shared sections and its own tasks: not the spec, the rest of the plan, or this conversation. So the plan does the hard thinking. It holds decisions, contracts, shapes, exact external interfaces, and risks — public names, signatures, error and status codes, data shapes, which files change, each task's bounds — never the implementation code, which the implementer writes.
+Write an implementation plan that implementers execute task by task, often in parallel and on cheaper models. Each implementer can read the codebase, but sees only the plan's shared sections and its own tasks: not the spec, the rest of the plan, or this conversation. The plan decides contracts, risks, and scope, never the implementation code, which the implementer writes.
 
 Save to `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or your human partner's location when they name one.
 
@@ -40,7 +40,7 @@ Every trap you find is either handled in the plan — the decision, exclusion, o
 - A task's **Files:** block lists every file it creates or modifies. "Plus every caller" is not a list.
 - The task that changes a migration, shared schema, shared type, or shared contract also updates the code that keeps it correct.
 - Every task picks a **Verify** mode:
-  - `test-first` — business rules, calculations, state changes, bug fixes: the implementer writes the tests for the task's Proves list first and records each one's first failing run in its report.
+  - `test-first` — business rules, calculations, state changes, bug fixes: the implementer writes the tests for the task's Proves list first.
   - `test-with` — wiring, UI composition, refactors under existing coverage: tests are written alongside the code and must pass.
   - `checks-only` — configuration, documentation, generated code, mechanical sweeps: the named commands are the evidence, and Proves may be `none`.
 
@@ -101,12 +101,6 @@ Task-specific traps go on the task.]
 
 [Only when the work adds or changes schema, migrations, shared types, or
 contracts: the exact shapes, once. Tasks reference it.]
-
-## Agent Routing
-
-[Optional, in plain words: routing for the implementer, task reviewer, or
-final reviewer that departs from the project's routing file; never restate
-that file. See toolbelt:agent-routing.]
 
 ## PR Boundaries
 

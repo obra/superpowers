@@ -43,6 +43,8 @@ assert_contains "$sdd" 'route <harness>/<model>/<effort>, report <path>' \
 
 assert_contains "$implementer" 'against code that lacks the guard' \
   "seen red means the guard failed against code missing the guard"
+assert_contains "$implementer" 'first run failed: <command> — <key error line>; passes now' \
+  "the implementer notes each new test's first failing run"
 assert_contains "$implementer" '| Finding | Commit | Covering test command | Result |' \
   "the fix report uses the required findings table"
 assert_contains "$rereview" 'never extend the fix loop' \

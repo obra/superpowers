@@ -54,8 +54,8 @@ assert_contains 'Implementers produce fresh evidence for their own claims' \
   "implementers never reuse evidence for their own claims"
 assert_contains 'Reviewers read that evidence instead of re-running it' \
   "reviewers reuse implementer evidence"
-assert_contains "The full suite is CI's; no implementer, reviewer, or monitor runs it" \
-  "no local gate runs the full suite"
+assert_contains 'Scope every gate as toolbelt:verification-before-completion says' \
+  "gate scope comes from its owner"
 assert_contains 'Review the task now only if the plan marks it `Review: per-task`' \
   "only risky tasks get a per-task review"
 assert_contains 'After the second round, rule on each finding still open' \

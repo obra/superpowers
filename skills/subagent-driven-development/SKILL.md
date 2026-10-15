@@ -63,7 +63,7 @@ After every task in the boundary is complete:
 
 ## Verification scope
 
-Scope every gate as toolbelt:verification-before-completion says: the related tests plus the task's `Verify:` command at a task gate, the covering tests in a fix round. The full suite is CI's; no implementer, reviewer, or monitor runs it as a local gate.
+Scope every gate as toolbelt:verification-before-completion says: the related tests plus the task's `Verify:` command at a task gate, the covering tests in a fix round.
 
 Implementers produce fresh evidence for their own claims. Reviewers read that evidence instead of re-running it, unless it leaves a real doubt.
 
@@ -82,6 +82,5 @@ Implementers produce fresh evidence for their own claims. Reviewers read that ev
 - The fix-round, ruling, parked, and final-review lines their sections give.
 - `Task N: blocked (<why>)`, then `Task N: unblocked (<what changed>)`.
 - `Task N: complete (commits <base7>..<head7>, review clean|final, route <harness>/<model>/<effort>, report <path>)`.
-- `Next: <expected event>` with each gate; the latest wins.
 
-After compaction or resume, read the ledger and `git log`; never re-dispatch a task it marks complete. Keep the workspace until delivery confirms the PR merged or your human partner abandons the work.
+After compaction or resume, read the ledger and `git log`; never re-dispatch a task it marks complete. Recorded routes are audit metadata: dispatch from the current routing text. Keep the workspace until delivery confirms the PR merged or your human partner abandons the work.

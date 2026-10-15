@@ -2,15 +2,15 @@
 
 ## Ledger
 
-Resolve the installed SDD skill's `scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep `delivery.md` in the workspace it prints, and keep the starting worktree until every boundary closes. Each boundary's SDD ledger header records the absolute path of `delivery.md`.
+Resolve the installed SDD skill's `scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep `delivery.md` in the workspace it prints, and keep the starting worktree until every boundary closes. Each boundary's SDD ledger opens with the absolute path of `delivery.md`.
 
-Lines are appended per orchestrating's What you write; the latest line for a boundary is its state. Append one when the boundary is prepared and each time its state changes:
+Lines are appended per orchestrating's What you write. Append this record when the boundary is prepared and each time its state changes; the latest one for a boundary is its state:
 
 `Boundary <N>: branch <name>, base <branch>, fork <sha7>, workspace <SDD workspace path>, PR <#num|none>, state <prepared|open|merged|blocked>`
 
-Whoever moves a branch appends `Boundary <N>: rebased <old SHA> → <new SHA>`, so a later rebase can find the old head after compaction.
+Whoever moves a branch appends `Boundary <N>: rebased <old SHA> → <new SHA>`, topology history (not a state record) that lets a later rebase find the old head after compaction.
 
-The SDD ledger carries the gate evidence SDD and pr-monitor record. After an interruption, reuse a recorded result only when its SHA is the current head; rerun only the gate whose evidence is missing or stale. Check the remote for an existing PR before publishing again.
+The SDD ledger carries SDD's gate evidence. After an interruption, reuse a recorded result only when its SHA is the current head; rerun only the gate whose evidence is missing or stale. Check the remote for an existing PR before publishing again.
 
 ## Rebases
 

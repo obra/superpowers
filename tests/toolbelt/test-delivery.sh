@@ -57,8 +57,8 @@ assert_no_model_names() {
 assert_contains "$skill" "name: delivery" "frontmatter name"
 assert_contains "$skill" "Use when an approved implementation plan is ready to be implemented and shipped" "approved-plan trigger"
 assert_contains "$skill" "one branch, one PR" "one PR per boundary"
-assert_contains "$skill" '## Agent Routing' "optional plan routing section"
-assert_contains "$skill" "plan route, then project route, then bundled default" "route precedence"
+assert_not_contains "$skill" '## Agent Routing' "plans carry no routing section"
+assert_contains "$plans" "The plan decides contracts, risks, and scope" "plans hold decisions, not code"
 assert_contains "$skill" "session agent remains the orchestrator" "plan cannot route orchestrator"
 assert_contains "$skill" "toolbelt:using-git-worktrees" "isolated worktree handoff"
 assert_before "$skill" "fetch its remote head" "toolbelt:using-git-worktrees" \
@@ -91,12 +91,13 @@ assert_no_model_names "$skill"
 [[ -f "$metadata" ]] || { echo "not ok - committed OpenAI metadata missing" >&2; exit 1; }
 assert_contains "$metadata" "display_name" "committed OpenAI metadata present"
 
-assert_contains "$routing" "overrides the routing text for that plan's work" "plan routing overrides the project routing text"
+assert_contains "$routing" "Plans carry no routing" "routing lives only in the routing text"
+assert_contains "$routing" "never overrides the current routing text" "ledger routes are audit metadata"
 assert_contains "$routing" "the routing text overrides the bundled default" "routing documents public precedence"
 
 assert_contains "$workflow" '`brainstorming` and `writing-plans`' "planning policy"
 assert_contains "$workflow" "one coherent delivery slice" "slice policy"
-assert_contains "$workflow" '## Agent Routing' "optional plan-routing policy"
+assert_contains "$workflow" "plans carry no routing" "workflow routes only from the routing text"
 assert_contains "$workflow" "implementation report and review-package path" "controller context discipline"
 assert_contains "$workflow" "never reports, reviews, diffs, or logs" "controller avoids duplicate review context"
 assert_contains "$workflow" "No separate resume state machine" "recovery avoids resume machinery"
