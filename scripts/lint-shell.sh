@@ -11,7 +11,8 @@
 set -euo pipefail
 
 usage() {
-  sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+  # Leading comment block after the shebang, not a fixed line count.
+  sed -n '2,/^[^#]/p' "$0" | sed -e '$d' -e 's/^# \{0,1\}//'
 }
 
 die() {
