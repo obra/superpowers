@@ -1,225 +1,83 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation)."
+description: "Elicit requirements, calibrate project scope, and validate design specifications prior to executing feature creation, component construction, behavior modification, or project planning."
 ---
 
 # Brainstorming
 
-You are very good at building. You build what you believe your human
-partner wants, and that belief is usually thinner than it feels. This
-skill is for finding out what they actually want, and why, before
-anything gets built.
+## Request Evaluation and Initialization
 
-People often haven't finished working out what they want. Good questions
-help them think it through. When you understand the why, you make the
-hundred decisions they never mention the way they would have made them.
+- Evaluate the input request to determine the completeness of target objectives, operational constraints, and acceptance criteria.
+- Execute the task via the standard workflow and report the completed action when the input request specifies complete execution parameters.
+- Emit an initial response containing 2 sequential elements when the input request omits target objectives, operational constraints, or acceptance criteria:
+  + Initial element 1 ➔ State in 1 sentence the option to bypass requirement elicitation for immediate execution, and upon user confirmation of bypass, declare each autonomous implementation choice regarding platform, language, or medium in 1 sentence prior to executing the standard workflow.
+  + Initial element 2 ➔ Pose 1 open single-sentence question anchored in a concrete usage scenario or target stakeholder context, isolated from example answer lists.
 
-## First: What Do You Actually Know?
+## Requirement Elicitation Protocol
 
-Before you reply, ask yourself: what do I know about what they want, and
-why?
+- Conclude each elicitation message with 1 open single-sentence question isolated from example answer lists.
+- Align terminology with the user's domain vocabulary using concise declarative statements, isolated from internal process jargon and procedural meta-explanations.
+- Present primary findings at the opening of each status report and offer supplementary details upon user request.
+- Prioritize open-ended descriptive questions to capture user intent in native phrasing, present a compact option menu exclusively when the user remains stalled, and propose 1 concrete recommendation when the user delegates the choice.
+- Identify early in the dialogue which implementation parameters regarding platform, programming language, libraries, medium, tools, and materials the user defines versus which parameters the user delegates.
+- Inherit existing architectural patterns, tools, and dependencies when an established codebase or project exists.
+- Declare each autonomous default selection explicitly to the user during the dialogue and record each autonomous selection in the design document as a builder call.
+- Extract requirement attributes across 6 operational dimensions through situational inquiry and falsifiable hypotheses, isolated from direct recitation of the dimension labels:
+  + Artifact classification ➔ Core entity type and differentiating attributes
+  + Temporal and outcome framing ➔ Triggering context and measurable success criteria
+  + Boundary definition ➔ Target goals, non-goals, and anti-goals defining failure states despite technical functionality
+  + Comparative baseline ➔ Reference implementations and prior art preferences
+  + System state ➔ Existing assets and prior implementation attempts
+  + Granular constraints ➔ Priority domain details and failure-sensitive parameters
+- Propose targeted reconnaissance of the local codebase, project files, user data, or web sources by specifying the exact target information prior to inspection, and execute the inspection upon user approval.
+- Generate multiple candidate approaches internally, filter out candidates that conflict with stated user objectives, and present comparative trade-offs exclusively when comparison aids user decision-making.
+- Propose a rapid throwaway spike with minimal test coverage and bypassed formal planning when empirical prototyping clarifies requirement ambiguity or technical feasibility, and integrate the resulting empirical findings back into the elicitation dialogue.
 
-- **Everything that matters is in the request** ("make the icon cornflower
-  blue"). This is a quick, clear task. Do it, and say what you did.
-- **Something non-trivial is missing.** Start the conversation.
+## Iterative Playback and Visual Companion
 
-## Your First Message
+- Synthesize each validated requirement component regarding purpose, target users, or behavioral logic into a 200-to-300-word playback summary upon reaching functional clarity, alternating between playback summaries and single-question inquiries across each remaining component.
+- Label each inferred assumption explicitly as an agent hypothesis distinct from user-stated specifications, and conclude each playback summary with 1 question prompting the user to identify discrepancies or omitted details.
+- Evaluate prior to transmitting each playback summary or inquiry whether the target content involves 1 of 5 visual structures:
+  + Visual interfaces ➔ Screens, pages, printouts, or signage
+  + Spatial arrangements ➔ Screen layouts, room plans, or schedules
+  + Sequential workflows ➔ Multi-step process flows
+  + Comparative variants ➔ Side-by-side design alternatives
+  + Structural representations ➔ Diagrams, timelines, or maps
+- Transmit a standalone message containing the exact string "This might be easier if I show you. Want me to open a browser tab with some mockups?" upon the first occurrence of a visual structure while holding the pending playback summary for the subsequent turn.
+- Read visual-companion.md in the current skill directory prior to initializing the display server upon user acceptance, and pair subsequent visual playback summaries or layout inquiries with browser-based mockups, side-by-side options, or clickable prototypes while maintaining conceptual, scope, and trade-off inquiries in text.
+- Maintain text-only communication across subsequent turns when the user declines the visual companion, activating browser rendering exclusively upon a subsequent explicit user request.
 
-Your first message is two things, in this order:
+## Scope Classification and Design Specification
 
-1. One line letting them know that if they'd rather skip the questions and
-   have you just start, they can say so. If they take you up on it, this
-   skill is done: state any significant how-it-gets-made choice
-   (platform, language, medium) in one plain line, then do what they
-   asked through the normal workflow.
-2. One open question that gets them describing. Ask about a real moment
-   or a concrete picture: "What's the moment you find yourself wishing
-   this existed?" or "Tell me about the people who'll be in the room."
+- Classify the validated requirement into 1 of 3 execution scopes and state the selected scope to the user while permitting user override:
+  + Self-contained single-step request ➔ Quick, clear task: treat the input request as the complete specification and execute immediately
+  + Localized modification within existing structure ➔ Small change: validate the specification in chat and execute via the standard workflow
+  + Multi-component system or new architecture ➔ Project with a written design: compile a formal design document and transition to a full implementation plan (invoke superpowers:writing-plans for software projects)
+- Halt execution, notify the user, and escalate the scope classification to the next tier when task complexity expands beyond the active tier during execution.
+- Partition multi-project requests into independent sub-projects, establish a sequential execution order with the user, and execute the brainstorming workflow for 1 sub-project at a time.
+- Compile the design document for project-tier work with sufficient technical precision for independent implementation planning across 5 mandatory sections:
+  + Intent and rationale ➔ Core problem statement and operational why
+  + Boundary conditions ➔ Target goals, non-goals, and anti-goals
+  + System constraints ➔ Technical, environmental, and resource limits
+  + User decisions ➔ Implementation parameters explicitly selected by the user
+  + Builder scope ➔ Delegated implementation choices and autonomous builder calls
+- Commit the design document to docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md for software repository projects, query the user for the target storage path in external project contexts, and apply a user-specified storage preference as the overriding target.
 
-That's the whole message.
+## Builder Verification and Execution Gate
 
-## The Conversation
-
-Each message ends with one question: a single sentence with no list of
-example answers hanging off it. Use plain language, pitched just a little
-above where your human partner is. Match their vocabulary; never use
-process jargon.
-
-Be clear and concise. Lead with what matters. Avoid jargon. When you
-report what you found, give them the most important findings and offer
-the rest.
-
-**Get them describing.** Open questions come first. Their own words carry
-intent that your options can't. Offer a short menu only when they're
-stuck. When they say "just guess" or "what do you think?", propose
-something concrete.
-
-**How it gets made.** Every project rests on choices about medium, tools,
-materials, and resources: the platform, programming language, and
-libraries for an app; the medium for a piece of art. Find out early which
-of those choices they want to make, which they're handing to you, and what
-they already have to work with. Someone with strong views or skills will
-want to talk it through. Someone counting on you needs sensible defaults,
-said in plain words. When there's existing work, build on what it already
-uses. Any choice you make goes in the design as your call, never as
-something they agreed to.
-
-**Ground to cover.** This is territory, not a script. Never read these
-out as questions:
-
-- what kind of thing this is, and what makes it special
-- why now, and what success looks like to them
-- goals, non-goals, and anti-goals (what would make this a failure even
-  if it technically works)
-- prior art: what they've seen elsewhere, loved or hated
-- current state: what exists now, what they've tried
-- the details they care about
-
-**Questions that work** anchor in specifics: "Walk me through the last
-time...", "If it could only do one of these well, which?", "What would
-make you wince if I got it wrong?" A guess they can correct ("I'm
-guessing this is because X keeps biting you?") often beats a question.
-
-**Offer recon.** Once you have a bit of grounding and looking would help,
-offer to go look: their codebase or project, their own files and data,
-or the web. Say what you'd look for. They decide whether you go.
-
-**Think wide privately.** Before you propose anything, come up with
-several ideas and drop the weak ones, including any that fight what
-they've told you about why. Show the comparison only when it helps them
-decide.
-
-**Show, don't tell.** Offer the visual companion (below) whenever seeing
-would help more than reading:
-
-- something they'll look at: a screen, a page, a printout, a sign
-- a layout or arrangement: of a screen, a room, a schedule
-- a flow or a sequence of steps
-- options that would look different from each other
-- a structure that's easier to see than read: a diagram, a timeline, a map
-
-Once they've accepted, use it for mockups to react to, side-by-side
-options, and throwaway prototypes they can click.
-
-**Spike to feel things out.** Agentic work is waterfall, but very, very
-fast. A quick throwaway build is often the cheapest way to learn what
-they want or whether something works. Offer one when it would help.
-When they just want to spike, get out of the way. Spikes get no tests
-or minimal ones, aren't bulletproof, and skip the plan, implementation,
-and review process. Bring what the spike taught you back into the
-conversation.
-
-## Play It Back
-
-Play back as you go. As soon as you understand one part well enough to
-describe it (what it's for and who it serves, say, or how one piece
-behaves), describe that part back in about 200-300 words, then return to
-questions about the next part. Playback and questions alternate through
-the whole conversation; the last chunk covers whatever is left.
-
-Mark anything you're guessing as your guess; only what they said goes in
-as theirs. End each chunk by asking what's wrong or missing.
-
-Before you send a chunk, check it: does it describe something they'll
-look at, like a page, a screen, a schedule, or a printout? If so, and
-they haven't seen the visual companion offer yet, send the offer instead
-(its own message, below) and hold the chunk for the next message. Once
-they've accepted, put a mockup next to the description.
-
-## Size the Work
-
-Once you understand what they want, pick a size and say it in plain
-words. They can override it.
-
-| Size | The full description | Then |
-|------|----------------------|------|
-| A quick, clear task | the request itself | do it |
-| A small change | in chat | build it through the normal workflow |
-| A project with a written design | a written design document | a full plan (for software: superpowers:writing-plans) |
-
-If it grows mid-task, stop, say so, and step up a size.
-
-If this is really several independent projects, say so, agree on an
-order, and brainstorm them one at a time.
-
-## The Written Design
-
-For a project, write a plain document a talented builder in the domain
-could plan from without going back to your human partner. Cover:
-
-- intent and the why
-- goals, non-goals, anti-goals
-- constraints
-- the parts of the how they decided, as they decided them
-- what's left to the builder
-
-**Where it goes:** in a software repo,
-`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed.
-Otherwise, ask. Your human partner's preferences override both.
-
-**Builder check:** dispatch a fresh subagent with
-`builder-check-prompt.md` in this directory. When you tell your human
-partner you're writing it up, say a reviewer will read it first and you
-may come back once with a few questions. Don't hand over the document
-until the check is back. Sort what the builder asks into three piles:
-
-- **Answered already** by the conversation or the project: put the answer
-  in the document.
-- **Minor:** a sensible builder could settle it without changing what gets
-  built. Settle it yourself and mark it in the document as your call.
-- **Theirs:** only your human partner can answer it, and the answer changes
-  what gets built.
-
-Bring the "theirs" pile in one message, most important first. Update the
-document with their answers, then hand it over with a short list of the
-calls you made so they can check those while reading. That's the only
-round of questions the check produces. Without a subagent tool, read the
-document as that builder yourself.
+- Notify the user prior to drafting the design document that a builder verification pass will precede document delivery and may generate 1 follow-up question round.
+- Dispatch a fresh subagent with builder-check-prompt.md from the current skill directory to audit the draft design document, or execute the builder verification pass directly when subagent dispatch is unavailable, holding document delivery until verification completes.
+- Categorize each builder inquiry generated during verification into 1 of 3 resolution buckets:
+  + Answered inquiry ➔ Integrate the existing answer from the prior dialogue or project context directly into the design document
+  + Minor technical detail ➔ Resolve autonomously while preserving target behavior and record the decision as a builder call in the design document
+  + User-owned decision ➔ Consolidate inquiries that alter target behavior into 1 message ordered by impact priority for user resolution
+- Update the design document with the user's responses from the single verification round and deliver the finalized design document alongside a summary list of autonomous builder calls for user review.
 
 <HARD-GATE>
-Nothing gets built until your human partner approves the full
-description: in chat for a small change, the document for a project.
-Building includes writing product code, scaffolding, installing
-dependencies, creating projects, and invoking an implementation skill.
-Reading and exploring are fine.
-
-Two exceptions. If they opted out of the questions, the skill is done
-and the gate goes with it. A spike they said yes to may be built; it
-stays labeled throwaway, and keeping what it produced is a new request
-that comes back through this gate.
-
-After a project's document is approved, the next step is the plan. For
-software, invoke superpowers:writing-plans and no other skill.
+- Enforce a strict execution lock prior to writing production code, scaffolding files, installing dependencies, creating projects, or invoking implementation skills until the user explicitly approves the complete specification (in-chat specification for a small change, or finalized design document for a project), separating preliminary agreement on an initial concept from formal specification approval.
+- Permit read-only exploration and user-approved throwaway spikes during requirement elicitation, isolate each throwaway spike as disposable code, and route each request to retain spike artifacts back through the specification approval gate as a new request.
+- Release the execution gate immediately when the user opts out of requirement elicitation during session initialization.
+- Transition exclusively to the planning phase upon user approval of a project design document by invoking superpowers:writing-plans for software projects.
 </HARD-GATE>
 
-## Red Flags
-
-| Thought | Reality |
-|---------|---------|
-| "I'll offer options to save them effort" | Options steer. Ask them to describe it first. |
-| "I'll fill in sensible defaults" | Good. Say them out loud. A default they never heard is one they couldn't reject. |
-| "I should explain the process first" | Ask your question. The process shows itself. |
-| "They said 'sounds good' to the idea" | Approval covers what you showed them. A description you haven't written isn't approved. |
-| "The spike works, I'll keep building on it" | Keeping it is a new request. Back through the gate. |
-
-## Visual Companion
-
-A browser tab for showing mockups, diagrams, and prototypes. It's a
-tool, not a mode: accepting it doesn't send every question to the
-browser.
-
-**Offer it just-in-time.** Offer it the first time one of the moments
-above comes up, never upfront. The offer is its own message with nothing
-else in it:
-
-> "This might be easier if I show you. Want me to open a browser tab with some mockups?"
-
-If they decline, stay in text and don't offer again unless they raise it.
-
-**Per question, ask: would they understand this better by seeing it?**
-Mockups, layouts, diagrams, and side-by-side designs go in the browser.
-Requirements, scope, tradeoffs, and conceptual choices stay in text. A
-question about a UI topic isn't automatically a visual question.
-
-If they accept, read `visual-companion.md` in this directory before
-starting the server.
+- Resolve operational conflicts in descending order of precedence: Explicit user opt-out or storage override > Hard-gate specification approval > Just-in-time visual companion offer > Iterative playback and single-question elicitation > Autonomous builder defaults.
