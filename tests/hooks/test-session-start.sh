@@ -172,8 +172,7 @@ else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
 fi
 
-if [[ -f "$REPO_ROOT/.muse-plugin/plugin.json" ]]; then
-    if node -e '
+if node -e '
 const manifest = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
 const hook = (manifest.capabilities?.hooks || []).find(h => h.id === "session-start");
 if (!hook) {
@@ -186,10 +185,9 @@ if (cmd[0] !== "bash") {
   process.exit(1);
 }
 ' "$(node_path "$REPO_ROOT/.muse-plugin/plugin.json")"; then
-        pass ".muse-plugin/plugin.json registers SessionStart with bash"
-    else
-        fail ".muse-plugin/plugin.json registers SessionStart with bash"
-    fi
+    pass ".muse-plugin/plugin.json registers SessionStart with bash"
+else
+    fail ".muse-plugin/plugin.json registers SessionStart with bash"
 fi
 
 claude_home="$(make_home claude-code)"
