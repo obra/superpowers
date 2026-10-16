@@ -7,8 +7,21 @@
   function nextReconnectDelay(current, max) {
     return Math.min(current * 2, max);
   }
+
+  // Pure: keys that should activate a choice element (keyboard parity with click).
+  function isActivationKey(key) {
+    return key === 'Enter' || key === ' ' || key === 'Spacebar';
+  }
+
+  // Pure: tags that already bring button semantics natively — focusable, fire
+  // click on Enter/Space, announced as interactive — and must not be re-hydrated.
+  function isNativeControl(tagName) {
+    return ['button', 'a', 'input', 'select', 'textarea']
+      .includes(String(tagName || '').toLowerCase());
+  }
+
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { nextReconnectDelay, MIN_RECONNECT_MS, MAX_RECONNECT_MS, TOMBSTONE_AFTER_MS };
+    module.exports = { nextReconnectDelay, isActivationKey, isNativeControl, MIN_RECONNECT_MS, MAX_RECONNECT_MS, TOMBSTONE_AFTER_MS };
   }
 
   // Everything below is browser-only; bail out when loaded in Node (tests).
@@ -140,6 +153,49 @@
 
   });
 
+  // Accessibility: agents copy plain `<div data-choice onclick="toggleSelect(this)">`
+  // markup from visual-companion.md, so choices render as divs with no role, no
+  // focus and no keyboard activation — unreachable by keyboard and screen-reader
+  // users. Hydrate whatever the page contains (now and later, via MutationObserver)
+  // so every choice is focusable and announced; native controls are left alone.
+  function hydrateChoice(el) {
+    if (el.dataset.choiceHydrated) return;
+    el.dataset.choiceHydrated = '1';
+    if (!isNativeControl(el.tagName)) {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+    }
+    if (!el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false');
+  }
+
+  function hydrateChoices(scope) {
+    if (scope && scope.matches && scope.matches('[data-choice]')) hydrateChoice(scope);
+    if (scope && scope.querySelectorAll) {
+      scope.querySelectorAll('[data-choice]').forEach(hydrateChoice);
+    }
+  }
+
+  function watchForChoices() {
+    if (typeof MutationObserver === 'undefined' || !document.body) return;
+    new MutationObserver((mutations) => {
+      mutations.forEach((m) => (m.addedNodes || []).forEach((n) => {
+        if (n && n.nodeType === 1) hydrateChoices(n);
+      }));
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  // Keyboard parity with the click listener above: Enter/Space activate the
+  // focused choice by synthesizing a click, which reuses the exact same
+  // selection path and event payload (server protocol unchanged). Native
+  // controls already fire click on Enter/Space, so they are skipped.
+  document.addEventListener('keydown', (e) => {
+    if (!isActivationKey(e.key)) return;
+    const target = e.target && e.target.closest && e.target.closest('[data-choice]');
+    if (!target || isNativeControl(target.tagName)) return;
+    e.preventDefault();
+    target.click();
+  });
+
   // Frame UI: selection tracking
   window.selectedChoice = null;
 
@@ -155,6 +211,10 @@
       el.classList.add('selected');
     }
     window.selectedChoice = el.dataset.choice;
+    // Mirror the selected class into aria-pressed so screen readers announce the
+    // state change instead of only seeing a CSS class.
+    const group = container ? container.querySelectorAll('.option, .card') : [el];
+    group.forEach(o => o.setAttribute('aria-pressed', o.classList.contains('selected') ? 'true' : 'false'));
   };
 
   // Expose API for explicit use
@@ -163,5 +223,7 @@
     choice: (value, metadata = {}) => sendEvent({ type: 'choice', value, ...metadata })
   };
 
+  hydrateChoices(document);
+  watchForChoices();
   connect();
 })();

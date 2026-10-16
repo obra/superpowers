@@ -144,6 +144,8 @@
       transition: all 0.15s ease;
     }
     .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    /* Choices are hydrated to tabindex=0 by helper.js — show keyboard focus. */
+    .option:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .card.selected { border-color: var(--selected-border); border-width: 2px; }
     .card-image { background: var(--bg-tertiary); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; }
     .card-body { padding: 1rem; }
