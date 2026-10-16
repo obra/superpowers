@@ -11,8 +11,8 @@
 set -euo pipefail
 
 usage() {
-  # Leading comment block after the shebang, not a fixed line count.
-  sed -n '2,/^[^#]/p' "$0" | sed -e '$d' -e 's/^# \{0,1\}//'
+  # Leading comment block after the shebang, including blank lines inside it.
+  sed -n '2,/^[[:space:]]*[^#[:space:]]/p' "$0" | sed -e '$d' -e 's/^# \{0,1\}//'
 }
 
 die() {

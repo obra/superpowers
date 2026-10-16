@@ -170,6 +170,32 @@ assert_contains "$help_output" "baseline, or pass files explicitly to lint a sma
 assert_contains "$help_output" "$header_last_line" "--help includes the last line of the header comment"
 assert_not_contains "$help_output" "set -euo pipefail" "--help stops at the end of the header comment"
 
+# A blank paragraph inside the leading comment must not end usage().
+# ^[^#] treats a whitespace-only line as the end of the block, so copy the
+# script and insert an empty line plus a spaces-only line after the first
+# paragraph. The usage line below that gap is only reachable if both are skipped.
+blank_header_script="$TEST_ROOT/lint-shell-blank-header.sh"
+awk '
+  { print }
+  inserted == 0 && $0 == "# Lint shell scripts in this repository." {
+    print ""
+    print "   "
+    inserted = 1
+  }
+' "$SCRIPT_UNDER_TEST" >"$blank_header_script"
+
+if blank_help_output="$(bash "$blank_header_script" --help 2>&1)"; then
+  pass "--help with a blank header line exits successfully"
+else
+  fail "--help with a blank header line exits successfully"
+  printf '%s\n' "$blank_help_output" | sed 's/^/      /'
+fi
+
+assert_contains "$blank_help_output" "Lint shell scripts in this repository." "--help with a blank header line keeps the paragraph before the gap"
+assert_contains "$blank_help_output" "scripts/lint-shell.sh [--all] [--format] [--strict] [file ...]" "--help with a blank header line keeps the usage line after the gap"
+assert_contains "$blank_help_output" "baseline, or pass files explicitly to lint a smaller set." "--help with a blank header line keeps the last usage sentence after the gap"
+assert_not_contains "$blank_help_output" "set -euo pipefail" "--help with a blank header line still stops before the script body"
+
 fixture="$TEST_ROOT/repo"
 fakebin="$TEST_ROOT/bin"
 log="$TEST_ROOT/tool.log"
