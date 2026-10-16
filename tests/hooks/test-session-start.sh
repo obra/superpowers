@@ -143,6 +143,14 @@ for (const forbiddenText of forbiddenTexts) {
 
 echo "SessionStart hook output tests"
 
+node_path() {
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -m "$1"
+    else
+        printf '%s\n' "$1"
+    fi
+}
+
 # Registration shape: the hook must declare shell:"bash" so Claude Code on
 # Windows dispatches via Git Bash (or fails with an actionable error) instead
 # of PowerShell/cmd.exe, whose parsers break on the quoted command string
@@ -158,10 +166,30 @@ if (!/run-hook\.cmd" session-start$/.test(entry.command)) {
   console.error(`unexpected SessionStart command shape: ${entry.command}`);
   process.exit(1);
 }
-' "$REPO_ROOT/hooks/hooks.json"; then
+' "$(node_path "$REPO_ROOT/hooks/hooks.json")"; then
     pass "hooks.json registers SessionStart with shell:bash dispatch"
 else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
+fi
+
+if [[ -f "$REPO_ROOT/.muse-plugin/plugin.json" ]]; then
+    if node -e '
+const manifest = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const hook = (manifest.capabilities?.hooks || []).find(h => h.id === "session-start");
+if (!hook) {
+  console.error("missing session-start hook in .muse-plugin/plugin.json");
+  process.exit(1);
+}
+const cmd = hook.command || [];
+if (cmd[0] !== "bash") {
+  console.error(`SessionStart hook command is ${JSON.stringify(cmd[0])}, expected "bash"`);
+  process.exit(1);
+}
+' "$(node_path "$REPO_ROOT/.muse-plugin/plugin.json")"; then
+        pass ".muse-plugin/plugin.json registers SessionStart with bash"
+    else
+        fail ".muse-plugin/plugin.json registers SessionStart with bash"
+    fi
 fi
 
 claude_home="$(make_home claude-code)"

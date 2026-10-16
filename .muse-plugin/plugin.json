@@ -77,7 +77,7 @@
         "id": "session-start",
         "event": "SessionStart",
         "command": [
-          "sh",
+          "bash",
           "hooks/session-start"
         ],
         "timeoutMs": 5000
