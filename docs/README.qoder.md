@@ -21,16 +21,16 @@ root:
 qoder plugins install /absolute/path/to/superpowers
 ```
 
-## Qoder IDE installation
+## Qoder App installation
 
-Qoder IDE imports plugin ZIP files. From the root of a Superpowers checkout,
+Qoder App imports plugin ZIP files. From the root of a Superpowers checkout,
 create an upload-ready archive:
 
 ```bash
 git archive --format=zip --prefix=superpowers/ -o superpowers-qoder.zip HEAD
 ```
 
-In Qoder, open **Extensions → Plugins → Add Plugins → Upload Plugin** and select
+In Qoder App, open **Extensions → Plugins → Add Plugins → Upload Plugin** and select
 `superpowers-qoder.zip`. Start a fresh task after importing or updating it.
 
 ## How it works

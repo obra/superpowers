@@ -263,7 +263,7 @@ qoder plugins install superpowers@superpowers-dev
 Start a fresh session after installing or updating. The Qoder plugin uses a
 native `SessionStart` hook to load the Superpowers bootstrap automatically.
 
-For Qoder IDE ZIP import and local development instructions, see
+For Qoder App ZIP import and local development instructions, see
 [docs/README.qoder.md](docs/README.qoder.md).
 
 ### Qwen Code
