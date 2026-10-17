@@ -36,7 +36,25 @@ awk -v n="$n" '
 ' "$plan" > "$out"
 
 if [ ! -s "$out" ]; then
-  echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
+  # Headings must use the English literal "Task N" (see writing-plans). When the
+  # plan is in another language the model often translates that token, and the
+  # old error read as "task missing" rather than "wrong language".
+  found=$(awk '
+    /^```/ { fence = !fence }
+    !fence && /^#+[ \t]+[^ \t]+[ \t]+[0-9]+([: \t]|$)/ {
+      h = $0
+      if (length(h) > 80) h = substr(h, 1, 77) "..."
+      print h
+    }
+  ' "$plan" | head -n 10)
+  if [ -n "$found" ]; then
+    echo "task ${n} not found in ${plan}: no heading matching the English literal 'Task ${n}'." >&2
+    echo "Task-like headings found:" >&2
+    printf '%s\n' "$found" | sed 's/^/  /' >&2
+    echo "Task headings must use the English word \"Task\" (e.g. '## Task ${n}: …'), even when the rest of the plan is in another language." >&2
+  else
+    echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
+  fi
   exit 3
 fi
 
