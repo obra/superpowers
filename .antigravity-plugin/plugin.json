@@ -6,7 +6,8 @@
   "logo": "assets/antigravity-logo.png",
   "suggestedPrompts": [
     "I've got an idea for something I'd like to build",
-    "Let's figure out why this broke"
+    "Let's figure out why this broke",
+    "Write a step-by-step TDD implementation plan for this feature"
   ],
   "category": "Developer Tools",
   "keywords": [
