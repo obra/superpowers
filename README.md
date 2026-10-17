@@ -20,6 +20,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
+  - [Qoder](#qoder)
   - [Qwen Code](#qwen-code)
   - [Hermes Agent](#hermes-agent)
   - [Muse](#muse)
@@ -249,6 +250,21 @@ pi -e /path/to/superpowers
 ```
 
 The Pi package loads the Superpowers skills and a small extension that injects the `using-superpowers` bootstrap at session startup and again after compaction. Pi has native skills, so no compatibility `Skill` tool is required. Subagent and task-list tools remain optional Pi companion packages.
+
+### Qoder
+
+Register this repository as a Qoder marketplace and install the native plugin:
+
+```bash
+qoder plugins marketplace add obra/superpowers
+qoder plugins install superpowers@superpowers-dev
+```
+
+Start a fresh session after installing or updating. The Qoder plugin uses a
+native `SessionStart` hook to load the Superpowers bootstrap automatically.
+
+For Qoder IDE ZIP import and local development instructions, see
+[docs/README.qoder.md](docs/README.qoder.md).
 
 ### Qwen Code
 

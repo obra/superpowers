@@ -164,6 +164,29 @@ else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
 fi
 
+if node -e '
+const hooks = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+const group = hooks.hooks.SessionStart[0];
+const entry = group.hooks[0];
+if (group.matcher !== "startup|resume|clear|compact|new") {
+  console.error(`unexpected Qoder SessionStart matcher: ${group.matcher}`);
+  process.exit(1);
+}
+if (entry.shell !== "bash") {
+  console.error(`Qoder SessionStart hook shell is ${JSON.stringify(entry.shell)}, expected "bash"`);
+  process.exit(1);
+}
+const expectedCommand = `"\${QODER_PLUGIN_ROOT}/hooks/run-hook.cmd" session-start`;
+if (entry.command !== expectedCommand) {
+  console.error(`unexpected Qoder SessionStart command: ${entry.command}`);
+  process.exit(1);
+}
+' "$REPO_ROOT/hooks/hooks-qoder.json"; then
+    pass "hooks-qoder.json registers every Qoder SessionStart source with shell:bash dispatch"
+else
+    fail "hooks-qoder.json registers every Qoder SessionStart source with shell:bash dispatch"
+fi
+
 claude_home="$(make_home claude-code)"
 assert_command_output \
     "Claude Code emits nested SessionStart additionalContext" \
@@ -182,6 +205,26 @@ assert_command_output \
     "" \
     "$wrapper_home" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$WRAPPER_UNDER_TEST" session-start
+
+qoder_home="$(make_home qoder)"
+assert_command_output \
+    "Qoder emits nested SessionStart additionalContext" \
+    "nested" \
+    "You have superpowers" \
+    "" \
+    "$qoder_home" \
+    QODER_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$HOOK_UNDER_TEST"
+
+qoder_wrapper_home="$(make_home qoder-wrapper)"
+assert_command_output \
+    "Qoder run-hook.cmd dispatches the shared session-start script" \
+    "nested" \
+    "You have superpowers" \
+    "" \
+    "$qoder_wrapper_home" \
+    QODER_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$WRAPPER_UNDER_TEST" session-start
 
 cursor_home="$(make_home cursor)"

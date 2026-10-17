@@ -177,6 +177,7 @@ write_upstream_fixture() {
         "$repo/.antigravity-plugin" \
         "$repo/.codex-plugin" \
         "$repo/.kimi-plugin" \
+        "$repo/.qoder-plugin" \
         "$repo/.private-journal" \
         "$repo/assets" \
         "$repo/evals/drill" \
@@ -236,6 +237,13 @@ EOF
 EOF
 
     cat > "$repo/.kimi-plugin/plugin.json" <<EOF
+{
+  "name": "superpowers",
+  "version": "$MANIFEST_VERSION"
+}
+EOF
+
+    cat > "$repo/.qoder-plugin/plugin.json" <<EOF
 {
   "name": "superpowers",
   "version": "$MANIFEST_VERSION"
@@ -308,6 +316,7 @@ EOF
         .antigravity-plugin/plugin.json \
         .codex-plugin/plugin.json \
         .kimi-plugin/plugin.json \
+        .qoder-plugin/plugin.json \
         .gitignore \
         .gitmodules \
         .pre-commit-config.yaml \
@@ -462,13 +471,16 @@ write_stale_ignored_destination_fixture() {
 
     mkdir -p \
         "$repo/plugins/superpowers/.kimi-plugin" \
+        "$repo/plugins/superpowers/.qoder-plugin" \
         "$repo/plugins/superpowers/.private-journal"
     printf 'fixture keep\n' > "$repo/plugins/superpowers/.fixture-keep"
     printf '{"name":"stale-kimi"}\n' > "$repo/plugins/superpowers/.kimi-plugin/plugin.json"
+    printf '{"name":"stale-qoder"}\n' > "$repo/plugins/superpowers/.qoder-plugin/plugin.json"
     printf 'stale ignored leak\n' > "$repo/plugins/superpowers/.private-journal/leak.txt"
     git -C "$repo" add \
         plugins/superpowers/.fixture-keep \
-        plugins/superpowers/.kimi-plugin/plugin.json
+        plugins/superpowers/.kimi-plugin/plugin.json \
+        plugins/superpowers/.qoder-plugin/plugin.json
 
     commit_fixture "$repo" "Initial stale ignored destination fixture"
 }
@@ -669,6 +681,7 @@ main() {
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
+    assert_not_contains "$preview_section" ".qoder-plugin/plugin.json" "Preview excludes Qoder manifest from Codex sync"
     assert_not_contains "$preview_section" ".antigravity-plugin/plugin.json" "Preview excludes Antigravity manifest from Codex sync"
     assert_not_contains "$preview_section" "assets/antigravity-logo.png" "Preview excludes Antigravity logo from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
@@ -701,6 +714,7 @@ main() {
     echo "Convergence assertions..."
     assert_equals "$stale_preview_status" "0" "Stale ignored destination preview exits successfully"
     assert_matches "$stale_preview_section" "\\*deleting +\\.kimi-plugin/plugin\\.json" "Preview deletes stale Kimi manifest from Codex plugin"
+    assert_matches "$stale_preview_section" "\\*deleting +\\.qoder-plugin/plugin\\.json" "Preview deletes stale Qoder manifest from Codex plugin"
     assert_matches "$stale_preview_section" "\\*deleting +\\.private-journal/leak\\.txt" "Preview deletes stale ignored destination file"
 
     echo ""
