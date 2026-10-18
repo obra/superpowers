@@ -21,6 +21,8 @@ Skills are code, not prose. They shape agent behavior, so edit them like code.
 - **One skill names exactly one next skill** and says "Do NOT invoke any other skill." Handoff chains leak otherwise.
 - **"Your human partner" is deliberate.** Don't normalize it to "the user."
 - **Split by trigger, not by size.** A distinct entry condition earns its own skill and its own `description`, however short the body is. One description straddling two entry conditions degrades both.
+- **One implementer carries a PR.** A skill that adds a per-task gate needs a measured failure first.
+- **Tests check structure and scripts, not wording.**
 
 ## Nothing may assume a specific project
 
@@ -32,7 +34,7 @@ This installs globally, so no file under `skills/` may hard-code anything about 
 - `docs/REVIEW-GUIDANCE.md` — review conventions, read when present
 - `AGENTS.md` — entry-point summary, copied from `docs/AGENTS-SNIPPET.md`
 
-Scripts are referenced relative to their own skill directory, never relative to a repo root. `scripts/review-package` is correct; `skills/subagent-driven-development/scripts/review-package` only works inside this checkout.
+Scripts are referenced relative to their own skill directory, never relative to a repo root. `scripts/review-package` is correct; `skills/delivery/scripts/review-package` only works inside this checkout.
 
 `.toolbelt/` is also where scratch lands in consuming projects — `sdd/`, `quick/`, `brainstorm/`.
 

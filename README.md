@@ -62,13 +62,11 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 
 2. **writing-specs** - Activates with an approved design, or directly when you ask for a spec. Writes and commits the spec, then gates it with your review and a review from a different harness.
 
-3. **writing-plans** - Activates with an approved spec. Splits the work into PR-sized boundaries and reviewable tasks with exact files, interfaces, tests, and verification; the implementer writes the code. Reviewed on a different harness, then waits for your approval.
+3. **writing-plans** - Activates with an approved spec. Splits the work into PR boundaries, each with a risk level, and tasks that state their files, contract, what proves them, and a verify command; the implementer writes the code. Reviewed on a different harness, then waits for your approval.
 
-4. **delivery** - Activates with an approved plan. Per PR boundary: creates a worktree, runs subagent-driven-development, then hands the branch to a pr-monitor that owns CI, review, fixes, and merge.
+4. **delivery** - Activates with an approved plan. Per PR boundary: creates a worktree, dispatches one implementer for all of the boundary's tasks, runs one review scaled to the boundary's risk, then hands the branch to a pr-monitor that owns CI, review, fixes, and merge.
 
-5. **subagent-driven-development** - Run by delivery. Implementers carry the boundary's tasks (test-first); tasks touching money, auth, tenancy, migrations, or shared contracts get their own review, with up to two fix rounds; one whole-branch review covers the rest.
-
-6. **finishing-a-development-branch** - Run by the pr-monitor, or directly when you finish work by hand. Verifies tests, then merges, opens a PR, keeps, or discards the branch.
+5. **finishing-a-development-branch** - Run by the pr-monitor, or directly when you finish work by hand. Verifies tests, then merges, opens a PR, keeps, or discards the branch.
 
 **quick-task** covers small, already-decided changes: a one-task plan straight into delivery.
 
@@ -90,24 +88,20 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 - **writing-specs** - Spec documents and their review gates
 - **interactive-design** - Frontend-first prototyping against fixture-backed API contracts
 - **writing-plans** - Detailed implementation plans
-- **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Verify feedback against the code before acting on it
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Delivery**
 - **quick-task** - Small decision-complete changes, straight to one merged PR
-- **orchestrating** - What the session agent reads, dispatches, and rules on; nothing else enters its context
-- **delivery** - An approved plan through one coherent slice to a merged PR
+- **delivery** - An approved plan, one implementer and one reviewed PR per boundary, through merge
 - **agent-routing** - Resolves logical roles to concrete agent routes
-- **ux-gate** - UX review for new flows, material UI changes, or explicit requests; scripted smoke checks for rendering tasks
+- **ux-gate** - UX review for new flows, material UI changes, or explicit requests
 - **pr-monitor** - PR publication, CI, review providers, fix loops, and merge
 
 **Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **writing-for-agents** - Editorial rules for any agent-consumed document
+- **writing-skills** - Create and edit skills and other agent-consumed documents (includes testing methodology)
 - **using-toolbelt** - Introduction to the skills system
 
 ## Philosophy
@@ -129,7 +123,7 @@ Plugin-infrastructure tests live in `tests/` and run via the relevant `run-*.sh`
 
 Toolbelt began as a fork of [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent](https://blog.fsck.com) and [Prime Radiant](https://primeradiant.com). The methodology and much of the original skill content came from there. It has since diverged and is maintained independently.
 
-The `writing-for-agents` skill and the review smell baseline are adapted from [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT).
+The editorial rules in `writing-skills` and the review smell baseline are adapted from [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT).
 
 ## License
 

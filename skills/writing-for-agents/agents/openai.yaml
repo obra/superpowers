@@ -1,4 +1,0 @@
-interface:
-  display_name: "Writing for Agents"
-  short_description: "Editorial rules for documents agents consume"
-  default_prompt: "Use $writing-for-agents to tighten this agent-facing document."

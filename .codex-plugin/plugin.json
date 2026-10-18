@@ -1,6 +1,6 @@
 {
   "name": "toolbelt",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "description": "An agentic skills framework & software development methodology that works: planning, TDD, debugging, and collaboration workflows.",
   "author": {
     "name": "Mike",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "keywords": [
     "brainstorming",
-    "subagent-driven-development",
+    "delivery",
     "skills",
     "planning",
     "tdd",

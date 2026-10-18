@@ -1,0 +1,8 @@
+I have my implementation plan ready at docs/toolbelt/plans/auth-system.md.
+
+I want to use delivery to execute it. That means:
+- One implementer carries each PR boundary
+- One review before each PR is published
+- A monitor carries each PR through CI and merge
+
+Let's start - please read the plan and begin the first boundary.

@@ -2,6 +2,30 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.0.0 (2026-10-17)
+
+Rebuilds delivery around one strong implementer per PR with one independent review behind it, moves deterministic checks into scripts, and cuts `skills/` from 32,752 words to under 13,500.
+
+- **One implementer per PR.** It receives every task brief at once, commits after each task, and stops only for a behavior, contract, or money decision the plan does not make. No per-task reviews or pause points.
+- **One local review per PR, before publish.** The plan's `Risk` column sets its effort, and `Risk: none` skips it. Boundaries over 2,000 changed lines split the review across up to three reviewers. The PR's review providers are the second reviewer.
+- **Parallelism is per PR.** Up to three implementers run on independent boundaries; a worktree policy may set a lower limit. Execution tracks, sub-worktrees, and integration tasks are gone.
+- **Implementer reports come back as the reply.** Delivery saves each to `boundary-N-report.md`, and the ledger points at it.
+- **Plans specify contracts, not code.** Tasks carry `Files`, `Contract`, `Proves`, and `Verify`; plans gain `## Risks` and a `Risk` column.
+- **Plans catch what reviews kept catching:** the search for every list of a new union member, every other way into each invariant, and scripted rewrites run twice.
+- **A finding is about a pattern.** Whoever fixes a finding fixes every sibling the same search finds, or lists each one left.
+- **One testing rule, stated once** in test-driven-development: guards and bug fixes are test-first with the mutation check; everything else writes tests alongside.
+- **Rebase once, at publish.** Delivery rebases before the review; the monitor owns rebasing after that.
+- **A fresh monitor carries PRs to merge,** one per chain. After two provider rounds, low-severity findings that touch no data, security, or money may move to a `## Follow-ups` list, unless the PR policy forbids it.
+- **Routing defaults:** high-effort implementer and reviewer, low-effort monitor (medium for money PRs), and a reviewer on a different harness from the implementer.
+- **Sizing is advisory:** three to nine tasks and 1,000–4,000 changed lines per PR.
+- **Scripts take the deterministic checks:** new `plan-check`, `pr-state`, and `dispatch-prompt`, and `review-package` path slices.
+- **Tests check structure, not wording.** `test-doctrine.sh` checks links, script paths, skill names, all-caps emphasis, and filler phrases; the phrase-needle tests are deleted.
+- **Prose follows current model guidance:** plain imperative sentences, no shouting outside gate blocks, and subagents only for large independent work.
+- **Authoring guidance is one skill.** `writing-for-agents` merges into `writing-skills`, and the pasted best-practices page becomes a link and eight rules.
+- **`dispatching-parallel-agents` is deleted.** Its one surviving rule lives in `using-toolbelt`.
+- **Historical plans and specs are deleted** from `docs/toolbelt/`. Git keeps them.
+- **Breaking:** `orchestrating`, `subagent-driven-development`, `dispatching-parallel-agents`, and `writing-for-agents` are removed. Delivery's scripts live under `skills/delivery/scripts/`.
+
 ## v9.0.0 (2026-10-14)
 
 Cuts the repeated checking and orchestrator churn that made long deliveries slow and expensive.

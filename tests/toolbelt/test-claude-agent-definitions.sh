@@ -76,18 +76,10 @@ scan_for_obsolete_models() {
 }
 
 scan_for_obsolete_models "obsolete operational models remain" \
-  --exclude=anthropic-best-practices.md \
   "$repo_root/agents" \
   "$repo_root/skills" \
   "$repo_root/.claude-plugin" \
   "$repo_root/.codex-plugin"
 echo "ok - obsolete operational models are absent"
-
-# The vendored authoring reference is guidance too, but historical release and
-# issue text plus regex guard tests are intentionally outside this operational scan.
-# It carries no --exclude: grep skips a named file that matches one.
-scan_for_obsolete_models "obsolete model guidance remains in the authoring reference" \
-  "$repo_root/skills/writing-skills/anthropic-best-practices.md"
-echo "ok - obsolete model guidance is absent"
 
 echo "PASS"

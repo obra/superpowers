@@ -1,104 +1,82 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: Use when creating or editing a skill, or editing any agent-consumed document such as AGENTS.md, CLAUDE.md, or a dispatch prompt template
 ---
 
 # Writing Skills
 
-A skill is a reference guide for a proven technique, pattern, or tool, not a story about solving something once. Skills are behavior-shaping code; write them under TDD.
+These rules apply to every document an agent reads: a skill, `AGENTS.md`, `CLAUDE.md`, a dispatch prompt, or a linked reference.
 
-**REQUIRED BACKGROUND:** `toolbelt:test-driven-development` defines the RED-GREEN-REFACTOR cycle this adapts; `toolbelt:writing-for-agents` holds the editorial rules every skill edit applies. Anthropic's authoring guidance: [anthropic-best-practices.md](anthropic-best-practices.md).
+New behavior-shaping guidance (a new skill, rule, or gate) needs a baseline first: watch an agent fail without it, then write against that failure. The method is in [testing-skills-with-subagents.md](testing-skills-with-subagents.md). An edit that leaves behavior unchanged, such as condensing or fixing a link, only needs to be correct. If an agent would behave differently after the edit, run the baseline.
 
-**Scope.** New behavior-shaping guidance — a new skill, rule, or gate — needs a baseline first: watch an agent fail without it, write against that failure, then close the loopholes it finds next. Editing what exists does not: condensing, restructuring, fixing a link, or rewording a rule whose behavior you are not changing needs only to be *correct*. Can't tell? Ask whether an agent would behave differently after the edit. Yes → baseline first.
+## When a skill is warranted
 
-## Testing
+Create a skill when the technique is not obvious, recurs across projects, and applies broadly. Project conventions belong in the consuming project's instructions file. A mechanical constraint belongs in a script or validator.
 
-Test a new or changed behavior-shaping skill before shipping it. The method, pressure scenarios, micro-tests, and the checklist are in [testing-skills-with-subagents.md](testing-skills-with-subagents.md).
+Split by trigger, not by size. A distinct entry condition earns its own skill and description, however short the body. One description that straddles two entry conditions degrades both.
 
-## When to Create a Skill
+## The description
 
-**Create when** the technique wasn't obvious, you'd use it again across projects, and it applies broadly.
+The description decides whether the skill loads at all. It sits in context on every turn.
 
-**Don't create for** one-off solutions, standard practices documented elsewhere, project-specific conventions (those belong in the consuming project's instructions file), or constraints a regex or validator can enforce. Automate those; document judgment calls.
-
-**Split by trigger, not by size.** A distinct entry condition earns its own skill and description, however short the body; one description straddling two degrades both.
+- Say when to use the skill, starting "Use when".
+- Leave the workflow out. An agent follows a workflow summary and skips the body; one such description produced one review where the body required two.
+- Put the trigger first, in the symptoms and error strings an agent would search for: "flaky", "ENOTEMPTY", "Hook timed out".
+- Give each trigger one phrasing. Two synonyms for one case are that case written twice.
+- Frontmatter is `name` and `description` only, under 1,024 characters.
 
 ## Structure
 
-```
-skills/skill-name/
-  SKILL.md              # required
-  supporting-file.*     # heavy reference (100+ lines) or reusable tools
-```
+- `SKILL.md` holds what every branch of the task needs. Material that only some branches reach goes in its own file, behind a link that says when to read it.
+- Keep one concept's rule, reason, and caveats under one heading.
+- Skills call their scripts as `bash scripts/<name>`, relative to the skill directory.
+- Use relative markdown links. An `@` link force-loads the file before it is needed.
+- End every step on a checkable completion condition. "Every modified model accounted for" beats "understanding reached".
+- Draw a flowchart only for a non-obvious decision or loop. Follow `graphviz-conventions.dot`; render with `./render-graphs.js <skill-directory>`.
 
-Flat namespace; all skills are searchable together. Keep principles, concepts, and code patterns under ~50 lines inline; split out API references, full syntax, and scripts, loaded only when needed.
+## Prose
 
-Frontmatter is exactly `name` and `description`, max 1024 characters ([full spec](https://agentskills.io/specification)); names use letters, numbers, hyphens.
+- Write normal imperative sentences. Give the reason in one clause where the rule is not obvious.
+- Put one idea in each sentence. State each rule once, in one place.
+- State the target behavior. Use a prohibition only where a positive instruction cannot carry it.
+- Use plain terms, not metaphor. Define a new term where it first appears.
+- Leave out all-caps emphasis, "think carefully", and instructions to re-check finished work.
+- Add one positive example where a pattern is hard to describe.
+- Suggest a subagent only for large, independent work, never to double-check the agent's own. The roles that delivery, quick-task, and review require are not discretionary.
+- Delete lines that no longer bear on the document. Settle whether a line is a no-op by running the document with and without it.
+- Leave out what the environment already says (`package.json` scripts, config files, `--help`) unless the task needs the exact value inline.
+- Keep exact commands, paths, and quoted user-facing messages verbatim.
 
-## The Description Field
+## Match the form to the failure
 
-**The highest-leverage line in any skill.** It answers one question for an agent choosing what to load: "should I read this now?"
+| Baseline failure | Form |
+|---|---|
+| Skips a known rule under pressure | One sentence with its reason; escalate only after it measurably fails |
+| Output has the wrong shape | A recipe: what the output is, its parts in order |
+| Omits an element | A required slot in the template |
+| Behavior depends on a condition | A conditional on an observable predicate |
 
-**Describe when to use it. Never summarize what it does.** A description that summarized the workflow caused one review instead of two: the agent followed it and never read the body.
+In dispatch-prompt tests, "don't X" produced more unwanted content than a recipe. A nuance clause such as "unless it matters" reopens the negotiation, so write a real exception as a conditional. An exemption clause does not scope a rule; restructure so the rule cannot reach the exempt part.
 
-```yaml
-# ❌ Summarizes workflow
-description: Use when executing plans - dispatches subagent per task with code review between tasks
+## Gates
 
-# ✅ Triggering conditions only
-description: Use when executing implementation plans with independent tasks in the current session
-```
+A `<HARD-GATE>` or `<ENTRY-GATE>` block marks a step whose failure is expensive or irreversible. Keep it to two or three sentences: the condition, who owns the exception, and why. All-caps emphasis belongs only inside such a block.
 
-Write in third person (it lands in the system prompt). Use triggers, symptoms, and error strings an agent would search for — "Hook timed out", "ENOTEMPTY", "flaky". Name the *problem* (race conditions), not a language-specific symptom (`setTimeout`), unless the skill is technology-specific.
+Add a rationalization table only where a brief rule measurably failed under pressure. Each row quotes a baseline excuse verbatim. Re-test every gate and table when the model changes.
 
-## Match the Form to the Failure
+## Handoffs
 
-Classify the baseline failure first: the form that bulletproofs one failure measurably backfires on another.
+A skill names exactly one next skill and says "Do NOT invoke any other skill." Cite a skill the reader needs as `toolbelt:<name>` and say that it is required.
 
-| Baseline failure | Right form | Wrong form |
-|---|---|---|
-| Skips a rule under pressure (knows better, does it anyway) | One-sentence rule + reason; after that measurably fails, prohibition + rationalization table | Soft guidance ("prefer", "consider") |
-| Output has the wrong shape (bloated prompt, buried verdict, restated spec) | Recipe: what the output IS, its parts in order | Prohibitions ("don't restate") |
-| Omits an element from what they already produce | Structural: a REQUIRED slot in the template | Prose reminders near the template |
-| Behavior should depend on a condition | Conditional on an observable predicate ("if the brief exists, reference it") | Unconditional rule + exemptions |
+## Anthropic's best practices
 
-**Why prohibitions backfire on shaping problems:** under a competing incentive, agents negotiate with "don't X". In wording tests on dispatch prompts, the prohibition arm produced more unwanted content than the recipe arm (fully separated distributions), and trended worse than the no-guidance control. A recipe leaves nothing to negotiate. Micro-test your own case.
+Anthropic publishes [skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices). Toolbelt applies these eight:
 
-**Whichever form you pick:**
-- **No nuance clauses.** "Don't X unless it matters" reopens the negotiation — one appended to a winning recipe degraded it from consistent to noisy in the same tests. Express a real exception as a conditional on an observable predicate.
-- **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses them; restructure so the rule can't reach the exempt part.
-
-## Bulletproofing Against Rationalization
-
-Use this only after a baseline shows the agent skipping a known rule under pressure and a brief instruction has failed to stop it. Frontier models overtrigger on aggressive phrasing; the default form is one sentence stating the rule and its reason.
-
-- **Close every loophole.** Name the workarounds the baseline produced, not just the rule.
-- **Build a rationalization table.** Each baseline excuse gets a row and a one-line reality, quoted verbatim rather than paraphrased.
-- **List the red-flag thoughts,** so an agent mid-rationalization can self-check, ending with what to do instead.
-- **Cut off spirit-versus-letter arguments** by saying the rule binds as written.
-
-Why these work: [persuasion-principles.md](persuasion-principles.md) (Cialdini 2021; Meincke et al. 2025).
-
-## Naming
-
-Name by what you DO or the core insight — verb-first, gerunds for processes:
-
-- ✅ `condition-based-waiting` > `async-test-helpers`
-- ✅ `root-cause-tracing` > `debugging-techniques`
-- ✅ `creating-skills` > `skill-creation`
-
-## Cross-Referencing Other Skills
-
-Name the skill with a requirement marker — `**REQUIRED BACKGROUND:** You MUST understand toolbelt:systematic-debugging`. A bare `See skills/testing/test-driven-development` leaves it unclear whether it's required.
-
-**Never use `@` links.** `@skills/.../SKILL.md` force-loads the file, burning context before you need it.
-
-## Flowcharts
-
-Use one only for a non-obvious decision point, a loop where you'd stop early, or an A-vs-B choice. Use tables for reference, markdown blocks for code, numbered lists for linear steps. Labels carry meaning: `helper1` and `step3` are useless.
-
-Style rules are in `graphviz-conventions.dot`. Show diagrams to your human partner with `./render-graphs.js ../some-skill` (`--combine` for one SVG).
-
-## Code Examples
-
-**One excellent example beats many mediocre ones.** Complete, runnable, from a real scenario, commented to explain WHY, in the language that fits the domain — no fill-in templates. One is enough.
+1. Assume the model is capable, and add only the context it lacks.
+2. Match freedom to fragility: prose for judgment calls, exact commands or a script for fragile steps.
+3. Write the description in third person with concrete trigger terms.
+4. Keep `SKILL.md` under 500 lines and every reference one level deep.
+5. Give a reference file over 100 lines a table of contents.
+6. Give a multi-step workflow a checklist and a validate, fix, repeat loop.
+7. Make scripts handle their own errors and justify their constants.
+8. Build evaluations before writing extensive guidance, and test with every model the skill will run on.

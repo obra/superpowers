@@ -53,8 +53,7 @@ else
 fi
 
 # one_rationalization_table
-expected_tables="skills/test-driven-development/SKILL.md
-skills/writing-skills/testing-skills-with-subagents.md"
+expected_tables="skills/test-driven-development/SKILL.md"
 tables=$(git grep -l -e "| Excuse | Reality |" -e "| Thought | Reality |" -- skills || true)
 unexpected=$(comm -23 <(echo "$tables" | grep -v '^$' | sort) <(echo "$expected_tables" | sort) || true)
 if [ -n "$unexpected" ]; then
