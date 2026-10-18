@@ -1,0 +1,4 @@
+{"data":{"repository":{"pullRequest":{"reviewThreads":{"pageInfo":{"hasNextPage":true,"endCursor":"t2"},"nodes":[
+{"id":"T_1","isResolved":false,"path":"src/a.ts","comments":{"nodes":[{"author":{"login":"review-bot"}}]}},
+{"id":"T_old","isResolved":true,"path":"src/old.ts","comments":{"nodes":[{"author":{"login":"review-bot"}}]}}
+]}}}}}

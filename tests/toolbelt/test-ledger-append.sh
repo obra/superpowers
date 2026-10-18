@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
-script="$repo_root/skills/subagent-driven-development/scripts/ledger-append"
+script="$repo_root/skills/delivery/scripts/ledger-append"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 ledger="$tmp/progress.md"

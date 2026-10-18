@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# Fill a dispatch template into a prompt file and print its path. The session
+# agent dispatches "Read <path> and follow it" and never loads the template.
+#
+# Usage:
+#   dispatch-prompt implementer --plan PLAN --boundary N --worktree DIR
+#   dispatch-prompt reviewer --package FILE --plan PLAN --boundary N [--slice "PATHS"]
+#   dispatch-prompt reviewer --package FILE --requirements TEXT
+#
+# implementer: writes one brief per task in the boundary's PR row, in order,
+# and fills implementer-prompt.md into <workspace>/boundary-N-implementer.md.
+# reviewer: fills requesting-code-review/code-reviewer.md into
+# <workspace>/boundary-N-review[-<slice hash>].md, with the boundary's row as
+# its scope and the briefs that carry `## Rulings`. With --requirements instead
+# of a plan, the prompt lands beside the package.
+# Exits non-zero when the boundary is not in the PR Boundaries table or a
+# [PLACEHOLDER] is left unfilled.
+set -euo pipefail
+
+usage() {
+  sed -n '5,8p' "$0" | sed 's/^# \{0,1\}//' >&2
+  exit 2
+}
+
+[ $# -ge 1 ] || usage
+mode=$1
+shift
+plan='' boundary='' worktree='' package='' slice='' requirements=''
+while [ $# -gt 0 ]; do
+  [ $# -ge 2 ] || usage
+  case $1 in
+    --plan) plan=$2 ;;
+    --boundary) boundary=$2 ;;
+    --worktree) worktree=$2 ;;
+    --package) package=$2 ;;
+    --slice) slice=$2 ;;
+    --requirements) requirements=$2 ;;
+    *) usage ;;
+  esac
+  shift 2
+done
+
+here=$(cd "$(dirname "$0")" && pwd)
+skill_dir=$(dirname "$here")
+
+abs_path() {
+  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+# Check the plan and boundary, then set plan_abs, workspace, and tasks.
+load_boundary() {
+  [ -n "$plan" ] && [ -n "$boundary" ] || usage
+  [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+  plan_abs=$(abs_path "$plan")
+  workspace=$(bash "$here/workspace" "$plan")
+  tasks=$(row_field "$boundary" 5)
+  [ -n "$tasks" ] || { echo "boundary $boundary is not in the PR Boundaries table of $plan" >&2; exit 1; }
+}
+
+# Print one field of boundary N's row from writing-plans' plan-rows:
+# 3 = Risk, 4 = Outcome, 5 = task numbers.
+row_field() {
+  bash "$skill_dir/../writing-plans/scripts/plan-rows" "$plan" |
+    awk -F'\t' -v want="$1" -v f="$2" '$1 == "row" && $2 == want { print $f; exit }'
+}
+
+# Print the first of the given paths that exists, or "none".
+first_existing() {
+  local f
+  for f in "$@"; do
+    if [ -f "$f" ]; then
+      echo "$f"
+      return
+    fi
+  done
+  echo none
+}
+
+check_filled() {
+  if grep -Eq '\[[A-Z][A-Z_]*\]' "$1"; then
+    grep -En '\[[A-Z][A-Z_]*\]' "$1" >&2
+    echo "dispatch-prompt: unfilled placeholder in $1" >&2
+    exit 1
+  fi
+}
+
+case $mode in
+  implementer)
+    [ -n "$worktree" ] && [ -d "$worktree" ] || usage
+    load_boundary
+    worktree=$(cd "$worktree" && pwd)
+
+    briefs='' nl=$'\n'
+    for t in $tasks; do
+      brief=$(bash "$here/task-brief" "$plan" "$t" | sed -n 's/^wrote \(.*\): [0-9]* lines$/\1/p')
+      briefs+="${briefs:+$nl}- Task $t: $brief"
+    done
+
+    main_root=$(dirname "$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)")
+    agents=$(first_existing "$worktree/AGENTS.md" "$main_root/AGENTS.md")
+    policy=$(first_existing "$worktree/.toolbelt/worktree-policy.md" "$main_root/.toolbelt/worktree-policy.md")
+
+    prompt=$(cat "$skill_dir/implementer-prompt.md")
+    prompt=${prompt//"[BOUNDARY]"/"$boundary"}
+    prompt=${prompt//"[PLAN]"/"$plan_abs"}
+    prompt=${prompt//"[WORKTREE]"/"$worktree"}
+    prompt=${prompt//"[BRIEFS]"/"$briefs"}
+    prompt=${prompt//"[PROJECT_RULES]"/"AGENTS.md: $agents; worktree policy: $policy"}
+    prompt=${prompt//"[LOOK_FOR]"/"$(dirname "$skill_dir")/requesting-code-review/code-reviewer.md"}
+
+    out="$workspace/boundary-$boundary-implementer.md"
+    printf '%s\n' "$prompt" > "$out"
+    check_filled "$out"
+    echo "$out"
+    ;;
+  reviewer)
+    [ -f "$package" ] || usage
+    package=$(abs_path "$package")
+    if [ -n "$requirements" ]; then
+      plan_abs=$requirements
+      scope="the whole range"
+      rulings=None
+      out="${package%.diff}-prompt.md"
+    else
+      load_boundary
+      list=${tasks// /, }
+      scope="PR $boundary, $(row_field "$boundary" 4): tasks $list"
+      rulings=
+      for t in $tasks; do
+        brief="$workspace/task-$t-brief.md"
+        if [ -f "$brief" ] && grep -q '^## Rulings' "$brief"; then
+          rulings+="${rulings:+, }$brief"
+        fi
+      done
+      out="$workspace/boundary-$boundary-review"
+      if [ -n "$slice" ]; then
+        out+="-$(printf '%s' "$slice" | git hash-object --stdin | cut -c1-7)"
+      fi
+      out+=".md"
+    fi
+
+    prompt=$(cat "$(dirname "$skill_dir")/requesting-code-review/code-reviewer.md")
+    prompt=${prompt//"[PACKAGE]"/"$package"}
+    prompt=${prompt//"[PLAN]"/"$plan_abs"}
+    prompt=${prompt//"[SCOPE]"/"$scope"}
+    prompt=${prompt//"[RULINGS]"/"${rulings:-None}"}
+    prompt=${prompt//"[SLICE]"/"${slice:-all}"}
+    prompt=${prompt//"[SMELLS_FILE]"/"$(dirname "$skill_dir")/requesting-code-review/smell-baseline.md"}
+    prompt=${prompt//"[REVIEW_FILE]"/"${package%.diff}.md"}
+
+    printf '%s\n' "$prompt" > "$out"
+    check_filled "$out"
+    echo "$out"
+    ;;
+  *) usage ;;
+esac

@@ -5,7 +5,7 @@ description: Use when starting feature work that needs isolation from the curren
 
 # Using Git Worktrees
 
-A caller may name a **source ref** (the SHA or branch to start from; default `HEAD`) and a branch name. A caller that asks for a new worktree, as delivery does for each boundary, always gets one: skip Step 0 and go to Step 1.
+A caller may name a **source ref** (default `HEAD`) and a branch name. A caller that asks for a new worktree, as delivery does, always gets one: go to Step 1.
 
 ## Step 0: Check for existing isolation
 
@@ -20,9 +20,7 @@ git rev-parse --show-superproject-working-tree 2>/dev/null   # prints a path ins
 
 ## Project worktree policy
 
-Read `<repo-root>/.toolbelt/worktree-policy.md` when it exists and follow it for the rest of this skill: port ranges and how to pick a set no other worktree uses, sidecar containers and their naming, per-worktree data directories, environment files to derive rather than copy, and what to tear down at finish. Report the set you claimed. Without a policy file, use the project's defaults rather than inventing a scheme the next worktree collides with.
-
-A policy may also set rules for worktrees that run concurrently, which subagent-driven-development applies to each track worktree: how to derive a per-workspace database name (or equivalent) from the branch, which resources are shared, setup commands to run per workspace, and a concurrency limit below SDD's three tracks when the machine can't run three setups at once. A track that needs isolated stateful resources the policy doesn't cover is a gap to report, not improvise around.
+Read `<repo-root>/.toolbelt/worktree-policy.md` when it exists and follow it for the rest of this skill: port ranges and how to pick a set no other worktree uses, sidecar containers, per-worktree data, environment files to derive rather than copy, teardown, and the concurrency limit. Report the set you claimed. Without a policy file, use the project's defaults rather than inventing a scheme the next worktree collides with.
 
 ## Step 1: Create the worktree
 
@@ -38,17 +36,17 @@ git worktree add "$LOCATION/$BRANCH_NAME" -b "$BRANCH_NAME" "${SOURCE_REF:-HEAD}
 cd "$LOCATION/$BRANCH_NAME"
 ```
 
-If `git worktree add` fails with a permission error, the sandbox blocked it. With a clean working tree, create the branch in place instead (`git switch -c "$BRANCH_NAME" "${SOURCE_REF:-HEAD}"`), tell your human partner, and continue with setup and baseline there. Otherwise stop and ask; never continue on the base branch.
+If `git worktree add` fails with a permission error, the sandbox blocked it. With a clean working tree, run `git switch -c "$BRANCH_NAME" "${SOURCE_REF:-HEAD}"` in place and tell your human partner. Otherwise stop and ask; never continue on the base branch.
 
 ## Step 2: Set up the project
 
-Apply the policy's setup (ports, sidecar containers, per-worktree data directories), then install dependencies the way the project's manifest says.
+Apply the policy's setup, then install dependencies the way the project's manifest says.
 
 ## Step 3: Verify a clean baseline
 
-Run the smallest focused checks that prove a clean start: the tests the work will rely on, not a workspace or package-wide baseline. When the base commit already has qualifying test evidence or green CI, cite that instead of re-running; docs-only work needs no baseline suite.
+Run the tests the work will rely on, not a package-wide baseline. When the base commit already has green CI or test evidence, cite it instead. Docs-only work needs no baseline.
 
-If the baseline fails, report the failures and ask whether to proceed or investigate. Otherwise report:
+If the baseline fails, report it and ask whether to proceed. Otherwise report:
 
 ```
 Worktree ready at <full-path>

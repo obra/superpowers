@@ -12,7 +12,7 @@ LLMs respond to the same persuasion principles as humans. Understanding this psy
 **What it is:** Deference to expertise, credentials, or official sources.
 
 **How it works in skills:**
-- Imperative language: "YOU MUST", "Never", "Always"
+- Imperative language: `YOU MUST`, "Never", "Always"
 - Non-negotiable framing: "No exceptions"
 - Eliminates decision fatigue and rationalization
 
@@ -135,7 +135,7 @@ LLMs respond to the same persuasion principles as humans. Understanding this psy
 ## Why This Works: The Psychology
 
 **Bright-line rules reduce rationalization:**
-- "YOU MUST" removes decision fatigue
+- `YOU MUST` removes decision fatigue
 - Absolute language eliminates "is this an exception?" questions
 - Explicit anti-rationalization counters close specific loopholes
 

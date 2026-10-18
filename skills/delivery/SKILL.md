@@ -5,50 +5,58 @@ description: Use when an approved implementation plan is ready to be implemented
 
 # Delivery
 
-Take an approved plan from its first PR boundary to every PR merged and cleaned up. A **boundary** is one row of the plan's `## PR Boundaries`: one branch, one PR. A **chain** is a stack of dependent boundaries, each PR targeting its predecessor's branch.
+Take an approved plan from its first PR boundary to every PR merged and cleaned up. A **boundary** is one row of the plan's `## PR Boundaries`: one branch, one implementer, one PR. A **chain** is a stack of dependent boundaries. Call this skill's scripts as `bash scripts/<name>`.
 
-## 1. Start
+## What you read
 
-Invoke toolbelt:orchestrating first; its read list holds throughout. Read the plan and [branch-lifecycle.md](branch-lifecycle.md), and open the delivery ledger it describes before creating any worktree. Execute the boundaries in the plan's order. The plan is approved: take any product decision it leaves open to your human partner rather than redesigning it.
+Read the plan, this skill, [branch-lifecycle.md](branch-lifecycle.md), agent-routing with the routing text, using-git-worktrees with the worktree policy, the ledger, and each implementer's reply. `dispatch-prompt` fills the prompt templates, so do not read them. Diffs, reviews, and logs move by path. Check an implementer's claim against the diff before you raise it to your human partner.
 
-After an interruption, recover from the ledger, Git and worktree state, and live PR state before dispatching anything.
+## Start
 
-## 2. Resolve routes
+1. Run `bash ../writing-plans/scripts/plan-check PLAN`. A failure goes back to planning.
+2. Run `bash scripts/workspace PLAN` from the starting checkout, and keep that checkout until every boundary closes. The ledger is `<workspace>/delivery.md`.
+3. Resolve the implementer, reviewer, and monitor routes with agent-routing, plus an `errand` gate runner when a boundary runs ux-gate.
+4. If the ledger already has lines, recover first.
 
-Route every role with toolbelt:agent-routing: the implementer, task reviewer, final reviewer (specialty `gate`), monitor, and, for a boundary that runs ux-gate, the `errand` gate runner. The session agent remains the orchestrator. If either reviewer lacks a route independent of the implementer, stop, unless agent-routing's outage override applies.
+## Per boundary
 
-## Who does what
+Up to three implementers run at once, on independent boundaries with disjoint files, unless the worktree policy sets a lower limit. A dependent boundary starts once its predecessor's PR is recorded.
 
-Dispatch prompts never reassign these.
+1. **Worktree.** Branch from the base branch, or from the predecessor's head while its PR is open. Create the worktree with using-git-worktrees on branch `<plan-slug>/pr-<N>` and record the fork SHA. A boundary that follows interactive-design keeps the prototype branch, worktree, and baseline; its review BASE is the commit before the prototype commits.
+2. **Dispatch.** Run `bash scripts/dispatch-prompt implementer --plan PLAN --boundary N --worktree DIR`. Dispatch one implementer with "Read <printed path> and follow it", and record its agent id.
+3. **Reply.** Save it to `<workspace>/boundary-N-report.md`. `DONE` continues. `NEEDS_DECISION` goes to your human partner; append the ruling under `## Rulings` in the brief it concerns and resume the implementer. Retry `BLOCKED` once with what it asked for or a stronger routed model; a second `BLOCKED` goes to your human partner.
+4. **Liveness.** Wait on agents with one blocking call. Check any agent with no new commit or output for 60 minutes. Replace a stuck or unresumable implementer with a fresh one, given the prompt path, the report so far, and the current head.
+5. **UX gate.** When ux-gate's entry condition holds, dispatch the gate runner with toolbelt:ux-gate, the changed pages, acceptance criteria, environment, and range. Its review file goes to the same implementer.
+6. **Review**, then **Publish**.
 
-| Work | Owner |
-|---|---|
-| Code, tests, commits, task reports, UI smoke of the touched pathway | Implementers |
-| Task reviews and the whole-branch final review | Reviewers |
-| Boundary UX capture and verdict | Gate runner with toolbelt:ux-gate, which dispatches a `ux` reviewer |
-| PR publication, CI, provider reviews, PR fixes, published-branch rebases, merge | pr-monitor, one per chain |
-| Worktrees, unpublished-branch rebases, issue-tracker reconciliation, cleanup | You |
+## Review
 
-## 3. Execute each boundary
+- `Risk: none` skips the review.
+- Otherwise rebase an unpublished dependent boundary per branch-lifecycle.md. Run `bash scripts/review-package --plan PLAN BASE HEAD`, BASE being the fork SHA or the new parent head after a rebase.
+- Run `bash scripts/dispatch-prompt reviewer --plan PLAN --boundary N --package FILE`, and dispatch the routed reviewer at the effort the row's `Risk` sets with "Read <printed path> and follow it."
+- Over 2,000 changed lines, or across areas one reader cannot hold, give up to three reviewers one path slice each (`review-package ... -- <paths>`, `dispatch-prompt reviewer ... --slice "<paths>"`). Run them in parallel and merge their findings.
+- Send every Critical and Important finding to the same implementer in one dispatch. Run no local re-review; the providers' next round is the re-check. A `plan-gap` finding goes to your human partner.
+- Record `Review: clean|fixed|skipped at <SHA>`.
 
-1. **Branch point.** An independent boundary branches from the base branch. A dependent boundary stacks on its predecessor while that PR is open: fetch its remote head and branch from that SHA, joining its chain; once it has merged, branch from the updated base branch. Any other dependency sits lower in the same chain or has merged. An approved interactive-design prototype keeps its own branch, worktree, and baseline and ships as one PR.
-2. **Worktree.** Create it with toolbelt:using-git-worktrees on branch `<plan-slug>/pr-<N>` (the plan file's basename without date or extension, and the boundary number), and record the boundary in the ledger.
-3. **UX gate.** When the boundary meets ux-gate's entry condition (new user flows, material interaction, layout, or responsive changes, or an explicit UX-review request), give SDD the gate runner's route and what the runner needs: the changed pages, acceptance criteria, and environment. SDD adds the commit range when it dispatches. Routine cosmetic changes need no gate.
-4. **Execute** with toolbelt:subagent-driven-development, giving it the boundary number, its task set, the starting SHA, the resolved routes, and the gate runner if any. SDD's final review is the boundary's gate; add no other whole-branch review.
+## Publish
 
-Start the next boundary as soon as this one's monitor is running; any number may be open at once. A dependent boundary starts only after its predecessor's PR is recorded in the ledger.
+Hand the boundary to toolbelt:pr-monitor with the worktree, the target base (the predecessor's branch, or the base branch), the review SHA, and the ledger path. The first boundary of a chain starts a monitor in the background; a dependent boundary resumes its chain's monitor; independent boundaries may share one. Check the ledger for a live monitor before starting another. Keep delivering while monitors run.
 
-## 4. Ship
+## On return
 
-When the final review is clean, hand the branch to the chain's pr-monitor, dispatched with toolbelt:pr-monitor, giving it:
+- **Merged:** confirm the PR is `MERGED` on the remote, reconcile the issue tracker when the plan links one, and clean up per branch-lifecycle.md.
+- **Blocked:** take it to your human partner and continue whatever it does not block.
 
-- the worktree path and target base (the predecessor's branch for a dependent boundary, the base branch otherwise)
-- the final-review SHA
-- both ledger paths: `delivery.md` and the boundary's SDD `progress.md`
+You are done when every boundary is merged and cleaned up, or blocked with your human partner told. Waiting on a monitor is not done.
 
-The first boundary of a chain starts its monitor in the background. A dependent boundary goes to its chain's running monitor by resuming it. A chain has exactly one pr-monitor: one that looks dead is not grounds to start a second one; check that state directly first.
+## Ledger
 
-Keep delivering independent boundaries while monitors run, then wait for their returns. Never report the work complete or end the session while a monitor runs. On each return:
+Append with `bash scripts/ledger-append LEDGER "line"` at gates only: a dispatch or reply, a ruling, a review verdict, a rebase, a PR opened or merged, a blocker raised or cleared. Point one line at each saved report. Before the final cleanup, append an `## Inefficiencies` section by plain append, listing every wait, repeat, or stop the run did not need, and include it in your closing message.
 
-- **Merged:** confirm the PR is `MERGED` on the remote, never commit ancestry; reconcile the issue tracker only when the plan is linked to one; then clean up per branch-lifecycle.md.
-- **Blocked or escalated:** take it to your human partner and keep delivering what it does not block. A bottom PR closed without merging blocks its whole chain; start no more boundaries in it.
+## Recovery
+
+Read the ledger and `git log`, list worktrees, check live agents and remote PRs, then continue from the latest `Next:`. A recorded review counts only at the current head. Never redispatch a boundary already reviewed or published.
+
+## Questions
+
+Only product, money, or cross-team questions go to your human partner, in plain words. Decide everything else the money-safe way and note it in the ledger.

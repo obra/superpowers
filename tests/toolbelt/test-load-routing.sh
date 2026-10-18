@@ -68,3 +68,6 @@ commands=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print("\
 assert_equals "$(sed -n 1p <<<"$commands")" "echo toolbelt-load-routing configured" "setup keeps a hook that only mentions the loader"
 assert_equals "$(wc -l <<<"$commands" | tr -d ' ')" "2" "setup replaces an earlier registration of the loader"
 assert_equals "$(cd "$tmp/wt" && sh -c "$(sed -n 2p <<<"$commands")")" "$expected" "registered command runs from a path with a space"
+
+# The bundled Claude routing names the Explore agent exactly once, to forbid it.
+assert_equals "$(grep -c "Explore" "$repo_root/skills/agent-routing/routing/claude.md")" "1" "the Claude routing file forbids the Explore agent once"

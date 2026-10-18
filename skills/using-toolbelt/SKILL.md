@@ -9,7 +9,7 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 
 ## The Rule
 
-Invoke a relevant or requested skill before any response or action, including clarifying questions and exploring the codebase; the skill sets the approach. If it does not fit, drop it. When orchestrating, that skill's read list decides which skills you open.
+Invoke a relevant or requested skill before any response or action, including clarifying questions and exploring the codebase; the skill sets the approach. If it does not fit, drop it.
 
 Before entering plan mode, brainstorm first if you have not.
 
@@ -31,6 +31,8 @@ In Codex, read `references/codex-tools.md`.
 ## Agent Routing
 
 Before your first dispatch, invoke the agent-routing skill. Route by logical role from the AGENT-ROUTING text injected at session start, or the skill's bundled default when none was; never pick a concrete agent yourself.
+
+Dispatch a discretionary subagent only for large, independent work, never to double-check your own. The roles delivery, quick-task, and review require are not discretionary.
 
 ## User Instructions
 

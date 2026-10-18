@@ -1,0 +1,3 @@
+{"data":{"repository":{"pullRequest":{"reviewThreads":{"pageInfo":{"hasNextPage":false,"endCursor":"t3"},"nodes":[
+{"id":"T_2","isResolved":false,"path":"src/b.ts","comments":{"nodes":[{"author":{"login":"alice"}}]}}
+]}}}}}

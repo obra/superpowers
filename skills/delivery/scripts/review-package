@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Write a review package: commit list, stat summary, and the net diff with
+# extended context, in one file the reviewer reads in one call. Pass the
+# recorded BASE, never HEAD~1, so multi-commit work stays intact.
+#
+# Usage: review-package [--plan PLAN_FILE] BASE HEAD [OUTFILE] [-- PATHSPEC...]
+# With PATHSPEC, only the diff is limited to those paths; the commit list and
+# the stat summary still cover the whole range, so a slice reviewer sees what
+# else changed.
+# Default OUTFILE: <workspace>/review-<base7>..<head7>[-<slice hash>].diff.
+# The slice hash keeps parallel slices of one range in separate files.
+# --plan scopes the workspace to one plan; without it the shared base is used.
+set -euo pipefail
+
+usage() {
+  echo "usage: review-package [--plan PLAN_FILE] BASE HEAD [OUTFILE] [-- PATHSPEC...]" >&2
+  exit 2
+}
+
+plan=
+if [ "${1-}" = "--plan" ]; then
+  [ $# -ge 2 ] || usage
+  plan=$2
+  shift 2
+fi
+
+args=()
+while [ $# -gt 0 ] && [ "$1" != "--" ]; do
+  args+=("$1")
+  shift
+done
+paths=()
+if [ $# -gt 0 ]; then
+  shift
+  paths=("$@")
+  [ ${#paths[@]} -gt 0 ] || usage
+fi
+
+if [ ${#args[@]} -lt 2 ] || [ ${#args[@]} -gt 3 ]; then
+  usage
+fi
+
+base=${args[0]}
+head=${args[1]}
+
+git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+
+if [ ${#args[@]} -eq 3 ]; then
+  out=${args[2]}
+else
+  workspace="$(cd "$(dirname "$0")" && pwd)/workspace"
+  if [ -n "$plan" ]; then
+    dir=$(bash "$workspace" "$plan")
+  else
+    dir=$(bash "$workspace")
+  fi
+  suffix=
+  if [ ${#paths[@]} -gt 0 ]; then
+    suffix="-$(printf '%s\n' "${paths[@]}" | git hash-object --stdin | cut -c1-7)"
+  fi
+  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head")${suffix}.diff"
+fi
+
+{
+  echo "# Review package: ${base}..${head}"
+  if [ ${#paths[@]} -gt 0 ]; then
+    echo
+    echo "Slice: ${paths[*]}"
+  fi
+  echo
+  echo "## Commits"
+  git log --oneline "${base}..${head}"
+  echo
+  echo "## Files changed"
+  git diff --stat "${base}..${head}"
+  echo
+  echo "## Diff"
+  git diff -U10 "${base}..${head}" -- ${paths[@]+"${paths[@]}"}
+} > "$out"
+
+commits=$(git rev-list --count "${base}..${head}")
+echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"

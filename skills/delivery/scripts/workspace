@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Resolve and create the working-tree directory delivery uses for its
+# short-lived artifacts: task briefs, dispatch prompts, implementer reports,
+# review packages, and the ledger. Print its absolute path.
+#
+# With PLAN_FILE the workspace is scoped to that plan
+# (.toolbelt/sdd/<plan-basename>-<digest>/), so two plans that both have a
+# "Task 2" never read or overwrite each other's artifacts. Without PLAN_FILE
+# the shared base directory is used; callers with no plan belong there.
+#
+# The workspace lives in the working tree, not under .git/, because Claude Code
+# denies agent writes under .git/. A self-ignoring .gitignore at the base keeps
+# it out of `git status` without touching a tracked file.
+#
+# Usage: workspace [PLAN_FILE]
+set -euo pipefail
+
+if [ $# -gt 1 ]; then
+  echo "usage: workspace [PLAN_FILE]" >&2
+  exit 2
+fi
+
+root=$(git rev-parse --show-toplevel)
+base="$root/.toolbelt/sdd"
+dir="$base"
+
+if [ $# -eq 1 ]; then
+  plan=$1
+  [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+  # Basename alone collides across directories (docs/a/foo.md vs docs/b/foo.md),
+  # so a short digest of the path relative to the repo root disambiguates while
+  # keeping the directory readable. Deterministic, so resume finds the same one.
+  rel=$(git -C "$root" ls-files --full-name --error-unmatch "$plan" 2>/dev/null) \
+    || rel=$(realpath --relative-to="$root" "$plan" 2>/dev/null) || rel=$plan
+  slug=$(basename "$plan" .md)
+  [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
+    || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
+  digest=$(printf '%s' "$rel" | git hash-object --stdin | cut -c1-6)
+  dir="$base/$slug-$digest"
+fi
+
+mkdir -p "$dir"
+printf '*\n' > "$base/.gitignore"
+cd "$dir" && pwd

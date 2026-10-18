@@ -74,7 +74,6 @@ done
 # List of skill tests to run (fast unit tests)
 tests=(
     "test-worktree-path-policy.sh"
-    "test-sdd-workspace.sh"
     "test-subagent-driven-development.sh"
 )
 

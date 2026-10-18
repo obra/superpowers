@@ -1,0 +1,5 @@
+{"data":{"repository":{"pullRequest":{"headRefOid":"bbbbbbb2222222222222222222222222222222222","commits":{"nodes":[{"commit":{"statusCheckRollup":{"contexts":{"pageInfo":{"hasNextPage":false,"endCursor":"c1"},"nodes":[
+{"__typename":"CheckRun","name":"lint","status":"COMPLETED","conclusion":"SUCCESS"},
+{"__typename":"CheckRun","name":"unit","status":"COMPLETED","conclusion":"FAILURE"},
+{"__typename":"StatusContext","context":"deploy-preview","state":"SUCCESS"}
+]}}}}]}}}}}

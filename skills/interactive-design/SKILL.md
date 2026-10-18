@@ -34,7 +34,7 @@ Edit directly in this session: no subagent dispatch, no per-iteration review. Co
 ## 4. Exit
 
 1. Reconcile. Every marker has a ledger entry matching its endpoint id, and every `[FIXTURE]` / `[EXISTING — EXTENDED]` entry has a marker (`[EXISTING]` and `[IMPLEMENTED]` entries carry none). Recorded shapes match what the fixtures actually return. Delete dead routes.
-2. Write `.toolbelt/ux/matrix.json` per ux-gate §2, listing every surface the criteria name, then run `scripts/ux-capture` from the ux-gate skill against the approved prototype into `.toolbelt/ux/baseline/`; the gate diffs against it. In the ledger’s **Acceptance criteria**, record absolute matrix and baseline paths and the prototype commit SHA. Then stop the dev server you started.
+2. Write `.toolbelt/ux/matrix.json` per ux-gate §2, listing every surface the criteria name, then run `../ux-gate/scripts/ux-capture` against the approved prototype into `.toolbelt/ux/baseline/`; the gate diffs against it. In the ledger’s **Acceptance criteria**, record absolute matrix and baseline paths and the prototype commit SHA. Then stop the dev server you started.
 3. Present the final contract inventory to your human partner.
 4. On approval, invoke the mode's terminal skill — new-feature mode: `toolbelt:writing-specs`; iteration mode: the route confirmed in iteration-mode.md. Do NOT invoke any other skill.
 

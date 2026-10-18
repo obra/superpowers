@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Write one task's brief: the plan's shared sections (Global Constraints,
+# Known Gotchas, Data Model, Risks) followed by the task's full text, into a
+# file the implementer reads in one call.
+#
+# A task runs from its "Task N" heading to the next heading of the same or a
+# higher level outside a code fence, so a trailing "## After release" section
+# never lands in the last task's brief.
+#
+# Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
+# Default OUTFILE: <workspace>/task-<N>-brief.md
+set -euo pipefail
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]" >&2
+  exit 2
+fi
+
+plan=$1
+n=$2
+[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+
+if [ $# -eq 3 ]; then
+  out=$3
+else
+  dir=$(bash "$(cd "$(dirname "$0")" && pwd)/workspace" "$plan")
+  out="$dir/task-${n}-brief.md"
+fi
+
+task=$(awk -v n="$n" '
+  /^```/ { infence = !infence }
+  !infence && /^#+[ \t]/ {
+    level = index($0, " ") - 1
+    if (intask && level <= tasklevel) intask = 0
+    if ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)")) { intask = 1; tasklevel = level }
+  }
+  intask { print }
+' "$plan"; echo x)
+task=${task%x}  # the sentinel keeps the task's trailing newlines intact
+
+if [ -z "$task" ]; then
+  echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
+  exit 3
+fi
+
+# A shared section runs from its "## " heading to the next "#"/"##" heading,
+# task heading, or "---" rule, ignoring headings inside code fences.
+shared=$(awk '
+  /^```/ { infence = !infence }
+  !infence && (/^##?[ \t]/ || /^#+[ \t]+Task[ \t]+[0-9]/ || /^---[ \t]*$/) {
+    inshared = ($0 ~ /^##[ \t]+(Global Constraints|Known Gotchas|Data Model|Risks)[ \t]*$/)
+  }
+  inshared { print }
+' "$plan")
+
+{
+  if [ -n "$shared" ]; then
+    printf '%s\n\n' "$shared"
+  fi
+  printf '%s' "$task"
+} > "$out"
+
+echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"

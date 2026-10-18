@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Print the plan's PR Boundaries table in one normalized form, so the checker
+# and the dispatcher read it the same way.
+#
+# The table is the first contiguous table under `## PR Boundaries`. Cells are
+# trimmed of spaces and backticks. Output, tab-separated:
+#   columns  <header cells, comma-separated>
+#   row      <PR>  <Risk>  <Outcome>  <task numbers, space-separated>
+# Task ranges such as "1–3" or "1-3" expand; commas separate entries. Prints
+# nothing when the plan has no such table.
+#
+# Usage: plan-rows PLAN_FILE
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+  echo "usage: plan-rows PLAN_FILE" >&2
+  exit 2
+fi
+[ -f "$1" ] || { echo "no such plan file: $1" >&2; exit 2; }
+
+awk '
+  function trim(s) { gsub(/^[ \t`]+|[ \t`]+$/, "", s); return s }
+  function expand(list,   out, m, j, p, r, k) {
+    gsub(/–|—/, "-", list)
+    m = split(list, part, ",")
+    out = ""
+    for (j = 1; j <= m; j++) {
+      p = part[j]; gsub(/[ \t`]/, "", p)
+      if (p == "") continue
+      if (split(p, r, "-") == 2) { for (k = r[1] + 0; k <= r[2] + 0; k++) out = out (out == "" ? "" : " ") k }
+      else out = out (out == "" ? "" : " ") p
+    }
+    return out
+  }
+  /^```/ { fence = !fence }
+  fence { next }
+  /^#+[ \t]/ { insec = ($0 ~ /^##[ \t]+PR Boundaries[ \t]*$/) && !done; next }
+  !insec { next }
+  !/^\|/ { if (header) { insec = 0; done = 1 }; next }
+  {
+    n = split($0, cell, "|")
+    for (i = 2; i < n; i++) cell[i] = trim(cell[i])
+    if (!header) {
+      header = 1; cols = ""
+      for (i = 2; i < n; i++) {
+        cols = cols (i > 2 ? "," : "") cell[i]
+        if (cell[i] == "PR") prcol = i
+        if (cell[i] == "Tasks") taskcol = i
+        if (cell[i] == "Risk") riskcol = i
+        if (cell[i] == "Outcome") outcol = i
+      }
+      print "columns\t" cols
+      next
+    }
+    if (cell[2] ~ /^:?-+:?$/) next
+    printf "row\t%s\t%s\t%s\t%s\n", cell[prcol], (riskcol ? cell[riskcol] : ""), (outcol ? cell[outcol] : ""), (taskcol ? expand(cell[taskcol]) : "")
+  }
+' "$1"

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# Lint a plan's structure. Prints one line per error and exits 1 when any is
+# found; warnings print with a "warning:" prefix and do not fail.
+#
+# Checks:
+# - a `## PR Boundaries` table with PR, Tasks, and Risk columns, each Risk
+#   being high, medium, or none
+# - every task number is unique, every task is in exactly one PR row, and
+#   every task a row names has a `### Task N` heading (ranges like 1–7 expand)
+# - every task has **Files:**, **Contract:**, **Proves:**, and **Verify:**
+# - no `path.ext:NN` or "line NN" reference inside a task
+# - a `## Risks` section
+# Warns when one PR carries more than nine tasks.
+#
+# Usage: plan-check PLAN_FILE
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+  echo "usage: plan-check PLAN_FILE" >&2
+  exit 2
+fi
+[ -f "$1" ] || { echo "no such plan file: $1" >&2; exit 2; }
+
+rows=$(bash "$(cd "$(dirname "$0")" && pwd)/plan-rows" "$1")
+
+awk -F'\t' '
+  function trim(s) { gsub(/^[ \t`]+|[ \t`]+$/, "", s); return s }
+  function err(msg) { print msg; errors++ }
+
+  # First input: the normalized PR Boundaries table from plan-rows.
+  FNR == NR {
+    if ($1 == "columns") { header = 1; riskcol = ("," $2 ",") ~ /,Risk,/; next }
+    if ($1 != "row") next
+    pr = $2
+    rows[pr] = 0
+    if (riskcol && $3 !~ /^(high|medium|none)$/)
+      err("PR " pr ": Risk must be high, medium, or none, not \"" $3 "\"")
+    m = split($5, ts, " ")
+    for (j = 1; j <= m; j++) {
+      k = ts[j]
+      if (k in owner) err("Task " k " is in PR " owner[k] " and PR " pr)
+      owner[k] = pr
+      rows[pr]++
+    }
+    next
+  }
+
+  # Second input: the plan itself.
+  /^```/ { fence = !fence }
+  fence { if (task != "") body[task] = body[task] "\n" $0; next }
+
+  /^#+[ \t]/ {
+    level = index($0, " ") - 1
+    if (level == 2 && trim(substr($0, 4)) == "Risks") risks = 1
+    if (task != "" && level <= tasklevel) task = ""
+    if (match($0, /^#+[ \t]+Task[ \t]+[0-9]+/)) {
+      t = substr($0, RSTART, RLENGTH); sub(/.*[ \t]/, "", t)
+      if (t in defined) err("Task " t " is defined more than once")
+      defined[t] = 1; task = t; tasklevel = level
+      order[++ntasks] = t
+      next
+    }
+  }
+
+  task != "" {
+    body[task] = body[task] "\n" $0
+    line = $0
+    while (match(line, /[A-Za-z0-9_\/.-]+\.[A-Za-z][A-Za-z0-9]*:[0-9]+/)) {
+      err("Task " task " cites a line number: " substr(line, RSTART, RLENGTH))
+      line = substr(line, RSTART + RLENGTH)
+    }
+    if (match(tolower($0), /(^|[^a-z])lines? [0-9]+/))
+      err("Task " task " cites a line number: " trim(substr($0, RSTART, RLENGTH)))
+  }
+
+  END {
+    if (!header) err("no ## PR Boundaries table")
+    else if (!riskcol) err("the PR Boundaries table has no Risk column")
+    if (!risks) err("no ## Risks section")
+    for (i = 1; i <= ntasks; i++) {
+      t = order[i]
+      if (!(t in owner)) err("Task " t " is in no PR row")
+      split("Files Contract Proves Verify", fields, " ")
+      for (f = 1; f <= 4; f++)
+        if (index(body[t], "\n**" fields[f] ":**") == 0) err("Task " t " has no **" fields[f] ":**")
+    }
+    for (t in owner) if (!(t in defined)) err("PR " owner[t] " names Task " t ", which has no heading")
+    for (pr in rows) if (rows[pr] > 9) print "warning: PR " pr " has " rows[pr] " tasks; the target is three to nine"
+    exit errors > 0
+  }
+' <(printf '%s\n' "$rows") "$1"

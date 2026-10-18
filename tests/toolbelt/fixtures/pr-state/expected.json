@@ -1,0 +1,28 @@
+{
+  "head": "bbbbbbb2222222222222222222222222222222222",
+  "checks": {
+    "state": "fail",
+    "failing": [
+      "unit"
+    ]
+  },
+  "reviews": [
+    {
+      "author": "review-bot",
+      "state": "COMMENTED",
+      "commit": "aaaaaaa1111111111111111111111111111111111"
+    }
+  ],
+  "threads": [
+    {
+      "id": "T_1",
+      "path": "src/a.ts",
+      "author": "review-bot"
+    },
+    {
+      "id": "T_2",
+      "path": "src/b.ts",
+      "author": "alice"
+    }
+  ]
+}

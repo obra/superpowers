@@ -7,45 +7,43 @@ description: Use before any dispatch that needs a role resolved. Callers request
 
 ## The routing text
 
-A session-start hook injects the project's routing text for your harness in an `<AGENT-ROUTING source="...">` block, read from `.toolbelt/routing/<harness>.md` in the project's main checkout. Route every dispatch from it.
+A session-start hook injects `.toolbelt/routing/<harness>.md` from the project's main checkout in an `<AGENT-ROUTING source="...">` block. Without the block, read the bundled `routing/claude.md` or `routing/codex.md` next to this file. Route every dispatch from it.
 
-When no block is in your context, read the bundled default for your harness, `routing/claude.md` or `routing/codex.md`, next to this `SKILL.md`.
-
-Map the model and effort the text names to an agent you can launch: a native subagent for your own harness, AGX for the other. Run `codex exec` or `claude -p` directly only when AGX is not installed. If the text names something you cannot launch, stop and tell your human partner. Never substitute a different model.
+Map each model and effort to an agent you can launch: a native subagent on your own harness, AGX for the other. Run `codex exec` or `claude -p` directly only when AGX is not installed. If you cannot launch what the text names, stop and tell your human partner rather than substituting a model.
 
 ## Roles
 
 | Role | Owns |
 |---|---|
-| `explorer` | Codebase context, architecture, prior art, external research. Read-only. |
-| `planner` | All planning work, however small it looks. |
-| `implementer` | All code operations. Every repository edit. |
-| `errand` | Tracker tickets, notifications, status checks, scripted browser capture. Never edits repository files. |
-| `monitor` | A pull request through CI, review providers, review-finding fixes, and merge. |
+| `implementer` | Every repository edit. |
+| `planner` | All planning work. |
+| `explorer` | Read-only codebase context and research. |
+| `errand` | Tickets, status checks, scripted capture. Never edits repository files. |
+| `monitor` | PRs through CI, review providers, review fixes, and merge. |
 | `reviewer` | Review, with specialty `code`, `spec`, `plan`, `ux`, or `gate`. |
 
-The boundary that matters: **planning goes to the planner, always; code goes to the implementer, except review findings on the monitor's own PR, which it fixes inline.** `errand` is cheap because its work is small, never a shortcut for real work.
+The monitor fixes review findings on its own PR inline; all other code goes to the implementer. When the text names no route for a role you need, stop and tell your human partner.
 
-When the routing text does not name a role you need, stop and tell your human partner rather than choosing one.
+The plan's `Risk` column raises effort and never changes the model. A `high` row raises the reviewer one effort level above its route.
 
 ## Reviewer independence
 
-A reviewer always runs on a different harness from the one that wrote the work. If the routing text would put the review on the author's harness, stop and tell your human partner.
+A reviewer runs on a different harness from the implementer's. If the text would put a review on the implementer's harness, stop and tell your human partner.
 
 ## Precedence
 
-Your human partner's direct instruction wins; the routing text overrides the bundled default. Plans carry no routing, and a route recorded in a ledger is audit metadata that never overrides the current routing text.
+Your human partner's direct instruction wins, then the routing text, then the bundled default. Plans carry no routing, and a route in a ledger is audit metadata.
 
-## Provider-outage emergency override
+## Outage override
 
-Reviewer independence has exactly one exception. The trigger is **dispatch-time provider failure**: dispatching the routed reviewer and each different-harness fallback the routing text names failed with provider availability errors on repeated attempts. When the trigger is met, the orchestrator may dispatch a **fresh instance** of the most capable reachable route as the reviewer, even on the author's harness. Constraints:
+The trigger: the routed reviewer and every other-harness fallback the text names failed with provider availability errors on repeated attempts. Then dispatch a fresh instance of the most capable reachable route as the reviewer, even on the implementer's harness:
 
-- Record the audit trail before invoking it: each failed route, the error, and the attempt times.
-- Never the author's own thread or instance — always a fresh dispatch with independently constructed context.
-- The review report and any resulting PR body carry an `EMERGENCY SAME-HARNESS REVIEW` flag naming the outage.
-- Do not downgrade to a lower-capability route to manufacture independence; a capable same-harness review beats an incapable different-harness one.
-- The override lasts only as long as the outage: resume normal routing — including for delta re-gates of work reviewed under the override — the moment a different-harness route is reachable.
-- The routing text may name the concrete emergency route and routes excluded from review; it governs.
+- Record each failed route, its error, and the attempt times first.
+- Use a fresh dispatch with its own context, never the author's thread.
+- Flag the review report and the PR body `EMERGENCY SAME-HARNESS REVIEW`, naming the outage.
+- Keep capability; never downgrade to manufacture independence.
+
+The override ends the moment an other-harness route is reachable.
 
 ## Setup
 

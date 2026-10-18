@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# Print one pull request's state as one JSON object:
+#   head     the PR's head SHA
+#   checks   {state: pass|fail|pending|unavailable, failing: [check names]}
+#   reviews  [{author, state, commit}], commit being the head each review saw
+#   threads  [{id, path, author}] for every unresolved review thread
+# Findings are review threads only; a plain PR comment never is one.
+# Every list is read to its last page.
+#
+# Exit 2: gh or jq is missing, or gh is unauthenticated.
+# Exit 3: an API error or an incomplete response. Nothing is printed, so a
+# failed read never looks like zero threads.
+#
+# Usage: pr-state PR_NUMBER
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+  echo "usage: pr-state PR_NUMBER" >&2
+  exit 2
+fi
+pr=$1
+
+for tool in gh jq; do
+  command -v "$tool" >/dev/null 2>&1 || { echo "pr-state: $tool not found" >&2; exit 2; }
+done
+gh auth status >/dev/null 2>&1 || { echo "pr-state: gh is not authenticated" >&2; exit 2; }
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+incomplete() {
+  echo "pr-state: $1" >&2
+  exit 3
+}
+
+# fetch_all NAME CONNECTION_PATH SELECTION [ABSENT_OK]
+# Pages through one connection of the pull request and writes its nodes,
+# one compact JSON object per line, to $tmp/NAME. The first page's raw
+# response is kept as $tmp/NAME.first. A missing connection, nodes list, or
+# pageInfo is an incomplete response, except on a first page where the jq
+# test ABSENT_OK holds (a head commit with no check rollup).
+fetch_all() {
+  local name=$1 path=$2 selection=$3 absent_ok=${4:-false} query response cursor='' page=0
+  query="query(\$owner: String!, \$name: String!, \$pr: Int!, \$after: String) {
+    repository(owner: \$owner, name: \$name) { pullRequest(number: \$pr) { $selection } } }"
+  : >"$tmp/$name"
+  while :; do
+    page=$((page + 1))
+    local args=(api graphql -f query="$query" -F owner='{owner}' -F name='{repo}' -F pr="$pr")
+    [ -z "$cursor" ] || args+=(-f after="$cursor")
+    response=$(gh "${args[@]}") || incomplete "$name page $page failed"
+    jq -e '(.errors // []) == [] and .data.repository.pullRequest != null' <<<"$response" >/dev/null ||
+      incomplete "$name page $page returned an error or no pull request"
+    [ "$page" -gt 1 ] || printf '%s' "$response" >"$tmp/$name.first"
+    if [ "$page" -eq 1 ] && jq -e "$absent_ok" <<<"$response" >/dev/null; then
+      return 0
+    fi
+    jq -e "($path.nodes | type) == \"array\" and ($path.pageInfo.hasNextPage | type) == \"boolean\"" \
+      <<<"$response" >/dev/null 2>&1 || incomplete "$name page $page is missing its nodes or pageInfo"
+    jq -c "$path.nodes[]" <<<"$response" >>"$tmp/$name"
+    jq -e "$path.pageInfo.hasNextPage" <<<"$response" >/dev/null || return 0
+    cursor=$(jq -r "$path.pageInfo.endCursor // empty" <<<"$response")
+    [ -n "$cursor" ] || incomplete "$name page $page has a next page but no cursor"
+  done
+}
+
+page_info='pageInfo { hasNextPage endCursor }'
+commit='.data.repository.pullRequest.commits.nodes[0].commit'
+fetch_all checks "$commit.statusCheckRollup.contexts" "headRefOid commits(last: 1) { nodes { commit { statusCheckRollup {
+  contexts(first: 100, after: \$after) { $page_info nodes { __typename
+    ... on CheckRun { name status conclusion } ... on StatusContext { context state } } } } } } }" \
+  "$commit != null and $commit.statusCheckRollup == null"
+fetch_all reviews '.data.repository.pullRequest.reviews' "reviews(first: 100, after: \$after) {
+  $page_info nodes { author { login } state commit { oid } } }"
+fetch_all threads '.data.repository.pullRequest.reviewThreads' "reviewThreads(first: 100, after: \$after) {
+  $page_info nodes { id isResolved path comments(first: 1) { nodes { author { login } } } } }"
+
+head=$(jq -r '.data.repository.pullRequest.headRefOid // empty' "$tmp/checks.first")
+[ -n "$head" ] || incomplete "no head SHA"
+
+jq -n \
+  --arg head "$head" \
+  --slurpfile checks "$tmp/checks" \
+  --slurpfile reviews "$tmp/reviews" \
+  --slurpfile threads "$tmp/threads" '
+  def outcome:
+    if .__typename == "CheckRun" then
+      if .status != "COMPLETED" then "pending"
+      elif (.conclusion | IN("SUCCESS", "NEUTRAL", "SKIPPED")) then "pass"
+      else "fail" end
+    else
+      if (.state | IN("PENDING", "EXPECTED")) then "pending"
+      elif .state == "SUCCESS" then "pass"
+      else "fail" end
+    end;
+  ($checks | map({name: (.name // .context), outcome: outcome})) as $runs
+  | {
+      head: $head,
+      checks: {
+        state: (if ($runs | length) == 0 then "unavailable"
+                elif any($runs[]; .outcome == "fail") then "fail"
+                elif any($runs[]; .outcome == "pending") then "pending"
+                else "pass" end),
+        failing: [$runs[] | select(.outcome == "fail") | .name]
+      },
+      reviews: [$reviews[] | {author: .author.login, state, commit: .commit.oid}],
+      threads: [$threads[] | select(.isResolved | not)
+                | {id, path, author: .comments.nodes[0].author.login}]
+    }'

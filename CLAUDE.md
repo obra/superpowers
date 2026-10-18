@@ -60,6 +60,6 @@ The uninstall step is not optional: `claude plugin install` reports "already ins
 
 Then start a fresh session — the hook registers on load, never mid-session.
 
-`tests/` holds plugin-infrastructure tests — packaging, hooks, the brainstorm server, and assertions about skill content. They are **not** a gate on skill wording; if a test asserts a phrase that should change, change the phrase and fix the test.
+`tests/` holds plugin-infrastructure tests — packaging, hooks, the brainstorm server, the skills' scripts, and one structural check on skill content in `tests/toolbelt/test-doctrine.sh` (links, script paths, skill names, all-caps emphasis, filler phrases). No test pins skill wording.
 
 `tests/toolbelt/` and `tests/hooks/` pass and are the ones worth keeping green. `tests/claude-code/` and `tests/explicit-skill-requests/` shell out to the `claude` CLI — they cost real money and time, so run them deliberately, not as a reflex.

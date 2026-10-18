@@ -233,7 +233,7 @@ skill_count="$(find "$extracted/skills" -mindepth 1 -maxdepth 1 -type d | wc -l 
 metadata_count="$(find "$extracted/skills" -path '*/agents/openai.yaml' -type f | wc -l | tr -d ' ')"
 assert_equals "$metadata_count" "$skill_count" "every packaged skill has OpenAI metadata"
 
-if [[ -x "$extracted/skills/subagent-driven-development/scripts/task-brief" ]]; then
+if [[ -x "$extracted/skills/delivery/scripts/task-brief" ]]; then
   pass "archive preserves executable script mode"
 else
   fail "archive preserves executable script mode"
@@ -261,7 +261,7 @@ extract_archive "$tar_archive" "$tar_extracted"
 tar_archive_paths="$(list_archive "$tar_archive" | normalize_archive_paths)"
 assert_equals "$tar_archive_paths" "$archive_paths" "zip and tar.gz archives contain the same paths"
 
-tar_task_brief_mode="$(tar -tzvf "$tar_archive" skills/subagent-driven-development/scripts/task-brief | awk '{print $1}')"
+tar_task_brief_mode="$(tar -tzvf "$tar_archive" skills/delivery/scripts/task-brief | awk '{print $1}')"
 assert_equals "$tar_task_brief_mode" "-rwxr-xr-x" "tar.gz archive preserves executable script mode"
 
 tar_metadata_times="$(python3 - "$tar_archive" <<'PY'

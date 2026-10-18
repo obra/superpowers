@@ -12,7 +12,7 @@ Live in `tests/`. Currently:
 - `tests/brainstorm-server/` — node test suite for the brainstorm server JS code.
 - `tests/codex/`, `tests/codex-plugin-sync/` — bash packaging and sync verification.
 - `tests/hooks/` — session-start hook output shape per harness.
-- `tests/toolbelt/` — checks for the delivery, routing, and gate skills.
+- `tests/toolbelt/` — tests for the skills' scripts, plus `test-doctrine.sh`, which checks skill structure rather than wording: links and script paths resolve, `toolbelt:` names exist, and no all-caps emphasis or filler phrases appear outside gate blocks.
 - `tests/claude-code/test-helpers.sh`, `analyze-token-usage.py` — utilities used by remaining bash tests.
 - `tests/claude-code/test-subagent-driven-development.sh` — agent-can-describe-SDD test (no drill counterpart; tests description-recall, not behavior).
 - `tests/claude-code/test-subagent-driven-development-integration.sh` — extended SDD integration with token analysis (drill covers the YAGNI subset; bash adds commit-count, Claude Code task-tracking, and token telemetry assertions).

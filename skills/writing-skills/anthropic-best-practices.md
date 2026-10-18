@@ -795,7 +795,7 @@ The same hierarchical pattern continues when improving Skills. You alternate bet
 
 3. **Return to Agent A for improvements**: Share the current SKILL.md and describe what you observed. Ask: "I noticed Agent B forgot to filter test accounts when I asked for a regional report. The Skill mentions filtering, but maybe it's not prominent enough?"
 
-4. **Review Agent A's suggestions**: Agent A might suggest reorganizing to make rules more prominent, using stronger language like "MUST filter" instead of "always filter", or restructuring the workflow section.
+4. **Review Agent A's suggestions**: Agent A might suggest reorganizing to make rules more prominent, using stronger language like `MUST filter` instead of "always filter", or restructuring the workflow section.
 
 5. **Apply and test changes**: Update the Skill with Agent A's refinements, then test again with Agent B on similar requests
 
@@ -826,7 +826,7 @@ Iterate based on these observations rather than assumptions. The 'name' and 'des
 
 Always use forward slashes in file paths, even on Windows:
 
-* ✓ **Good**: `scripts/helper.py`, `reference/guide.md`
+* ✓ **Good**: `helper.py` under `scripts/`, `reference/guide.md`
 * ✗ **Avoid**: `scripts\helper.py`, `reference\guide.md`
 
 Unix-style paths work across all platforms, while Windows-style paths cause errors on Unix systems.

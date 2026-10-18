@@ -1,0 +1,3 @@
+{"data":{"repository":{"pullRequest":{"reviews":{"pageInfo":{"hasNextPage":false,"endCursor":"r1"},"nodes":[
+{"author":{"login":"review-bot"},"state":"COMMENTED","commit":{"oid":"aaaaaaa1111111111111111111111111111111111"}}
+]}}}}}

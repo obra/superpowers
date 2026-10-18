@@ -90,6 +90,101 @@ else
   ok "gates_under_80_words"
 fi
 
+# structure: references resolve and the prose carries no shouting or filler.
+# Prints one "file:line: reason" per failure under the given skills root.
+structure_failures() {
+  local root=$1 file rel skill_dir kind line ref target
+  while IFS= read -r file; do
+    rel=${file#"$root"/}
+    skill_dir="$root/${rel%%/*}"
+    while IFS=$'\t' read -r kind line ref; do
+      case "$kind" in
+        link)
+          target=${ref%%#*}
+          [ -e "$(dirname "$file")/$target" ] || [ -e "$skill_dir/$target" ] ||
+            echo "$file:$line: broken link $ref"
+          ;;
+        script)
+          [ -e "$skill_dir/$ref" ] || [ -e "$repo_root/$ref" ] ||
+            echo "$file:$line: missing script $ref"
+          ;;
+        name)
+          [ -d "$root/$ref" ] || echo "$file:$line: unknown skill toolbelt:$ref"
+          ;;
+        caps) echo "$file:$line: all-caps $ref outside a gate block" ;;
+        phrase) echo "$file:$line: stock phrase \"$ref\"" ;;
+      esac
+    done < <(awk '
+      function each(re, kind, s, grp,   m) {
+        while (match(s, re)) {
+          m = substr(s, RSTART, RLENGTH)
+          if (grp == "link") { sub(/^\]\(/, "", m); sub(/\)$/, "", m) }
+          if (grp == "name") sub(/^toolbelt:/, "", m)
+          if (grp == "script") sub(/\.+$/, "", m)
+          if (grp == "caps") gsub(/[^A-Z]/, "", m)
+          if (grp != "link" || (m !~ /^[a-z]+:/ && m ~ /\.md(#.*)?$/))
+            printf "%s\t%d\t%s\n", kind, NR, m
+          s = substr(s, RSTART + RLENGTH)
+        }
+      }
+      # A fence closes only on a run of its own character at least as long.
+      !fence && match($0, /^[ \t]*(```+|~~~+)/) {
+        run = substr($0, RSTART, RLENGTH); sub(/^[ \t]*/, "", run)
+        fence = 1; fchar = substr(run, 1, 1); flen = length(run); next
+      }
+      fence {
+        line = $0; sub(/^[ \t]*/, "", line); sub(/[ \t]*$/, "", line)
+        close_run = line; gsub(fchar, "", close_run)
+        if (close_run == "" && length(line) >= flen) fence = 0
+        next
+      }
+      /^<(HARD|ENTRY)-GATE>/ { gate = 1 }
+      /^<\/(HARD|ENTRY)-GATE>/ { gate = 0 }
+      {
+        each("\\]\\([^) ]+\\)", "link", $0, "link")
+        each("[A-Za-z0-9_./-]*scripts/[A-Za-z0-9_.-]+", "script", $0, "script")
+        each("toolbelt:[a-z0-9-]+", "name", $0, "name")
+        bare = $0
+        gsub(/`[^`]*`/, "", bare)
+        if (!gate) each("(^|[^A-Za-z_])(MUST|NEVER|ALWAYS|CRITICAL|IMPORTANT)([^A-Za-z_]|$)", "caps", bare, "caps")
+        low = tolower(bare)
+        n = split("it'"'"'s important to|the whole point|in order to|make sure to", ps, "|")
+        for (i = 1; i <= n; i++) if (index(low, ps[i])) printf "phrase\t%d\t%s\n", NR, ps[i]
+        if (index(bare, "Remember,")) printf "phrase\t%d\tRemember,\n", NR
+        if (index(bare, "Note that")) printf "phrase\t%d\tNote that\n", NR
+      }
+    ' "$file")
+  done < <(find "$root" -name '*.md' | sort)
+}
+
+structure_out=$(structure_failures skills)
+if [ -n "$structure_out" ]; then
+  echo "$structure_out" >&2
+  fail "structure: $(echo "$structure_out" | wc -l) failure(s) under skills/"
+else
+  ok "structure"
+fi
+
+# structure_fixtures: each bad fixture fails for its own reason; the good one passes.
+fixtures=tests/toolbelt/fixtures/doctrine
+for case in "broken-link:broken link" "missing-script:missing script" \
+  "unknown-name:unknown skill" "stray-must:all-caps MUST" "stock-phrase:stock phrase"; do
+  name=${case%%:*}
+  want=${case#*:}
+  if structure_failures "$fixtures/$name" | grep -qF -- "$want"; then
+    ok "structure_fixtures: $name fails"
+  else
+    fail "structure_fixtures: $name should report \"$want\""
+  fi
+done
+passing_out=$(structure_failures "$fixtures/passing")
+if [ -z "$passing_out" ]; then
+  ok "structure_fixtures: passing passes"
+else
+  echo "$passing_out" >&2
+  fail "structure_fixtures: passing should report nothing"
+fi
+
 if [ "$failures" -gt 0 ]; then
   exit 1
 fi

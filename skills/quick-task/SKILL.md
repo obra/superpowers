@@ -14,8 +14,8 @@ Confirm the work has one coherent outcome, an established owner surface, no unre
 
 ## 2. Mini-plan
 
-Write a git-ignored one-task implementation plan at `.toolbelt/quick/<slug>-plan.md` in writing-plans format. Include the request, exact files, and the task's Contract, Decisions, Proves, and Verify mode; logic is `test-first`. It is scratch; never commit it.
+Write a git-ignored plan at `.toolbelt/quick/<slug>-plan.md`: one task in one PR boundary with `Risk` set, using writing-plans' task fields and a `## Risks` section, as in [mini-plan-example.md](mini-plan-example.md). Run `bash ../writing-plans/scripts/plan-check PLAN` and fix what it reports. The plan is scratch; never commit it.
 
 ## 3. Deliver
 
-Invoke `delivery` with the mini-plan path, absolute so it survives the move into the delivery worktree. Delivery owns the worktree, routing, SDD, optional UX gate, PR, merge, and cleanup.
+Invoke toolbelt:delivery with the mini-plan's absolute path, so it survives the move into the delivery worktree. Delivery owns the worktree, routing, implementer, review, optional UX gate, PR, merge, and cleanup. Do NOT invoke any other skill.
