@@ -147,7 +147,13 @@ a ledger file, not only in todos.
     were routed onward; treat exactly like `complete`. Do not re-dispatch.
   - `dispatched` → interrupted mid-flight. Do not re-dispatch blind. Run
     `git log <base>..HEAD` using the base from that line:
-    - No commits → the implementer landed nothing. Re-dispatch normally.
+    - No commits → the implementer landed nothing — but liveness is
+      unknown: the dispatched worker may still be mid-edit. Try messaging
+      it by the agent id recorded at dispatch; if unreachable, wait for
+      a quiet window (minutes of no working-tree changes) before
+      re-dispatching — two writers in one checkout corrupts both. The
+      fresh implementer inspects the orphan's uncommitted diff and keeps
+      or discards it; the decision is a ledger ruling.
     - Commits present → the work exists but was never reviewed. Generate
       the review package with the recorded base
       (`bash scripts/review-package PLAN_FILE <base> HEAD`) and dispatch

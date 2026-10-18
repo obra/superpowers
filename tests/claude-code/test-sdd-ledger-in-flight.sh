@@ -67,8 +67,14 @@ check "resume rule keys on each task's last line" \
   has "each task's last line tells you its state"
 check "dispatched state checks git log with the recorded base" \
   has 'git log <base>..HEAD'
-check "no-commits case routes to re-dispatch" \
-  has 'Re-dispatch normally'
+check "no-commits case treats dispatched worker liveness as unknown" \
+  has 'liveness is'
+check "no-commits case: try messaging the recorded agent id first" \
+  has 'agent id recorded at dispatch'
+check "no-commits case: quiet window before re-dispatch (two-writers rule)" \
+  has 'two writers in one checkout'
+check "no-commits case: orphan diff disposition is a ledger ruling" \
+  has 'decision is a ledger ruling'
 check "commits-present case routes to reviewer, not re-implementation" \
   has 'was never reviewed'
 check "minor (deferred) state enumerated as done-like" \
