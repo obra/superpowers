@@ -12,6 +12,8 @@ const prefix = '<!doctype html><html lang="en"><head><title>Capture fixture</tit
   '<link rel="icon" href="data:,"><style>body{margin:0;background:white;color:#111;font-family:Arial}' +
   'button{width:120px;height:48px}</style></head><body>';
 let label = 'A';
+const srOnlyStyle = '<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;' +
+  'overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>';
 const pages = {
   '/clean': '<main><h1>Ready</h1></main>',
   '/crash': '<main>Loading</main><script>throw new Error("Application boot failed")</script>',
@@ -26,6 +28,21 @@ const pages = {
     '<dialog id="modal"><button id="close" autofocus onclick="modal.close()">Close</button></dialog>',
   '/unreachable': '<button id="skipped" tabindex="-1">Skipped</button><button id="other">Other</button>',
   '/fill': '<label>Name<input id="name" oninput="document.getElementById(\'echo\').textContent=this.value"></label><p id="echo"></p>',
+  // A grid-stacked link covering its whole card: the usual stretched-link layout.
+  '/stretched': '<article style="display:grid;width:300px"><h2 id="card-title" style="grid-area:1/1;margin:0">Card title</h2>' +
+    '<a id="card-link" href="#" style="grid-area:1/1;display:block"></a></article>',
+  '/stretched-control': '<article style="display:grid;width:300px;height:60px">' +
+    '<input id="card-input" style="grid-area:1/1;width:100px;height:40px"><a id="card-link" href="#" style="grid-area:1/1;display:block"></a></article>',
+  ...Object.fromEntries([
+    ['editor', '<div id="covered" contenteditable="true" style="grid-area:1/1;width:100px;height:40px">Edit</div>'],
+    ['role-link', '<span id="covered" role="link" tabindex="0" style="grid-area:1/1;width:100px;height:40px">Go</span>'],
+    ['summary', '<details style="grid-area:1/1"><summary id="covered" style="width:100px;height:40px">More</summary></details>'],
+  ].map(([name, control]) => [`/stretched-${name}`, '<article style="display:grid;width:300px;height:60px">' + control +
+    '<a id="card-link" href="#" style="grid-area:1/1;display:block"></a></article>'])),
+  '/sr-only': srOnlyStyle + '<button>X<span class="sr-only">Close the dialog window</span></button>',
+  '/clipped': '<span id="clipped" style="display:inline-block;width:40px;overflow:hidden;white-space:nowrap">A long clipped label</span>',
+  '/sr-only-wide': srOnlyStyle + '<style>@media (min-width:1000px){.sr-only{position:static;display:inline-block;' +
+    'width:40px;height:auto;margin:0;clip:auto}}</style><p><span class="sr-only">Visible only on wide screens</span></p>',
 };
 const server = http.createServer((req, res) => {
   if (req.url === '/font.ttf') {
@@ -114,6 +131,42 @@ async function main() {
       for (const position of ['fixed', 'absolute', 'sticky']) {
         assert(r.checks.some(c => c.check === 'overlap' && c.with === `DIV#overlap-${position}`), position);
       }
+    });
+    await check('a stretched link over a non-interactive title is suppressed, not reported', async () => {
+      const r = await capture(pathway('/stretched'));
+      assert.deepEqual(r.checks, []);
+      assert.deepEqual(r.entries[0].suppressed, [
+        { check: 'overlap', selector: 'H2#card-title', with: 'A#card-link', reason: 'covered by a stretched link or button' },
+      ]);
+    });
+    await check('a stretched link over an interactive control is still an overlap', async () => {
+      const r = await capture(pathway('/stretched-control'));
+      assert(r.checks.some(c => c.check === 'overlap' && c.selector === 'INPUT#card-input' && c.with === 'A#card-link'),
+        JSON.stringify(r.checks));
+    });
+    await check('a stretched link over editable, focusable, or native controls is still an overlap', async () => {
+      const missed = [];
+      for (const name of ['editor', 'role-link', 'summary']) {
+        const r = await capture(pathway(`/stretched-${name}`));
+        if (!r.checks.some(c => c.check === 'overlap' && /#covered/.test(c.selector) && c.with === 'A#card-link')) missed.push(name);
+      }
+      assert.deepEqual(missed, []);
+    });
+    await check('screen-reader-only text inside a button is not a finding', async () => {
+      const r = await capture(pathway('/sr-only'));
+      assert.deepEqual(r.checks, []);
+    });
+    await check('visibly clipped text that is not screen-reader-only is a finding', async () => {
+      const r = await capture(pathway('/clipped'));
+      assert(r.checks.some(c => c.check === 'clipped-text' && c.selector === 'SPAN#clipped'), JSON.stringify(r.checks));
+    });
+    await check('screen-reader-only text made visible at a wider width is checked there', async () => {
+      const r = await capture({
+        ...pathway('/sr-only-wide'),
+        viewports: [{ width: 375, height: 812, dpr: 1 }, { width: 1440, height: 900, dpr: 1 }],
+      }, []);
+      const clippedAt = r.entries.filter(e => e.checks.some(c => c.check === 'clipped-text')).map(e => e.width);
+      assert.deepEqual(clippedAt, [1440], JSON.stringify(r.checks));
     });
     await check('a missing required web font is detected', async () => {
       const r = await capture({ ...pathway('/font'), fonts: ['MissingReviewFont'] });

@@ -28,6 +28,10 @@ const PLAYWRIGHT_HELP =
   '(npm i -D playwright) or set PLAYWRIGHT_MODULE=/path/to/node_modules/playwright';
 
 const CONTROL_SELECTOR = 'button, a[href], [role=button], input, select, textarea';
+// Anything a person can click, type into, or focus: a stretched link must not cover it.
+const INTERACTIVE_SELECTOR = `${CONTROL_SELECTOR}, summary, label, [contenteditable]:not([contenteditable=false]), ` +
+  '[tabindex]:not([tabindex^="-"]), [role=link], [role=checkbox], [role=radio], [role=switch], [role=tab], ' +
+  '[role=menuitem], [role=option], [role=slider], [role=textbox], [role=combobox]';
 const DEFAULT_VIEWPORTS = [
   { name: 'sm', width: 375, height: 812, dpr: 2 },
   { name: 'md', width: 768, height: 1024, dpr: 1 },
@@ -280,6 +284,7 @@ const clsInit = () => {
 
 const inPageChecks = (opts) => {
   const checks = [];
+  const suppressed = [];
   const controlSelector = opts.controlSelector;
 
   const selectorOf = (el) => {
@@ -322,6 +327,13 @@ const inPageChecks = (opts) => {
     return style.visibility !== 'hidden' && style.display !== 'none';
   };
   const isLeaf = (el) => el.children.length === 0;
+  // Visually hidden for screen readers at this width, judged by computed style only.
+  const screenReaderOnly = (el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 1 || rect.height > 1) return false;
+    const style = getComputedStyle(el);
+    return style.overflow === 'hidden' && (style.clip !== 'auto' || style.clipPath !== 'none');
+  };
 
   const skipTags = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'NOSCRIPT', 'HEAD', 'BR']);
   const all = [document.documentElement, document.body].concat(
@@ -329,7 +341,7 @@ const inPageChecks = (opts) => {
   );
   const elements = all.filter((el) => el && !skipTags.has(el.tagName));
   const visibleEls = elements.filter(visible);
-  const leaves = visibleEls.filter(isLeaf);
+  const leaves = visibleEls.filter((el) => isLeaf(el) && !screenReaderOnly(el));
 
   const docEl = document.documentElement;
 
@@ -407,6 +419,15 @@ const inPageChecks = (opts) => {
   const overlapCandidates = overlapEligible
     .slice(0, 1500)
     .map((el) => ({ el, rect: el.getBoundingClientRect(), layer: positionedLayer(el) }));
+  // A link or button stretched over a non-interactive element is a deliberate
+  // click target, not a collision.
+  const stretchedOver = (cover, covered) => {
+    const link = cover.el.closest('a[href], button');
+    if (!link || covered.el.closest(opts.interactiveSelector)) return false;
+    const box = link.getBoundingClientRect();
+    return box.left <= covered.rect.left && box.top <= covered.rect.top &&
+      box.right >= covered.rect.right && box.bottom >= covered.rect.bottom;
+  };
   for (let i = 0; i < overlapCandidates.length; i += 1) {
     for (let j = i + 1; j < overlapCandidates.length; j += 1) {
       const a = overlapCandidates[i];
@@ -416,6 +437,15 @@ const inPageChecks = (opts) => {
       const dx = Math.min(a.rect.right, b.rect.right) - Math.max(a.rect.left, b.rect.left);
       const dy = Math.min(a.rect.bottom, b.rect.bottom) - Math.max(a.rect.top, b.rect.top);
       if (dx > 4 && dy > 4) {
+        if (stretchedOver(a, b) || stretchedOver(b, a)) {
+          suppressed.push({
+            check: 'overlap',
+            selector: selectorOf(a.el),
+            with: selectorOf(b.el),
+            reason: 'covered by a stretched link or button',
+          });
+          continue;
+        }
         add('overlap', 'should', a.el, {
           with: selectorOf(b.el),
           by: [Math.round(dx), Math.round(dy)],
@@ -508,6 +538,7 @@ const inPageChecks = (opts) => {
 
   return {
     checks,
+    suppressed,
     overlapTruncated,
     docId: window.__uxDocId || null,
     cls: window.__uxCls || 0,
@@ -709,6 +740,8 @@ function makeEntry(o) {
     axe: o.axe,
   };
   if (o.error) entry.error = o.error;
+  // Only recorded when a finding was deliberately suppressed.
+  if (o.suppressed && o.suppressed.length) entry.suppressed = o.suppressed;
   // Only recorded when the overlap candidate cap actually applied.
   if (o.overlapTruncated) entry.overlapTruncated = true;
   return entry;
@@ -884,6 +917,7 @@ async function main() {
       theme,
       viewportWidth: viewport.width,
       controlSelector: CONTROL_SELECTOR,
+      interactiveSelector: INTERACTIVE_SELECTOR,
       allowOverflow: matrix.allowOverflow,
       allowOverlap: matrix.allowOverlap,
       allowLight: matrix.allowLight,
@@ -1197,6 +1231,7 @@ async function main() {
               failedRequests: listeners.failedRequests.slice(),
               fonts: result.fonts,
               axe,
+              suppressed: result.suppressed,
               overlapTruncated: result.overlapTruncated,
               error,
             }),
@@ -1309,6 +1344,7 @@ async function main() {
             failedRequests: listeners.failedRequests,
             fonts: result.fonts,
             axe,
+            suppressed: result.suppressed,
             overlapTruncated: result.overlapTruncated,
             error,
           }),
