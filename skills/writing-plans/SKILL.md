@@ -20,6 +20,13 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## The Spec is Frozen
+
+The approved design spec (`docs/superpowers/specs/<name>.md`) is the requirements contract your human partner approved:
+- **A plan must never touch the approved spec**: Do not edit the spec, and never schedule tasks within the plan to modify it. Modifying an approved spec during planning or implementation silently invalidates user review.
+- **If planning reveals a gap or contradiction**: If drafting or probing reveals an assumption gap, contradiction, or missing requirement in the spec, **stop**. Do not add a task to patch the spec later. Surface the gap directly to your human partner and return to `superpowers:brainstorming` to revise and re-approve the spec before resuming planning.
+- **Older or superseded specs**: A plan may only touch a spec file if an explicitly approved instruction in the current spec directs marking an older, superseded document.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
@@ -174,7 +181,17 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
+**6. Spec immutability:** Verify that the approved spec is never listed among files to modify and no step instructs editing it.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "I found a gap in the spec; I'll have the plan edit the spec" | The spec is what your partner approved. Editing it in a plan circumvents their review. Stop, surface the gap, and return to brainstorming to revise the spec. |
+| "The spec change is minor, so I'll flag it in the plan review" | Surfacing a spec change inside a plan review blurs two distinct gates. Spec changes require spec review before planning resumes. |
+
 
 ## Execution Handoff
 
