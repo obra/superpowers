@@ -46,6 +46,7 @@ EXCLUDES=(
   # Dotfiles and infra — top-level only
   "/.agents/"
   "/.bob-plugin/"
+  "/.antigravity-plugin/"
   "/.claude/"
   "/.claude-plugin/"
   "/.codex/"
@@ -82,6 +83,9 @@ EXCLUDES=(
   "/scripts/"
   "/tests/"
   "/tmp/"
+
+  # Other harnesses' assets
+  "/assets/antigravity-logo.png"
 )
 
 # =============================================================================
