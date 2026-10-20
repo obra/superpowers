@@ -23,18 +23,45 @@ why?
   blue"). This is a quick, clear task. Do it, and say what you did.
 - **Something non-trivial is missing.** Start the conversation.
 
+## Look Before You Ask
+
+In an existing project, or when they've given you context (a spec, a plan,
+a handoff, files they pointed at, earlier conversation), do a little recon
+before your first message: read what they referred to and the parts of the
+project it touches. Enough to ask better questions, not a full survey.
+Never ask what the project or their context already answers.
+
 ## Your First Message
 
-Your first message is two things, in this order:
+Move the work forward, with one of these:
 
-1. One line letting them know that if they'd rather skip the questions and
-   have you just start, they can say so. If they take you up on it, this
-   skill is done: state any significant how-it-gets-made choice
-   (platform, language, medium) in one plain line, then do what they
-   asked through the normal workflow.
-2. One open question that gets them describing. Ask about a real moment
-   or a concrete picture: "What's the moment you find yourself wishing
-   this existed?" or "Tell me about the people who'll be in the room."
+- **They've already said what they want** (a spec, a plan, a detailed
+  request): aim for about 200 words for the whole message. Play back
+  what the project showed you that bears on it, and the two or three
+  guesses that matter most about what their description leaves open,
+  marked as guesses. Where a guess is a real fork in how to build it, make it your
+  recommendation, name the strongest alternative in a clause, and offer
+  to dig in (see Think wide, then recommend). End with one line inviting
+  corrections, then one question: the open design choice whose answer
+  would most change what gets built. Specs are often incomplete, so
+  confirm before you build on one.
+- **They haven't:** one open question that gets them describing. Ask
+  about a real moment or a concrete picture: "What's the moment you find
+  yourself wishing this existed?" or "Tell me about the people who'll be
+  in the room."
+
+How the message ends depends on whether their message asked for
+brainstorming:
+
+- **They asked for it** (by name, by invoking it, or by asking for a
+  design discussion): end with your question. They want this
+  conversation.
+- **They didn't:** they may not want a conversation at all. After your
+  question, add a light, one-line offer to just get going instead, like
+  "Or if you'd rather I just dive in, say so." If they take you up on
+  it, this skill is done: state any significant how-it-gets-made choice
+  (platform, language, medium) in one plain line, then do what they
+  asked through the normal workflow.
 
 That's the whole message.
 
@@ -43,7 +70,8 @@ That's the whole message.
 Each message ends with one question: a single sentence with no list of
 example answers hanging off it. Use plain language, pitched just a little
 above where your human partner is. Match their vocabulary; never use
-process jargon.
+process jargon. You never need to quote this skill to your human
+partner.
 
 Be clear and concise. Lead with what matters. Avoid jargon. When you
 report what you found, give them the most important findings and offer
@@ -80,14 +108,20 @@ time...", "If it could only do one of these well, which?", "What would
 make you wince if I got it wrong?" A guess they can correct ("I'm
 guessing this is because X keeps biting you?") often beats a question.
 
-**Offer recon.** Once you have a bit of grounding and looking would help,
-offer to go look: their codebase or project, their own files and data,
-or the web. Say what you'd look for. They decide whether you go.
+**Offer recon.** Once you have a bit of grounding and looking further
+would help, offer to go look: deeper into their codebase or project,
+their own files and data, or the web. Say what you'd look for. They
+decide whether you go.
 
-**Think wide privately.** Before you propose anything, come up with
-several ideas and drop the weak ones, including any that fight what
-they've told you about why. Show the comparison only when it helps them
-decide.
+**Think wide, then recommend.** Before you propose a way of building
+something, come up with several real alternatives and drop the weak
+ones, including any that fight what they've told you about why, and any
+the existing work rules out. Check your pick against what the project
+actually does. Propose the one you recommend, name the alternatives
+you'd genuinely hesitate between and what each would trade, and offer
+to dig into any of them. Where there's an obvious default, state it in
+a clause instead. This is for how it gets built; for what they want,
+get them describing first.
 
 **Show, don't tell.** Offer the visual companion (below) whenever seeing
 would help more than reading:
