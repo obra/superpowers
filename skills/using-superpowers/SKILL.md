@@ -39,7 +39,6 @@ When multiple skills apply, process skills come first — they set the approach,
 
 - "Let's build X" → superpowers:brainstorming first, then implementation skills.
 - "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
-- "I'm opening a PR that a reviewer in another session or machine will review" / "review someone else's PR" → superpowers:status-handoff — the PR plus status refs on the shared remote are the channel between the two sides.
 
 ## Red Flags
 
