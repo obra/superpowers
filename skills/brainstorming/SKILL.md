@@ -42,9 +42,9 @@ Move the work forward, with one of these:
   guesses. Where a guess is a real fork in how to build it, make it your
   recommendation, name the strongest alternative in a clause, and offer
   to dig in (see Think wide, then recommend). End with one line inviting
-  corrections, then one question:
-  the open design choice whose answer would most change what gets
-  built. Specs are often incomplete, so confirm before you build on one.
+  corrections, then one question: the open design choice whose answer
+  would most change what gets built. Specs are often incomplete, so
+  confirm before you build on one.
 - **They haven't:** one open question that gets them describing. Ask
   about a real moment or a concrete picture: "What's the moment you find
   yourself wishing this existed?" or "Tell me about the people who'll be
