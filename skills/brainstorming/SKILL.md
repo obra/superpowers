@@ -36,10 +36,10 @@ Never ask what the project or their context already answers.
 Move the work forward, with one of these:
 
 - **They've already said what they want** (a spec, a plan, a detailed
-  request): the whole message stays under 200 words. Play back what the
-  project showed you that bears on it, and the two or three guesses
-  that matter most about what their description leaves open, marked as
-  guesses. Where a guess is a real fork in how to build it, make it your
+  request): aim for about 200 words for the whole message. Play back
+  what the project showed you that bears on it, and the two or three
+  guesses that matter most about what their description leaves open,
+  marked as guesses. Where a guess is a real fork in how to build it, make it your
   recommendation, name the strongest alternative in a clause, and offer
   to dig in (see Think wide, then recommend). End with one line inviting
   corrections, then one question: the open design choice whose answer
