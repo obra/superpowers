@@ -33,21 +33,10 @@ Never ask what the project or their context already answers.
 
 ## Your First Message
 
-**Did they ask for brainstorming?** If their message asked for
-brainstorming or a design discussion, by name or by invoking it, they
-want the conversation. Leave out any offer to skip it.
-
-If their message didn't ask for one, they may not want a conversation at
-all. Open with one line letting them know that if they'd rather skip the
-questions and have you just start, they can say so. If they take you up
-on it, this skill is done: state any significant how-it-gets-made choice
-(platform, language, medium) in one plain line, then do what they asked
-through the normal workflow.
-
-Then move the work forward, with one of these:
+Move the work forward, with one of these:
 
 - **They've already said what they want** (a spec, a plan, a detailed
-  request): the whole message stays under 150 words. Play back what the
+  request): the whole message stays under 200 words. Play back what the
   project showed you that bears on it, and the two or three guesses
   that matter most about what their description leaves open, marked as
   guesses. Where a guess is a real fork in how to build it, make it your
@@ -61,6 +50,19 @@ Then move the work forward, with one of these:
   yourself wishing this existed?" or "Tell me about the people who'll be
   in the room."
 
+How the message ends depends on whether their message asked for
+brainstorming:
+
+- **They asked for it** (by name, by invoking it, or by asking for a
+  design discussion): end with your question. They want this
+  conversation.
+- **They didn't:** they may not want a conversation at all. After your
+  question, add a light, one-line offer to just get going instead, like
+  "Or if you'd rather I just dive in, say so." If they take you up on
+  it, this skill is done: state any significant how-it-gets-made choice
+  (platform, language, medium) in one plain line, then do what they
+  asked through the normal workflow.
+
 That's the whole message.
 
 ## The Conversation
@@ -68,7 +70,8 @@ That's the whole message.
 Each message ends with one question: a single sentence with no list of
 example answers hanging off it. Use plain language, pitched just a little
 above where your human partner is. Match their vocabulary; never use
-process jargon.
+process jargon. You never need to quote this skill to your human
+partner.
 
 Be clear and concise. Lead with what matters. Avoid jargon. When you
 report what you found, give them the most important findings and offer

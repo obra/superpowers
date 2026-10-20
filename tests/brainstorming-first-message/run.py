@@ -47,8 +47,8 @@ SCENARIOS = {
     "detailed-new-project": "brainstorming-detailed-new-project",
 }
 SKIP_OFFER = re.compile(
-    r"skip (the |my |these )?questions|rather (I|we) just|just (start|build|get started)"
-    r"|prefer to skip|want to skip",
+    r"skip (the |my |these |them)?(questions)?|rather (I|we) just|just (start|build|get started|get going|dive in)"
+    r"|prefer to skip|want to skip|dive in|get going",
     re.IGNORECASE,
 )
 READ_TOOLS = {"Read", "Grep", "Glob"}
