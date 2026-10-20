@@ -23,18 +23,36 @@ why?
   blue"). This is a quick, clear task. Do it, and say what you did.
 - **Something non-trivial is missing.** Start the conversation.
 
+## Look Before You Ask
+
+In an existing project, or when they've given you context (a spec, a plan,
+a handoff, files they pointed at, earlier conversation), do a little recon
+before your first message: read what they referred to and the parts of the
+project it touches. Enough to ask better questions, not a full survey.
+Never ask what the project or their context already answers.
+
 ## Your First Message
 
-Your first message is two things, in this order:
+**Did they ask for brainstorming?** If they asked for it by name or
+invoked it, they want the conversation. Leave out any offer to skip it.
 
-1. One line letting them know that if they'd rather skip the questions and
-   have you just start, they can say so. If they take you up on it, this
-   skill is done: state any significant how-it-gets-made choice
-   (platform, language, medium) in one plain line, then do what they
-   asked through the normal workflow.
-2. One open question that gets them describing. Ask about a real moment
-   or a concrete picture: "What's the moment you find yourself wishing
-   this existed?" or "Tell me about the people who'll be in the room."
+If this skill fired on its own, they may not want a conversation at all.
+Open with one line letting them know that if they'd rather skip the
+questions and have you just start, they can say so. If they take you up
+on it, this skill is done: state any significant how-it-gets-made choice
+(platform, language, medium) in one plain line, then do what they asked
+through the normal workflow.
+
+Then move the work forward, with one of these:
+
+- **They've already said what and why** (a spec, a plan, a detailed
+  request): play back your understanding in a few sentences, marking
+  your guesses as guesses, and ask what's wrong or missing. Specs are
+  often incomplete, so confirm before you build on one.
+- **They haven't:** one open question that gets them describing. Ask
+  about a real moment or a concrete picture: "What's the moment you find
+  yourself wishing this existed?" or "Tell me about the people who'll be
+  in the room."
 
 That's the whole message.
 
@@ -80,9 +98,10 @@ time...", "If it could only do one of these well, which?", "What would
 make you wince if I got it wrong?" A guess they can correct ("I'm
 guessing this is because X keeps biting you?") often beats a question.
 
-**Offer recon.** Once you have a bit of grounding and looking would help,
-offer to go look: their codebase or project, their own files and data,
-or the web. Say what you'd look for. They decide whether you go.
+**Offer recon.** Once you have a bit of grounding and looking further
+would help, offer to go look: deeper into their codebase or project,
+their own files and data, or the web. Say what you'd look for. They
+decide whether you go.
 
 **Think wide privately.** Before you propose anything, come up with
 several ideas and drop the weak ones, including any that fight what
