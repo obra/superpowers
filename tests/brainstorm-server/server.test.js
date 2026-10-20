@@ -211,6 +211,20 @@ async function runTests() {
       assert(res.body.includes('data-choice="a"'), 'Fragment interactive elements intact');
     });
 
+    await test('preserves literal replacement tokens in content fragments', async () => {
+      const tokens = ["$'", '$`', '$&', '$$', '$1', '$<name>'];
+      const fragment = '<h2>Literal tokens</h2><pre>' + tokens.join(' | ') + '</pre>';
+      fs.writeFileSync(path.join(CONTENT_DIR, 'literal-tokens.html'), fragment);
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200);
+      assert(res.body.includes(fragment), 'Fragment must be inserted verbatim');
+      assert.strictEqual(res.body.split('<div class="header">').length - 1, 1, 'Frame chrome must not be duplicated');
+      assert(!res.body.includes('<!-- CONTENT -->'), 'Replacement tokens must not restore the placeholder');
+      assert(res.body.includes('WebSocket'), 'Helper must still be injected');
+    });
+
     await test('serves newest file by mtime', async () => {
       fs.writeFileSync(path.join(CONTENT_DIR, 'older.html'), '<h2>Older</h2>');
       await sleep(100);
@@ -577,7 +591,8 @@ async function runTests() {
 
     // ========== Summary ==========
     console.log(`\n--- Results: ${passed} passed, ${failed} failed, ${skipped} skipped ---`);
-    if (failed > 0) process.exit(1);
+    // exitCode, not exit(): exit() would skip the finally below and orphan the server.
+    if (failed > 0) process.exitCode = 1;
 
   } finally {
     server.kill();

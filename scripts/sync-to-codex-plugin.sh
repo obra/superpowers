@@ -44,6 +44,7 @@ DEST_REL="plugins/superpowers"
 # (.DS_Store is intentionally unanchored — Finder creates them everywhere.)
 EXCLUDES=(
   # Dotfiles and infra — top-level only
+  "/.antigravity-plugin/"
   "/.claude/"
   "/.claude-plugin/"
   "/.codex/"
@@ -80,6 +81,9 @@ EXCLUDES=(
   "/scripts/"
   "/tests/"
   "/tmp/"
+
+  # Other harnesses' assets
+  "/assets/antigravity-logo.png"
 )
 
 # =============================================================================

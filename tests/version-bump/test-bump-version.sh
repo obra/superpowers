@@ -73,4 +73,17 @@ cmp -s "$TEST_ROOT/package.before" "$invalid_repo/package.json" \
 cmp -s "$TEST_ROOT/plugin.before" "$invalid_repo/.hermes-plugin/plugin.yaml" \
   || fail "invalid YAML manifest changed"
 
+audit_repo="$TEST_ROOT/audit-boundaries"
+make_fixture "$audit_repo" $'name: superpowers\nversion: 1.2.3'
+/bin/bash "$audit_repo/scripts/bump-version.sh" 4.0.0 >/dev/null
+printf 'host = "10.4.0.0"\n' >"$audit_repo/server.js"
+printf 'pin: superpowers.git#v4.0.0\n' >"$audit_repo/INSTALL.md"
+/bin/bash "$audit_repo/scripts/bump-version.sh" --audit >"$TEST_ROOT/audit-boundaries.out"
+
+grep -q 'INSTALL.md' "$TEST_ROOT/audit-boundaries.out" \
+  || fail "audit missed an undeclared #v4.0.0 pin"
+if grep -q 'server.js' "$TEST_ROOT/audit-boundaries.out"; then
+  fail "audit flagged 10.4.0.0 as version 4.0.0"
+fi
+
 echo "Version-bump tests passed"
