@@ -45,7 +45,7 @@ if [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
-last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1)
+last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
 [ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
 line="Task $n: complete (commits $(git rev-parse --short=7 "$base")..$(git rev-parse --short=7 HEAD), tests: $cmd → $last)"
 printf '%s\n' "$line" >> "$ledger"

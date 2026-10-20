@@ -19,6 +19,16 @@ fail() {
     FAILURES=$((FAILURES + 1))
 }
 
+# Push a path through the same `cd ... && pwd` normalization that
+# sdd-workspace's own printed output goes through, so both sides of a
+# string comparison are guaranteed to be spelled identically. On Windows
+# Git Bash/MSYS, `git rev-parse --show-toplevel` (Windows-style,
+# C:/Users/...) and `cd ... && pwd` (MSYS-style, /c/Users/...) can print
+# different spellings of the identical physical directory; on Linux/macOS
+# this is a no-op since the two already agree (module the resolved-symlink
+# /var -> /private/var case handled by the mktemp comment above).
+physical_path() { (cd "$1" && pwd); }
+
 cleanup() {
     if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
         rm -rf "$TEST_ROOT"
@@ -32,9 +42,11 @@ cleanup() {
 
 project_id() {
     # Mirrors the id scheme in sdd-workspace: path basename + first 6 hex
-    # chars of the path's md5.
+    # chars of the path's md5 — computed from the physical root, with the
+    # same cd+pwd normalization the script applies (rev-parse and pwd can
+    # print different spellings of one directory on Windows Git Bash).
     local path="$1" resolved
-    resolved="$(cd "$path" && git rev-parse --show-toplevel)"
+    resolved="$(cd "$(cd "$path" && git rev-parse --show-toplevel)" && pwd -P)"
     printf '%s-%s\n' "$(basename "$resolved")" \
         "$(printf %s "$resolved" | md5sum | cut -c1-6)"
 }
@@ -48,6 +60,7 @@ main() {
     git init -q -b main "$TEST_ROOT/repo"
     local repo
     repo="$(cd "$TEST_ROOT/repo" && git rev-parse --show-toplevel)"
+    repo="$(physical_path "$repo")"
     local repo_id base
     repo_id="$(project_id "$repo")"
     base="/tmp/superpowers/$repo_id/sdd"
@@ -376,6 +389,24 @@ PLAN
         fail "out-of-repo plan gets a basename slug and an absolute-path marker"
         echo "    dir:    $dir_out"
         echo "    marker: $(cat "$dir_out/plan-path" 2>/dev/null)"
+    fi
+
+    # --- A repo's own committed .superpowers/sdd/.gitignore is left alone ---
+    git init -q -b main "$TEST_ROOT/own-ignore"
+    local own own_ignore
+    own="$(cd "$TEST_ROOT/own-ignore" && git rev-parse --show-toplevel)"
+    own_ignore=$'*\n!.gitignore\n!*/\n!*/progress.md'
+    mkdir -p "$own/.superpowers/sdd"
+    printf '%s\n' "$own_ignore" > "$own/.superpowers/sdd/.gitignore"
+    printf '# Plan\n\n## Task 1: One\n\nOne.\n' > "$own/plan.md"
+    (cd "$own" && git add -A && git -c user.name=t -c user.email=t@t commit -qm init)
+    (cd "$own" && "$SDD_SCRIPTS/sdd-workspace" plan.md >/dev/null)
+    if [[ "$(cat "$own/.superpowers/sdd/.gitignore")" == "$own_ignore" \
+        && -z "$(cd "$own" && git status --porcelain -- .superpowers/sdd/.gitignore)" ]]; then
+        pass "an existing .superpowers/sdd/.gitignore is not overwritten"
+    else
+        fail "an existing .superpowers/sdd/.gitignore is not overwritten"
+        echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
     fi
 
     echo ""
