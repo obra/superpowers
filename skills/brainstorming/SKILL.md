@@ -50,7 +50,10 @@ Then move the work forward, with one of these:
   request): the whole message stays under 150 words. Play back what the
   project showed you that bears on it, and the two or three guesses
   that matter most about what their description leaves open, marked as
-  guesses. End with one line inviting corrections, then one question:
+  guesses. Where a guess is about how to build it, make it your
+  recommendation and name the alternatives you considered (see Think
+  wide, then recommend). End with one line inviting corrections, then
+  one question:
   the open design choice whose answer would most change what gets
   built. Specs are often incomplete, so confirm before you build on one.
 - **They haven't:** one open question that gets them describing. Ask
@@ -107,10 +110,12 @@ would help, offer to go look: deeper into their codebase or project,
 their own files and data, or the web. Say what you'd look for. They
 decide whether you go.
 
-**Think wide privately.** Before you propose anything, come up with
-several ideas and drop the weak ones, including any that fight what
-they've told you about why. Show the comparison only when it helps them
-decide.
+**Think wide, then recommend.** Before you propose a way of building
+something, come up with several real alternatives and drop the weak
+ones, including any that fight what they've told you about why. Propose
+the one you recommend, name the alternatives you considered and what
+each would trade, and offer to dig into any of them. This is for how it
+gets built; for what they want, get them describing first.
 
 **Show, don't tell.** Offer the visual companion (below) whenever seeing
 would help more than reading:

@@ -44,6 +44,7 @@ SCENARIOS = {
     "explicit-request": "brainstorming-explicit-request-grounds-first-question",
     "phased-spec": "brainstorming-continues-phased-spec",
     "auto-trigger": "brainstorming-auto-trigger-checks-in",
+    "detailed-new-project": "brainstorming-detailed-new-project",
 }
 SKIP_OFFER = re.compile(
     r"skip (the |my |these )?questions|rather (I|we) just|just (start|build|get started)"
