@@ -9,14 +9,6 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **Core principle:** Review early, review often.
 
-## Who Reviews
-
-Pick the lane before dispatching anything:
-
-1. **Reviewer is dispatchable in this harness** → the default path below: dispatch a code reviewer subagent.
-2. **Reviewer is another session or machine** (you open a PR someone else will review) → `superpowers:status-handoff`, and its flow is not optional: push the branch, open the PR stating the contract, transition `-ready-review`, arm the monitor, say you're waiting, stop. **Self-review does not substitute for the remote reviewer** — it issues no verdict and finishes nothing; the verdict is the `-changes` / `-merged` / `-closed` the other side pushes. Waiting is part of the work.
-3. **No external reviewer exists and subagents are unavailable** → fresh-eyes self-review, the fallback of last resort — never the shortcut past lane 2.
-
 ## When to Request Review
 
 **Mandatory:**
@@ -92,7 +84,6 @@ You: [Fix progress indicators]
 |--------|---------|
 | "I'll just review the diff myself instead of dispatching a reviewer" | You're the coordinator — reviewing the diff inline burns the context window you need to keep driving the work. Dispatch a reviewer subagent: the diff and the evaluation live in its context, and only the findings come back to you. |
 | "The reviewer needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the reviewer on the work product, not your thought process. |
-| "The reviewer is on another machine, but a self-review is faster" | Self-review bypasses the channel both sides watch: the partner and their monitor are waiting on a status ref, not on your conclusion. Hand off via `superpowers:status-handoff` and wait — the review you do yourself is the one nobody asked for. |
 
 ## Red Flags
 
