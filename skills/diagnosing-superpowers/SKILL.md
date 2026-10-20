@@ -100,7 +100,7 @@ yourself in step 3 and which findings to lead with in the verdict.
   partner either.
 - **Approval gates.** No archive before your partner has seen the scrub
   log and file list. No issue or comment before they approve the exact
-  text.
+  text, and none with a placeholder summary.
 - **Intake before analysis.** Nothing in steps 2–7 starts until your
   partner has answered. If they are away, write the questions and stop.
   A statement you reconstructed for them is not an answer. An
