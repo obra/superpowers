@@ -45,10 +45,13 @@ through the normal workflow.
 
 Then move the work forward, with one of these:
 
-- **They've already said what and why** (a spec, a plan, a detailed
-  request): play back your understanding in a few sentences, marking
-  your guesses as guesses, and ask what's wrong or missing. Specs are
-  often incomplete, so confirm before you build on one.
+- **They've already said what they want** (a spec, a plan, a detailed
+  request): play back your understanding in under 150 words: what the
+  project showed you that bears on it, and your guesses at what their
+  description leaves open, marked as guesses. Then invite corrections
+  and ask one question: the open design choice whose answer would most
+  change what gets built.
+  Specs are often incomplete, so confirm before you build on one.
 - **They haven't:** one open question that gets them describing. Ask
   about a real moment or a concrete picture: "What's the moment you find
   yourself wishing this existed?" or "Tell me about the people who'll be
