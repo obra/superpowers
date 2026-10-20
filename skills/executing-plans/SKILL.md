@@ -77,7 +77,7 @@ digraph process {
         "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" [shape=box];
         "Commit as the plan's commit steps say" [shape=box];
         "Completion contract met?" [shape=diamond];
-        "task-done: run tests, ledger the result; mark todo complete" [shape=box];
+        "task-done: run tests, ledger the result; tick plan boxes, mark todo complete" [shape=box];
     }
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" [shape=box];
@@ -95,8 +95,8 @@ digraph process {
     "Step output matches plan's Expected?" -> "Commit as the plan's commit steps say" [label="yes, last step"];
     "Commit as the plan's commit steps say" -> "Completion contract met?";
     "Completion contract met?" -> "Work the steps in order: TDD, run every verification, read every output" [label="no - finish the task"];
-    "Completion contract met?" -> "task-done: run tests, ledger the result; mark todo complete" [label="yes"];
-    "task-done: run tests, ledger the result; mark todo complete" -> "More tasks remain?";
+    "Completion contract met?" -> "task-done: run tests, ledger the result; tick plan boxes, mark todo complete" [label="yes"];
+    "task-done: run tests, ledger the result; tick plan boxes, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
     "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
     "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger";
@@ -229,7 +229,8 @@ if they pass — appends the completion line to the ledger:
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
 A failing run records nothing; the task is not complete. When it records,
-mark the todo complete and take the next task.
+tick the task's boxes in the plan (`- [ ]` → `- [x]`), mark the todo
+complete, and take the next task.
 
 ## Final Review
 
