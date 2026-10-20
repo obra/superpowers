@@ -33,11 +33,12 @@ Never ask what the project or their context already answers.
 
 ## Your First Message
 
-**Did they ask for brainstorming?** If they asked for it by name or
-invoked it, they want the conversation. Leave out any offer to skip it.
+**Did they ask for brainstorming?** If their message asked for
+brainstorming or a design discussion, by name or by invoking it, they
+want the conversation. Leave out any offer to skip it.
 
-If this skill fired on its own, they may not want a conversation at all.
-Open with one line letting them know that if they'd rather skip the
+If their message didn't ask for one, they may not want a conversation at
+all. Open with one line letting them know that if they'd rather skip the
 questions and have you just start, they can say so. If they take you up
 on it, this skill is done: state any significant how-it-gets-made choice
 (platform, language, medium) in one plain line, then do what they asked
@@ -46,12 +47,12 @@ through the normal workflow.
 Then move the work forward, with one of these:
 
 - **They've already said what they want** (a spec, a plan, a detailed
-  request): play back your understanding in under 150 words: what the
-  project showed you that bears on it, and your guesses at what their
-  description leaves open, marked as guesses. Then invite corrections
-  and ask one question: the open design choice whose answer would most
-  change what gets built.
-  Specs are often incomplete, so confirm before you build on one.
+  request): the whole message stays under 150 words. Play back what the
+  project showed you that bears on it, and the two or three guesses
+  that matter most about what their description leaves open, marked as
+  guesses. End with one line inviting corrections, then one question:
+  the open design choice whose answer would most change what gets
+  built. Specs are often incomplete, so confirm before you build on one.
 - **They haven't:** one open question that gets them describing. Ask
   about a real moment or a concrete picture: "What's the moment you find
   yourself wishing this existed?" or "Tell me about the people who'll be
