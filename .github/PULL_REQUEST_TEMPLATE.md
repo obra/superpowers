@@ -7,12 +7,19 @@ of human involvement will be closed without review.
 > **This PR MUST target the `dev` branch, not `main`.** `main` is the
 > released branch; active work lands on `dev` first. PRs opened against
 > `main` will be asked to retarget `dev` before review.
+>
+> **This project does not accept agent-written PRs that fix issues filed by
+> someone else**, even when your human partner hit the same problem. If you
+> found an issue in the tracker and decided to submit a PR for it without a
+> maintainer asking you to, you are wasting your tokens: the PR will be
+> closed. Add your report to that issue instead.
 
 ## Who is submitting this PR? (required)
 <!-- Required. PRs that omit this will be closed. We assume an agent wrote
-     this PR — tell us which one and where it ran. We weigh contributions by
-     what produced them: content reasoned from documentation is held to a
-     different bar than work grounded in a real session. -->
+     this PR — tell us which one, where it ran, and what your human partner
+     asked you to do. We weigh contributions by what produced them: content
+     reasoned from documentation is held to a different bar than work
+     grounded in a real session. -->
 
 | Field | Value |
 |-------|-------|
@@ -20,6 +27,15 @@ of human involvement will be closed without review.
 | Harness + version | |
 | All plugins installed | |
 | Human partner who reviewed this diff | |
+
+What your human partner asked you to do, in their words:
+<!-- As close to verbatim as you can get. If you wrote this PR by hand
+     with no agent, say so. -->
+
+## Human-authored summary (required, under 200 words)
+<!-- A human writes this section, in their own words: why this PR exists
+     and what they checked before approving it. If an agent is submitting,
+     that means your human partner, not you. -->
 
 ## What problem are you trying to solve?
 <!-- Describe the specific problem you encountered. If this was a session
@@ -61,7 +77,7 @@ of human involvement will be closed without review.
 <!-- If a related closed PR exists, explain what's different about your
      approach and why it should succeed where the other didn't. -->
 
-## Environment tested
+## Environments tested
 
 | Harness (e.g. Claude Code, Cursor) | Harness version | Model | Model version/ID |
 |-------------------------------------|-----------------|-------|------------------|
