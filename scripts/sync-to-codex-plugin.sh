@@ -58,6 +58,7 @@ EXCLUDES=(
   "/.kimi-plugin/"
   "/.opencode/"
   "/.pi/"
+  "/.qoder-plugin/"
   "/.pre-commit-config.yaml"
   "/.version-bump.json"
   "/.worktrees/"
