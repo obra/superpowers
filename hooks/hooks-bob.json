@@ -1,0 +1,16 @@
+{
+  "_comment": "Sample only — paste the 'hooks' block into .bob/settings.json (project) or ~/.bob/settings/settings.json (global). Bob does not load this file directly. The install script (bob-plugin/install.sh) handles this automatically.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh hooks/session-start-bob",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

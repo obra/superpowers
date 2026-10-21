@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# SessionStart hook for superpowers plugin — Bob IDE surface.
+# Bob injects this script's plain-text stdout verbatim into the model context.
+# Unlike other harnesses, Bob does NOT expect JSON output — do NOT use escape_for_json.
+
+set -euo pipefail
+
+# Drain Bob's stdin JSON payload ({"event":"SessionStart","session_id":"..."})
+# before emitting output, to avoid broken-pipe errors.
+cat > /dev/null
+
+# Determine plugin root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Read using-superpowers content
+using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+
+# Assemble plain-text context block.
+# Bob injects stdout verbatim — no JSON wrapping, no escaping needed.
+session_context="<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
+
+${using_superpowers_content}
+</EXTREMELY_IMPORTANT>"
+
+printf '%s\n' "$session_context"
+
+exit 0
