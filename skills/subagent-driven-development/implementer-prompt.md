@@ -5,8 +5,11 @@ Use this template when dispatching an implementer subagent.
 ```
 Subagent (general-purpose):
   description: "Implement Task N: [task name]"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIRED: when the brief carries a Tier line, set from it:
+         mechanical → the cheapest model the subagent tool offers; judgment →
+         a standard mid-tier model. Otherwise choose per SKILL.md Model
+         Selection. An omitted model silently inherits the session's most
+         expensive one]
   prompt: |
     You are implementing Task N: [task name]
 
