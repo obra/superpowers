@@ -104,15 +104,27 @@ cd "$path"
 Auto-detect and run appropriate setup:
 
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
+# Node.js — detect package manager via lockfile.
+# Critical for pnpm/yarn workspaces: `npm install` ignores workspace
+# protocols, won't create `node_modules/<pkg>` symlinks for workspace
+# packages, and can leave the tree in a state where tools that resolve
+# imports through `node_modules` (LSP, type checkers) silently break.
+if   [ -f pnpm-lock.yaml ];     then pnpm install
+elif [ -f yarn.lock ];          then yarn install
+elif [ -f bun.lockb ];          then bun install
+elif [ -f package-lock.json ];  then npm install
+elif [ -f package.json ];       then npm install
+fi
 
 # Rust
 if [ -f Cargo.toml ]; then cargo build; fi
 
 # Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+if   [ -f uv.lock ];          then uv sync
+elif [ -f poetry.lock ];      then poetry install
+elif [ -f pyproject.toml ];   then poetry install
+elif [ -f requirements.txt ]; then pip install -r requirements.txt
+fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi
