@@ -123,6 +123,11 @@ tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
+Do not run Option 1's branch-deletion command after choosing Option 2: the
+branch remains checked out in the preserved worktree, so `git branch -d`
+will fail. Keep both the branch and worktree until the pull/merge request
+has been handled.
+
 Keep the worktree — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
@@ -167,7 +172,34 @@ Step 2, from before that directory change.
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
 **If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** Superpowers
-created this worktree — we own cleanup:
+created this worktree — we own cleanup. First check for surviving
+Superpowers scratch: `scripts/sdd-workspace` gives `.superpowers/sdd/` a
+self-ignoring `.gitignore`, and brainstorm mockups live under
+`.superpowers/brainstorm/`. None of it makes the worktree dirty, so
+removal will not refuse for it:
+
+```bash
+find "$WORKTREE_PATH/.superpowers" -type f -not -name .gitignore 2>/dev/null
+```
+
+**If that lists anything**: the worktree holds plan workspaces, progress
+ledgers, rulings, implementer/reviewer reports, or design mockups that
+exist nowhere else. Show your human partner what is at stake and ask:
+
+```
+Worktree holds Superpowers scratch that was never finished:
+
+<file list>
+
+1. Move it into <main repo root> before cleanup
+2. Keep the worktree in place
+3. Delete it (unrecoverable)
+
+Which?
+```
+
+Carry out the choice. If option 2 was chosen, stop here; otherwise, remove
+the worktree:
 
 ```bash
 git worktree remove "$WORKTREE_PATH"
