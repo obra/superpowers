@@ -10,6 +10,7 @@ describe and size a skill so agents find it and read it.
 - Max 1024 characters total
 - `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
 - `description`: Third-person, describes ONLY when to use (NOT what it does)
+  - Quote the value when it contains `: ` (colon + space): unquoted, YAML parses it as a key-value separator, the frontmatter breaks, and the CLI silently ignores the skill. When in doubt, always quote `description`.
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see Skill Discovery Optimization below for why)
