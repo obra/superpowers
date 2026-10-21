@@ -1,0 +1,58 @@
+name: Flag suspicious issues/comments
+
+# Watches new/edited issues and issue comments for common
+# malware-lure patterns (PowerShell download-and-execute one-liners,
+# curl|sh pipelines, known IOCs, suspicious links, etc.) and posts a
+# Slack alert naming only the matched rules -- never the suspicious
+# text or any link found inside it, so Slack never unfurls an
+# attacker-controlled URL.
+#
+# No model calls, no network access other than (optionally) the one
+# Slack webhook POST. Pure stdlib Python regex matching.
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+
+# No token permissions needed: this workflow only reads the trusted
+# repo script via checkout (default-branch code only, since we never
+# override `ref:`) and makes an outbound HTTP POST to Slack. It never
+# calls the GitHub API and never comments back on the issue.
+permissions: {}
+
+concurrency:
+  group: flag-suspicious-${{ github.event.issue.number }}-${{ github.event.comment.id }}
+  cancel-in-progress: true
+
+jobs:
+  flag-suspicious:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      # No `ref:` override: on issues/issue_comment events this checks
+      # out the repository's default branch, never contributor-supplied
+      # code, so an attacker editing an issue cannot get their own code
+      # to run here.
+      - name: Checkout scripts (default branch only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: |
+            .github/scripts
+
+      - name: Run suspicious-content check
+        env:
+          # Untrusted event data is passed exclusively via env vars, never
+          # interpolated into this (or any) `run:` shell string. The
+          # Python script only reads these values; it does not eval/exec
+          # them or shell out with them.
+          CONTENT_TITLE: ${{ github.event.issue.title }}
+          CONTENT_BODY: ${{ github.event.comment.body || github.event.issue.body }}
+          CONTENT_URL: ${{ github.event.comment.html_url || github.event.issue.html_url }}
+          CONTENT_AUTHOR: ${{ github.event.comment.user.login || github.event.issue.user.login }}
+          AUTHOR_TYPE: ${{ github.event.comment.user.type || github.event.issue.user.type }}
+          AUTHOR_ASSOCIATION: ${{ github.event.comment.author_association || github.event.issue.author_association }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_SUPERPOWERS }}
+        run: python3 .github/scripts/flag_suspicious.py
