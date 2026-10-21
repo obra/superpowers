@@ -53,9 +53,11 @@ CMDBLOCK
 # running) instead of a PATH lookup for bash, so this keeps working when
 # Claude Code spawns the SessionStart hook with a broken/empty PATH
 # (anthropics/claude-code#43127).
+# No $(cd ... && pwd) subshell: a fork costs tens of milliseconds under Git
+# Bash on Windows, and a relative directory is enough for the exec below.
 case "$0" in
-  */*|*\\*) SCRIPT_DIR="$(cd "${0%[/\\]*}" && pwd)" ;;
-  *) SCRIPT_DIR="$(pwd)" ;;
+  */*|*\\*) SCRIPT_DIR="${0%[/\\]*}" ;;
+  *) SCRIPT_DIR="." ;;
 esac
 SCRIPT_NAME="$1"
 shift
