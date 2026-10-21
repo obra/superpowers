@@ -142,14 +142,21 @@ a ledger file, not only in todos.
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
   — do not re-dispatch them; resume at the first task without one. A task
   whose last line is a fix round is mid-loop: resume the loop at the next
-  round. A ledger whose first line names a different plan file — or a stray
+  round. A resumed controller also reads the ledger's `## Discoveries`
+  section: it holds what completed tasks found that the plan could not
+  know, and it is the source for clause (3) of the next dispatch. A ledger
+  whose first line names a different plan file — or a stray
   ledger at the old flat path `.superpowers/sdd/progress.md` — is another
   plan's progress: leave it in place and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
 - The ledger is your recovery map: the commits it names exist in git even
   when your context no longer remembers creating them. After compaction,
-  trust the ledger and `git log` over your own recollection.
+  trust the ledger and `git log` over your own recollection. The ledger's
+  `## Discoveries` section is the same map for knowledge: what earlier tasks
+  found that the plan could not know. A resumed controller composes clause
+  (3) of every dispatch from that section, never from recollection of a
+  context it no longer has.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
   that happens, recover from `git log`.
 
@@ -256,10 +263,12 @@ and fix-round diffs need it.
   task fits in the project; (2) the brief path, introduced as "read this
   first — it is your requirements, with the exact values to use verbatim";
   (3) interfaces and decisions from earlier tasks that the brief cannot
-  know; (4) your resolution of any ambiguity you noticed in the brief;
-  (5) the report-file path and report contract. Exact values (numbers,
-  magic strings, signatures, test cases) appear only in the brief. Never
-  make a subagent read the whole plan file.
+  know — read them from the ledger's Discoveries section, not from your
+  memory of past reports: copy the entries the task's interfaces touch, in
+  full, and skip the rest; (4) your resolution of any ambiguity you noticed
+  in the brief; (5) the report-file path and report contract. Exact values
+  (numbers, magic strings, signatures, test cases) appear only in the
+  brief. Never make a subagent read the whole plan file.
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
@@ -268,7 +277,10 @@ and fix-round diffs need it.
   paste accumulated prior-task summaries ("state after Tasks 1-3") into
   later dispatches — a real session's dispatch hit 42k chars of which 99%
   was pasted history. A fresh subagent needs its task, the interfaces it
-  touches, and the global constraints. Nothing else.
+  touches, and the global constraints. Nothing else. A curated slice copied
+  from the Discoveries section is not pasted history — it is clause (3)
+  above, kept small enough to read in full because each entry is a delta
+  from the plan.
 - The dispatch carries the no-subagents contract (it is in the
   implementer template): the implementer never dispatches subagents —
   not helpers, and never a reviewer. Review arrives from you, after the
@@ -438,6 +450,15 @@ message as your other bookkeeping:
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
   tripped breaker
 
+Copy the task's Discoveries into the ledger in the same message, from the
+report's "Discoveries for later tasks" field: append a `### Task <N>`
+heading under the ledger's `## Discoveries` section (create the section on
+first use) with each discovery as one line, or `- None` when the field is
+empty. Keep it a delta from the plan: only what a later task needs and the
+plan could not know — corrections to the plan, negative results, resolved
+unknowns, interfaces discovered in the code. If it does not change what a
+later task does, it does not go in.
+
 Then mark the todo complete and move on. Never move to the next task while
 the review has open Critical/Important issues that are neither fixed nor
 parked-with-ruling at the cap.
@@ -529,6 +550,7 @@ Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
 
 [Ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, review clean)]
+[Ledger: Discoveries — Task 1: hooks dir must be created before install; none other]
 
 Task 2: Recovery modes
 
@@ -555,6 +577,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 
 [Ledger: Task 2: fix round 1/5 (2 addressed, 0 open; commits d4e5f6a..b7c8d9e)]
 [Ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, review clean)]
+[Ledger: Discoveries — Task 2: None]
 
 ...
 

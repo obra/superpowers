@@ -134,6 +134,12 @@ Subagent (general-purpose):
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation
     - Files changed
+    - **Discoveries for later tasks:** what you found that a later task
+      needs and the plan could not know — resolved unknowns, corrections
+      to the plan, negative results ("X has no lookup endpoint, so no
+      probe was written"), interfaces you had to inspect in the installed
+      code. Write "None" when the plan already knew everything. The
+      controller copies this into the ledger; be specific.
     - Self-review findings (if any)
     - Any issues or concerns
 
