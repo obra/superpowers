@@ -19,7 +19,7 @@ import { execFileSync } from 'child_process';
 
 function extractDotBlocks(markdown) {
   const blocks = [];
-  const regex = /```dot\n([\s\S]*?)```/g;
+  const regex = /```dot\r?\n([\s\S]*?)```/g;
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
@@ -148,6 +148,7 @@ function main() {
       console.log(`  Source: ${skillName}_combined.dot`);
     } else {
       console.error('  Failed to render combined diagram');
+      process.exitCode = 1;
     }
   } else {
     // Render each separately
@@ -159,6 +160,7 @@ function main() {
         console.log(`  Rendered: ${block.name}.svg`);
       } else {
         console.error(`  Failed: ${block.name}`);
+        process.exitCode = 1;
       }
     }
   }
