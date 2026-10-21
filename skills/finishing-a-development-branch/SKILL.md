@@ -39,7 +39,7 @@ On a detached HEAD, offer only options 2–4, and push as a new branch.
 
 ## Step 4: Execute
 
-**Merge locally.** From the main repo root, run `git checkout <base-branch>`, `git pull`, `git merge <feature-branch>`, and the full test suite. If it fails, stop and report. Otherwise clean up (Step 5), then run `git branch -d <feature-branch>`.
+**Merge locally.** From the main repo root, run `git checkout <base-branch>`, `git pull`, `git merge <feature-branch>`, and Step 1's checks against the merged result; the full suite is CI's. If they fail, stop and report. Otherwise clean up (Step 5), then run `git branch -d <feature-branch>`.
 
 **Pull request.**
 
