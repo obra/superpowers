@@ -2,6 +2,14 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.1.0 (2026-10-20)
+
+Cuts CI spent on tiny PRs and blind reruns.
+
+- **A quick task may carry several small fixes.** Each fix is one task in the same mini-plan, and they ship together in one PR.
+- **Plans fold tiny boundaries into a neighbor.** A boundary under about 100 changed lines joins a neighbor unless it needs its own release order, `Risk`, or revert.
+- **Monitors read a failure before rerunning.** A failing check's log is read first, and a rerun happens only for a cause outside the PR.
+
 ## v10.0.0 (2026-10-17)
 
 Rebuilds delivery around one strong implementer per PR with one independent review behind it, moves deterministic checks into scripts, and cuts `skills/` from 32,752 words to under 13,500.

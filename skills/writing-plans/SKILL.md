@@ -16,7 +16,7 @@ Read the nearest instructions, the files you will change, and their tests until 
 ## Shape
 
 - A PR boundary is an outcome a reviewer can judge alone, and its verification passes without later boundaries. Every task sits in exactly one boundary.
-- Aim for three to nine tasks and 1,000–4,000 changed lines per PR. Above 3,000 lines, say why the PR stays one PR. A one-task PR is fine.
+- Aim for three to nine tasks and 1,000–4,000 changed lines per PR. Above 3,000 lines, say why the PR stays one PR. A one-task PR is fine when it is not tiny. Fold a boundary under about 100 changed lines into a neighbor unless it needs its own release order, `Risk`, or revert.
 - Independent boundaries list disjoint files. A dependent boundary names one predecessor in `Depends on`.
 - `Risk` is `high` for money, security, tenancy, migrations, or shared contracts; `none` for a sweep, codemod, or CI config; `medium` otherwise. `none` skips the local review.
 

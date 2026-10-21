@@ -8,4 +8,4 @@ Every role routes from the project's routing text, or the bundled default; plans
 
 After an interruption, delivery recovers from its ledger, Git history, worktrees, live agents, and PR state.
 
-`quick-task` writes a one-task mini-plan for a small decision-complete change, then enters the same delivery path.
+`quick-task` writes a mini-plan with one task per small decision-complete fix, all in one PR, then enters the same delivery path.

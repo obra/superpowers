@@ -68,7 +68,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 
 5. **finishing-a-development-branch** - Run by the pr-monitor, or directly when you finish work by hand. Verifies tests, then merges, opens a PR, keeps, or discards the branch.
 
-**quick-task** covers small, already-decided changes: a one-task plan straight into delivery.
+**quick-task** covers small, already-decided changes: a mini-plan with one task per fix, straight into delivery as one PR.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 

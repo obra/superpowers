@@ -1,6 +1,6 @@
 {
   "name": "toolbelt",
-  "version": "10.0.0",
+  "version": "10.1.0",
   "description": "Toolbelt skills and runtime bootstrap for coding agents",
   "type": "module",
   "keywords": [

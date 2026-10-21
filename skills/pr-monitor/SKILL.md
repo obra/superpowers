@@ -20,10 +20,11 @@ For an unpublished branch, run finishing-a-development-branch on the pull-reques
 1. Read `bash scripts/pr-state <PR>`, or the policy's command. Exit 2 or 3 means the state is unknown, never clean. Resolve a merge conflict first; a conflicting PR schedules no CI.
 2. Evidence belongs to one head. Request each policy provider once per head: when the PR opens and after every push, fix or rebase. A docs-only push, per finishing-a-development-branch Step 1, carries completed provider reviews forward.
 3. A provider has completed when its review covers the current head. One that passes the policy timeout (default 20 minutes), or fails, skips, or rate-limits, drops out for that head; record the fallback in the PR body.
-4. Once every awaited provider has completed, fix what is real, with its siblings (toolbelt:receiving-code-review), and run only the tests that cover the fix. Push the fixes as one batch, and rebut the rest on the thread with code evidence. The providers' next round is the re-review.
-5. After two provider rounds, move a finding to a `## Follow-ups` list in the PR body and resolve its thread when the provider rates it below its top two severities and it touches no data, security, or money, unless the policy forbids it.
-6. A finding that would change the design, or a PR that has diverged from its plan, blocks that PR. Record why in the ledger and keep carrying the other PRs.
-7. With nothing actionable, wait with one call: the policy's wait command, or 180 seconds. Waiting on a provider or CI is not a reason to return; wait again in the same turn.
+4. Read a failing check's log before any rerun, and rerun only for a cause outside the PR.
+5. Once every awaited provider has completed, fix what is real, with its siblings (toolbelt:receiving-code-review), and run only the tests that cover the fix. Push the fixes as one batch, and rebut the rest on the thread with code evidence. The providers' next round is the re-review.
+6. After two provider rounds, move a finding to a `## Follow-ups` list in the PR body and resolve its thread when the provider rates it below its top two severities and it touches no data, security, or money, unless the policy forbids it.
+7. A finding that would change the design, or a PR that has diverged from its plan, blocks that PR. Record why in the ledger and keep carrying the other PRs.
+8. With nothing actionable, wait with one call: the policy's wait command, or 180 seconds. Waiting on a provider or CI is not a reason to return; wait again in the same turn.
 
 ## Chains
 
