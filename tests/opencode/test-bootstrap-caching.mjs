@@ -76,6 +76,9 @@ const failures = scenario === 'present'
 
 if (scenario === 'present') {
   failures.push(...assertV2Bootstrap(result));
+  // #2583: both flavors register bare skill ids and look them up exactly.
+  failures.push(...assertTeachesBareSkillIds('V1', bootstrapText(firstOutput), 'name'));
+  failures.push(...assertTeachesBareSkillIds('V2', v2Result.text, 'id'));
 }
 failures.push(...mappingFailures);
 
@@ -198,6 +201,25 @@ function assertMappingConstants(mod) {
     if (mod.V2_MAPPING.includes(stale)) {
       failures.push(`expected V2_MAPPING not to teach the V1-only tool name ${stale}`);
     }
+  }
+  return failures;
+}
+
+// #2583: skills reference each other as `superpowers:<name>` (the Claude Code
+// plugin namespace), but OpenCode V1 and V2 register bare ids (`brainstorming`)
+// and their `skill` tools do an exact lookup, so a namespaced call fails with
+// "Unable to load skill". When the injected bootstrap contains namespaced
+// references, its tool mapping must tell the model to drop the prefix, using
+// the flavor's `skill` parameter (V1 `name`, V2 `id`).
+function assertTeachesBareSkillIds(flavor, text, param) {
+  const failures = [];
+  const refs = [...new Set(text.match(/superpowers:[a-z0-9-]+/g) || [])];
+  if (refs.length === 0) return failures;
+  if (!text.includes('drop the `superpowers:` prefix')) {
+    failures.push(`expected ${flavor} bootstrap to tell the model to drop the superpowers: prefix (bootstrap references ${refs.join(', ')})`);
+  }
+  if (!text.includes(`\`superpowers:brainstorming\` → \`skill\` with \`${param}: "brainstorming"\``)) {
+    failures.push(`expected ${flavor} bootstrap to show superpowers:brainstorming loading as \`skill\` with \`${param}: "brainstorming"\``);
   }
   return failures;
 }
