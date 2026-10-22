@@ -278,11 +278,12 @@ Fix the Critical and Important findings yourself — you are the
 implementer here — in ONE pass. Each fix is verified by TDD, not by a
 second reviewer: write the test that reproduces the finding, watch it
 fail, make it pass, then run the whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
-without a test that failed first is not verified; a suite that is not
-green after the pass means the pass is not over. Do not dispatch a
-re-review: it would re-read a diff whose covering tests already answer
-"addressed" and whose suite run already answers "broke nothing".
+`Final: fixed <finding> — <test name> RED: <failing assertion text> → GREEN, suite <N>/<N>`.
+A fix without a test that failed first is not verified; a ledger line
+without RED output (the failing assertion text) is an unverified fix; a
+suite that is not green after the pass means the pass is not over. Do not
+dispatch a re-review: it would re-read a diff whose covering tests already
+answer "addressed" and whose suite run already answers "broke nothing".
 
 A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner

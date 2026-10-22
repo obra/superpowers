@@ -234,6 +234,7 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 | "TDD will slow me down" | TDD IS the pragmatic path: catches bugs before commit, prevents regressions, lets you refactor without fear. "Pragmatic" shortcuts mean debugging in production — slower, not faster. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
+| "I'll batch the test and the code to save a turn" | The RED run is how you learn the test can fail. A batched run only proves the pair agrees with itself. |
 
 ## Red Flags - STOP and Start Over
 
