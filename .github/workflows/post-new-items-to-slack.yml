@@ -1,0 +1,99 @@
+name: Post new issues and PRs to Slack
+
+# Posts a one-line notification to Slack for every newly opened issue and
+# every newly opened pull request, so a human/agent can triage it there.
+# This workflow intentionally does NOT check out repository code, does NOT
+# comment on GitHub, and does NOT do any content-based pattern matching.
+# All attacker-controlled text (issue/PR title, author login) is treated as
+# untrusted: it is passed through `env:` (never interpolated into a `run:`
+# script via ${{ ... }}), escaped for Slack's control characters, and
+# serialized into JSON using `jq -n --arg` so it can never be interpreted
+# as shell or JSON syntax.
+
+on:
+  issues:
+    types: [opened]
+  # pull_request_target (not pull_request) so the SLACK_WEBHOOK_SUPERPOWERS
+  # secret is available even for pull requests opened from forks. No code
+  # from the PR is ever checked out or executed.
+  pull_request_target:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build payload and post to Slack
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_SUPERPOWERS }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_LOGIN: ${{ github.event.issue.user.login }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LOGIN: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "::error::SLACK_WEBHOOK_SUPERPOWERS secret is empty or unset. Refusing to continue (nothing would be posted, and we don't want to silently no-op)." >&2
+            exit 1
+          fi
+
+          if [ "$EVENT_NAME" = "issues" ]; then
+            KIND="issue"
+            NUMBER="$ISSUE_NUMBER"
+            RAW_TITLE="$ISSUE_TITLE"
+            RAW_LOGIN="$ISSUE_LOGIN"
+            URL="$ISSUE_URL"
+          elif [ "$EVENT_NAME" = "pull_request_target" ]; then
+            KIND="PR"
+            NUMBER="$PR_NUMBER"
+            RAW_TITLE="$PR_TITLE"
+            RAW_LOGIN="$PR_LOGIN"
+            URL="$PR_URL"
+          else
+            echo "::error::Unexpected event name: $EVENT_NAME" >&2
+            exit 1
+          fi
+
+          # Truncate the untrusted title to 200 chars BEFORE escaping, so we
+          # never cut an HTML entity in half.
+          TRUNCATED_TITLE="${RAW_TITLE:0:200}"
+
+          # Escape Slack control characters so untrusted text can't be
+          # interpreted as a channel mention (<!channel>) or a fake link
+          # (<https://evil|text>). Order matters: escape & first so we don't
+          # double-escape the entities we just introduced.
+          escape_slack() {
+            local s="$1"
+            # NOTE: in bash ${s//pat/repl}, an unescaped & in *repl* means
+            # "the text that matched", so each replacement below must use
+            # \& for a literal ampersand or the escaping is silently wrong
+            # (e.g. "<" would become "<lt;" instead of "&lt;").
+            s="${s//&/\&amp;}"
+            s="${s//</\&lt;}"
+            s="${s//>/\&gt;}"
+            printf '%s' "$s"
+          }
+
+          SAFE_TITLE="$(escape_slack "$TRUNCATED_TITLE")"
+          SAFE_LOGIN="$(escape_slack "$RAW_LOGIN")"
+
+          # Build the JSON body with jq -n --arg so nothing in the
+          # attacker-controlled fields can be interpreted as JSON or shell
+          # syntax; jq handles all the necessary quoting/escaping itself.
+          payload="$(jq -n \
+            --arg kind "$KIND" \
+            --arg number "$NUMBER" \
+            --arg title "$SAFE_TITLE" \
+            --arg login "$SAFE_LOGIN" \
+            --arg url "$URL" \
+            '{text: ("New " + $kind + " #" + $number + ": " + $title + " by " + $login + " " + $url)}')"
+
+          curl --fail-with-body -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK"
