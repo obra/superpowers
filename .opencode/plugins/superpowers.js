@@ -112,6 +112,11 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 // regex work on every agent step.  See #1202 for the full analysis.
 const _bootstrapCache = new Map(); // mapping -> bootstrap (null = file missing)
 
+// Opening of every injected bootstrap part. The already-injected guards match
+// it at the start of a part, so a prompt that merely mentions the tag (#2197)
+// is not mistaken for the bootstrap.
+const BOOTSTRAP_MARKER = '<EXTREMELY_IMPORTANT>\nYou have superpowers.';
+
 // Helper to generate bootstrap content (cached after first call per mapping)
 const getBootstrapContent = (toolMapping) => {
   // Return cached result on subsequent calls
@@ -127,8 +132,7 @@ const getBootstrapContent = (toolMapping) => {
   const fullContent = fs.readFileSync(skillPath, 'utf8');
   const { content } = extractAndStripFrontmatter(fullContent);
 
-  _bootstrapCache.set(toolMapping, `<EXTREMELY_IMPORTANT>
-You have superpowers.
+  _bootstrapCache.set(toolMapping, `${BOOTSTRAP_MARKER}
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
 
@@ -248,7 +252,7 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
       if (!firstUser || !firstUser.parts.length) return;
 
       // Guard: skip if first user message already contains bootstrap.
-      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      if (firstUser.parts.some(p => p.type === 'text' && p.text.startsWith(BOOTSTRAP_MARKER))) return;
 
       // #2160: never restart the controller workflow inside task subagent
       // (child) sessions. V1 passes no input to this hook (verified in the
@@ -342,7 +346,7 @@ async function setup(ctx) {
         if (!bootstrap || !event.messages || !event.messages.length) return;
         const firstUser = event.messages.find(m => m.role === 'user');
         if (firstUser && (!firstUser.content || !firstUser.content.length)) return;
-        if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+        if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.startsWith(BOOTSTRAP_MARKER))) return;
 
         // #2160: the context event carries the sessionID directly. Skip the
         // controller bootstrap when this prompt belongs to a task subagent
