@@ -140,6 +140,26 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    # --- task-brief names the English-literal requirement when headings are translated ---
+    cat > "$repo/plan-es.md" <<'MD'
+# Plan: demo
+
+## Tarea 1: Banner
+
+## Tarea 2: Other
+MD
+    local es_out es_rc=0
+    es_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-es.md 1 2>&1)" || es_rc=$?
+    if [[ "$es_rc" -eq 3 ]] \
+        && [[ "$es_out" == *"English literal 'Task 1'"* ]] \
+        && [[ "$es_out" == *"## Tarea 1: Banner"* ]] \
+        && [[ "$es_out" == *"English word \"Task\""* ]]; then
+        pass "task-brief diagnoses translated Task headings"
+    else
+        fail "task-brief diagnoses translated Task headings"
+        echo "    rc=$es_rc out=$es_out"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

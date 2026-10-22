@@ -91,6 +91,11 @@ owns the code, in that task's own step style.]
 
 ## Task Structure
 
+The heading word `Task` is a machine-read token for `task-brief` / `task-start`
+(SDD and executing-plans). Keep it in English — `### Task N: …` — even when the
+rest of the plan is written in another language. Translating it to e.g. `Tarea`
+or `Aufgabe` makes those scripts report the task as missing.
+
 ````markdown
 ### Task N: [Component Name]
 

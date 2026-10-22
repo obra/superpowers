@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## Unreleased
+
+### Muse
+
+- **The SessionStart hook now runs on Debian and Ubuntu.** Muse's manifest ran `hooks/session-start`, a bash script, with `sh`. Where `sh` is dash, the hook failed with exit 2 and the bootstrap never loaded. It now runs with `bash`. Thanks @rahul05ranjan for the report and @twotnguyen for the fix. (#2528, #2533)
+
 ## v7.0.1 (2026-10-21)
 
 This release retunes brainstorming after its rebuild in v7.0.0. Many of you told us, rightly, that the new default questions got annoying fast and felt formulaic. Brainstorming now digs for context before it asks anything, and tries to ask better questions. We expect to keep tuning it, but we think it's better than it was.
