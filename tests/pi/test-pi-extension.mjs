@@ -34,6 +34,14 @@ function firstHandler(handlers, event) {
   return eventHandlers[0];
 }
 
+// Fire an event the way pi does: every registered handler runs, and an event
+// the extension does not subscribe to is a no-op.
+async function emit(handlers, event, payload) {
+  for (const handler of handlers.get(event) ?? []) {
+    await handler({ type: event, ...payload }, {});
+  }
+}
+
 function textOf(message) {
   if (typeof message.content === 'string') return message.content;
   return message.content
@@ -55,17 +63,16 @@ test('extension leaves package skill discovery to Pi and registers lifecycle hoo
   const { handlers } = await loadExtension();
 
   assert.equal((handlers.get('resources_discover') ?? []).length, 0, 'extension must not bypass package skill filters');
-  for (const event of ['session_start', 'session_compact', 'context', 'agent_end']) {
+  for (const event of ['session_start', 'session_compact', 'context']) {
     assert.equal((handlers.get(event) ?? []).length, 1, `missing ${event} handler`);
   }
   assert.equal((handlers.get('session_before_compact') ?? []).length, 0);
 });
 
-test('startup context injects the bootstrap as one user message until agent_end', async () => {
+test('startup context injects the bootstrap as one user message', async () => {
   const { handlers } = await loadExtension();
   const sessionStart = firstHandler(handlers, 'session_start');
   const context = firstHandler(handlers, 'context');
-  const agentEnd = firstHandler(handlers, 'agent_end');
 
   await sessionStart({ type: 'session_start', reason: 'startup' }, {});
 
@@ -86,10 +93,40 @@ test('startup context injects the bootstrap as one user message until agent_end'
 
   const alreadyInjected = await context({ type: 'context', messages: result.messages }, {});
   assert.equal(alreadyInjected, undefined, 'bootstrap should not duplicate when already present');
+});
 
-  await agentEnd({ type: 'agent_end', messages: [] }, {});
-  const afterEnd = await context({ type: 'context', messages: originalMessages }, {});
-  assert.equal(afterEnd, undefined, 'startup bootstrap should clear after agent_end');
+// pi emits agent_start/agent_end around every user prompt, not once per
+// session, and the messages a context handler returns are never written back
+// to session history. So every provider request of every prompt needs the
+// bootstrap injected again (#2083).
+test('every provider request of every prompt in a session carries the bootstrap', async () => {
+  const { handlers } = await loadExtension();
+  const context = firstHandler(handlers, 'context');
+
+  await emit(handlers, 'session_start', { reason: 'startup' });
+
+  const history = [];
+  const prompts = [
+    { text: 'first prompt', providerRequests: 1 },
+    { text: 'second prompt with a tool call', providerRequests: 2 },
+    { text: 'third prompt', providerRequests: 1 },
+  ];
+  for (const [promptIndex, prompt] of prompts.entries()) {
+    history.push({ role: 'user', content: [{ type: 'text', text: prompt.text }], timestamp: promptIndex });
+    await emit(handlers, 'agent_start', {});
+    for (let request = 1; request <= prompt.providerRequests; request += 1) {
+      await emit(handlers, 'turn_start', {});
+      const result = await context({ type: 'context', messages: structuredClone(history) }, {});
+      const label = `prompt ${promptIndex + 1}, provider request ${request}`;
+      assert.ok(result, `${label}: bootstrap missing`);
+      assert.equal(result.messages.length, history.length + 1, `${label}: expected exactly one bootstrap message`);
+      assert.match(textOf(result.messages[0]), /You have superpowers/, `${label}: bootstrap not first`);
+      history.push({ role: 'assistant', content: [{ type: 'text', text: 'ok' }], timestamp: promptIndex });
+      await emit(handlers, 'turn_end', {});
+    }
+    await emit(handlers, 'agent_end', { messages: [] });
+    await emit(handlers, 'agent_settled', {});
+  }
 });
 
 test('session_compact injects bootstrap after compaction summaries, not before compaction', async () => {

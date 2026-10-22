@@ -24,10 +24,9 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		injectBootstrap = true;
 	});
 
-	pi.on("agent_end", async () => {
-		injectBootstrap = false;
-	});
-
+	// Messages returned from a context handler are sent to the provider but never
+	// written to session history, so the bootstrap has to be injected into every
+	// provider request, on every prompt, for the whole session.
 	pi.on("context", async (event) => {
 		if (!injectBootstrap) return;
 		if (event.messages.some(messageContainsBootstrap)) return;
