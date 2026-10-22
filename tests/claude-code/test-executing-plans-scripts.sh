@@ -154,15 +154,62 @@ PLAN
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
     fi
 
-    # --- task-start: a repo with no commit yet has no BASE to record (#2242) ---
+    # --- no usable repository: every helper stops with one message (#2242, #2429) ---
+    # The same message for a new project and for a caller standing in the
+    # wrong directory (such as the plugin's skill directory, where git init
+    # is the wrong fix), so "init and commit" is only the new-project case.
     git init -q -b main "$TEST_ROOT/unborn"
     cp "$repo/plan.md" "$TEST_ROOT/unborn/plan.md"
-    rc=0
-    out="$(cd "$TEST_ROOT/unborn" && "$EP_SCRIPTS/task-start" plan.md 1 2>&1)" || rc=$?
-    if [[ "$rc" -eq 2 && "$out" == *"initial commit"* && "$out" != *"base:"* ]]; then
-        pass "task-start before the first commit exits 2 instead of printing a bogus BASE"
+    mkdir -p "$TEST_ROOT/no-repo"
+    cp "$repo/plan.md" "$TEST_ROOT/no-repo/plan.md"
+    local where msg
+    for where in unborn no-repo; do
+        msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $TEST_ROOT/$where). If this is a new project, run 'git init' and make a first commit, then rerun."
+        rc=0
+        out="$(cd "$TEST_ROOT/$where" && "$EP_SCRIPTS/task-start" plan.md 1 2>&1)" || rc=$?
+        if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+            pass "task-start in a $where directory exits 2 with the shared message"
+        else
+            fail "task-start in a $where directory exits 2 with the shared message"
+            echo "    exit: $rc"
+            echo "    got: $out"
+        fi
+        rc=0
+        out="$(cd "$TEST_ROOT/$where" && "$EP_SCRIPTS/task-done" plan.md 1 HEAD -- true 2>&1)" || rc=$?
+        if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+            pass "task-done in a $where directory exits 2 with the shared message"
+        else
+            fail "task-done in a $where directory exits 2 with the shared message"
+            echo "    exit: $rc"
+            echo "    got: $out"
+        fi
+    done
+    if [[ ! -e "$TEST_ROOT/unborn/.superpowers" && ! -e "$TEST_ROOT/no-repo/.superpowers" ]]; then
+        pass "nothing is written without a usable repository"
     else
-        fail "task-start before the first commit exits 2 instead of printing a bogus BASE"
+        fail "nothing is written without a usable repository"
+    fi
+
+    # --- outside any repository, task-start and task-done use the plan's (#2429) ---
+    # The same fallback task-brief takes, so BASE comes from the repository
+    # the brief and ledger were written into, not from the bare cwd.
+    rc=0
+    out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-start" "$repo/plan.md" 2 2>&1)" || rc=$?
+    local head_now
+    head_now="$(cd "$repo" && git rev-parse HEAD)"
+    if [[ "$rc" -eq 0 && "$out" == *"brief: $repo/.superpowers/sdd/plan/task-2-brief.md"* && "$out" == *"base: $head_now"* ]]; then
+        pass "task-start outside any repository takes the plan's repository and HEAD"
+    else
+        fail "task-start outside any repository takes the plan's repository and HEAD"
+        echo "    exit: $rc"
+        echo "    got: $out"
+    fi
+    rc=0
+    out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-done" "$repo/plan.md" 2 "$head_now" -- true 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 ]] && grep -q "^Task 2: complete (commits ${head_now:0:7}..${head_now:0:7}," "$repo/.superpowers/sdd/plan/progress.md"; then
+        pass "task-done outside any repository records into the plan's repository"
+    else
+        fail "task-done outside any repository records into the plan's repository"
         echo "    exit: $rc"
         echo "    got: $out"
     fi

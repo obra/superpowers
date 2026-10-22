@@ -30,7 +30,7 @@ head=$3
 
 # Invoke via bash rather than direct exec: some extractors (Python zipfile)
 # strip Unix exec bits when unpacking marketplace packages (#2040).
-repo=$("${BASH:-bash}" "$here/sdd-repo" "$plan")
+repo=$("${BASH:-bash}" "$here/sdd-repo" --with-commit "$plan")
 
 git -C "$repo" rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 git -C "$repo" rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }

@@ -322,26 +322,30 @@ PLAN
     local gf="$TEST_ROOT/greenfield"
     mkdir -p "$gf"
     printf '## Task 1: Scaffold the repo\n\nCreate files.\n' > "$gf/plan.md"
+    # One message for both ways to get here: a caller standing in the wrong
+    # directory (such as the plugin's own skill directory, where git init is
+    # the wrong fix) and a new project with no repository yet.
+    local no_repo_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $gf). If this is a new project, run 'git init' and make a first commit, then rerun."
     local cmd gf_err
     for cmd in "sdd-workspace plan.md" "task-brief plan.md 1"; do
         local script=${cmd%% *}
         rc=0
         # shellcheck disable=SC2086 # cmd is a fixed script name plus its arguments
         gf_err="$(cd "$gf" && "$SDD_SCRIPTS"/$cmd 2>&1 >/dev/null)" || rc=$?
-        if [[ "$rc" -eq 2 && "$gf_err" == *"git init"* && "$gf_err" != *"fatal:"* ]]; then
-            pass "$script outside any repository exits 2 telling you to git init"
+        if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg" ]]; then
+            pass "$script outside any repository exits 2 naming both fixes"
         else
-            fail "$script outside any repository exits 2 telling you to git init"
+            fail "$script outside any repository exits 2 naming both fixes"
             echo "    exit: $rc"
             echo "    stderr: $gf_err"
         fi
     done
     rc=0
     gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 2 && "$gf_err" == *"git init"* && "$gf_err" != *"fatal:"* ]]; then
-        pass "review-package outside any repository exits 2 telling you to git init"
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg" ]]; then
+        pass "review-package outside any repository exits 2 naming both fixes"
     else
-        fail "review-package outside any repository exits 2 telling you to git init"
+        fail "review-package outside any repository exits 2 naming both fixes"
         echo "    exit: $rc"
         echo "    stderr: $gf_err"
     fi
@@ -350,6 +354,19 @@ PLAN
     else
         fail "nothing is written outside a repository"
         find "$gf/.superpowers" | sed 's/^/    /'
+    fi
+
+    # A repository with no commit yet has no range to review, so
+    # review-package gets the same stop, naming its directory.
+    git init -q -b main "$gf"
+    rc=0
+    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg" && ! -e "$gf/.superpowers" ]]; then
+        pass "review-package in a repository with no commit exits 2 with the same message"
+    else
+        fail "review-package in a repository with no commit exits 2 with the same message"
+        echo "    exit: $rc"
+        echo "    stderr: $gf_err"
     fi
 
     # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---

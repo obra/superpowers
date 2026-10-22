@@ -11,26 +11,40 @@
 #
 # The plan's repository is the fallback for a caller whose current directory
 # is outside any repository, such as the skill's own directory in an
-# installed plugin. With neither, there is no repository to hold the
-# workspace or the commits under review, so say how to get one rather than
-# guess a directory.
+# installed plugin. With neither, there is nothing to hold the workspace, so
+# stop rather than guess a directory. --with-commit also stops on a
+# repository with no commit yet, for callers that need HEAD as a BASE or a
+# review range. The message covers both ways to get here: running from the
+# wrong directory (where 'git init' would be the wrong fix) and a new
+# project that has no repository or commit yet.
 #
-# Single source of truth for which repository the SDD scripts work in, so
-# sdd-workspace and review-package cannot disagree.
+# Single source of truth for which repository the SDD and executing-plans
+# scripts work in, so no two of them can disagree.
 #
-# Usage: sdd-repo PLAN_FILE
+# Usage: sdd-repo [--with-commit] PLAN_FILE
 set -euo pipefail
 
+with_commit=false
+if [ "${1:-}" = "--with-commit" ]; then
+  with_commit=true
+  shift
+fi
+
 if [ $# -ne 1 ]; then
-  echo "usage: sdd-repo PLAN_FILE" >&2
+  echo "usage: sdd-repo [--with-commit] PLAN_FILE" >&2
   exit 2
 fi
 
 plan=$1
 
-git rev-parse --show-toplevel 2>/dev/null && exit 0
-git -C "$(dirname "$plan")" rev-parse --show-toplevel 2>/dev/null && exit 0
+root=$(git rev-parse --show-toplevel 2>/dev/null) \
+  || root=$(git -C "$(dirname "$plan")" rev-parse --show-toplevel 2>/dev/null) \
+  || root=""
 
-echo "not in a git repository: neither the current directory ($PWD) nor the plan's directory ($(dirname "$plan")) is inside one." >&2
-echo "SDD keeps each plan's workspace at the repository root and reviews commits, so it needs a repository. For a new project, run 'git init' in the project root and make an initial commit, then rerun." >&2
+if [ -n "$root" ] && { [ "$with_commit" = false ] || git -C "$root" rev-parse --verify --quiet HEAD >/dev/null; }; then
+  printf '%s\n' "$root"
+  exit 0
+fi
+
+echo "SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $PWD). If this is a new project, run 'git init' and make a first commit, then rerun." >&2
 exit 2
