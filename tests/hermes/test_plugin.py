@@ -39,10 +39,11 @@ def _fire_pre_llm(ctx, **kwargs):
 
 
 class TestPluginRegistration:
-    def test_register_attaches_only_pre_llm_call_hook(self, mock_ctx):
+    def test_register_attaches_bootstrap_and_compaction_hooks(self, mock_ctx):
         plugin = _load_plugin()
         plugin.register(mock_ctx)
-        assert list(mock_ctx._hooks.keys()) == ["pre_llm_call"]
+        assert sorted(mock_ctx._hooks.keys()) == [
+            "on_session_finalize", "post_compaction", "pre_llm_call"]
 
     def test_register_registers_every_stock_skill_as_path(self, mock_ctx):
         plugin = _load_plugin()
@@ -176,3 +177,73 @@ class TestSkillDescriptions:
     def test_frontmatter_value_parsing(self, block, expected):
         plugin = _load_plugin()
         assert plugin._frontmatter_value(block, "description") == expected
+
+
+def _fire_compaction(ctx, **kwargs):
+    defaults = {"session_id": "s1", "old_session_id": "", "kind": "summarize",
+                "reason": "pre_api", "before_tokens": 100, "after_tokens": 10,
+                "messages_removed": 5}
+    defaults.update(kwargs)
+    return ctx._hooks["post_compaction"](**defaults)
+
+
+class TestPostCompactionReinject:
+    def _ctx(self, mock_ctx):
+        _load_plugin().register(mock_ctx)
+        return mock_ctx
+
+    def test_reinjects_once_after_summarizing_compaction(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        assert _fire_pre_llm(ctx) is None
+        _fire_compaction(ctx)
+        result = _fire_pre_llm(ctx, conversation_history=[{"role": "user", "content": "summary"}])
+        assert BOOTSTRAP_MARKER in result["context"]
+        assert _fire_pre_llm(ctx) is None
+
+    def test_micro_and_provider_native_compactions_reinject(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        for kind in ("micro_summarize", "provider_native"):
+            _fire_compaction(ctx, kind=kind)
+            assert BOOTSTRAP_MARKER in _fire_pre_llm(ctx)["context"]
+
+    def test_tool_result_pruning_does_not_reinject(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        _fire_compaction(ctx, kind="prune_tool_results")
+        assert _fire_pre_llm(ctx) is None
+
+    def test_only_the_compacted_session_reinjects(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        _fire_compaction(ctx, session_id="s2", old_session_id="s1")
+        assert _fire_pre_llm(ctx, session_id="s1") is None
+        assert BOOTSTRAP_MARKER in _fire_pre_llm(ctx, session_id="s2")["context"]
+
+    def test_skips_when_bootstrap_survived_in_api_content(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        _fire_compaction(ctx)
+        history = [{"role": "user", "content": "hi",
+                    "api_content": f"hi\n\n<EXTREMELY_IMPORTANT>\n{BOOTSTRAP_MARKER}"}]
+        assert _fire_pre_llm(ctx, conversation_history=history) is None
+
+    def test_skips_when_bootstrap_survived_in_multimodal_part(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        _fire_compaction(ctx)
+        history = [{"role": "user", "content": [
+            {"type": "text", "text": "hi"},
+            {"type": "text", "text": f"<EXTREMELY_IMPORTANT>\n{BOOTSTRAP_MARKER}"}]}]
+        assert _fire_pre_llm(ctx, conversation_history=history) is None
+
+    def test_quoted_marker_outside_user_injection_does_not_suppress(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        _fire_compaction(ctx)
+        history = [
+            {"role": "assistant", "content": f"<EXTREMELY_IMPORTANT>\n{BOOTSTRAP_MARKER}"},
+            {"role": "tool", "content": BOOTSTRAP_MARKER},
+            {"role": "user", "content": f"why does it say {BOOTSTRAP_MARKER}?"},
+        ]
+        assert BOOTSTRAP_MARKER in _fire_pre_llm(ctx, conversation_history=history)["context"]
+
+    def test_finalized_session_is_forgotten(self, mock_ctx):
+        ctx = self._ctx(mock_ctx)
+        _fire_compaction(ctx, session_id="s2")
+        ctx._hooks["on_session_finalize"](session_id="s2", platform="cli")
+        assert _fire_pre_llm(ctx, session_id="s2") is None

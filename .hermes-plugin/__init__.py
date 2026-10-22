@@ -90,6 +90,28 @@ def _build_bootstrap(skills_dir: str) -> str:
     )
 
 
+def _history_has_bootstrap(history) -> bool:
+    """True when a user message still carries the injected bootstrap block.
+
+    Hermes appends injected context to the user message, in its
+    ``api_content`` sidecar (string turns) or as an extra text part
+    (multimodal turns). Only user messages count, and only the opening of the
+    injected block, so a quoted marker cannot suppress the refresh.
+    """
+    block_start = f"<EXTREMELY_IMPORTANT>\n{BOOTSTRAP_MARKER}"
+    for msg in history or ():
+        if not isinstance(msg, dict) or msg.get("role") != "user":
+            continue
+        for field in ("content", "api_content"):
+            value = msg.get(field)
+            parts = value if isinstance(value, list) else [value]
+            for part in parts:
+                text = part.get("text") if isinstance(part, dict) else part
+                if isinstance(text, str) and block_start in text:
+                    return True
+    return False
+
+
 def register(ctx):
     skills_dir = _skills_dir()
     bootstrap = _build_bootstrap(skills_dir)
@@ -105,10 +127,23 @@ def register(ctx):
                 description = _frontmatter_value(f.read(), "description")
             ctx.register_skill(name, Path(skill_md), description=description)
 
+    # A summarizing compaction can drop the first-turn bootstrap; re-inject it
+    # on the session's next turn (tool-result pruning keeps user messages).
+    pending_reinject = set()
+
+    def post_compaction(session_id=None, kind=None, **kwargs):
+        if session_id and kind != "prune_tool_results":
+            pending_reinject.add(session_id)
+
+    def on_session_finalize(session_id=None, old_session_id=None, **kwargs):
+        # Drop sessions torn down before their next turn.
+        pending_reinject.discard(session_id)
+        pending_reinject.discard(old_session_id)
+
     # pre_llm_call returning {"context": ...} is the documented injection path
     # (on_session_start return values are ignored, and ctx.inject_message
     # refuses from that hook — verified empirically 2026-07-23). The context is
-    # appended to the first turn's user message.
+    # appended to the current turn's user message.
     def pre_llm_call(
         session_id=None,
         user_message=None,
@@ -119,7 +154,16 @@ def register(ctx):
         **kwargs,
     ):
         if is_first_turn:
+            pending_reinject.discard(session_id)
             return {"context": bootstrap}
+        if session_id in pending_reinject:
+            pending_reinject.discard(session_id)
+            # The first compaction protects the head, so the bootstrap may
+            # still be in history; don't inject a second copy.
+            if not _history_has_bootstrap(conversation_history):
+                return {"context": bootstrap}
         return None
 
     ctx.register_hook("pre_llm_call", pre_llm_call)
+    ctx.register_hook("post_compaction", post_compaction)
+    ctx.register_hook("on_session_finalize", on_session_finalize)
