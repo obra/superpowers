@@ -164,10 +164,49 @@ PLAN
         fail "task-done records the TAP summary rather than the trailing duration line"
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null
     fi
+
+    # --- task-done: spec-reporter output also records the summary ---
+    # Since Node 23 the non-TTY default reporter is `spec`, not `tap`, so a
+    # redirected `node --test` marks its summary with `ℹ` (\342\204\271)
+    # instead of `#` and still ends on the duration line. Octal escapes keep
+    # this test independent of the file's own encoding.
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 4 "$head" -- sh -c 'printf "\342\234\224 a (0.5792ms)\n\342\234\224 b (0.0984ms)\n\342\204\271 tests 4\n\342\204\271 suites 0\n\342\204\271 pass 4\n\342\204\271 fail 0\n\342\204\271 duration_ms 70.9626\n"')"
+    if grep -q "Task 4: complete .* → 4/4 pass)" "$ledger"; then
+        pass "task-done records the spec-reporter summary rather than the duration line"
+    else
+        fail "task-done records the spec-reporter summary rather than the duration line"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null
+    fi
+
+    # Checked after both reporters have been exercised, so it covers each one.
     if ! grep -o '→ [^)]*)$' "$ledger" | grep -q 'duration_ms'; then
         pass "task-done keeps the duration line out of the ledger result"
     else
         fail "task-done keeps the duration line out of the ledger result"
+    fi
+
+    # --- task-done: a run that found no tests is not recorded as a pass ---
+    # An empty glob still exits 0, and the summary then reads `tests 0` /
+    # `pass 0`. Recording that as "0/0 pass" would read green in the ledger
+    # while nothing actually ran -- the task would look verified when the
+    # suite had silently disappeared.
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 5 "$head" -- sh -c 'printf "No test files found\n\342\204\271 tests 0\n\342\204\271 pass 0\n\342\204\271 fail 0\n\342\204\271 duration_ms 3.1\n"')"
+    if grep -q "Task 5: complete .* → 0 tests ran)" "$ledger"; then
+        pass "task-done records a zero-test run as such, not as a pass"
+    else
+        fail "task-done records a zero-test run as such, not as a pass"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null
+    fi
+
+    # --- task-done: never builds a ratio from two unrelated lines ---
+    # The counts are read independently, so a stray summary-shaped line after
+    # the real summary could otherwise yield an impossible "7/4 pass".
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 6 "$head" -- sh -c 'printf "# tests 4\n# pass 4\n# duration_ms 1\nSummary follows\npass 7\n"')"
+    if ! grep -q '7/4' "$ledger"; then
+        pass "task-done does not report more passes than tests"
+    else
+        fail "task-done does not report more passes than tests"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null
     fi
 
     echo
