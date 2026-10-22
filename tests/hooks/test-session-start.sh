@@ -294,27 +294,57 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     "$bash_bin" -c 'cd "$1" && exec "$2" "$3"' _ "$backslash_cwd" "$bash_bin" "$backslash_hook"
 
-# When cat is on PATH, the JSON must still go through it: the pipe absorbs
-# EPIPE on Windows + Git Bash (#1612). The stub records that it ran.
-cat_stub_dir="$TEST_ROOT/cat-stub/bin"
-cat_marker="$TEST_ROOT/cat-stub/used"
-mkdir -p "$cat_stub_dir"
-printf '#!%s\n: > "%s"\nexec /bin/cat "$@"\n' "$bash_bin" "$cat_marker" > "$cat_stub_dir/cat"
-chmod +x "$cat_stub_dir/cat"
-cat_stub_home="$(make_home cat-stub)"
-assert_command_output \
-    "session-start with cat on PATH emits nested additionalContext" \
-    "nested" \
-    "" \
-    "" \
-    "$cat_stub_home" \
-    PATH="$cat_stub_dir" \
-    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-    "$bash_bin" "$HOOK_UNDER_TEST"
-if [[ -f "$cat_marker" ]]; then
-    pass "session-start pipes its JSON through cat when cat is on PATH"
+# EPIPE on Windows + Git Bash (#1612): the harness can close the hook's stdout
+# before the JSON is written. The hook must still exit 0 with nothing on
+# stderr, directly and through run-hook.cmd. The reader (:) exits without
+# reading, so the write usually lands on a closed pipe.
+assert_closed_stdout() {
+    local description="$1"
+    shift
+    local err_file="$TEST_ROOT/closed-stdout.err"
+    local status
+    set +e
+    env -i PATH="${PATH:-}" HOME="$TEST_ROOT" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" "$@" 2>"$err_file" | :
+    status="${PIPESTATUS[0]}"
+    set -e
+    if [[ "$status" -eq 0 && ! -s "$err_file" ]]; then
+        pass "$description"
+    else
+        fail "$description"
+        echo "    exit $status, stderr:"
+        sed 's/^/      /' "$err_file"
+    fi
+}
+
+for _ in 1 2 3; do
+    assert_closed_stdout \
+        "session-start exits 0 silently when stdout is closed early" \
+        "$bash_bin" "$HOOK_UNDER_TEST"
+    assert_closed_stdout \
+        "run-hook.cmd exits 0 silently when stdout is closed early" \
+        "$bash_bin" "$WRAPPER_UNDER_TEST" session-start
+done
+
+# Each fork costs tens of milliseconds under Git Bash on Windows, and this hook
+# runs on every startup, /clear and compaction (#2081). Neither the hook nor
+# the wrapper may start a child process. Counted with Linux strace (Git for
+# Windows ships an unrelated strace.exe with other options).
+if [[ "$(uname -s)" == Linux ]] && command -v strace >/dev/null 2>&1; then
+    fork_log="$TEST_ROOT/forks.log"
+    for target in "$HOOK_UNDER_TEST" "$WRAPPER_UNDER_TEST session-start"; do
+        # shellcheck disable=SC2086 # split the wrapper's argument off its path
+        env -i PATH="${PATH:-}" HOME="$TEST_ROOT" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+            strace -f -qq -e trace=fork,vfork,clone,clone3 -o "$fork_log" \
+            "$bash_bin" $target > /dev/null
+        forks="$(grep -c -E '(fork|clone3?)\(' "$fork_log" || true)"
+        if [[ "$forks" -eq 0 ]]; then
+            pass "${target##*/} starts no child processes"
+        else
+            fail "${target##*/} starts no child processes ($forks started)"
+        fi
+    done
 else
-    fail "session-start pipes its JSON through cat when cat is on PATH"
+    echo "  [SKIP] child-process count: needs Linux strace"
 fi
 
 if [[ "$FAILURES" -gt 0 ]]; then
