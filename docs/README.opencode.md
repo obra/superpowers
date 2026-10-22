@@ -126,7 +126,7 @@ The plugin does two things, using host-flavor-specific APIs:
     - **V2:** via the `setup()` function using `ctx.skill.transform()` (V2 native API, confirmed active at runtime)
 2. **Injects bootstrap context** with a flavor-specific tool mapping: V1 sessions get the V1 tool names below, and V2 sessions get the V2 names.
     - **V1:** via `experimental.chat.messages.transform` hook
-    - **V2:** via `ctx.session.hook("context")` — the V2 equivalent (confirmed active at runtime)
+    - **V2:** via `ctx.session.hook()` on `context`, `compaction`, and `generate` — the V2 equivalent (confirmed active at runtime). Registering on all three keeps compaction requests on the same cached prompt prefix as normal turns.
 
 Controller sessions receive the using-superpowers bootstrap in transient model
 context. Delegated child sessions keep access to native skills but do not receive
@@ -234,7 +234,7 @@ package name, not a local directory.
 ### Bootstrap not appearing
 
 - **V1:** Check OpenCode version supports `experimental.chat.messages.transform` hook. Restart OpenCode after config changes.
-- **V2:** The plugin uses `ctx.session.hook("context")` for bootstrap injection. Verify the plugin loaded via `opencode api get /api/plugin`. Restart with `opencode service restart` after config changes. The `opencode2` command may be available as an alias.
+- **V2:** The plugin uses `ctx.session.hook()` on `context`, `compaction`, and `generate` for bootstrap injection. Verify the plugin loaded via `opencode api get /api/plugin`. Restart with `opencode service restart` after config changes. The `opencode2` command may be available as an alias.
 
 ## Getting Help
 
