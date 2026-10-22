@@ -285,6 +285,119 @@ PLAN
         echo "    stderr: $es_err"
     fi
 
+    # --- An unclosed fence hides every later Task heading (#2436) ---
+    cat > "$repo/plan-unclosed.md" <<'PLAN'
+# Example Plan
+
+### Task 1: First task
+
+```typescript
+const x = 1
+```
+
+```typescript
+const y = 2
+
+### Task 2: Second task
+
+TASK-2-MARKER
+
+### Task 3: Third task
+
+TASK-3-MARKER
+PLAN
+    local fence_out="$TEST_ROOT/unclosed-brief.md" fence_err
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 4 && ! -e "$fence_out" && "$fence_err" == *"line 9"*"never closes"* ]]; then
+        pass "task-brief refuses a brief that an unclosed fence would run to EOF (exit 4, names the line)"
+    else
+        fail "task-brief refuses a brief that an unclosed fence would run to EOF (exit 4, names the line)"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+        echo "    brief: $(cat "$fence_out" 2>/dev/null)"
+    fi
+
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed.md 2 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$fence_err" == *"never closes"* ]]; then
+        pass "task-brief names the unclosed fence when it hides the requested heading"
+    else
+        fail "task-brief names the unclosed fence when it hides the requested heading"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+    fi
+
+    # An unclosed fence in a later task does not touch an earlier task's brief.
+    sed 's/^### Task 1: First task$/### Task 0: Before/' "$repo/plan-unclosed.md" \
+        | sed '1a\
+\
+### Task 1: Clean\
+\
+CLEAN-MARKER' > "$repo/plan-unclosed-later.md"
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed-later.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && -z "$fence_err" ]] && grep -q CLEAN-MARKER "$fence_out" && ! grep -q 'Task 0' "$fence_out"; then
+        pass "an unclosed fence in a later task leaves an earlier task's brief alone"
+    else
+        fail "an unclosed fence in a later task leaves an earlier task's brief alone"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+        echo "    brief: $(cat "$fence_out" 2>/dev/null)"
+    fi
+
+    # A stray fence that hides no Task heading (seen in real plans as a lone
+    # ``` on the last line) leaves the brief complete: brief it, and warn.
+    cat > "$repo/plan-stray-fence.md" <<'PLAN'
+### Task 1: First
+
+BODY-1
+
+### Task 2: Last
+
+BODY-2
+```
+PLAN
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-stray-fence.md 2 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && "$fence_err" == *"warning"*"line 8"*"never closes"* ]] \
+        && grep -q BODY-2 "$fence_out" && ! grep -q BODY-1 "$fence_out"; then
+        pass "a stray fence that hides no Task heading briefs the task and warns"
+    else
+        fail "a stray fence that hides no Task heading briefs the task and warns"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+        echo "    brief: $(cat "$fence_out" 2>/dev/null)"
+    fi
+
+    # An unclosed fence that hides only some later prose, but no Task
+    # heading, also leaves the last task's brief complete.
+    printf '### Task 1: Only\n\nBODY-1\n\n```sh\necho hi\n\n## Notes\n\nNOT-A-TASK\n' > "$repo/plan-stray-prose.md"
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-stray-prose.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && "$fence_err" == *"warning"* ]] && grep -q BODY-1 "$fence_out"; then
+        pass "an unclosed fence that hides no Task heading does not block the brief"
+    else
+        fail "an unclosed fence that hides no Task heading does not block the brief"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+    fi
+
+    # When the open fence hides every Task heading, the fence is the
+    # diagnosis: the plan's English Task headings must not also draw the
+    # "use the English word Task" hint, which would contradict it.
+    printf '## Phase 1: Setup\n\n```sh\necho hi\n\n### Task 1: Hidden\n\nBODY-1\n' > "$repo/plan-fence-hides-all.md"
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fence-hides-all.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$fence_err" == *"line 3"*"never closes"* && "$fence_err" == *"task 1 not found"* \
+        && "$fence_err" != *"English word"* ]]; then
+        pass "a fence hiding every Task heading gets the fence message, not the English-word hint"
+    else
+        fail "a fence hiding every Task heading gets the fence message, not the English-word hint"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

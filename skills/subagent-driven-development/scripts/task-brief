@@ -41,8 +41,20 @@ fi
 # the plan is in. A plan with no Task headings at all usually translated it
 # ("## Tarea 1"), so list the headings shaped like tasks before the
 # not-found error instead of implying the plan has no task 1 (#2496).
-awk -v n="$n" '
-  /^```/ { infence = !infence }
+#
+# A fence that never closes hides every Task heading after it (#2436). When
+# it hides one while the requested task is being captured, that task's end
+# can't be found and the brief would run on through every later task: refuse
+# (exit 4) rather than hand an implementer several tasks as its requirements.
+# When it hides the requested heading itself, say so before the not-found
+# error. A stray fence that hides no Task heading (real plans end with a lone
+# ``` line) leaves the brief complete, so brief it with a warning.
+# The plan path goes through ENVIRON, not -v, which would mangle the
+# backslashes of a Windows path.
+rc=0
+TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
+  /^```/ { infence = !infence; if (infence) { fence_line = NR; hidden = 0 } }
+  infence && /^#+[ \t]+Task[ \t]/ { hidden = 1 }
   !infence && /^#+[ \t]+Task[ \t]/ {
     id = $0
     sub(/^#+[ \t]+Task[ \t]+/, "", id)
@@ -59,14 +71,27 @@ awk -v n="$n" '
     }
   }
   !infence && /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5 { shaped_heading[++shaped] = $0 }
-  intask { print }
+  intask { print; found = 1 }
   END {
-    if (!tasks && shaped) {
+    where = "the code fence opened at line " fence_line " of " ENVIRON["TASK_BRIEF_PLAN"] " never closes"
+    if (infence && hidden && (intask || !found)) {
+      print "task-brief: " where ", so no Task heading after it can be seen; close that fence in the plan and rerun" | "cat >&2"
+      if (intask) exit 4
+    } else if (infence && intask) {
+      print "task-brief: warning: " where "; it hides no Task heading, so this brief is complete" | "cat >&2"
+    }
+    # An open fence that hid Task headings already explains why none were
+    # seen; the English-word hint would contradict it.
+    if (!tasks && shaped && !(infence && hidden)) {
       print "task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:" | "cat >&2"
       for (i = 1; i <= shaped; i++) print "  " shaped_heading[i] | "cat >&2"
     }
   }
-' "$plan" > "$out"
+' "$plan" > "$out" || rc=$?
+if [ "$rc" -ne 0 ]; then
+  if [ -f "$out" ]; then rm -f "$out"; fi
+  exit "$rc"
+fi
 
 if [ ! -s "$out" ]; then
   echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
