@@ -59,4 +59,19 @@ case "$0" in
 esac
 SCRIPT_NAME="$1"
 shift
-exec "${BASH:-bash}" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+
+# Without bash installed, the harness runs this file with zsh or sh and $BASH
+# is unset (#2503). session-start runs unchanged under zsh, so fall back to
+# it, and otherwise exit quietly like the Windows half: the plugin still
+# works, just without SessionStart context injection.
+if [ -n "${BASH:-}" ]; then
+  shell="$BASH"
+elif command -v bash >/dev/null 2>&1; then
+  shell="bash"
+elif command -v zsh >/dev/null 2>&1; then
+  shell="zsh"
+else
+  exit 0
+fi
+
+exec "$shell" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
