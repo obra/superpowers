@@ -252,6 +252,39 @@ PLAN
         fi
     done
 
+    # --- Translated task headings: say so instead of "not found" (#2496) ---
+    cat > "$repo/plan-es.md" <<'PLAN'
+# Plan: demo
+
+## Tarea 1: Banner
+
+**Archivos:**
+
+## Tarea 2: Segunda
+PLAN
+    local es_err
+    rc=0
+    es_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-es.md 1 "$id_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$es_err" == *'English word "Task"'* \
+        && "$es_err" == *"## Tarea 1: Banner"* && "$es_err" == *"## Tarea 2: Segunda"* ]]; then
+        pass "task-brief on a plan with no Task headings names the headings it saw"
+    else
+        fail "task-brief on a plan with no Task headings names the headings it saw"
+        echo "    exit: $rc"
+        echo "    stderr: $es_err"
+    fi
+
+    # A plan that has Task headings, just not this one, gets the plain error.
+    rc=0
+    es_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-ids.md 99 "$id_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$es_err" == "task 99 not found in plan-ids.md (no heading matching 'Task 99')" ]]; then
+        pass "a missing task in a plan with Task headings gets only the not-found line"
+    else
+        fail "a missing task in a plan with Task headings gets only the not-found line"
+        echo "    exit: $rc"
+        echo "    stderr: $es_err"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

@@ -36,12 +36,18 @@ fi
 # whose ID extends the requested one with a letter or dot is a sub-task and
 # stays in its brief (### Task 7 keeps #### Task 7a), as it always has.
 # Depth alone is not enough: plans drift from "## Task 1" to "### Task 2".
+#
+# The word stays the English literal "Task", whatever language the rest of
+# the plan is in. A plan with no Task headings at all usually translated it
+# ("## Tarea 1"), so list the headings shaped like tasks before the
+# not-found error instead of implying the plan has no task 1 (#2496).
 awk -v n="$n" '
   /^```/ { infence = !infence }
   !infence && /^#+[ \t]+Task[ \t]/ {
     id = $0
     sub(/^#+[ \t]+Task[ \t]+/, "", id)
     if (match(id, /^[A-Za-z0-9]+(\.[A-Za-z0-9]+)*/) && substr(id, 1, RLENGTH) ~ /[0-9]/) {
+      tasks++
       id = substr(id, 1, RLENGTH)
       match($0, /^#+/)
       subtask = intask && RLENGTH > level && substr(id, 1, length(n)) == n \
@@ -52,7 +58,14 @@ awk -v n="$n" '
       }
     }
   }
+  !infence && /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5 { shaped_heading[++shaped] = $0 }
   intask { print }
+  END {
+    if (!tasks && shaped) {
+      print "task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:" | "cat >&2"
+      for (i = 1; i <= shaped; i++) print "  " shaped_heading[i] | "cat >&2"
+    }
+  }
 ' "$plan" > "$out"
 
 if [ ! -s "$out" ]; then
