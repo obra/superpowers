@@ -140,6 +140,59 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    # --- task-brief matches a task number exactly, not as a regex prefix (#2405) ---
+    cat > "$repo/plan-dotted.md" <<'PLAN'
+# Plan Dotted
+
+## Task 1.1: alpha
+
+Alpha body.
+
+## Task 1.2: beta
+
+Beta body.
+
+## Task 2.1: gamma
+
+Gamma body.
+
+## Task 201: decoy
+
+Decoy body.
+PLAN
+
+    rc=0
+    local dotted_err
+    dotted_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-dotted.md 1 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 ]]; then
+        pass "task-brief '1' does not prefix-match 'Task 1.1'/'Task 1.2'"
+    else
+        fail "task-brief '1' does not prefix-match 'Task 1.1'/'Task 1.2'"
+        echo "    exit: $rc"
+        echo "    stderr: $dotted_err"
+    fi
+
+    local dotted_out dotted_path
+    dotted_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-dotted.md 2.1)"
+    dotted_path="$(printf '%s\n' "$dotted_out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
+    if [[ -f "$dotted_path" ]] && grep -q 'Gamma body.' "$dotted_path" && ! grep -q 'Decoy body.' "$dotted_path"; then
+        pass "task-brief '2.1' matches only 'Task 2.1', not 'Task 201'"
+    else
+        fail "task-brief '2.1' matches only 'Task 2.1', not 'Task 201'"
+        echo "    brief: $(cat "$dotted_path" 2>/dev/null)"
+    fi
+
+    rc=0
+    local inject_err
+    inject_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-dotted.md '2(' 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 4 ]]; then
+        pass "task-brief rejects a task number with regex metacharacters instead of crashing awk"
+    else
+        fail "task-brief rejects a task number with regex metacharacters instead of crashing awk"
+        echo "    exit: $rc"
+        echo "    stderr: $inject_err"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

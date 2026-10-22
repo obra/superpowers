@@ -18,6 +18,20 @@ plan=$1
 n=$2
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
+# Validate before using $n in a filename or an awk pattern: task-brief's
+# own headings are only ever digits, optionally dot-separated (e.g. "3" or
+# "2.1"). Anything else either (a) could never match a real heading and
+# would previously fail silently, or (b) once reached the awk program
+# unescaped and could be interpreted as regex metacharacters -- a plan
+# number containing "(" crashed awk outright, and "2|3" or "." matched
+# headings it had no business matching (#2405).
+case "$n" in
+  ''|*[!0-9.]*|*..*|.*|*.)
+    echo "invalid task number: '${n}' (expected digits, optionally dot-separated, e.g. 3 or 2.1)" >&2
+    exit 4
+    ;;
+esac
+
 if [ $# -eq 3 ]; then
   out=$3
 else
@@ -27,10 +41,17 @@ else
   out="$dir/task-${n}-brief.md"
 fi
 
+# Match the task heading's full number (digits and dots) and compare it to
+# $n as an exact string, instead of interpolating $n into the regex. A
+# prefix match previously let "1" swallow "1.1"/"1.2" (the "." terminator
+# a bare digit search relied on is itself a valid id character) and let
+# "2.1" swallow "201" (the "." in "2.1" matched as "any character").
 awk -v n="$n" '
   /^```/ { infence = !infence }
-  !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
-    intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+  !infence && match($0, /^#+[ \t]+Task[ \t]+[0-9]+(\.[0-9]+)*/) {
+    heading_num = substr($0, RSTART, RLENGTH)
+    sub(/^#+[ \t]+Task[ \t]+/, "", heading_num)
+    intask = (heading_num == n)
   }
   intask { print }
 ' "$plan" > "$out"
