@@ -109,6 +109,52 @@ else
 fi
 
 echo ""
+echo "--- start-server.sh relative --project-dir ---"
+
+cat > "$TEST_DIR/fake-bin/node" <<'EOF'
+#!/usr/bin/env bash
+echo "CAPTURED_BRAINSTORM_DIR=${BRAINSTORM_DIR:-__UNSET__}"
+exit 0
+EOF
+chmod +x "$TEST_DIR/fake-bin/node"
+
+# The script cds into its own directory before starting the server, so a
+# relative --project-dir must be resolved against the caller's cwd first.
+# Covers an existing dir and a not-yet-created one, both with spaces.
+for relative_dir in "." "new project dir"; do
+  caller_dir="$TEST_DIR/caller with space"
+  rm -rf "$caller_dir"
+  mkdir -p "$caller_dir"
+  expected_root="$(cd "$caller_dir" && pwd)"
+  if [[ "$relative_dir" != "." ]]; then
+    expected_root="$expected_root/$relative_dir"
+  fi
+
+  captured=$(
+    cd "$caller_dir" &&
+      PATH="$TEST_DIR/fake-bin:$PATH" \
+        MSYSTEM="" \
+        bash "$START_SCRIPT" --project-dir "$relative_dir" --foreground 2>&1 || true
+  )
+  brainstorm_dir=$(echo "$captured" | grep "CAPTURED_BRAINSTORM_DIR=" | head -1 | sed 's/CAPTURED_BRAINSTORM_DIR=//')
+
+  case "$brainstorm_dir" in
+    "$expected_root/.superpowers/brainstorm/"*)
+      pass "--project-dir '$relative_dir' gives the server an absolute session dir under the caller's cwd" ;;
+    *)
+      fail "--project-dir '$relative_dir' gives the server an absolute session dir under the caller's cwd" \
+           "expected prefix '$expected_root/.superpowers/brainstorm/', got: $captured" ;;
+  esac
+
+  if [[ -n "$brainstorm_dir" && -f "$brainstorm_dir/state/server.pid" ]]; then
+    pass "--project-dir '$relative_dir' writes server.pid into the project session dir"
+  else
+    fail "--project-dir '$relative_dir' writes server.pid into the project session dir" \
+         "no server.pid under '$brainstorm_dir/state', output: $captured"
+  fi
+done
+
+echo ""
 echo "--- Results: $passed passed, $failed failed ---"
 if [[ $failed -gt 0 ]]; then
   exit 1
