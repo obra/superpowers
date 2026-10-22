@@ -261,6 +261,49 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     "$bash_bin" "$WRAPPER_UNDER_TEST" session-start
 
+# On a Unix system with zsh but no bash (#2503), the harness can't honour
+# shell:"bash" and runs run-hook.cmd with zsh or sh. $BASH is unset there, so
+# the wrapper must find zsh, which runs session-start unchanged. sh only
+# counts when it isn't bash (Git Bash's and macOS's sh are bash, which sets
+# $BASH and never reaches the fallback).
+posix_sh="$(command -v sh)"
+if [[ -n "$(env -i "$posix_sh" -c 'echo "${BASH:-}"')" ]]; then
+    posix_sh=""
+fi
+no_bash_bin="$TEST_ROOT/no-bash/bin"
+mkdir -p "$no_bash_bin"
+if zsh_bin="$(command -v zsh)"; then
+    ln -s "$zsh_bin" "$no_bash_bin/zsh"
+    for runner_bin in "$zsh_bin" ${posix_sh:+"$posix_sh"}; do
+        assert_command_output \
+            "run-hook.cmd run by ${runner_bin##*/} without bash dispatches session-start through zsh" \
+            "nested" \
+            "" \
+            "" \
+            "$(make_home "no-bash-${runner_bin##*/}")" \
+            PATH="$no_bash_bin" \
+            CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+            "$runner_bin" "$WRAPPER_UNDER_TEST" session-start
+    done
+else
+    echo "  [SKIP] run-hook.cmd without bash: zsh not installed"
+fi
+
+# With neither bash nor zsh, exit 0 quietly like the Windows half: the plugin
+# still works, just without the bootstrap.
+if [[ -n "$posix_sh" ]]; then
+    no_shell_rc=0
+    no_shell_out="$(env -i PATH="$TEST_ROOT/no-shell" HOME="$TEST_ROOT" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+        "$posix_sh" "$WRAPPER_UNDER_TEST" session-start 2>&1)" || no_shell_rc=$?
+    if [[ "$no_shell_rc" -eq 0 && -z "$no_shell_out" ]]; then
+        pass "run-hook.cmd with neither bash nor zsh exits 0 with no output"
+    else
+        fail "run-hook.cmd with neither bash nor zsh exits 0 with no output (rc=$no_shell_rc, out=$no_shell_out)"
+    fi
+else
+    echo "  [SKIP] run-hook.cmd with neither bash nor zsh: sh is bash here"
+fi
+
 # Run by bare filename from inside hooks/ ($0 has no slash), the plugin root
 # must still resolve.
 bare_name_home="$(make_home bare-name)"
