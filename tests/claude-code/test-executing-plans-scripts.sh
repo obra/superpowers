@@ -154,6 +154,19 @@ PLAN
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
     fi
 
+    # --- task-start: a repo with no commit yet has no BASE to record (#2242) ---
+    git init -q -b main "$TEST_ROOT/unborn"
+    cp "$repo/plan.md" "$TEST_ROOT/unborn/plan.md"
+    rc=0
+    out="$(cd "$TEST_ROOT/unborn" && "$EP_SCRIPTS/task-start" plan.md 1 2>&1)" || rc=$?
+    if [[ "$rc" -eq 2 && "$out" == *"initial commit"* && "$out" != *"base:"* ]]; then
+        pass "task-start before the first commit exits 2 instead of printing a bogus BASE"
+    else
+        fail "task-start before the first commit exits 2 instead of printing a bogus BASE"
+        echo "    exit: $rc"
+        echo "    got: $out"
+    fi
+
     echo
     if [[ "$FAILURES" -eq 0 ]]; then
         echo "PASS"

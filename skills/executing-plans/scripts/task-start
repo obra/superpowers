@@ -23,6 +23,10 @@ sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
 out=$("$sdd/task-brief" "$plan" "$n")
 brief=$(printf '%s\n' "$out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')
 [ -n "$brief" ] || { echo "task-brief did not report a path: $out" >&2; exit 1; }
+# A repository with no commit yet (a greenfield plan right after git init)
+# has no HEAD to cut the review range from.
+base=$(git rev-parse --verify --quiet HEAD) \
+  || { echo "task-start: HEAD has no commit yet, so there is no BASE to record; make an initial commit first" >&2; exit 2; }
 
 echo "brief: $brief"
-echo "base: $(git rev-parse HEAD)"
+echo "base: $base"

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Print the top-level directory of the git working tree the SDD scripts use
+# for PLAN_FILE: the current directory's, or, when the current directory is
+# not inside a git working tree, the plan's own.
+#
+# The current directory wins because an executor working in a linked
+# worktree commonly holds an absolute path to the plan in the main checkout
+# (writing-plans leaves the plan uncommitted there), and its workspace and
+# commits belong to the worktree it is working in. A caller that means a
+# different working tree says so with the scripts' -C DIR.
+#
+# The plan's repository is the fallback for a caller whose current directory
+# is outside any repository, such as the skill's own directory in an
+# installed plugin. With neither, there is no repository to hold the
+# workspace or the commits under review, so say how to get one rather than
+# guess a directory.
+#
+# Single source of truth for which repository the SDD scripts work in, so
+# sdd-workspace and review-package cannot disagree.
+#
+# Usage: sdd-repo PLAN_FILE
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+  echo "usage: sdd-repo PLAN_FILE" >&2
+  exit 2
+fi
+
+plan=$1
+
+git rev-parse --show-toplevel 2>/dev/null && exit 0
+git -C "$(dirname "$plan")" rev-parse --show-toplevel 2>/dev/null && exit 0
+
+echo "not in a git repository: neither the current directory ($PWD) nor the plan's directory ($(dirname "$plan")) is inside one." >&2
+echo "SDD keeps each plan's workspace at the repository root and reviews commits, so it needs a repository. For a new project, run 'git init' in the project root and make an initial commit, then rerun." >&2
+exit 2
