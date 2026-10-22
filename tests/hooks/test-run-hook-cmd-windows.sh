@@ -207,6 +207,24 @@ else
     fi
 fi
 
+# --- the hooks.json powershell form dispatches under PowerShell ---
+# Copilot (CLI and VS Code) on Windows runs hook commands through PowerShell,
+# where the quoted `command` form is a ParserError (#2189). It substitutes
+# ${CLAUDE_PLUGIN_ROOT} into the string first; the plugin root here has a
+# space, as real install paths can.
+ps_plugin="$TEST_ROOT/plugin root"
+make_plugin "$ps_plugin" real
+cp "$ps_plugin/hooks/probe-ok" "$ps_plugin/hooks/session-start"
+ps_command="$(sed -n 's/^ *"powershell": "\(.*\)",\{0,1\}$/\1/p' "$REPO_ROOT/hooks/hooks.json" | sed 's/\\"/"/g')"
+ps_command="${ps_command//\$\{CLAUDE_PLUGIN_ROOT\}/$(cygpath -w "$ps_plugin")}"
+RC=0
+OUT="$(cd "$TEST_ROOT" && powershell -NoProfile -NonInteractive -Command "$ps_command" 2>&1)" || RC=$?
+if [[ -n "$ps_command" && "$RC" -eq 0 && "$OUT" == *probe-ran* ]]; then
+    pass "hooks.json powershell command runs session-start under PowerShell"
+else
+    fail "hooks.json powershell command runs session-start under PowerShell (command=$ps_command, rc=$RC, out=$OUT)"
+fi
+
 # --- no usable bash: exit 0 quietly, without invoking the WSL launcher ---
 run_hook "$sandbox" "$TEST_ROOT" probe-ok \
     LOCALAPPDATA="$NO_LA" PATH="$SYS32_PATH"
