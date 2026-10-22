@@ -45,7 +45,31 @@ if [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
-last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
+# The result field is evidence, so prefer the run's own summary counts. Both
+# of node --test's reporters end on the duration line, so the log's last line
+# says how long the run took, not whether it passed — and since Node 23 the
+# non-TTY default is `spec`, marking its summary with `ℹ` where `tap` uses
+# `#`. Skipping any leading non-alphanumeric marker covers both; [#ℹ] would
+# not, since `ℹ` is multibyte and a bracket expression matches one byte of it.
+# Counts take the last match, because a summary comes last.
+#
+# The two counts are only evidence together: a glob that matched nothing still
+# exits 0 reporting `tests 0`, and "0/0 pass" would read green while nothing
+# ran. More passes than tests means they came from unrelated lines. Otherwise
+# fall back to the last line, keeping the empty-log guard from #2385 so a
+# silent pass is still recorded.
+tap_count() {
+  sed -n "s/^[^[:alnum:]]*$1[[:space:]]\{1,\}\([0-9][0-9]*\)[[:space:]]*$/\1/p" "$log" | tail -n 1
+}
+total=$(tap_count tests)
+passed=$(tap_count pass)
+if [ "${total:-0}" -gt 0 ] && [ -n "$passed" ] && [ "$passed" -le "$total" ]; then
+  last="$passed/$total pass"
+elif [ "${total:-}" = "0" ]; then
+  last="0 tests ran"
+else
+  last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
+fi
 [ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
 line="Task $n: complete (commits $(git rev-parse --short=7 "$base")..$(git rev-parse --short=7 HEAD), tests: $cmd → $last)"
 printf '%s\n' "$line" >> "$ledger"
