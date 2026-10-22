@@ -190,28 +190,35 @@ PLAN
         fail "nothing is written without a usable repository"
     fi
 
-    # --- outside any repository, task-start and task-done use the plan's (#2429) ---
-    # The same fallback task-brief takes, so BASE comes from the repository
-    # the brief and ledger were written into, not from the bare cwd.
+    # --- outside any repository, a plan in a repository is not a fallback (#2429) ---
+    # Like git, the scripts act on the current directory's working tree; an
+    # absolute plan path into some repository does not pick that one instead.
+    msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $TEST_ROOT/no-repo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local before head_now
+    head_now="$(cd "$repo" && git rev-parse HEAD)"
+    before="$(find "$repo/.superpowers" | sort; cat "$repo/.superpowers/sdd/plan/progress.md")"
     rc=0
     out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-start" "$repo/plan.md" 2 2>&1)" || rc=$?
-    local head_now
-    head_now="$(cd "$repo" && git rev-parse HEAD)"
-    if [[ "$rc" -eq 0 && "$out" == *"brief: $repo/.superpowers/sdd/plan/task-2-brief.md"* && "$out" == *"base: $head_now"* ]]; then
-        pass "task-start outside any repository takes the plan's repository and HEAD"
+    if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+        pass "task-start outside any repository stops with the shared message despite a plan in a repository"
     else
-        fail "task-start outside any repository takes the plan's repository and HEAD"
+        fail "task-start outside any repository stops with the shared message despite a plan in a repository"
         echo "    exit: $rc"
         echo "    got: $out"
     fi
     rc=0
     out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-done" "$repo/plan.md" 2 "$head_now" -- true 2>&1)" || rc=$?
-    if [[ "$rc" -eq 0 ]] && grep -q "^Task 2: complete (commits ${head_now:0:7}..${head_now:0:7}," "$repo/.superpowers/sdd/plan/progress.md"; then
-        pass "task-done outside any repository records into the plan's repository"
+    if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+        pass "task-done outside any repository stops with the shared message despite a plan in a repository"
     else
-        fail "task-done outside any repository records into the plan's repository"
+        fail "task-done outside any repository stops with the shared message despite a plan in a repository"
         echo "    exit: $rc"
         echo "    got: $out"
+    fi
+    if [[ "$(find "$repo/.superpowers" | sort; cat "$repo/.superpowers/sdd/plan/progress.md")" == "$before" && ! -e "$TEST_ROOT/no-repo/.superpowers" ]]; then
+        pass "outside any repository, task-start and task-done write nothing to the plan's repository"
+    else
+        fail "outside any repository, task-start and task-done write nothing to the plan's repository"
     fi
 
     echo

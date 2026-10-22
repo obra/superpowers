@@ -60,7 +60,7 @@ slug=$(basename "$plan" .md)
 # failing sdd-repo stops the script instead of handing cd an empty path.
 # Invoke via bash rather than direct exec: some extractors (Python zipfile)
 # strip Unix exec bits when unpacking marketplace packages (#2040).
-toplevel=$("${BASH:-bash}" "$here/sdd-repo" "$plan")
+toplevel=$("${BASH:-bash}" "$here/sdd-repo")
 root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
 base="$root/.superpowers/sdd"
 

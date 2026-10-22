@@ -22,7 +22,7 @@ sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
 
 # The repository the workspace and ledger belong to (see sdd-repo); BASE and
 # HEAD are read there, not in the bare cwd.
-repo=$("${BASH:-bash}" "$sdd/sdd-repo" --with-commit "$plan")
+repo=$("${BASH:-bash}" "$sdd/sdd-repo" --with-commit)
 git -C "$repo" rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 
 dir=$("$sdd/sdd-workspace" "$plan")

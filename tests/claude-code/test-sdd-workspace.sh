@@ -294,28 +294,30 @@ PLAN
     fi
 
     # Run from outside any repository (e.g. the skill's own directory in an
-    # installed plugin), the plan's repository is the one to use.
+    # installed plugin), the scripts stop even when the plan's absolute path
+    # is inside a repository: like git, they act on the current directory's
+    # working tree (or -C DIR), never on one guessed from the plan.
     local nonrepo="$TEST_ROOT/not-a-repo"
     mkdir -p "$nonrepo"
-    local nr_dir nr_err
-    nr_dir="$(cd "$nonrepo" && "$SDD_SCRIPTS/sdd-workspace" "$wt/plan-a.md" 2>"$TEST_ROOT/nr.err")" || true
-    nr_err="$(cat "$TEST_ROOT/nr.err")"
-    if [[ "$nr_dir" == "$wt_root/.superpowers/sdd/plan-a" && -z "$nr_err" && ! -e "$nonrepo/.superpowers" ]]; then
-        pass "outside any repository, sdd-workspace uses the plan's repository"
+    local nr_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $nonrepo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local nr_before nr_cmd nr_err
+    nr_before="$(find "$wt_root/.superpowers" | sort)"
+    for nr_cmd in "sdd-workspace $wt/plan-a.md" "task-brief $wt/plan-a.md 1" "review-package $wt/plan-a.md $wt_base $wt_head"; do
+        rc=0
+        # shellcheck disable=SC2086 # nr_cmd is a fixed script name plus its arguments
+        nr_err="$(cd "$nonrepo" && "$SDD_SCRIPTS"/$nr_cmd 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$nr_err" == "$nr_msg" ]]; then
+            pass "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
+        else
+            fail "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
+            echo "    exit: $rc"
+            echo "    stderr: $nr_err"
+        fi
+    done
+    if [[ ! -e "$nonrepo/.superpowers" && "$(find "$wt_root/.superpowers" | sort)" == "$nr_before" ]]; then
+        pass "outside any repository, nothing is written to the cwd or the plan's repository"
     else
-        fail "outside any repository, sdd-workspace uses the plan's repository"
-        echo "    got: $nr_dir"
-        echo "    stderr: $nr_err"
-    fi
-
-    local nr_rp nr_rp_path
-    nr_rp="$(cd "$nonrepo" && "$SDD_SCRIPTS/review-package" "$wt/plan-a.md" "$wt_base" "$wt_head" 2>&1)" || true
-    nr_rp_path="$(printf '%s\n' "$nr_rp" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
-    if [[ "$nr_rp_path" == "$wt_root/.superpowers/sdd/plan-a/review-"*.diff ]] && grep -q 'wt-only.txt' "$nr_rp_path"; then
-        pass "outside any repository, review-package diffs the plan's repository"
-    else
-        fail "outside any repository, review-package diffs the plan's repository"
-        echo "    got: $nr_rp"
+        fail "outside any repository, nothing is written to the cwd or the plan's repository"
     fi
 
     # --- No repository anywhere: a greenfield plan before Task 1 (#2242) ---

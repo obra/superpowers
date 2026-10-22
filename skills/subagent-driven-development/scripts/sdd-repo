@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# Print the top-level directory of the git working tree the SDD scripts use
-# for PLAN_FILE: the current directory's, or, when the current directory is
-# not inside a git working tree, the plan's own.
+# Print the top-level directory of the git working tree the SDD scripts use:
+# the current directory's, exactly as git itself picks one. A caller that
+# means a different working tree says so with the scripts' -C DIR, which
+# they apply (cd) before calling this.
 #
-# The current directory wins because an executor working in a linked
-# worktree commonly holds an absolute path to the plan in the main checkout
-# (writing-plans leaves the plan uncommitted there), and its workspace and
-# commits belong to the worktree it is working in. A caller that means a
-# different working tree says so with the scripts' -C DIR.
+# The plan file's location never picks the repository. An executor working
+# in a linked worktree commonly holds an absolute path to the plan in the
+# main checkout (writing-plans leaves the plan uncommitted there), and its
+# workspace and commits belong to the worktree it is working in. And a
+# caller standing outside any repository, such as the skill's own directory
+# in an installed plugin, is in the wrong place: guessing a repository from
+# the plan would silently act on whichever checkout the path points into.
 #
-# The plan's repository is the fallback for a caller whose current directory
-# is outside any repository, such as the skill's own directory in an
-# installed plugin. With neither, there is nothing to hold the workspace, so
-# stop rather than guess a directory. --with-commit also stops on a
-# repository with no commit yet, for callers that need HEAD as a BASE or a
-# review range. The message covers both ways to get here: running from the
-# wrong directory (where 'git init' would be the wrong fix) and a new
-# project that has no repository or commit yet.
+# Outside any working tree, stop. --with-commit also stops on a repository
+# with no commit yet, for callers that need HEAD as a BASE or a review
+# range. The message covers both ways to get here: running from the wrong
+# directory (where 'git init' would be the wrong fix) and a new project
+# that has no repository or commit yet.
 #
 # Single source of truth for which repository the SDD and executing-plans
 # scripts work in, so no two of them can disagree.
 #
-# Usage: sdd-repo [--with-commit] PLAN_FILE
+# Usage: sdd-repo [--with-commit]
 set -euo pipefail
 
 with_commit=false
@@ -30,16 +30,12 @@ if [ "${1:-}" = "--with-commit" ]; then
   shift
 fi
 
-if [ $# -ne 1 ]; then
-  echo "usage: sdd-repo [--with-commit] PLAN_FILE" >&2
+if [ $# -ne 0 ]; then
+  echo "usage: sdd-repo [--with-commit]" >&2
   exit 2
 fi
 
-plan=$1
-
-root=$(git rev-parse --show-toplevel 2>/dev/null) \
-  || root=$(git -C "$(dirname "$plan")" rev-parse --show-toplevel 2>/dev/null) \
-  || root=""
+root=$(git rev-parse --show-toplevel 2>/dev/null) || root=""
 
 if [ -n "$root" ] && { [ "$with_commit" = false ] || git -C "$root" rev-parse --verify --quiet HEAD >/dev/null; }; then
   printf '%s\n' "$root"
