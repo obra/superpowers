@@ -27,6 +27,10 @@
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
+# A greenfield plan's first task is often "create the repo", so there is no
+# repo root to resolve yet: fall back to the current directory rather than
+# failing, since that task is exactly the one needing a brief.
+#
 # Usage: sdd-workspace PLAN_FILE
 set -euo pipefail
 
@@ -45,7 +49,16 @@ slug=$(basename "$plan" .md)
 # Physical path, spelled the way pwd -P spells the plan path below: on Git
 # Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
 # repo-relative marker check needs both in the same form.
-root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
+#
+# A greenfield plan's Task 1 is "create the repo", so there may be no repo to
+# resolve yet: degrade to the current directory, which is where that task's
+# git init runs, so the path is unchanged once the repo exists.
+if toplevel=$(git rev-parse --show-toplevel 2>/dev/null); then
+  root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
+else
+  root=$(CDPATH='' cd -- "$PWD" && pwd -P)
+  echo "sdd-workspace: no git repository yet, using $root/.superpowers/sdd until this plan's first task creates one" >&2
+fi
 base="$root/.superpowers/sdd"
 
 # Normalize the plan path (physical directory, so relative/absolute/../
