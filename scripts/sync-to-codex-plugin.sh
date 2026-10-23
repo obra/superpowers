@@ -57,6 +57,7 @@ EXCLUDES=(
   "/.gitmodules"
   "/.kimi-plugin/"
   "/.opencode/"
+  "/.openclaw/"
   "/.pi/"
   "/.pre-commit-config.yaml"
   "/.version-bump.json"
@@ -71,6 +72,7 @@ EXCLUDES=(
   "/RELEASE-NOTES.md"
   "/gemini-extension.json"
   "/index.js"
+  "/openclaw.plugin.json"
   "/package.json"
 
   # Directories not shipped by canonical Codex plugins
