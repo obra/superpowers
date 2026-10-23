@@ -160,6 +160,11 @@ decide nothing ("TBD", "handle edge cases", "add appropriate validation",
 "write tests for the above", a type or function no task defines) are the
 opposite failure, and the self-review catches both.
 
+- **An expected value:** if a verification step names a count, output, or
+  match, produce it by running the command against the real tree while
+  writing the plan and record the value, or describe what to observe and
+  compare two independently derived counts.
+
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
@@ -173,6 +178,8 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
+
+**6. Produced expectations:** For every expected count, output, or match in a verification step, did I produce it from the real tree and record it — or define an observation and an independent comparison instead?
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
