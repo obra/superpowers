@@ -33,6 +33,14 @@ The main conversation is your coordination space. Tool payloads — file content
 - A command will print a lot (test suite, build log, wide diff)? Redirect to a file and read the excerpt that matters, or have a subagent digest it.
 - No subagents in your harness? Targeted greps and ranged reads — still never bulk payloads into the chat.
 
+## Summarize Before Acting
+
+When a task's context lives outside the conversation — an issue, a PR, a review target, a bug report — read it and the code it touches first. Then give your human partner one digest before you ask them anything or change anything: what the task needs, the context that shapes it (current state, constraints, anything surprising), and the approach you'll take. Proceed without waiting for approval — it's a checkpoint they can interrupt, not a gate.
+
+When you report the task complete, open the report with a short recap of that same context — the summary they can always find at the bottom of the conversation.
+
+Skip both when the conversation already carries the context, or the task states itself completely.
+
 ## Skill Priority
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
