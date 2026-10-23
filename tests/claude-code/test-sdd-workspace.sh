@@ -140,6 +140,151 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    # --- task-brief ends a task at the next same-or-shallower heading ---
+    cat > "$repo/plan-sections.md" <<'PLAN'
+# Plan With Trailing Sections
+
+## Global Constraints
+
+Constraints text.
+
+### Task 1: First thing
+
+First-task requirement.
+
+#### Notes for Task 1
+
+Nested detail belongs to task 1.
+
+### Task 2: Last thing
+
+Last-task requirement.
+
+## Self-review
+
+Author-only checklist, not a task step.
+
+## Done when
+
+Plan-level exit criteria.
+PLAN
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sections.md 2 >/dev/null )
+    local last_brief="$repo/.superpowers/sdd/plan-sections/task-2-brief.md"
+    if grep -q "Last-task requirement." "$last_brief" 2>/dev/null \
+        && ! grep -q "Author-only checklist" "$last_brief" 2>/dev/null \
+        && ! grep -q "Plan-level exit criteria" "$last_brief" 2>/dev/null; then
+        pass "task-brief stops the last task at the next plan-level section"
+    else
+        fail "task-brief stops the last task at the next plan-level section"
+        echo "    brief: $(cat "$last_brief" 2>/dev/null)"
+    fi
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sections.md 1 >/dev/null )
+    local first_brief="$repo/.superpowers/sdd/plan-sections/task-1-brief.md"
+    if grep -q "Nested detail belongs to task 1." "$first_brief" 2>/dev/null \
+        && ! grep -q "Last-task requirement." "$first_brief" 2>/dev/null; then
+        pass "task-brief keeps a task's deeper sub-headings and stops at the next task"
+    else
+        fail "task-brief keeps a task's deeper sub-headings and stops at the next task"
+        echo "    brief: $(cat "$first_brief" 2>/dev/null)"
+    fi
+
+    # --- ambiguous fencing keeps the old, safe behaviour ---
+    # The embedded document's inner bare ``` closes the outer fence per
+    # CommonMark, so the two fence parses disagree from there on. A heading
+    # after that point must not cut the task short.
+    cat > "$repo/plan-embedded.md" <<'PLAN'
+# Plan With An Embedded Document
+
+### Task 1: Write the new skill file
+
+Replace the file with:
+
+```markdown
+# Some Skill
+
+## Overview
+
+Prose.
+
+```bash
+echo hi
+```
+
+## Step 2
+
+More embedded prose.
+```
+
+LAST_LINE: still part of task 1.
+
+### Task 2: Something else
+
+Other work.
+PLAN
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-embedded.md 1 >/dev/null )
+    local embedded_brief="$repo/.superpowers/sdd/plan-embedded/task-1-brief.md"
+    if grep -q "LAST_LINE: still part of task 1." "$embedded_brief" 2>/dev/null \
+        && ! grep -q "Other work." "$embedded_brief" 2>/dev/null; then
+        pass "task-brief does not cut a task on a heading inside ambiguous fencing"
+    else
+        fail "task-brief does not cut a task on a heading inside ambiguous fencing"
+        echo "    brief: $(cat "$embedded_brief" 2>/dev/null)"
+    fi
+
+    # --- a same-level heading is a sibling section, fenced or not ---
+    # Unfenced, it ends the task: writing-plans puts a task's steps in
+    # bullets, so a same-level heading after a task is the next section
+    # (Self-review, Done when), never part of the task. Inside a fence it
+    # is quoted text and never ends anything, which is how real plans
+    # carry "### Step 1.5" blocks to insert into a skill file.
+    cat > "$repo/plan-sibling.md" <<'PLAN'
+# Plan With Sibling Sections
+
+### Task 1: Insert a step into a skill file
+
+Insert this block after Step 1:
+
+```markdown
+### Step 1.5: Detect Environment
+
+Quoted body, part of task 1.
+```
+
+FENCED_TAIL: still part of task 1.
+
+### Task 2: Second thing
+
+Second-task requirement.
+
+### Rollout notes
+
+Sibling section, not part of task 2.
+PLAN
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sibling.md 1 >/dev/null )
+    local sibling_first="$repo/.superpowers/sdd/plan-sibling/task-1-brief.md"
+    if grep -q "Quoted body, part of task 1." "$sibling_first" 2>/dev/null \
+        && grep -q "FENCED_TAIL: still part of task 1." "$sibling_first" 2>/dev/null \
+        && ! grep -q "Second-task requirement." "$sibling_first" 2>/dev/null; then
+        pass "task-brief keeps a fenced same-level heading inside its task"
+    else
+        fail "task-brief keeps a fenced same-level heading inside its task"
+        echo "    brief: $(cat "$sibling_first" 2>/dev/null)"
+    fi
+
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-sibling.md 2 >/dev/null )
+    local sibling_last="$repo/.superpowers/sdd/plan-sibling/task-2-brief.md"
+    if grep -q "Second-task requirement." "$sibling_last" 2>/dev/null \
+        && ! grep -q "Sibling section" "$sibling_last" 2>/dev/null; then
+        pass "task-brief ends a task at an unfenced same-level heading"
+    else
+        fail "task-brief ends a task at an unfenced same-level heading"
+        echo "    brief: $(cat "$sibling_last" 2>/dev/null)"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \
