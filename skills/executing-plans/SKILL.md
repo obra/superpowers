@@ -109,8 +109,8 @@ digraph process {
 
 Ensure the work happens in an isolated workspace: use
 superpowers:using-git-worktrees to create one or verify the existing one.
-Never start implementation on a main/master branch without your human
-partner's explicit consent.
+Do not start implementation on main/master unless your human partner has
+said to, in this conversation or in their instructions.
 
 Conversation memory does not survive compaction. An inline executor that
 loses its place re-implements tasks whose commits already exist — the same
