@@ -27,13 +27,71 @@ else
   out="$dir/task-${n}-brief.md"
 fi
 
-awk -v n="$n" '
-  /^```/ { infence = !infence }
-  !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
-    intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+# A task heading is `Task` followed by an ID: letters and digits, optionally
+# dot-separated, containing at least one digit (3, 6b, A1, 2.1). The digit
+# keeps headings like "## Task Overview" or "#### Task notes" from becoming
+# task boundaries. The ID is compared to TASK_NUMBER as a whole string, so
+# Task 6 never matches Task 6b, Task 1 never matches Task 1.1, and
+# TASK_NUMBER never reaches awk as a regex (#2459). A deeper Task heading
+# whose ID extends the requested one with a letter or dot is a sub-task and
+# stays in its brief (### Task 7 keeps #### Task 7a), as it always has.
+# Depth alone is not enough: plans drift from "## Task 1" to "### Task 2".
+#
+# The word stays the English literal "Task", whatever language the rest of
+# the plan is in. A plan with no Task headings at all usually translated it
+# ("## Tarea 1"), so list the headings shaped like tasks before the
+# not-found error instead of implying the plan has no task 1 (#2496).
+#
+# A fence that never closes hides every Task heading after it (#2436). When
+# it hides one while the requested task is being captured, that task's end
+# can't be found and the brief would run on through every later task: refuse
+# (exit 4) rather than hand an implementer several tasks as its requirements.
+# When it hides the requested heading itself, say so before the not-found
+# error. A stray fence that hides no Task heading (real plans end with a lone
+# ``` line) leaves the brief complete, so brief it with a warning.
+# The plan path goes through ENVIRON, not -v, which would mangle the
+# backslashes of a Windows path.
+rc=0
+TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
+  /^```/ { infence = !infence; if (infence) { fence_line = NR; hidden = 0 } }
+  infence && /^#+[ \t]+Task[ \t]/ { hidden = 1 }
+  !infence && /^#+[ \t]+Task[ \t]/ {
+    id = $0
+    sub(/^#+[ \t]+Task[ \t]+/, "", id)
+    if (match(id, /^[A-Za-z0-9]+(\.[A-Za-z0-9]+)*/) && substr(id, 1, RLENGTH) ~ /[0-9]/) {
+      tasks++
+      id = substr(id, 1, RLENGTH)
+      match($0, /^#+/)
+      subtask = intask && RLENGTH > level && substr(id, 1, length(n)) == n \
+        && substr(id, length(n) + 1, 1) ~ /[A-Za-z.]/
+      if (!subtask) {
+        intask = (id == n)
+        level = RLENGTH
+      }
+    }
   }
-  intask { print }
-' "$plan" > "$out"
+  !infence && /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5 { shaped_heading[++shaped] = $0 }
+  intask { print; found = 1 }
+  END {
+    where = "the code fence opened at line " fence_line " of " ENVIRON["TASK_BRIEF_PLAN"] " never closes"
+    if (infence && hidden && (intask || !found)) {
+      print "task-brief: " where ", so no Task heading after it can be seen; close that fence in the plan and rerun" | "cat >&2"
+      if (intask) exit 4
+    } else if (infence && intask) {
+      print "task-brief: warning: " where "; it hides no Task heading, so this brief is complete" | "cat >&2"
+    }
+    # An open fence that hid Task headings already explains why none were
+    # seen; the English-word hint would contradict it.
+    if (!tasks && shaped && !(infence && hidden)) {
+      print "task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:" | "cat >&2"
+      for (i = 1; i <= shaped; i++) print "  " shaped_heading[i] | "cat >&2"
+    }
+  }
+' "$plan" > "$out" || rc=$?
+if [ "$rc" -ne 0 ]; then
+  if [ -f "$out" ]; then rm -f "$out"; fi
+  exit "$rc"
+fi
 
 if [ ! -s "$out" ]; then
   echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
