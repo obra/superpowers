@@ -140,6 +140,81 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    # --- task-brief fails loudly on an unclosed fence instead of silently
+    # absorbing every later task into this one's brief (#2436) ---
+    cat > "$repo/plan-unclosed-fence.md" <<'PLAN'
+# Example Plan
+
+### Task 1: First task
+
+- [ ] Step 1: closes fine
+
+```typescript
+const x = 1
+```
+
+- [ ] Step 2: never closes
+
+```typescript
+const y = 2
+
+### Task 2: Second task
+
+TASK-2-MARKER: this must not appear in Task 1's brief.
+
+### Task 3: Third task
+
+TASK-3-MARKER: nor this.
+PLAN
+    local fence_out
+    fence_out="$TEST_ROOT/unclosed-fence-brief.md"
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed-fence.md 1 "$fence_out" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 4 && ! -e "$fence_out" ]]; then
+        pass "task-brief fails (exit 4) and writes no brief when the plan has an unclosed fence"
+    else
+        fail "task-brief fails (exit 4) and writes no brief when the plan has an unclosed fence"
+        echo "    rc: $rc"
+        echo "    out exists: $( [[ -e "$fence_out" ]] && echo yes || echo no )"
+    fi
+
+    # Control: the same plan with the fence closed extracts cleanly and does
+    # not leak Task 2/3 content into Task 1's brief.
+    cat > "$repo/plan-closed-fence.md" <<'PLAN'
+# Example Plan
+
+### Task 1: First task
+
+- [ ] Step 1: closes fine
+
+```typescript
+const x = 1
+```
+
+- [ ] Step 2: also closes
+
+```typescript
+const y = 2
+```
+
+### Task 2: Second task
+
+TASK-2-MARKER: this must not appear in Task 1's brief.
+
+### Task 3: Third task
+
+TASK-3-MARKER: nor this.
+PLAN
+    local closed_out
+    closed_out="$TEST_ROOT/closed-fence-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-closed-fence.md 1 "$closed_out" >/dev/null)
+    if [[ -s "$closed_out" ]] && ! grep -q 'MARKER' "$closed_out"; then
+        pass "task-brief: closing the fence (control) extracts task 1 without leaking later tasks"
+    else
+        fail "task-brief: closing the fence (control) extracts task 1 without leaking later tasks"
+        echo "    got: $(cat "$closed_out" 2>/dev/null)"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \
