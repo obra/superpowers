@@ -9,6 +9,7 @@ FAILURES=0
 TEST_ROOT="$(mktemp -d)"
 
 cleanup() {
+  git -C "$REPO_ROOT" worktree remove --force "$TEST_ROOT/linked-worktree" >/dev/null 2>&1 || true
   rm -rf "$TEST_ROOT"
 }
 trap cleanup EXIT
@@ -138,6 +139,8 @@ archive="$TEST_ROOT/superpowers"
 tar_archive="$TEST_ROOT/superpowers.tar.gz"
 extracted="$TEST_ROOT/extracted"
 tar_extracted="$TEST_ROOT/tar-extracted"
+worktree_archive="$TEST_ROOT/superpowers-from-worktree.zip"
+linked_worktree="$TEST_ROOT/linked-worktree"
 write_metadata_fixture "$metadata_source"
 
 source_hooks="$(python3 -c 'import json; print(json.load(open("'"$REPO_ROOT"'/.codex-plugin/plugin.json")).get("hooks"))')"
@@ -159,6 +162,25 @@ fi
 assert_contains "$output" "Archive:" "reports archive path"
 assert_contains "$output" "Format:  zip" "reports default zip format"
 assert_contains "$output" "SHA-256:" "reports archive checksum"
+
+if git -C "$REPO_ROOT" worktree add -q --detach "$linked_worktree" HEAD >/dev/null 2>&1; then
+  # The worktree is checked out at HEAD, so copy in the script under test
+  # (it may have uncommitted edits); that dirties the tree, hence --allow-dirty.
+  cp "$SCRIPT_UNDER_TEST" "$linked_worktree/scripts/package-codex-plugin.sh"
+  if output="$("$linked_worktree/scripts/package-codex-plugin.sh" --allow-dirty --metadata-source "$metadata_source" --output "$worktree_archive" 2>&1)"; then
+    pass "package script accepts a linked worktree checkout"
+  else
+    fail "package script accepts a linked worktree checkout"
+    printf '%s\n' "$output" | sed 's/^/      /'
+  fi
+  if [[ -f "$worktree_archive" ]]; then
+    pass "package script writes archive from a linked worktree"
+  else
+    fail "package script writes archive from a linked worktree"
+  fi
+else
+  fail "create linked worktree fixture"
+fi
 
 extract_archive "$archive" "$extracted"
 
