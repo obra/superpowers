@@ -17,6 +17,7 @@ fi
 plan=$1
 n=$2
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+[[ "$n" =~ ^[A-Za-z0-9]+$ ]] || { echo "invalid task ID: $n (expected letters and digits only)" >&2; exit 2; }
 
 if [ $# -eq 3 ]; then
   out=$3
@@ -29,8 +30,8 @@ fi
 
 awk -v n="$n" '
   /^```/ { infence = !infence }
-  !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
-    intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+  !infence && /^#+[ \t]+Task[ \t]+[A-Za-z0-9]+/ {
+    intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^A-Za-z0-9]|$)"))
   }
   intask { print }
 ' "$plan" > "$out"
