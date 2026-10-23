@@ -162,12 +162,16 @@ PLAN
     cp "$repo/plan.md" "$TEST_ROOT/unborn/plan.md"
     mkdir -p "$TEST_ROOT/no-repo"
     cp "$repo/plan.md" "$TEST_ROOT/no-repo/plan.md"
-    local where msg
+    # git's own first error line follows the shared message, so the reason
+    # git refused is never hidden.
+    local where msg said
     for where in unborn no-repo; do
         msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $TEST_ROOT/$where). If this is a new project, run 'git init' and make a first commit, then rerun."
+        said="git said: fatal: "
+        [[ "$where" == no-repo ]] && said="git said: fatal: not a git repository"
         rc=0
         out="$(cd "$TEST_ROOT/$where" && "$EP_SCRIPTS/task-start" plan.md 1 2>&1)" || rc=$?
-        if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+        if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"$said"* ]]; then
             pass "task-start in a $where directory exits 2 with the shared message"
         else
             fail "task-start in a $where directory exits 2 with the shared message"
@@ -176,7 +180,7 @@ PLAN
         fi
         rc=0
         out="$(cd "$TEST_ROOT/$where" && "$EP_SCRIPTS/task-done" plan.md 1 HEAD -- true 2>&1)" || rc=$?
-        if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+        if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"$said"* ]]; then
             pass "task-done in a $where directory exits 2 with the shared message"
         else
             fail "task-done in a $where directory exits 2 with the shared message"
@@ -199,7 +203,7 @@ PLAN
     before="$(find "$repo/.superpowers" | sort; cat "$repo/.superpowers/sdd/plan/progress.md")"
     rc=0
     out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-start" "$repo/plan.md" 2 2>&1)" || rc=$?
-    if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+    if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"git said: fatal: not a git repository"* ]]; then
         pass "task-start outside any repository stops with the shared message despite a plan in a repository"
     else
         fail "task-start outside any repository stops with the shared message despite a plan in a repository"
@@ -208,7 +212,7 @@ PLAN
     fi
     rc=0
     out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-done" "$repo/plan.md" 2 "$head_now" -- true 2>&1)" || rc=$?
-    if [[ "$rc" -eq 2 && "$out" == "$msg" ]]; then
+    if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"git said: fatal: not a git repository"* ]]; then
         pass "task-done outside any repository stops with the shared message despite a plan in a repository"
     else
         fail "task-done outside any repository stops with the shared message despite a plan in a repository"

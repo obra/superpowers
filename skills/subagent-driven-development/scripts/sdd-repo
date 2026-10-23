@@ -35,12 +35,20 @@ if [ $# -ne 0 ]; then
   exit 2
 fi
 
-root=$(git rev-parse --show-toplevel 2>/dev/null) || root=""
-
-if [ -n "$root" ] && { [ "$with_commit" = false ] || git -C "$root" rev-parse --verify --quiet HEAD >/dev/null; }; then
-  printf '%s\n' "$root"
-  exit 0
+if root=$(git rev-parse --show-toplevel 2>/dev/null); then
+  if [ "$with_commit" = false ] || git -C "$root" rev-parse --verify --quiet HEAD >/dev/null; then
+    printf '%s\n' "$root"
+    exit 0
+  fi
+  said=$(git -C "$root" rev-parse --verify HEAD 2>&1 >/dev/null) || true
+else
+  said=$(git rev-parse --show-toplevel 2>&1 >/dev/null) || true
 fi
 
+# git's own first line always follows the shared message: where git refuses
+# a working tree the caller is inside (dubious ownership, git missing from
+# PATH, the cwd inside .git), the shared message alone would be wrong, and
+# git's line names the real fix.
 echo "SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $PWD). If this is a new project, run 'git init' and make a first commit, then rerun." >&2
+echo "git said: ${said%%$'\n'*}" >&2
 exit 2

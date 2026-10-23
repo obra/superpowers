@@ -306,7 +306,7 @@ PLAN
         rc=0
         # shellcheck disable=SC2086 # nr_cmd is a fixed script name plus its arguments
         nr_err="$(cd "$nonrepo" && "$SDD_SCRIPTS"/$nr_cmd 2>&1 >/dev/null)" || rc=$?
-        if [[ "$rc" -eq 2 && "$nr_err" == "$nr_msg" ]]; then
+        if [[ "$rc" -eq 2 && "$nr_err" == "$nr_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
             pass "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
         else
             fail "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
@@ -326,7 +326,8 @@ PLAN
     printf '## Task 1: Scaffold the repo\n\nCreate files.\n' > "$gf/plan.md"
     # One message for both ways to get here: a caller standing in the wrong
     # directory (such as the plugin's own skill directory, where git init is
-    # the wrong fix) and a new project with no repository yet.
+    # the wrong fix) and a new project with no repository yet. git's own
+    # first error line follows it, so the reason git refused is never hidden.
     local no_repo_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $gf). If this is a new project, run 'git init' and make a first commit, then rerun."
     local cmd gf_err
     for cmd in "sdd-workspace plan.md" "task-brief plan.md 1"; do
@@ -334,7 +335,7 @@ PLAN
         rc=0
         # shellcheck disable=SC2086 # cmd is a fixed script name plus its arguments
         gf_err="$(cd "$gf" && "$SDD_SCRIPTS"/$cmd 2>&1 >/dev/null)" || rc=$?
-        if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg" ]]; then
+        if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
             pass "$script outside any repository exits 2 naming both fixes"
         else
             fail "$script outside any repository exits 2 naming both fixes"
@@ -344,7 +345,7 @@ PLAN
     done
     rc=0
     gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg" ]]; then
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
         pass "review-package outside any repository exits 2 naming both fixes"
     else
         fail "review-package outside any repository exits 2 naming both fixes"
@@ -363,12 +364,32 @@ PLAN
     git init -q -b main "$gf"
     rc=0
     gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg" && ! -e "$gf/.superpowers" ]]; then
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: "* && ! -e "$gf/.superpowers" ]]; then
         pass "review-package in a repository with no commit exits 2 with the same message"
     else
         fail "review-package in a repository with no commit exits 2 with the same message"
         echo "    exit: $rc"
         echo "    stderr: $gf_err"
+    fi
+
+    # --- git refuses the repository itself: its reason must reach the caller ---
+    # Inside a working tree git won't trust ("dubious ownership": another
+    # owner, a FAT or network drive, WSL /mnt/c), the shared message alone
+    # would be wrong, so git's own line has to follow it. git's test knob
+    # GIT_TEST_ASSUME_DIFFERENT_OWNER simulates another owner without root.
+    local dub_err dub_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $repo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    if (cd "$repo" && GIT_TEST_ASSUME_DIFFERENT_OWNER=1 git rev-parse --show-toplevel >/dev/null 2>&1); then
+        echo "  [SKIP] git refusing a dubious-ownership repo ($(git --version) ignores GIT_TEST_ASSUME_DIFFERENT_OWNER)"
+    else
+        rc=0
+        dub_err="$(cd "$repo" && GIT_TEST_ASSUME_DIFFERENT_OWNER=1 "$SDD_SCRIPTS/sdd-workspace" plan-a.md 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$dub_err" == "$dub_msg"$'\n'"git said: fatal: detected dubious ownership in repository at "* ]]; then
+            pass "a repository git refuses as dubious stops with the shared message plus git's reason"
+        else
+            fail "a repository git refuses as dubious stops with the shared message plus git's reason"
+            echo "    exit: $rc"
+            echo "    stderr: $dub_err"
+        fi
     fi
 
     # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
