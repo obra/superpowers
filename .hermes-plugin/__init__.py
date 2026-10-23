@@ -118,7 +118,7 @@ def register(ctx):
         platform=None,
         **kwargs,
     ):
-        if is_first_turn:
+        if is_first_turn and platform != "subagent":
             return {"context": bootstrap}
         return None
 
