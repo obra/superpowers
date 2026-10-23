@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Print the top-level directory of the git working tree the SDD scripts use:
+# the current directory's, exactly as git itself picks one. A caller that
+# means a different working tree says so with the scripts' -C DIR, which
+# they apply (cd) before calling this.
+#
+# The plan file's location never picks the repository. An executor working
+# in a linked worktree commonly holds an absolute path to the plan in the
+# main checkout (writing-plans leaves the plan uncommitted there), and its
+# workspace and commits belong to the worktree it is working in. And a
+# caller standing outside any repository, such as the skill's own directory
+# in an installed plugin, is in the wrong place: guessing a repository from
+# the plan would silently act on whichever checkout the path points into.
+#
+# Outside any working tree, stop. --with-commit also stops on a repository
+# with no commit yet, for callers that need HEAD as a BASE or a review
+# range. The message covers both ways to get here: running from the wrong
+# directory (where 'git init' would be the wrong fix) and a new project
+# that has no repository or commit yet.
+#
+# Single source of truth for which repository the SDD and executing-plans
+# scripts work in, so no two of them can disagree.
+#
+# Usage: sdd-repo [--with-commit]
+set -euo pipefail
+
+with_commit=false
+if [ "${1:-}" = "--with-commit" ]; then
+  with_commit=true
+  shift
+fi
+
+if [ $# -ne 0 ]; then
+  echo "usage: sdd-repo [--with-commit]" >&2
+  exit 2
+fi
+
+if root=$(git rev-parse --show-toplevel 2>/dev/null); then
+  if [ "$with_commit" = false ] || git -C "$root" rev-parse --verify --quiet HEAD >/dev/null; then
+    printf '%s\n' "$root"
+    exit 0
+  fi
+  said=$(git -C "$root" rev-parse --verify HEAD 2>&1 >/dev/null) || true
+else
+  said=$(git rev-parse --show-toplevel 2>&1 >/dev/null) || true
+fi
+
+# git's own first line always follows the shared message: where git refuses
+# a working tree the caller is inside (dubious ownership, git missing from
+# PATH, the cwd inside .git), the shared message alone would be wrong, and
+# git's line names the real fix.
+echo "SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $PWD). If this is a new project, run 'git init' and make a first commit, then rerun." >&2
+echo "git said: ${said%%$'\n'*}" >&2
+exit 2

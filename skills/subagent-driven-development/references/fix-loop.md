@@ -42,7 +42,7 @@ covering test files in the fix message — a one-line fix does not need the
 whole suite.
 
 **The re-review is scoped.** Run `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
-where FIX_BASE is the head the previous review saw, and dispatch
+by its absolute path, from the working tree you're executing in, where FIX_BASE is the head the previous review saw, and dispatch
 [re-review-prompt.md](../re-review-prompt.md) with the findings list, the
 brief, the report file, and the printed diff path. The re-reviewer verdicts
 each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix

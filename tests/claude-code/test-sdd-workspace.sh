@@ -225,10 +225,177 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- Which repository: cwd, then -C, then the plan's (#2429, #1799) ---
+    printf 'wt-only\n' > "$wt/wt-only.txt"
+    ( cd "$wt" && git add wt-only.txt && git "${git_id[@]}" commit -qm wt-change )
+    local wt_base wt_head
+    wt_base="$(cd "$wt" && git rev-parse HEAD~1)"
+    wt_head="$(cd "$wt" && git rev-parse HEAD)"
+
+    # An executor working in the worktree with an absolute path to the main
+    # checkout's plan (writing-plans leaves the plan uncommitted there) keeps
+    # its workspace in the worktree it is working in.
+    printf '# Main only\n\n## Task 1: Main only\n\nMain only.\n' > "$repo/main-only.md"
+    local wt_abs_dir
+    wt_abs_dir="$(cd "$wt" && "$SDD_SCRIPTS/sdd-workspace" "$repo/main-only.md")" || true
+    if [[ "$wt_abs_dir" == "$wt_root/.superpowers/sdd/main-only" ]]; then
+        pass "a plan in another worktree still resolves to the current worktree's workspace"
+    else
+        fail "a plan in another worktree still resolves to the current worktree's workspace"
+        echo "    got: $wt_abs_dir"
+    fi
+
+    # -C DIR runs as if started in DIR: workspace and git commands both.
+    local c_dir
+    c_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" -C "$wt" plan-a.md)" || true
+    if [[ "$c_dir" == "$wt_root/.superpowers/sdd/plan-a" ]]; then
+        pass "sdd-workspace -C DIR resolves DIR's workspace"
+    else
+        fail "sdd-workspace -C DIR resolves DIR's workspace"
+        echo "    got: $c_dir"
+    fi
+
+    # These two run the way SKILL.md invokes them, `bash scripts/...` from the
+    # skill's directory: the relative script path must survive the -C cd.
+    local c_brief
+    c_brief="$(cd "$SDD_SCRIPTS/.." && bash scripts/task-brief -C "$wt" plan-a.md 1)" || true
+    if [[ "$c_brief" == "wrote $wt_root/.superpowers/sdd/plan-a/task-1-brief.md: "* ]]; then
+        pass "task-brief -C DIR writes the brief into DIR's workspace"
+    else
+        fail "task-brief -C DIR writes the brief into DIR's workspace"
+        echo "    got: $c_brief"
+    fi
+
+    local c_rp c_rp_path
+    c_rp="$(cd "$SDD_SCRIPTS/.." && bash scripts/review-package -C "$wt" plan-a.md "$wt_base" HEAD)" || true
+    c_rp_path="$(printf '%s\n' "$c_rp" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    case "$c_rp_path" in
+        "$wt_root/.superpowers/sdd/plan-a/review-"*.diff)
+            if grep -q 'wt-only.txt' "$c_rp_path"; then
+                pass "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
+            else
+                fail "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
+                echo "    diff lacks the worktree's commit: $c_rp_path"
+            fi
+            ;;
+        *)
+            fail "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
+            echo "    got: $c_rp"
+            ;;
+    esac
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" -C "$TEST_ROOT/no-such-dir" plan-a.md HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "review-package -C with a missing directory errors with exit 2"
+    else
+        fail "review-package -C with a missing directory errors with exit 2"
+        echo "    exit: $rc"
+    fi
+
+    # Run from outside any repository (e.g. the skill's own directory in an
+    # installed plugin), the scripts stop even when the plan's absolute path
+    # is inside a repository: like git, they act on the current directory's
+    # working tree (or -C DIR), never on one guessed from the plan.
+    local nonrepo="$TEST_ROOT/not-a-repo"
+    mkdir -p "$nonrepo"
+    local nr_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $nonrepo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local nr_before nr_cmd nr_err
+    nr_before="$(find "$wt_root/.superpowers" | sort)"
+    for nr_cmd in "sdd-workspace $wt/plan-a.md" "task-brief $wt/plan-a.md 1" "review-package $wt/plan-a.md $wt_base $wt_head"; do
+        rc=0
+        # shellcheck disable=SC2086 # nr_cmd is a fixed script name plus its arguments
+        nr_err="$(cd "$nonrepo" && "$SDD_SCRIPTS"/$nr_cmd 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$nr_err" == "$nr_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+            pass "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
+        else
+            fail "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
+            echo "    exit: $rc"
+            echo "    stderr: $nr_err"
+        fi
+    done
+    if [[ ! -e "$nonrepo/.superpowers" && "$(find "$wt_root/.superpowers" | sort)" == "$nr_before" ]]; then
+        pass "outside any repository, nothing is written to the cwd or the plan's repository"
+    else
+        fail "outside any repository, nothing is written to the cwd or the plan's repository"
+    fi
+
+    # --- No repository anywhere: a greenfield plan before Task 1 (#2242) ---
+    local gf="$TEST_ROOT/greenfield"
+    mkdir -p "$gf"
+    printf '## Task 1: Scaffold the repo\n\nCreate files.\n' > "$gf/plan.md"
+    # One message for both ways to get here: a caller standing in the wrong
+    # directory (such as the plugin's own skill directory, where git init is
+    # the wrong fix) and a new project with no repository yet. git's own
+    # first error line follows it, so the reason git refused is never hidden.
+    local no_repo_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $gf). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local cmd gf_err
+    for cmd in "sdd-workspace plan.md" "task-brief plan.md 1"; do
+        local script=${cmd%% *}
+        rc=0
+        # shellcheck disable=SC2086 # cmd is a fixed script name plus its arguments
+        gf_err="$(cd "$gf" && "$SDD_SCRIPTS"/$cmd 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+            pass "$script outside any repository exits 2 naming both fixes"
+        else
+            fail "$script outside any repository exits 2 naming both fixes"
+            echo "    exit: $rc"
+            echo "    stderr: $gf_err"
+        fi
+    done
+    rc=0
+    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+        pass "review-package outside any repository exits 2 naming both fixes"
+    else
+        fail "review-package outside any repository exits 2 naming both fixes"
+        echo "    exit: $rc"
+        echo "    stderr: $gf_err"
+    fi
+    if [[ ! -e "$gf/.superpowers" ]]; then
+        pass "nothing is written outside a repository"
+    else
+        fail "nothing is written outside a repository"
+        find "$gf/.superpowers" | sed 's/^/    /'
+    fi
+
+    # A repository with no commit yet has no range to review, so
+    # review-package gets the same stop, naming its directory.
+    git init -q -b main "$gf"
+    rc=0
+    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: "* && ! -e "$gf/.superpowers" ]]; then
+        pass "review-package in a repository with no commit exits 2 with the same message"
+    else
+        fail "review-package in a repository with no commit exits 2 with the same message"
+        echo "    exit: $rc"
+        echo "    stderr: $gf_err"
+    fi
+
+    # --- git refuses the repository itself: its reason must reach the caller ---
+    # Inside a working tree git won't trust ("dubious ownership": another
+    # owner, a FAT or network drive, WSL /mnt/c), the shared message alone
+    # would be wrong, so git's own line has to follow it. git's test knob
+    # GIT_TEST_ASSUME_DIFFERENT_OWNER simulates another owner without root.
+    local dub_err dub_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $repo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    if (cd "$repo" && GIT_TEST_ASSUME_DIFFERENT_OWNER=1 git rev-parse --show-toplevel >/dev/null 2>&1); then
+        echo "  [SKIP] git refusing a dubious-ownership repo ($(git --version) ignores GIT_TEST_ASSUME_DIFFERENT_OWNER)"
+    else
+        rc=0
+        dub_err="$(cd "$repo" && GIT_TEST_ASSUME_DIFFERENT_OWNER=1 "$SDD_SCRIPTS/sdd-workspace" plan-a.md 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$dub_err" == "$dub_msg"$'\n'"git said: fatal: detected dubious ownership in repository at "* ]]; then
+            pass "a repository git refuses as dubious stops with the shared message plus git's reason"
+        else
+            fail "a repository git refuses as dubious stops with the shared message plus git's reason"
+            echo "    exit: $rc"
+            echo "    stderr: $dub_err"
+        fi
+    fi
+
     # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
     local stripped="$TEST_ROOT/stripped-scripts"
     mkdir -p "$stripped"
-    cp "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
+    cp "$SDD_SCRIPTS/sdd-repo" "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
     chmod -x "$stripped"/*
     local noexec_out noexec_rc=0
     noexec_out="$(cd "$repo" && bash "$stripped/task-brief" plan-b.md 1 2>&1)" || noexec_rc=$?
