@@ -124,6 +124,11 @@ print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
 Keep the worktree — your human partner iterates on PR feedback there.
+After the PR merges, a separate post-merge cleanup step (e.g. the
+`commit-commands:clean_gone` command, which removes worktrees whose
+remote branch is gone) is what retires the workspace. This skill
+intentionally does not manage that moment — Option 2's job ends at
+"PR opened."
 
 ### Option 3: Keep As-Is
 
