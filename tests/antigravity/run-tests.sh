@@ -13,4 +13,8 @@ for t in "$SCRIPT_DIR"/test-*.sh; do
 done
 
 echo
+echo ">>> pytest (plugin manifest, logo)"
+python3 -m pytest "$SCRIPT_DIR"
+
+echo
 echo "=== All Antigravity tests passed ==="
