@@ -140,7 +140,7 @@ if [[ "$FORMAT" == "zip" ]]; then
   command -v unzip >/dev/null || die "unzip not found in PATH"
 fi
 
-[[ -d "$REPO_ROOT/.git" ]] || die "repo root is not a git checkout: $REPO_ROOT"
+[[ -e "$REPO_ROOT/.git" ]] || die "repo root is not a git checkout: $REPO_ROOT"
 git -C "$REPO_ROOT" rev-parse --verify "$REF^{commit}" >/dev/null ||
   die "git ref does not resolve to a commit: $REF"
 
