@@ -59,6 +59,7 @@ If your harness appears here, read its reference file for special instructions:
 - Antigravity: `references/antigravity-tools.md`
 - Hermes Agent: `references/hermes-tools.md`
 - Muse: `references/muse-tools.md`
+- OpenCode: `references/opencode-tools.md` — skills are registered under bare ids (`brainstorming`, never `superpowers:brainstorming`)
 
 ## User Instructions
 
