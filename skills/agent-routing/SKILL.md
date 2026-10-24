@@ -17,12 +17,13 @@ Map each model and effort to an agent you can launch: a native subagent on your 
 |---|---|
 | `implementer` | Every repository edit. |
 | `planner` | All planning work. |
-| `explorer` | Read-only codebase context and research. |
+| `lookup` | Narrow, specific codebase or web questions, answered by path, symbol, and one line. Read-only; stops at the first complete answer. |
+| `explorer` | Read-only mapping of a system, competing implementations, or affected callers. |
 | `errand` | Tickets, status checks, scripted capture. Never edits repository files. |
 | `monitor` | PRs through CI, review providers, review fixes, and merge. |
 | `reviewer` | Review, with specialty `code`, `spec`, `plan`, `ux`, or `gate`. |
 
-The monitor fixes review findings on its own PR inline; all other code goes to the implementer. When the text names no route for a role you need, stop and tell your human partner.
+The monitor fixes review findings on its own PR inline; all other code goes to the implementer. When the text names no route for a role you need, stop and tell your human partner. One exception: when the text names no `lookup` route, use its `explorer` route for lookups.
 
 The plan's `Risk` column raises effort and never changes the model. A `high` row raises the reviewer one effort level above its route.
 
