@@ -18,6 +18,8 @@ for case in \
   "missing-task:PR 2 names Task 4, which has no heading" \
   "duplicate-task:Task 2 is defined more than once" \
   "missing-field:Task 2 has no **Proves:**" \
+  "missing-reuses:Task 2 has no **Reuses:**" \
+  "bare-none-reuses:Task 2: Reuses is a bare \"none\"; say why" \
   "line-reference:Task 1 cites a line number: src/filters.ts:88" \
   "no-risks:no ## Risks section"; do
   name=${case%%:*}
@@ -31,7 +33,7 @@ for case in \
   fi
 done
 
-for plan in "$fixtures/valid.md" "$fixtures/task-table.md" "$repo_root/docs/toolbelt/plans/2026-10-15-lean-delivery.md" \
+for plan in "$fixtures/valid.md" "$fixtures/task-table.md" "$repo_root/docs/toolbelt/plans/2026-10-24-reuse-first-planning.md" \
   "$repo_root/skills/quick-task/mini-plan-example.md"; do
   if out=$(bash "$check" "$plan") && [ -z "$out" ]; then
     ok "passes: ${plan#"$repo_root"/}"

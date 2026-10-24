@@ -23,6 +23,8 @@
 
 **Contract:** `step1()` returns `1`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step1()` rejects a caller without access.
 
@@ -34,6 +36,8 @@
 - Modify: `src/step2.ts`
 
 **Contract:** `step2()` returns `2`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step2()` rejects a caller without access.
@@ -47,6 +51,8 @@
 
 **Contract:** `step3()` returns `3`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step3()` rejects a caller without access.
 
@@ -58,6 +64,8 @@
 - Modify: `src/step4.ts`
 
 **Contract:** `step4()` returns `4`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step4()` rejects a caller without access.
@@ -71,6 +79,8 @@
 
 **Contract:** `step5()` returns `5`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step5()` rejects a caller without access.
 
@@ -82,6 +92,8 @@
 - Modify: `src/step6.ts`
 
 **Contract:** `step6()` returns `6`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step6()` rejects a caller without access.
@@ -95,6 +107,8 @@
 
 **Contract:** `step7()` returns `7`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step7()` rejects a caller without access.
 
@@ -106,6 +120,8 @@
 - Modify: `src/step8.ts`
 
 **Contract:** `step8()` returns `8`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step8()` rejects a caller without access.
@@ -119,6 +135,8 @@
 
 **Contract:** `step9()` returns `9`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step9()` rejects a caller without access.
 
@@ -130,6 +148,8 @@
 - Modify: `src/step10.ts`
 
 **Contract:** `step10()` returns `10`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step10()` rejects a caller without access.

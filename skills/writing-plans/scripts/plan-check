@@ -7,7 +7,8 @@
 #   being high, medium, or none
 # - every task number is unique, every task is in exactly one PR row, and
 #   every task a row names has a `### Task N` heading (ranges like 1–7 expand)
-# - every task has **Files:**, **Contract:**, **Proves:**, and **Verify:**
+# - every task has **Files:**, **Contract:**, **Reuses:**, **Proves:**, and
+#   **Verify:**, and a Reuses value is not a bare "none" with no reason after it
 # - no `path.ext:NN` or "line NN" reference inside a task
 # - a `## Risks` section
 # Warns when one PR carries more than nine tasks.
@@ -80,9 +81,18 @@ awk -F'\t' '
     for (i = 1; i <= ntasks; i++) {
       t = order[i]
       if (!(t in owner)) err("Task " t " is in no PR row")
-      split("Files Contract Proves Verify", fields, " ")
-      for (f = 1; f <= 4; f++)
+      split("Files Contract Reuses Proves Verify", fields, " ")
+      for (f = 1; f <= 5; f++)
         if (index(body[t], "\n**" fields[f] ":**") == 0) err("Task " t " has no **" fields[f] ":**")
+      nlines = split(body[t], lines, "\n")
+      for (ln = 1; ln <= nlines; ln++) {
+        if (index(lines[ln], "**Reuses:**") == 1) {
+          reuses = tolower(trim(substr(lines[ln], length("**Reuses:**") + 1)))
+          sub(/\.$/, "", reuses)
+          if (reuses == "none") err("Task " t ": Reuses is a bare \"none\"; say why")
+          break
+        }
+      }
     }
     for (t in owner) if (!(t in defined)) err("PR " owner[t] " names Task " t ", which has no heading")
     for (pr in rows) if (rows[pr] > 9) print "warning: PR " pr " has " rows[pr] " tasks; the target is three to nine"

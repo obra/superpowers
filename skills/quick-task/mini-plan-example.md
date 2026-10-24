@@ -18,6 +18,8 @@
 
 **Contract:** The export button `InvoiceList` renders reads "Download CSV" and keeps its click handler.
 
+**Reuses:** none — copy-only change; no component involved
+
 **Proves:** The rendered export button reads "Download CSV".
 
 **Verify:** `npm test -- invoices`

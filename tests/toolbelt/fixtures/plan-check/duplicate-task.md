@@ -24,6 +24,8 @@
 
 **Contract:** `step1()` returns `1`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step1()` rejects a caller without access.
 
@@ -35,6 +37,8 @@
 - Modify: `src/step2.ts`
 
 **Contract:** `step2()` returns `2`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step2()` rejects a caller without access.
@@ -48,6 +52,8 @@
 
 **Contract:** `step3()` returns `3`.
 
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
+
 **Proves:**
 - (guard) `step3()` rejects a caller without access.
 
@@ -59,6 +65,8 @@
 - Modify: `src/step2.ts`
 
 **Contract:** `step2()` returns `2`.
+
+**Reuses:** `assertAccess` in `src/auth.ts`, the access check the importer already uses.
 
 **Proves:**
 - (guard) `step2()` rejects a caller without access.
