@@ -27,7 +27,7 @@ Every finding names a concrete scenario the system can produce: the caller, entr
 - UI and API permission parity, including each button's gating against its endpoint's permission.
 - Moved behavior, checked on both the old and the new path.
 - Every route that grants access.
-- Reuse of an existing owner.
+- Reuse: check the diff against each task's `Reuses:`. Where the diff adds a component, helper, service, or calculation, search the domain words and screen labels for an existing one. A new shared piece must not branch on which caller is using it.
 - Screens after an access error.
 - Stale drafts.
 - Refresh in both directions.
@@ -43,6 +43,6 @@ Write the review to [REVIEW_FILE] under three headings:
 - `### Important`: architecture, missing behavior, error handling, test gaps.
 - `### Minor`: style, optimization, documentation.
 
-Each finding gives `path:line`, the scenario, why it matters, and the fix when it is not obvious. End with `### Out of scope` (one line each, or "None") and `**Ready to merge?** Yes | No | With fixes`.
+Each finding gives `path:line`, the scenario, why it matters, and the fix when it is not obvious. A new copy of an existing shared piece is Important. Label it `plan-gap` only when the plan's `Reuses:` was silent or wrong about it. End with `### Out of scope` (one line each, or "None") and `**Ready to merge?** Yes | No | With fixes`.
 
 Reply in as few lines as cover: the head, the verdict, counts per severity, one line per Critical and Important finding with its label, and the review file path.
