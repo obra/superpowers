@@ -380,6 +380,17 @@ PLAN
         echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
     fi
 
+    # --- task-brief cleans up empty brief file when task is not found (#2611) ---
+    local not_found_rc=0
+    ( cd "$own" && "$SDD_SCRIPTS/task-brief" plan.md 99 >/dev/null 2>&1 ) || not_found_rc=$?
+    if [[ "$not_found_rc" -eq 3 && ! -e "$own/.superpowers/sdd/plan/task-99-brief.md" ]]; then
+        pass "task-brief removes empty brief file and exits 3 when task is not found"
+    else
+        fail "task-brief removes empty brief file and exits 3 when task is not found"
+        echo "    exit code: $not_found_rc (expected 3)"
+        echo "    file exists: $(test -e "$own/.superpowers/sdd/plan/task-99-brief.md" && echo yes || echo no)"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."

@@ -36,6 +36,7 @@ awk -v n="$n" '
 ' "$plan" > "$out"
 
 if [ ! -s "$out" ]; then
+  rm -f "$out"
   echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
   exit 3
 fi
