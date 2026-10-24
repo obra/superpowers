@@ -26,7 +26,7 @@ Up to three implementers run at once, on independent boundaries with disjoint fi
 2. **Dispatch.** Run `bash scripts/dispatch-prompt implementer --plan PLAN --boundary N --worktree DIR`. Dispatch one implementer with "Read <printed path> and follow it", and record its agent id.
 3. **Reply.** Save it to `<workspace>/boundary-N-report.md`. `DONE` continues. `NEEDS_DECISION` goes to your human partner; append the ruling under `## Rulings` in the brief it concerns and resume the implementer. Retry `BLOCKED` once with what it asked for or a stronger routed model; a second `BLOCKED` goes to your human partner.
 4. **Liveness.** Wait on agents with one blocking call. Check any agent with no new commit or output for 60 minutes. Replace a stuck or unresumable implementer with a fresh one, given the prompt path, the report so far, and the current head.
-5. **UX gate.** When ux-gate's entry condition holds, dispatch the gate runner with toolbelt:ux-gate, the changed pages, acceptance criteria, environment, and range. Its review file goes to the same implementer.
+5. **UX gate.** When ux-gate's entry condition holds, dispatch the gate runner with toolbelt:ux-gate, the changed pages, acceptance criteria, environment, range, the plan's absolute path, and the prototype ledger's absolute path when the boundary follows interactive-design. Its review file goes to the same implementer.
 6. **Review**, then **Publish**.
 
 ## Review
