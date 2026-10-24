@@ -2,6 +2,15 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.2.0 (2026-10-24)
+
+Specs and plans now say what the app already has, so work reuses it instead of building a second copy beside it.
+
+- **Every plan task carries a `Reuses:` line.** It names the existing code the task uses or extends, the shared piece it creates, or why there is none. `plan-check` requires it, and a bare `none` fails. Add `Reuses:` lines to in-flight plans before delivery, or delivery will send them back to planning.
+- **Every spec has a What already exists section.** At the level of screens and concepts, it says where the app already shows the information or makes the calculation, and what has to stay the same when it appears in more than one place.
+- **A new `lookup` route takes narrow questions.** It answers by path, symbol, and one line, and stops at the first complete answer. Wide questions still go to `explorer`. A project routing file with no `lookup` line keeps working: lookups use its `explorer` route.
+- **UX review compares against the matching screen.** When a plan or prototype ledger names a screen to match, ux-gate captures that screen beside the changed one and the reviewer reports differences in hierarchy, spacing, information order, and actions that nothing explains. The matching screen is a reference only, so a problem already on it never fails the gate.
+
 ## v10.1.0 (2026-10-20)
 
 Cuts CI spent on tiny PRs and blind reruns.
