@@ -21,11 +21,11 @@ ceilings=(
   "skills/using-git-worktrees/SKILL.md:630"
   "skills/requesting-code-review/SKILL.md:180"
   "skills/requesting-code-review/code-reviewer.md:525"
-  "skills/interactive-design/SKILL.md:900"
+  "skills/interactive-design/SKILL.md:957"
   "skills/interactive-design/iteration-mode.md:240"
   "skills/writing-plans/SKILL.md:1500"
-  "skills/ux-gate/SKILL.md:740"
-  "skills/ux-gate/matrix.md:620"
+  "skills/ux-gate/SKILL.md:856"
+  "skills/ux-gate/matrix.md:676"
   "skills/writing-specs/SKILL.md:592"
   "skills/delivery/SKILL.md:930"
   "skills/delivery/branch-lifecycle.md:360"
@@ -73,7 +73,7 @@ for entry in "${ceilings[@]}"; do
 done
 
 # The whole skills tree stays under one budget, so a new file cannot dodge the ceilings.
-total_ceiling=14494
+total_ceiling=14843
 total=$(find "$repo_root/skills" -name '*.md' -print0 | xargs -0 cat | wc -w)
 echo "$total/$total_ceiling skills/**/*.md"
 if [[ "$total" -ge "$total_ceiling" ]]; then

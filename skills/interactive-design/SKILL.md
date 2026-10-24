@@ -17,7 +17,8 @@ For the third entry, read [iteration-mode.md](iteration-mode.md) first.
 
 1. Work in an isolated worktree, invoking `toolbelt:using-git-worktrees` if you are not in one. The backend plan later executes on this branch.
 2. Read `.toolbelt/prototyping.md` if present: where fixture routes live, how to run the dev server, seed-data conventions. If absent, infer them and record the inferences in the ledger header.
-3. Create the ledger (§7) and start the dev server.
+3. Before the first edit, find the existing screens that show the same information and the shared pieces they use. Delegate the search through agent-routing when you do not already know them. Use or extend a shared piece instead of building a second one beside it.
+4. Create the ledger (§7) and start the dev server. In the ledger header, record the screen each surface matches and any difference you intend.
 
 ## 2. The fixture gate
 
@@ -34,7 +35,7 @@ Edit directly in this session, with no subagents and no per-iteration review. Co
 ## 4. Exit
 
 1. Reconcile: every marker has a matching ledger entry, every `[FIXTURE]` or `[EXISTING — EXTENDED]` entry has a marker, and recorded shapes match the fixtures. Delete dead routes.
-2. Write `.toolbelt/ux/matrix.json` per ux-gate §2 for every surface the criteria name. Run `../ux-gate/scripts/ux-capture` against the prototype into `.toolbelt/ux/baseline/`. Under the ledger's **Acceptance criteria**, record the prototype's visual and interaction criteria, including the empty and error states, both absolute paths, and the prototype commit SHA. Stop the dev server.
+2. Write `.toolbelt/ux/matrix.json` per ux-gate §2 for every surface the criteria name. Run `../ux-gate/scripts/ux-capture` against the prototype into `.toolbelt/ux/baseline/`. Under the ledger's **Acceptance criteria**, record the prototype's visual and interaction criteria, including the empty and error states, both absolute paths, and the prototype commit SHA. For each surface with a matching screen, include "matches <screen> in hierarchy, spacing, information order, and actions", with any intended difference named. Stop the dev server.
 3. Present the contract inventory to your human partner.
 4. On approval, invoke `toolbelt:writing-specs`, or in iteration mode the route iteration-mode.md confirms. Do NOT invoke any other skill.
 
@@ -61,7 +62,7 @@ During delivery, the implementer stops with `NEEDS_DECISION`. The approved resol
 
 ## 7. The ledger
 
-`.toolbelt/prototype/<feature-slug>/contracts.md` has a header naming the feature, branch, and marker, then one entry per endpoint (or GraphQL operation, RPC procedure) with request and response shapes and error statuses. Each marker's endpoint id resolves to exactly one entry.
+`.toolbelt/prototype/<feature-slug>/contracts.md` has a header naming the feature, branch, and marker, and the screen each surface matches with any intended difference, then one entry per endpoint (or GraphQL operation, RPC procedure) with request and response shapes and error statuses. Each marker's endpoint id resolves to exactly one entry.
 
 | Status | Fields |
 |---|---|

@@ -22,6 +22,7 @@ Pick the smallest set of pathways covering the diff and the acceptance criteria'
 - Capture every supported theme for every changed surface.
 - Reach the criteria's states (empty, loading, error, dense data, overlays) with isolated fixtures or seeded data, never by editing app source.
 - Check changed hover or focus, keyboard reach for changed interactions, and scrolling past the fold. Prove Tab reach with `press` and `expectFocus`; a direct `focus` does not. Use `capture: false` for assertion-only steps, and `motion: true` for changed motion.
+- When the plan's `Reuses:` or the prototype ledger names a screen to match, capture that screen as its own pathway, named with the `match-` prefix (see [matrix.md](matrix.md)). Give it whatever steps reach the matching state, such as opening the slide-out panel, at the same viewports and themes as the changed surface. That pathway is unchanged code: its stills are references for the reviewer, and its mechanical results are ignored, so a problem that was already on that screen never fails the gate for the changed one.
 
 Record why any dimension is omitted.
 
@@ -37,15 +38,15 @@ Read [matrix.md](matrix.md) and write `.toolbelt/ux/matrix.json`. Set `UX_SKILL_
 
 Use the prototype ledger's absolute baseline path when present; otherwise capture the same matrix first on the base branch, served in isolation. With no baseline, omit `--baseline`, review every still as `new`, and record why. An incomplete step is a finding. Exit 2 means capture did not run.
 
-Run any token or palette check the policy names. A mechanical finding at `should` or above joins the review's findings.
+Run any token or palette check the policy names. A mechanical finding at `should` or above joins the review's findings, except on a `match-` pathway, whose mechanical results you ignore.
 
 ## 3. Review
 
-Route one `reviewer` with specialty `ux` through agent-routing, on a vision-capable model. Send changed and new captures, useful crops, reference screens, and any unchanged capture a criterion needs, images first, labelled `Image N: <tag>`, then criteria, mechanical results, the design-reference path, and the review file path (`.toolbelt/ux/<capture-dir>/review.md`). The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
+Route one `reviewer` with specialty `ux` through agent-routing, on a vision-capable model. Send changed and new captures, useful crops, reference screens, and any unchanged capture a criterion needs, images first, labelled `Image N: <tag>`, then criteria, mechanical results, the design-reference path, and the review file path (`.toolbelt/ux/<capture-dir>/review.md`). When a `match-` pathway exists, send its stills beside the changed surface they match. The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
 
 > Pass 1: mark each criterion met, not met, or not evidenced, citing the evidence.
 >
-> Pass 2: identify visible inconsistencies or usability problems in spacing, alignment, typography, contrast, action hierarchy, and states. Use the project's design rules and reference screens. Explain the consequence and relevant criterion or convention. Distinguish legitimate disabled states from unfinished controls. Code review checks component imports; screenshots cannot establish them.
+> Pass 2: identify visible inconsistencies or usability problems in spacing, alignment, typography, contrast, action hierarchy, and states. Use the project's design rules and reference screens. When a matching screen was sent beside the changed surface, judge the changed surface against that screen and report any difference in hierarchy, spacing, information order, and actions that the criteria do not explain. Explain the consequence and relevant criterion or convention. Distinguish legitimate disabled states from unfinished controls. Code review checks component imports; screenshots cannot establish them.
 >
 > Each finding names a severity (blocker, should, nit), the evidence, expected and actual behavior, and component/file when known. Missing evidence can block a criterion.
 >

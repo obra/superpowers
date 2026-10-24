@@ -23,6 +23,8 @@ Read this when writing a matrix for `scripts/ux-capture`. Run it from the consum
 
 `baseUrl` and a nonempty `pathways` are required. Each pathway has a unique `name` and a route `path`. Omitted `steps` default to one step named `open`; an explicitly empty step list, theme list, or viewport list is an error. Names and state labels use letters, digits, underscores, or hyphens, and output tags are unique.
 
+A screen the changed surface has to match is captured as its own pathway, not as a `referenceScreens` entry, because reaching the matching state can take steps, such as opening a slide-out panel. Name it with the `match-` prefix, for example `match-invoice-detail`, so the gate runner can tell it apart. Give it the steps that reach the matching state. It is captured at the matrix's themes and viewports, the same as the changed surface. Its stills are comparison references, and the gate runner ignores its mechanical results.
+
 Defaults are light and dark themes, and viewports 375×812 at DPR 2, 768×1024 at DPR 1, and 1440×900 at DPR 1. Override them with the project's supported set.
 
 Optional matrix fields:
