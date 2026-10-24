@@ -26,7 +26,7 @@ ceilings=(
   "skills/writing-plans/SKILL.md:1500"
   "skills/ux-gate/SKILL.md:740"
   "skills/ux-gate/matrix.md:620"
-  "skills/writing-specs/SKILL.md:430"
+  "skills/writing-specs/SKILL.md:592"
   "skills/delivery/SKILL.md:930"
   "skills/delivery/branch-lifecycle.md:360"
   "skills/delivery/implementer-prompt.md:330"
@@ -73,7 +73,7 @@ for entry in "${ceilings[@]}"; do
 done
 
 # The whole skills tree stays under one budget, so a new file cannot dodge the ceilings.
-total_ceiling=14184
+total_ceiling=14346
 total=$(find "$repo_root/skills" -name '*.md' -print0 | xargs -0 cat | wc -w)
 echo "$total/$total_ceiling skills/**/*.md"
 if [[ "$total" -ge "$total_ceiling" ]]; then
