@@ -61,23 +61,58 @@ esac
 # True when the workspace at $1 is (or becomes) this plan's: an existing
 # marker must name this plan; a missing marker means a new workspace or a
 # pre-marker legacy one, and either way the plan claims it by writing one.
+#
+# owns() distinguishes "this plan's" (0) from "another plan's" (1) from
+# "unusable" (2: mkdir/printf failed, or the marker cannot be read). The
+# caller loop must treat a failure as a reason to stop, never as a slot to
+# try next: with `set -e` suspended inside a `while ! owns ...` condition,
+# an unwritable workspace spun the slug counter forever (a regular file at
+# .superpowers reproduced 800+ iterations in 8s before exiting via timeout).
 owns() {
   if [ -e "$1/plan-path" ]; then
-    [ "$(cat "$1/plan-path")" = "$plan_id" ]
-  else
-    mkdir -p "$1"
-    printf '%s\n' "$plan_id" > "$1/plan-path"
+    val=$(cat "$1/plan-path" 2>/dev/null) || { echo "cannot read marker in $1" >&2; return 2; }
+    [ "$val" = "$plan_id" ] && return 0 || return 1
   fi
+  if ! mkdir -p "$(dirname "$1")" 2>/dev/null; then
+    echo "cannot create workspace base $(dirname "$1")" >&2; return 2
+  fi
+  if ! mkdir "$1" 2>/dev/null; then
+    if [ -d "$1" ]; then
+      if ( set -C; printf '%s\n' "$plan_id" > "$1/plan-path" ) 2>/dev/null; then return 0; fi
+      val=$(cat "$1/plan-path" 2>/dev/null) || { echo "workspace $1 unusable" >&2; return 2; }
+      [ "$val" = "$plan_id" ] && return 0 || return 1
+    fi
+    echo "cannot create workspace $1" >&2; return 2
+  fi
+  # noclobber: two controllers claiming the same fresh directory race on the
+  # marker; only the winner's write lands, the loser classifies via the
+  # marker it finds.
+  if ! ( set -C; printf '%s\n' "$plan_id" > "$1/plan-path" ) 2>/dev/null; then
+    echo "cannot write marker in $1" >&2; return 2
+  fi
+  return 0
+}
+
+claim() {
+  owns "$1"; rc=$?
+  case $rc in
+    0|1) return "$rc" ;;
+    *) exit 2 ;;
+  esac
 }
 
 dir="$base/$slug"
-if ! owns "$dir"; then
+if ! claim "$dir"; then
   parent=$(basename "$plan_dir")
   dir="$base/$slug-$parent"
-  if ! owns "$dir"; then
+  if ! claim "$dir"; then
     n=2
-    while ! owns "$base/$slug-$parent-$n"; do n=$((n + 1)); done
-    dir="$base/$slug-$parent-$n"
+    dir=""
+    while [ "$n" -le 32 ]; do
+      if claim "$base/$slug-$parent-$n"; then dir="$base/$slug-$parent-$n"; break; fi
+      n=$((n + 1))
+    done
+    [ -n "$dir" ] || { echo "no free workspace for $slug under $base after 32 attempts" >&2; exit 2; }
   fi
 fi
 

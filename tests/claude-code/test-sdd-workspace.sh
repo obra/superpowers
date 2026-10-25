@@ -380,6 +380,48 @@ PLAN
         echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
     fi
 
+    # --- An unwritable workspace fails fast with a message, never spins ---
+    # The slug loop runs in a `while ! owns ...` condition where `set -e` is
+    # suspended, so a failure of owns() beyond "another plan owns it" used to
+    # retry forever. A regular file squatting on the workspace parent is the
+    # deterministic trigger; timeout distinguishes "spins" from "fails".
+    git init -q -b main "$TEST_ROOT/spin"
+    local spin spin_rc=0
+    spin="$(cd "$TEST_ROOT/spin" && git rev-parse --show-toplevel)"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$spin/spin-plan.md"
+    mkdir -p "$spin/.superpowers/sdd"
+    printf 'blocker\n' > "$spin/.superpowers/sdd/spin-plan"
+    timeout 10 bash -c 'cd "$1" && "$2" spin-plan.md >/dev/null 2>&1' \
+        _ "$spin" "$SDD_SCRIPTS/sdd-workspace" || spin_rc=$?
+    if [[ "$spin_rc" -ne 0 && "$spin_rc" -ne 124 ]]; then
+        pass "unwritable workspace: non-zero exit, no timeout (fails instead of spinning)"
+    else
+        fail "unwritable workspace: non-zero exit, no timeout (fails instead of spinning)"
+        echo "    exit: $spin_rc (124 = killed by timeout = spin)"
+    fi
+
+    # --- A full counter range stops with a message, not forever ---
+    git init -q -b main "$TEST_ROOT/capped"
+    local capped rc_capped=0
+    capped="$(cd "$TEST_ROOT/capped" && git rev-parse --show-toplevel)"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$capped/plan.md"
+    for slot in plan plan-capped; do
+        mkdir -p "$capped/.superpowers/sdd/$slot"
+        printf 'other/plan.md\n' > "$capped/.superpowers/sdd/$slot/plan-path"
+    done
+    for i in $(seq 2 33); do
+        mkdir -p "$capped/.superpowers/sdd/plan-capped-$i"
+        printf 'other/plan.md\n' > "$capped/.superpowers/sdd/plan-capped-$i/plan-path"
+    done
+    timeout 10 bash -c 'cd "$1" && "$2" plan.md >/dev/null 2>&1' \
+        _ "$capped" "$SDD_SCRIPTS/sdd-workspace" || rc_capped=$?
+    if [[ "$rc_capped" -ne 0 && "$rc_capped" -ne 124 ]]; then
+        pass "33 occupied slots: gives up with non-zero exit (bounded search)"
+    else
+        fail "33 occupied slots: gives up with non-zero exit (bounded search)"
+        echo "    exit: $rc_capped"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
