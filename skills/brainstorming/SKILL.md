@@ -21,6 +21,14 @@ When a spec or plan states a fact about the existing code ("X is done by Y",
 A self-review that only re-reads the spec passes clean even when the spec
 is wrong about the code.
 
+## Bug Reports Are Investigations, Not Restatements
+
+When the user reports a bug, investigate the code and the reproduction before
+asking for confirmation. Do not restate the report and ask "is that right?"
+— that wastes a turn and adds no information. Ask only for the missing fact
+that would change the diagnosis (logs, environment, exact steps), using the
+platform's question tool when available.
+
 ## First: What Do You Actually Know?
 
 Before you reply, ask yourself: what do I know about what they want, and
