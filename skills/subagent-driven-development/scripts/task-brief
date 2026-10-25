@@ -2,6 +2,8 @@
 # Extract one task's full text from an implementation plan into a file the
 # implementer reads in one call, so the task text never has to be pasted
 # through the controller's context.
+# Includes the plan's Spec reference, Global Constraints and Review Focus so
+# requirements shared by every task survive a fresh executor or compaction.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
 # Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/task-<N>-brief.md
@@ -28,9 +30,29 @@ else
 fi
 
 awk -v n="$n" '
+  { line = $0; sub(/\r$/, "", line) }
   /^```/ { infence = !infence }
   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
+    pastheader = 1
     intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+    if (intask && !emitted_header) {
+      printf "%s", context
+      emitted_header = 1
+    }
+  }
+  !pastheader {
+    if (!infence && /^#+[ \t]+/) {
+      heading = $0
+      sub(/[ \t].*$/, "", heading)
+      depth = length(heading)
+      if (incontext && depth <= contextdepth) incontext = 0
+      if (!incontext && line ~ /^#+[ \t]+(Global Constraints|Review Focus)([ \t]+#+)?[ \t]*$/) {
+        incontext = 1
+        contextdepth = depth
+      }
+    }
+    if (incontext) context = context $0 ORS
+    else if (!infence && /^\*\*Spec:\*\*/) context = context $0 ORS ORS
   }
   intask { print }
 ' "$plan" > "$out"
