@@ -79,6 +79,13 @@ Skip any step = lying, not verifying
 ❌ "Should pass now" / "Looks correct"
 ```
 
+Read the runner's VERDICT, never the tail. Playwright/vitest print
+`2 failed … 30 passed` with the pass line last — skimming the tail (or
+grepping only for `passed`) reports success while the failure line scrolls
+past unseen. Capture the run and check BOTH counts, including failures, or
+use a reporter that fails the process on any failure; quote counts with
+failures included. The trap fires exactly on mostly-green runs.
+
 **Regression tests (TDD Red-Green):**
 ```
 ✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
