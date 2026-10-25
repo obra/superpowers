@@ -4,11 +4,29 @@ Load this before reviewing for the code-smells dimension. Report a smell
 only when it has impact — the code is about to be edited repeatedly, or the
 smell is itself a bug nest. When unsure, drop it.
 
+## Before the smell pass — measure the touched files
+
+Run `wc -l` on every file listed in package.files, in the repository
+working tree. Each source or test file around 500 lines or more gets
+one full read with one question: does it carry several unrelated
+responsibilities? Do this first — the diff's own smells will consume
+your attention if you let them go first.
+
+Record the pass in the findings file even when clean: one line per
+measured file — `# measure: <path> <n> lines — cohesive | mixed
+responsibilities`. If mixed, write the god-file finding and do not
+drop it against the impact bar: a file that accretes one
+responsibility per PR is edited repeatedly by construction, and the
+diff under review is one more of those edits. Cohesion is the
+criterion — size alone is never a finding.
+
 ## Structure
 
 - Long method — does several jobs, nesting deeper than 3 levels (arrow
   anti-pattern)
 - God class — one class carrying many responsibilities
+- God file — one module (or test file) carrying several unrelated
+  responsibilities; found by the measure-first pass above
 - Long parameter list — more than 4-5 parameters
 - Data clump — the same group of fields/params travels together everywhere
 - Primitive obsession — strings/ints standing in for a domain type
