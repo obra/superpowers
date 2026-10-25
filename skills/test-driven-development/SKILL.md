@@ -219,6 +219,14 @@ When writing or changing any test, read [writing-good-tests.md](writing-good-tes
 - Keep test-only code in test utilities, out of production classes
 - Understand a dependency's side effects before mocking it
 
+## Blind Spots (regression tests inherit the author's)
+
+Before trusting a regression test, list the stubs and overrides the fixture applies and check whether any pins the condition the bug depends on. If so, drop it for this test and use the real state. "Watch it fail" catches this only if RED happens with the exact fixture that stays in the final test.
+
+When code introduces an in-progress flag or lock, list every public method that reads or writes the same state and write one test per method called while the operation is in flight (the fake needs a delay for the operation to exist in the test). For operations that cost money, the final test is "the created resource is never left without a record, whatever the order".
+
+A test written from the author's imagined threat inherits the author's blind spot.
+
 ## Common Rationalizations
 
 | Excuse | Reality |
