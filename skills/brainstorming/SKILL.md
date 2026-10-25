@@ -14,6 +14,13 @@ People often haven't finished working out what they want. Good questions
 help them think it through. When you understand the why, you make the
 hundred decisions they never mention the way they would have made them.
 
+## Verify Claims Against the Code
+
+When a spec or plan states a fact about the existing code ("X is done by Y",
+"Z is the only entry point"), check it against the code before trusting it.
+A self-review that only re-reads the spec passes clean even when the spec
+is wrong about the code.
+
 ## First: What Do You Actually Know?
 
 Before you reply, ask yourself: what do I know about what they want, and
