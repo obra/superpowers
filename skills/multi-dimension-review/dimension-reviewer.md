@@ -27,6 +27,8 @@ prompt: |
   - evidence: <diff excerpt, or the command you ran plus its output>
 
   Rules:
+  - The repository working tree under review is your current working
+    directory — read from it freely, never modify it.
   - A finding without file:line plus evidence is self-rejected — do not
     write it.
   - Do not report what a linter, typechecker, or compiler would catch.
