@@ -40,8 +40,10 @@ Skip any step = lying, not verifying
 | Claim | Requires | Not Sufficient |
 |-------|----------|----------------|
 | Tests pass | Test command output: 0 failures | Previous run, "should pass" |
+| Tests pass (verdict vs tail) | Full runner output: check BOTH failed and passed counts | Skimming the tail/last line (e.g. Vitest/Playwright print failures above summary), grepping only for "passed" |
 | Linter clean | Linter output: 0 errors | Partial check, extrapolation |
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
+| CLI gate clean | Authoritative CLI command exit 0 (`tsc --noEmit`, `cargo check`) | Cached or asynchronous editor diagnostics / IDE tooltips |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
@@ -54,6 +56,9 @@ Skip any step = lying, not verifying
 - About to commit/push/PR without verification
 - Trusting agent success reports
 - Relying on partial verification
+- Skimming only the tail or last line of a test runner's output
+- Grepping only for "passed" while failures scroll past unseen
+- Trusting asynchronous editor diagnostics over the project's CLI gate command
 - Thinking "just this once"
 - Tired and wanting work over
 - **ANY wording implying success without having run verification**
@@ -65,6 +70,8 @@ Skip any step = lying, not verifying
 | "Should work now" | RUN the verification |
 | "I'm confident" | Confidence ≠ evidence |
 | "Just this once" | No exceptions |
+| "The last line said passed" | Runners print failures above the summary; check BOTH passed and failed counts |
+| "Editor diagnostics still show an error" | Editor views are cached; the CLI gate command is the single authoritative artifact |
 | "Linter passed" | Linter ≠ compiler |
 | "Agent said success" | Verify independently |
 | "I'm tired" | Exhaustion ≠ excuse |
@@ -75,8 +82,9 @@ Skip any step = lying, not verifying
 
 **Tests:**
 ```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
+✅ [Run test command] [Read runner's FULL verdict: check BOTH failed and passed counts (e.g. 0 failed, 34 passed)] "All tests pass"
+❌ Skim the tail / last line (runners like Vitest/Playwright print "2 failed ... 30 passed" with the pass line last)
+❌ Grep only for "passed" while failures scroll past unseen
 ```
 
 **Regression tests (TDD Red-Green):**
@@ -85,10 +93,11 @@ Skip any step = lying, not verifying
 ❌ "I've written a regression test" (without red-green verification)
 ```
 
-**Build:**
+**Build & CLI Gate vs Editor Diagnostics:**
 ```
-✅ [Run build] [See: exit 0] "Build passes"
+✅ [Run authoritative CLI gate command (`tsc --noEmit`, `cargo check`, build script)] [See: exit 0] "Build and typecheck pass"
 ❌ "Linter passed" (linter doesn't check compilation)
+❌ Rely on cached/asynchronous editor diagnostics when the CLI gate is green
 ```
 
 **Requirements:**
