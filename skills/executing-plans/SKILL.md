@@ -216,6 +216,13 @@ in this session — not inferred from the diff looking right:
 - Every `Expected:` line in the brief was compared against real output.
 - Every deviation from the brief has a `Ruling:` line in the ledger.
 
+When a task's verification runs outside the shell (browser, hardware,
+external system, deployed service), the ledger line records the
+verification and its observed outcome as reported, prefixed with
+`verified-externally:` instead of a shell command and result. Never
+fabricate a shell command for a check that did not run in the shell;
+the ledger is the honest record of what was actually proven.
+
 **REQUIRED SUB-SKILL:** superpowers:verification-before-completion governs
 the claim. If any item is missing, the task is not complete: finish it.
 
