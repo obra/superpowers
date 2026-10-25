@@ -81,6 +81,8 @@ remain unchanged, establish a characterization guard before refactoring:
 2. Write the test and observe the existing behavior pass.
 3. Require `git diff HEAD -- <production-paths>` to be empty before mutating.
    If those paths have existing changes, stop without discarding them.
+   Stop any dev server, watcher, or worker that reloads those paths; the
+   mutation is live on disk until step 4 restores it.
    Make the mutation and verify the expected failure. If the test still
    passes, strengthen or replace it and repeat.
 4. Restore only the mutated production paths from VCS with
