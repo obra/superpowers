@@ -167,7 +167,7 @@ PLAN
         pass "review-package rejects a tree revision as BASE with exit 2"
     else
         fail "review-package rejects a tree revision as BASE with exit 2"
-        echo "    exit: $tree_rc (128 = git raw failure past the guards)"
+        echo "    exit: $tree_rc (3 = misdiagnosed by the descendant guard; should be 2 = bad input)"
     fi
 
     rc=0
