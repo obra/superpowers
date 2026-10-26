@@ -118,6 +118,19 @@ Superpowers is available via the [official Codex plugin marketplace](https://git
 
 - Select `Install Plugin`.
 
+To install the version from a local checkout instead of the public marketplace, run these commands from the repository root:
+
+```bash
+codex plugin marketplace add .
+codex plugin add superpowers@superpowers-dev
+```
+
+The local marketplace is named `superpowers-dev` in `.agents/plugins/marketplace.json`. Verify the installation with:
+
+```bash
+codex plugin list --marketplace superpowers-dev
+```
+
 ### Cursor
 
 - In Cursor Agent chat, install from marketplace:
