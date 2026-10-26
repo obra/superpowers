@@ -44,6 +44,7 @@ DEST_REL="plugins/superpowers"
 # (.DS_Store is intentionally unanchored — Finder creates them everywhere.)
 EXCLUDES=(
   # Dotfiles and infra — top-level only
+  "/.antigravity-plugin/"
   "/.claude/"
   "/.claude-plugin/"
   "/.codex/"
@@ -69,6 +70,7 @@ EXCLUDES=(
   "/GEMINI.md"
   "/RELEASE-NOTES.md"
   "/gemini-extension.json"
+  "/index.js"
   "/package.json"
 
   # Directories not shipped by canonical Codex plugins
@@ -79,6 +81,9 @@ EXCLUDES=(
   "/scripts/"
   "/tests/"
   "/tmp/"
+
+  # Other harnesses' assets
+  "/assets/antigravity-logo.png"
 )
 
 # =============================================================================

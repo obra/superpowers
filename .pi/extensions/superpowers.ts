@@ -16,10 +16,6 @@ let cachedBootstrap: string | null | undefined;
 export default function superpowersPiExtension(pi: ExtensionAPI) {
 	let injectBootstrap = true;
 
-	pi.on("resources_discover", async () => ({
-		skillPaths: [skillsDir],
-	}));
-
 	pi.on("session_start", async () => {
 		injectBootstrap = true;
 	});

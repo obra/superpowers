@@ -174,6 +174,7 @@ write_upstream_fixture() {
     local with_pure_ignored="${2:-1}"
 
     mkdir -p \
+        "$repo/.antigravity-plugin" \
         "$repo/.codex-plugin" \
         "$repo/.kimi-plugin" \
         "$repo/.private-journal" \
@@ -194,6 +195,10 @@ write_upstream_fixture() {
   "name": "fixture-upstream",
   "version": "$PACKAGE_VERSION"
 }
+EOF
+
+    cat > "$repo/index.js" <<'EOF'
+export { default } from "./.opencode/plugins/superpowers.js";
 EOF
 
     cat > "$repo/.gitignore" <<'EOF'
@@ -236,6 +241,15 @@ EOF
   "version": "$MANIFEST_VERSION"
 }
 EOF
+
+    cat > "$repo/.antigravity-plugin/plugin.json" <<EOF
+{
+  "name": "superpowers",
+  "version": "$MANIFEST_VERSION"
+}
+EOF
+
+    printf 'antigravity png fixture\n' > "$repo/assets/antigravity-logo.png"
 
     cat > "$repo/assets/superpowers-small.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>
@@ -291,11 +305,13 @@ EOF
     fi
 
     git -C "$repo" add \
+        .antigravity-plugin/plugin.json \
         .codex-plugin/plugin.json \
         .kimi-plugin/plugin.json \
         .gitignore \
         .gitmodules \
         .pre-commit-config.yaml \
+        assets/antigravity-logo.png \
         assets/app-icon.png \
         assets/superpowers-small.svg \
         evals/drill/README.md \
@@ -303,6 +319,7 @@ EOF
         hooks/run-hook.cmd \
         hooks/session-start \
         hooks/session-start-codex \
+        index.js \
         package.json \
         scripts/sync-to-codex-plugin.sh \
         skills/example/SKILL.md
@@ -652,6 +669,8 @@ main() {
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
+    assert_not_contains "$preview_section" ".antigravity-plugin/plugin.json" "Preview excludes Antigravity manifest from Codex sync"
+    assert_not_contains "$preview_section" "assets/antigravity-logo.png" "Preview excludes Antigravity logo from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
@@ -664,6 +683,7 @@ main() {
     assert_not_contains "$preview_section" "evals/" "Preview excludes eval harness"
     assert_not_contains "$preview_section" ".gitmodules" "Preview excludes repo submodule metadata"
     assert_not_contains "$preview_section" ".pre-commit-config.yaml" "Preview excludes repo pre-commit config"
+    assert_not_contains "$preview_section" "index.js" "Preview excludes OpenCode root entrypoint"
     assert_not_contains "$preview_output" "Overlay file (.codex-plugin/plugin.json) will be regenerated" "Preview omits overlay regeneration note"
     assert_not_contains "$preview_output" "Assets (superpowers-small.svg, app-icon.png) will be seeded from" "Preview omits assets seeding note"
     assert_contains "$preview_section" "skills/example/SKILL.md" "Preview reflects dirty tracked destination file"
