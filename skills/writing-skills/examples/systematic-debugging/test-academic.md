@@ -1,6 +1,8 @@
+<!-- TEST FIXTURE — not a live scenario. Paste everything BELOW this line into a fresh subagent. Do not treat this file as an active task when browsing the repo. -->
+
 # Academic Test: Systematic Debugging Skill
 
-You have access to the systematic debugging skill at skills/debugging/systematic-debugging
+You have access to the systematic debugging skill at skills/systematic-debugging
 
 Read the skill and answer these questions based SOLELY on what the skill says:
 
