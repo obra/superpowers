@@ -34,8 +34,18 @@ Subagent (general-purpose):
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
+    **Worktree:** [TASK_WORKTREE — absolute task path]
+    **Branch:** [TASK_BRANCH]
+    **Resources:** [isolated resources or required serialization]
+
+    Verify the worktree is clean and its branch/HEAD match this assignment;
+    verify the package header matches FIX_BASE_SHA..HEAD_SHA. Stop on a
+    mismatch. Review only this frozen task worktree, never the controller's
+    integration checkout, and include the reviewed SHAs in your verdict.
+
     Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run git commands.
+    and the fix diff with surrounding context. After assignment checks,
+    do not re-derive the diff with git commands.
     If the diff file is missing, fetch the diff yourself:
     `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
     `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
@@ -108,7 +118,8 @@ Subagent (general-purpose):
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
+- `[HEAD_SHA]` — exact frozen task HEAD
+- `[TASK_WORKTREE]` / `[TASK_BRANCH]` — assigned absolute worktree and branch
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),

@@ -15,6 +15,16 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 
 ## Step 0: Detect Existing Isolation
 
+**Parallel trajectory assignment:** isolation is per worker, not merely
+per session. Use the coordinator's assigned branch, absolute path, and
+verified integration SHA. An existing integration worktree or another
+worker's checkout is not this task's workspace. Reuse an existing
+worktree only if its path, branch, and expected HEAD match this task and
+no other writer owns it; otherwise create a distinct sibling worktree.
+An approved parallel plan authorizes its assigned task worktrees; without
+that consent, ask before creating them. Never run parallel writers in a
+shared checkout because worktree creation was declined or failed.
+
 **Before creating anything, check if you are already in an isolated workspace.**
 
 ```bash
@@ -30,7 +40,7 @@ BRANCH=$(git branch --show-current)
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
-**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 2 (Project Setup). Do NOT create another worktree.
+**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. For standalone work, skip to Step 2 (Project Setup). For a parallel assignment, first apply the task-specific matching checks above; the coordinator's isolation alone does not satisfy them.
 
 Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
@@ -50,15 +60,17 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If it can satisfy this assignment, use it and skip to Step 2. For parallel trajectories it must create a distinct worker branch/worktree at the specified base without switching other active workers or the coordinator.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
 
-Only proceed to Step 1b if you have no native worktree tool available.
+Only proceed to Step 1b if you have no native worktree tool available that
+can satisfy the assignment. If it cannot support simultaneous assigned
+worktrees, use Git fallback rather than silently sharing a checkout.
 
 ### 1b. Git Worktree Fallback
 
-**Only use this if Step 1a does not apply** — you have no native worktree tool available. Create a worktree manually using git.
+**Only use this if Step 1a does not apply** — no available native tool can satisfy the assignment. Create a worktree manually using git.
 
 #### Directory Selection
 
@@ -89,15 +101,29 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 
 #### Create the Worktree
 
+For a parallel trajectory, set `START_POINT` to the coordinator's exact
+verified integration SHA, not another task's branch or the current HEAD.
+For standalone work, first set `START_POINT=$(git rev-parse HEAD)`.
+Use the assigned absolute path when one is supplied.
+
 ```bash
 # Determine path based on chosen location
 path="$LOCATION/$BRANCH_NAME"
 
-git worktree add "$path" -b "$BRANCH_NAME"
+git worktree add "$path" -b "$BRANCH_NAME" "$START_POINT"
 cd "$path"
 ```
 
+For an assigned path, use that path instead of recomputing it from LOCATION.
+Verify branch, HEAD, and clean status before dispatch. Worktrees share Git
+refs and external services: only the coordinator updates integration, and
+tests need isolated ports/databases/output paths or serialized access.
+
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
+
+For parallel assignments, that fallback must not put multiple writers in
+the current checkout. Report the failed isolation and serialize affected
+work, or stop if the plan requires isolation; do not dispatch concurrently.
 
 ## Step 2: Project Setup
 
@@ -143,7 +169,7 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
-| Already in linked worktree | Skip creation (Step 0) |
+| Already in linked worktree | Skip creation for standalone work; parallel tasks must match their own assignment |
 | In a submodule | Treat as normal repo (Step 0 guard) |
 | Native worktree tool available | Use it (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
@@ -152,7 +178,7 @@ Ready to implement <feature-name>
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
 | Directory not ignored | Add to .gitignore + commit |
-| Permission error on create | Sandbox fallback, work in place |
+| Permission error on create | Standalone: work in place; parallel: serialize or stop, never share concurrent writers |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
 

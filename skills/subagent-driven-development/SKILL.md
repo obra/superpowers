@@ -5,11 +5,16 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute the plan's dependency graph with a fresh implementer per trajectory.
+Run independent ready trajectories concurrently in separate branches and
+worktrees. Review each pinned result (spec compliance, then quality, with
+the task reviewer); the coordinator alone merges and verifies results.
+Keep the broad whole-branch review at the end.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
+**Core principle:** Parallel isolated implementation + pinned task reviews +
+serialized verified merge commits + broad final review.
 
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
@@ -29,6 +34,11 @@ operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For those,
 stop and ask.
+
+Approval of a plan that explicitly authorizes local trajectory merges into
+its dedicated integration branch covers those merges. Without that
+authorization, ask once before integration. It never authorizes a push or
+a merge into a shared target branch.
 
 ## When to Use
 
@@ -54,47 +64,39 @@ digraph when_to_use {
 - Fresh subagent per task (no context pollution) instead of one context doing every task
 - Review after each task (spec compliance + code quality) instead of only at the end
 - Costs a fresh context per task and per review; inline costs one context plus one final reviewer
-- Both run in this session, share the same plan workspace and ledger, and never pause between tasks
+- Both run in this session and use a plan workspace and ledger. SDD workers
+  have separate worktrees; only the coordinator updates the shared ledger.
 
 ## The Process
 
 ```dot
 digraph process {
     rankdir=TB;
-
-    subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer implements, tests, commits, self-reviews" [shape=box];
-        "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
-        "Spec ✅ and quality approved?" [shape=diamond];
-        "Fix loop: read references/fix-loop.md before every round" [shape=box];
-        "Append completion to ledger, mark todo complete" [shape=box];
-    }
-
-    "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
-    "More tasks remain?" [shape=diamond];
-    "Final review and finish: read references/final-review.md" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
-
-    "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
-    "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
-    "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
-    "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
-    "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
-    "Spec ✅ and quality approved?" -> "Fix loop: read references/fix-loop.md before every round" [label="no"];
-    "Fix loop: read references/fix-loop.md before every round" -> "Append completion to ledger, mark todo complete" [label="addressed, or parked at the cap"];
-    "Append completion to ledger, mark todo complete" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Final review and finish: read references/final-review.md" [label="no"];
-    "Final review and finish: read references/final-review.md" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    setup [label="Integration worktree, ledger, dependency graph, preflight", shape=box];
+    ready [label="Independent tasks ready?", shape=diamond];
+    launch [label="Dispatch ready implementers concurrently, one worktree each", shape=box];
+    review [label="Pinned task review: spec then quality", shape=box];
+    gate [label="Task review gate satisfied?", shape=diamond];
+    fix [label="Fix loop in task worktree; read references/fix-loop.md", shape=box];
+    merge [label="Coordinator merges pinned HEAD; combined-tree checks pass?", shape=diamond];
+    recover [label="Abort own merge; preserve task; reconcile and re-review", shape=box];
+    complete [label="Commit merge, ledger integrated SHA, unlock dependents", shape=box];
+    pending [label="All tasks integrated?", shape=diamond];
+    final [label="Read references/final-review.md; review and finish", shape=box];
+    setup -> ready;
+    ready -> launch [label="yes"];
+    ready -> pending [label="no: wait for active work or resolve blockers"];
+    launch -> review;
+    review -> gate;
+    gate -> fix [label="no"];
+    fix -> gate [label="reviewed fixes or rulings at cap"];
+    gate -> merge [label="yes"];
+    merge -> recover [label="no"];
+    recover -> review;
+    merge -> complete [label="yes"];
+    complete -> ready;
+    pending -> ready [label="no"];
+    pending -> final [label="yes"];
 }
 ```
 
@@ -135,6 +137,17 @@ rulings made without one are provisional.
 Before dispatching Task 1, read [references/preflight.md](references/preflight.md)
 and run the conflict scan it describes. Its table and rulings go in the
 ledger.
+
+## Parallel Trajectories and Integration
+
+Read [references/parallel-integration.md](references/parallel-integration.md)
+before dispatch, every merge/retry, recovery, or cleanup; re-read it after
+compaction. It defines metadata, pinned reviews, helper context, and merge gates.
+
+Independent ready tasks need unique branches/worktrees and isolated or
+serialized resources. The coordinator alone writes the ledger and merges
+reviewed SHAs serially. DONE is ready for review; dependents wait for
+verified merge commits. Preserve dirty/unmerged work.
 
 ## Model Selection
 
@@ -196,8 +209,9 @@ child is noticed within minutes, not at the end of the session.
 
 ### 1. Dispatch the implementer
 
-Record BASE (`git rev-parse HEAD`) before dispatching — the review package
-and fix-round diffs need it.
+Record BASE as the exact verified integration SHA used to create this
+task's branch before dispatching — never derive it later from another
+task's HEAD. The review package and fix-round diffs need it.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `bash scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
@@ -230,7 +244,10 @@ and fix-round diffs need it.
   a pointer to that ledger entry in the dispatch.
 - Record the implementer's agent identity from the dispatch result —
   fix-loop rounds 1-3 resume this agent.
-- Never dispatch multiple implementation subagents in parallel (conflicts).
+- Include the assigned absolute worktree, branch, base SHA, prerequisites,
+  allowed files/interfaces, resource assignments, and integration checks.
+- Dispatch independent ready implementers in parallel only in separate
+  branches/worktrees. Never share a writer's checkout or mutable resources.
 
 Template: [implementer-prompt.md](implementer-prompt.md)
 
@@ -238,7 +255,11 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Freeze and verify this task's worktree, then generate the review
+package with the absolute script/plan paths from the integration worktree,
+using the recorded BASE and exact task HEAD — never the integration HEAD
+or `HEAD~1`. Dispatch the task reviewer with the package path and that
+task's absolute worktree, branch, base, and pinned HEAD.
 
 **Any other status** (DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED): read
 [references/handling-reports.md](references/handling-reports.md) and follow
@@ -267,7 +288,8 @@ needed.
   dispatch a task reviewer without a diff file.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
-  constraints that bind the task.
+  constraints that bind the task, its exact worktree/branch/base/HEAD,
+  ownership boundaries, and resource assignments.
 - The global-constraints block you hand the reviewer is its attention
   lens. Copy the binding requirements verbatim from the plan's Global
   Constraints section or the spec: exact values, exact formats, and the
@@ -301,23 +323,25 @@ follow it. Read it again before every round, even if you read it earlier in
 this session: it holds the round cap, the breaker, and the ledger line each
 round writes, and your memory of it does not survive compaction.
 
-### 5. Complete the task
+### 5. Integrate and complete the task
 
 When the review comes back clean — or every open finding is parked with a
-ruling at the cap — append the completion line to the ledger in the same
-message as your other bookkeeping:
+ruling at the cap — the task is ready for its integration gate, not DONE.
+Run the serialized integration protocol above. After the combined-tree
+checks pass and the merge commit exists, append its completion line:
 
-- `Task <N>: complete (commits <base7>..<head7>, review clean)`
-- `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
+- `Task <N>: complete (commits <base7>..<head7>, integrated <merge-sha>, review clean)`
+- `Task <N>: complete (commits <base7>..<head7>, integrated <merge-sha>, <K> parked)` after a
   tripped breaker
 
-Then mark the todo complete and move on. Never move to the next task while
-the review has open Critical/Important issues that are neither fixed nor
-parked-with-ruling at the cap.
+Then mark the todo complete and release dependents. Unrelated isolated
+tasks need not wait for this task's review or fix loop. Never integrate
+this task with open Critical/Important issues that are neither fixed nor
+parked-with-ruling at the cap, and never skip integration checks.
 
 ## Final Review
 
-When every task is complete, read
+When every task is integrated and verified, read
 [references/final-review.md](references/final-review.md) and follow it. It
 covers the whole-branch review, its single fix wave, and how you finish.
 

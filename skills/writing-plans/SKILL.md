@@ -40,6 +40,61 @@ deliverable needs them; split only where a reviewer could meaningfully
 reject one task while approving its neighbor. Each task ends with an
 independently testable deliverable.
 
+## Parallel Task Trajectories
+
+Every plan explicitly defines its execution graph, even if it is entirely
+sequential. Treat each independently mergeable task as a **trajectory** with
+its own branch and worktree; split longer chains into dependent trajectories.
+Keep the task right-sizing rule above: do not manufacture tiny parallel tasks.
+
+Before the task details, include:
+- **Integration workspace:** the dedicated feature branch and absolute
+  worktree path where the coordinator alone integrates results.
+- **Dependencies:** stable task numbers and actual prerequisite edges.
+  A prerequisite is satisfied only after review, merge, and verification on
+  the integration branch, not when an implementer reports DONE.
+- **Parallel-ready groups:** which trajectories may run concurrently and
+  why they are independent; if none can, say why.
+- **Ownership and interfaces:** exact allowed files and the existing
+  Consumes/Produces contracts. Put shared contracts in a prerequisite.
+  Serialize overlapping files, lockfiles, generated outputs, and wiring,
+  or assign their reconciliation to an explicit dependent integration task.
+- **Isolation:** a unique branch and absolute worktree path per active
+  trajectory, plus isolated ports, test databases, output paths, and other
+  mutable resources, or serialization of the affected operations. Separate
+  worktrees isolate files, not external services.
+- **Integration gates:** coordinator-owned serialized merge commits from
+  pinned reviewed SHAs, exact combined-tree test commands and expected
+  results, recovery, and safe cleanup. Obtain authorization for these local
+  merges into the dedicated integration branch; do not imply permission to
+  push or merge into the human partner's shared target branch.
+
+| Trajectory / task | Depends on | Owned files / interface | Branch / worktree | Parallel with |
+|-------------------|------------|-------------------------|-------------------|---------------|
+| 1: contract | None | `src/contracts.ts`: shared API | `task/contract` / `/repo/.worktrees/contract` | None |
+| 2: service | 1 | `src/service.ts`, service tests; consumes 1 | `task/service` / `/repo/.worktrees/service` | 3 |
+| 3: panel | 1 | `src/panel.ts`, panel tests; consumes 1 | `task/panel` / `/repo/.worktrees/panel` | 2 |
+| 4: wiring | 2, 3 | Wiring and shared lockfile | `task/wiring` / `/repo/.worktrees/wiring` | None |
+
+Replace example paths with project-specific paths and provide each task's
+exact integration gate. Schedule `1 -> {2, 3} -> 4`: create 2 and 3 from
+the verified integration tip containing 1, then launch them concurrently.
+Integrate whichever approved result is ready first; unrelated siblings
+are not a barrier. Task 4 waits for both verified merge commits.
+
+The plan specifies the merge protocol: freeze each task's final HEAD,
+review its recorded base..HEAD (spec compliance, then quality using the
+task reviewer), and let only the coordinator merge that SHA with
+`git merge --no-ff --no-commit <reviewed-head>` into a clean integration
+worktree. Run the combined-tree checks before committing the merge. Do
+not hand-edit the integration tree: conflicts or failed checks leave the
+task unintegrated, its dependents blocked, and its branch/worktree intact.
+Abort only that in-progress merge, reconcile in the isolated task,
+re-test, re-review its new HEAD, and retry. Record the verified merge SHA
+before releasing dependents. Remove a task worktree/branch only after its
+agents stop, it is clean, and its reviewed HEAD is reachable from verified
+integration. Final whole-branch review and checks precede normal completion.
+
 ## Step Granularity
 
 **Each step is one action with a checkable result:**
@@ -56,7 +111,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development for parallel-ready trajectories in separate worktrees, or superpowers:executing-plans for sequential native execution. Follow the chosen method's dependency and integration gates. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -93,6 +148,14 @@ owns the code, in that task's own step style.]
 
 ````markdown
 ### Task N: [Component Name]
+
+**Trajectory:** [stable task number]
+**Depends on:** [task numbers, or None; must be integrated and verified]
+**Parallel with:** [independent task numbers, or None with reason]
+**Branch / worktree:** [unique branch / absolute path]
+**Base:** [verified integration HEAD captured when prerequisites pass]
+**Resource isolation:** [assigned ports, databases, outputs, or serialization]
+**Integration gate:** [exact coordinator commands and expected results]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -137,6 +200,8 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
+Do not add "Co-authored-by Copilot:" in the commit message.
+
 ## What a Step Contains
 
 A step is done when the implementer can write exactly one reasonable thing
@@ -174,6 +239,15 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
+**6. Parallel safety:** Is the dependency graph acyclic, with actual edges
+instead of list order? Do independent trajectories have unique
+branches/worktrees, clear ownership/interfaces, isolated or serialized
+resources, pinned review targets, serialized merge gates, and recovery
+that preserves unmerged work? If native execution is chosen, keep the
+graph but execute it sequentially using superpowers:executing-plans;
+parallel trajectory branches and their merge protocol apply to
+subagent-driven execution.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
@@ -188,7 +262,7 @@ them to review the plan and choose an execution method before implementation.
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Which execution approach would you prefer?**
 
-- **Subagent-driven** - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
+- **Subagent-driven** - Fresh subagents implement independent ready trajectories concurrently in separate worktrees. A fresh task reviewer checks spec then quality for each pinned result; the coordinator merges approved results serially and verifies the combined tree before releasing dependents. A whole-branch review runs at the end.
 - **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
 **For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**

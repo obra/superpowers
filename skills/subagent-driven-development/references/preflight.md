@@ -9,6 +9,17 @@ what you checked as you check it:
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a
   defect (a test that asserts nothing, verbatim duplication of a logic block)
+- dependency cycles or prerequisites that are only "implemented", not
+  reviewed, integrated, and verified
+- parallel tasks sharing files, mutable interfaces, lockfiles, generated
+  outputs, ports, databases, or other resources without ownership/isolation
+  or serialized access
+
+Record each task's prerequisites, allowed files/interfaces, planned branch
+and absolute worktree, resource assignments, and integration checks in the
+ledger. Identify independent ready groups explicitly. Shared contracts
+belong in a prerequisite; unsafe overlaps require serialization or a
+dependent reconciliation task. A preferred merge order is not a dependency.
 
 The scan's output is a table, not a verdict. One row for every pair of tasks
 that share a file or an interface: the two tasks, what one produces against

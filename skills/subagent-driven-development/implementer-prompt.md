@@ -19,6 +19,31 @@ Subagent (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Assigned Trajectory
+
+    - Task/trajectory: [stable task number, or eligible batch member numbers]
+    - Worktree (absolute path): [assigned task worktree]
+    - Branch: [unique task branch]
+    - Base SHA: [verified integration SHA used to create this branch]
+    - Expected starting HEAD: [base on initial dispatch; assigned current HEAD on fixes]
+    - Verified prerequisites: [task numbers and integrated SHAs, or None]
+    - Ownership / interfaces: [allowed files and frozen Consumes/Produces contracts]
+    - Resources: [isolated ports, databases, output paths, or serialized access]
+    - Checks: [exact task commands and expected results]
+
+    Verify your directory, branch, expected HEAD, and clean status before
+    editing. Report NEEDS_CONTEXT on a mismatch. Other implementers may be
+    working concurrently: edit only your assigned worktree and scope.
+    The only allowed write outside it is your assigned [REPORT_FILE] in
+    the coordinator's scratch workspace. Never edit its ledger, shared
+    plan/briefs, another task's checkout, or integration tracked files.
+
+    The coordinator owns integration and cleanup. Do not merge into the
+    integration branch, pull/rebase, switch branches, or remove worktrees.
+    You may merge a newer pinned verified integration SHA into your own
+    branch only on an explicit reconciliation assignment. Worktrees do
+    not isolate services: honor the resource assignments or serialization.
+
     ## Before You Begin
 
     If you have questions about:
@@ -39,13 +64,18 @@ Subagent (general-purpose):
     5. Self-review (see below)
     6. Report back
 
-    Work from: [directory]
+    Work from: [assigned absolute task worktree path]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.
+
+    Stop all writes and test/server processes you started before reporting
+    completion. Keep the worktree clean and final HEAD frozen for review
+    and integration; wait for an explicit fix request before editing again.
+    DONE means ready for review, not integrated or complete.
 
     ## You Do Not Dispatch Subagents
 
@@ -134,6 +164,9 @@ Subagent (general-purpose):
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation
     - Files changed
+    - Trajectory ID, absolute worktree, branch, base SHA, and final HEAD SHA
+    - Ordered task commits and any explicitly authorized reconciliation merge
+    - Worktree cleanliness, resource assignments, and confirmation your writes/processes stopped
     - Self-review findings (if any)
     - Any issues or concerns
 
@@ -141,6 +174,7 @@ Subagent (general-purpose):
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Commits created (short SHA + subject)
+    - Assigned worktree/branch and exact final HEAD
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

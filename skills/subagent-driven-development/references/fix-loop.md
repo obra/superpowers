@@ -4,6 +4,15 @@ Part of superpowers:subagent-driven-development. The task review reported
 spec ❌, a Critical or Important finding, or a ⚠️ item you confirmed as a real
 gap.
 
+Every round stays in this trajectory's assigned worktree and branch.
+Pass the absolute worktree, branch, expected starting HEAD, and resource
+assignments to the implementer and re-reviewer. Freeze writes during
+review and record the actual final HEAD. The coordinator alone updates
+the shared ledger; the worker writes only its assigned report file.
+Unrelated isolated trajectories may continue throughout this loop.
+A successful fix review makes the task ready for integration, not
+complete; the serialized verified merge gate still applies.
+
 Before the loop starts, two routes leave it immediately:
 
 - Record Minor findings in the progress ledger as you go

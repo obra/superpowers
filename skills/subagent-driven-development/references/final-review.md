@@ -1,7 +1,12 @@
 # Final Review and Finish
 
 Part of superpowers:subagent-driven-development. Every task in the plan is
-complete.
+integrated and verified on the coordinator's integration branch.
+
+Freeze that branch for whole-branch review. Supply its absolute worktree,
+branch, recorded starting SHA, and exact final HEAD, with all task-local
+merges and their check evidence in the ledger. Do not review a moving
+integration branch or another trajectory's checkout.
 
 The final whole-branch review gets a package too: run
 `bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
@@ -15,10 +20,11 @@ the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
-with the complete findings list — not one fixer per finding.
+in a new isolated trajectory from the verified integration tip with the
+complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
 session's final-review fix wave cost more than all its tasks combined.
-Then run exactly one scoped re-review of the fix wave
+Then run exactly one scoped re-review of the fix wave in that worktree
 (`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
 [re-review-prompt.md](../re-review-prompt.md)).
 Adjudicate any residual findings as in the fix loop's breaker
@@ -27,6 +33,12 @@ ones and ledger what you decided. Only the four things that stop a running
 plan (top of SKILL.md) stop you here. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
 finishing-a-development-branch presents the options.
+
+Integrate the reviewed fix HEAD through the same coordinator-owned,
+serialized merge and combined-tree checks. Failed integration does not
+become complete through a parked ruling: retain the fix worktree and
+recover using [parallel-integration.md](parallel-integration.md). Run the plan's final
+checks on the verified integration result before branch completion.
 
 ### Finish
 
@@ -40,6 +52,9 @@ whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
 When the final whole-branch review is clean and its fixes are merged,
+first confirm every agent using this plan's artifacts or task worktrees
+has stopped. Remove only clean task worktrees whose reviewed HEADs are
+ancestors of verified integration; preserve dirty/unmerged work. Then
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
