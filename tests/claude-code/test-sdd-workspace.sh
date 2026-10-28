@@ -140,6 +140,49 @@ PLAN
         echo "    got: $brief_path"
     fi
 
+    cat > "$repo/grouped.md" <<'PLAN'
+# Grouped plan
+## Trajectory T1: Service
+### Task 1: Contract
+Contract work.
+### Task 2: Service
+Service work.
+#### Step 1: Test
+```markdown
+## Trajectory T99: Example only
+### Task 99: Example only
+```
+## Trajectory T2: Panel
+Panel-only metadata.
+### Task 3: Panel
+Panel work.
+### Final checks
+Not part of Task 3.
+PLAN
+    cat > "$TEST_ROOT/expected-brief" <<'BRIEF'
+### Task 2: Service
+Service work.
+#### Step 1: Test
+```markdown
+## Trajectory T99: Example only
+### Task 99: Example only
+```
+BRIEF
+    (cd "$repo" && bash "$SDD_SCRIPTS/task-brief" grouped.md 2 "$TEST_ROOT/grouped-brief" >/dev/null)
+    if cmp -s "$TEST_ROOT/expected-brief" "$TEST_ROOT/grouped-brief"; then
+        pass "grouped task brief stops before the next trajectory and retains nested steps and fences"
+    else
+        fail "grouped task brief stops before the next trajectory and retains nested steps and fences"
+        diff -u "$TEST_ROOT/expected-brief" "$TEST_ROOT/grouped-brief" || :
+    fi
+    printf '### Task 3: Panel\nPanel work.\n' > "$TEST_ROOT/expected-brief"
+    (cd "$repo" && bash "$SDD_SCRIPTS/task-brief" grouped.md 3 "$TEST_ROOT/grouped-brief" >/dev/null)
+    if cmp -s "$TEST_ROOT/expected-brief" "$TEST_ROOT/grouped-brief"; then
+        pass "task brief stops at a same-level non-task heading"
+    else
+        fail "task brief stops at a same-level non-task heading"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

@@ -82,6 +82,25 @@ PLAN
         fail "task-start writes the brief file"
     fi
 
+    cat > "$repo/grouped.md" <<'PLAN'
+# Grouped plan
+## Trajectory T1: First
+### Task 7: First task
+First task work.
+## Trajectory T2: Second
+Second trajectory metadata.
+### Task 8: Second task
+Second task work.
+PLAN
+    out="$(cd "$repo" && bash "$EP_SCRIPTS/task-start" grouped.md 7)"
+    local grouped_brief="$repo/.superpowers/sdd/grouped/task-7-brief.md"
+    if [[ "$out" == *"base: $base"* \
+        && "$(cat "$grouped_brief")" == $'### Task 7: First task\nFirst task work.' ]]; then
+        pass "task-start preserves the task BASE and extracts only its grouped task"
+    else
+        fail "task-start preserves the task BASE and extracts only its grouped task"
+    fi
+
     # --- task-done: records a passing task ---
     ( cd "$repo" && echo x > work.txt && git add work.txt && git "${git_id[@]}" commit -qm "task 1" )
     local head

@@ -29,8 +29,14 @@ fi
 
 awk -v n="$n" '
   /^```/ { infence = !infence }
+  !infence && /^#+[ \t]+/ {
+    match($0, /^#+/)
+    level = RLENGTH
+    if (intask && level <= tasklevel) intask = 0
+  }
   !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
     intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+    tasklevel = level
   }
   intask { print }
 ' "$plan" > "$out"
