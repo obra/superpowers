@@ -1,0 +1,54 @@
+name: VIN Quality Gate
+
+on:
+  push:
+    paths:
+      - 'projects/build-vin-mapping-system/**'
+      - '.github/workflows/vin-quality-gate.yml'
+  pull_request:
+    paths:
+      - 'projects/build-vin-mapping-system/**'
+      - '.github/workflows/vin-quality-gate.yml'
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/build-vin-mapping-system
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Backend typecheck
+        run: npm run typecheck -w backend
+
+      - name: Frontend typecheck
+        run: npm run typecheck -w frontend
+
+      - name: Frontend production build
+        run: npm run build -w frontend
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: projects/build-vin-mapping-system/frontend
+
+      - name: Playwright smoke tests
+        run: npm run test:e2e -w frontend
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vin-playwright-report
+          path: projects/build-vin-mapping-system/frontend/playwright-report
+          if-no-files-found: ignore
