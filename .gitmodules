@@ -13,3 +13,6 @@
 [submodule ".transitions-dev"]
 	path = .transitions-dev
 	url = https://github.com/Jakubantalik/transitions.dev.git
+[submodule ".playwright-cli"]
+	path = .playwright-cli
+	url = https://github.com/microsoft/playwright-cli.git
