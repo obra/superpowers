@@ -1,3 +1,6 @@
 [submodule ".impeccable"]
 	path = .impeccable
 	url = https://github.com/pbakaus/impeccable.git
+[submodule ".designlang"]
+	path = .designlang
+	url = https://github.com/tobiags/designlang.git
