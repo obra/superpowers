@@ -183,6 +183,33 @@ BRIEF
         fail "task brief stops at a same-level non-task heading"
     fi
 
+    cat > "$TEST_ROOT/expected-fenced-brief" <<'BRIEF'
+## Task 7: Fences
+   ```markdown
+## Task 99: Inside indented fence
+   ```
+~~~markdown
+# Inside tilde fence
+~~~
+````markdown
+```
+## Task 98: Inside shorter nested fence
+```
+````
+BRIEF
+    {
+        printf '# Fenced plan\n'
+        cat "$TEST_ROOT/expected-fenced-brief"
+        printf '## Task 8: Real next task\nExcluded work.\n'
+    } > "$repo/fenced.md"
+    (cd "$repo" && bash "$SDD_SCRIPTS/task-brief" fenced.md 7 "$TEST_ROOT/fenced-brief" >/dev/null)
+    if cmp -s "$TEST_ROOT/expected-fenced-brief" "$TEST_ROOT/fenced-brief"; then
+        pass "task brief preserves indented, tilde and shorter nested fences"
+    else
+        fail "task brief preserves indented, tilde and shorter nested fences"
+        diff -u "$TEST_ROOT/expected-fenced-brief" "$TEST_ROOT/fenced-brief" || :
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \
