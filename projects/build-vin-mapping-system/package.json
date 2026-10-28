@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "concurrently -n API,WEB -c auto \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "start": "npm run dev",
+    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
     "build": "npm run build -w frontend",
+    "test:e2e": "npm run test:e2e -w frontend",
+    "quality": "npm run typecheck && npm run build && npm run test:e2e",
     "install:all": "npm install"
   },
   "devDependencies": {
