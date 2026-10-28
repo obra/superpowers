@@ -380,6 +380,45 @@ PLAN
         echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
     fi
 
+    # --- sdd-workspace and review-package resolve when plan file was deleted ---
+    git init -q -b main "$TEST_ROOT/deleted-plan"
+    local del_repo del_base del_head
+    del_repo="$(cd "$TEST_ROOT/deleted-plan" && git rev-parse --show-toplevel)"
+    mkdir -p "$del_repo/docs"
+    printf '# Ephemeral Plan\n\n## Task 1\nTask 1\n' > "$del_repo/docs/ephemeral-plan.md"
+    printf 'initial content\n' > "$del_repo/code.txt"
+    (cd "$del_repo" && git add -A && git -c user.name=t -c user.email=t@t commit -qm "initial commit with plan")
+    del_base="$(cd "$del_repo" && git rev-parse HEAD)"
+
+    # Resolve workspace while plan exists
+    local ws_before ws_after
+    ws_before="$(cd "$del_repo" && "$SDD_SCRIPTS/sdd-workspace" docs/ephemeral-plan.md)"
+
+    # Task finishes and deletes the plan file
+    printf 'updated content\n' > "$del_repo/code.txt"
+    (cd "$del_repo" && git rm -q docs/ephemeral-plan.md && git add code.txt && git -c user.name=t -c user.email=t@t commit -qm "task finish: delete plan")
+    del_head="$(cd "$del_repo" && git rev-parse HEAD)"
+
+    # sdd-workspace resolves the workspace even after plan deletion
+    ws_after="$(cd "$del_repo" && "$SDD_SCRIPTS/sdd-workspace" docs/ephemeral-plan.md 2>/dev/null)" || true
+    if [[ "$ws_before" == "$ws_after" && -n "$ws_after" ]]; then
+        pass "sdd-workspace resolves existing workspace after plan file is deleted in a task"
+    else
+        fail "sdd-workspace resolves existing workspace after plan file is deleted in a task"
+        echo "    before: $ws_before"
+        echo "    after:  $ws_after"
+    fi
+
+    # review-package succeeds and writes diff even after plan deletion
+    local pkg_out
+    pkg_out="$(cd "$del_repo" && "$SDD_SCRIPTS/review-package" docs/ephemeral-plan.md "$del_base" "$del_head" 2>&1)" || true
+    if [[ -f "$ws_before/review-${del_base:0:7}..${del_head:0:7}.diff" ]]; then
+        pass "review-package generates review diff after plan file is deleted in a task"
+    else
+        fail "review-package generates review diff after plan file is deleted in a task"
+        echo "    output: $pkg_out"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
