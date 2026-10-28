@@ -1,0 +1,18 @@
+{
+  "name": "build-vin-mapping-system",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c auto \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "start": "npm run dev",
+    "build": "npm run build -w frontend",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
