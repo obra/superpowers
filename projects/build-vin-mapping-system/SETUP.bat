@@ -4,7 +4,6 @@ cd /d %~dp0
 
 echo ========================================
 echo VIN Mapping System - Full Setup
-
 echo ========================================
 
 where node >nul 2>nul
@@ -28,6 +27,17 @@ echo npm version:
 npm -v
 
 echo.
+where git >nul 2>nul
+if not errorlevel 1 (
+  echo Initializing project skills and Git submodules...
+  pushd ..\..
+  git submodule update --init --recursive
+  popd
+) else (
+  echo [WARN] Git is not available in PATH. Skipping submodule initialization.
+)
+
+echo.
 echo Installing frontend, backend and root dependencies...
 npm install
 if errorlevel 1 (
@@ -38,5 +48,7 @@ if errorlevel 1 (
 
 echo.
 echo Setup completed successfully.
+echo Frontend will run on http://localhost:5173
+echo Backend will run on http://localhost:3001
 echo Run START.bat to start the system.
 pause
