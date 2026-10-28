@@ -7,3 +7,6 @@
 [submodule ".react-bits"]
 	path = .react-bits
 	url = https://github.com/DavidHDev/react-bits.git
+[submodule ".gsap-skills"]
+	path = .gsap-skills
+	url = https://github.com/greensock/gsap-skills.git
