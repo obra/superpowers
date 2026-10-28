@@ -10,8 +10,9 @@ its change, send the whole batch to a single subagent, and review its diff
 as one unit. Reserve one-dispatch-per-task for work that needs its own
 judgment, its own tests, or its own review surface.
 
-Treat an eligible batch as one trajectory in one assigned branch/worktree.
-Batch only tasks with satisfied prerequisites and compatible ownership and
-resource assignments; never batch across an unmet dependency or absorb
-another active trajectory. Record every member's reviewed task HEAD and
-verified integration SHA before marking its todo complete.
+An eligible batch is one task dispatch/review unit inside its existing
+trajectory, not a new integration unit. Batch only tasks with satisfied
+internal prerequisites and compatible ownership/resources; never cross an
+unmet dependency or absorb another trajectory. Record each member's
+completion and the batch's reviewed range before marking its todo complete.
+Their trajectory still integrates only at its recorded completion boundary.

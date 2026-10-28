@@ -9,6 +9,12 @@ Execute the plan yourself, task by task, in this session: no implementer
 subagent per task, no reviewer per task. One fresh-context review of the
 whole branch at the end.
 
+Plans have the hierarchy Plan -> Trajectory -> Task -> Step. Native
+execution retains both dependency graphs but runs all work sequentially
+in the isolated feature worktree. A trajectory may contain many tasks:
+finish its internal prerequisites before advancing dependent trajectories.
+Do not create per-task worktrees or perform SDD's trajectory merge protocol.
+
 **Why inline:** Subagent-driven development pays for a fresh implementer
 and a fresh reviewer on every task, each re-reading the codebase from zero.
 Inline execution pays for one context (yours) plus one reviewer at the end.
@@ -49,8 +55,8 @@ those, stop and ask.
 - Your harness has no subagent tool (see the per-platform references in
   `../using-superpowers/references/`). Never fabricate a dispatch; run
   the plan here.
-- Tasks are mostly independent — the same precondition as
-  superpowers:subagent-driven-development.
+- The trajectory/task graphs determine order; independent ready work is
+  still executed sequentially in this method.
 
 A fully specified plan makes inline execution transcription plus testing:
 it runs well on a mid-tier session model, and the one place the most
@@ -121,6 +127,10 @@ live view; the ledger is the record.
 The workspace and ledger are shared with superpowers:subagent-driven-development
 — same directory, same format — so a plan can change executors mid-flight
 and the new one resumes from the same ledger.
+Keep task completion distinct from trajectory integration. When changing
+methods, reconcile existing branches, commits and evidence using SDD's
+[resume reference](../subagent-driven-development/references/resuming.md);
+do not infer integration from a task completion label.
 
 - Each plan owns a workspace: at skill start, run
   `../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` — it
@@ -145,6 +155,13 @@ todo per task. If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
+
+For grouped plans, retain globally unique numeric task IDs under their
+trajectory headings. Capture each task's BASE at its own start using
+task-start; do not reuse the trajectory's original base for later tasks.
+Native task-done entries record tests, not independent task review.
+Record a trajectory's local completion only after all its tasks and exact
+completion checks pass; this is not an SDD integration merge record.
 
 **REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
 before Task 1. It governs every step of every task below; a plan whose

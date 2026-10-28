@@ -34,8 +34,9 @@ Subagent (general-purpose):
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    **Worktree:** [TASK_WORKTREE — absolute task path]
-    **Branch:** [TASK_BRANCH]
+    **Trajectory:** [TRAJECTORY_ID]
+    **Worktree:** [TASK_WORKTREE — absolute owning trajectory path]
+    **Branch:** [TASK_BRANCH — owning trajectory branch]
     **Resources:** [isolated resources or required serialization]
 
     Verify the worktree is clean and its branch/HEAD match this assignment;
@@ -119,7 +120,8 @@ Subagent (general-purpose):
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — exact frozen task HEAD
-- `[TASK_WORKTREE]` / `[TASK_BRANCH]` — assigned absolute worktree and branch
+- `[TRAJECTORY_ID]` — the task's owning trajectory
+- `[TASK_WORKTREE]` / `[TASK_BRANCH]` — owning trajectory's absolute worktree and branch
 - `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),

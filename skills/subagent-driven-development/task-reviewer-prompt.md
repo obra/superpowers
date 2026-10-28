@@ -35,8 +35,9 @@ Subagent (general-purpose):
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    **Worktree:** [TASK_WORKTREE — absolute task path, not integration]
-    **Branch:** [TASK_BRANCH]
+    **Trajectory:** [TRAJECTORY_ID]
+    **Worktree:** [TASK_WORKTREE — owning trajectory path, not integration]
+    **Branch:** [TASK_BRANCH — owning trajectory branch]
     **Ownership / resources:** [allowed files, interfaces, isolated resources or serialization]
 
     First verify that this worktree is clean, on the assigned branch at
@@ -45,6 +46,10 @@ Subagent (general-purpose):
     permitted checks from this worktree. The coordinator freezes it for
     this review; unrelated agents may continue in their own worktrees.
     Cite the reviewed base and HEAD in your verdict.
+
+    BASE is this task's starting trajectory HEAD, not the trajectory's
+    original dispatch base. Earlier tasks may exist on the branch; they are
+    not part of this task's diff. No next task may write during this review.
 
     Read the diff file once — it contains the commit list, a stat summary,
     and the full diff with surrounding context, and it is your view of the
@@ -212,7 +217,8 @@ Subagent (general-purpose):
   report to
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — exact frozen task HEAD, not the integration branch's HEAD
-- `[TASK_WORKTREE]` / `[TASK_BRANCH]` — assigned absolute worktree and unique branch
+- `[TRAJECTORY_ID]` — the task's owning trajectory
+- `[TASK_WORKTREE]` / `[TASK_BRANCH]` — owning trajectory's absolute worktree and branch
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`bash scripts/review-package PLAN_FILE BASE HEAD` prints the unique
   path it wrote; the package never enters the controller's context)

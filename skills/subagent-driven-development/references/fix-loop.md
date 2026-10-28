@@ -10,8 +10,9 @@ assignments to the implementer and re-reviewer. Freeze writes during
 review and record the actual final HEAD. The coordinator alone updates
 the shared ledger; the worker writes only its assigned report file.
 Unrelated isolated trajectories may continue throughout this loop.
-A successful fix review makes the task ready for integration, not
-complete; the serialized verified merge gate still applies.
+A successful fix review satisfies the task's review gate, allowing internal
+dependents to advance in this trajectory. It does not integrate the task:
+the whole trajectory must finish before its verified merge gate.
 
 Before the loop starts, two routes leave it immediately:
 

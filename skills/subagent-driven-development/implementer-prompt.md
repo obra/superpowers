@@ -21,19 +21,21 @@ Subagent (general-purpose):
 
     ## Assigned Trajectory
 
-    - Task/trajectory: [stable task number, or eligible batch member numbers]
-    - Worktree (absolute path): [assigned task worktree]
-    - Branch: [unique task branch]
-    - Base SHA: [verified integration SHA used to create this branch]
-    - Expected starting HEAD: [base on initial dispatch; assigned current HEAD on fixes]
-    - Verified prerequisites: [task numbers and integrated SHAs, or None]
+    - Task: [globally unique number, or eligible batch member numbers]
+    - Trajectory: [owning trajectory ID]
+    - Worktree (absolute path): [assigned trajectory worktree]
+    - Branch: [trajectory branch shared with its sequential tasks]
+    - Task base SHA: [current reviewed trajectory HEAD before this task starts]
+    - Trajectory dispatch base: [verified integration SHA used to create the branch]
+    - Expected starting HEAD: [task base on initial dispatch; current HEAD on fixes]
+    - Verified prerequisites: [reviewed internal tasks and integrated external trajectories]
     - Ownership / interfaces: [allowed files and frozen Consumes/Produces contracts]
     - Resources: [isolated ports, databases, output paths, or serialized access]
     - Checks: [exact task commands and expected results]
 
     Verify your directory, branch, expected HEAD, and clean status before
-    editing. Report NEEDS_CONTEXT on a mismatch. Other implementers may be
-    working concurrently: edit only your assigned worktree and scope.
+    editing. Report NEEDS_CONTEXT on a mismatch. Other trajectories may be
+    working concurrently: edit only your assigned worktree and task scope.
     The only allowed write outside it is your assigned [REPORT_FILE] in
     the coordinator's scratch workspace. Never edit its ledger, shared
     plan/briefs, another task's checkout, or integration tracked files.
@@ -64,7 +66,7 @@ Subagent (general-purpose):
     5. Self-review (see below)
     6. Report back
 
-    Work from: [assigned absolute task worktree path]
+    Work from: [assigned absolute trajectory worktree path]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
@@ -75,7 +77,9 @@ Subagent (general-purpose):
     Stop all writes and test/server processes you started before reporting
     completion. Keep the worktree clean and final HEAD frozen for review
     and integration; wait for an explicit fix request before editing again.
-    DONE means ready for review, not integrated or complete.
+    DONE means ready for task review, not trajectory integration or completion.
+    Earlier tasks may already exist on this branch. Preserve their work;
+    do not create a new branch/worktree or integrate between tasks.
 
     ## You Do Not Dispatch Subagents
 
@@ -164,7 +168,8 @@ Subagent (general-purpose):
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation
     - Files changed
-    - Trajectory ID, absolute worktree, branch, base SHA, and final HEAD SHA
+    - Task and trajectory IDs, absolute worktree/branch, task BASE,
+      trajectory dispatch base, and final task HEAD SHA
     - Ordered task commits and any explicitly authorized reconciliation merge
     - Worktree cleanliness, resource assignments, and confirmation your writes/processes stopped
     - Self-review findings (if any)

@@ -1,10 +1,10 @@
 # Final Review and Finish
 
-Part of superpowers:subagent-driven-development. Every task in the plan is
+Part of superpowers:subagent-driven-development. Every trajectory in the plan is
 integrated and verified on the coordinator's integration branch.
 
 Freeze that branch for whole-branch review. Supply its absolute worktree,
-branch, recorded starting SHA, and exact final HEAD, with all task-local
+branch, recorded starting SHA, and exact final HEAD, with all trajectory
 merges and their check evidence in the ledger. Do not review a moving
 integration branch or another trajectory's checkout.
 
@@ -52,8 +52,8 @@ whatever you got wrong. A ruling that dies with the workspace was a decision
 made in secret.
 
 When the final whole-branch review is clean and its fixes are merged,
-first confirm every agent using this plan's artifacts or task worktrees
-has stopped. Remove only clean task worktrees whose reviewed HEADs are
+first confirm every agent using this plan's artifacts or trajectory worktrees
+has stopped. Remove only clean trajectory worktrees whose pinned HEADs are
 ancestors of verified integration; preserve dirty/unmerged work. Then
 delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them

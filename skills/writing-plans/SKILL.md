@@ -40,23 +40,36 @@ deliverable needs them; split only where a reviewer could meaningfully
 reject one task while approving its neighbor. Each task ends with an
 independently testable deliverable.
 
-## Parallel Task Trajectories
+## Trajectories Contain Tasks
 
-Every plan explicitly defines its execution graph, even if it is entirely
-sequential. Treat each independently mergeable task as a **trajectory** with
-its own branch and worktree; split longer chains into dependent trajectories.
-Keep the task right-sizing rule above: do not manufacture tiny parallel tasks.
+The hierarchy is **Plan -> Trajectory -> Task -> Step**. A task is a
+testable increment with its own implementer and review gate. A trajectory
+is a coherent workstream containing one or more tasks and ending at a clean
+integration boundary. Independently testable tasks do not automatically
+need separate trajectories.
+
+Group dependent tasks that build toward one completion boundary into a
+trajectory, especially when they edit the same files. Give independent
+workstreams separate trajectories. Split a longer workstream where a
+complete, reviewed result can integrate and successors can start from it.
+Do not manufacture intermediate integration boundaries or tiny parallel tasks.
+
+Every plan explicitly defines its trajectory dependency graph and each
+trajectory's internal task dependencies, even when both are sequential.
+Use stable trajectory IDs (`T1`, `T2`) and numeric task IDs unique across the
+whole plan; do not restart task numbering inside a trajectory.
 
 Before the task details, include:
 - **Integration workspace:** the dedicated feature branch and absolute
   worktree path where the coordinator alone integrates results.
-- **Dependencies:** stable task numbers and actual prerequisite edges.
-  A prerequisite is satisfied only after review, merge, and verification on
-  the integration branch, not when an implementer reports DONE.
+- **Dependencies:** actual prerequisite edges between trajectories and
+  between their tasks. An internal task prerequisite passes its task review
+  gate in the trajectory worktree. A cross-trajectory prerequisite requires
+  the completed trajectory's verified integration commit, not a task's DONE.
 - **Parallel-ready groups:** which trajectories may run concurrently and
   why they are independent; if none can, say why.
-- **Ownership and interfaces:** exact allowed files and the existing
-  Consumes/Produces contracts. Put shared contracts in a prerequisite.
+- **Ownership and interfaces:** exact trajectory ownership, task-level
+  allowed files and Consumes/Produces contracts. Put shared contracts in a prerequisite.
   Serialize overlapping files, lockfiles, generated outputs, and wiring,
   or assign their reconciliation to an explicit dependent integration task.
 - **Isolation:** a unique branch and absolute worktree path per active
@@ -69,31 +82,39 @@ Before the task details, include:
   merges into the dedicated integration branch; do not imply permission to
   push or merge into the human partner's shared target branch.
 
-| Trajectory / task | Depends on | Owned files / interface | Branch / worktree | Parallel with |
+| Trajectory / tasks | Depends on | Owned files / interface | Branch / worktree | Parallel with |
 |-------------------|------------|-------------------------|-------------------|---------------|
-| 1: contract | None | `src/contracts.ts`: shared API | `task/contract` / `/repo/.worktrees/contract` | None |
-| 2: service | 1 | `src/service.ts`, service tests; consumes 1 | `task/service` / `/repo/.worktrees/service` | 3 |
-| 3: panel | 1 | `src/panel.ts`, panel tests; consumes 1 | `task/panel` / `/repo/.worktrees/panel` | 2 |
-| 4: wiring | 2, 3 | Wiring and shared lockfile | `task/wiring` / `/repo/.worktrees/wiring` | None |
+| T1: contract / 1 | None | `src/contracts.ts`: shared API | `trajectory/contract` / `/repo/.worktrees/contract` | None |
+| T2: service / 2, 3 | T1 | `src/service.ts`, tests; persistence then API | `trajectory/service` / `/repo/.worktrees/service` | T3 |
+| T3: panel / 4 | T1 | `src/panel.ts`, tests; consumes T1 | `trajectory/panel` / `/repo/.worktrees/panel` | T2 |
+| T4: wiring / 5 | T2, T3 | Wiring and shared lockfile | `trajectory/wiring` / `/repo/.worktrees/wiring` | None |
 
 Replace example paths with project-specific paths and provide each task's
-exact integration gate. Schedule `1 -> {2, 3} -> 4`: create 2 and 3 from
-the verified integration tip containing 1, then launch them concurrently.
-Integrate whichever approved result is ready first; unrelated siblings
-are not a barrier. Task 4 waits for both verified merge commits.
+exact integration gate. Schedule `T1 -> {T2, T3} -> T4`: create T2 and T3
+from the verified integration tip containing T1, then advance them concurrently.
+Tasks 2 and 3 execute sequentially in T2's worktree, with review between
+them and no plan-integration merge between tasks. Integrate whichever
+completed trajectory is ready first; unrelated siblings are not a barrier.
+T4 waits for both verified trajectory merge commits.
 
-The plan specifies the merge protocol: freeze each task's final HEAD,
-review its recorded base..HEAD (spec compliance, then quality using the
-task reviewer), and let only the coordinator merge that SHA with
+The plan specifies the merge protocol: each task gets a pinned review of
+its own task base..HEAD (spec compliance, then quality). When all assigned
+tasks pass their gates and the trajectory completion checks pass, freeze
+the trajectory's final HEAD. Only the coordinator merges that SHA with
 `git merge --no-ff --no-commit <reviewed-head>` into a clean integration
 worktree. Run the combined-tree checks before committing the merge. Do
 not hand-edit the integration tree: conflicts or failed checks leave the
-task unintegrated, its dependents blocked, and its branch/worktree intact.
-Abort only that in-progress merge, reconcile in the isolated task,
-re-test, re-review its new HEAD, and retry. Record the verified merge SHA
-before releasing dependents. Remove a task worktree/branch only after its
-agents stop, it is clean, and its reviewed HEAD is reachable from verified
+trajectory unintegrated, its dependents blocked, and its branch/worktree intact.
+Abort only that in-progress merge, reconcile in the isolated trajectory,
+re-test, review the reconciliation changes, and retry. Record the verified merge SHA
+before releasing dependents. Remove a trajectory worktree/branch only after its
+agents stop, it is clean, and its pinned HEAD is reachable from verified
 integration. Final whole-branch review and checks precede normal completion.
+
+SDD may revise a clean trajectory boundary during execution: record the
+completed scope, move pending tasks and prerequisite edges to stable
+successors, and complete/integrate the revised trajectory through the same
+gates. A recorded boundary change is not permission to merge a task early.
 
 ## Step Granularity
 
@@ -111,7 +132,7 @@ integration. Final whole-branch review and checks precede normal completion.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development for parallel-ready trajectories in separate worktrees, or superpowers:executing-plans for sequential native execution. Follow the chosen method's dependency and integration gates. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to coordinate parallel-ready trajectories, with superpowers:trajectory-execution for their task loops, or superpowers:executing-plans for sequential native execution. Follow the chosen method's dependency and integration gates. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -147,15 +168,23 @@ owns the code, in that task's own step style.]
 ## Task Structure
 
 ````markdown
-### Task N: [Component Name]
+## Trajectory T1: [Workstream Name]
 
-**Trajectory:** [stable task number]
-**Depends on:** [task numbers, or None; must be integrated and verified]
-**Parallel with:** [independent task numbers, or None with reason]
+**Tasks:** [globally unique task numbers]
+**Depends on:** [trajectory IDs, or None; must be integrated and verified]
+**Parallel with:** [independent trajectory IDs, or None with reason]
 **Branch / worktree:** [unique branch / absolute path]
 **Base:** [verified integration HEAD captured when prerequisites pass]
+**Ownership / interfaces:** [trajectory files and cross-trajectory contracts]
 **Resource isolation:** [assigned ports, databases, outputs, or serialization]
+**Completion boundary:** [complete result, all task gates, and exact trajectory checks]
 **Integration gate:** [exact coordinator commands and expected results]
+
+### Task N: [Component Name]
+
+**Trajectory:** T1
+**Depends on:** [internal task numbers, or None; must pass task review]
+**Review base:** [trajectory HEAD captured immediately before this task starts]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -239,8 +268,10 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
-**6. Parallel safety:** Is the dependency graph acyclic, with actual edges
-instead of list order? Do independent trajectories have unique
+**6. Parallel safety:** Are both dependency graphs acyclic, with actual edges
+instead of list order? Does every task belong to exactly one trajectory,
+with globally unique task IDs and task review bases distinct from trajectory
+dispatch bases? Do independent trajectories have unique
 branches/worktrees, clear ownership/interfaces, isolated or serialized
 resources, pinned review targets, serialized merge gates, and recovery
 that preserves unmerged work? If native execution is chosen, keep the
@@ -262,7 +293,7 @@ them to review the plan and choose an execution method before implementation.
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Which execution approach would you prefer?**
 
-- **Subagent-driven** - Fresh subagents implement independent ready trajectories concurrently in separate worktrees. A fresh task reviewer checks spec then quality for each pinned result; the coordinator merges approved results serially and verifies the combined tree before releasing dependents. A whole-branch review runs at the end.
+- **Subagent-driven** - SDD coordinates independent ready trajectories concurrently in separate worktrees, using trajectory-execution directly without another coordinator agent. Fresh task implementers write code and tests; separate reviewers check spec then quality. The coordinator integrates only completed trajectories serially and verifies the combined tree before releasing dependents. A whole-branch review runs at the end.
 - **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
 **For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
