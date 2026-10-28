@@ -36,7 +36,6 @@ if [ $# -ne 1 ]; then
 fi
 
 plan=$1
-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
 slug=$(basename "$plan" .md)
 [ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
@@ -51,12 +50,41 @@ base="$root/.superpowers/sdd"
 # Normalize the plan path (physical directory, so relative/absolute/../
 # spellings of one plan compare equal) and express it as the marker value:
 # repo-relative when the plan lives under the repo root, absolute otherwise.
-plan_dir=$(CDPATH='' cd -- "$(dirname "$plan")" && pwd -P)
+plan_dir_raw=$(dirname "$plan")
+if [ -d "$plan_dir_raw" ]; then
+  plan_dir=$(CDPATH='' cd -- "$plan_dir_raw" && pwd -P)
+else
+  case "$plan_dir_raw" in
+    /*|[A-Za-z]:*) plan_dir="$plan_dir_raw" ;;
+    *) plan_dir="$root/$plan_dir_raw" ;;
+  esac
+fi
 plan_abs="$plan_dir/$(basename "$plan")"
 case "$plan_abs" in
   "$root"/*) plan_id=${plan_abs#"$root"/} ;;
   *)         plan_id=$plan_abs ;;
 esac
+
+if [ ! -f "$plan" ]; then
+  # The plan file is not in the working tree. If it existed in git history
+  # (e.g. deleted during a finishing task) or its workspace already exists,
+  # keep resolving. Otherwise reject with exit 2.
+  has_git_history=false
+  if [ -n "$(git rev-list -1 HEAD -- "$plan" 2>/dev/null)" ] || \
+     [ -n "$(git rev-list -1 HEAD -- "$plan_id" 2>/dev/null)" ]; then
+    has_git_history=true
+  fi
+
+  has_existing_workspace=false
+  if [ -e "$base/$slug/plan-path" ] && [ "$(cat "$base/$slug/plan-path" 2>/dev/null)" = "$plan_id" ]; then
+    has_existing_workspace=true
+  fi
+
+  if ! $has_git_history && ! $has_existing_workspace; then
+    echo "no such plan file: $plan" >&2
+    exit 2
+  fi
+fi
 
 # True when the workspace at $1 is (or becomes) this plan's: an existing
 # marker must name this plan; a missing marker means a new workspace or a
