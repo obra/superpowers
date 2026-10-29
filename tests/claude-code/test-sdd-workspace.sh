@@ -240,6 +240,54 @@ PLAN
         echo "    output: $noexec_out"
     fi
 
+    # --- task-brief stops at trailing non-Task sections and handles nested fences ---
+    cat > "$repo/plan-fences.md" <<'PLAN'
+# Plan With Trailing Sections
+
+## Task 1: Markdown wrapper
+
+````markdown
+Here is an embedded code block inside a 4-backtick fence:
+```bash
+echo "inside nested fence"
+```
+````
+
+### Step 1: Subheading inside Task 1
+
+Keep this line in Task 1.
+
+## Task 2: Final task
+
+Final task body line.
+
+## Self-Review
+
+- Checklist item that must not leak into Task 2 brief.
+
+## Execution Handoff
+
+Handoff instructions that must not leak into Task 2 brief.
+PLAN
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fences.md 1 >/dev/null )
+    ( cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fences.md 2 >/dev/null )
+    local brief1="$repo/.superpowers/sdd/plan-fences/task-1-brief.md"
+    local brief2="$repo/.superpowers/sdd/plan-fences/task-2-brief.md"
+    if grep -q "Keep this line in Task 1." "$brief1" && ! grep -q "Final task body line." "$brief1"; then
+        pass "task-brief preserves subheadings after a 4-backtick fence containing a 3-backtick block"
+    else
+        fail "task-brief preserves subheadings after a 4-backtick fence containing a 3-backtick block"
+        echo "    brief1: $(cat "$brief1" 2>/dev/null)"
+    fi
+    if grep -q "Final task body line." "$brief2" \
+        && ! grep -q "Self-Review" "$brief2" \
+        && ! grep -q "Execution Handoff" "$brief2"; then
+        pass "task-brief stops at trailing non-Task headings (Self-Review, Execution Handoff)"
+    else
+        fail "task-brief stops at trailing non-Task headings (Self-Review, Execution Handoff)"
+        echo "    brief2: $(cat "$brief2" 2>/dev/null)"
+    fi
+
     # --- Ownership markers: two plans with the same basename (#2045) ---
     mkdir -p "$repo/docs/alpha" "$repo/docs/beta"
     cat > "$repo/docs/alpha/plan.md" <<'PLAN'
