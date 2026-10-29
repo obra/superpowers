@@ -1,6 +1,6 @@
 # Resuming From an Existing Ledger
 
-Part of superpowers:subagent-driven-development. This plan's workspace
+Part of superpowers-lt:subagent-driven-development. This plan's workspace
 already has a ledger at `<workspace>/progress.md`.
 
 If the ledger's first line names your plan file, tasks with a `Task <N>:
