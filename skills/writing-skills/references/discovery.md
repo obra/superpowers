@@ -1,6 +1,6 @@
 # Writing SKILL.md for Discovery
 
-Part of superpowers:writing-skills: the SKILL.md template and how to name,
+Part of superpowers-lt:writing-skills: the SKILL.md template and how to name,
 describe and size a skill so agents find it and read it.
 
 ## SKILL.md Structure
@@ -193,8 +193,8 @@ wc -w skills/path/SKILL.md
 **When writing documentation that references other skills:**
 
 Use skill name only, with explicit requirement markers:
-- ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers:test-driven-development`
-- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers:systematic-debugging`
+- ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers-lt:test-driven-development`
+- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers-lt:systematic-debugging`
 - ❌ Bad: `See skills/testing/test-driven-development` (unclear if required)
 - ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
 

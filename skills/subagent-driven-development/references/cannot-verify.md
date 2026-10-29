@@ -1,6 +1,6 @@
 # "Cannot Verify From Diff" Items
 
-Part of superpowers:subagent-driven-development.
+Part of superpowers-lt:subagent-driven-development.
 
 The task reviewer may report "⚠️ Cannot verify from diff" items — requirements
 that live in unchanged code or span tasks. These do not block the rest of the

@@ -1,6 +1,6 @@
 # The Fix Loop
 
-Part of superpowers:subagent-driven-development. The task review reported
+Part of superpowers-lt:subagent-driven-development. The task review reported
 spec ❌, a Critical or Important finding, or a ⚠️ item you confirmed as a real
 gap.
 

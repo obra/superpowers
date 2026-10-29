@@ -1,6 +1,6 @@
 # Handling a Report That Isn't DONE
 
-Part of superpowers:subagent-driven-development.
+Part of superpowers-lt:subagent-driven-development.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 

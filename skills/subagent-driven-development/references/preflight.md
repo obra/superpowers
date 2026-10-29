@@ -1,6 +1,6 @@
 # The Pre-flight Scan
 
-Part of superpowers:subagent-driven-development. Run it once, before
+Part of superpowers-lt:subagent-driven-development. Run it once, before
 dispatching Task 1.
 
 Before dispatching Task 1, scan the plan once for conflicts, writing down
