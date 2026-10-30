@@ -22,10 +22,16 @@ echo "test-antigravity-tools: checking Antigravity tool mapping"
 [ -f "$MAPPING" ] || fail "tool mapping missing at $MAPPING"
 
 # --- Core action→tool mappings are documented -------------------------------
-for tool in write_to_file replace_file_content invoke_subagent; do
+for tool in write_file edit_file write_to_file replace_file_content invoke_subagent; do
   grep -q "$tool" "$MAPPING" \
     || fail "mapping does not document the '$tool' tool"
 done
+
+# --- Task tracking documents the Antigravity 2.0 / IDE ArtifactMetadata schema
+grep -q "ArtifactMetadata" "$MAPPING" \
+  || fail "mapping does not document ArtifactMetadata for task artifacts"
+grep -q "<appDataDir>/brain/<conversation-id>" "$MAPPING" \
+  || fail "mapping does not document the <appDataDir>/brain/<conversation-id> artifact directory"
 
 # --- Subagents use the built-in self/research types -------------------------
 grep -q '`self`' "$MAPPING" \

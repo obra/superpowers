@@ -21,6 +21,8 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
 
+**Inline chat recommendations are not plans:** before executing multi-step changes after a diagnostic turn or a "proceed" reply, invoke `superpowers:brainstorming` or `superpowers:writing-plans` and create your task checklist first.
+
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
 ## Skill Priority
