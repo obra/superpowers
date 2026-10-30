@@ -179,6 +179,11 @@ Only what they said goes in as theirs. Anything you filled in goes in
 as your proposal, with your reason. End each chunk by asking what's wrong
 or missing.
 
+Send each chunk, and the approaches, as plain message text. Some
+harnesses don't render text that comes before an interactive question
+tool call (such as AskUserQuestion) in the same turn, so never pair the
+two. Ask in plain text, or end the turn and use the tool in the next one.
+
 Before you send a chunk, check it: does it describe something they'll
 look at, like a page, a screen, a schedule, or a printout? If so, and
 they haven't seen the visual companion offer yet, send the offer instead
