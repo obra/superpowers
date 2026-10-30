@@ -181,25 +181,24 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, hand execution to a fresh session — never your own.
-You authored this plan: your context carries the brainstorm, the spec, and
-every draft of the plan text, and a session that keeps executing drags all
-of it through every dispatch and ruling ahead. Still never offer an
-execution choice or ask which approach your human partner prefers — the
-handoff itself is the default:
+After saving and self-reviewing the plan, hand execution to a fresh
+session — never your own: your authoring context carries the brainstorm,
+the spec, and every plan draft, and none of it belongs in execution.
+Never offer an execution choice — the handoff itself is the default:
 
 **"Plan complete and saved to <plan file path>. Dispatching a fresh implementation session."**
 
-- Launch a brand-new session or agent (a new CLI session, Paseo
-  `create_agent`, whatever your harness offers) with a pointer prompt:
-  the plan file path, the worktree/branch to work in, and
-  **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development.
-  Pointers only — the prompt carries no plan content; the implementing
-  session reads the plan file itself.
+- Launch a brand-new session or agent with a pointer prompt: the plan
+  file path, the worktree/branch to work in, and **REQUIRED SUB-SKILL:**
+  Use superpowers:subagent-driven-development. Pointers only — the
+  implementing session reads the plan file itself.
+- The dispatched session must inherit your env/config — endpoint,
+  provider, credentials. Never launch it on a different account or
+  provider than your own; the only exception is an explicit direction
+  from your human partner.
 - **Fallback when fresh sessions aren't available:** dispatch ONE
-  implementation subagent (Agent/Task tool) that runs
-  superpowers:subagent-driven-development in its own clean context —
-  still not your session.
+  implementation subagent that runs superpowers:subagent-driven-development
+  in its own clean context.
 - **Fallback when this harness has no subagent access:** Use
   superpowers:executing-plans and tell your human partner you're running
   inline.
