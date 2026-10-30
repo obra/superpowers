@@ -51,22 +51,14 @@ test('package.json declares a pi package with skills and extension resources', a
   assert.deepEqual(pkg.pi.extensions, ['./.pi/extensions/superpowers.ts']);
 });
 
-test('extension registers lifecycle hooks without pre-compaction injection', async () => {
+test('extension leaves package skill discovery to Pi and registers lifecycle hooks', async () => {
   const { handlers } = await loadExtension();
 
-  for (const event of ['resources_discover', 'session_start', 'session_compact', 'context', 'agent_end']) {
+  assert.equal((handlers.get('resources_discover') ?? []).length, 0, 'extension must not bypass package skill filters');
+  for (const event of ['session_start', 'session_compact', 'context', 'agent_end']) {
     assert.equal((handlers.get(event) ?? []).length, 1, `missing ${event} handler`);
   }
   assert.equal((handlers.get('session_before_compact') ?? []).length, 0);
-});
-
-test('resources_discover contributes the bundled skills directory', async () => {
-  const { handlers } = await loadExtension();
-  const discover = firstHandler(handlers, 'resources_discover');
-
-  const result = await discover({ type: 'resources_discover', cwd: repoRoot, reason: 'startup' }, {});
-
-  assert.deepEqual(result.skillPaths, [resolve(repoRoot, 'skills')]);
 });
 
 test('startup context injects the bootstrap as one user message until agent_end', async () => {
@@ -122,7 +114,16 @@ test('pi tools reference documents pi-specific mappings', async () => {
   assert.equal(existsSync(piToolsPath), true, 'pi-tools.md should exist');
   const text = await readFile(piToolsPath, 'utf8');
 
-  for (const expected of ['Skill', 'Task', 'TodoWrite', 'read', 'write', 'edit', 'bash']) {
-    assert.match(text, new RegExp(expected));
-  }
+  // Assert against the mapping-table rows only. The surrounding prose mentions
+  // these same tokens, so matching the whole file would still pass if the table
+  // were deleted — the exact regression this test exists to catch.
+  const rows = text.split('\n').filter((line) => line.startsWith('|'));
+  assert.ok(
+    rows.some((row) => /subagent/i.test(row)),
+    'mapping table documents subagent dispatch',
+  );
+  assert.ok(
+    rows.some((row) => /todo|task/i.test(row)),
+    'mapping table documents task tracking',
+  );
 });

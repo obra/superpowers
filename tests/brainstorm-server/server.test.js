@@ -34,6 +34,19 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// fs.watch delivery latency varies widely by platform: on macOS, FSEvents
+// has been observed delivering events anywhere from ~100ms to over 2s after
+// the write. File-watching tests poll for the outcome instead of sleeping a
+// fixed interval, so a slow event neither fails its own test nor arrives
+// during the next one.
+async function waitFor(condition, message, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (!condition()) {
+    if (Date.now() > deadline) throw new Error(message);
+    await sleep(25);
+  }
+}
+
 async function fetch(url) {
   return new Promise((resolve, reject) => {
     const headers = { Cookie: `brainstorm-key-${TEST_PORT}=${TOKEN}` };
@@ -115,7 +128,27 @@ async function runTests() {
 
   const server = startServer();
   let stdoutAccum = '';
-  server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
+  // Unlike stdoutAccum, never reset: lets a test wait until the server has
+  // processed a specific file event.
+  let serverLog = '';
+  server.stdout.on('data', (data) => {
+    stdoutAccum += data.toString();
+    serverLog += data.toString();
+  });
+  const screenLogged = (type, filePath) =>
+    serverLog.includes(JSON.stringify({ type, file: filePath }));
+
+  // Drains file events still in flight from earlier tests, which can each
+  // trigger a reload and clear state/events. fs.watch delivers events in
+  // order, so once the server has processed a file written now, every
+  // earlier event has been handled too.
+  let barrierCount = 0;
+  async function settleWatcher() {
+    const barrier = path.join(CONTENT_DIR, `barrier-${++barrierCount}.html`);
+    fs.writeFileSync(barrier, '<h2>Barrier</h2>');
+    await waitFor(() => screenLogged('screen-added', barrier),
+      'Server should process the barrier file');
+  }
 
   let initialStdout = '';
   let passed = 0;
@@ -209,6 +242,20 @@ async function runTests() {
       assert(!res.body.includes('<!-- CONTENT -->'), 'Placeholder should be replaced');
       assert(res.body.includes('Pick a layout'), 'Fragment content should be present');
       assert(res.body.includes('data-choice="a"'), 'Fragment interactive elements intact');
+    });
+
+    await test('preserves literal replacement tokens in content fragments', async () => {
+      const tokens = ["$'", '$`', '$&', '$$', '$1', '$<name>'];
+      const fragment = '<h2>Literal tokens</h2><pre>' + tokens.join(' | ') + '</pre>';
+      fs.writeFileSync(path.join(CONTENT_DIR, 'literal-tokens.html'), fragment);
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200);
+      assert(res.body.includes(fragment), 'Fragment must be inserted verbatim');
+      assert.strictEqual(res.body.split('<div class="header">').length - 1, 1, 'Frame chrome must not be duplicated');
+      assert(!res.body.includes('<!-- CONTENT -->'), 'Replacement tokens must not restore the placeholder');
+      assert(res.body.includes('WebSocket'), 'Helper must still be injected');
     });
 
     await test('serves newest file by mtime', async () => {
@@ -352,6 +399,7 @@ async function runTests() {
 
     await test('writes choice events to state/events', async () => {
       // Clean up events from prior tests
+      await settleWatcher();
       const eventsFile = path.join(STATE_DIR, 'events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
@@ -402,10 +450,9 @@ async function runTests() {
       });
 
       fs.writeFileSync(path.join(CONTENT_DIR, 'multi-client.html'), '<h2>Multi</h2>');
-      await sleep(500);
 
-      assert(ws1Reload, 'Client 1 should receive reload');
-      assert(ws2Reload, 'Client 2 should receive reload');
+      await waitFor(() => ws1Reload, 'Client 1 should receive reload');
+      await waitFor(() => ws2Reload, 'Client 2 should receive reload');
       ws1.close();
       ws2.close();
     });
@@ -417,8 +464,10 @@ async function runTests() {
       await sleep(100);
 
       // This should not throw even though ws1 is closed
-      fs.writeFileSync(path.join(CONTENT_DIR, 'after-close.html'), '<h2>After</h2>');
-      await sleep(300);
+      const afterClose = path.join(CONTENT_DIR, 'after-close.html');
+      fs.writeFileSync(afterClose, '<h2>After</h2>');
+      await waitFor(() => screenLogged('screen-added', afterClose),
+        'Server should process the new screen');
       // If we got here without error, the test passes
     });
 
@@ -449,16 +498,16 @@ async function runTests() {
       });
 
       fs.writeFileSync(path.join(CONTENT_DIR, 'watch-new.html'), '<h2>New</h2>');
-      await sleep(500);
 
-      assert(gotReload, 'Should send reload on new file');
+      await waitFor(() => gotReload, 'Should send reload on new file');
       ws.close();
     });
 
     await test('sends reload on .html file change', async () => {
       const filePath = path.join(CONTENT_DIR, 'watch-change.html');
       fs.writeFileSync(filePath, '<h2>Original</h2>');
-      await sleep(500);
+      await waitFor(() => screenLogged('screen-added', filePath),
+        'Server should process the original file');
 
       const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?key=${TOKEN}`);
       await new Promise(resolve => ws.on('open', resolve));
@@ -469,41 +518,44 @@ async function runTests() {
       });
 
       fs.writeFileSync(filePath, '<h2>Modified</h2>');
-      await sleep(500);
 
-      assert(gotReload, 'Should send reload on file change');
+      await waitFor(() => gotReload, 'Should send reload on file change');
       ws.close();
     });
 
     await test('does NOT send reload for non-.html files', async () => {
+      await settleWatcher();
       const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?key=${TOKEN}`);
       await new Promise(resolve => ws.on('open', resolve));
 
-      let gotReload = false;
+      let reloads = 0;
       ws.on('message', (data) => {
-        if (JSON.parse(data.toString()).type === 'reload') gotReload = true;
+        if (JSON.parse(data.toString()).type === 'reload') reloads++;
       });
 
       fs.writeFileSync(path.join(CONTENT_DIR, 'data.txt'), 'not html');
-      await sleep(500);
+      await settleWatcher();
 
-      assert(!gotReload, 'Should NOT reload for non-HTML files');
+      // The only reload is the one for settleWatcher's own file.
+      assert.strictEqual(reloads, 1, 'Should NOT reload for non-HTML files');
       ws.close();
     });
 
     await test('does NOT send reload for ._*.html resource-fork dotfiles', async () => {
+      await settleWatcher();
       const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?key=${TOKEN}`);
       await new Promise(resolve => ws.on('open', resolve));
 
-      let gotReload = false;
+      let reloads = 0;
       ws.on('message', (data) => {
-        if (JSON.parse(data.toString()).type === 'reload') gotReload = true;
+        if (JSON.parse(data.toString()).type === 'reload') reloads++;
       });
 
       fs.writeFileSync(path.join(CONTENT_DIR, '._sidecar.html'), 'resource fork');
-      await sleep(500);
+      await settleWatcher();
 
-      assert(!gotReload, 'a ._ dotfile appearing must not trigger a reload');
+      // The only reload is the one for settleWatcher's own file.
+      assert.strictEqual(reloads, 1, 'a ._ dotfile appearing must not trigger a reload');
       ws.close();
     });
 
@@ -514,29 +566,27 @@ async function runTests() {
       assert(fs.existsSync(eventsFile));
 
       fs.writeFileSync(path.join(CONTENT_DIR, 'clear-events.html'), '<h2>New screen</h2>');
-      await sleep(500);
 
-      assert(!fs.existsSync(eventsFile), 'state/events should be cleared on new screen');
+      await waitFor(() => !fs.existsSync(eventsFile), 'state/events should be cleared on new screen');
     });
 
     await test('logs screen-added on new file', async () => {
       stdoutAccum = '';
       fs.writeFileSync(path.join(CONTENT_DIR, 'log-test.html'), '<h2>Log</h2>');
-      await sleep(500);
 
-      assert(stdoutAccum.includes('screen-added'), 'Should log screen-added');
+      await waitFor(() => stdoutAccum.includes('screen-added'), 'Should log screen-added');
     });
 
     await test('logs screen-updated on file change', async () => {
       const filePath = path.join(CONTENT_DIR, 'log-update.html');
       fs.writeFileSync(filePath, '<h2>V1</h2>');
-      await sleep(500);
+      await waitFor(() => screenLogged('screen-added', filePath),
+        'Server should process V1');
 
       stdoutAccum = '';
       fs.writeFileSync(filePath, '<h2>V2</h2>');
-      await sleep(500);
 
-      assert(stdoutAccum.includes('screen-updated'), 'Should log screen-updated');
+      await waitFor(() => stdoutAccum.includes('screen-updated'), 'Should log screen-updated');
     });
 
     // ========== Helper.js Content ==========
@@ -577,7 +627,8 @@ async function runTests() {
 
     // ========== Summary ==========
     console.log(`\n--- Results: ${passed} passed, ${failed} failed, ${skipped} skipped ---`);
-    if (failed > 0) process.exit(1);
+    // exitCode, not exit(): exit() would skip the finally below and orphan the server.
+    if (failed > 0) process.exitCode = 1;
 
   } finally {
     server.kill();

@@ -230,14 +230,16 @@ prepare_metadata_root() {
 
 METADATA_ROOT="$(prepare_metadata_root "$METADATA_SOURCE")"
 
-git -C "$REPO_ROOT" archive --format=tar "$REF" -- \
+# Pin tar.umask and extract with -p so staged modes are canonical 755/644
+# regardless of the builder's git config or process umask.
+git -C "$REPO_ROOT" -c tar.umask=0022 archive --format=tar "$REF" -- \
   .codex-plugin \
   CODE_OF_CONDUCT.md \
   LICENSE \
   README.md \
   assets \
   skills \
-  | tar -xf - -C "$STAGE"
+  | tar -xpf - -C "$STAGE"
 
 VERSION="$(jq -r '.version // empty' "$STAGE/.codex-plugin/plugin.json")"
 [[ -n "$VERSION" ]] || die "could not read version from .codex-plugin/plugin.json"
@@ -298,12 +300,19 @@ case "$FORMAT" in
     )
     ;;
   tar.gz)
-    # Match the prior official archive's deterministic tar entry metadata.
+    # Match the prior official archive's deterministic tar entry metadata:
+    # ustar entries with uid/gid 0 and empty uname/gname. GNU tar and bsdtar
+    # (macOS) spell those flags differently.
+    if tar --version 2>/dev/null | grep -q 'GNU tar'; then
+      TAR_METADATA_FLAGS=(--owner=:0 --group=:0 --numeric-owner)
+    else
+      TAR_METADATA_FLAGS=(--uid 0 --gid 0 --uname '' --gname '')
+    fi
     TZ=UTC find "$STAGE" -exec touch -t 197001010000 {} +
     (
       cd "$STAGE"
       rm -f "$OUTPUT"
-      COPYFILE_DISABLE=1 tar -cf - --no-recursion --format ustar --uid 0 --gid 0 --uname '' --gname '' -T "$ARCHIVE_LIST" |
+      COPYFILE_DISABLE=1 tar -cf - --no-recursion --format ustar "${TAR_METADATA_FLAGS[@]}" -T "$ARCHIVE_LIST" |
         gzip -9n >"$OUTPUT"
     )
     ;;
