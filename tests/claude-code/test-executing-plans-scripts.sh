@@ -154,6 +154,32 @@ PLAN
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
     fi
 
+    # --- task-start & task-done survive stripped exec bits (#2040) ---
+    local stripped_root="$TEST_ROOT/stripped-skills"
+    mkdir -p "$stripped_root/executing-plans/scripts" "$stripped_root/subagent-driven-development/scripts"
+    cp "$EP_SCRIPTS/task-start" "$EP_SCRIPTS/task-done" "$stripped_root/executing-plans/scripts/"
+    cp "$REPO_ROOT/skills/subagent-driven-development/scripts/sdd-workspace" \
+       "$REPO_ROOT/skills/subagent-driven-development/scripts/task-brief" \
+       "$REPO_ROOT/skills/subagent-driven-development/scripts/review-package" \
+       "$stripped_root/subagent-driven-development/scripts/"
+    chmod -x "$stripped_root/executing-plans/scripts/"* "$stripped_root/subagent-driven-development/scripts/"*
+    rc=0
+    out="$(cd "$repo" && bash "$stripped_root/executing-plans/scripts/task-start" plan.md 1 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$out" == *"brief: $repo/.superpowers/sdd/plan/task-1-brief.md"* ]]; then
+        pass "task-start works with no exec bit on subagent-driven-development scripts"
+    else
+        fail "task-start works with no exec bit on subagent-driven-development scripts (got rc=$rc)"
+        echo "    got: $out"
+    fi
+    rc=0
+    out="$(cd "$repo" && bash "$stripped_root/executing-plans/scripts/task-done" plan.md 1 "$base" -- true 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$out" == *"ledger: Task 1: complete"* ]]; then
+        pass "task-done works with no exec bit on subagent-driven-development scripts"
+    else
+        fail "task-done works with no exec bit on subagent-driven-development scripts (got rc=$rc)"
+        echo "    got: $out"
+    fi
+
     echo
     if [[ "$FAILURES" -eq 0 ]]; then
         echo "PASS"
