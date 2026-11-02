@@ -123,7 +123,8 @@ The workspace and ledger are shared with superpowers:subagent-driven-development
 and the new one resumes from the same ledger.
 
 - Each plan owns a workspace: at skill start, run
-  `../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` — it
+  `../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` by its
+  absolute path, from the working tree you're executing in — it
   prints the plan's git-ignored directory
   (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to every
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
@@ -169,7 +170,8 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-- Run this skill's `scripts/task-start PLAN_FILE N`. It prints the brief
+- Run this skill's `scripts/task-start PLAN_FILE N` by its absolute path,
+  from the working tree you're executing in. It prints the brief
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
   what you remember is a summary, the brief has the exact values,
@@ -222,7 +224,7 @@ the claim. If any item is missing, the task is not complete: finish it.
 ### 4. Complete the task
 
 Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
-with the test command the brief names for the whole task. It runs the
+by its absolute path, from the working tree you're executing in, with the test command the brief names for the whole task. It runs the
 tests, keeps the full output in the workspace, prints the tail, and — only
 if they pass — appends the completion line to the ledger:
 
@@ -234,7 +236,7 @@ mark the todo complete and take the next task.
 ## Final Review
 
 Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
-(MERGE_BASE = the commit the branch started from, e.g.
+by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.
 `git merge-base main HEAD`) and review from the file it prints.
 
 **With a subagent tool:** dispatch the reviewer on the most capable
