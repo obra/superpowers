@@ -17,15 +17,24 @@ fail() {
     FAILURES=$((FAILURES + 1))
 }
 
-# Push a path through the same `cd ... && pwd` normalization that
-# sdd-workspace's own printed output goes through, so both sides of a
-# string comparison are guaranteed to be spelled identically. On Windows
-# Git Bash/MSYS, `git rev-parse --show-toplevel` (Windows-style,
-# C:/Users/...) and `cd ... && pwd` (MSYS-style, /c/Users/...) can print
-# different spellings of the identical physical directory; on Linux/macOS
-# this is a no-op since the two already agree (module the resolved-symlink
-# /var -> /private/var case handled by the mktemp comment above).
-physical_path() { (cd "$1" && pwd); }
+# Push a path through the same normalization that sdd-workspace's own
+# printed output goes through, so both sides of a string comparison are
+# guaranteed to be spelled identically. On Windows (Git Bash/MSYS, Cygwin)
+# that is the drive-letter form `cygpath -m` prints (C:/Users/...), not the
+# MSYS form `pwd` prints (/c/Users/...); on Linux/macOS it is plain `pwd`
+# (modulo the resolved-symlink /var -> /private/var case handled by the
+# mktemp comment below).
+physical_path() {
+    (cd "$1" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)
+}
+
+# On Windows, check that PowerShell (the shell an agent's PowerShell tool
+# runs) can open a path the helpers printed. Elsewhere there is nothing to
+# check: the printed path is the shell's own.
+native_readable() {
+    command -v cygpath >/dev/null 2>&1 && command -v powershell.exe >/dev/null 2>&1 || return 0
+    [[ "$(powershell.exe -NoProfile -Command "Test-Path -LiteralPath '$1'" | tr -d '\r')" == "True" ]]
+}
 
 cleanup() {
     if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
@@ -93,6 +102,13 @@ PLAN
         echo "    got: $dir_a"
     fi
 
+    if native_readable "$dir_a"; then
+        pass "the printed workspace path opens from PowerShell on Windows"
+    else
+        fail "the printed workspace path opens from PowerShell on Windows"
+        echo "    got: $dir_a"
+    fi
+
     if [[ "$dir_a" != "$dir_b" && -d "$dir_a" && -d "$dir_b" ]]; then
         pass "two plans resolve to two distinct directories"
     else
@@ -137,6 +153,12 @@ PLAN
         pass "task-brief writes its brief under the plan's workspace"
     else
         fail "task-brief writes its brief under the plan's workspace"
+        echo "    got: $brief_path"
+    fi
+    if native_readable "$brief_path"; then
+        pass "the printed brief path opens from PowerShell on Windows"
+    else
+        fail "the printed brief path opens from PowerShell on Windows"
         echo "    got: $brief_path"
     fi
 
