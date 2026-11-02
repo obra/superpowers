@@ -428,10 +428,9 @@ messages break some models (#894). Three things you must replicate:
   harness-specific constant.) Cache the bootstrap content at module level so
   you're not re-reading and re-parsing `SKILL.md` on every call (#1202).
 - **Compaction.** If the harness compacts/summarizes history, re-inject
-  afterward. pi sets an `injectBootstrap` flag on `session_start` and
-  `session_compact`, clears it on `agent_end`, and inserts the message *after*
-  any leading compaction-summary messages. OpenCode relies on its per-step
-  re-injection plus the dedup guard.
+  afterward. pi re-injects on every `context` call and inserts the message
+  *after* any leading compaction-summary messages. OpenCode relies on its
+  per-step re-injection plus the dedup guard.
 - **Message-object shape is per-harness — discover yours, don't copy a literal.**
   The two references use *incompatible* shapes: pi builds
   `{ role, content: [{ type, text }], timestamp }`; OpenCode manipulates
@@ -827,9 +826,11 @@ Use this as the live index; when in doubt, read the files, not this table.
   (Cursor). Use what your harness exports; the script re-derives the root itself.
 - **System-message injection.** Shape B injects a *user* message on purpose
   (#750, #894). Don't "fix" it to a system message.
-- **Per-step vs per-turn callbacks.** OpenCode fires every step (per-call dedup
-  guard); pi fires per turn (lifecycle flag + `agent_end` reset). Copying one
-  harness's dedup strategy onto the other's callback frequency breaks injection.
+- **Disarming injection after the first prompt.** If your harness's transform
+  output is not saved to session history (pi's `context` result is not), the
+  bootstrap must be injected into every provider request. A flag cleared on a
+  per-prompt event such as pi's `agent_end` drops the bootstrap after the first
+  prompt (#2083).
 - **Message-object shape is per-harness.** Shape B. pi and OpenCode use
   incompatible shapes; discover yours, don't copy a reference's object literal.
 - **Hunting for a skill-registration API that doesn't exist.** A harness with no

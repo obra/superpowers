@@ -79,7 +79,7 @@ export const V1_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → \`todowrite\`
 - \`Subagent (general-purpose):\` → \`task\` with \`subagent_type: "general"\`
-- Invoke a skill → OpenCode's native \`skill\` tool
+- Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`name: "brainstorming"\`)
 - Read files → \`read\`
 - Create, edit, or delete files → \`apply_patch\`
 - Run shell commands → \`bash\`
@@ -97,7 +97,7 @@ export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
-- Invoke a skill → OpenCode's native \`skill\` tool
+- Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`id: "brainstorming"\`)
 - Read files → \`read\`
 - Create, edit, or delete files → use \`patch\` with \`patchText\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`shell\` for deletion
 - Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
@@ -112,6 +112,11 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 // parsing it once eliminates redundant fs.existsSync + fs.readFileSync +
 // regex work on every agent step.  See #1202 for the full analysis.
 const _bootstrapCache = new Map(); // mapping -> bootstrap (null = file missing)
+
+// Opening of every injected bootstrap part. The already-injected guards match
+// it at the start of a part, so a prompt that merely mentions the tag (#2197)
+// is not mistaken for the bootstrap.
+const BOOTSTRAP_MARKER = '<EXTREMELY_IMPORTANT>\nYou have superpowers.';
 
 // Helper to generate bootstrap content (cached after first call per mapping)
 const getBootstrapContent = (toolMapping) => {
@@ -128,8 +133,7 @@ const getBootstrapContent = (toolMapping) => {
   const fullContent = fs.readFileSync(skillPath, 'utf8');
   const { content } = extractAndStripFrontmatter(fullContent);
 
-  _bootstrapCache.set(toolMapping, `<EXTREMELY_IMPORTANT>
-You have superpowers.
+  _bootstrapCache.set(toolMapping, `${BOOTSTRAP_MARKER}
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
 
@@ -249,7 +253,7 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
       if (!firstUser || !firstUser.parts.length) return;
 
       // Guard: skip if first user message already contains bootstrap.
-      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      if (firstUser.parts.some(p => p.type === 'text' && p.text.startsWith(BOOTSTRAP_MARKER))) return;
 
       // #2160: never restart the controller workflow inside task subagent
       // (child) sessions. V1 passes no input to this hook (verified in the
@@ -356,7 +360,7 @@ async function setup(ctx) {
       if (!bootstrap || !event.messages || !event.messages.length) return;
       const firstUser = event.messages.find(m => m.role === 'user');
       if (firstUser && (!firstUser.content || !firstUser.content.length)) return;
-      if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.startsWith(BOOTSTRAP_MARKER))) return;
 
       // #2160: the request event carries the sessionID directly. Skip the
       // controller bootstrap when this prompt belongs to a task subagent
