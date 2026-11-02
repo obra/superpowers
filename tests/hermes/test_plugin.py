@@ -87,6 +87,24 @@ class TestBootstrapInjection:
         assert _fire_pre_llm(mock_ctx, is_first_turn=False) is None
         assert _fire_pre_llm(mock_ctx, is_first_turn=None) is None
 
+    def test_subagent_platform_skips_bootstrap_on_first_turn(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+        assert (
+            _fire_pre_llm(mock_ctx, is_first_turn=True, platform="subagent")
+            is None
+        )
+
+    def test_non_subagent_platforms_receive_bootstrap(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+        for platform in ("cli", "desktop", "cron", "telegram"):
+            result = _fire_pre_llm(
+                mock_ctx, is_first_turn=True, platform=platform
+            )
+            assert isinstance(result, dict)
+            assert BOOTSTRAP_MARKER in result["context"]
+
     def test_hook_tolerates_future_kwargs(self, mock_ctx):
         plugin = _load_plugin()
         plugin.register(mock_ctx)

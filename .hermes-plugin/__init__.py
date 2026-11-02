@@ -108,7 +108,9 @@ def register(ctx):
     # pre_llm_call returning {"context": ...} is the documented injection path
     # (on_session_start return values are ignored, and ctx.inject_message
     # refuses from that hook — verified empirically 2026-07-23). The context is
-    # appended to the first turn's user message.
+    # appended to the first turn's user message. delegate_task children run
+    # with platform="subagent" and an empty history, so every child's first
+    # turn would otherwise get the controller bootstrap too.
     def pre_llm_call(
         session_id=None,
         user_message=None,
@@ -118,7 +120,7 @@ def register(ctx):
         platform=None,
         **kwargs,
     ):
-        if is_first_turn:
+        if is_first_turn and platform != "subagent":
             return {"context": bootstrap}
         return None
 
