@@ -158,6 +158,18 @@ PLAN
             ;;
     esac
 
+    # --- review-package rejects revisions that are not commits ---
+    local tree_rev
+    tree_rev="$(cd "$repo" && git rev-parse "HEAD^{tree}")"
+    local tree_rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md "$tree_rev" HEAD >/dev/null 2>&1) || tree_rc=$?
+    if [[ "$tree_rc" -eq 2 ]]; then
+        pass "review-package rejects a tree revision as BASE with exit 2"
+    else
+        fail "review-package rejects a tree revision as BASE with exit 2"
+        echo "    exit: $tree_rc (3 = misdiagnosed by the descendant guard; should be 2 = bad input)"
+    fi
+
     rc=0
     (cd "$repo" && "$SDD_SCRIPTS/review-package" HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
     if [[ "$rc" -eq 2 ]]; then

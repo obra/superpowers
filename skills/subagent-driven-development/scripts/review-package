@@ -19,8 +19,12 @@ base=$2
 head=$3
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+# A revision that names any object passes --verify; range guards downstream
+# then die inside git with a raw exit 128 instead of the documented clean
+# error (measured: a tree SHA passed both verifies, then merge-base failed
+# with "fatal: Not a valid commit name"). Require that both peel to commits.
+git rev-parse --verify --quiet "${base}^{commit}" >/dev/null || { echo "bad BASE (not a commit): $base" >&2; exit 2; }
+git rev-parse --verify --quiet "${head}^{commit}" >/dev/null || { echo "bad HEAD (not a commit): $head" >&2; exit 2; }
 
 # Range guards (exit 3): a wrong-branch HEAD yields a range that is empty or
 # not rooted at BASE; either would silently produce a bogus review package.
