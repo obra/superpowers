@@ -27,11 +27,23 @@
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
-# Usage: sdd-workspace PLAN_FILE
+# The repository is the current directory's (see sdd-repo). -C DIR runs as
+# if started in DIR, the way git -C does: a caller working on another
+# checkout or worktree needs no `cd DIR ;` prefix, a compound that harnesses
+# cannot allowlist because DIR differs on every run (#1799).
+#
+# Usage: sdd-workspace [-C DIR] PLAN_FILE
 set -euo pipefail
 
+here=$(cd "$(dirname "$0")" && pwd)
+if [ "${1:-}" = "-C" ]; then
+  [ -d "${2:-}" ] || { echo "bad -C directory: ${2:-}" >&2; exit 2; }
+  cd "$2"
+  shift 2
+fi
+
 if [ $# -ne 1 ]; then
-  echo "usage: sdd-workspace PLAN_FILE" >&2
+  echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2
   exit 2
 fi
 
@@ -44,8 +56,12 @@ slug=$(basename "$plan" .md)
 
 # Physical path, spelled the way pwd -P spells the plan path below: on Git
 # Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
-# repo-relative marker check needs both in the same form.
-root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
+# repo-relative marker check needs both in the same form. Two steps, so a
+# failing sdd-repo stops the script instead of handing cd an empty path.
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040).
+toplevel=$("${BASH:-bash}" "$here/sdd-repo")
+root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
 base="$root/.superpowers/sdd"
 
 # Normalize the plan path (physical directory, so relative/absolute/../
