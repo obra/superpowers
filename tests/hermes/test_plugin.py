@@ -1,6 +1,7 @@
 import importlib
 import importlib.util
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -86,6 +87,24 @@ class TestBootstrapInjection:
         assert _fire_pre_llm(mock_ctx, is_first_turn=False) is None
         assert _fire_pre_llm(mock_ctx, is_first_turn=None) is None
 
+    def test_subagent_platform_skips_bootstrap_on_first_turn(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+        assert (
+            _fire_pre_llm(mock_ctx, is_first_turn=True, platform="subagent")
+            is None
+        )
+
+    def test_non_subagent_platforms_receive_bootstrap(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+        for platform in ("cli", "desktop", "cron", "telegram"):
+            result = _fire_pre_llm(
+                mock_ctx, is_first_turn=True, platform=platform
+            )
+            assert isinstance(result, dict)
+            assert BOOTSTRAP_MARKER in result["context"]
+
     def test_hook_tolerates_future_kwargs(self, mock_ctx):
         plugin = _load_plugin()
         plugin.register(mock_ctx)
@@ -140,3 +159,38 @@ class TestLayoutResolution:
         mod = self._load_from(plugdir)
         with pytest.raises(RuntimeError, match="cannot find the skills"):
             mod.register(mock_ctx)
+
+
+class TestSkillDescriptions:
+    """Hermes builds its skill catalogue from register_skill(description=...),
+    which defaults to "". Registering the path alone left every stock skill
+    blank in that catalogue, so the model had nothing to select on."""
+
+    def test_every_stock_skill_registers_a_description(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+        assert set(mock_ctx._descriptions) == set(mock_ctx._skills)
+        blank = sorted(n for n, d in mock_ctx._descriptions.items() if not d.strip())
+        assert blank == [], f"registered without a description: {blank}"
+
+    def test_descriptions_match_the_skill_frontmatter(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+        skills_dir = Path(plugin._skills_dir())
+        for name, description in mock_ctx._descriptions.items():
+            text = (skills_dir / name / "SKILL.md").read_text(encoding="utf-8")
+            declared = re.search(r"^description:\s*(.+)$", text, re.M).group(1)
+            assert description == declared.strip().strip('"').strip("'")
+
+    @pytest.mark.parametrize(
+        "block, expected",
+        [
+            ('---\nname: demo\ndescription: "Quoted value."\n---\nbody', "Quoted value."),
+            ("---\nname: demo\ndescription: Bare value\n---\nbody", "Bare value"),
+            ("---\nname: demo\n---\nbody", ""),
+            ("no frontmatter at all", ""),
+        ],
+    )
+    def test_frontmatter_value_parsing(self, block, expected):
+        plugin = _load_plugin()
+        assert plugin._frontmatter_value(block, "description") == expected

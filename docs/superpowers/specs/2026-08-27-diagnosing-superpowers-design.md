@@ -253,18 +253,20 @@ user asks.
    otherwise give the user a search URL and stop.
 2. **Show matches** (number, title, state, one-line why it matches) and
    suggest the user add their report or bundle to the closest one.
-3. **If nothing matches**, draft an issue from `templates/issue.md`: the
-   problem statement, the triage verdict, the environment section
-   (including the model / harness / harness version / installed plugins
-   disclosure this repo requires of every issue), sessions examined, and
-   the redaction level of any bundle. Show the exact text; create the
-   issue with `gh issue create` only after the user approves it, with the
-   `bug` and `automated-issue-report` labels. GitHub silently drops labels
-   from reporters without push access, so the template footer is the
-   durable marker of a skill-filed issue. `gh` cannot attach files, so the
-   skill tells the user the bundle path to attach through the web UI.
-   Without `gh`, the skill hands over a prefilled new-issue link on the
-   `diagnosis_report.md` template, which applies both labels for any
+3. **If nothing matches**, draft an issue from `templates/issue.md`: who
+   is filing and what the user asked for, a summary in the user's own
+   words, the problem statement, the triage verdict, the environment
+   section (including the model / harness / harness version / installed
+   plugins disclosure this repo requires of every issue), sessions
+   examined, and the redaction level of any bundle. Show the exact text;
+   create the issue with `gh issue create` only after the user approves
+   it and the summary holds their words, with the `bug` and
+   `automated-issue-report` labels. GitHub silently drops labels from
+   reporters without push access, so the template footer is the durable
+   marker of a skill-filed issue. `gh` cannot attach files, so the skill
+   tells the user the bundle path to attach through the web UI. Without
+   `gh`, the skill hands over a prefilled new-issue link on the
+   `bug_report.md` template, which applies the `bug` label for any
    reporter; GitHub caps that URL near 8,000 characters.
 4. Nothing is posted anywhere without the user approving the exact text.
 
