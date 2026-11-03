@@ -500,7 +500,7 @@ SH
     printf 'race-empty-plan.md\n' > "$race_empty/.superpowers/sdd/race-empty-plan/plan-path"
     cat > "$race_bin/cat" <<'SH'
 #!/usr/bin/env bash
-if [[ -n "${EMPTY_ONCE_STAMP:-}" && ! -e "$EMPTY_ONCE_STAMP" ]]; then
+if [[ -n "${EMPTY_ONCE_STAMP:-}" && ! -e "$EMPTY_ONCE_STAMP" && "${1:-}" == *plan-path ]]; then
     : > "$EMPTY_ONCE_STAMP"
     exit 0
 fi
@@ -521,6 +521,52 @@ SH
         echo "    dir:      $race_empty_dir"
         echo "    injected: $([[ -e "$TEST_ROOT/race-empty-stamp" ]] && echo yes || echo no)"
         echo "    marker:   $(cat "$race_empty_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # --- A marker that stays empty is still another plan's slot ---
+    # The retries above only cover a writer that finishes; a marker left
+    # empty by a crashed winner must keep the pre-existing classification
+    # (skip the slot) instead of turning into a hard failure that blocks
+    # every later run of this plan.
+    git init -q -b main "$TEST_ROOT/race-stale"
+    local race_stale race_stale_dir race_stale_rc
+    race_stale="$(physical_path "$(cd "$TEST_ROOT/race-stale" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race_stale/race-stale-plan.md"
+    mkdir -p "$race_stale/.superpowers/sdd/race-stale-plan"
+    : > "$race_stale/.superpowers/sdd/race-stale-plan/plan-path"
+    race_stale_rc=0
+    race_stale_dir="$(cd "$race_stale" \
+        && "$SDD_SCRIPTS/sdd-workspace" race-stale-plan.md 2>/dev/null)" || race_stale_rc=$?
+    if [[ "$race_stale_rc" -eq 0 \
+        && "$race_stale_dir" == "$race_stale/.superpowers/sdd/race-stale-plan-race-stale" \
+        && "$(cat "$race_stale_dir/plan-path" 2>/dev/null)" == "race-stale-plan.md" ]]; then
+        pass "empty marker that stays empty: skips the slot instead of failing"
+    else
+        fail "empty marker that stays empty: skips the slot instead of failing"
+        echo "    exit:   $race_stale_rc"
+        echo "    dir:    $race_stale_dir"
+        echo "    marker: $(cat "$race_stale_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # --- An unreadable marker is unusable, not another plan's slot ---
+    # A lost race whose marker cannot be read at all is the one case that
+    # must stop the caller: skipping it would leave the plan's artifacts in
+    # a workspace nobody owns. plan-path as a directory makes `cat` fail
+    # deterministically, and the diagnostic must name the failed write.
+    git init -q -b main "$TEST_ROOT/race-bad"
+    local race_bad race_bad_rc
+    race_bad="$(physical_path "$(cd "$TEST_ROOT/race-bad" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race_bad/race-bad-plan.md"
+    mkdir -p "$race_bad/.superpowers/sdd/race-bad-plan/plan-path"
+    race_bad_rc=0
+    ( cd "$race_bad" && "$SDD_SCRIPTS/sdd-workspace" race-bad-plan.md >/dev/null 2>"$TEST_ROOT/race-bad.err" ) \
+        || race_bad_rc=$?
+    if [[ "$race_bad_rc" -eq 2 ]] && grep -q "after a failed marker write" "$TEST_ROOT/race-bad.err"; then
+        pass "unreadable marker: exits 2 and names the failed write"
+    else
+        fail "unreadable marker: exits 2 and names the failed write"
+        echo "    exit: $race_bad_rc"
+        echo "    err:  $(cat "$TEST_ROOT/race-bad.err" 2>/dev/null)"
     fi
 
     echo ""
