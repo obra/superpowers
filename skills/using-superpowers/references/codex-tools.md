@@ -78,6 +78,22 @@ default_subagent_model = "<a mid-tier model from your spawn allowlist>"
 default_subagent_reasoning_effort = "medium"
 ```
 
+## Compaction sheds these instructions
+
+Context compaction replaces your transcript with a summary that keeps
+your progress but not your working instructions — the first
+post-compaction dispatch is where routing drift starts, and once one
+bare spawn lands, the broken pattern becomes its own precedent. The
+plugin ships a compaction re-injection hook (`hooks/hooks-codex.json`,
+Codex 0.145+) that restores the bootstrap after every compaction; it
+needs one-time trust approval, so if you never see a
+`<CONTEXT_RESTORED>` block after a compaction, tell your human partner
+the hook may be untrusted or unsupported on this version. Without it,
+re-ground yourself: when a summary appears in your context, re-read
+this file and the SKILL.md of the skill you are mid-way through
+executing before your next dispatch, and trust the ledger over your
+summarized memory of what happened.
+
 ## Environment Detection
 
 Skills that create worktrees or finish branches should detect their
