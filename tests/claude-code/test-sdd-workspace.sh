@@ -422,6 +422,62 @@ PLAN
         echo "    exit: $rc_capped"
     fi
 
+    # --- A lost marker race is classified, never treated as unusable ---
+    # Two controllers can reach the same fresh slug. A wins `mkdir`; B sees
+    # the directory, takes the existing-directory branch, and wins the
+    # noclobber marker write. A's own write then fails, and A must classify
+    # via the winner's marker — skip the slot if another plan owns it, adopt
+    # it if it holds the same plan — instead of exiting 2 as "unusable".
+    # The PATH shim below makes that interleaving deterministic: it creates
+    # the directory and writes the winner's marker before owns() writes its
+    # own.
+    git init -q -b main "$TEST_ROOT/race"
+    local race race_bin race_dir race_rc own_race own_race_dir own_race_rc
+    race="$(cd "$TEST_ROOT/race" && git rev-parse --show-toplevel)"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race/race-plan.md"
+    race_bin="$TEST_ROOT/race-bin"
+    mkdir -p "$race_bin"
+    cat > "$race_bin/mkdir" <<'SH'
+#!/usr/bin/env bash
+command -p mkdir "$@" || exit $?
+if [[ $# -eq 1 && "$1" == "${INJECT_DIR:-}" ]]; then
+    printf '%s\n' "${INJECT_PLAN:-other/plan.md}" > "$1/plan-path"
+fi
+SH
+    chmod +x "$race_bin/mkdir"
+
+    race_rc=0
+    race_dir="$(cd "$race" && PATH="$race_bin:$PATH" \
+        INJECT_DIR="$race/.superpowers/sdd/race-plan" \
+        "$SDD_SCRIPTS/sdd-workspace" race-plan.md 2>/dev/null)" || race_rc=$?
+    if [[ "$race_rc" -eq 0 && "$race_dir" == "$race/.superpowers/sdd/race-plan-race" \
+        && "$(cat "$race_dir/plan-path" 2>/dev/null)" == "race-plan.md" ]]; then
+        pass "lost marker race to another plan: skips the slot instead of failing"
+    else
+        fail "lost marker race to another plan: skips the slot instead of failing"
+        echo "    exit:   $race_rc"
+        echo "    dir:    $race_dir"
+        echo "    marker: $(cat "$race_dir/plan-path" 2>/dev/null)"
+    fi
+
+    git init -q -b main "$TEST_ROOT/race-own"
+    own_race_rc=0
+    own_race="$(cd "$TEST_ROOT/race-own" && git rev-parse --show-toplevel)"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$own_race/race-own-plan.md"
+    own_race_dir="$(cd "$own_race" && PATH="$race_bin:$PATH" \
+        INJECT_DIR="$own_race/.superpowers/sdd/race-own-plan" \
+        INJECT_PLAN="race-own-plan.md" \
+        "$SDD_SCRIPTS/sdd-workspace" race-own-plan.md 2>/dev/null)" || own_race_rc=$?
+    if [[ "$own_race_rc" -eq 0 && "$own_race_dir" == "$own_race/.superpowers/sdd/race-own-plan" \
+        && "$(cat "$own_race_dir/plan-path" 2>/dev/null)" == "race-own-plan.md" ]]; then
+        pass "lost marker race to the same plan: adopts the workspace"
+    else
+        fail "lost marker race to the same plan: adopts the workspace"
+        echo "    exit:   $own_race_rc"
+        echo "    dir:    $own_race_dir"
+        echo "    marker: $(cat "$own_race_dir/plan-path" 2>/dev/null)"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
