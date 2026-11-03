@@ -80,7 +80,18 @@ claim_marker() {
   if ( set -C; printf '%s\n' "$plan_id" > "$1/plan-path" ) 2>/dev/null; then
     return 0
   fi
-  val=$(cat "$1/plan-path" 2>/dev/null) || { echo "cannot read marker in $1" >&2; return 2; }
+  # The noclobber winner creates plan-path and then writes the line, so a
+  # read that lands in between sees an empty file. Retry briefly: an empty
+  # read is not another plan's marker, and treating it as one would split
+  # this plan across two slots. A marker that stays empty is a crashed
+  # winner's residue and still counts as another plan's, as before.
+  local val="" try
+  for try in 1 2 3; do
+    val=$(cat "$1/plan-path" 2>/dev/null) \
+      || { echo "cannot read marker in $1 after a failed marker write" >&2; return 2; }
+    if [ -n "$val" ]; then break; fi
+    if [ "$try" -lt 3 ]; then sleep 0.05; fi
+  done
   [ "$val" = "$plan_id" ] && return 0 || return 1
 }
 

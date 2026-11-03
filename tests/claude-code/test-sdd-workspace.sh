@@ -433,7 +433,7 @@ PLAN
     # own.
     git init -q -b main "$TEST_ROOT/race"
     local race race_bin race_dir race_rc own_race own_race_dir own_race_rc
-    race="$(cd "$TEST_ROOT/race" && git rev-parse --show-toplevel)"
+    race="$(physical_path "$(cd "$TEST_ROOT/race" && git rev-parse --show-toplevel)")"
     printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race/race-plan.md"
     race_bin="$TEST_ROOT/race-bin"
     mkdir -p "$race_bin"
@@ -442,6 +442,7 @@ PLAN
 command -p mkdir "$@" || exit $?
 if [[ $# -eq 1 && "$1" == "${INJECT_DIR:-}" ]]; then
     printf '%s\n' "${INJECT_PLAN:-other/plan.md}" > "$1/plan-path"
+    if [[ -n "${INJECT_SENTINEL:-}" ]]; then : > "$INJECT_SENTINEL"; fi
 fi
 SH
     chmod +x "$race_bin/mkdir"
@@ -462,20 +463,64 @@ SH
 
     git init -q -b main "$TEST_ROOT/race-own"
     own_race_rc=0
-    own_race="$(cd "$TEST_ROOT/race-own" && git rev-parse --show-toplevel)"
+    own_race="$(physical_path "$(cd "$TEST_ROOT/race-own" && git rev-parse --show-toplevel)")"
     printf '# P\n\n## Task 1: One\n\nOne.\n' > "$own_race/race-own-plan.md"
     own_race_dir="$(cd "$own_race" && PATH="$race_bin:$PATH" \
         INJECT_DIR="$own_race/.superpowers/sdd/race-own-plan" \
         INJECT_PLAN="race-own-plan.md" \
+        INJECT_SENTINEL="$TEST_ROOT/race-own-injected" \
         "$SDD_SCRIPTS/sdd-workspace" race-own-plan.md 2>/dev/null)" || own_race_rc=$?
+    # The injected marker alone cannot prove the race happened: without it the
+    # fresh-directory path produces the same directory and marker, so the case
+    # would pass while never reaching claim_marker's lost-write branch. The
+    # sentinel the shim drops is the proof that the interleaving occurred.
     if [[ "$own_race_rc" -eq 0 && "$own_race_dir" == "$own_race/.superpowers/sdd/race-own-plan" \
+        && -e "$TEST_ROOT/race-own-injected" \
         && "$(cat "$own_race_dir/plan-path" 2>/dev/null)" == "race-own-plan.md" ]]; then
         pass "lost marker race to the same plan: adopts the workspace"
     else
         fail "lost marker race to the same plan: adopts the workspace"
-        echo "    exit:   $own_race_rc"
-        echo "    dir:    $own_race_dir"
-        echo "    marker: $(cat "$own_race_dir/plan-path" 2>/dev/null)"
+        echo "    exit:     $own_race_rc"
+        echo "    dir:      $own_race_dir"
+        echo "    injected: $([[ -e "$TEST_ROOT/race-own-injected" ]] && echo yes || echo no)"
+        echo "    marker:   $(cat "$own_race_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # --- A read inside the winner's open-before-write gap retries ---
+    # The noclobber winner creates plan-path and writes the line as two
+    # steps, so a loser reading in between sees an empty file. Treating that
+    # as another plan's marker splits one plan across two slots; the reader
+    # must retry briefly instead. The cat shim below answers the first read
+    # with nothing and the retry with the real file.
+    git init -q -b main "$TEST_ROOT/race-empty"
+    local race_empty race_empty_dir race_empty_rc
+    race_empty="$(physical_path "$(cd "$TEST_ROOT/race-empty" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race_empty/race-empty-plan.md"
+    mkdir -p "$race_empty/.superpowers/sdd/race-empty-plan"
+    printf 'race-empty-plan.md\n' > "$race_empty/.superpowers/sdd/race-empty-plan/plan-path"
+    cat > "$race_bin/cat" <<'SH'
+#!/usr/bin/env bash
+if [[ -n "${EMPTY_ONCE_STAMP:-}" && ! -e "$EMPTY_ONCE_STAMP" ]]; then
+    : > "$EMPTY_ONCE_STAMP"
+    exit 0
+fi
+command -p cat "$@"
+SH
+    chmod +x "$race_bin/cat"
+    race_empty_rc=0
+    race_empty_dir="$(cd "$race_empty" && PATH="$race_bin:$PATH" \
+        EMPTY_ONCE_STAMP="$TEST_ROOT/race-empty-stamp" \
+        "$SDD_SCRIPTS/sdd-workspace" race-empty-plan.md 2>/dev/null)" || race_empty_rc=$?
+    if [[ "$race_empty_rc" -eq 0 && "$race_empty_dir" == "$race_empty/.superpowers/sdd/race-empty-plan" \
+        && -e "$TEST_ROOT/race-empty-stamp" \
+        && "$(cat "$race_empty_dir/plan-path" 2>/dev/null)" == "race-empty-plan.md" ]]; then
+        pass "empty marker read from the write gap: retries and adopts"
+    else
+        fail "empty marker read from the write gap: retries and adopts"
+        echo "    exit:     $race_empty_rc"
+        echo "    dir:      $race_empty_dir"
+        echo "    injected: $([[ -e "$TEST_ROOT/race-empty-stamp" ]] && echo yes || echo no)"
+        echo "    marker:   $(cat "$race_empty_dir/plan-path" 2>/dev/null)"
     fi
 
     echo ""
