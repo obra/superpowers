@@ -428,10 +428,9 @@ messages break some models (#894). Three things you must replicate:
   harness-specific constant.) Cache the bootstrap content at module level so
   you're not re-reading and re-parsing `SKILL.md` on every call (#1202).
 - **Compaction.** If the harness compacts/summarizes history, re-inject
-  afterward. pi sets an `injectBootstrap` flag on `session_start` and
-  `session_compact`, clears it on `agent_end`, and inserts the message *after*
-  any leading compaction-summary messages. OpenCode relies on its per-step
-  re-injection plus the dedup guard.
+  afterward. pi re-injects on every `context` call and inserts the message
+  *after* any leading compaction-summary messages. OpenCode relies on its
+  per-step re-injection plus the dedup guard.
 - **Message-object shape is per-harness — discover yours, don't copy a literal.**
   The two references use *incompatible* shapes: pi builds
   `{ role, content: [{ type, text }], timestamp }`; OpenCode manipulates
@@ -519,8 +518,8 @@ honors the rule rather than breaking it. Distinguish three cases:
    `activate_skill`): point the mapping at that tool.
 2. **Native skill *discovery* but no `Skill` tool** (pi, Antigravity): the harness
    can find and list skills, but the model can't call a tool to load one. Get the
-   skills installed where the harness scans (pi registers via `resources_discover`
-   → `skillPaths`; OpenCode via its `config` hook; `agy plugin install` copies
+   skills installed where the harness scans (pi declares them in the package
+   manifest's `pi.skills`; OpenCode via its `config` hook; `agy plugin install` copies
    them in), and tell the model to load a skill by **reading its `SKILL.md` with
    the file-read tool when the skill applies** — the sanctioned mechanism here,
    the way `references/pi-tools.md` states it.
@@ -810,8 +809,8 @@ Use this as the live index; when in doubt, read the files, not this table.
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
 | Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
 | Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
-| OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook("context")` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
-| pi | `.pi/extensions/superpowers.ts` | in-process: `resources_discover` registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
+| OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook` on `context`/`compaction`/`generate` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
+| pi | `.pi/extensions/superpowers.ts` | in-process: package manifest registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
 
 ## Appendix B — Gotchas that have bitten porters
 
@@ -827,9 +826,11 @@ Use this as the live index; when in doubt, read the files, not this table.
   (Cursor). Use what your harness exports; the script re-derives the root itself.
 - **System-message injection.** Shape B injects a *user* message on purpose
   (#750, #894). Don't "fix" it to a system message.
-- **Per-step vs per-turn callbacks.** OpenCode fires every step (per-call dedup
-  guard); pi fires per turn (lifecycle flag + `agent_end` reset). Copying one
-  harness's dedup strategy onto the other's callback frequency breaks injection.
+- **Disarming injection after the first prompt.** If your harness's transform
+  output is not saved to session history (pi's `context` result is not), the
+  bootstrap must be injected into every provider request. A flag cleared on a
+  per-prompt event such as pi's `agent_end` drops the bootstrap after the first
+  prompt (#2083).
 - **Message-object shape is per-harness.** Shape B. pi and OpenCode use
   incompatible shapes; discover yours, don't copy a reference's object literal.
 - **Hunting for a skill-registration API that doesn't exist.** A harness with no

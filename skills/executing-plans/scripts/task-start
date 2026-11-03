@@ -20,9 +20,13 @@ plan=$1
 n=$2
 sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
 
+# BASE comes from the same repository the brief is written into (sdd-repo
+# also refuses one with no commit yet), not from the bare cwd.
+repo=$("${BASH:-bash}" "$sdd/sdd-repo" --with-commit)
 out=$("$sdd/task-brief" "$plan" "$n")
 brief=$(printf '%s\n' "$out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')
 [ -n "$brief" ] || { echo "task-brief did not report a path: $out" >&2; exit 1; }
+base=$(git -C "$repo" rev-parse --verify HEAD)
 
 echo "brief: $brief"
-echo "base: $(git rev-parse HEAD)"
+echo "base: $base"

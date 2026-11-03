@@ -114,6 +114,13 @@ umask 077
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
+  # Make the project dir absolute now: the script cds into its own directory
+  # before starting the server, which would re-root a relative path there.
+  # mkdir -p keeps the existing behavior of creating a missing project dir.
+  if ! PROJECT_DIR="$(mkdir -p -- "$PROJECT_DIR" && CDPATH='' cd -- "$PROJECT_DIR" && pwd)"; then
+    echo "{\"error\": \"Cannot create or enter --project-dir\"}"
+    exit 1
+  fi
   SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
   # Persist the bound port and key per project so a restart reuses them and an
   # already-open browser tab reconnects to the same URL with a valid cookie.

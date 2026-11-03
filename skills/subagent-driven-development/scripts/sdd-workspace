@@ -27,11 +27,23 @@
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
-# Usage: sdd-workspace PLAN_FILE
+# The repository is the current directory's (see sdd-repo). -C DIR runs as
+# if started in DIR, the way git -C does: a caller working on another
+# checkout or worktree needs no `cd DIR ;` prefix, a compound that harnesses
+# cannot allowlist because DIR differs on every run (#1799).
+#
+# Usage: sdd-workspace [-C DIR] PLAN_FILE
 set -euo pipefail
 
+here=$(cd "$(dirname "$0")" && pwd)
+if [ "${1:-}" = "-C" ]; then
+  [ -d "${2:-}" ] || { echo "bad -C directory: ${2:-}" >&2; exit 2; }
+  cd "$2"
+  shift 2
+fi
+
 if [ $# -ne 1 ]; then
-  echo "usage: sdd-workspace PLAN_FILE" >&2
+  echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2
   exit 2
 fi
 
@@ -44,8 +56,12 @@ slug=$(basename "$plan" .md)
 
 # Physical path, spelled the way pwd -P spells the plan path below: on Git
 # Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
-# repo-relative marker check needs both in the same form.
-root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
+# repo-relative marker check needs both in the same form. Two steps, so a
+# failing sdd-repo stops the script instead of handing cd an empty path.
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040).
+toplevel=$("${BASH:-bash}" "$here/sdd-repo")
+root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
 base="$root/.superpowers/sdd"
 
 # Normalize the plan path (physical directory, so relative/absolute/../
@@ -84,4 +100,11 @@ fi
 # Create-only: a repo may commit its own .gitignore here (e.g. to version
 # progress.md ledgers); overwriting it would revert that on every run.
 [ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
-CDPATH='' cd -- "$dir" && pwd
+
+# On Windows (Git Bash, MSYS2, Cygwin) print C:/Users/... rather than
+# /c/Users/... or /tmp/...: the caller may be PowerShell or another native
+# tool, which can't resolve MSYS paths, and bash accepts this form too.
+# Only the printed path changes; the plan-path markers above keep pwd -P's
+# spelling, so existing workspaces still match their plans.
+CDPATH='' cd -- "$dir"
+if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi

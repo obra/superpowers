@@ -111,7 +111,7 @@ V1 `plugin` key and the V2 `plugins` key):
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v7.0.1"]
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v7.0.2"]
 }
 ```
 
@@ -126,7 +126,7 @@ The plugin does two things, using host-flavor-specific APIs:
     - **V2:** via the `setup()` function using `ctx.skill.transform()` (V2 native API, confirmed active at runtime)
 2. **Injects bootstrap context** with a flavor-specific tool mapping: V1 sessions get the V1 tool names below, and V2 sessions get the V2 names.
     - **V1:** via `experimental.chat.messages.transform` hook
-    - **V2:** via `ctx.session.hook("context")` — the V2 equivalent (confirmed active at runtime)
+    - **V2:** via `ctx.session.hook()` on `context`, `compaction`, and `generate` — the V2 equivalent (confirmed active at runtime). Registering on all three keeps compaction requests on the same cached prompt prefix as normal turns.
 
 Controller sessions receive the using-superpowers bootstrap in transient model
 context. Delegated child sessions keep access to native skills but do not receive
@@ -148,7 +148,7 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 
 - "Create a todo" / "mark complete in todo list" → `todowrite`
 - `Subagent (general-purpose):` template → OpenCode's `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
-- "Invoke a skill" → OpenCode's native `skill` tool
+- "Invoke a skill" → OpenCode's native `skill` tool with the bare skill name (`superpowers:brainstorming` → `name: "brainstorming"`)
 - "Read a file" → `read`
 - "Create a file" / "edit a file" / "delete a file" → `apply_patch`
 - "Run a shell command" → `bash`
@@ -159,7 +159,7 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 
 - "Create a todo" → V2 has no todo tool of any kind; the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
 - `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
-- "Invoke a skill" → OpenCode's native `skill` tool
+- "Invoke a skill" → OpenCode's native `skill` tool with the bare skill id (`superpowers:brainstorming` → `id: "brainstorming"`)
 - "Read a file" → `read`
 - "Create, edit, or delete files" → use `patch` with `patchText` when available; otherwise use `write` to create or overwrite files, `edit` for targeted changes, and `shell` for deletion
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
@@ -234,7 +234,7 @@ package name, not a local directory.
 ### Bootstrap not appearing
 
 - **V1:** Check OpenCode version supports `experimental.chat.messages.transform` hook. Restart OpenCode after config changes.
-- **V2:** The plugin uses `ctx.session.hook("context")` for bootstrap injection. Verify the plugin loaded via `opencode api get /api/plugin`. Restart with `opencode service restart` after config changes. The `opencode2` command may be available as an alias.
+- **V2:** The plugin uses `ctx.session.hook()` on `context`, `compaction`, and `generate` for bootstrap injection. Verify the plugin loaded via `opencode api get /api/plugin`. Restart with `opencode service restart` after config changes. The `opencode2` command may be available as an alias.
 
 ## Getting Help
 
