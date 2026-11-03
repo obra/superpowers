@@ -9,6 +9,7 @@ python3 - "$MARKETPLACE" "$REPO_ROOT" <<'PY'
 import json
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 marketplace_path = Path(sys.argv[1])
 repo_root = Path(sys.argv[2])
@@ -51,6 +52,17 @@ if not plugin_manifest.exists():
 
 manifest = json.loads(plugin_manifest.read_text(encoding="utf-8"))
 assert_equal(manifest.get("name"), plugin.get("name"), "plugin manifest name")
+
+interface = manifest.get("interface", {})
+subtitle = interface.get("shortDescription")
+if not isinstance(subtitle, str) or not 1 <= len(subtitle) <= 30:
+    raise AssertionError("marketplace subtitle must contain 1 to 30 characters")
+if "\n" in subtitle or "\r" in subtitle:
+    raise AssertionError("marketplace subtitle must fit on one line")
+
+support_url = urlsplit(interface.get("supportURL", ""))
+if support_url.scheme != "https" or not support_url.hostname:
+    raise AssertionError("marketplace support URL must be an HTTPS URL")
 
 # Codex auto-discovers a plugin's hooks/hooks.json whenever the Codex manifest
 # has no `hooks` field: load_plugin_hooks falls back to a hardcoded
