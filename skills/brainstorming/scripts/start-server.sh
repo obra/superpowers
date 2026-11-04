@@ -29,7 +29,15 @@ IDLE_TIMEOUT_MINUTES=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
-      PROJECT_DIR="$2"
+      if [[ ! -d "$2" ]]; then
+        echo "{\"error\": \"--project-dir directory not found: $2\"}"
+        exit 1
+      fi
+      # Resolve to an absolute path: the script cd's into its own directory
+      # before the server starts, so any relative path derived from
+      # PROJECT_DIR (SESSION_DIR, PID_FILE, LOG_FILE, ...) would otherwise
+      # be re-resolved against the scripts directory.
+      PROJECT_DIR="$(cd "$2" && pwd)"
       shift 2
       ;;
     --host)
