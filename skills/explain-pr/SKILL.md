@@ -63,7 +63,7 @@ base 미지정 시 스크립트가 자동 결정(인자 > PR target > dev > 기�
 
   - finishing-a-development-branch Option 2 경로: `gh pr create` / `glab mr create` **전에** 본문에 포함.
   - 기존 PR: `gh pr edit <n> --body-file` / `glab mr update <n> --description` 로 주입.
-  - `gh`/`glab`이 없는 환경: 문서를 커밋·push하고, 위 블록을 사용자에게 그대로 출력해 compare URL에서 붙여넣게 한다.
+  - `gh`/`glab`이 없는 환경: 문서를 커밋하고 push 한 뒤, 위 블록을 본문에 넣어 forge REST API 로 PR/MR 을 직접 만든다(finishing-a-development-branch Option 2 의 API 절차). API 도 실패할 때만 블록과 compare URL 을 사용자에게 준다.
 
 ## 완료 판정 (exit checklist)
 아래를 모두 만족해야 완료다.
