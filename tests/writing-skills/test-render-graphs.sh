@@ -8,6 +8,14 @@ SCRIPT_UNDER_TEST="$REPO_ROOT/skills/writing-skills/render-graphs.js"
 # under the empty PATH used for the missing-Graphviz case.
 NODE_BIN="$(node -p 'process.execPath')"
 
+node_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
 PASSES=0
 FAILURES=0
 TEST_ROOT="$(mktemp -d)"
@@ -71,7 +79,7 @@ EOF
 
 echo "Writing-skills render-graphs tests"
 
-missing_dot_output="$(PATH="$TEST_ROOT/empty-path" "$NODE_BIN" "$SCRIPT_UNDER_TEST" "$fixture" 2>&1)"
+missing_dot_output="$(PATH="$TEST_ROOT/empty-path" "$NODE_BIN" "$(node_path "$SCRIPT_UNDER_TEST")" "$(node_path "$fixture")" 2>&1)"
 missing_dot_status=$?
 
 if [[ "$missing_dot_status" -ne 0 ]]; then
@@ -82,7 +90,89 @@ fi
 assert_contains "$missing_dot_output" "Error: graphviz (dot) not found." "missing Graphviz reports install guidance"
 assert_not_contains "$missing_dot_output" "ReferenceError: require is not defined" "script runs as an ES module"
 
-render_output="$("$NODE_BIN" "$SCRIPT_UNDER_TEST" "$fixture" 2>&1)"
+# Test exit code on render failure and CRLF line endings (issue #2519)
+fake_dot_bin="$TEST_ROOT/fake-dot/bin"
+mkdir -p "$fake_dot_bin"
+cat >"$fake_dot_bin/dot" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-V" ]]; then
+  exit 0
+fi
+if [[ "${1:-}" == "-Tsvg" ]]; then
+  input="$(cat)"
+  if [[ "$input" == *"broken_graph"* || "$input" == *"invalid"* ]]; then
+    echo "Error: syntax error in dot" >&2
+    exit 1
+  fi
+  printf '<svg viewBox="0 0 100 100"><text>mock</text></svg>\n'
+  exit 0
+fi
+exit 0
+EOF
+chmod +x "$fake_dot_bin/dot"
+
+if command -v cygpath >/dev/null 2>&1 && command -v gcc >/dev/null 2>&1; then
+  gcc -O2 -x c - -o "$(cygpath -m "$fake_dot_bin/dot.exe")" <<'EOF'
+#include <stdio.h>
+#include <string.h>
+int main(int argc, char *argv[]) {
+  if (argc > 1 && strcmp(argv[1], "-V") == 0) return 0;
+  char buf[1024];
+  while (fgets(buf, sizeof(buf), stdin)) {
+    if (strstr(buf, "broken_graph") || strstr(buf, "invalid")) {
+      fprintf(stderr, "Error: syntax error in dot\n");
+      return 1;
+    }
+  }
+  printf("<svg viewBox=\"0 0 100 100\"><text>mock</text></svg>\n");
+  return 0;
+}
+EOF
+fi
+
+# Test CRLF line endings in SKILL.md (issue #2519)
+fixture_crlf="$TEST_ROOT/fixture-crlf"
+mkdir -p "$fixture_crlf"
+printf '# Skill\r\n```dot\r\ndigraph crlf_graph {\r\n  start -> end;\r\n}\r\n```\r\n' >"$fixture_crlf/SKILL.md"
+
+crlf_output="$(PATH="$fake_dot_bin:$PATH" "$NODE_BIN" "$(node_path "$SCRIPT_UNDER_TEST")" "$(node_path "$fixture_crlf")" 2>&1)"
+assert_contains "$crlf_output" "Found 1 diagram(s)" "extracts dot blocks with CRLF line endings"
+assert_contains "$crlf_output" "Rendered: crlf_graph.svg" "renders CRLF diagram to SVG"
+
+fixture_fail="$TEST_ROOT/fixture-fail"
+mkdir -p "$fixture_fail"
+cat >"$fixture_fail/SKILL.md" <<'EOF'
+# Skill
+
+```dot
+digraph broken_graph {
+  invalid
+}
+```
+EOF
+
+fail_render_output="$(PATH="$fake_dot_bin:$PATH" "$NODE_BIN" "$(node_path "$SCRIPT_UNDER_TEST")" "$(node_path "$fixture_fail")" 2>&1)"
+fail_render_status=$?
+
+if [[ "$fail_render_status" -ne 0 ]]; then
+  pass "render failure exits non-zero"
+else
+  fail "render failure exits non-zero"
+fi
+assert_contains "$fail_render_output" "Failed: broken_graph" "reports diagram render failure"
+
+# Test --combine render failure exits non-zero (issue #2519)
+fail_combine_output="$(PATH="$fake_dot_bin:$PATH" "$NODE_BIN" "$(node_path "$SCRIPT_UNDER_TEST")" "$(node_path "$fixture_fail")" --combine 2>&1)"
+fail_combine_status=$?
+
+if [[ "$fail_combine_status" -ne 0 ]]; then
+  pass "combine render failure exits non-zero"
+else
+  fail "combine render failure exits non-zero"
+fi
+assert_contains "$fail_combine_output" "Failed to render combined diagram" "reports combined diagram render failure"
+
+render_output="$(PATH="$fake_dot_bin:$PATH" "$NODE_BIN" "$(node_path "$SCRIPT_UNDER_TEST")" "$(node_path "$fixture")" 2>&1)"
 render_status=$?
 
 if [[ "$render_status" -eq 0 ]]; then
