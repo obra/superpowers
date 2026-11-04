@@ -98,9 +98,6 @@ test("arm injects one wrapped user message, strips frontmatter, and caches succe
 	assert.equal(repeated.messages[1], original);
 
 	await rm(bootstrapSkillPath);
-	controller.disarm();
-	assert.equal(controller.inject(messages), undefined);
-	controller.arm();
 	const cached = controller.inject(messages);
 	assert.equal(injectedMessage(cached).content[0].text, text);
 });
@@ -200,7 +197,6 @@ test("read failure fails soft and reports one structured diagnostic without retr
 		undefined,
 		"failed reads are not retried",
 	);
-	controller.disarm();
 	controller.arm();
 	assert.equal(
 		controller.inject([]),

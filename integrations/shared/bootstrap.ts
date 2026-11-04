@@ -20,7 +20,6 @@ export interface BootstrapControllerConfig {
 
 export interface BootstrapController<Message = unknown> {
 	arm(): void;
-	disarm(): void;
 	inject(messages: Message[]): { messages: Message[] } | undefined;
 }
 
@@ -68,9 +67,6 @@ ${config.toolMapping}
 	return {
 		arm() {
 			armed = true;
-		},
-		disarm() {
-			armed = false;
 		},
 		inject(messages) {
 			if (!armed || messages.some(messageContainsMarker)) return undefined;

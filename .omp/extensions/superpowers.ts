@@ -34,13 +34,12 @@ export default function superpowersOmpExtension(omp: ExtensionAPI) {
 		controller.arm();
 	});
 
+	// Messages returned from a context handler are sent to the provider but never
+	// written to session history, so the bootstrap has to be injected into every
+	// provider request, on every prompt, for the whole session.
 	omp.on("context", async (event: ContextEvent) =>
 		controller.inject(event.messages),
 	);
-
-	omp.on("agent_end", async () => {
-		controller.disarm();
-	});
 }
 
 function ompToolMapping(): string {
