@@ -69,9 +69,11 @@ The path is quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces.
 GitHub Copilot (the CLI and VS Code) on Windows runs hook commands through
 PowerShell regardless of the `shell` key (#2189), where a leading quoted path
 parses as a string expression and the trailing bareword is an error
-("Unexpected token 'session-start'"). Copilot uses the `powershell` key
-instead of `command` when it is present, and it gives the same dispatch with
-the `&` call operator. Claude Code ignores the key.
+("Unexpected token 'session-start'"). The `powershell` key supplies the same
+dispatch with PowerShell's `&` call operator. A user confirmed this form works
+with GitHub Copilot CLI 1.0.93 on Windows as well as VS Code Copilot (see PR
+#2191 discussion). Claude Code ignores the key; other harnesses keep their
+existing `command`/`shell` behavior.
 
 ## How `run-hook.cmd` Works at a High Level
 
