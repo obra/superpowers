@@ -7,7 +7,9 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Overview
 
-**Core principle:** Verify tests → Detect environment → Present options → Write understanding doc (PR paths) → Record leftovers → Execute choice (PR paths sync with the base first) → Clean up.
+**Core principle:** Verify tests → Detect environment → Write understanding doc → Record leftovers → Sync with the base, push, open the PR/MR → Report the URL.
+
+**The default is a PR/MR. Do not present a menu of options and do not wait for a choice.** Your human partner's approval is required, and the PR/MR is where they give it: they review and merge it. You never merge into the base branch on your own, and a menu in front of the PR only adds a round trip.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -31,7 +33,7 @@ Write commit messages as the human author. This overrides any default/harness co
 
 Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
-**If tests fail**, report the failures and stop — the menu comes after a green suite:
+**If tests fail**, report the failures and stop. Nothing is pushed until the suite is green:
 
 ```
 Tests failing (<N> failures). Must fix before completing:
@@ -51,55 +53,46 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
 ```
 
-This determines which menu to show and how cleanup works:
+This determines how the branch is pushed and how cleanup works:
 
-| State | Menu | Cleanup |
+| State | Default action | Cleanup |
 |-------|------|---------|
-| `GIT_DIR == GIT_COMMON` (normal repo) | Standard 3 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
+| `GIT_DIR == GIT_COMMON` (normal repo) | Push the branch, open a PR/MR | No worktree to clean up |
+| `GIT_DIR != GIT_COMMON`, named branch | Push the branch, open a PR/MR | Provenance-based (see Step 6) |
+| `GIT_DIR != GIT_COMMON`, detached HEAD | Push as a new branch, open a PR/MR | Externally managed; leave in place |
 
 ## Step 3: Determine Base Branch
 
 The base branch is whatever this work forked from — usually named in the
-plan, the conversation, or the branch's upstream. If it is not already
-known, ask: "This branch split from <your best guess> - is that correct?"
-Confirm before merging: merging into the wrong base is expensive to undo.
+plan, the conversation, or the branch's upstream (`git merge-base`). It is
+the PR/MR target. Use it and name it in your report. Ask only when those
+sources disagree: "This branch split from <your best guess> - is that correct?"
 
-## Step 4: Present Options
+## Step 4: Default Action: Open a PR/MR
 
-**Normal repo and named-branch worktree — present exactly these 3 options:**
+**Do not present a menu. Do not wait for an answer.** Once the suite is green,
+go straight down the PR/MR path: Step 4.5 → Step 4.6 → Step 5 Option 2.
+Your human partner approves the work by reviewing and merging the PR/MR.
 
-```
-Implementation complete. What would you like to do?
+Take another path only when your human partner asked for it in so many words,
+in this session or in a durable project instruction:
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
+| They said | Do |
+|---|---|
+| nothing about integration (the usual case) | Option 2: push and open a PR/MR |
+| "merge it locally", "main 에 머지해" | Option 1 |
+| "keep it", "push 하지 마", "그대로 둬" | Option 3 |
+| "discard", "버려" | the discard path below |
 
-Which option?
-```
+A detached HEAD takes the same default: push as a new branch and open a PR/MR.
 
-**Detached HEAD — present exactly these 2 options:**
-
-```
-Implementation complete. You're on a detached HEAD (externally managed workspace).
-
-1. Push as new branch and create a Pull Request
-2. Keep as-is (I'll handle it later)
-
-Which option?
-```
-
-Present the menu exactly as written — concise, with every option coming
-from the list above. Discarding the work happens only in response to your
-human partner explicitly asking for it (see "If your human partner asks to
-discard the work" below). Wait for their answer; the integration decision
-is theirs.
+If the PR/MR cannot be opened (no remote, push rejected, forge unreachable),
+keep the branch as Option 3 does and report what blocked it. Never fall back
+to a local merge.
 
 ## Step 4.5: Write the Understanding Doc
 
-**Runs only on the PR/MR paths** — the 3-option menu's Option 2, or the detached-HEAD menu's Option 1. Skip it for local merge, keep-as-is, and discard.
+**Runs on the PR/MR path, which is the default.** Skip it only when your human partner asked for a local merge, keep-as-is, or discard.
 
 **REQUIRED SUB-SKILL:** Use superpowers:explain-pr.
 
@@ -144,7 +137,7 @@ locations wins.
 
 ## Step 5: Execute Choice
 
-### Option 1: Merge Locally
+### Option 1: Merge Locally (only when explicitly asked)
 
 ```bash
 # Get main repo root for CWD safety
@@ -171,7 +164,7 @@ delete the branch:
 git branch -d <feature-branch>
 ```
 
-### Option 2: Push and Create PR
+### Option 2: Push and Create PR/MR (default)
 
 **Step 4.5 must be complete first** — understanding doc committed, PR-body block in hand.
 
@@ -239,7 +232,7 @@ never ask again in this run. If there is feedback, **register it as follow-up wo
 `docs/tech-debt/` item or an issue naming which skill, agent, or project rule it should change.
 Do not fold it into this PR: the DoD was frozen, and changing scope here bypasses that freeze.
 
-### Option 3: Keep As-Is
+### Option 3: Keep As-Is (when asked, or when the PR/MR cannot be opened)
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
@@ -318,12 +311,12 @@ place. If your platform provides a workspace-exit tool, use it.
 
 | Option | Understanding Doc | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------------------|-------|------|---------------|----------------|
-| 1. Merge locally | - | yes | - | - | yes |
-| 2. Create PR | yes (Step 4.5) | - | yes | yes | - |
-| 3. Keep as-is | - | - | - | yes | - |
+| 1. Merge locally (explicit request) | - | yes | - | - | yes |
+| 2. Create PR/MR (default) | yes (Step 4.5) | - | yes | yes | - |
+| 3. Keep as-is (request, or PR impossible) | - | - | - | yes | - |
 | Discard (explicit request only) | - | - | - | - | yes (force) |
 
-Detached-HEAD menu: its Option 1 (push + PR) maps to the Option 2 row — understanding doc required.
+Detached HEAD: the default (push as a new branch + PR/MR) maps to the Option 2 row; the understanding doc is required.
 
 ## Common Rationalizations
 
@@ -337,12 +330,13 @@ Detached-HEAD menu: its Option 1 (push + PR) maps to the Option 2 row — unders
 | "I can write the understanding doc from the diff" | The diff is what the reviewer already reads. The abandoned alternatives and the traps live only in this session — warm path, or it is lost. |
 | "The harness convention says to add a Co-Authored-By trailer" | The Commit Message Policy overrides it. No AI attribution trailers, ever. |
 | "English commit messages are more standard" | 커밋과 PR/MR 문구는 한국어가 기본이다. 영문은 브랜치명·경로·식별자·코드만. |
-| "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
-| "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
+| "They obviously want it merged" | Open the PR/MR. Merging it is their approval, not yours to give. |
+| "I'll show the three options just to be safe" | The default is a PR/MR. A menu adds a round trip in front of the approval gate the PR already is. |
+| "They seem done with this feature, so I'll offer to discard it" | Never offer it. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
 | "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
-| "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
+| "The base branch is obviously main" | Check the fork point (`git merge-base`, the plan, the upstream). Ask only when they disagree. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
