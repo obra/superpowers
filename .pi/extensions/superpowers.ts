@@ -38,10 +38,6 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.on("resources_discover", async () => ({
-		skillPaths: [skillsDir],
-	}));
-
 	pi.on("session_start", async () => {
 		controller.arm();
 	});
@@ -50,10 +46,9 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		controller.arm();
 	});
 
-	pi.on("agent_end", async () => {
-		controller.disarm();
-	});
-
+	// Messages returned from a context handler are sent to the provider but never
+	// written to session history, so the bootstrap has to be injected into every
+	// provider request, on every prompt, for the whole session.
 	pi.on("context", async (event: ContextEvent) =>
 		controller.inject(event.messages),
 	);

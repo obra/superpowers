@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+# Tests for executing-plans' bookkeeping helpers: scripts/task-start extracts
+# the brief and records BASE in one call; scripts/task-done runs the task's
+# test command, records the result in the ledger, and refuses to record a
+# failing task.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+EP_SCRIPTS="$REPO_ROOT/skills/executing-plans/scripts"
+
+FAILURES=0
+TEST_ROOT=""
+
+pass() { echo "  [PASS] $1"; }
+fail() {
+    echo "  [FAIL] $1"
+    FAILURES=$((FAILURES + 1))
+}
+
+cleanup() {
+    if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
+        rm -rf "$TEST_ROOT"
+    fi
+}
+
+main() {
+    echo "=== Test: executing-plans scripts ==="
+
+    TEST_ROOT="$(mktemp -d)"
+    trap cleanup EXIT
+
+    git init -q -b main "$TEST_ROOT/repo"
+    local repo
+    repo="$(cd "$TEST_ROOT/repo" && git rev-parse --show-toplevel)"
+    # Same spelling as the scripts print: C:/... from cygpath -m on Windows,
+    # plain pwd elsewhere.
+    repo="$(cd "$repo" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)"
+    local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
+
+    cat > "$repo/plan.md" <<'PLAN'
+# Plan
+
+## Task 1: First thing
+
+Do the first thing.
+
+## Task 2: Second thing
+
+Do the second thing.
+PLAN
+    ( cd "$repo" && git add plan.md && git "${git_id[@]}" commit -qm fixture )
+    local base
+    base="$(cd "$repo" && git rev-parse HEAD)"
+
+    # --- task-start: argument validation ---
+    local rc=0
+    (cd "$repo" && "$EP_SCRIPTS/task-start" plan.md >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "task-start without a task number errors with exit 2"
+    else
+        fail "task-start without a task number errors with exit 2 (got $rc)"
+    fi
+
+    # --- task-start: brief path + BASE in one call ---
+    local out
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-start" plan.md 1)"
+    if [[ "$out" == *"brief: $repo/.superpowers/sdd/plan/task-1-brief.md"* ]]; then
+        pass "task-start prints the brief path under the plan's workspace"
+    else
+        fail "task-start prints the brief path under the plan's workspace"
+        echo "    got: $out"
+    fi
+    if [[ "$out" == *"base: $base"* ]]; then
+        pass "task-start prints BASE as the current HEAD"
+    else
+        fail "task-start prints BASE as the current HEAD"
+        echo "    got: $out"
+    fi
+    if [[ -s "$repo/.superpowers/sdd/plan/task-1-brief.md" ]]; then
+        pass "task-start writes the brief file"
+    else
+        fail "task-start writes the brief file"
+    fi
+
+    # --- task-done: records a passing task ---
+    ( cd "$repo" && echo x > work.txt && git add work.txt && git "${git_id[@]}" commit -qm "task 1" )
+    local head
+    head="$(cd "$repo" && git rev-parse HEAD)"
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 1 "$base" -- sh -c 'echo "Ran 3 tests"; echo OK')"
+    rc=$?
+    local ledger="$repo/.superpowers/sdd/plan/progress.md"
+    local expected="Task 1: complete (commits ${base:0:7}..${head:0:7}, tests: sh -c 'echo \"Ran 3 tests\"; echo OK' → OK)"
+    if [[ -f "$ledger" ]] && grep -qF "$expected" "$ledger"; then
+        pass "task-done appends the completion line with commit range and test result"
+    else
+        fail "task-done appends the completion line with commit range and test result"
+        echo "    expected: $expected"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
+    fi
+    if [[ "$out" == *"OK"* ]]; then
+        pass "task-done prints the tail of the test output"
+    else
+        fail "task-done prints the tail of the test output"
+        echo "    got: $out"
+    fi
+    if [[ -s "$repo/.superpowers/sdd/plan/task-1-tests.log" ]]; then
+        pass "task-done keeps the full test output in the workspace"
+    else
+        fail "task-done keeps the full test output in the workspace"
+    fi
+
+    # --- task-done: refuses to record a failing task ---
+    rc=0
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 2 "$head" -- sh -c 'echo "FAILED (errors=1)"; exit 1' 2>&1)" || rc=$?
+    if [[ "$rc" -ne 0 ]]; then
+        pass "task-done exits non-zero when the test command fails"
+    else
+        fail "task-done exits non-zero when the test command fails"
+    fi
+    if ! grep -q "Task 2: complete" "$ledger"; then
+        pass "task-done does not record a failing task as complete"
+    else
+        fail "task-done does not record a failing task as complete"
+    fi
+    if [[ "$out" == *"FAILED"* ]]; then
+        pass "task-done shows the failing output"
+    else
+        fail "task-done shows the failing output"
+        echo "    got: $out"
+    fi
+
+    # --- task-done: records a passing task whose test command prints nothing ---
+    # https://github.com/obra/superpowers/issues/2385 -- under `set -euo
+    # pipefail`, the ledger's `grep -v '^[[:space:]]*$' log | tail -n 1`
+    # exits 1 on an empty/blank log, which used to abort the whole script
+    # (silently, no ledger line) even though the test command itself passed.
+    ( cd "$repo" && echo y > work2.txt && git add work2.txt && git "${git_id[@]}" commit -qm "task 2" )
+    local head2
+    head2="$(cd "$repo" && git rev-parse HEAD)"
+    rc=0
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 2 "$head" -- true 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+        pass "task-done exits 0 when a passing test command prints nothing"
+    else
+        fail "task-done exits 0 when a passing test command prints nothing (got rc=$rc)"
+        echo "    got: $out"
+    fi
+    local expected2="Task 2: complete (commits ${head:0:7}..${head2:0:7}, tests: true → (no output))"
+    if [[ -f "$ledger" ]] && grep -qF "$expected2" "$ledger"; then
+        pass "task-done records a passing task that printed no output"
+    else
+        fail "task-done records a passing task that printed no output"
+        echo "    expected: $expected2"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
+    fi
+
+    # --- no usable repository: every helper stops with one message (#2242, #2429) ---
+    # The same message for a new project and for a caller standing in the
+    # wrong directory (such as the plugin's skill directory, where git init
+    # is the wrong fix), so "init and commit" is only the new-project case.
+    git init -q -b main "$TEST_ROOT/unborn"
+    cp "$repo/plan.md" "$TEST_ROOT/unborn/plan.md"
+    mkdir -p "$TEST_ROOT/no-repo"
+    cp "$repo/plan.md" "$TEST_ROOT/no-repo/plan.md"
+    # git's own first error line follows the shared message, so the reason
+    # git refused is never hidden.
+    local where msg said
+    for where in unborn no-repo; do
+        msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $TEST_ROOT/$where). If this is a new project, run 'git init' and make a first commit, then rerun."
+        said="git said: fatal: "
+        [[ "$where" == no-repo ]] && said="git said: fatal: not a git repository"
+        rc=0
+        out="$(cd "$TEST_ROOT/$where" && "$EP_SCRIPTS/task-start" plan.md 1 2>&1)" || rc=$?
+        if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"$said"* ]]; then
+            pass "task-start in a $where directory exits 2 with the shared message"
+        else
+            fail "task-start in a $where directory exits 2 with the shared message"
+            echo "    exit: $rc"
+            echo "    got: $out"
+        fi
+        rc=0
+        out="$(cd "$TEST_ROOT/$where" && "$EP_SCRIPTS/task-done" plan.md 1 HEAD -- true 2>&1)" || rc=$?
+        if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"$said"* ]]; then
+            pass "task-done in a $where directory exits 2 with the shared message"
+        else
+            fail "task-done in a $where directory exits 2 with the shared message"
+            echo "    exit: $rc"
+            echo "    got: $out"
+        fi
+    done
+    if [[ ! -e "$TEST_ROOT/unborn/.superpowers" && ! -e "$TEST_ROOT/no-repo/.superpowers" ]]; then
+        pass "nothing is written without a usable repository"
+    else
+        fail "nothing is written without a usable repository"
+    fi
+
+    # --- outside any repository, a plan in a repository is not a fallback (#2429) ---
+    # Like git, the scripts act on the current directory's working tree; an
+    # absolute plan path into some repository does not pick that one instead.
+    msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $TEST_ROOT/no-repo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local before head_now
+    head_now="$(cd "$repo" && git rev-parse HEAD)"
+    before="$(find "$repo/.superpowers" | sort; cat "$repo/.superpowers/sdd/plan/progress.md")"
+    rc=0
+    out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-start" "$repo/plan.md" 2 2>&1)" || rc=$?
+    if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+        pass "task-start outside any repository stops with the shared message despite a plan in a repository"
+    else
+        fail "task-start outside any repository stops with the shared message despite a plan in a repository"
+        echo "    exit: $rc"
+        echo "    got: $out"
+    fi
+    rc=0
+    out="$(cd "$TEST_ROOT/no-repo" && "$EP_SCRIPTS/task-done" "$repo/plan.md" 2 "$head_now" -- true 2>&1)" || rc=$?
+    if [[ "$rc" -eq 2 && "$out" == "$msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+        pass "task-done outside any repository stops with the shared message despite a plan in a repository"
+    else
+        fail "task-done outside any repository stops with the shared message despite a plan in a repository"
+        echo "    exit: $rc"
+        echo "    got: $out"
+    fi
+    if [[ "$(find "$repo/.superpowers" | sort; cat "$repo/.superpowers/sdd/plan/progress.md")" == "$before" && ! -e "$TEST_ROOT/no-repo/.superpowers" ]]; then
+        pass "outside any repository, task-start and task-done write nothing to the plan's repository"
+    else
+        fail "outside any repository, task-start and task-done write nothing to the plan's repository"
+    fi
+
+    echo
+    if [[ "$FAILURES" -eq 0 ]]; then
+        echo "PASS"
+    else
+        echo "FAIL ($FAILURES)"
+        exit 1
+    fi
+}
+
+main "$@"

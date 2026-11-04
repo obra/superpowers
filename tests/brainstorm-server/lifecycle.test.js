@@ -102,16 +102,16 @@ async function waitForStartedOutput(child, timeoutMs = 5000) {
 }
 
 function makeShellTempDir(prefix) {
-  return execFileSync('bash', ['-lc', `mktemp -d "\${TMPDIR:-/tmp}/${prefix}-XXXXXX"`], { encoding: 'utf8' }).trim();
+  return execFileSync('bash', ['-c', `mktemp -d "\${TMPDIR:-/tmp}/${prefix}-XXXXXX"`], { encoding: 'utf8' }).trim();
 }
 
 function removeShellPath(p) {
-  execFileSync('bash', ['-lc', 'rm -rf "$1"', 'bash', p], { stdio: 'ignore' });
+  execFileSync('bash', ['-c', 'rm -rf "$1"', 'bash', p], { stdio: 'ignore' });
 }
 
 function newestSessionDir(projectDir) {
   const sessionDir = execFileSync('bash', [
-    '-lc',
+    '-c',
     'find "$1/.superpowers/brainstorm" -mindepth 1 -maxdepth 1 -type d -print | sort | tail -1',
     'bash',
     projectDir
