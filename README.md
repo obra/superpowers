@@ -15,6 +15,7 @@ This is a customized fork of [obra/superpowers](https://github.com/obra/superpow
 - **One work directory per feature.** Spec, plan, DoD, and understanding doc live together in `docs/work/<slug>/` (`<slug>` = branch slug). Brainstorming starts with a read-only re-entry check of that directory: initial run, follow-up, partial rerun, or new run.
 - **`definition-of-done` skill (fork-only).** writing-plans drafts `dod.md` (criteria with verification tiers T1–T4 and named verification commands), commits design/plan/DoD as a draft, and freezes the DoD in its own commit when the plan is approved. Execution ends with a fixed-format DoD verdict (`VERIFIED` / `AWAITING_HUMAN` / `FAILED` / `BLOCKED`).
 - **Claims about existing code are checked.** The spec reviewer and the plan self-review open the code behind every claim about existing behavior.
+- **PR/MR by default, no menu.** `finishing-a-development-branch` does not present a merge/PR/keep menu or wait for a choice. With a green suite it pushes the branch and opens a PR/MR; your partner approves the work by merging that PR/MR. The agent never merges into the base on its own. Local merge, keep-as-is, and discard happen only when asked for in so many words; if the PR/MR cannot be opened, the branch is kept and the blocker reported. `executing-plans` and `subagent-driven-development` list opening the PR/MR as not a stop.
 - **Sync with the base before the PR.** `finishing-a-development-branch` merges `origin/<base>` (merge, not rebase) and re-runs the full suite before pushing, then checks mergeability. PR bodies carry measured numbers and keep unverified items unchecked.
 - **One file per item.** Tech debt (`docs/tech-debt/<summary>.md`) and change history (`docs/changelog/YYYY-MM-DD-<slug>.md`) never go into a shared list file.
 - **Two review seats when there is a contract.** With a frozen DoD or project rule documents, the whole-branch review runs a contract reviewer (`requesting-code-review/contract-reviewer.md`) in parallel with the bug reviewer; when they disagree about a frozen criterion the code meets, the contract wins and changing it is your partner's call.
@@ -25,6 +26,7 @@ This is a customized fork of [obra/superpowers](https://github.com/obra/superpow
 
 ### Changelog (fork)
 
+- **fork-v6.4.2.11** (plugin version 6.4.64): `finishing-a-development-branch` opens a PR/MR by default instead of presenting three options and waiting (6.4.63); the merge approval is the PR/MR merge. `executing-plans` and `subagent-driven-development` stop lists no longer treat opening the PR/MR as a reason to stop and ask.
 - **fork-v6.4.2.10** (plugin version 6.4.9): Korean prose rules ban fabricated naive reactions that make the author look foolish and verb-form table headers.
 - **fork-v6.4.2.9** (plugin version 6.4.8): Korean prose rules ban vague situation phrases, subject-less contrast pairs, pre-emptive denials nobody raised, letter placeholders for named services, ambiguous verbs and coined word pairs.
 - **fork-v6.4.2.8** (plugin version 6.4.7): Korean prose rules ban lecturing tone, arrogant phrasing, vague summary sentences, machine-eyed "who calls it" questions and trailing "~고요." fragments.
@@ -378,7 +380,7 @@ Restart any active Muse sessions after installing so the `SessionStart` hook tak
 
 6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, pushes the branch and opens a PR/MR by default (local merge, keep, or discard only on explicit request), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
