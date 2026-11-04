@@ -326,6 +326,37 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     "$bash_bin" -c 'cd "$1" && exec "$2" run-hook.cmd session-start' _ "$REPO_ROOT/hooks" "$bash_bin"
 
+# When bash is absent on PATH and $BASH is unset, run-hook.cmd falls back to zsh (#2503).
+zsh_stub_dir="$TEST_ROOT/zsh-stub/bin"
+zsh_marker="$TEST_ROOT/zsh-stub/used"
+mkdir -p "$zsh_stub_dir"
+printf '#!%s\n: > "%s"\nexec "%s" "$@"\n' "$bash_bin" "$zsh_marker" "$bash_bin" > "$zsh_stub_dir/zsh"
+chmod +x "$zsh_stub_dir/zsh"
+zsh_stub_home="$(make_home zsh-stub)"
+assert_command_output \
+    "run-hook.cmd falls back to zsh when bash is absent and BASH is unset" \
+    "nested" \
+    "" \
+    "" \
+    "$zsh_stub_home" \
+    PATH="$zsh_stub_dir" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    "$bash_bin" -c 'unset BASH; . "$1" "$2"' "$WRAPPER_UNDER_TEST" "$WRAPPER_UNDER_TEST" session-start
+if [[ -f "$zsh_marker" ]]; then
+    pass "run-hook.cmd invoked zsh when bash was absent"
+else
+    fail "run-hook.cmd invoked zsh when bash was absent"
+fi
+
+# When neither bash nor zsh is on PATH and $BASH is unset, run-hook.cmd exits 0 quietly (#2503).
+no_shell_rc=0
+no_shell_out="$(PATH="/empty/path" "$bash_bin" -c 'unset BASH; . "$1" "$2"' "$WRAPPER_UNDER_TEST" "$WRAPPER_UNDER_TEST" session-start 2>&1)" || no_shell_rc=$?
+if [[ "$no_shell_rc" -eq 0 && -z "$no_shell_out" ]]; then
+    pass "run-hook.cmd exits 0 quietly when neither bash nor zsh is available"
+else
+    fail "run-hook.cmd exits 0 quietly when neither bash nor zsh is available (rc=$no_shell_rc, out=$no_shell_out)"
+fi
+
 # run-hook.cmd's Windows half starts bash with a backslash path
 # (C:\...\hooks\session-start), so $0 can use \ as its separator. The skill
 # must still be found. On Windows use the real Windows path; elsewhere build
