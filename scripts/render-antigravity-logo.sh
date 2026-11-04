@@ -7,7 +7,7 @@
 #
 # Draws the Superpowers mark in near-black on a white rounded square with
 # transparent corners, 512x512 PNG. Run it whenever superpowers-small.svg
-# changes; tests/antigravity/test-logo.sh fails if the committed PNG is stale.
+# changes; tests/antigravity/test_logo.py fails if the committed PNG is stale.
 # Requires rsvg-convert (Homebrew: librsvg).
 set -euo pipefail
 

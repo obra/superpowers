@@ -3,4 +3,4 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-bash "$SCRIPT_DIR/test-plugin-manifest.sh"
+python3 -m pytest "$SCRIPT_DIR/test_plugin_manifest.py"

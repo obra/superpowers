@@ -2,7 +2,7 @@
 # Validate the Antigravity (agy) tool mapping: subagent dispatch via
 # invoke_subagent (self/research types), task tracking via a task artifact, and
 # SKILL.md pointing at the mapping. The plugin manifest and layout are checked
-# by test-plugin-manifest.sh.
+# by test_plugin_manifest.py.
 #
 # Mirrors tests/pi/test-pi-extension.mjs's "tools reference documents
 # harness-specific mappings" check. CI-safe: does not require `agy` installed.
