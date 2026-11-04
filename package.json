@@ -19,5 +19,13 @@
     "skills": [
       "./skills"
     ]
+  },
+  "commandcode": {
+    "mods": [
+      "./.commandcode/mods/superpowers.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
   }
 }
