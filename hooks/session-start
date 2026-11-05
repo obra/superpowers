@@ -3,7 +3,12 @@
 
 set -euo pipefail
 
-# Determine plugin root directory.
+# Operators who want Superpowers available only through explicit skill
+# invocation can disable the automatic bootstrap without disabling the plugin.
+if [[ "${SUPERPOWERS_DISABLE_BOOTSTRAP:-}" == "1" ]]; then
+  exit 0
+fi
+
 # Splits $0 on its last / or \ (run-hook.cmd's cmd half passes a Windows
 # path), with no separator meaning the current directory. This avoids
 # dirname because a SessionStart:startup hook can run with a broken/empty

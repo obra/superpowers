@@ -143,6 +143,16 @@ for (const forbiddenText of forbiddenTexts) {
 
 echo "SessionStart hook output tests"
 
+disabled_home="$(make_home disabled-bootstrap)"
+disabled_output=""
+disabled_rc=0
+disabled_output="$(env -i PATH="${PATH:-}" HOME="$disabled_home" SUPERPOWERS_DISABLE_BOOTSTRAP=1 CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_UNDER_TEST" 2>&1)" || disabled_rc=$?
+if [[ "$disabled_rc" -eq 0 && -z "$disabled_output" ]]; then
+    pass "SUPERPOWERS_DISABLE_BOOTSTRAP=1 suppresses automatic bootstrap"
+else
+    fail "SUPERPOWERS_DISABLE_BOOTSTRAP=1 suppresses automatic bootstrap (rc=$disabled_rc, out=$disabled_output)"
+fi
+
 # Registration shape: the hook must declare shell:"bash" so Claude Code on
 # Windows dispatches via Git Bash (or fails with an actionable error) instead
 # of PowerShell/cmd.exe, whose parsers break on the quoted command string
