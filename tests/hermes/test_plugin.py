@@ -87,6 +87,29 @@ class TestBootstrapInjection:
         assert _fire_pre_llm(mock_ctx, is_first_turn=False) is None
         assert _fire_pre_llm(mock_ctx, is_first_turn=None) is None
 
+    def test_bootstrap_can_be_disabled_without_disabling_skill_registration(self, mock_ctx):
+        plugin = _load_plugin()
+        mock_ctx._config["bootstrap.enabled"] = False
+        plugin.register(mock_ctx)
+
+        assert "brainstorming" in mock_ctx._skills
+        assert _fire_pre_llm(mock_ctx, is_first_turn=True) is None
+
+    def test_bootstrap_remains_enabled_by_default(self, mock_ctx):
+        plugin = _load_plugin()
+        plugin.register(mock_ctx)
+
+        result = _fire_pre_llm(mock_ctx, is_first_turn=True)
+        assert BOOTSTRAP_MARKER in result["context"]
+
+    def test_older_hermes_without_config_api_fails_closed(self, mock_ctx):
+        plugin = _load_plugin()
+        del mock_ctx.get_config
+        plugin.register(mock_ctx)
+
+        assert "brainstorming" in mock_ctx._skills
+        assert _fire_pre_llm(mock_ctx, is_first_turn=True) is None
+
     def test_subagent_platform_skips_bootstrap_on_first_turn(self, mock_ctx):
         plugin = _load_plugin()
         plugin.register(mock_ctx)

@@ -4,3 +4,8 @@ description: Superpowers skills and workflow bootstrap for Hermes Agent
 author: obra
 provides_hooks:
   - pre_llm_call
+config_schema:
+  bootstrap.enabled:
+    type: bool
+    default: true
+    description: Inject the using-superpowers bootstrap automatically on the first turn.
