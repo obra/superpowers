@@ -93,6 +93,8 @@ def _build_bootstrap(skills_dir: str) -> str:
 def register(ctx):
     skills_dir = _skills_dir()
     bootstrap = _build_bootstrap(skills_dir)
+    get_config = getattr(ctx, "get_config", None)
+    bootstrap_enabled = bool(get_config("bootstrap.enabled", True)) if callable(get_config) else False
 
     # Register every stock skill with Hermes' native loader so skill_view can
     # load them on demand. Standard markdown; no conversion (plugin guide).
@@ -120,7 +122,7 @@ def register(ctx):
         platform=None,
         **kwargs,
     ):
-        if is_first_turn and platform != "subagent":
+        if bootstrap_enabled and is_first_turn and platform != "subagent":
             return {"context": bootstrap}
         return None
 

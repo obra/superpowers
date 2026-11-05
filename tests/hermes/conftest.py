@@ -10,6 +10,7 @@ def mock_ctx():
     ctx._hooks = {}
     ctx._skills = {}
     ctx._descriptions = {}
+    ctx._config = {}
 
     def register_hook(event, fn):
         ctx._hooks[event] = fn
@@ -29,4 +30,5 @@ def mock_ctx():
 
     ctx.register_hook.side_effect = register_hook
     ctx.register_skill.side_effect = register_skill
+    ctx.get_config.side_effect = lambda key, default=None: ctx._config.get(key, default)
     return ctx
