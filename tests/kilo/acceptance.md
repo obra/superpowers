@@ -872,3 +872,31 @@ These choices are in the *what* category. Key unanswered question for the *how*:
 **Does the todo list need to persist across page refreshes (localStorage), or is session-only state fine?** Or should it sync to a backend/API rather than the browser?
 
 Or if you'd rather I just dive in with the defaults above, say so.
+
+## Maintainer-review follow-up verification
+
+The runtime plugin is unchanged in this follow-up. The installation docs now
+label Kilo support as a preview and install a reviewed local checkout rather
+than advertising the moving upstream development branch as a release.
+
+Executed with Kilo CLI 7.8.17 on macOS, using fresh HOME and XDG directories:
+
+- `node --test tests/kilo/test-plugin.mjs`: 18 passed. The new installation-docs
+  check failed against the previous instructions before they were corrected.
+- Ran the exact documented `kilo plugin "file://$PWD" --global` command from
+  the candidate checkout: native server target detected, config updated, and
+  all 15 bundled skills discovered from a separate empty project.
+- `python3 tests/kilo/test-native.py --kilo <isolated-cli> --output <new-evidence-dir>`:
+  native package installation and discovery passed; captured real requests had
+  one top-level bootstrap and no child bootstrap, with skills in both.
+- The same native test loaded a benign project-owned skill and rejected its
+  sibling that tried to include an outside-project canary file.
+- `git diff --check`: passed.
+
+The loopback provider deliberately returned HTTP 400. These fresh checks prove
+runtime wiring and the tested project boundary, not new model behavior. The
+live-model transcripts above remain historical evidence for the unchanged
+runtime code. No credentials or paid model calls were used for this follow-up.
+The private `skill_path_origins` dependency remains; the documentation now
+states its trust consequences, limited tested host, and upgrade/revalidation
+requirement explicitly. This is not a claim that it became a public Kilo API.

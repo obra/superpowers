@@ -18,6 +18,15 @@ async function transform(hooks, sessionID, system = ['Original Kilo system promp
 const bootstrapCount = output => output.system.join('\n').split(marker).length - 1;
 
 // Contract tests do not replace the real clean-session/model acceptance test.
+test('installation docs identify the preview and do not install an unreleased moving branch', () => {
+  for (const relative of ['README.md', 'docs/README.kilo.md']) {
+    const content = fs.readFileSync(path.join(root, relative), 'utf8');
+    assert.doesNotMatch(content, /kilo plugin[^\n]*@dev\b/);
+    assert.match(content, /preview/i);
+    assert.ok(content.includes('kilo plugin "file://$PWD" --global'));
+  }
+});
+
 test('package selects a native Kilo server without changing the OpenCode entrypoint', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   assert.equal(manifest.exports['./server'], './.kilo/plugin/superpowers.js');

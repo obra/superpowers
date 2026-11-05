@@ -204,10 +204,12 @@ Superpowers is available via the [official Grok plugin marketplace](https://gith
 
 ### Kilo Code
 
-Install through Kilo's native plugin manager:
+Kilo support is a preview, not yet part of a released Superpowers version.
+From the root of a reviewed checkout containing `.kilo/plugin/superpowers.js`,
+install through Kilo's native plugin manager:
 
 ```bash
-kilo plugin git:github.com/obra/superpowers@dev --global
+kilo plugin "file://$PWD" --global
 ```
 
 Restart Kilo after installing. The server plugin registers skills and loads the
