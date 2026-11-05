@@ -301,6 +301,33 @@ function browserLauncherForPlatform(url, {
   return null;
 }
 
+// Quote-aware tokenizer for the trusted BRAINSTORM_OPEN_CMD operator input.
+// Splits a single- or double-quoted command string into an argv (no shell, no
+// metacharacter expansion), so execFile can launch it without a `sh -c` layer.
+// Returns null on unbalanced quotes so a malformed command is never handed to
+// a shell as a fallback.
+function shellArgv(input) {
+  const argv = [];
+  let cur = '';
+  let quote = null;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (quote) {
+      if (ch === quote) { quote = null; continue; }
+      cur += ch;
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === ' ' || ch === '\t' || ch === '\n') {
+      if (cur.length) { argv.push(cur); cur = ''; }
+    } else {
+      cur += ch;
+    }
+  }
+  if (quote) return null; // unbalanced quotes — refuse to guess
+  if (cur.length) argv.push(cur);
+  return argv.length ? argv : null;
+}
+
 function isRegularFileInsideContentDir(filePath) {
   let stat, realContentDir, realFilePath;
   try {
@@ -535,9 +562,17 @@ function maybeOpenBrowser() {
   if (clients.size > 0) return; // the user already opened it
   const url = companionUrl(); // must carry the key or the gate 403s it
   const cp = require('child_process');
-  // Operator-provided launcher: run as given (this env var is trusted operator input).
+  // Operator-provided launcher: this env var is trusted operator input (opt-in,
+  // loopback-only), but we still avoid the shell entirely. Split the command into
+  // an argv with a quote-aware tokenizer and pass the URL as a single argv element
+  // via execFile, mirroring the platform launchers below — so a URL containing
+  // shell metacharacters can never reach a shell. A command that fails to tokenize
+  // (unbalanced quotes) is rejected rather than handed to a shell.
   if (process.env.BRAINSTORM_OPEN_CMD) {
-    try { cp.exec(process.env.BRAINSTORM_OPEN_CMD + ' ' + JSON.stringify(url), () => {}); } catch (e) { /* best effort */ }
+    const argv = shellArgv(process.env.BRAINSTORM_OPEN_CMD);
+    if (argv) {
+      try { cp.execFile(argv[0], argv.slice(1).concat(url), () => {}); } catch (e) { /* best effort */ }
+    }
     return;
   }
   // Platform launchers: pass the URL as an argv element via execFile (no shell),
