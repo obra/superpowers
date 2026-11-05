@@ -1,0 +1,72 @@
+Authoring environment
+Model: gpt-6.1-sol via openai-codex
+Delegated research/review model: gpt-6-luna
+Harness: Hermes Agent v0.22.5 (2026.9.24), local bf0203a794a0
+Human instructions: "anything in superpowers?", "why you're returning with empty hands", "continue".
+No claim of human diff review or human-authored PR summary is made.
+MCP tool catalogs exposed to this authoring session: beehiiv and posthog (not used for this change).
+
+Installed Hermes plugin inventory (hermes plugins list --plain):
+enabled      bundled  1.0.0    browser-browser-use
+enabled      bundled  1.0.0    browser-browserbase
+enabled      bundled  1.0.0    browser-firecrawl
+not enabled  bundled  1.0.0    chronos
+enabled      bundled  1.0.0    basic
+enabled      bundled  1.0.0    drain
+enabled      bundled  1.0.0    nous
+enabled      bundled  1.0.0    self-hosted
+enabled      bundled  1.0.0    default
+not enabled  bundled  2.0.0    disk-cleanup
+not enabled  bundled  0.2.0    google_meet
+enabled      bundled  1.0.0    deepinfra
+enabled      bundled  1.0.0    fal
+enabled      bundled  1.1.0    krea
+enabled      bundled  1.0.0    meta-ai-image-gen
+enabled      bundled  1.0.0    openai
+enabled      bundled  1.0.0    openai-codex
+enabled      bundled  1.1.0    openrouter
+enabled      bundled  1.0.0    xai
+enabled      bundled  1.0.0    a2a-platform
+enabled      bundled  1.0.0    bluebubbles-platform
+enabled      bundled  1.0.0    buzz-platform
+enabled      bundled  1.0.0    dingtalk-platform
+enabled      bundled  1.0.0    discord-platform
+enabled      bundled  1.0.0    email-platform
+enabled      bundled  1.0.0    feishu-platform
+enabled      bundled  1.0.0    google_chat-platform
+enabled      bundled  1.0.0    irc-platform
+enabled      bundled  1.0.0    line-platform
+enabled      bundled  1.0.0    matrix-platform
+enabled      bundled  1.0.0    mattermost-platform
+enabled      bundled  1.0.0    ntfy-platform
+enabled      bundled  0.3.0    photon-platform
+enabled      bundled  1.0.0    qqbot-platform
+enabled      bundled  1.0.0    raft-platform
+enabled      bundled  1.0.0    signal-platform
+enabled      bundled  1.1.0    simplex-platform
+enabled      bundled  1.0.0    slack-platform
+enabled      bundled  1.0.0    sms-platform
+enabled      bundled  1.0.0    teams-platform
+enabled      bundled  1.0.0    telegram-platform
+enabled      bundled  1.0.0    wecom-platform
+enabled      bundled  1.0.0    weixin-platform
+enabled      bundled  1.0.0    whatsapp-platform
+enabled      bundled  1.0.0    whatsapp_cloud-platform
+enabled      bundled  1.0.0    yuanbao-platform
+not enabled  bundled  0.1.0    security-guidance
+not enabled  bundled  0.1.0    teams_pipeline
+enabled      bundled  1.0.0    deepinfra
+enabled      bundled  1.0.0    fal
+enabled      bundled  1.0.0    openrouter
+enabled      bundled  1.0.0    xai
+enabled      bundled  1.0.0    web-brave-free
+enabled      bundled  1.0.0    web-ddgs
+enabled      bundled  1.0.0    web-exa
+enabled      bundled  1.0.0    web-firecrawl
+enabled      bundled  1.0.0    web-keenable
+enabled      bundled  1.0.0    web-openai-native
+enabled      bundled  1.0.0    web-parallel
+enabled      bundled  1.0.0    web-perplexity
+enabled      bundled  1.0.0    web-searxng
+enabled      bundled  1.0.0    web-tavily
+enabled      bundled  1.0.0    web-xai
