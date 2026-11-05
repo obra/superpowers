@@ -81,6 +81,28 @@ The Superpowers marketplace provides Superpowers and some other related plugins 
   /plugin install superpowers@superpowers-marketplace
   ```
 
+By default, the Claude Code plugin injects the Superpowers bootstrap at
+session start. To keep the skills installed and invoke them only when you
+choose, set `SUPERPOWERS_DISABLE_BOOTSTRAP=1` before starting Claude Code:
+
+```bash
+export SUPERPOWERS_DISABLE_BOOTSTRAP=1
+claude
+```
+
+To keep the setting across terminal sessions, add the export to your shell
+startup file, such as `~/.bashrc` or `~/.zshrc`. On Windows, set the user
+environment variable in PowerShell before launching Claude Code:
+
+```powershell
+$env:SUPERPOWERS_DISABLE_BOOTSTRAP = "1"
+claude
+```
+
+Restart active Claude Code sessions after changing the variable. This disables
+only automatic bootstrap injection; the Superpowers skills remain installed
+and explicitly callable.
+
 ### Antigravity
 
 Install Superpowers as a plugin from this repository:
