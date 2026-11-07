@@ -1,0 +1,16 @@
+# The Superpowers bundle patch for DeepSeek Harness.
+#
+# `dsh plugin --profile <name> add …` appends this package to the profile's
+# `dsh.profile.bundles`, and dsh applies this file as one more patch layer over
+# the profile tree. The row lands in the global layer, which every agent's
+# scope chain merges, so Superpowers is active on every surface without
+# touching a preset.
+#
+# Turn it off in the profile's own cordis.patch.yml:
+#
+#   - id: superpowers
+#     disabled: true
+#
+- insert:
+    - id: superpowers
+      name: superpowers/.dsh/plugins/superpowers.js
