@@ -74,6 +74,8 @@ test('bootstrap reinjects when invoked again with empty bootstrap files', async 
 
 test('plugin loads without skill files instead of throwing', async () => {
   const tmp = await mkdtemp(join(tmpdir(), 'openclaw-missing-skills-'));
+  const { writeFile } = await import('node:fs/promises');
+  await writeFile(join(tmp, 'package.json'), JSON.stringify({ type: 'module' }));
   const stubPath = join(tmp, 'index.js');
   await copyFile(pluginPath, stubPath);
   const plugin = (await import(pathToFileURL(stubPath).href)).default;
