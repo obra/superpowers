@@ -148,10 +148,16 @@ test('the dsh tool-mapping reference exists, is linked, and matches the inline m
   mod.apply(ctx);
   const [section] = sections;
 
-  // The subagent delta is the load-bearing line: keep both copies identical.
-  const subagentLine = 'NO named subagent types';
-  assert.ok(reference.includes(subagentLine), 'reference must carry the subagent delta');
-  assert.ok(section.text.includes(subagentLine), 'inline mapping must carry the subagent delta');
+  // The subagent and Windows sandbox deltas are load-bearing: keep both copies in sync.
+  for (const delta of [
+    'NO named subagent types',
+    'TEAM_MEMBER_NOT_FOUND',
+    'Delegation depth is 1',
+    '--test-isolation=none',
+  ]) {
+    assert.ok(reference.includes(delta), `reference must carry delta: ${delta}`);
+    assert.ok(section.text.includes(delta), `inline mapping must carry delta: ${delta}`);
+  }
 });
 
 test('a second apply registers the same thing again, with no leaked state', async () => {
