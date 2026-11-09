@@ -9,6 +9,27 @@
 # Exit: the test command's exit status.
 set -euo pipefail
 
+# Choose a meaningful test result for the ledger line. Prefer a test-runner
+# summary that states pass/fail (node --test prints "# pass N" / "# fail N";
+# TAP prints "# tests N"; mocha/jest print "N passing" / "N failing"). Fall
+# back to the last non-blank output line so other runners — and the existing
+# behavior — are unchanged. node --test's final "# duration_ms: …" line is
+# deliberately NOT used: it says nothing about pass/fail (see
+# https://github.com/obra/superpowers/issues/2342).
+pick_test_result() {
+  local log="$1" line
+  line=$(grep -E '^# +pass +[0-9]+' "$log" | tail -n 1) || true
+  if [ -n "$line" ]; then printf '%s' "$line"; return 0; fi
+  line=$(grep -E '^# +(tests|fail|ok|not ok) +' "$log" | tail -n 1) || true
+  if [ -n "$line" ]; then printf '%s' "$line"; return 0; fi
+  line=$(grep -E '[0-9]+ +passing' "$log" | tail -n 1) || true
+  if [ -n "$line" ]; then printf '%s' "$line"; return 0; fi
+  line=$(grep -E '[0-9]+ +(failing|passed|failed)' "$log" | tail -n 1) || true
+  if [ -n "$line" ]; then printf '%s' "$line"; return 0; fi
+  line=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || true
+  if [ -n "$line" ]; then printf '%s' "$line"; else printf '(no output)'; fi
+}
+
 if [ $# -lt 5 ] || [ "$4" != "--" ]; then
   echo "usage: task-done PLAN_FILE TASK_NUMBER BASE -- TEST_COMMAND [ARGS...]" >&2
   exit 2
@@ -48,7 +69,7 @@ if [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
-last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
+last=$(pick_test_result "$log")
 [ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
 line="Task $n: complete (commits $(git -C "$repo" rev-parse --short=7 "$base")..$(git -C "$repo" rev-parse --short=7 HEAD), tests: $cmd → $last)"
 printf '%s\n' "$line" >> "$ledger"

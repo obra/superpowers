@@ -155,6 +155,35 @@ PLAN
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
     fi
 
+    # --- task-done: ledgers a pass/fail summary, not the # duration_ms line (#2342) ---
+    # node --test's final output line is "# duration_ms: …", which carries no
+    # pass/fail information. task-done must ledger the "# pass N" summary
+    # instead of that trailing line, while still falling back to the last line
+    # for runners that print a plain result (e.g. "OK").
+    ( cd "$repo" && echo z > work3.txt && git add work3.txt && git "${git_id[@]}" commit -qm "task 3" )
+    local head3
+    head3="$(cd "$repo" && git rev-parse HEAD)"
+    rc=0
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 3 "$head2" -- sh -c 'printf "# pass 5\n# fail 0\n# duration_ms 12.3\n"')" || rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+        pass "task-done exits 0 on a node --test-style passing run"
+    else
+        fail "task-done exits 0 on a node --test-style passing run (rc=$rc)"
+        echo "    got: $out"
+    fi
+    if grep -qF "Task 3: complete" "$ledger" && grep -qF "→ # pass 5" "$ledger"; then
+        pass "task-done ledgers the # pass N summary instead of # duration_ms (#2342)"
+    else
+        fail "task-done ledgers the # pass N summary instead of # duration_ms (#2342)"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
+    fi
+    if ! grep -qF "→ # duration_ms" "$ledger"; then
+        pass "task-done does not record the # duration_ms line as the result"
+    else
+        fail "task-done does not record the # duration_ms line as the result"
+        echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
+    fi
+
     # --- no usable repository: every helper stops with one message (#2242, #2429) ---
     # The same message for a new project and for a caller standing in the
     # wrong directory (such as the plugin's skill directory, where git init
