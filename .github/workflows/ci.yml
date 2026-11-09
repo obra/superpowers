@@ -1,0 +1,84 @@
+name: CI
+
+# Tier 1: deterministic, credential-free checks on every pull request.
+#
+# See docs/testing.md for the tiered model. Live agent-behaviour evaluations
+# (evals/, tests/explicit-skill-requests/, tests/claude-code/*agent* tests)
+# need a coding-agent CLI plus paid API credentials and are deliberately NOT
+# run here — they belong in a separate scheduled/on-demand workflow.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: these jobs only read the repository.
+permissions:
+  contents: read
+
+# Superseded runs on the same ref are pointless; cancel them.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell-syntax:
+    name: Shell syntax (bash -n)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash -n on every tracked shell script
+        run: |
+          set -uo pipefail
+          bad=0
+          total=0
+          while IFS= read -r f; do
+            case "$f" in
+              *.sh) ;;
+              *) head -1 "$f" | grep -qE '^#!.*\b(bash|sh)\b' || continue ;;
+            esac
+            total=$((total + 1))
+            if ! bash -n "$f"; then
+              echo "::error file=$f::bash -n failed"
+              bad=$((bad + 1))
+            fi
+          done < <(git ls-files)
+          echo "checked $total shell script(s), $bad with syntax errors"
+          [ "$bad" -eq 0 ]
+
+  plugin-tests:
+    name: ${{ matrix.test }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      # Report every failure, not just the first one.
+      fail-fast: false
+      matrix:
+        test:
+          - tests/skill-layout/test-no-dev-files-in-skills.sh
+          - tests/skill-size/test-skill-size.sh
+          - tests/sdd-helper-paths/test-sdd-helper-paths.sh
+          - tests/shell-lint/test-lint-shell.sh
+          - tests/systematic-debugging/test-find-polluter.sh
+          - tests/hooks/test-session-start.sh
+          - tests/brainstorm-server/start-server.test.sh
+          - tests/brainstorm-server/stop-server.test.sh
+          - tests/codex/test-marketplace-manifest.sh
+          - tests/devin/test-devin-plugin.sh
+          - tests/kimi/test-plugin-manifest.sh
+          - tests/antigravity/test-plugin-manifest.sh
+          - tests/diagnosing-superpowers/test-skill-structure.sh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run ${{ matrix.test }}
+        run: bash "${{ matrix.test }}"
