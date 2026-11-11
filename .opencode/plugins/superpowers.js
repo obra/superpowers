@@ -9,7 +9,8 @@
  *
  * V2 (opencode2): loaded via default export { id, setup } by PluginSupervisor.
  * setup() registers skills natively via ctx.skill.transform(), and injects
- * bootstrap context via ctx.session.hook("context").
+ * bootstrap context via ctx.session.hook on `context`, `compaction`, and
+ * `generate` so every request shape carries the same cached prefix.
  *
  * No external dependencies — pure JavaScript works in both V1 and V2 without
  * installing @opencode-ai/plugin or effect.
@@ -78,7 +79,7 @@ export const V1_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → \`todowrite\`
 - \`Subagent (general-purpose):\` → \`task\` with \`subagent_type: "general"\`
-- Invoke a skill → OpenCode's native \`skill\` tool
+- Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`name: "brainstorming"\`)
 - Read files → \`read\`
 - Create, edit, or delete files → \`apply_patch\`
 - Run shell commands → \`bash\`
@@ -96,7 +97,7 @@ export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
-- Invoke a skill → OpenCode's native \`skill\` tool
+- Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`id: "brainstorming"\`)
 - Read files → \`read\`
 - Create, edit, or delete files → use \`patch\` with \`patchText\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`shell\` for deletion
 - Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
@@ -111,6 +112,11 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 // parsing it once eliminates redundant fs.existsSync + fs.readFileSync +
 // regex work on every agent step.  See #1202 for the full analysis.
 const _bootstrapCache = new Map(); // mapping -> bootstrap (null = file missing)
+
+// Opening of every injected bootstrap part. The already-injected guards match
+// it at the start of a part, so a prompt that merely mentions the tag (#2197)
+// is not mistaken for the bootstrap.
+const BOOTSTRAP_MARKER = '<EXTREMELY_IMPORTANT>\nYou have superpowers.';
 
 // Helper to generate bootstrap content (cached after first call per mapping)
 const getBootstrapContent = (toolMapping) => {
@@ -127,8 +133,7 @@ const getBootstrapContent = (toolMapping) => {
   const fullContent = fs.readFileSync(skillPath, 'utf8');
   const { content } = extractAndStripFrontmatter(fullContent);
 
-  _bootstrapCache.set(toolMapping, `<EXTREMELY_IMPORTANT>
-You have superpowers.
+  _bootstrapCache.set(toolMapping, `${BOOTSTRAP_MARKER}
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
 
@@ -248,7 +253,7 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
       if (!firstUser || !firstUser.parts.length) return;
 
       // Guard: skip if first user message already contains bootstrap.
-      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      if (firstUser.parts.some(p => p.type === 'text' && p.text.startsWith(BOOTSTRAP_MARKER))) return;
 
       // #2160: never restart the controller workflow inside task subagent
       // (child) sessions. V1 passes no input to this hook (verified in the
@@ -280,8 +285,12 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
  *    is `path` — renamed from `location` in upstream commit 199aabe9e2,
  *    first released in v2.0.4.
  *    See packages/core/src/plugin/skill.ts and packages/schema/src/skill.ts.
- * 2. Injects bootstrap context via ctx.session.hook("context"), the V2
- *    equivalent of V1's experimental.chat.messages.transform.
+ * 2. Injects bootstrap context via ctx.session.hook on `context`,
+ *    `compaction`, and `generate` — the V2 equivalents of V1's
+ *    experimental.chat.messages.transform. OpenCode's built-in plugins
+ *    register on all three; skipping any one makes that request's prompt
+ *    diverge from the cached prefix at the first user message, which for a
+ *    large session forces a cold re-prefill. See issue #2391.
  */
 async function setup(ctx) {
   // V1 (observed on opencode 1.18.18) also invokes default.setup, but with a
@@ -334,38 +343,51 @@ async function setup(ctx) {
     console.error('[superpowers] skill registration failed:', err);
   }
 
-  // 2. Inject bootstrap into first user message via V2 session context hook
-  try {
-    await ctx.session.hook('context', async (event) => {
-      try {
-        const bootstrap = getBootstrapContent(V2_MAPPING);
-        if (!bootstrap || !event.messages || !event.messages.length) return;
-        const firstUser = event.messages.find(m => m.role === 'user');
-        if (firstUser && (!firstUser.content || !firstUser.content.length)) return;
-        if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+  // 2. Inject bootstrap into first user message via V2 session hooks.
+  // OpenCode V2 dispatches three request shapes — context (normal turn),
+  // compaction (auto-summary), and generate (explicit generation). The
+  // compaction payload is the same `{ sessionID, messages, ... }` shape as
+  // context (observed on 2.1.2/2.1.3); generate's is taken from upstream
+  // source and the built-in plugins, not observed. OpenCode's
+  // own built-in plugins register on all three; if superpowers only covers
+  // `context`, the other two requests diverge from the cached prefix at
+  // exactly the position the bootstrap would have occupied, forcing a cold
+  // re-prefill of the whole session on the largest request of its lifetime.
+  // See issue #2391.
+  const injectBootstrap = async (event) => {
+    try {
+      const bootstrap = getBootstrapContent(V2_MAPPING);
+      if (!bootstrap || !event.messages || !event.messages.length) return;
+      const firstUser = event.messages.find(m => m.role === 'user');
+      if (firstUser && (!firstUser.content || !firstUser.content.length)) return;
+      if (firstUser?.content.some(p => p.type === 'text' && p.text && p.text.startsWith(BOOTSTRAP_MARKER))) return;
 
-        // #2160: the context event carries the sessionID directly. Skip the
-        // controller bootstrap when this prompt belongs to a task subagent
-        // (child) session. Skills registered above stay available to workers.
-        if (typeof ctx.session.get === 'function' && await isChildSession(
-          (id) => ctx.session.get({ sessionID: id }),
-          event.sessionID,
-        )) return;
+      // #2160: the request event carries the sessionID directly. Skip the
+      // controller bootstrap when this prompt belongs to a task subagent
+      // (child) session. Skills registered above stay available to workers.
+      if (typeof ctx.session.get === 'function' && await isChildSession(
+        (id) => ctx.session.get({ sessionID: id }),
+        event.sessionID,
+      )) return;
 
-        // Native compaction can leave only an opaque checkpoint. Keep it
-        // intact and append the transient bootstrap as a user message.
-        if (firstUser) {
-          firstUser.content.unshift({ type: 'text', text: bootstrap });
-        } else {
-          event.messages.push({ role: 'user', content: [{ type: 'text', text: bootstrap }] });
-        }
-      } catch (err) {
-        // Never let hook callback errors break the request pipeline.
-        console.error('[superpowers] context hook failed:', err);
+      // Native compaction can leave only an opaque checkpoint. Keep it
+      // intact and append the transient bootstrap as a user message.
+      if (firstUser) {
+        firstUser.content.unshift({ type: 'text', text: bootstrap });
+      } else {
+        event.messages.push({ role: 'user', content: [{ type: 'text', text: bootstrap }] });
       }
-    });
-  } catch (err) {
-    console.error('[superpowers] session hook registration failed:', err);
+    } catch (err) {
+      // Never let hook callback errors break the request pipeline.
+      console.error('[superpowers] session hook failed:', err);
+    }
+  };
+  for (const hookName of ['context', 'compaction', 'generate']) {
+    try {
+      await ctx.session.hook(hookName, injectBootstrap);
+    } catch (err) {
+      console.error(`[superpowers] session hook registration failed (${hookName}):`, err);
+    }
   }
 }
 

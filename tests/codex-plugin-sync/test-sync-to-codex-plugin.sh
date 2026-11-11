@@ -174,6 +174,7 @@ write_upstream_fixture() {
     local with_pure_ignored="${2:-1}"
 
     mkdir -p \
+        "$repo/.antigravity-plugin" \
         "$repo/.codex-plugin" \
         "$repo/.kimi-plugin" \
         "$repo/.private-journal" \
@@ -241,6 +242,15 @@ EOF
 }
 EOF
 
+    cat > "$repo/.antigravity-plugin/plugin.json" <<EOF
+{
+  "name": "superpowers",
+  "version": "$MANIFEST_VERSION"
+}
+EOF
+
+    printf 'antigravity png fixture\n' > "$repo/assets/antigravity-logo.png"
+
     cat > "$repo/assets/superpowers-small.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>
 EOF
@@ -295,11 +305,13 @@ EOF
     fi
 
     git -C "$repo" add \
+        .antigravity-plugin/plugin.json \
         .codex-plugin/plugin.json \
         .kimi-plugin/plugin.json \
         .gitignore \
         .gitmodules \
         .pre-commit-config.yaml \
+        assets/antigravity-logo.png \
         assets/app-icon.png \
         assets/superpowers-small.svg \
         evals/drill/README.md \
@@ -559,6 +571,12 @@ main() {
     local bootstrap_output
     local missing_manifest_status
     local missing_manifest_output
+    local linked_upstream_main
+    local linked_upstream
+    local linked_dest_main
+    local linked_dest
+    local linked_preview_status
+    local linked_preview_output
     local mixed_only_status
     local mixed_only_output
     local stale_preview_status
@@ -591,6 +609,10 @@ main() {
     dest_branch="fixture/preview-target"
     bootstrap_dest_branch="fixture/bootstrap-preview-target"
     fake_bin="$TEST_ROOT/bin"
+    linked_upstream_main="$TEST_ROOT/linked-upstream-main"
+    linked_upstream="$TEST_ROOT/linked-upstream"
+    linked_dest_main="$TEST_ROOT/linked-destination-main"
+    linked_dest="$TEST_ROOT/linked-destination"
 
     init_repo "$upstream"
     write_upstream_fixture "$upstream"
@@ -623,6 +645,17 @@ main() {
     write_bootstrap_destination_fixture "$bootstrap_dest"
     checkout_fixture_branch "$bootstrap_dest" "$bootstrap_dest_branch"
 
+    # The sync script wants upstream on main, so park the primary checkout
+    # on another branch and check main out in the linked worktree.
+    init_repo "$linked_upstream_main"
+    write_upstream_fixture "$linked_upstream_main"
+    git -C "$linked_upstream_main" switch -q -c fixture/parked
+    git -C "$linked_upstream_main" worktree add -q "$linked_upstream" main
+
+    init_repo "$linked_dest_main"
+    write_destination_fixture "$linked_dest_main"
+    git -C "$linked_dest_main" worktree add -q -b fixture/linked-target "$linked_dest"
+
     write_fake_gh "$fake_bin"
 
     # This regression test is about dry-run content, so capture the preview
@@ -642,6 +675,8 @@ main() {
     noop_apply_status=$?
     missing_manifest_output="$(run_preview_without_manifest "$upstream" "$dest" "$fake_bin")"
     missing_manifest_status=$?
+    linked_preview_output="$(run_preview "$linked_upstream" "$linked_dest" "$fake_bin")"
+    linked_preview_status=$?
     set -e
     help_output="$(run_help "$upstream" "$fake_bin")"
     script_source="$(cat "$upstream/scripts/sync-to-codex-plugin.sh")"
@@ -657,6 +692,8 @@ main() {
     assert_not_contains "$preview_output" "Version:  $PACKAGE_VERSION" "Preview does not use package.json version"
     assert_contains "$preview_section" ".codex-plugin/plugin.json" "Preview includes manifest path"
     assert_not_contains "$preview_section" ".kimi-plugin/plugin.json" "Preview excludes Kimi manifest from Codex sync"
+    assert_not_contains "$preview_section" ".antigravity-plugin/plugin.json" "Preview excludes Antigravity manifest from Codex sync"
+    assert_not_contains "$preview_section" "assets/antigravity-logo.png" "Preview excludes Antigravity logo from Codex sync"
     assert_contains "$preview_section" "assets/superpowers-small.svg" "Preview includes SVG asset"
     assert_contains "$preview_section" "assets/app-icon.png" "Preview includes PNG asset"
     assert_contains "$preview_section" "hooks/hooks-codex.json" "Preview includes Codex hook manifest"
@@ -715,6 +752,11 @@ Locally modified fixture content." "Dirty local apply preserves tracked working-
     assert_file_equals "$noop_openai_metadata_path" "interface:
   display_name: \"Example\"
   short_description: \"Destination-owned OpenAI metadata\"" "Clean no-op local apply preserves OpenAI agent metadata"
+
+    echo ""
+    echo "Linked worktree assertions..."
+    assert_equals "$linked_preview_status" "0" "Preview from a linked worktree into a linked worktree exits successfully"
+    assert_not_contains "$linked_preview_output" "is not a git checkout" "Linked worktrees are accepted as git checkouts"
 
     echo ""
     echo "Missing manifest assertions..."

@@ -2,6 +2,20 @@ Title: <skill or symptom>: <one-line observable> (<harness>)
 
 - [x] I searched existing issues and this is not a duplicate (searched: <query terms>; closest: <#n title, or "none">)
 
+## Who's filing this report? (required)
+
+<model and harness of this session>, filing on behalf of <how your
+partner wants to be named, or "my human partner">, who asked: "<their
+request from this session that led to the diagnosis or the issue,
+scrubbed>"
+
+## Human-authored summary (required, under 200 words)
+
+<Your partner's own words on what went wrong and what should have
+happened, pasted as written. Ask for them; a placeholder here means the
+issue is not ready to file. If they run long, ask them to trim rather
+than editing their words.>
+
 ## Environment (required)
 
 | Field | Value | Provenance / supporting evidence |
@@ -17,8 +31,12 @@ Title: <skill or symptom>: <one-line observable> (<harness>)
 
 - [ ] I confirmed this issue does not occur without Superpowers installed
 
-The reporter has not tried reproducing without superpowers. Evidence for
-involvement is below; it does not establish cause.
+How I verified that this issue does not reproduce without Superpowers:
+<"Not tried", or what your partner ran without superpowers and what
+happened, with the transcript path if there is one. Tick the box above
+only when a transcript shows the problem did not recur.>
+
+Evidence for involvement is below; it does not establish cause.
 
 ## What happened?
 
@@ -47,5 +65,6 @@ Superpowers involvement per the diagnosis report: <possible | likely>, with
 evidence at <transcript lines>. This report does not propose a fix.
 
 ---
-Filed with the `diagnosing-superpowers` skill. Model, harness, harness
-version, and installed plugins are listed above.
+Filed with the `diagnosing-superpowers` skill. The filing model and
+harness are under "Who's filing"; the diagnosed session's model, harness,
+versions, and plugins are in the Environment table.

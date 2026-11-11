@@ -1,39 +1,140 @@
 # Superpowers Release Notes
 
-## Unreleased
+## v7.0.2 (2026-11-03)
+
+This release further tunes brainstorming's questions. It asks fewer of them, starts by asking why, and when there's a choice to make it gives you options to pick from. It also fixes bootstrap problems on six harnesses, and makes the SDD and executing-plans helper scripts much harder to point at the wrong repository or the wrong task.
 
 ### Brainstorming
 
-- **Visual companion screens containing `$'`, `$&` or similar are no longer corrupted.** The server inserted screen content with `String.replace`, which treats those sequences as replacement patterns, so content like `NT$'` spliced pieces of the frame into the page. Content is now inserted literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
+- **It asks a question only when the answer would change what gets built and nothing already answers it.** Otherwise it states its call as a proposal you can correct. It also stops asking about process: writing things up, where files go, whether to look further, and how to show you something are its own calls, and it tells you what it decided. (#2644)
+- **When you haven't said why you want something, that's the first thing it asks.** It asks openly, with no example answers to pick from. (#2644)
+- **When there's a choice it can name, it shows you the options with a recommendation.** In one of our test scenarios, where a spec gives Ctrl+K to two features, 7.0.1 found the conflict every time but asked a bare "which one?" in 8 of 8 runs. This release laid out the options and recommended one in 8 of 8. (#2644)
+- **It reads from how you talk whether you want to discuss the technical choices,** and when your request leaves nothing open, its first message is a short design for you to approve. (#2644)
+- In blind-graded test conversations, filler questions dropped from 41 with 7.0.1 to 23, the reason behind the request came out before any approach in 33 of 33 conversations (28 of 33 before), and nothing got built before approval (4 times before). Against 6.4.2's brainstorming in the same scenarios, it had fewer filler questions (23 against 34), drew out the why far more often (33 of 33 against 19 of 33), and matched it at building nothing before approval. (#2644)
+- **`start-server.sh --project-dir .` now works.** The script `cd`s into its own directory before starting the server, so every path it derived from a relative `--project-dir` pointed to the wrong place, and the server never started. It now resolves the directory first. Thanks @anchore-jesset for the report. (#2524, #2608)
 
-### Systematic Debugging
-
-- **The multi-layer diagnostic example no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs; the example now reports only whether it's set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
-
-### Executing Plans
-
-- **`task-done` records tasks whose test command passes silently.** A passing command with no output made `task-done` exit 1 without writing the ledger line, so a finished task looked unfinished. The ledger now records `→ (no output)`. Thanks @KenM-BT for the report and Ada Sen for the fix. (#2385, #2388)
+Thanks to @mbcrawfo and everyone on #2530 who sent transcripts and tested 7.0.1. If brainstorming still asks you something it shouldn't, please tell us there, with what you asked and what it asked back.
 
 ### Hooks
 
-- **SessionStart works when the harness starts it with a broken `PATH`.** The hooks no longer need `dirname`, `cat` or `bash` from `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
-- **Windows: `run-hook.cmd` finds a per-user Git for Windows install and skips the WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH` it skips the `bash.exe` WSL launchers that fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 (#1864) and @KaiyiQuan (#2365) for the fixes this combines. (#1863, #2393)
-- **Windows: `run-hook.cmd` no longer runs `bash` or `where` from the current directory.** A repository containing `bash.cmd` or `where.bat` could have had it run at session start. (#2393)
-- **Windows: hook exit codes now reach the harness.** `run-hook.cmd` used to report success even when the hook failed. (#2393)
+- **Copilot on Windows now gets the bootstrap.** Copilot CLI and VS Code Copilot run hook commands through PowerShell, which rejected the SessionStart command with a ParserError. `hooks.json` now has a `powershell` form of the command. Thanks @ronpieper-engcp and @orty for the reports. (#2189, #1225, #2592)
+- **The SessionStart hook starts no child processes.** On Git Bash, each one costs tens of milliseconds, and the hook started six of them on every startup, `/clear` and compaction. Thanks @midirectiekade14-debug for the report and measurements. (#2081, #2593)
+- **On a Unix system without bash, `run-hook.cmd` falls back to zsh, or exits quietly.** It used to exit 127 with `bash: not found`, and the bootstrap was lost. (#2503, #2594)
 
-### Requesting Code Review
+### Pi
 
-- **The example's base-SHA command survives skill arguments.** Claude Code substitutes `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which has no `$` token. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
-
-### Subagent-Driven Development
-
-- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to rewrite the file with `*` on every run, so a repo that commits its own (for example, to version `progress.md` ledgers) saw it reverted after each SDD run. The default is now written only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
-
-- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. The root is now resolved the same way as the plan path. Found while landing the Windows test fixes from @t0domanh (#2149).
+- **Every prompt now gets the bootstrap.** The extension turned the bootstrap off after the first prompt of a session, so every later prompt went without it. Because the first message of the request changed, Anthropic prompt caching also rewrote the whole conversation's cache on the second prompt. Over a day of sessions, @sjawhar measured 83% of first-to-second-prompt transitions rewriting the cache. Thanks @DKnight927 for the report. (#2083, #2595)
+- **The `skills` filter on the Superpowers package entry works.** The extension re-added the whole `skills/` directory after pi applied the filter, so `"skills": []` still loaded all 15 skills. Thanks @adrian-85 for the report and @m2dumpling for the fix. (#2394, #2402, #2598)
 
 ### Hermes Agent
 
-- **Superpowers skills show their descriptions in Hermes' skill list.** Hermes lists plugin skills with the description passed to `register_skill`, which defaults to empty, and the plugin only passed a name and path, so every skill appeared blank and the model had nothing to choose on. Each skill's frontmatter description is now passed through. Thanks @pepijn-blom for the fix. (#2284)
+- **`delegate_task` subagents no longer get the controller's bootstrap.** Every child started with an empty history, so each one looked like a new session and got the full bootstrap, and some started by loading `using-superpowers` instead of doing their task. Thanks @thealps01-netizen for the report. (#2536, #2596)
+
+### OpenCode
+
+- **The bootstrap tells the model to use bare skill ids.** OpenCode registers skills as `brainstorming`, not `superpowers:brainstorming`, so a model that copied the namespaced form from the bootstrap got "skill not found" and went on without the skill. Thanks @shiluoluo16 for the report. (#2583, #2597)
+- **A prompt that mentions `EXTREMELY_IMPORTANT` no longer turns the bootstrap off.** The plugin decided the bootstrap was already there if the first message contained that word, so asking "is there an EXTREMELY_IMPORTANT block in your context?" was enough to drop it. It now looks for the bootstrap's own first line. Thanks @Swift22 for the report. (#2197, #2600)
+- **OpenCode 2's compaction and generate requests carry the bootstrap.** Without it, the compaction request, the largest of the session, missed the prompt cache. Thanks @tpischke for the report and measurements. (#2391, #2601)
+
+### Muse
+
+- **The SessionStart hook now runs on Debian and Ubuntu.** Muse's manifest ran `hooks/session-start`, a bash script, with `sh`. Where `sh` is dash, the hook failed with exit 2 and the bootstrap never loaded. It now runs with `bash`. Thanks @rahul05ranjan for the report and @twotnguyen for the fix. (#2528, #2533)
+
+### Subagent-Driven Development and Executing Plans
+
+- **The helpers act on the repository of the current directory, as `git` does, and take `-C DIR` to point at another.** Outside a repository, `sdd-workspace` used to write its workspace into whatever directory the agent was in, often the plugin cache. All five helpers now stop with exit 2 and a message that tells your agent what to do. In a new project with no commits yet, your agent will need to run `git init` and make a first commit before it can start. `-C` also lets a controller review a worktree without a `cd … ;` prefix that Claude Code can't allowlist. Thanks @abat-kek, @rz1989s, and @jiyimeta for the reports. (#2429, #2242, #1799, #2606)
+- **The skills say to run the helpers by absolute path from your working tree.** They used to say "from this skill's directory", and agents that `cd`'d there ran the helpers against the plugin's own files. A test now fails if a skill names a helper by a relative path. Thanks @anchore-jesset for the report. (#2525, #2607)
+- **`task-brief` finds tasks with IDs like `A1`, `6b`, and `2.1`.** It used to reject letter-first IDs entirely, and asking for Task 6 also picked up Task 6b. When a plan's task headings aren't in English, it now says they must use the word "Task" and shows the headings it found. Thanks @rhuthik, @jnrod03-rgb, @christopherpconway, and @ferrous26 for the reports. (#2459, #2496, #2175, #2405, #2604)
+- **`task-brief` refuses a brief that an unclosed code fence ran to the end of the plan.** One missing closing fence hid every later task heading, and the reporter's 177-line task came back as a 1,159-line brief holding five tasks. Thanks @bobbykim89 for the report. (#2436, #2605)
+- **On Windows, the helpers print paths PowerShell can open.** They printed `/c/Users/…`, which PowerShell reads as `C:\c\Users\…`. Thanks @sean-parent for the report. (#2307, #2602)
+
+### Systematic Debugging
+
+- **The skill no longer installs its own test scenarios.** `CREATION-LOG.md` and four pressure-test prompts, which open with "This is a real scenario. You must choose and act", installed next to `SKILL.md` and could be found by an agent mid-task. They now live under `tests/`, and a test keeps files like these out of every skill. Thanks @Caarles00 for the report. (#2277, #2654)
+
+### Maintenance
+
+- `scripts/package-codex-plugin.sh` and `scripts/sync-to-codex-plugin.sh` work from a linked git worktree. (#2609)
+
+## v7.0.1 (2026-10-21)
+
+This release retunes brainstorming after its rebuild in v7.0.0. Many of you told us, rightly, that the new default questions got annoying fast and felt formulaic. Brainstorming now digs for context before it asks anything, and tries to ask better questions. We expect to keep tuning it, but we think it's better than it was.
+
+It also trims three long skills so they better survive compaction on Claude Code, and changes the issue and PR templates to ask for a summary written by a human.
+
+### Brainstorming
+
+- **It digs for context first.** In an existing project, or when you point it at a spec, plan, or files, it reads them before its first message and doesn't ask what they already answer. (#2560)
+- **It tries to ask better questions.** v7.0.0 opened every session the same way: an offer to skip the questions, then a generic question about "the moment you wished this existed." Now, when you've already said what you want, it plays your request back with what it found in the project and asks about the one thing still open. Later questions build on your answers and on what it found, and say what the answer would change. (#2560, #2571)
+- **It offers to skip the questions only when it started on its own.** If you asked for brainstorming by name or with `/brainstorming`, it no longer offers to skip it. (#2560)
+- **It lays out the approaches and writes a design doc before building.** It presents two or three ways to build the thing, recommends one, and asks you to pick. Then it writes a design doc, a short one for a small change, and builds nothing until you approve it. Some of you saw it skip the doc and start building; in one of our test scenarios, it skipped the doc without asking in 24 of 24 runs before this change and 3 of 24 after. (#2571)
+
+Thanks to @mbcrawfo for opening #2530, and to @katyatitkova, @ertra, @blorenz, @Biomaj, @fsalum, @technicalpickles, @orochi235, @alexxburg, @fcavalieri, @CelesteCunha, and @zzzzz9999 for the reports, transcripts, and testing there.
+
+If brainstorming's questions in 7.0.1 still don't feel right, please comment on #2530. Examples help most: what you asked, what it asked back, and what you wish it had asked.
+
+### Skills better survive compaction on Claude Code
+
+After a compaction, Claude Code re-attaches each skill cut off at 20,000 characters, so anything past that point is gone for the rest of the session. In one reported session, subagent-driven development lost its five-round limit and ran 18 fix rounds on one task. Thanks @dan-1492 for the report. (#2481)
+
+- **`subagent-driven-development`** moves the fix loop, final review, report handling, resuming, preflight, batching, and cannot-verify guidance into `references/`. It reads each file from disk at the step that needs it. (#2565)
+- **`writing-skills`** moves its supporting docs, the SKILL.md template and discovery guidance, bulletproofing, and flowchart conventions into `references/`. (#2564)
+- **`executing-plans`** drops its Example Workflow, which repeated rules stated above it. (#2563)
+- `tests/skill-size/test-skill-size.sh` fails when any `SKILL.md` reaches 20,000 bytes. (#2565)
+
+### Contributing
+
+- **Issue and PR templates now ask who is filing and what their human partner asked for, plus a summary of under 200 words written by a human.** The bug report also asks how you confirmed the problem doesn't happen without Superpowers. (#2569)
+- **We don't accept agent-written PRs that fix someone else's issue unless a maintainer asked for one.** If your human partner hit the same problem, add their report to the existing issue. The PR template, `AGENTS.md`, and the README say so. (#2569)
+- **`diagnosing-superpowers` adds the same two sections to the issues it drafts** and won't file one while the summary is a placeholder. Its prefilled link now opens the Bug Report template; we removed the Session Diagnosis Report template. (#2569)
+
+## v7.0.0 (2026-10-09)
+
+We rebuilt brainstorming from scratch so it does a much better job of what it was always for: helping you work out what you actually want and put it into words before anything gets built. The new skill asks you to describe what you're after and why, plays back what it heard so you can correct it, and keeps asking good questions until the picture is clear. Then it matches the process to the work, from just doing it to writing a full design. 
+
+This release also adds a native plugin manifest for the Antigravity Marketplace and fixes Windows hook discovery, Git Bash paths, Hermes skill descriptions, and several smaller bugs.
+
+### Brainstorming
+
+- **Brainstorming draws out what you want before it proposes anything.** Its first message offers to skip the questions and asks one open question about a real moment or a concrete picture. It offers a menu only when you're stuck. Along the way, it offers to look at prior art, your project, or the web. As it understands each part, it plays that part back in a few hundred words and marks its guesses as guesses. (#2463)
+- **It sizes the work after it understands what you want, and says so in plain words.** It does a quick, clear task right away, agrees a small change with you in chat, and writes a design document for a project. You can override its call, and it steps up a size if the work grows. (#2463)
+- **A builder check replaces the spec-document reviewer.** A fresh subagent reads the design as the person who'll build it and lists what they'd still need to ask. Brainstorming answers what it can, makes the minor calls itself and marks them as its own, and brings you the questions that change what gets built, in one round. (#2463)
+- **It finds out which choices about how the thing gets made you want to own.** Platform, language, libraries, medium: if you have strong views, it talks them through; if you hand them over, it picks sensible defaults and tells you what it picked. It does this even when you skip the questions. We made this change after a session designed an iOS app, never asked about platform, and built a web app. (#2482, #2483)
+- **It offers the visual companion whenever seeing would help more than reading:** screens, layouts, flows, options that look different, diagrams. The offer drops its token-cost warning. (#2463)
+- **The visual companion now shows screens containing `$'`, `$&`, and similar sequences intact.** The server inserted content with `String.replace`, which treats those sequences as replacement patterns. It now inserts content literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
+
+### Antigravity
+
+- **`agy plugin install https://github.com/obra/superpowers` now installs Superpowers as a native Antigravity plugin.** We added `.antigravity-plugin/plugin.json` with the Marketplace display name, logo, and suggested prompts. Previously, agy fell back to importing the repo as a Gemini CLI extension, then rejected the copied Claude-format hooks file on every session with `invalid hook "hooks": command hook must specify 'command'`. The install command stays the same. (#2479)
+- **Superpowers bootstraps on Antigravity through skill discovery.** Antigravity has no session-start hook event, but it shows the model each installed skill's description, and `using-superpowers`' "Use when starting any conversation" prompts the model to load it. We verified this on agy 1.3.1 across 12 runs: "Let's make a react todo list" and "add a settings page" triggered brainstorming before any code, and a failing test triggered systematic-debugging before any edit. We also corrected the README and porting guide, which described a session-start hook and install script that never existed. (#2479)
+
+### Hooks
+
+- **SessionStart now works when the harness launches it with a broken `PATH`.** The hooks no longer look up `dirname`, `cat`, or `bash` on `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
+- **Windows: `run-hook.cmd` finds per-user Git for Windows installs and skips WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH`, it skips the WSL `bash.exe` launchers, which fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 (#1864) and @KaiyiQuan (#2365) for the fixes we combined here. (#1863, #2393)
+- **Windows: `run-hook.cmd` ignores `bash` and `where` in the current directory.** Previously, a repository could plant `bash.cmd` or `where.bat` and have it run at session start. (#2393)
+- **Windows: `run-hook.cmd` now passes hook exit codes to the harness.** It used to report success even when the hook failed. (#2393)
+
+### Subagent-Driven Development
+
+- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to overwrite the file with `*` on every run, reverting any version a repo committed (for example, to track `progress.md` ledgers). It now writes the default only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
+- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. It now resolves the root the same way as the plan path. We found this while landing @t0domanh's Windows test fixes (#2149).
+
+### Executing Plans
+
+- **`task-done` now records tasks whose test command passes silently.** When a passing command printed nothing, `task-done` exited 1 without writing the ledger line, so a finished task looked unfinished. It now records `→ (no output)`. Thanks @KenM-BT for the report and Ada Sen for the fix. (#2385, #2388)
+
+### Requesting Code Review
+
+- **The example's base-SHA command survives skill arguments.** Claude Code replaces `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which contains no `$`. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
+
+### Systematic Debugging
+
+- **The multi-layer diagnostic example no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs. The example now reports only whether the variable is set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
+
+### Hermes Agent
+
+- **Hermes' skill list now shows Superpowers skill descriptions.** Hermes lists each plugin skill with the description passed to `register_skill`, which defaults to empty. The plugin passed only a name and path, so every skill appeared blank and the model had nothing to choose from. The plugin now passes each skill's frontmatter description. Thanks @pepijn-blom for the fix. (#2284)
 
 ## v6.4.2 (2026-09-25)
 

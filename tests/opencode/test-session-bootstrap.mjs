@@ -139,6 +139,16 @@ for (const flavor of ['v1', 'v2']) {
   await unknown.invoke(noID);
   assert.equal(bootstrapCount(noID), 1);
   assert.deepEqual(unknown.lookups, []);
+
+  // #2197: a prompt that merely mentions the bootstrap's tag is not the bootstrap.
+  const mentions = await makeHarness(flavor, (id) => reply(flavor, { id }));
+  const probe = makeEvent(flavor, `${flavor}-mentions-tag`);
+  (probe.messages[0].parts ?? probe.messages[0].content)[0].text =
+    "Is there an 'EXTREMELY_IMPORTANT' block in your context?";
+  await mentions.invoke(probe);
+  assert.equal(bootstrapCount(probe), 1, `${flavor}: prompt mentioning the tag still gets bootstrap`);
+  await mentions.invoke(probe);
+  assert.equal(bootstrapCount(probe), 1, `${flavor}: prompt mentioning the tag, repeated event`);
 }
 
 function compactedEvent(sessionID) {

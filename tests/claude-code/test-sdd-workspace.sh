@@ -17,15 +17,24 @@ fail() {
     FAILURES=$((FAILURES + 1))
 }
 
-# Push a path through the same `cd ... && pwd` normalization that
-# sdd-workspace's own printed output goes through, so both sides of a
-# string comparison are guaranteed to be spelled identically. On Windows
-# Git Bash/MSYS, `git rev-parse --show-toplevel` (Windows-style,
-# C:/Users/...) and `cd ... && pwd` (MSYS-style, /c/Users/...) can print
-# different spellings of the identical physical directory; on Linux/macOS
-# this is a no-op since the two already agree (module the resolved-symlink
-# /var -> /private/var case handled by the mktemp comment above).
-physical_path() { (cd "$1" && pwd); }
+# Push a path through the same normalization that sdd-workspace's own
+# printed output goes through, so both sides of a string comparison are
+# guaranteed to be spelled identically. On Windows (Git Bash/MSYS, Cygwin)
+# that is the drive-letter form `cygpath -m` prints (C:/Users/...), not the
+# MSYS form `pwd` prints (/c/Users/...); on Linux/macOS it is plain `pwd`
+# (modulo the resolved-symlink /var -> /private/var case handled by the
+# mktemp comment below).
+physical_path() {
+    (cd "$1" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)
+}
+
+# On Windows, check that PowerShell (the shell an agent's PowerShell tool
+# runs) can open a path the helpers printed. Elsewhere there is nothing to
+# check: the printed path is the shell's own.
+native_readable() {
+    command -v cygpath >/dev/null 2>&1 && command -v powershell.exe >/dev/null 2>&1 || return 0
+    [[ "$(powershell.exe -NoProfile -Command "Test-Path -LiteralPath '$1'" | tr -d '\r')" == "True" ]]
+}
 
 cleanup() {
     if [[ -n "$TEST_ROOT" && -d "$TEST_ROOT" ]]; then
@@ -93,6 +102,13 @@ PLAN
         echo "    got: $dir_a"
     fi
 
+    if native_readable "$dir_a"; then
+        pass "the printed workspace path opens from PowerShell on Windows"
+    else
+        fail "the printed workspace path opens from PowerShell on Windows"
+        echo "    got: $dir_a"
+    fi
+
     if [[ "$dir_a" != "$dir_b" && -d "$dir_a" && -d "$dir_b" ]]; then
         pass "two plans resolve to two distinct directories"
     else
@@ -138,6 +154,270 @@ PLAN
     else
         fail "task-brief writes its brief under the plan's workspace"
         echo "    got: $brief_path"
+    fi
+    if native_readable "$brief_path"; then
+        pass "the printed brief path opens from PowerShell on Windows"
+    else
+        fail "the printed brief path opens from PowerShell on Windows"
+        echo "    got: $brief_path"
+    fi
+
+    # --- Task IDs: alphanumeric (#2459), matched whole, never as a prefix ---
+    cat > "$repo/plan-ids.md" <<'PLAN'
+# Lanes Plan
+
+## Task Overview
+
+Shared context; not a task.
+
+### Task A1: First lane
+
+BODY-A1
+
+#### Task notes
+
+Still part of A1.
+
+### Task A10: Same lane, later
+
+BODY-A10
+
+### Task 6: Numbered
+
+BODY-6
+
+### Task 6b: Sub-task
+
+BODY-6B
+
+### Task 2.1: Dotted
+
+BODY-2.1
+
+### Task 201: Decoy
+
+BODY-201
+PLAN
+    local id want got id_out="$TEST_ROOT/id-brief.md"
+    for id in A1 A10 6 6b 2.1 201; do
+        want="BODY-$(printf '%s' "$id" | tr '[:lower:]' '[:upper:]')"
+        rc=0
+        (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-ids.md "$id" "$id_out" >/dev/null 2>&1) || rc=$?
+        got="$(grep '^BODY-' "$id_out" 2>/dev/null | tr '\n' ' ')" || true
+        if [[ "$rc" -eq 0 && "$got" == "$want " ]]; then
+            pass "task-brief extracts Task $id and nothing else"
+        else
+            fail "task-brief extracts Task $id and nothing else"
+            echo "    exit: $rc, bodies: $got"
+        fi
+        : > "$id_out"
+    done
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-ids.md A1 "$id_out" >/dev/null 2>&1) || true
+    if grep -q 'Still part of A1.' "$id_out"; then
+        pass "a Task heading with no digit in its ID is not a task boundary"
+    else
+        fail "a Task heading with no digit in its ID is not a task boundary"
+        echo "    brief: $(cat "$id_out" 2>/dev/null)"
+    fi
+    # A deeper heading whose ID extends the task's (7 -> 7a) is a sub-task and
+    # stays in the parent's brief; a deeper heading for another task (a plan
+    # that drifts from ## Task 9 to ### Task 10) is still a boundary.
+    cat > "$repo/plan-nested.md" <<'PLAN'
+### Task 7: Parent
+
+BODY-7
+
+#### Task 7a: First part
+
+BODY-7A
+
+#### Task 7b: Second part
+
+BODY-7B
+
+### Task 8: Next
+
+BODY-8
+
+## Task 9: Shallower heading
+
+BODY-9
+
+### Task 10: Deeper, but not a sub-task
+
+BODY-10
+PLAN
+    for id in 7 7a 7b 8 9 10; do
+        case "$id" in
+            7) want="BODY-7 BODY-7A BODY-7B " ;;
+            *) want="BODY-$(printf '%s' "$id" | tr '[:lower:]' '[:upper:]') " ;;
+        esac
+        rc=0
+        (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-nested.md "$id" "$id_out" >/dev/null 2>&1) || rc=$?
+        got="$(grep '^BODY-' "$id_out" 2>/dev/null | tr '\n' ' ')" || true
+        if [[ "$rc" -eq 0 && "$got" == "$want" ]]; then
+            pass "nested plan: Task $id brief holds exactly its own section"
+        else
+            fail "nested plan: Task $id brief holds exactly its own section"
+            echo "    exit: $rc, bodies: $got (want: $want)"
+        fi
+    done
+
+    for id in 2 '2|6' '6(' Overview; do
+        rc=0
+        (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-ids.md "$id" "$id_out" >/dev/null 2>&1) || rc=$?
+        if [[ "$rc" -eq 3 ]]; then
+            pass "task-brief '$id' matches no task (exit 3)"
+        else
+            fail "task-brief '$id' matches no task (exit 3)"
+            echo "    exit: $rc, brief: $(cat "$id_out" 2>/dev/null)"
+        fi
+    done
+
+    # --- Translated task headings: say so instead of "not found" (#2496) ---
+    cat > "$repo/plan-es.md" <<'PLAN'
+# Plan: demo
+
+## Tarea 1: Banner
+
+**Archivos:**
+
+## Tarea 2: Segunda
+PLAN
+    local es_err
+    rc=0
+    es_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-es.md 1 "$id_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$es_err" == *'English word "Task"'* \
+        && "$es_err" == *"## Tarea 1: Banner"* && "$es_err" == *"## Tarea 2: Segunda"* ]]; then
+        pass "task-brief on a plan with no Task headings names the headings it saw"
+    else
+        fail "task-brief on a plan with no Task headings names the headings it saw"
+        echo "    exit: $rc"
+        echo "    stderr: $es_err"
+    fi
+
+    # A plan that has Task headings, just not this one, gets the plain error.
+    rc=0
+    es_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-ids.md 99 "$id_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$es_err" == "task 99 not found in plan-ids.md (no heading matching 'Task 99')" ]]; then
+        pass "a missing task in a plan with Task headings gets only the not-found line"
+    else
+        fail "a missing task in a plan with Task headings gets only the not-found line"
+        echo "    exit: $rc"
+        echo "    stderr: $es_err"
+    fi
+
+    # --- An unclosed fence hides every later Task heading (#2436) ---
+    cat > "$repo/plan-unclosed.md" <<'PLAN'
+# Example Plan
+
+### Task 1: First task
+
+```typescript
+const x = 1
+```
+
+```typescript
+const y = 2
+
+### Task 2: Second task
+
+TASK-2-MARKER
+
+### Task 3: Third task
+
+TASK-3-MARKER
+PLAN
+    local fence_out="$TEST_ROOT/unclosed-brief.md" fence_err
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 4 && ! -e "$fence_out" && "$fence_err" == *"line 9"*"never closes"* ]]; then
+        pass "task-brief refuses a brief that an unclosed fence would run to EOF (exit 4, names the line)"
+    else
+        fail "task-brief refuses a brief that an unclosed fence would run to EOF (exit 4, names the line)"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+        echo "    brief: $(cat "$fence_out" 2>/dev/null)"
+    fi
+
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed.md 2 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$fence_err" == *"never closes"* ]]; then
+        pass "task-brief names the unclosed fence when it hides the requested heading"
+    else
+        fail "task-brief names the unclosed fence when it hides the requested heading"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+    fi
+
+    # An unclosed fence in a later task does not touch an earlier task's brief.
+    sed 's/^### Task 1: First task$/### Task 0: Before/' "$repo/plan-unclosed.md" \
+        | sed '1a\
+\
+### Task 1: Clean\
+\
+CLEAN-MARKER' > "$repo/plan-unclosed-later.md"
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed-later.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && -z "$fence_err" ]] && grep -q CLEAN-MARKER "$fence_out" && ! grep -q 'Task 0' "$fence_out"; then
+        pass "an unclosed fence in a later task leaves an earlier task's brief alone"
+    else
+        fail "an unclosed fence in a later task leaves an earlier task's brief alone"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+        echo "    brief: $(cat "$fence_out" 2>/dev/null)"
+    fi
+
+    # A stray fence that hides no Task heading (seen in real plans as a lone
+    # ``` on the last line) leaves the brief complete: brief it, and warn.
+    cat > "$repo/plan-stray-fence.md" <<'PLAN'
+### Task 1: First
+
+BODY-1
+
+### Task 2: Last
+
+BODY-2
+```
+PLAN
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-stray-fence.md 2 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && "$fence_err" == *"warning"*"line 8"*"never closes"* ]] \
+        && grep -q BODY-2 "$fence_out" && ! grep -q BODY-1 "$fence_out"; then
+        pass "a stray fence that hides no Task heading briefs the task and warns"
+    else
+        fail "a stray fence that hides no Task heading briefs the task and warns"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+        echo "    brief: $(cat "$fence_out" 2>/dev/null)"
+    fi
+
+    # An unclosed fence that hides only some later prose, but no Task
+    # heading, also leaves the last task's brief complete.
+    printf '### Task 1: Only\n\nBODY-1\n\n```sh\necho hi\n\n## Notes\n\nNOT-A-TASK\n' > "$repo/plan-stray-prose.md"
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-stray-prose.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && "$fence_err" == *"warning"* ]] && grep -q BODY-1 "$fence_out"; then
+        pass "an unclosed fence that hides no Task heading does not block the brief"
+    else
+        fail "an unclosed fence that hides no Task heading does not block the brief"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
+    fi
+
+    # When the open fence hides every Task heading, the fence is the
+    # diagnosis: the plan's English Task headings must not also draw the
+    # "use the English word Task" hint, which would contradict it.
+    printf '## Phase 1: Setup\n\n```sh\necho hi\n\n### Task 1: Hidden\n\nBODY-1\n' > "$repo/plan-fence-hides-all.md"
+    rc=0
+    fence_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fence-hides-all.md 1 "$fence_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 3 && "$fence_err" == *"line 3"*"never closes"* && "$fence_err" == *"task 1 not found"* \
+        && "$fence_err" != *"English word"* ]]; then
+        pass "a fence hiding every Task heading gets the fence message, not the English-word hint"
+    else
+        fail "a fence hiding every Task heading gets the fence message, not the English-word hint"
+        echo "    exit: $rc"
+        echo "    stderr: $fence_err"
     fi
 
     # --- review-package takes the plan first and lands in its directory ---
@@ -225,10 +505,177 @@ PLAN
         echo "    status: $wt_status"
     fi
 
+    # --- Which repository: cwd, then -C, then the plan's (#2429, #1799) ---
+    printf 'wt-only\n' > "$wt/wt-only.txt"
+    ( cd "$wt" && git add wt-only.txt && git "${git_id[@]}" commit -qm wt-change )
+    local wt_base wt_head
+    wt_base="$(cd "$wt" && git rev-parse HEAD~1)"
+    wt_head="$(cd "$wt" && git rev-parse HEAD)"
+
+    # An executor working in the worktree with an absolute path to the main
+    # checkout's plan (writing-plans leaves the plan uncommitted there) keeps
+    # its workspace in the worktree it is working in.
+    printf '# Main only\n\n## Task 1: Main only\n\nMain only.\n' > "$repo/main-only.md"
+    local wt_abs_dir
+    wt_abs_dir="$(cd "$wt" && "$SDD_SCRIPTS/sdd-workspace" "$repo/main-only.md")" || true
+    if [[ "$wt_abs_dir" == "$wt_root/.superpowers/sdd/main-only" ]]; then
+        pass "a plan in another worktree still resolves to the current worktree's workspace"
+    else
+        fail "a plan in another worktree still resolves to the current worktree's workspace"
+        echo "    got: $wt_abs_dir"
+    fi
+
+    # -C DIR runs as if started in DIR: workspace and git commands both.
+    local c_dir
+    c_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" -C "$wt" plan-a.md)" || true
+    if [[ "$c_dir" == "$wt_root/.superpowers/sdd/plan-a" ]]; then
+        pass "sdd-workspace -C DIR resolves DIR's workspace"
+    else
+        fail "sdd-workspace -C DIR resolves DIR's workspace"
+        echo "    got: $c_dir"
+    fi
+
+    # These two run the way SKILL.md invokes them, `bash scripts/...` from the
+    # skill's directory: the relative script path must survive the -C cd.
+    local c_brief
+    c_brief="$(cd "$SDD_SCRIPTS/.." && bash scripts/task-brief -C "$wt" plan-a.md 1)" || true
+    if [[ "$c_brief" == "wrote $wt_root/.superpowers/sdd/plan-a/task-1-brief.md: "* ]]; then
+        pass "task-brief -C DIR writes the brief into DIR's workspace"
+    else
+        fail "task-brief -C DIR writes the brief into DIR's workspace"
+        echo "    got: $c_brief"
+    fi
+
+    local c_rp c_rp_path
+    c_rp="$(cd "$SDD_SCRIPTS/.." && bash scripts/review-package -C "$wt" plan-a.md "$wt_base" HEAD)" || true
+    c_rp_path="$(printf '%s\n' "$c_rp" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    case "$c_rp_path" in
+        "$wt_root/.superpowers/sdd/plan-a/review-"*.diff)
+            if grep -q 'wt-only.txt' "$c_rp_path"; then
+                pass "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
+            else
+                fail "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
+                echo "    diff lacks the worktree's commit: $c_rp_path"
+            fi
+            ;;
+        *)
+            fail "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
+            echo "    got: $c_rp"
+            ;;
+    esac
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" -C "$TEST_ROOT/no-such-dir" plan-a.md HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "review-package -C with a missing directory errors with exit 2"
+    else
+        fail "review-package -C with a missing directory errors with exit 2"
+        echo "    exit: $rc"
+    fi
+
+    # Run from outside any repository (e.g. the skill's own directory in an
+    # installed plugin), the scripts stop even when the plan's absolute path
+    # is inside a repository: like git, they act on the current directory's
+    # working tree (or -C DIR), never on one guessed from the plan.
+    local nonrepo="$TEST_ROOT/not-a-repo"
+    mkdir -p "$nonrepo"
+    local nr_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $nonrepo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local nr_before nr_cmd nr_err
+    nr_before="$(find "$wt_root/.superpowers" | sort)"
+    for nr_cmd in "sdd-workspace $wt/plan-a.md" "task-brief $wt/plan-a.md 1" "review-package $wt/plan-a.md $wt_base $wt_head"; do
+        rc=0
+        # shellcheck disable=SC2086 # nr_cmd is a fixed script name plus its arguments
+        nr_err="$(cd "$nonrepo" && "$SDD_SCRIPTS"/$nr_cmd 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$nr_err" == "$nr_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+            pass "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
+        else
+            fail "${nr_cmd%% *} outside any repository stops with the shared message despite a plan in a repository"
+            echo "    exit: $rc"
+            echo "    stderr: $nr_err"
+        fi
+    done
+    if [[ ! -e "$nonrepo/.superpowers" && "$(find "$wt_root/.superpowers" | sort)" == "$nr_before" ]]; then
+        pass "outside any repository, nothing is written to the cwd or the plan's repository"
+    else
+        fail "outside any repository, nothing is written to the cwd or the plan's repository"
+    fi
+
+    # --- No repository anywhere: a greenfield plan before Task 1 (#2242) ---
+    local gf="$TEST_ROOT/greenfield"
+    mkdir -p "$gf"
+    printf '## Task 1: Scaffold the repo\n\nCreate files.\n' > "$gf/plan.md"
+    # One message for both ways to get here: a caller standing in the wrong
+    # directory (such as the plugin's own skill directory, where git init is
+    # the wrong fix) and a new project with no repository yet. git's own
+    # first error line follows it, so the reason git refused is never hidden.
+    local no_repo_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $gf). If this is a new project, run 'git init' and make a first commit, then rerun."
+    local cmd gf_err
+    for cmd in "sdd-workspace plan.md" "task-brief plan.md 1"; do
+        local script=${cmd%% *}
+        rc=0
+        # shellcheck disable=SC2086 # cmd is a fixed script name plus its arguments
+        gf_err="$(cd "$gf" && "$SDD_SCRIPTS"/$cmd 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+            pass "$script outside any repository exits 2 naming both fixes"
+        else
+            fail "$script outside any repository exits 2 naming both fixes"
+            echo "    exit: $rc"
+            echo "    stderr: $gf_err"
+        fi
+    done
+    rc=0
+    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
+        pass "review-package outside any repository exits 2 naming both fixes"
+    else
+        fail "review-package outside any repository exits 2 naming both fixes"
+        echo "    exit: $rc"
+        echo "    stderr: $gf_err"
+    fi
+    if [[ ! -e "$gf/.superpowers" ]]; then
+        pass "nothing is written outside a repository"
+    else
+        fail "nothing is written outside a repository"
+        find "$gf/.superpowers" | sed 's/^/    /'
+    fi
+
+    # A repository with no commit yet has no range to review, so
+    # review-package gets the same stop, naming its directory.
+    git init -q -b main "$gf"
+    rc=0
+    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: "* && ! -e "$gf/.superpowers" ]]; then
+        pass "review-package in a repository with no commit exits 2 with the same message"
+    else
+        fail "review-package in a repository with no commit exits 2 with the same message"
+        echo "    exit: $rc"
+        echo "    stderr: $gf_err"
+    fi
+
+    # --- git refuses the repository itself: its reason must reach the caller ---
+    # Inside a working tree git won't trust ("dubious ownership": another
+    # owner, a FAT or network drive, WSL /mnt/c), the shared message alone
+    # would be wrong, so git's own line has to follow it. git's test knob
+    # GIT_TEST_ASSUME_DIFFERENT_OWNER simulates another owner without root.
+    local dub_err dub_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $repo). If this is a new project, run 'git init' and make a first commit, then rerun."
+    if (cd "$repo" && GIT_TEST_ASSUME_DIFFERENT_OWNER=1 git rev-parse --show-toplevel >/dev/null 2>&1); then
+        echo "  [SKIP] git refusing a dubious-ownership repo ($(git --version) ignores GIT_TEST_ASSUME_DIFFERENT_OWNER)"
+    else
+        rc=0
+        dub_err="$(cd "$repo" && GIT_TEST_ASSUME_DIFFERENT_OWNER=1 "$SDD_SCRIPTS/sdd-workspace" plan-a.md 2>&1 >/dev/null)" || rc=$?
+        if [[ "$rc" -eq 2 && "$dub_err" == "$dub_msg"$'\n'"git said: fatal: detected dubious ownership in repository at "* ]]; then
+            pass "a repository git refuses as dubious stops with the shared message plus git's reason"
+        else
+            fail "a repository git refuses as dubious stops with the shared message plus git's reason"
+            echo "    exit: $rc"
+            echo "    stderr: $dub_err"
+        fi
+    fi
+
     # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
     local stripped="$TEST_ROOT/stripped-scripts"
     mkdir -p "$stripped"
-    cp "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
+    cp "$SDD_SCRIPTS/sdd-repo" "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
     chmod -x "$stripped"/*
     local noexec_out noexec_rc=0
     noexec_out="$(cd "$repo" && bash "$stripped/task-brief" plan-b.md 1 2>&1)" || noexec_rc=$?
