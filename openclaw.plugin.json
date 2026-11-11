@@ -3,12 +3,8 @@
   "name": "Superpowers",
   "description": "Skill workflows and automatic session bootstrap for coding agents",
   "version": "7.0.2",
-  "skills": [
-    "./skills"
-  ],
-  "activation": {
-    "onStartup": true
-  },
+  "skills": ["./skills"],
+  "activation": { "onStartup": true },
   "configSchema": {
     "type": "object",
     "additionalProperties": false,

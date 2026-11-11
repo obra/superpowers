@@ -22,9 +22,10 @@ Check the installation:
 
 ```bash
 openclaw plugins inspect superpowers --runtime
+openclaw skills list
 ```
 
-The plugin should show its skill root and `agent:bootstrap` registration. Start a fresh agent session and send exactly:
+Check that the plugin is loaded and `superpowers-bootstrap` is registered for `agent:bootstrap`. In the skills list, confirm that `brainstorming` is eligible. Start a fresh agent session and send exactly:
 
 ```text
 Let's make a react todo list
