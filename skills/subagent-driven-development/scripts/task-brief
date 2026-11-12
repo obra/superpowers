@@ -56,10 +56,36 @@ fi
 # When it hides the requested heading itself, say so before the not-found
 # error. A stray fence that hides no Task heading (real plans end with a lone
 # ``` line) leaves the brief complete, so brief it with a warning.
+#
+# A task also ends at the next heading of level 2 or deeper that is not a
+# Task heading and is not deeper than the task's own heading. Without that
+# terminator every trailing section of the plan (Self-review, Done when,
+# Final gate) is appended to the last task's brief. Level-1 lines never end
+# a task: a plan's own title is level 1 and sits above every task.
+#
+# Cutting a task short is the expensive mistake, so the terminator only
+# fires where the line is certainly not inside an example. Plans embed whole
+# markdown documents, and their fencing is often ambiguous (a bare ``` inside
+# a ```markdown block closes it, however it was meant), so a second, stricter
+# fence parse runs alongside the existing one: `cfence` follows CommonMark
+# (opening character and length, up to three spaces of indentation, a
+# backtick info string containing a backtick is not a fence, and only the
+# same character at the same or greater length with nothing else on the line
+# closes it). A heading ends a task only when both parses agree it is outside
+# a fence. Where they disagree the old behaviour stands, so nothing this
+# script already extracted gets shorter by accident.
+#
 # The plan path goes through ENVIRON, not -v, which would mangle the
 # backslashes of a Windows path.
 rc=0
 TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
+  /^ ? ? ?(```|~~~)/ {
+    line = $0; sub(/^ +/, "", line)
+    c = substr(line, 1, 1)
+    l = 0; while (substr(line, l + 1, 1) == c) l++
+    if (!cfence) { if (c == "~" || substr(line, l + 1) !~ /`/) { cfence = 1; cc = c; cl = l } }
+    else if (c == cc && l >= cl && substr(line, l + 1) ~ /^[ \t]*$/) { cfence = 0 }
+  }
   /^```/ { infence = !infence; if (infence) { fence_line = NR; hidden = 0 } }
   infence && /^#+[ \t]+Task[ \t]/ { hidden = 1 }
   !infence && /^#+[ \t]+Task[ \t]/ {
@@ -67,6 +93,7 @@ TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
     sub(/^#+[ \t]+Task[ \t]+/, "", id)
     if (match(id, /^[A-Za-z0-9]+(\.[A-Za-z0-9]+)*/) && substr(id, 1, RLENGTH) ~ /[0-9]/) {
       tasks++
+      boundary = NR
       id = substr(id, 1, RLENGTH)
       match($0, /^#+/)
       subtask = intask && RLENGTH > level && substr(id, 1, length(n)) == n \
@@ -76,6 +103,10 @@ TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
         level = RLENGTH
       }
     }
+  }
+  intask && !infence && !cfence && NR != boundary && /^##+[ \t]/ {
+    match($0, /^#+/)
+    if (RLENGTH <= level) intask = 0
   }
   !infence && /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5 { shaped_heading[++shaped] = $0 }
   intask { print; found = 1 }
