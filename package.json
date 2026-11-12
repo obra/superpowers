@@ -12,6 +12,11 @@
     "collaboration",
     "workflow"
   ],
+  "omp": {
+    "extensions": [
+      "./.omp/extensions/superpowers.ts"
+    ]
+  },
   "pi": {
     "extensions": [
       "./.pi/extensions/superpowers.ts"
