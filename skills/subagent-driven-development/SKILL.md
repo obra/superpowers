@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing an implementation plan by dispatching subagents — requires a subagent tool; when the work runs inline, use executing-plans
 ---
 
 # Subagent-Driven Development
@@ -78,7 +78,7 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Final review and finish: read references/final-review.md" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
@@ -94,14 +94,14 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Final review and finish: read references/final-review.md" [label="no"];
     "Final review and finish: read references/final-review.md" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "Final review clean: delete this plan's workspace" -> "Use finishing-a-development-branch";
 }
 ```
 
 ## Setup
 
 Ensure the work happens in an isolated workspace: use
-superpowers:using-git-worktrees to create one or verify the existing one.
+using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 

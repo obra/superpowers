@@ -13,6 +13,13 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
+**Boundary:** the deck skill `tdd` is the short-form loop for code work in this
+workspace. When `tdd` is the loaded one, it governs the loop's shape — the
+REFACTOR phase below then belongs to the review stage (`code-review`) instead
+of the cycle — and this file governs test quality only
+([writing-good-tests.md](writing-good-tests.md)). When you work without the
+deck, this file governs both. Load one, not both.
+
 ## When to Use
 
 **Always:**

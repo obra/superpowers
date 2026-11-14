@@ -11,6 +11,11 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 **Violating the letter of this process is violating the spirit of debugging.**
 
+**Boundary:** the deck skill `diagnosing-bugs` owns the hard-bug and
+performance-regression loop (reproduce → minimise → instrument → fix). This
+skill is the default discipline for any bug, test failure, or unexpected
+behaviour — including the ordinary ones that need no separate diagnosis loop.
+
 ## The Iron Law
 
 ```
@@ -174,7 +179,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the `test-driven-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -186,7 +191,7 @@ You MUST complete each phase before proceeding to the next.
    - Test passes now?
    - No other tests broken?
    - Issue actually resolved?
-   - Use the `superpowers:verification-before-completion` skill before claiming success
+   - Use the `verification-before-completion` skill before claiming success
 
 4. **If Fix Doesn't Work**
    - STOP
