@@ -15,6 +15,10 @@ IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 This is not negotiable. You cannot rationalize your way out of this.
 </EXTREMELY-IMPORTANT>
 
+**What counts as a task:** work with a deliverable — a change to code, a fix, a
+document, a plan. A turn that only reports a fact or answers a question from
+material already in hand has no deliverable: there is nothing to invoke.
+
 ## The Rule
 
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
@@ -27,8 +31,8 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
 
-- "Let's build X" → superpowers:brainstorming first, then implementation skills.
-- "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
+- "Let's build X" → brainstorming first, then implementation skills.
+- "Fix this bug" → systematic-debugging first, then domain skills.
 
 ## Red Flags
 
@@ -53,6 +57,10 @@ These thoughts mean STOP—you're rationalizing:
 
 If your harness appears here, read its reference file for special instructions:
 
+**In DeepSeek Harness (DSH):** skills are registered by flat name
+(`test-driven-development`), with no `superpowers:` prefix — that prefix is a
+Claude Code plugin namespace and resolves to nothing here. Invoke through the
+`skill` tool with the exact name from the session's skill catalog.
 - Claude Code: `references/claude-code-tools.md`
 - Codex: `references/codex-tools.md`
 - Pi: `references/pi-tools.md`

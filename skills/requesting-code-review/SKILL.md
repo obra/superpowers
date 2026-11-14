@@ -9,6 +9,11 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **Core principle:** Review early, review often.
 
+**Boundary:** the deck skill `code-review` reviews a fixed point on two axes
+(Standards + Spec) with two parallel subagents — use it for a branch, a PR, or
+work-in-progress changes. This skill is the in-loop dispatch: one reviewer on
+one task's diff while you execute a plan.
+
 ## When to Request Review
 
 **Mandatory:**
@@ -25,7 +30,12 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **1. Get git SHAs:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or: git merge-base origin/main HEAD
+BASE_SHA=$(git merge-base origin/main HEAD)  # the fork point. For one task
+                                             # inside a plan, use the commit
+                                             # recorded before the implementer
+                                             # ran — never HEAD~1, which drops
+                                             # all but the last commit of a
+                                             # multi-commit task
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
