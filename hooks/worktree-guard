@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# PreToolUse guard for superpowers: refuse to delete files that exist only in a
+# superpowers-owned worktree (.worktrees/<name> or worktrees/<name>) and were
+# never committed. Everything else is allowed. Fails open if python3 is missing.
+HOOK_INPUT="$(cat)"
+command -v python3 >/dev/null 2>&1 || { printf '{"permission":"allow"}\n'; exit 0; }
+export HOOK_INPUT
+exec python3 - <<'PY'
+import json, os, re, subprocess
+try:
+    data = json.loads(os.environ.get("HOOK_INPUT") or "{}")
+except Exception:
+    data = {}
+claude = data.get("hook_event_name") == "PreToolUse"  # Claude Code; Cursor sends "preToolUse"
+
+def allow():
+    print("{}" if claude else '{"permission":"allow"}'); raise SystemExit(0)
+
+def deny(msg):
+    if claude:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+              "permissionDecision": "deny", "permissionDecisionReason": msg}}))
+    else:
+        print(json.dumps({"permission": "deny", "user_message": msg, "agent_message": msg}))
+    raise SystemExit(0)
+
+tool = (data.get("tool_name") or "").lower()
+ti = data.get("tool_input") or {}
+cmd = ti.get("command") or data.get("command") or ""
+target = ti.get("file_path") or ti.get("path") or ""
+cwd = ti.get("cwd") or ti.get("working_directory") or data.get("cwd") or ""
+
+DESTRUCTIVE = re.compile(
+    r"\brm\b|\brmdir\b|\bunlink\b|\bshred\b|-delete\b|\brmtree\b|os\.remove|os\.unlink|\.unlink\(|"
+    r"\bgit\b[^|;&]*\b(clean|stash|restore)\b|\bgit\b[^|;&]*\bcheckout\b[^|;&]*(\s--\s|\s-f\b|\s\.(\s|$))|"
+    r"\bgit\b[^|;&]*\breset\b[^|;&]*--hard|\bworktree\s+remove\b[^|;&]*(\s-f\b|--force)")
+if tool in ("delete",):
+    text = target
+elif tool in ("shell", "bash", "") and cmd:
+    if not DESTRUCTIVE.search(cmd):
+        allow()
+    text = cmd
+else:
+    allow()
+
+def git(path, *args):
+    try:
+        return subprocess.run(["git", "-C", path, *args], capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return ""
+
+# Candidate worktree parents: from paths in the command, cwd, and the workspace roots.
+parents = set()
+for m in re.finditer(r"(/[^\s'\"]*?/)(\.?worktrees)/", text + " " + cwd + "/"):
+    parents.add(m.group(1) + m.group(2))
+roots = [r for r in (data.get("workspace_roots") or []) if r] + ([cwd] if cwd else [])
+for root in roots:
+    top = git(root, "rev-parse", "--show-toplevel").strip()
+    for base in filter(None, [top, root]):
+        for dirpath, dirnames, _ in os.walk(base):
+            depth = dirpath[len(base):].count(os.sep)
+            dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules", ".skillgate", ".venv", "__pycache__")]
+            for d in list(dirnames):
+                if d in (".worktrees", "worktrees"):
+                    parents.add(os.path.join(dirpath, d)); dirnames.remove(d)
+            if depth >= 4:
+                dirnames[:] = []
+
+at_risk = []
+for parent in parents:
+    if not os.path.isdir(parent):
+        continue
+    for name in sorted(os.listdir(parent)):
+        wt = os.path.join(parent, name)
+        if not os.path.isfile(os.path.join(wt, ".git")):
+            continue
+        lines = [l[3:] for l in git(wt, "status", "--porcelain", "-uall").splitlines() if l.strip()]
+        if lines:
+            at_risk.append((wt, name, os.path.basename(parent), lines))
+
+for wt, name, pname, files in at_risk:
+    hits = [wt, f"{pname}/{name}"] + [os.path.basename(f.rstrip("/")) for f in files] + [f.split("/")[0] for f in files]
+    if any(h and h in text for h in hits) or (cwd and cwd.startswith(wt)):
+        listing = "\n".join(f"  - {f}" for f in files)
+        deny(
+            f"superpowers blocked this: {wt} holds files that were never committed and exist nowhere else "
+            f"(not on any branch, not in git history):\n{listing}\n"
+            "Deleting, cleaning, stashing, or force-removing them would lose them permanently. "
+            "Do not delete them another way. Leave the worktree in place and ask your human partner what to do "
+            "with each file: commit it, move it into the main repo, or delete it. If they choose delete, "
+            "they can run the delete themselves.")
+allow()
+PY

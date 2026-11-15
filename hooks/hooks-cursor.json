@@ -5,6 +5,11 @@
       {
         "command": "./hooks/run-hook.cmd session-start"
       }
+    ],
+    "preToolUse": [
+      {
+        "command": "./hooks/run-hook.cmd worktree-guard"
+      }
     ]
   }
 }
