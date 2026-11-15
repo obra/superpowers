@@ -1,18 +1,18 @@
 {
   "name": "superpowers",
   "displayName": "Superpowers",
-  "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
+  "description": "Core skills library: spec-driven development, debugging, collaboration patterns, and proven techniques",
   "version": "7.0.2",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/thanhphong19512/superpowers",
+  "repository": "https://github.com/thanhphong19512/superpowers",
   "license": "MIT",
   "keywords": [
     "skills",
-    "tdd",
+    "spec-driven",
     "debugging",
     "collaboration",
     "best-practices",

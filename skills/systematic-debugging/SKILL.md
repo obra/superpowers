@@ -169,12 +169,14 @@ You MUST complete each phase before proceeding to the next.
 
 **Fix the root cause, not the symptom:**
 
-1. **Create Failing Test Case**
-   - Simplest possible reproduction
-   - Automated test if possible
-   - One-off test script if no framework
-   - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+1. **Reproduce It**
+   - Simplest possible reproduction: a command, request, or one-off script
+   - MUST see the failure before fixing
+   - Check the feature spec's Known issues (`docs/features/<feature>.md`):
+     has this symptom or root cause happened before?
+   - If it is a recurrence, or it breaks a `[locked]` behavior, it gets a
+     permanent guard test (see `superpowers:spec-driven-development`).
+     Otherwise the reproduction stays throwaway — no new test.
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -183,9 +185,12 @@ You MUST complete each phase before proceeding to the next.
    - No bundled refactoring
 
 3. **Verify Fix**
-   - Test passes now?
-   - No other tests broken?
+   - Reproduction no longer fails?
+   - Feature's guard tests still pass?
    - Issue actually resolved?
+   - Record it in the feature spec's Known issues (symptom, root cause,
+     occurrences). Second occurrence → add the guard test, prove it fails
+     on the unfixed code.
    - Use the `superpowers:verification-before-completion` skill before claiming success
 
 4. **If Fix Doesn't Work**
@@ -217,7 +222,7 @@ If you catch yourself thinking:
 - "Quick fix for now, investigate later"
 - "Just try changing X and see if it works"
 - "Add multiple changes, run tests"
-- "Skip the test, I'll manually verify"
+- "Skip reproducing, I'll just check after the fix"
 - "It's probably X, let me fix that"
 - "I don't fully understand but this might work"
 - "Pattern says X but I'll adapt it differently"
@@ -248,7 +253,8 @@ If you catch yourself thinking:
 | "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs. |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing. |
 | "Just try this first, then investigate" | First fix sets the pattern. Do it right from the start. |
-| "I'll write test after confirming fix works" | Untested fixes don't stick. Test first proves it. |
+| "I'll skip reproducing, the fix is obvious" | Without seeing it fail you can't see it fixed. Reproduce first. |
+| "First time this broke, I'll skip Known issues" | The Known issues line is how the next occurrence gets its guard. |
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
@@ -261,7 +267,7 @@ If you catch yourself thinking:
 | **1. Root Cause** | Read errors, reproduce, check changes, gather evidence | Understand WHAT and WHY |
 | **2. Pattern** | Find working examples, compare | Identify differences |
 | **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |
-| **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |
+| **4. Implementation** | Reproduce, fix, verify, record in Known issues | Bug resolved, guards pass |
 
 ## When Process Reveals "No Root Cause"
 

@@ -43,7 +43,8 @@ Skip any step = lying, not verifying
 | Linter clean | Linter output: 0 errors | Partial check, extrapolation |
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
+| Guard test works | Seen failing on broken code, passing on fixed | Test passes once |
+| Feature works | Ran the changed behavior, read output | Code compiles, diff looks right |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
@@ -79,10 +80,16 @@ Skip any step = lying, not verifying
 ❌ "Should pass now" / "Looks correct"
 ```
 
-**Regression tests (TDD Red-Green):**
+**Guard tests (locked behaviors, recurring issues only):**
 ```
 ✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
+❌ "I've written a guard test" (without seeing it fail)
+```
+
+**Features (spec-driven):**
+```
+✅ Run each changed spec behavior → read output → spec file matches code → "F1–F3 verified"
+❌ "Implemented per spec" (without running it)
 ```
 
 **Build:**

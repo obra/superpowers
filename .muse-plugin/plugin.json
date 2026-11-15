@@ -3,7 +3,7 @@
   "name": "superpowers",
   "displayName": "Superpowers",
   "version": "7.0.2",
-  "description": "Core skills library for Muse: TDD, debugging, collaboration patterns, and proven techniques",
+  "description": "Core skills library for Muse: spec-driven development, debugging, collaboration patterns, and proven techniques",
   "compat": {
     "source": "native",
     "manifestDir": ".muse-plugin"
@@ -47,8 +47,8 @@
         "path": "skills/systematic-debugging/SKILL.md"
       },
       {
-        "id": "test-driven-development",
-        "path": "skills/test-driven-development/SKILL.md"
+        "id": "spec-driven-development",
+        "path": "skills/spec-driven-development/SKILL.md"
       },
       {
         "id": "using-git-worktrees",

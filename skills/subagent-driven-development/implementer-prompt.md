@@ -32,20 +32,25 @@ Subagent (general-purpose):
     ## Your Job
 
     Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
-    3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+    1. Update the feature spec (`docs/features/<feature>.md`) for the
+       behaviors the task names
+    2. Implement exactly what the task specifies
+    3. Verify each behavior by running it and reading the output
+    4. Write guard tests ONLY where the task names them (`[locked]`
+       behaviors, recurring issues); break the code on purpose to see
+       each guard fail, then restore. No other tests. No test-first.
+    5. Run the feature's existing guard tests
+    6. Commit code and spec together
+    7. Self-review (see below)
+    8. Report back
 
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    If your change would alter a behavior the spec marks `[locked]` and the
+    task does not say to change it, stop and report NEEDS_CONTEXT.
 
     ## You Do Not Dispatch Subagents
 
@@ -108,31 +113,34 @@ Subagent (general-purpose):
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
 
-    **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
-    - Are tests comprehensive?
-    - Is the test output pristine (no stray warnings or noise)?
+    **Verification:**
+    - Did I run every behavior the task touches and read the output?
+    - Does the feature spec match what the code now does?
+    - Does every test I added guard a locked behavior or recurring issue,
+      and did I see it fail against broken code?
+    - Did I avoid adding tests nobody asked for?
+    - Do all the feature's guards pass, with pristine output?
 
     If you find issues during self-review, fix them now before reporting.
 
     ## After Review Findings
 
     If the task review finds issues, you will be resumed with the findings.
-    Fix them, re-run the tests that cover the amended code, and append a fix
-    report to your report file: what you changed, the covering tests you
-    ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
+    Fix them, re-verify the amended behavior (run it) and re-run the
+    feature's guards, and append a fix report to your report file: what you
+    changed, what you ran, the command, and the output. Reviewers will not
+    re-run anything for you — your report is the evidence. Then reply with the same short
     status contract as your first report.
 
     ## Report Format
 
     Write your full report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
-    - What you tested and test results
-    - **TDD Evidence** (if TDD was required for this task):
-      - RED: command run, relevant failing output before implementation, and why the failure was expected
-      - GREEN: command run and relevant passing output after implementation
+    - **Verification:** for each spec behavior, the command you ran and
+      the relevant output
+    - **Guard evidence** (only for guards you added): how you broke the
+      code, the failing output, and the passing output after restore
+    - Spec changes (behavior IDs added/changed)
     - Files changed
     - Self-review findings (if any)
     - Any issues or concerns
@@ -141,7 +149,7 @@ Subagent (general-purpose):
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Commits created (short SHA + subject)
-    - One-line test summary (e.g. "14/14 passing, output pristine")
+    - One-line verification summary (e.g. "F1–F3 verified by run, guards 4/4")
     - Your concerns, if any
     - The report file path
 

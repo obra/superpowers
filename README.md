@@ -1,6 +1,19 @@
-# Superpowers
+# Superpowers (spec-driven fork)
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
+
+> **This fork** replaces test-driven development with **spec-driven development (SDD)**: work is organized around features, each with a living spec in `docs/features/<feature>.md`. Behavior is verified by running it. Tests are written only for **recurring issues** and **`[locked]` sensitive behaviors** that must stay exact across many edits. See [`skills/spec-driven-development`](skills/spec-driven-development/SKILL.md).
+
+### Quick install (this fork)
+
+| Agent | Command |
+|-------|---------|
+| Any agent supporting `npx skills` (OpenCode, Codex, Cursor, Gemini, …) | `npx skills add thanhphong19512/superpowers -g` |
+| Claude Code | `/plugin marketplace add thanhphong19512/superpowers` then `/plugin install superpowers@superpowers-dev` |
+| OpenCode (plugin, with bootstrap) | add `"superpowers@git+https://github.com/thanhphong19512/superpowers.git"` to `plugin` in `opencode.json` |
+| Codex / Gemini / Kimi | use the upstream instructions below with `thanhphong19512/superpowers` in place of `obra/superpowers` |
+
+Update later: `npx skills update` (or `/plugin update` in Claude Code). Remove an upstream copy first so the two don't collide: `npx skills remove using-superpowers`.
 
 ## Table of Contents
 
@@ -39,7 +52,7 @@ It starts from the moment you fire up your coding agent. As soon as it sees that
 
 Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It is organized by feature: each task delivers spec behaviors you can run, keeps the feature spec current, and adds tests only where a behavior is locked or an issue has recurred. YAGNI (You Aren't Gonna Need It) and DRY. 
 
 Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
@@ -315,7 +328,7 @@ Restart any active Muse sessions after installing so the `SessionStart` hook tak
 
 4. **subagent-driven-development** or **executing-plans** - Activates with plan. Either dispatches a fresh subagent per task with a review after each (most thorough), or implements every task inline in the current session with one fresh review of the whole branch at the end (cheapest).
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+5. **spec-driven-development** - Activates during implementation. Keeps a living feature spec as the source of truth, verifies behavior by running it, and writes guard tests only for recurring issues and `[locked]` sensitive behaviors. No test-first.
 
 6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
 
@@ -341,8 +354,8 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 
 ### Skills Library
 
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+**Development**
+- **spec-driven-development** - Feature specs, run-it verification, guard tests for recurring issues and locked behaviors (includes writing-good-tests reference)
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
@@ -366,7 +379,7 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 
 ## Philosophy
 
-- **Test-Driven Development** - Write tests first, always
+- **Spec-Driven Development** - Features first; tests only guard what has broken before or must never break
 - **Systematic over ad-hoc** - Process over guessing
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success

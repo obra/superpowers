@@ -29,7 +29,7 @@ To invoke a superpowers skill, use:
 
 ```
 skill_view("brainstorming")
-skill_view("test-driven-development")
+skill_view("spec-driven-development")
 ```
 
 If `skill_view` cannot find a superpowers skill (it may not appear in the catalog

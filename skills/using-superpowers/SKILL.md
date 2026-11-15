@@ -29,6 +29,15 @@ When multiple skills apply, process skills come first — they set the approach,
 
 - "Let's build X" → superpowers:brainstorming first, then implementation skills.
 - "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
+- Writing or changing feature code → superpowers:spec-driven-development.
+
+## Development Model
+
+Work is organized around features, not process. Each feature keeps a
+living spec (`docs/features/<feature>.md`) that is the source of truth
+across edits. There is no test-driven development: verify behavior by
+running it, and write tests only for recurring issues and `[locked]`
+(sensitive) behaviors. See superpowers:spec-driven-development.
 
 ## Red Flags
 

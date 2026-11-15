@@ -7,7 +7,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write implementation plans for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact test, and that they will make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, which tests prove each task. Document those. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write implementation plans for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact behavior, and that they will make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, how each feature behavior is verified, and which behaviors are locked. Document those. Give them the whole plan as feature-sized tasks. DRY. YAGNI. Spec-driven (superpowers:spec-driven-development), no TDD. Frequent commits.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -31,22 +31,33 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## Feature Specs
+
+Before writing tasks, list the features this plan creates or changes and,
+for each, the behaviors (F1, F2, ...) it adds or changes in
+`docs/features/<feature>.md`. Copy exact values from the design. Mark a
+behavior `[locked]` when it is sensitive (money, auth, permissions, data
+integrity, public contracts, values your human partner insists on) and
+must survive later edits exactly; mark it in the plan so your human partner
+can veto the lock when reviewing. Locked behaviors and recurring known
+issues are the ONLY behaviors that get tests.
+
 ## Task Right-Sizing
 
-A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
-configuration, scaffolding, and documentation steps into the task whose
+A task delivers one feature slice: a set of spec behaviors a user or
+caller can observe working, worth a fresh reviewer's gate. Fold setup,
+configuration, scaffolding, and documentation into the task whose
 deliverable needs them; split only where a reviewer could meaningfully
-reject one task while approving its neighbor. Each task ends with an
-independently testable deliverable.
+reject one task while approving its neighbor. Each task ends with
+behavior that can be verified by running it.
 
 ## Step Granularity
 
 **Each step is one action with a checkable result:**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
+- "Update the feature spec" - step
+- "Implement X" - step
+- "Run it and check the behavior" - step
+- "Add the guard test for the locked behavior, prove it can fail" - step (locked behaviors only)
 - "Commit" - step
 
 ## Plan Document Header
@@ -74,17 +85,21 @@ naming and copy rules, platform requirements — one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
 
+## Features
+
+[One line per feature: `docs/features/<feature>.md` — behaviors added or
+changed (IDs), and which are `[locked]` with a one-line reason each.]
+
 ## Review Focus
 
-[The five input classes or failure modes the spec implies but no task's
-tests exercise that are most likely to bite a person using this software
-— one line each, naming the input or condition and the behavior a
-reasonable person would expect, most likely first. The spec is a vision
-document: it says what the software must do, not everything it will
-meet, and its silence on an input is not permission for that input to
-break the program. Write the list here, once, with the spec in front of
-you. Then, for each line, add the test that pins it to the task that
-owns the code, in that task's own step style.]
+[The five input classes or failure modes the spec implies that are most
+likely to bite a person using this software — one line each, naming the
+input or condition and the behavior a reasonable person would expect,
+most likely first. The spec is a vision document: its silence on an
+input is not permission for that input to break the program. For each
+line, add a verification step to the owning task (run it with that input
+and check the result). Only a line that touches a locked behavior gets a
+guard test.]
 
 ---
 ```
@@ -94,10 +109,12 @@ owns the code, in that task's own step style.]
 ````markdown
 ### Task N: [Component Name]
 
+**Feature:** `docs/features/<feature>.md` — behaviors F1, F2 (F3 [locked])
+
 **Files:**
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
+- Guard (locked behaviors only): `tests/exact/path/to/test.py`
 
 **Interfaces:**
 - Consumes: [what this task uses from earlier tasks — exact signatures]
@@ -105,34 +122,36 @@ owns the code, in that task's own step style.]
   and return types. A task's implementer sees only their own task; this
   block is how they learn the names and types neighboring tasks use.]
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Update the feature spec**
 
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
+Add or change behaviors F1–F3 in `docs/features/<feature>.md` with the
+exact values below.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
-
-- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
-
-One line on the approach when the signature and the test leave a choice
+One line on the approach when the signature and the spec leave a choice
 (which library call, which data structure); a code block only for an
 algorithm they do not determine.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 3: Verify F1, F2 by running it**
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
+Run: `python -m app do-thing --input foo`
+Expected: prints `bar` and writes `out/foo.json`
+
+- [ ] **Step 4: Guard F3 [locked]** (only for locked behaviors or recurring issues)
+
+```python
+def test_f3_total_rounds_half_up():
+    assert total([Decimal("0.005")]) == Decimal("0.01")
+```
+
+Run: `pytest tests/path/test.py::test_f3_total_rounds_half_up -v`
+Expected: PASS; then break the rounding on purpose → FAIL; restore → PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/path/test.py src/path/file.py
+git add docs/features/<feature>.md src/path/file.py tests/path/test.py
 git commit -m "feat: add specific feature"
 ```
 ````
@@ -143,12 +162,14 @@ A step is done when the implementer can write exactly one reasonable thing
 from it. That is the whole requirement: unambiguous, not complete. Each kind
 of step carries what makes it unambiguous and nothing more:
 
-- **A test step:** the test's name and its assertions, as code, with the
-  spec's exact values in them.
+- **A spec step:** the behavior IDs and their exact values.
+- **A guard step** (locked behaviors and recurring issues only): the
+  test's name and its assertions, as code, with the spec's exact values
+  in them, and how to break the code to prove it fails.
 - **A code step:** the exact signature (name, parameters, return type), the
   file it lives in, and the specific values the spec pins. The implementer
   writes the body. A body appears only for an algorithm the signature and
-  tests do not determine, or for exact copy the spec fixes.
+  spec do not determine, or for exact copy the spec fixes.
 - **A verification step:** the command to run and the output that means it
   passed.
 - **A reference to another task:** that task's Interfaces block says what
@@ -157,7 +178,7 @@ of step carries what makes it unambiguous and nothing more:
 A plan is the set of decisions the implementer cannot make alone. A plan
 longer than the code it describes has written the code instead. Lines that
 decide nothing ("TBD", "handle edge cases", "add appropriate validation",
-"write tests for the above", a type or function no task defines) are the
+"write tests for the above", "verify it works", a type or function no task defines) are the
 opposite failure, and the self-review catches both.
 
 ## Self-Review
@@ -166,13 +187,15 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
-**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both.
+**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and spec already determine is a transcript. Fix both.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-**4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
+**4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose verification exercises it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets a verification step in the owning task. An empty section means you checked and found none, not that you skipped the check.
 
-**5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
+**5. Test budget:** Every test in the plan guards a `[locked]` behavior or a recurring issue. Delete any other test step and replace it with a run-it verification step.
+
+**6. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures and expected behavior, and check that each step is still unambiguous.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 

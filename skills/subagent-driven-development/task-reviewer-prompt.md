@@ -70,11 +70,12 @@ Subagent (general-purpose):
     implementer grading their own work. Judge the code on its merits — a
     stated rationale never downgrades a finding's severity.
 
-    ## Tests
+    ## Verification and Tests
 
-    The implementer already ran the tests and reported results with TDD
-    evidence for exactly this code. Do not re-run the suite to confirm their
-    report. Run a test only when reading the code raises a specific doubt
+    This project is spec-driven, not test-driven. The implementer verified
+    behaviors by running them and wrote tests only as guards for `[locked]`
+    behaviors and recurring issues; they reported that evidence for exactly
+    this code. Do not re-run anything to confirm their report. Run a test only when reading the code raises a specific doubt
     that no existing run answers — and then a focused test, never a
     package-wide suite, race detector run, or repeated/high-count loop. If
     heavy validation seems warranted, recommend it in your report instead of
@@ -120,13 +121,19 @@ Subagent (general-purpose):
     - DRY without premature abstraction?
     - Edge cases handled?
 
-    **Tests:**
-    - Do the new and changed tests verify real behavior, not mocks?
-    - Are the task's edge cases covered?
+    **Spec and guards:**
+    - Does the feature spec in the diff match what the code now does?
+    - Does any change alter a `[locked]` behavior the task did not ask to
+      change? That is Critical.
+    - Does every new test guard a locked behavior or recurring issue, with
+      evidence it failed against broken code? Tests outside that scope are
+      Minor (unrequested maintenance), not a virtue.
+    - Missing tests are a finding only for locked behaviors and recurring
+      issues.
 
     **Structure:**
     - Does each file have one clear responsibility with a well-defined interface?
-    - Are units decomposed so they can be understood and tested independently?
+    - Are units decomposed so they can be understood independently?
     - Is the implementation following the file structure from the plan?
     - Did this change create new files that are already large, or
       significantly grow existing files? (Don't flag pre-existing file

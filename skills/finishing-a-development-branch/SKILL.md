@@ -13,7 +13,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Step 1: Verify Tests
 
-Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
+Run the project's build and its existing test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`), which includes every feature's guard tests. A project with no tests runs its build and a smoke run of the features this branch changed.
 
 **If tests fail**, report the failures and stop — the menu comes after a green suite:
 

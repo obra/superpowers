@@ -11,7 +11,7 @@
   "category": "Developer Tools",
   "keywords": [
     "skills",
-    "tdd",
+    "spec-driven",
     "debugging",
     "collaboration",
     "best-practices",
@@ -21,7 +21,7 @@
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/thanhphong19512/superpowers",
+  "repository": "https://github.com/thanhphong19512/superpowers",
   "license": "MIT"
 }

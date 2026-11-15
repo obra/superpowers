@@ -237,6 +237,9 @@ from without going back to your human partner. Cover:
 - approaches (above)
 - the parts of the how they decided, as they decided them
 - what's left to the builder
+- the features it touches, their observable behaviors with exact values,
+  and which behaviors are sensitive enough to lock (see
+  superpowers:spec-driven-development); these seed `docs/features/`
 
 For a small change, the short design covers the same points in a line
 or two each and goes straight to your human partner, without the

@@ -1,7 +1,8 @@
 # Writing Good Tests
 
-**Load this reference when:** writing or changing tests, adding mocks, or
-adding cleanup/helper methods for tests.
+**Load this reference when:** writing or changing a guard test (a recurring
+issue or a `[locked]` behavior), adding mocks, or adding cleanup/helper
+methods for tests.
 
 ## Overview
 
@@ -13,9 +14,9 @@ here:
 2. Every test exercises the real thing
 ```
 
-Strict TDD produces both naturally: a test written first and watched
-failing against real code has already proven it can fail, and only earns
-a mock when the real dependency proves slow or external.
+A guard test proves both by being broken on purpose: revert the fix or
+mutate the guarded behavior, watch it fail, restore. It earns a mock only
+when the real dependency proves slow or external.
 
 ## Principle 1: Name the Break
 
@@ -147,12 +148,12 @@ BEFORE adding a mock or test helper:
     Unmock it or delete the assertion.
 ```
 
-## Tests Ship With the Implementation
+## Only Guards Ship
 
-The TDD cycle — failing test, minimal implementation, refactor — is what
-"complete" means. Ship the tests the behavior needs and only those:
-trivial code and human prose earn none, and a test written to satisfy
-process costs maintenance forever.
+Tests are written for recurring issues and `[locked]` behaviors only (see
+superpowers:spec-driven-development). Trivial code, UI, glue, and human
+prose earn none, and a test written to satisfy process costs maintenance
+forever.
 
 ## The Mutation Check
 

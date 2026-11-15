@@ -14,12 +14,13 @@ and a fresh reviewer on every task, each re-reading the codebase from zero.
 Inline execution pays for one context (yours) plus one reviewer at the end.
 What it gives up is a fresh context per task and a second pair of eyes per
 task. This skill keeps what those two things bought, by other means: the
-brief is the spec, the ledger is your memory, TDD is the per-task gate, and
-the final reviewer is the second pair of eyes.
+brief is the spec, the ledger is your memory, running each feature
+behavior and the feature's guard tests is the per-task gate, and the final
+reviewer is the second pair of eyes.
 
 **Core principle:** The plan already did the thinking. Execute it exactly,
-prove each step with a test you watched fail and then pass, and leave a
-record that survives your own forgetting.
+prove each behavior by running it and reading the output, keep the
+feature spec true, and leave a record that survives your own forgetting.
 
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
@@ -52,7 +53,7 @@ those, stop and ask.
 - Tasks are mostly independent — the same precondition as
   superpowers:subagent-driven-development.
 
-A fully specified plan makes inline execution transcription plus testing:
+A fully specified plan makes inline execution transcription plus verification:
 it runs well on a mid-tier session model, and the one place the most
 capable model earns its cost is the final review, which this skill
 dispatches separately. Tell your human partner so when they choose inline.
@@ -72,35 +73,35 @@ digraph process {
     subgraph cluster_per_task {
         label="Per Task";
         "task-start: brief + BASE; read the brief" [shape=box];
-        "Work the steps in order: TDD, run every verification, read every output" [shape=box];
+        "Work the steps in order: spec, code, run every verification, read every output" [shape=box];
         "Step output matches plan's Expected?" [shape=diamond];
         "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" [shape=box];
         "Commit as the plan's commit steps say" [shape=box];
         "Completion contract met?" [shape=diamond];
-        "task-done: run tests, ledger the result; mark todo complete" [shape=box];
+        "task-done: run verification, ledger the result; mark todo complete" [shape=box];
     }
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Final whole-branch review (fresh reviewer if you have one)" [shape=box];
-    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" [shape=box];
+    "Re-grade, then: Critical/Important → ONE fix pass, each fix verified + guards green; Minor → ledger" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" -> "task-start: brief + BASE; read the brief";
-    "task-start: brief + BASE; read the brief" -> "Work the steps in order: TDD, run every verification, read every output";
-    "Work the steps in order: TDD, run every verification, read every output" -> "Step output matches plan's Expected?";
+    "task-start: brief + BASE; read the brief" -> "Work the steps in order: spec, code, run every verification, read every output";
+    "Work the steps in order: spec, code, run every verification, read every output" -> "Step output matches plan's Expected?";
     "Step output matches plan's Expected?" -> "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" [label="no"];
-    "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" -> "Work the steps in order: TDD, run every verification, read every output";
+    "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" -> "Work the steps in order: spec, code, run every verification, read every output";
     "Step output matches plan's Expected?" -> "Commit as the plan's commit steps say" [label="yes, last step"];
     "Commit as the plan's commit steps say" -> "Completion contract met?";
-    "Completion contract met?" -> "Work the steps in order: TDD, run every verification, read every output" [label="no - finish the task"];
-    "Completion contract met?" -> "task-done: run tests, ledger the result; mark todo complete" [label="yes"];
-    "task-done: run tests, ledger the result; mark todo complete" -> "More tasks remain?";
+    "Completion contract met?" -> "Work the steps in order: spec, code, run every verification, read every output" [label="no - finish the task"];
+    "Completion contract met?" -> "task-done: run verification, ledger the result; mark todo complete" [label="yes"];
+    "task-done: run verification, ledger the result; mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
     "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
-    "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger";
-    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" -> "Final review clean: delete this plan's workspace";
+    "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix verified + guards green; Minor → ledger";
+    "Re-grade, then: Critical/Important → ONE fix pass, each fix verified + guards green; Minor → ledger" -> "Final review clean: delete this plan's workspace";
     "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
@@ -147,10 +148,10 @@ authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
 
-**REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
-before Task 1. It governs every step of every task below; a plan whose
-steps already say "write the failing test first" does not exempt you
-from reading it.
+**REQUIRED SUB-SKILL:** load superpowers:spec-driven-development now,
+before Task 1. It governs every step of every task below: feature specs
+stay true, behavior is verified by running it, and tests exist only as
+guards for `[locked]` behaviors and recurring issues.
 
 Before Task 1, scan the plan for conflicts between tasks. The plan's
 Interfaces blocks tell you where to look: for every task that consumes
@@ -175,7 +176,7 @@ in the workspace and read its tail; read a brief, not the whole plan.
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
   what you remember is a summary, the brief has the exact values,
-  signatures, and test cases.
+  signatures, and behaviors.
 - Mark the task's todo in_progress.
 
 Every tool call is a turn that re-reads your whole context. Bookkeeping
@@ -184,11 +185,12 @@ never in a call of its own.
 
 ### 2. Work the steps
 
-The plan's steps are already in RED-GREEN order; follow them in that
-order under superpowers:test-driven-development, loaded at setup. A test
-step's code is written first and run first. Watching it fail is a step,
-not a formality — a test that passes before the implementation exists is
-a finding about the test.
+Follow the plan's steps in order under superpowers:spec-driven-development,
+loaded at setup: update the feature spec, implement, run it. Do not add
+tests the plan does not name unless a behavior is `[locked]` or an issue
+recurred; a guard test the plan names must be shown to fail when the
+guarded code is broken on purpose — a guard that never failed is a
+finding about the guard.
 
 Every step that runs a command has an `Expected:` line. Run the command,
 read its output, and compare. Three outcomes:
@@ -211,10 +213,14 @@ is fine; BASE is what the review range is cut from, never `HEAD~1`.
 Before a task's ledger line, all of the following are true, with evidence
 in this session — not inferred from the diff looking right:
 
-- Every test the brief names exists and ran in this task, and you read
-  the output.
-- The final test run for the task passed — `task-done` is that run, and
-  it writes the command and result into the ledger line.
+- Every spec behavior the task touches was verified by running it, and
+  you read the output.
+- The feature spec matches what the code now does, in the same commit.
+- Every guard test the brief names exists, was seen failing against
+  broken code, and passes.
+- The final verification run for the task passed — `task-done` is that
+  run (the feature's guards, or the build/smoke command when it has
+  none), and it writes the command and result into the ledger line.
 - Every `Expected:` line in the brief was compared against real output.
 - Every deviation from the brief has a `Ruling:` line in the ledger.
 
@@ -223,10 +229,10 @@ the claim. If any item is missing, the task is not complete: finish it.
 
 ### 4. Complete the task
 
-Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
-by its absolute path, from the working tree you're executing in, with the test command the brief names for the whole task. It runs the
-tests, keeps the full output in the workspace, prints the tail, and — only
-if they pass — appends the completion line to the ledger:
+Run this skill's `scripts/task-done PLAN_FILE N BASE -- <verify command>`
+by its absolute path, from the working tree you're executing in, with the verification command the brief names for the whole task (guard tests, build, or smoke run). It runs the
+command, keeps the full output in the workspace, prints the tail, and — only
+if it passes — appends the completion line to the ledger:
 
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
@@ -277,14 +283,14 @@ because the spec was silent has graded the spec, not the effect. Then:
   conflict, not a note that you declined a polish suggestion.
 
 Fix the Critical and Important findings yourself — you are the
-implementer here — in ONE pass. Each fix is verified by TDD, not by a
-second reviewer: write the test that reproduces the finding, watch it
-fail, make it pass, then run the whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
-without a test that failed first is not verified; a suite that is not
-green after the pass means the pass is not over. Do not dispatch a
-re-review: it would re-read a diff whose covering tests already answer
-"addressed" and whose suite run already answers "broke nothing".
+implementer here — in ONE pass. Each fix is verified by evidence, not by
+a second reviewer: reproduce the finding by running it, fix it, run it
+again and read the output, then run every guard test. A finding that
+touches a `[locked]` behavior or repeats a Known issue also gets a guard
+test, shown to fail against the unfixed code. Record each in the ledger
+as `Final: fixed <finding> — <how verified>, guards <N>/<N>`. Record the
+finding in the feature spec's Known issues. A guard run that is not green
+after the pass means the pass is not over. Do not dispatch a re-review.
 
 A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner
@@ -310,8 +316,9 @@ Use superpowers:finishing-a-development-branch.
 | Excuse | Reality |
 |--------|---------|
 | "I remember what Task N says" | You remember a summary. The brief has the exact values. Read it. |
-| "The plan's code is right, skip watching the test fail" | A test you never saw fail proves nothing. It is one step. Run it. |
-| "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
+| "The plan's code is right, skip running it" | Code you never ran proves nothing. It is one step. Run it. |
+| "I'll add a few tests to be safe" | Tests guard locked behaviors and recurring issues only. Run it instead. |
+| "I'll update the feature spec at the end" | The spec is the memory across edits. Same commit as the code. |
 | "The plan is wrong here, I'll just do the right thing" | Do the right thing and ledger the ruling. Unledgered deviation is a decision made in secret. |
 | "I'll write the ledger lines after a few tasks" | Compaction does not wait for a convenient moment. One line per task, in the same message as the commit. |
 | "Let me check in before the next task" | They chose inline to spend less. Progress prompts spend their time instead. Only the four stops stop you. |
@@ -319,5 +326,5 @@ Use superpowers:finishing-a-development-branch.
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
 | "Subagents are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
 | "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
-| "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
-| "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them; your partner decides. |
+| "The fix is obvious, no need to reproduce it" | Reproducing it is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
+| "I'll fix the minors too while I'm in there" | Every minor you fix is a fix and a verification your partner did not ask for. Ledger them; your partner decides. |

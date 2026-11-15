@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "superpowers",
-      "description": "Core skills library for Muse: TDD, debugging, collaboration patterns, and proven techniques",
+      "description": "Core skills library for Muse: spec-driven development, debugging, collaboration patterns, and proven techniques",
       "version": "7.0.2",
       "source": "./",
       "author": {
