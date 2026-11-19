@@ -236,6 +236,12 @@ from without going back to your human partner. Cover:
 - constraints
 - approaches (above)
 - the parts of the how they decided, as they decided them
+- how it will be verified, for software: what your human partner will see
+  working, in their terms (a few scenarios), and which of unit,
+  integration, and end-to-end tests prove it. Plan on all three; drop one
+  only with a line saying why it doesn't apply. A separate subagent writes
+  the tests from this document, never from the code that implements it, so
+  they check what was asked for and not what got built
 - what's left to the builder
 
 For a small change, the short design covers the same points in a line
