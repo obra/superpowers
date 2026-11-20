@@ -83,12 +83,14 @@ test('startup context injects the bootstrap as one user message', async () => {
 
   assert.equal(result.messages.length, 2);
   assert.equal(result.messages[0].role, 'user');
+  assert.equal(result.messages[0].timestamp, 0, 'bootstrap message must have a stable timestamp for prompt caching');
   assert.match(textOf(result.messages[0]), /You have superpowers/);
   assert.match(textOf(result.messages[0]), /Pi tool mapping/);
   assert.equal(result.messages[1], originalMessages[0]);
 
   const repeatedProviderRequest = await context({ type: 'context', messages: originalMessages }, {});
   assert.equal(repeatedProviderRequest.messages.length, 2);
+  assert.equal(repeatedProviderRequest.messages[0].timestamp, 0, 'subsequent provider requests must reuse the stable timestamp');
   assert.match(textOf(repeatedProviderRequest.messages[0]), /You have superpowers/);
 
   const alreadyInjected = await context({ type: 'context', messages: result.messages }, {});

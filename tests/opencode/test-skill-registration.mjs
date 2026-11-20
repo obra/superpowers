@@ -143,6 +143,7 @@ const frontmatterFixtures = {
 };
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'superpowers-frontmatter-'));
 try {
+  fs.writeFileSync(path.join(fixtureRoot, 'package.json'), JSON.stringify({ type: 'module' }));
   const fixturePlugin = path.join(fixtureRoot, '.opencode', 'plugins', 'superpowers.js');
   fs.mkdirSync(path.dirname(fixturePlugin), { recursive: true });
   fs.copyFileSync(pluginPath, fixturePlugin);
