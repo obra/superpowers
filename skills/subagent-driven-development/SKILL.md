@@ -155,7 +155,9 @@ most capable model; a subtle concurrency change does. Scoped re-reviews of
 small fix diffs take a cheap-to-mid tier.
 
 **Fix-loop escalation (rounds 4-5)**: use a model at least one tier above
-the implementer that got stuck.
+the implementer that got stuck. The escalation applies to this task's fix
+loop only. When the task is done, retire the escalated implementer: dispatch the
+next task's implementer fresh, with its model chosen again under Model Selection.
 
 **Always specify the model explicitly when dispatching a subagent.** An
 omitted model inherits your session's model — often the most capable and
