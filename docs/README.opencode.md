@@ -157,7 +157,7 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 
 **V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
 
-- "Create a todo" → V2 has no todo tool of any kind; the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
+- "Create a todo" → use `todowrite` when available (enabled by `experimental.todo: true` in opencode.json; pass a JSON array of `{content, status}` items); otherwise track the plan in a markdown file (or the harness's plan facility) instead
 - `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool with the bare skill id (`superpowers:brainstorming` → `id: "brainstorming"`)
 - "Read a file" → `read`
@@ -167,7 +167,7 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 - "Fetch a URL" → `webfetch`
 - "Search the web" → `websearch`
 
-In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely. The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and the todo tool (`todowrite`) is gated behind `experimental.todo: true` in `opencode.json`. The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
 
 (V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the OpenCode 2.0.4 and 2.0.7 host contracts.)
 
