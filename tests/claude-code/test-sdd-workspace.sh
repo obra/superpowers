@@ -456,6 +456,33 @@ PLAN
         echo "    got: $rp_explicit"
     fi
 
+    # Two recorded gitlinks suffice to exercise a committed submodule update.
+    # The review must include it even when normal git diff hides the submodule.
+    local parent="$TEST_ROOT/superproject" package="$TEST_ROOT/submodule.diff"
+    local old_pin new_pin
+    old_pin=$(git -C "$repo" rev-parse HEAD~1)
+    new_pin=$(git -C "$repo" rev-parse HEAD)
+    git init -q "$parent"
+    (
+        cd "$parent"
+        echo "# Plan" > plan.md
+        git config -f .gitmodules submodule.lib.path lib
+        git config -f .gitmodules submodule.lib.ignore all
+        git add plan.md .gitmodules
+        git update-index --add --cacheinfo "160000,$old_pin,lib"
+        git "${git_id[@]}" commit -qm baseline
+        git update-index --cacheinfo "160000,$new_pin,lib"
+        git "${git_id[@]}" commit -qm update
+        "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD "$package" >/dev/null
+    )
+    if grep -Eq '^ lib +\|' "$package" &&
+        grep -Fxq -- "-Subproject commit $old_pin" "$package" &&
+        grep -Fxq -- "+Subproject commit $new_pin" "$package"; then
+        pass "review-package includes ignored submodule updates in the stat and diff"
+    else
+        fail "review-package includes ignored submodule updates in the stat and diff"
+    fi
+
     # --- range guards: BASE must be an ancestor of HEAD, range must be non-empty ---
     local divergent
     divergent="$(cd "$repo" && git "${git_id[@]}" commit-tree 'HEAD~1^{tree}' -p 'HEAD~1' -m divergent)"

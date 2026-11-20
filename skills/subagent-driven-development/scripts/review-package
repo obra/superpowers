@@ -54,10 +54,10 @@ fi
   git -C "$repo" log --oneline "${base}..${head}"
   echo
   echo "## Files changed"
-  git -C "$repo" diff --stat "${base}..${head}"
+  git -C "$repo" diff --ignore-submodules=none --stat "${base}..${head}"
   echo
   echo "## Diff"
-  git -C "$repo" diff -U10 "${base}..${head}"
+  git -C "$repo" diff --ignore-submodules=none -U10 "${base}..${head}"
 } > "$out"
 
 commits=$(git -C "$repo" rev-list --count "${base}..${head}")
