@@ -31,7 +31,10 @@ SKILL.md's Model Selection), with the brief path, the report-file path, the open
 findings, and this framing: "A prior implementer attempted this task
 [N] times; you own it now. Read the report file for what was tried." A loop
 that survives three resumes usually means the implementer cannot see its
-own problem — fresh eyes and a capability bump in one move.
+own problem — fresh eyes and a capability bump in one move. This escalation
+applies to this task's fix loop only. When the task is done, retire the escalated
+implementer: dispatch the next task's implementer fresh, with its model chosen
+again under Model Selection.
 
 **Every round, either way:** the implementer fixes, re-runs the tests
 covering the amended code, appends its fix report to the same report file,
