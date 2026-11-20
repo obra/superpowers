@@ -64,10 +64,10 @@ const result = {
   v2BootstrapParts: v2Result.bootstrapParts,
   mapsV2SubagentTool: v2Result.text.includes('`subagent` with `agent: "general"`'),
   mapsV2SessionIDContinuation: v2Result.text.includes('`sessionID` to continue a previous subagent'),
-  mapsV2NoTodoTool: v2Result.text.includes('no todo tool'),
+  mapsV2TodoTool: v2Result.text.includes('`todowrite` when available'),
   mapsV2MutationToPatch: v2Result.text.includes('`patch` with `patchText`'),
   mapsV2Shell: v2Result.text.includes('`shell`'),
-  staleV1ToolsInV2: v2Result.text.includes('`apply_patch`') || v2Result.text.includes('`todowrite`') || v2Result.text.includes('`subagent_type`'),
+  staleV1ToolsInV2: v2Result.text.includes('`apply_patch`') || v2Result.text.includes('`subagent_type`'),
 };
 
 const failures = scenario === 'present'
@@ -183,7 +183,7 @@ function assertMappingConstants(mod) {
   for (const needle of [
     '`subagent` with `agent: "general"`',
     '`sessionID` to continue a previous subagent',
-    'no todo tool',
+    '`todowrite` when available',
     '`write`',
     '`edit`',
     '`patch` with `patchText`',
@@ -197,7 +197,7 @@ function assertMappingConstants(mod) {
       failures.push(`expected V2_MAPPING to teach the V2 tool ${needle}`);
     }
   }
-  for (const stale of ['`todowrite`', '`task` with', '`apply_patch`', '`bash`']) {
+  for (const stale of ['`task` with', '`apply_patch`', '`bash`']) {
     if (mod.V2_MAPPING.includes(stale)) {
       failures.push(`expected V2_MAPPING not to teach the V1-only tool name ${stale}`);
     }
@@ -274,8 +274,8 @@ function assertV2Bootstrap(result) {
   if (!result.mapsV2SessionIDContinuation) {
     failures.push('expected V2 bootstrap to teach sessionID continuation for subagents');
   }
-  if (!result.mapsV2NoTodoTool) {
-    failures.push('expected V2 bootstrap to state that V2 has no todo tool');
+  if (!result.mapsV2TodoTool) {
+    failures.push('expected V2 bootstrap to teach todowrite tool when available');
   }
   if (!result.mapsV2MutationToPatch) {
     failures.push('expected V2 bootstrap to map file mutation to patch with patchText');

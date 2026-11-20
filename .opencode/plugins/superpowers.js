@@ -88,14 +88,14 @@ When skills request actions, substitute OpenCode equivalents:
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-// V2 built-ins: no todo tool at all; task → subagent (agent name in 'agent',
+// V2 built-ins: todowrite is available when experimental.todo is enabled; task → subagent (agent name in 'agent',
 // continuation via sessionID); apply_patch → patch (patchText, same patch
 // format); bash → shell. read, write, edit, grep, glob, webfetch, websearch,
 // and skill all exist under those names (verified against the 2.0.4 and 2.0.7
 // host contracts).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
-- Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
+- Create or update todos → use \`todowrite\` when available (enabled by \`experimental.todo: true\` in opencode.json; pass a JSON array of \`{content, status}\` items); otherwise track the plan in a markdown file (or the harness's plan facility)
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
 - Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`id: "brainstorming"\`)
 - Read files → \`read\`
