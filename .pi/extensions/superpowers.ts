@@ -37,7 +37,7 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		const bootstrapMessage = {
 			role: "user" as const,
 			content: [{ type: "text" as const, text: bootstrap }],
-			timestamp: Date.now(),
+			timestamp: 0,
 		};
 
 		const insertAt = firstNonCompactionSummaryIndex(event.messages);
