@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{Design name}}</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9; --surface: #fff; --fg: #141a23; --muted: #586274; --line: #d4dae3;
+    --fact: #0f766e; --fact-bg: #def3f0;
+    --call: #a85a06; --call-bg: #fdf0d2;
+    --human: #1e4fd1; --human-bg: #dde8fd;
+    --chg: #b0306a; --chg-bg: #fbe3ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e131b; --surface: #161d28; --fg: #e5e9f0; --muted: #9ba5b6; --line: #2c3544;
+      --fact: #5fd8c9; --fact-bg: #12302d;
+      --call: #f3b34a; --call-bg: #3a2a0c;
+      --human: #86a9ff; --human-bg: #172650;
+      --chg: #ff8fbd; --chg-bg: #3b1526;
+    }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 28px 16px 64px; display: flex; flex-direction: column; gap: 32px; }
+  h1, h2, h3, p, ul, figure, blockquote { margin: 0; }
+  h1 { font-size: 28px; line-height: 1.2; }
+  h2 { font-size: 20px; margin-bottom: 10px; }
+  h3 { font-size: 15px; margin: 14px 0 4px; }
+  ul { padding-left: 20px; }
+  li { margin: 3px 0; }
+  a { color: var(--human); }
+  .status { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .summary { font-size: 17px; max-width: 68ch; }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; align-items: start; }
+  figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+  figcaption { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  svg { display: block; width: 100%; height: auto; color: var(--muted); }
+  svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  svg .box.chg { fill: var(--chg-bg); stroke: var(--chg); stroke-width: 2; }
+  svg .ln { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  svg text { fill: var(--fg); font: 12.5px system-ui, sans-serif; }
+  svg .tb { font-weight: 600; }
+  svg .ts { fill: var(--muted); font-size: 11px; }
+  .group { background: var(--surface); border: 1px solid var(--line); border-left-width: 5px; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+  .group h3 { margin-top: 0; }
+  .group.fact { border-left-color: var(--fact); } .group.fact h3 { color: var(--fact); }
+  .group.call { border-left-color: var(--call); } .group.call h3 { color: var(--call); }
+  .group.human { border-left-color: var(--human); } .group.human h3 { color: var(--human); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+  .scroll { overflow-x: auto; }
+  article { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+  article:target { outline: 3px solid var(--human); }
+  article h3 { margin-top: 0; }
+  .src { color: var(--muted); font-size: 14px; }
+  blockquote { border-left: 3px solid var(--line); padding-left: 10px; color: var(--muted); font-size: 14px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="status">Waiting for your review · {{YYYY-MM-DD}}</p>
+  <h1>{{Design name}}</h1>
+</header>
+
+<section id="summary">
+  <h2>Summary</h2>
+  <p class="summary">{{Four lines at most, about 120 words. Lead with the point: what gets built, why, and the one thing to watch.}}</p>
+</section>
+
+<section id="overview">
+  <h2>Overview</h2>
+  <div class="pair">
+    <figure>
+      <svg viewBox="0 0 410 66" role="img" aria-label="{{Before: what exists today}}">
+        <defs><marker id="ah-before" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect class="box" x="10" y="10" width="90" height="44" rx="6"/><text class="tb" x="55" y="37" text-anchor="middle">{{Part A}}</text>
+        <rect class="box" x="160" y="10" width="90" height="44" rx="6"/><text class="tb" x="205" y="37" text-anchor="middle">{{Part B}}</text>
+        <rect class="box" x="310" y="10" width="90" height="44" rx="6"/><text class="tb" x="355" y="37" text-anchor="middle">{{Part C}}</text>
+        <line class="ln" x1="100" y1="32" x2="160" y2="32" marker-end="url(#ah-before)"/><text class="ts" x="130" y="24" text-anchor="middle">{{verb}}</text>
+        <line class="ln" x1="250" y1="32" x2="310" y2="32" marker-end="url(#ah-before)"/><text class="ts" x="280" y="24" text-anchor="middle">{{verb}}</text>
+      </svg>
+      <figcaption>Before: {{how it works today}}</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 410 170" role="img" aria-label="{{After: what changes}}">
+        <defs><marker id="ah-after" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect class="box" x="10" y="10" width="90" height="44" rx="6"/><text class="tb" x="55" y="37" text-anchor="middle">{{Part A}}</text>
+        <rect class="box" x="160" y="10" width="90" height="44" rx="6"/><text class="tb" x="205" y="37" text-anchor="middle">{{Part B}}</text>
+        <rect class="box" x="310" y="10" width="90" height="44" rx="6"/><text class="tb" x="355" y="37" text-anchor="middle">{{Part C}}</text>
+        <rect class="box chg" x="160" y="100" width="90" height="44" rx="6"/><text class="tb" x="205" y="127" text-anchor="middle">{{New part}}</text>
+        <line class="ln" x1="100" y1="32" x2="160" y2="32" marker-end="url(#ah-after)"/><text class="ts" x="130" y="24" text-anchor="middle">{{verb}}</text>
+        <line class="ln" x1="205" y1="54" x2="205" y2="100" marker-end="url(#ah-after)"/><text class="ts" x="213" y="82">{{verb}}</text>
+        <path class="ln" d="M250,122 H355 V56" marker-end="url(#ah-after)"/><text class="ts" x="302" y="114" text-anchor="middle">{{verb}}</text>
+      </svg>
+      <figcaption>After: {{what is added or removed}}</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="review">
+  <h2>For your review</h2>
+  <div class="group fact">
+    <h3>Confirmed</h3>
+    <ul>
+      <li>{{A fact you found}} (<a href="#evidence-example">{{source name}}</a>)</li>
+    </ul>
+  </div>
+  <div class="group call">
+    <h3>My call</h3>
+    <ul>
+      <li>{{A small, easy-to-undo choice you made, and why}} (<a href="#evidence-example">{{source name}}</a>)</li>
+    </ul>
+  </div>
+  <div class="group human">
+    <h3>You decided</h3>
+    <ul>
+      <li>{{A choice your human partner made, in their words}}</li>
+    </ul>
+  </div>
+</section>
+
+<section id="design">
+  <h2>The design</h2>
+  <h3>Intent and why</h3>
+  <p>{{What they want and why, in their terms.}}</p>
+  <h3>Goals</h3>
+  <ul><li>{{Goal}}</li></ul>
+  <h3>Non-goals</h3>
+  <ul><li>{{Non-goal}}</li></ul>
+  <h3>Anti-goals</h3>
+  <ul><li>{{What would make this a failure even if it technically works}}</li></ul>
+  <h3>Constraints</h3>
+  <ul><li>{{Constraint}}</li></ul>
+  <h3>Approaches</h3>
+  <div class="scroll">
+    <table>
+      <tr><th>Approach</th><th>Trades off</th><th>Chosen</th></tr>
+      <tr><td>{{Approach}}</td><td>{{Trade-off}}</td><td>{{Yes, because… / No}}</td></tr>
+    </table>
+  </div>
+  <h3>How it gets made</h3>
+  <ul><li>{{A decision, as they decided it. Mark yours as "my call".}}</li></ul>
+  <h3>How it will be verified</h3>
+  <ul><li>{{Scenario in their terms: what they will see working}}</li></ul>
+  <p>{{Which of unit, integration, and end-to-end tests prove it; a line on why if one doesn't apply.}}</p>
+  <h3>Left to the builder</h3>
+  <ul><li>{{What the builder may decide}}</li></ul>
+</section>
+
+<section id="evidence">
+  <h2>Evidence</h2>
+  <article id="evidence-example">
+    <h3>{{The finding, in plain words}}</h3>
+    <p class="src">{{Source: a link you opened, or the exact read-only query or log filter}} · {{date}}</p>
+    <blockquote>{{The sentence from the source that supports it, or what the query returned}}</blockquote>
+  </article>
+</section>
+
+</main>
+</body>
+</html>

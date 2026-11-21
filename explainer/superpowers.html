@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Superpowers Explainer</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --ink: #1c1b19;
+    --muted: #67655e;
+    --line: #d8d5ca;
+    --accent: #4338ca;
+    --accent-soft: #ecebfd;
+    --new: #0f766e;
+    --new-soft: #dff2ef;
+    --pain: #b42318;
+    --pain-soft: #fdecea;
+    --code-bg: #efede6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --surface: #1e1e1c;
+      --ink: #ecebe6;
+      --muted: #a3a097;
+      --line: #36352f;
+      --accent: #a9a4ff;
+      --accent-soft: #262540;
+      --new: #5eead4;
+      --new-soft: #12312d;
+      --pain: #ff9b8f;
+      --pain-soft: #3a1f1c;
+      --code-bg: #2a2a27;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--accent); }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  code { background: var(--code-bg); padding: 2px 6px; border-radius: 5px; font-size: .88em; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+  /* top nav */
+  .topnav {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav .wrap { display: flex; gap: 20px; align-items: center; height: 52px; overflow-x: auto; white-space: nowrap; }
+  .topnav strong { font-size: 15px; margin-right: auto; }
+  .topnav a { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; }
+  .topnav a:hover { color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 48px 0 8px; }
+  .hero h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.15; margin: 0 0 12px; letter-spacing: -.02em; }
+  .hero p { max-width: 62ch; font-size: 18px; color: var(--muted); margin: 0 0 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-size: 13px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+
+  section { padding: 44px 0 8px; }
+  section > .wrap > h2 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.01em; }
+  .lead { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+  .secno { color: var(--accent); font-weight: 700; margin-right: 8px; }
+
+  /* diagram */
+  .diagram-grid { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .diagram-box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 12px 12px; }
+  svg.flow { width: 100%; height: auto; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); padding: 10px 8px 2px; }
+  .legend i { display: inline-block; width: 22px; height: 12px; border-radius: 4px; border: 1.5px solid var(--accent); vertical-align: -2px; margin-right: 6px; background: var(--surface); }
+  .legend i.dash { border-style: dashed; border-color: var(--muted); }
+  .legend i.new { border-color: var(--new); }
+
+  .flow .node { cursor: pointer; outline: none; }
+  .flow .node rect { fill: var(--surface); stroke: var(--accent); stroke-width: 1.5; transition: fill .12s; }
+  .flow .node.side rect { stroke: var(--line); }
+  .flow .node.opt rect { stroke-dasharray: 5 4; }
+  .flow .node.new rect { stroke: var(--new); }
+  .flow .node:hover rect, .flow .node:focus-visible rect { fill: var(--accent-soft); stroke-width: 2.6; }
+  .flow .name { font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--ink); }
+  .flow .sub { font: 11.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
+  .flow .num circle { fill: var(--accent); }
+  .flow .num text { fill: #fff; font: 700 10px system-ui, sans-serif; text-anchor: middle; }
+  .flow .node.new .num circle { fill: var(--new); }
+  .flow .arrow { fill: none; stroke: var(--muted); stroke-width: 1.5; marker-end: url(#ah); }
+  .flow .arrow.join { marker-end: none; }
+  .flow #ah path { fill: var(--muted); }
+  .flow .band rect { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 4; }
+  .flow .band text, .flow .note { font: 600 10.5px system-ui, sans-serif; fill: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+  .flow .note { text-transform: none; letter-spacing: 0; font-weight: 500; font-style: italic; }
+
+  /* pain list */
+  .pains { position: sticky; top: 68px; }
+  .pains h3 { margin: 0 0 4px; font-size: 18px; }
+  .pains p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+  .pain-item { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--pain); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+  .pain-item q { display: block; quotes: none; font-weight: 600; font-size: 14.5px; line-height: 1.4; }
+  .pain-item .fix { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
+  .skill-link {
+    display: inline-block; font: 600 12px ui-monospace, Menlo, Consolas, monospace;
+    background: var(--accent-soft); color: var(--accent); text-decoration: none;
+    padding: 2px 8px; border-radius: 6px; margin: 2px 4px 2px 0;
+  }
+  .skill-link:hover { text-decoration: underline; }
+
+  /* usage */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; counter-reset: s; }
+  .step { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; counter-increment: s; }
+  .step::before {
+    content: counter(s); display: inline-grid; place-items: center; width: 28px; height: 28px;
+    border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; margin-bottom: 10px;
+  }
+  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; font-size: 14.5px; color: var(--muted); }
+  .step p + p { margin-top: 8px; }
+  .step .ex { display: block; margin-top: 8px; font-size: 13px; background: var(--code-bg); padding: 8px 10px; border-radius: 8px; word-break: break-word; }
+  .callout { margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: var(--accent-soft); font-size: 14.5px; }
+
+  /* skill cards */
+  .phase { margin: 32px 0 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .phase h3 { margin: 0; font-size: 19px; }
+  .phase span { color: var(--muted); font-size: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px 12px; scroll-margin-top: 72px; transition: box-shadow .2s, border-color .2s;
+  }
+  .card:target { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .card header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .badge { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; }
+  .card h4 { margin: 0; font: 700 15px ui-monospace, Menlo, Consolas, monospace; word-break: break-word; }
+  .tag { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: var(--code-bg); color: var(--muted); }
+  .tag.new { background: var(--new-soft); color: var(--new); }
+  .row { margin: 0 0 9px; font-size: 14.5px; }
+  .row b { display: block; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
+  .row.pain { background: var(--pain-soft); border-radius: 8px; padding: 7px 10px; }
+  .row.pain b { color: var(--pain); }
+  .back { font-size: 12.5px; text-decoration: none; color: var(--muted); display: inline-block; margin-top: 2px; }
+  .back:hover { color: var(--accent); }
+
+  footer { margin: 48px 0 64px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+
+  .swipe-hint { display: none; font-size: 12.5px; color: var(--muted); margin: 0 0 8px 4px; }
+
+  @media (max-width: 600px) {
+    .diagram-box { overflow-x: auto; }
+    svg.flow { min-width: 520px; }
+    .swipe-hint { display: block; }
+  }
+
+  @media (max-width: 900px) {
+    .diagram-grid { grid-template-columns: minmax(0, 1fr); }
+    .pains { position: static; }
+    .cards { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <strong>Superpowers</strong>
+    <a href="#diagram">1 · Diagram</a>
+    <a href="#usage">2 · Cách dùng</a>
+    <a href="#skills">3 · Skill</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Superpowers</h1>
+    <p>Bộ skill ép coding agent làm việc như một kỹ sư có kỷ luật: hỏi cho rõ, lên plan, test trước, và chỉ nói “xong” khi đã chứng minh được.</p>
+    <div class="chips">
+      <span class="chip"><b>17</b> skill</span>
+      <span class="chip">Tự kích hoạt, không cần gõ lệnh</span>
+      <span class="chip">Click vào node trong diagram để xem chi tiết</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. DIAGRAM ============ -->
+<section id="diagram">
+  <div class="wrap">
+    <h2><span class="secno">1</span>Diagram: luồng làm việc</h2>
+    <p class="lead">Đi từ trên xuống. Mỗi node là một skill, click để nhảy tới phần giải thích bên dưới.</p>
+
+    <div class="diagram-grid">
+      <div class="diagram-box">
+        <p class="swipe-hint">← Vuốt ngang để xem hết diagram →</p>
+        <svg class="flow" viewBox="0 0 560 1080" role="group" aria-label="Luồng skill của Superpowers">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 1 L10 5 L0 9 z"/>
+            </marker>
+          </defs>
+
+          <!-- arrows (drawn first, nodes on top) -->
+          <path class="arrow" d="M280 68 V90 H139 V112"/>
+          <path class="arrow" d="M280 90 H421 V112"/>
+          <path class="arrow" d="M264 139 H294"/>
+          <path class="arrow" d="M421 166 V182 H280 V198"/>
+          <path class="arrow" d="M280 252 V284"/>
+          <path class="arrow" d="M280 338 V354 H139 V370"/>
+          <path class="arrow" d="M280 354 H421 V370"/>
+          <text class="note" x="272" y="348" text-anchor="end">chọn 1 trong 2</text>
+          <path class="arrow" d="M139 424 V456"/>
+          <path class="arrow" d="M421 424 V456"/>
+          <path class="arrow" d="M268 517 H290"/>
+          <path class="arrow" d="M280 568 V584 H139 V600"/>
+          <path class="arrow" d="M280 584 H421 V600"/>
+          <path class="arrow" d="M264 627 H294"/>
+          <path class="arrow" d="M139 654 V670 H280 V686"/>
+          <path class="arrow join" d="M421 654 V670 H280"/>
+
+          <!-- bands -->
+          <g class="band">
+            <rect x="14" y="456" width="532" height="112" rx="14"/>
+            <text x="28" y="476">Lặp lại cho từng task</text>
+          </g>
+          <g class="band">
+            <rect x="14" y="772" width="532" height="170" rx="14"/>
+            <text x="28" y="792">Gọi khi gặp tình huống</text>
+          </g>
+          <g class="band">
+            <rect x="14" y="962" width="532" height="102" rx="14"/>
+            <text x="28" y="982">Ngoài luồng chính</text>
+          </g>
+
+          <!-- 0 -->
+          <a class="node" href="#s-using-superpowers" aria-label="using-superpowers">
+            <rect x="130" y="14" width="300" height="54" rx="10"/>
+            <text class="name" x="144" y="37">using-superpowers</text>
+            <text class="sub" x="144" y="55">Luôn bật · tự gọi skill đúng lúc</text>
+            <g class="num"><circle cx="130" cy="14" r="10"/><text x="130" y="17.5">0</text></g>
+          </a>
+
+          <!-- 1 -->
+          <a class="node opt new" href="#s-research-before-brainstorming" aria-label="research-before-brainstorming">
+            <rect x="14" y="112" width="250" height="54" rx="10"/>
+            <text class="name" x="28" y="135">research-before-brainstorming</text>
+            <text class="sub" x="28" y="153">Tự tra trước khi hỏi bạn</text>
+            <g class="num"><circle cx="14" cy="112" r="10"/><text x="14" y="115.5">1</text></g>
+          </a>
+
+          <!-- 2 -->
+          <a class="node" href="#s-brainstorming" aria-label="brainstorming">
+            <rect x="296" y="112" width="250" height="54" rx="10"/>
+            <text class="name" x="310" y="135">brainstorming</text>
+            <text class="sub" x="310" y="153">Hỏi ra thứ bạn thật sự cần</text>
+            <g class="num"><circle cx="296" cy="112" r="10"/><text x="296" y="115.5">2</text></g>
+          </a>
+
+          <!-- 3 -->
+          <a class="node" href="#s-using-git-worktrees" aria-label="using-git-worktrees">
+            <rect x="130" y="198" width="300" height="54" rx="10"/>
+            <text class="name" x="144" y="221">using-git-worktrees</text>
+            <text class="sub" x="144" y="239">Làm trên nhánh cô lập, an toàn</text>
+            <g class="num"><circle cx="130" cy="198" r="10"/><text x="130" y="201.5">3</text></g>
+          </a>
+
+          <!-- 4 -->
+          <a class="node" href="#s-writing-plans" aria-label="writing-plans">
+            <rect x="130" y="284" width="300" height="54" rx="10"/>
+            <text class="name" x="144" y="307">writing-plans</text>
+            <text class="sub" x="144" y="325">Chia việc thành task 2–5 phút</text>
+            <g class="num"><circle cx="130" cy="284" r="10"/><text x="130" y="287.5">4</text></g>
+          </a>
+
+          <!-- 5 -->
+          <a class="node" href="#s-subagent-driven-development" aria-label="subagent-driven-development">
+            <rect x="14" y="370" width="250" height="54" rx="10"/>
+            <text class="name" x="28" y="393">subagent-driven-development</text>
+            <text class="sub" x="28" y="411">1 subagent/task · review từng task</text>
+            <g class="num"><circle cx="14" cy="370" r="10"/><text x="14" y="373.5">5</text></g>
+          </a>
+          <a class="node" href="#s-executing-plans" aria-label="executing-plans">
+            <rect x="296" y="370" width="250" height="54" rx="10"/>
+            <text class="name" x="310" y="393">executing-plans</text>
+            <text class="sub" x="310" y="411">Tự làm một mạch · rẻ hơn</text>
+            <g class="num"><circle cx="296" cy="370" r="10"/><text x="296" y="373.5">5</text></g>
+          </a>
+
+          <!-- 6, 7 -->
+          <a class="node" href="#s-test-driven-development" aria-label="test-driven-development">
+            <rect x="28" y="490" width="240" height="54" rx="10"/>
+            <text class="name" x="42" y="513">test-driven-development</text>
+            <text class="sub" x="42" y="531">Test fail trước, rồi mới code</text>
+            <g class="num"><circle cx="28" cy="490" r="10"/><text x="28" y="493.5">6</text></g>
+          </a>
+          <a class="node" href="#s-requesting-code-review" aria-label="requesting-code-review">
+            <rect x="292" y="490" width="240" height="54" rx="10"/>
+            <text class="name" x="306" y="513">requesting-code-review</text>
+            <text class="sub" x="306" y="531">Review sau mỗi task</text>
+            <g class="num"><circle cx="292" cy="490" r="10"/><text x="292" y="493.5">7</text></g>
+          </a>
+
+          <!-- 8, 9 -->
+          <a class="node" href="#s-verification-before-completion" aria-label="verification-before-completion">
+            <rect x="14" y="600" width="250" height="54" rx="10"/>
+            <text class="name" x="28" y="623">verification-before-completion</text>
+            <text class="sub" x="28" y="641">Chạy lệnh thật rồi mới báo xong</text>
+            <g class="num"><circle cx="14" cy="600" r="10"/><text x="14" y="603.5">8</text></g>
+          </a>
+          <a class="node new" href="#s-verifying-ai-generated-code" aria-label="verifying-ai-generated-code">
+            <rect x="296" y="600" width="250" height="54" rx="10"/>
+            <text class="name" x="310" y="623">verifying-ai-generated-code</text>
+            <text class="sub" x="310" y="641">Test độc lập + bằng chứng thật</text>
+            <g class="num"><circle cx="296" cy="600" r="10"/><text x="296" y="603.5">9</text></g>
+          </a>
+
+          <!-- 10 -->
+          <a class="node" href="#s-finishing-a-development-branch" aria-label="finishing-a-development-branch">
+            <rect x="130" y="686" width="300" height="54" rx="10"/>
+            <text class="name" x="144" y="709">finishing-a-development-branch</text>
+            <text class="sub" x="144" y="727">Test xanh → merge / mở PR / giữ nhánh</text>
+            <g class="num"><circle cx="130" cy="686" r="10"/><text x="130" y="689.5">10</text></g>
+          </a>
+
+          <!-- on demand -->
+          <a class="node side" href="#s-systematic-debugging" aria-label="systematic-debugging">
+            <rect x="28" y="806" width="240" height="54" rx="10"/>
+            <text class="name" x="42" y="829">systematic-debugging</text>
+            <text class="sub" x="42" y="847">Gặp bug → tìm root cause trước</text>
+          </a>
+          <a class="node side" href="#s-receiving-code-review" aria-label="receiving-code-review">
+            <rect x="292" y="806" width="240" height="54" rx="10"/>
+            <text class="name" x="306" y="829">receiving-code-review</text>
+            <text class="sub" x="306" y="847">Nhận feedback → kiểm chứng đã</text>
+          </a>
+          <a class="node side" href="#s-dispatching-parallel-agents" aria-label="dispatching-parallel-agents">
+            <rect x="28" y="874" width="504" height="54" rx="10"/>
+            <text class="name" x="42" y="897">dispatching-parallel-agents</text>
+            <text class="sub" x="42" y="915">Từ 2 việc độc lập trở lên → mỗi việc một agent, chạy song song</text>
+          </a>
+
+          <!-- meta -->
+          <a class="node side" href="#s-writing-skills" aria-label="writing-skills">
+            <rect x="28" y="996" width="240" height="54" rx="10"/>
+            <text class="name" x="42" y="1019">writing-skills</text>
+            <text class="sub" x="42" y="1037">Tự viết / sửa skill của bạn</text>
+          </a>
+          <a class="node side" href="#s-diagnosing-superpowers" aria-label="diagnosing-superpowers">
+            <rect x="292" y="996" width="240" height="54" rx="10"/>
+            <text class="name" x="306" y="1019">diagnosing-superpowers</text>
+            <text class="sub" x="306" y="1037">Phiên chạy sai → tìm nguyên nhân</text>
+          </a>
+        </svg>
+        <div class="legend">
+          <span><i></i>Trong luồng chính</span>
+          <span><i class="dash"></i>Nét đứt: tuỳ chọn</span>
+          <span><i class="new"></i>Viền xanh: skill mới</span>
+        </div>
+      </div>
+
+      <aside class="pains">
+        <h3>Nó giải quyết painpoint nào?</h3>
+        <p>Những thói quen xấu của coding agent mà từng skill sinh ra để chặn.</p>
+
+        <div class="pain-item">
+          <q>Lao vào code, làm đúng thứ bạn không cần</q>
+          <div class="fix"><a class="skill-link" href="#s-brainstorming">brainstorming</a> hỏi và chốt design trước</div>
+        </div>
+        <div class="pain-item">
+          <q>Hỏi bạn những thứ mà tool tự tra được</q>
+          <div class="fix"><a class="skill-link" href="#s-research-before-brainstorming">research-before-brainstorming</a></div>
+        </div>
+        <div class="pain-item">
+          <q>Sửa thẳng lên nhánh bạn đang làm</q>
+          <div class="fix"><a class="skill-link" href="#s-using-git-worktrees">using-git-worktrees</a> làm trên nhánh riêng</div>
+        </div>
+        <div class="pain-item">
+          <q>Plan mơ hồ, agent tự đoán từng chi tiết</q>
+          <div class="fix"><a class="skill-link" href="#s-writing-plans">writing-plans</a> task nhỏ, file và code cụ thể</div>
+        </div>
+        <div class="pain-item">
+          <q>Làm một mạch dài, đầy context, lệch plan</q>
+          <div class="fix"><a class="skill-link" href="#s-subagent-driven-development">subagent-driven-development</a> mỗi task một context sạch</div>
+        </div>
+        <div class="pain-item">
+          <q>Test pass nhưng tính năng vẫn sai</q>
+          <div class="fix">
+            <a class="skill-link" href="#s-test-driven-development">test-driven-development</a>
+            <a class="skill-link" href="#s-verifying-ai-generated-code">verifying-ai-generated-code</a>
+          </div>
+        </div>
+        <div class="pain-item">
+          <q>Nói “xong rồi” khi chưa chạy gì</q>
+          <div class="fix"><a class="skill-link" href="#s-verification-before-completion">verification-before-completion</a></div>
+        </div>
+        <div class="pain-item">
+          <q>Sửa bug bằng cách đoán, vá triệu chứng</q>
+          <div class="fix"><a class="skill-link" href="#s-systematic-debugging">systematic-debugging</a></div>
+        </div>
+        <div class="pain-item">
+          <q>Gật đầu mù quáng với feedback của reviewer</q>
+          <div class="fix"><a class="skill-link" href="#s-receiving-code-review">receiving-code-review</a></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. USAGE ============ -->
+<section id="usage">
+  <div class="wrap">
+    <h2><span class="secno">2</span>Cách dùng, tóm tắt</h2>
+    <p class="lead">Bạn không gọi skill thủ công. Bạn chỉ trò chuyện, trả lời và duyệt. Phần còn lại agent tự chạy.</p>
+
+    <div class="steps">
+      <div class="step">
+        <h3>Cài một lần</h3>
+        <p>Cài plugin vào agent bạn đang dùng. Mỗi công cụ (Cursor, Codex, Gemini CLI…) có cách cài riêng, xem README.</p>
+        <code class="ex">/plugin install superpowers@claude-plugins-official</code>
+      </div>
+      <div class="step">
+        <h3>Nói như bình thường</h3>
+        <p>Mô tả việc bạn muốn. <a href="#s-using-superpowers">using-superpowers</a> tự gọi skill phù hợp, bắt đầu bằng brainstorming.</p>
+        <code class="ex">Let's make a react todo list</code>
+      </div>
+      <div class="step">
+        <h3>Bạn quyết 3 điểm</h3>
+        <p>Trả lời các câu hỏi làm rõ, duyệt <b>design</b>, duyệt <b>plan</b>, rồi nói “go”.</p>
+      </div>
+      <div class="step">
+        <h3>Agent tự chạy</h3>
+        <p>Code theo TDD, review từng task, chạy kiểm chứng. Có thể tự làm vài giờ mà không lệch plan.</p>
+        <p>Cuối cùng bạn chọn: merge, mở PR hoặc giữ nhánh.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Phiên chạy lạ?</b> (lặp việc, bỏ plan, skill không kích hoạt, tốn token) Hãy nói với agent:
+      <code>figure out what went wrong with superpowers in this session</code>
+      → chạy <a href="#s-diagnosing-superpowers">diagnosing-superpowers</a>.
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. SKILLS ============ -->
+<section id="skills">
+  <div class="wrap">
+    <h2><span class="secno">3</span>Các skill, theo thứ tự chạy</h2>
+    <p class="lead">Mỗi skill có 3 dòng: vấn đề nó giải, nó làm gì, và dùng khi nào. Số trong badge khớp với số trên diagram.</p>
+
+    <!-- Nền -->
+    <div class="phase"><h3>Nền</h3><span>Chạy ngầm ở đầu mọi phiên</span></div>
+    <div class="cards">
+      <article class="card" id="s-using-superpowers">
+        <header><span class="badge">0</span><h4>using-superpowers</h4><span class="tag">Tự động</span></header>
+        <p class="row pain"><b>Vấn đề</b>Agent có skill nhưng quên dùng, hoặc tự nhủ “việc này đơn giản, khỏi cần”.</p>
+        <p class="row"><b>Làm gì</b>Nạp ở đầu phiên. Bắt agent kiểm tra skill phù hợp trước mọi phản hồi, kể cả câu hỏi làm rõ. Chỉ cần 1% khả năng skill áp dụng là phải gọi.</p>
+        <p class="row"><b>Dùng khi</b>Tự động ở mọi cuộc hội thoại. Bạn không cần gọi.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- 1 Hiểu -->
+    <div class="phase"><h3>1 · Hiểu yêu cầu</h3><span>Trước khi có dòng code nào</span></div>
+    <div class="cards">
+      <article class="card" id="s-research-before-brainstorming">
+        <header><span class="badge">1</span><h4>research-before-brainstorming</h4><span class="tag">Tuỳ chọn</span><span class="tag new">Mới</span></header>
+        <p class="row pain"><b>Vấn đề</b>Agent hỏi bạn những câu mà tool tự trả lời được: version thư viện, schema DB, lỗi trong log.</p>
+        <p class="row"><b>Làm gì</b>Tự tra codebase, docs đúng version trong lockfile, DB (chỉ đọc), log, git history. Ghi lại thành một research brief ngắn.</p>
+        <p class="row"><b>Dùng khi</b>Yêu cầu đụng tới thư viện, DB, log hoặc hệ thống chưa kiểm tra. Bỏ qua nếu yêu cầu đã đủ rõ.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-brainstorming">
+        <header><span class="badge">2</span><h4>brainstorming</h4><span class="tag">Trong luồng</span></header>
+        <p class="row pain"><b>Vấn đề</b>Agent code ngay theo giả định, kết quả là đúng thứ bạn không cần.</p>
+        <p class="row"><b>Làm gì</b>Đọc project trước, rồi hỏi từng câu về “bạn muốn gì và vì sao”. Đưa vài hướng để bạn chọn, viết design doc ngắn và chờ bạn duyệt.</p>
+        <p class="row"><b>Dùng khi</b>Trước mọi việc tạo mới hoặc đổi hành vi. Yêu cầu nhỏ và rõ (đổi màu icon) thì làm luôn.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- 2 Chuẩn bị -->
+    <div class="phase"><h3>2 · Chuẩn bị</h3><span>Design đã duyệt, chưa đụng code</span></div>
+    <div class="cards">
+      <article class="card" id="s-using-git-worktrees">
+        <header><span class="badge">3</span><h4>using-git-worktrees</h4><span class="tag">Trong luồng</span></header>
+        <p class="row pain"><b>Vấn đề</b>Agent sửa thẳng lên nhánh bạn đang làm. Hỏng thì khó quay lại.</p>
+        <p class="row"><b>Làm gì</b>Tạo workspace cô lập trên nhánh mới (hoặc nhận ra cái đã có), chạy setup, kiểm tra test baseline đang xanh.</p>
+        <p class="row"><b>Dùng khi</b>Sau khi design được duyệt, trước khi code. Agent hỏi bạn đồng ý trước khi tạo.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-writing-plans">
+        <header><span class="badge">4</span><h4>writing-plans</h4><span class="tag">Trong luồng</span></header>
+        <p class="row pain"><b>Vấn đề</b>Plan mơ hồ nên agent tự đoán từng chi tiết, mỗi lần một kiểu.</p>
+        <p class="row"><b>Làm gì</b>Biến design thành các task nhỏ (2–5 phút), mỗi task có đường dẫn file chính xác, code đầy đủ và bước kiểm tra. Lưu ở <code>docs/superpowers/plans/</code>.</p>
+        <p class="row"><b>Dùng khi</b>Đã có spec được duyệt cho việc nhiều bước, trước khi đụng code.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- 3 Thực thi -->
+    <div class="phase"><h3>3 · Thực thi</h3><span>Chọn 1 trong 2 cách chạy plan, rồi lặp TDD + review cho từng task</span></div>
+    <div class="cards">
+      <article class="card" id="s-subagent-driven-development">
+        <header><span class="badge">5</span><h4>subagent-driven-development</h4><span class="tag">Chọn 1 · kỹ nhất</span></header>
+        <p class="row pain"><b>Vấn đề</b>Một agent làm hết trong một context dài: đầy context, lệch plan, tự chấm bài của mình.</p>
+        <p class="row"><b>Làm gì</b>Mỗi task giao cho một subagent mới (context sạch). Sau đó review 2 lớp: đúng spec trước, chất lượng code sau. Cuối cùng review cả nhánh. Chạy liên tục, không hỏi “tiếp nhé?”.</p>
+        <p class="row"><b>Dùng khi</b>Đã có plan và môi trường có subagent. Chất lượng cao nhất nhưng tốn token hơn.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-executing-plans">
+        <header><span class="badge">5</span><h4>executing-plans</h4><span class="tag">Chọn 1 · rẻ nhất</span></header>
+        <p class="row pain"><b>Vấn đề</b>Subagent cho từng task tốn token vì mỗi lần phải đọc lại codebase từ đầu.</p>
+        <p class="row"><b>Làm gì</b>Agent tự làm tuần tự trong phiên hiện tại. TDD là cổng kiểm từng task, có sổ ghi (ledger) để không quên, và một review mới cho cả nhánh ở cuối.</p>
+        <p class="row"><b>Dùng khi</b>Bạn chọn chạy inline để tiết kiệm, hoặc môi trường không có subagent.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-test-driven-development">
+        <header><span class="badge">6</span><h4>test-driven-development</h4><span class="tag">Trong luồng</span></header>
+        <p class="row pain"><b>Vấn đề</b>Test viết sau code thì luôn pass, nên không chứng minh được gì.</p>
+        <p class="row"><b>Làm gì</b>Red → Green → Refactor: viết test, xem nó fail, viết code tối thiểu cho pass. Code viết trước test thì xoá đi làm lại.</p>
+        <p class="row"><b>Dùng khi</b>Mọi feature, bugfix, refactor. Ngoại lệ (prototype bỏ đi, code sinh tự động, file config) phải hỏi bạn.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-requesting-code-review">
+        <header><span class="badge">7</span><h4>requesting-code-review</h4><span class="tag">Mỗi task</span></header>
+        <p class="row pain"><b>Vấn đề</b>Lỗi nhỏ ở task 2 âm thầm lan sang task 3, 4, 5.</p>
+        <p class="row"><b>Làm gì</b>Giao một subagent reviewer (chỉ nhận mô tả và khoảng commit, không thấy lịch sử phiên) soi theo plan. Báo lỗi theo mức độ, lỗi Critical chặn tiến độ.</p>
+        <p class="row"><b>Dùng khi</b>Sau mỗi task, sau tính năng lớn, trước khi merge. Cũng dùng được khi bị kẹt.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- 4 Chứng minh -->
+    <div class="phase"><h3>4 · Chứng minh</h3><span>Trước khi nói “xong”</span></div>
+    <div class="cards">
+      <article class="card" id="s-verification-before-completion">
+        <header><span class="badge">8</span><h4>verification-before-completion</h4><span class="tag">Trong luồng</span></header>
+        <p class="row pain"><b>Vấn đề</b>Agent nói “xong rồi, test pass” mà chưa hề chạy.</p>
+        <p class="row"><b>Làm gì</b>Luật: không tuyên bố hoàn thành khi chưa có output mới từ lệnh kiểm chứng. Chạy lệnh, đọc kết quả, rồi mới được nói.</p>
+        <p class="row"><b>Dùng khi</b>Ngay trước khi báo hoàn thành, commit hoặc mở PR.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-verifying-ai-generated-code">
+        <header><span class="badge">9</span><h4>verifying-ai-generated-code</h4><span class="tag">Trong luồng</span><span class="tag new">Mới</span></header>
+        <p class="row pain"><b>Vấn đề</b>Test do chính agent viết thì cùng hiểu sai với code, nên pass mà tính năng vẫn sai.</p>
+        <p class="row"><b>Làm gì</b>Kiểm theo tầng: static → unit → integration → e2e. Test do một subagent khác viết từ design (không thấy code). E2e phải có bằng chứng (screenshot, video, trace). Tầng nào không chạy được thì báo “not verified”, không giấu.</p>
+        <p class="row"><b>Dùng khi</b>Lúc lên plan cho thay đổi người dùng nhìn thấy (viết e2e sớm), và khi sắp báo xong.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- 5 Kết thúc -->
+    <div class="phase"><h3>5 · Kết thúc</h3><span>Đưa việc đã xong vào nhánh chính</span></div>
+    <div class="cards">
+      <article class="card" id="s-finishing-a-development-branch">
+        <header><span class="badge">10</span><h4>finishing-a-development-branch</h4><span class="tag">Trong luồng</span></header>
+        <p class="row pain"><b>Vấn đề</b>Làm xong thì nhánh và worktree bị bỏ lơ, hoặc merge khi test còn đỏ.</p>
+        <p class="row"><b>Làm gì</b>Chạy full test. Nếu xanh thì đưa 3 lựa chọn: merge, mở PR hoặc giữ nhánh. Sau đó dọn worktree.</p>
+        <p class="row"><b>Dùng khi</b>Implement xong và test pass.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- Khi cần -->
+    <div class="phase"><h3>Gọi khi cần</h3><span>Không nằm cố định trong luồng, xuất hiện khi gặp tình huống</span></div>
+    <div class="cards">
+      <article class="card" id="s-systematic-debugging">
+        <header><h4>systematic-debugging</h4><span class="tag">Khi cần</span></header>
+        <p class="row pain"><b>Vấn đề</b>Sửa bug bằng cách đoán, vá triệu chứng, càng sửa càng rối.</p>
+        <p class="row"><b>Làm gì</b>4 pha: điều tra root cause → phân tích pattern → giả thuyết và thử → sửa. Luật: chưa có root cause thì không được sửa.</p>
+        <p class="row"><b>Dùng khi</b>Mọi bug, test fail, lỗi build, vấn đề hiệu năng. Đặc biệt khi đang gấp hoặc đã sửa một hai lần không được.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-receiving-code-review">
+        <header><h4>receiving-code-review</h4><span class="tag">Khi cần</span></header>
+        <p class="row pain"><b>Vấn đề</b>Agent gật đầu “You’re absolutely right!” rồi sửa mù quáng, kể cả khi feedback sai.</p>
+        <p class="row"><b>Làm gì</b>Đọc → hiểu → kiểm chứng với codebase → đánh giá → trả lời kỹ thuật hoặc phản biện có lý do → sửa từng ý và test từng ý.</p>
+        <p class="row"><b>Dùng khi</b>Nhận feedback từ review (người hoặc reviewer subagent), nhất là feedback mơ hồ hoặc đáng ngờ.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-dispatching-parallel-agents">
+        <header><h4>dispatching-parallel-agents</h4><span class="tag">Khi cần</span></header>
+        <p class="row pain"><b>Vấn đề</b>Nhiều việc độc lập mà làm lần lượt thì phí thời gian.</p>
+        <p class="row"><b>Làm gì</b>Mỗi nhóm vấn đề độc lập giao một agent, chạy đồng thời. Context của từng agent được dựng riêng.</p>
+        <p class="row"><b>Dùng khi</b>Có từ 2 việc trở lên, không dùng chung state và không phụ thuộc thứ tự (ví dụ 3 file test fail do 3 nguyên nhân khác nhau).</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <!-- Meta -->
+    <div class="phase"><h3>Ngoài luồng chính</h3><span>Dành cho người tuỳ biến hoặc gỡ lỗi chính Superpowers</span></div>
+    <div class="cards">
+      <article class="card" id="s-writing-skills">
+        <header><h4>writing-skills</h4><span class="tag">Meta</span></header>
+        <p class="row pain"><b>Vấn đề</b>Skill viết ẩu thì agent bỏ qua hoặc làm sai.</p>
+        <p class="row"><b>Làm gì</b>Áp dụng TDD cho tài liệu: chạy kịch bản áp lực với subagent khi chưa có skill (xem nó sai), viết skill, kiểm lại, bịt kẽ hở.</p>
+        <p class="row"><b>Dùng khi</b>Tạo hoặc sửa skill của riêng bạn.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+
+      <article class="card" id="s-diagnosing-superpowers">
+        <header><h4>diagnosing-superpowers</h4><span class="tag">Meta</span></header>
+        <p class="row pain"><b>Vấn đề</b>Phiên chạy lạ (lặp việc, bỏ plan, skill không kích hoạt, quá tốn) mà không biết vì sao.</p>
+        <p class="row"><b>Làm gì</b>Đọc transcript, báo cáo kèm dẫn chứng theo dòng (<code>path:line</code>). Có thể đóng gói bundle đã che dữ liệu nhạy cảm để gửi bug report.</p>
+        <p class="row"><b>Dùng khi</b>Bạn nói: “figure out what went wrong with superpowers in this session”.</p>
+        <a class="back" href="#diagram">↑ Về diagram</a>
+      </article>
+    </div>
+
+    <footer>
+      Nguồn: <code>README.md</code> và <code>skills/*/SKILL.md</code>. Hai skill đánh dấu “Mới” (research-before-brainstorming, verifying-ai-generated-code) có trong thư mục <code>skills/</code> trên branch <code>feat/research-and-verification-skills</code> nhưng chưa được liệt kê trong README.
+    </footer>
+  </div>
+</section>
+
+</body>
+</html>

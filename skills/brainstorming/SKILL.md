@@ -41,13 +41,35 @@ the questions.
 
 ## Look Before You Ask
 
-In an existing project, or when they've given you context (a spec, a plan,
-a handoff, files they pointed at, earlier conversation), dig in before your
-first message. Read what they referred to and the code or material it
-connects to, and keep reading until you can explain how the relevant
-parts work today and what this change would touch. Never ask what the
-project or their context already answers, or reopen what they've
-already decided.
+If a tool can answer it, don't ask your human partner. Only they can say
+what they want, why, and which trade-offs they accept. How things are
+today is yours to find out: the code, the design system, library docs at
+the version in use, the database, logs, the web, whatever this session
+has. For how to research, read `references/research.md` in this
+directory. Never ask what the project or their context already answers,
+or reopen what they've already decided.
+
+When the request points at something you can inspect (a feature, a bug, a
+spec, files they named), look before your first message: read what they
+referred to and what it connects to, until you can explain how the
+relevant parts work today and what this change would touch. When it
+points at nothing yet ("a website for my bakery"), ask your one question
+first; their answer tells you what to look at. From then on, looking and
+asking alternate, because an answer can open something new to look up.
+
+Sort what you find into three kinds, and tell them which is which:
+
+- **Confirmed:** facts you found, each with where you found it: a link
+  they can click, or for a query or log search, the query and what it
+  returned.
+- **My call:** a small technical choice that's easy to undo, with your
+  reason and what it rests on. If it's costly, risky, or hard to undo,
+  it's theirs, not yours.
+- **Yours to decide:** what only they can decide, plus anything you
+  couldn't find out or whose sources disagree. Ask these.
+
+No source, no finding. A source you can't reach is a question for them,
+not a gap to fill from memory.
 
 ## Your First Message
 
@@ -58,7 +80,8 @@ Move the work forward, with one of these:
   request back in your own words, so they can see whether you've got its
   shape: what they want, who it's for, and why, as far as they've said.
   Add what you found that bears on it: how the relevant parts work today
-  and what the change would touch. If you found something they may not
+  and what the change would touch, laid out as Confirmed and My call. If
+  you found something they may not
   have considered that would change what they're asking for or how it
   has to be built, like a constraint, a conflict, or a cheaper path, say
   so plainly. How to build it comes later, once you understand what they
@@ -152,6 +175,9 @@ beats a question.
 **Do recon.** Once you have a bit of grounding and looking further
 would help, go look: deeper into their codebase or project, their own
 files and data, or the web. Say what you looked for and what you found.
+A technical question that comes up mid-conversation is recon too: look it
+up and report it as Confirmed or My call in your next message, instead of
+asking.
 
 **Lay out the approaches.** Once you understand what they want, and
 before you write anything up, put the ways of building it in a message
@@ -228,22 +254,45 @@ order, and brainstorm them one at a time.
 
 ## The Written Design
 
-Write a plain document a talented builder in the domain could plan
-from without going back to your human partner. Cover:
+Write one document. Your human partner reads it to approve it, and a
+talented builder in the domain could plan from it without going back to
+them. Start from `templates/design-doc.html` in this directory, so they
+can open it in a browser; the template shows each section. Fill every
+section, replace every `{{...}}`, and search the file for `{{` before you
+hand it over. In this order:
 
-- intent and the why
-- goals, non-goals, anti-goals
-- constraints
-- approaches (above)
-- the parts of the how they decided, as they decided them
-- what's left to the builder
+- **Summary:** about 120 words, the point first: what gets built, why,
+  and the one thing to watch.
+- **Overview:** a before-and-after diagram of what changes, with labeled
+  arrows. Draw only what the decision turns on. Skip it for a small
+  change when a sentence says it faster.
+- **For your review:** Confirmed, My call, and what they decided. Each
+  Confirmed and My call item links to its entry under Evidence.
+- **The design:**
+  - intent and the why
+  - goals, non-goals, anti-goals
+  - constraints
+  - approaches (above)
+  - the parts of the how they decided, as they decided them
+  - how it will be verified, for software: what your human partner will
+    see working, in their terms (a few scenarios), and which of unit,
+    integration, and end-to-end tests prove it. Plan on all three; drop
+    one only with a line saying why it doesn't apply. A separate subagent
+    writes the tests from this document, never from the code that
+    implements it, so they check what was asked for and not what got built
+  - what's left to the builder
+- **Evidence:** one entry per finding: its name in plain words, the
+  source (a link you opened, or the exact query or log filter with its
+  date and result), and the sentence from it that supports the claim.
+  Refer to evidence by name; never give it a code or number to look up.
 
-For a small change, the short design covers the same points in a line
-or two each and goes straight to your human partner, without the
-builder check.
+For a small change, the short design is the Summary, For your review, and
+a line or two on each point of the design, plus Evidence for anything it
+links to. It goes straight to your human partner, without the builder
+check.
 
 **Where it goes:** in a software repo,
-`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed.
+`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.html`, committed.
 Otherwise, pick a sensible place and say where. Your human partner's
 preferences override both.
 
@@ -261,7 +310,8 @@ until the check is back. Sort what the builder asks into three piles:
   what gets built.
 
 Bring the "theirs" pile in one message, most important first. Update the
-document with their answers, then hand it over with a short list of the
+document with their answers, then hand it over (give the path; it opens
+in a browser) with a short list of the
 calls you made so they can check those while reading. That's the only
 round of questions the check produces. Without a subagent tool, read the
 document as that builder yourself.
