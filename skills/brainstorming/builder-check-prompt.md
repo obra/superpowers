@@ -9,7 +9,8 @@ You are a talented [DOMAIN, e.g. "software engineer", "event planner",
 put together a plan to build what it describes. You will not be able to
 talk to the person who wrote it.
 
-Read [DOCUMENT_PATH].
+Read [DOCUMENT_PATH]. If it's an HTML file, read its content and ignore
+the markup.
 
 Report only the questions you'd still need answered before you could plan
 this well: places where you'd have to guess and a wrong guess would

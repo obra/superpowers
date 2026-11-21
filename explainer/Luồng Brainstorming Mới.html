@@ -1,0 +1,308 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Luồng Brainstorming Mới</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+  /* Layout: a header, a before/after pair of flow figures, then the triage figure beside a sample report. */
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --fg: #131a24;
+    --muted: #586274;
+    --line: #d3d9e2;
+    --fact: #0f766e;   --fact-bg: #def3f0;
+    --call: #a85a06;   --call-bg: #fdf0d2;
+    --human: #1e4fd1;  --human-bg: #dde8fd;
+    --warn: #b42323;   --warn-bg: #fde2e2;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-head: "Space Grotesk", "Inter", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e131b; --surface: #161d28; --fg: #e5e9f0; --muted: #9ba5b6; --line: #2c3544;
+      --fact: #5fd8c9;  --fact-bg: #12302d;
+      --call: #f3b34a;  --call-bg: #3a2a0c;
+      --human: #86a9ff; --human-bg: #172650;
+      --warn: #ff8a8a;  --warn-bg: #3b1618;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e131b; --surface: #161d28; --fg: #e5e9f0; --muted: #9ba5b6; --line: #2c3544;
+    --fact: #5fd8c9;  --fact-bg: #12302d;
+    --call: #f3b34a;  --call-bg: #3a2a0c;
+    --human: #86a9ff; --human-bg: #172650;
+    --warn: #ff8a8a;  --warn-bg: #3b1618;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+    padding-block: 28px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+  h1, h2, h3 { font-family: var(--font-head); font-weight: 600; margin: 0; text-wrap: balance; }
+  h1 { font-size: clamp(26px, 5vw, 34px); line-height: 1.15; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 15px; letter-spacing: 0.02em; }
+  p { margin: 0; }
+
+  header { display: flex; flex-direction: column; gap: 10px; }
+  .lead { color: var(--muted); max-width: 62ch; }
+  .chip-status {
+    align-self: flex-start; font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+  }
+
+  section { display: flex; flex-direction: column; gap: 14px; }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; align-items: start; }
+  .pair > * { min-width: 0; }
+
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+  figure h3 { display: flex; align-items: center; gap: 8px; }
+  .tag { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; }
+  .tag.old { color: var(--warn); background: var(--warn-bg); }
+  .tag.new { color: var(--fact); background: var(--fact-bg); }
+  figcaption { color: var(--muted); font-size: 13.5px; }
+  svg { display: block; width: 100%; height: auto; max-width: 440px; margin: 0 auto; color: var(--muted); }
+
+  /* SVG parts, styled from the page because the SVG carries no <style> of its own */
+  svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  svg .box.dash { stroke-dasharray: 5 4; }
+  svg .box.warn { fill: var(--warn-bg); stroke: var(--warn); }
+  svg .box.fact { fill: var(--fact-bg); stroke: var(--fact); }
+  svg .box.call { fill: var(--call-bg); stroke: var(--call); }
+  svg .box.human { fill: var(--human-bg); stroke: var(--human); }
+  svg .ln { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  svg .ln.dash { stroke-dasharray: 5 4; }
+  svg text { font-family: var(--font-body); fill: var(--fg); font-size: 12.5px; }
+  svg .tb { font-weight: 600; font-size: 13.5px; }
+  svg .ts { fill: var(--muted); font-size: 11.5px; }
+  svg .dot-fact { fill: var(--fact); }
+  svg .dot-call { fill: var(--call); }
+
+  .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  .split > * { min-width: 0; }
+
+  .report { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .report h3 { font-size: 14px; }
+  .group { display: flex; flex-direction: column; gap: 6px; }
+  .group-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot.fact { background: var(--fact); } .dot.call { background: var(--call); } .dot.human { background: var(--human); }
+  .group ul { list-style: none; margin: 0; padding: 0 0 0 17px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .src { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; color: var(--human); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+  .note { color: var(--muted); font-size: 13px; }
+
+  .todo { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .todo > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .todo b { font-family: var(--font-head); font-weight: 600; }
+  .todo span { color: var(--muted); font-size: 14px; }
+  .limits { color: var(--muted); font-size: 13.5px; max-width: 72ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="chip-status">Đề xuất, chưa áp dụng vào skill</span>
+    <h1>Luồng Brainstorming Mới</h1>
+    <p class="lead">Sau khi gộp research-before-brainstorming vào brainstorming, AI tự tra những gì tra được, báo lại kèm bằng chứng, và chỉ hỏi bạn phần chỉ bạn quyết được.</p>
+  </header>
+
+  <section>
+    <h2>Cũ và mới</h2>
+    <div class="pair">
+      <figure>
+        <h3><span class="tag old">Cũ</span> Hai skill nối bằng tay</h3>
+        <svg viewBox="0 0 380 464" role="img" aria-label="Luồng cũ: research là skill riêng và tùy chọn, thường bị bỏ qua; brainstorming hỏi người dùng cả những câu kỹ thuật mà AI có thể tự tra.">
+          <defs>
+            <marker id="ah-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          </defs>
+          <rect class="box" x="20" y="10" width="230" height="40" rx="8"/>
+          <text class="tb" x="135" y="35" text-anchor="middle">Yêu cầu của bạn</text>
+
+          <line class="ln dash" x1="135" y1="50" x2="135" y2="90" marker-end="url(#ah-old)"/>
+          <text class="ts" x="145" y="75">tùy chọn, hay bị bỏ qua</text>
+
+          <rect class="box dash" x="20" y="90" width="230" height="60" rx="8"/>
+          <text class="tb" x="135" y="114" text-anchor="middle">research-before-brainstorming</text>
+          <text class="ts" x="135" y="134" text-anchor="middle">skill riêng, viết research brief</text>
+
+          <line class="ln" x1="135" y1="150" x2="135" y2="190" marker-end="url(#ah-old)"/>
+          <text class="ts" x="145" y="175">gọi brainstorming</text>
+
+          <rect class="box warn" x="20" y="190" width="230" height="84" rx="8"/>
+          <text class="tb" x="135" y="214" text-anchor="middle">brainstorming</text>
+          <text x="135" y="234" text-anchor="middle">hỏi bạn cả câu AI tự tra được</text>
+          <text class="ts" x="135" y="254" text-anchor="middle">(DB gì, có queue chưa, design system)</text>
+
+          <path class="ln" d="M250,30 H290 V232 H252" marker-end="url(#ah-old)"/>
+          <text class="ts" x="303" y="131" text-anchor="middle" transform="rotate(90 303 131)">thường đi thẳng</text>
+
+          <line class="ln" x1="135" y1="274" x2="135" y2="314" marker-end="url(#ah-old)"/>
+          <text class="ts" x="145" y="299">bạn trả lời</text>
+
+          <rect class="box" x="20" y="314" width="230" height="40" rx="8"/>
+          <text x="135" y="339" text-anchor="middle">Bạn trả lời từng câu</text>
+
+          <line class="ln" x1="135" y1="354" x2="135" y2="394" marker-end="url(#ah-old)"/>
+
+          <rect class="box" x="20" y="394" width="230" height="60" rx="8"/>
+          <text class="tb" x="135" y="418" text-anchor="middle">Hướng tiếp cận, design doc</text>
+          <text class="ts" x="135" y="438" text-anchor="middle">bạn duyệt, rồi viết plan</text>
+        </svg>
+        <figcaption>Brainstorming hỏi thẳng bạn, kể cả câu mà code hay DB đã trả lời. Research chỉ chạy khi AI nhớ gọi.</figcaption>
+      </figure>
+
+      <figure>
+        <h3><span class="tag new">Mới</span> Một skill, một vòng lặp</h3>
+        <svg viewBox="0 0 400 628" role="img" aria-label="Luồng mới: tùy yêu cầu có chỉ ra chỗ để nhìn hay không, AI tra định hướng trước hoặc hỏi một câu mở trước. Sau đó AI research, báo cáo kèm link và hỏi người dùng, lặp lại cho đến khi đủ hiểu để viết design doc.">
+          <defs>
+            <marker id="ah-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          </defs>
+          <rect class="box" x="20" y="10" width="230" height="40" rx="8"/>
+          <text class="tb" x="135" y="35" text-anchor="middle">Yêu cầu của bạn</text>
+
+          <line class="ln" x1="135" y1="50" x2="135" y2="88" marker-end="url(#ah-new)"/>
+
+          <rect class="box" x="20" y="88" width="230" height="54" rx="8"/>
+          <text x="135" y="112" text-anchor="middle">Yêu cầu có chỉ ra</text>
+          <text x="135" y="130" text-anchor="middle">chỗ để nhìn không?</text>
+
+          <line class="ln" x1="135" y1="142" x2="135" y2="190" marker-end="url(#ah-new)"/>
+          <text class="ts" x="145" y="170">có</text>
+
+          <path class="ln" d="M250,115 H355 V482 H252" marker-end="url(#ah-new)"/>
+          <text class="ts" x="262" y="107">không</text>
+          <text class="ts" x="368" y="300" text-anchor="middle" transform="rotate(90 368 300)">hỏi 1 câu mở về mục đích trước</text>
+
+          <rect class="box fact" x="20" y="190" width="230" height="84" rx="8"/>
+          <text class="tb" x="135" y="214" text-anchor="middle">AI tự research</text>
+          <text x="135" y="234" text-anchor="middle">đọc code, MCP, docs, DB, logs, web</text>
+          <text class="ts" x="135" y="254" text-anchor="middle">không hỏi bạn lúc đang tra</text>
+
+          <line class="ln" x1="135" y1="274" x2="135" y2="314" marker-end="url(#ah-new)"/>
+          <text class="ts" x="145" y="299">kết quả tra được</text>
+
+          <rect class="box" x="20" y="314" width="230" height="84" rx="8"/>
+          <text class="tb" x="135" y="338" text-anchor="middle">Báo cáo cho bạn, kèm link</text>
+          <circle class="dot-fact" cx="40" cy="354" r="4.5"/>
+          <text x="52" y="358">Đã xác nhận</text>
+          <circle class="dot-call" cx="40" cy="376" r="4.5"/>
+          <text x="52" y="380">Tôi tự quyết, nói nếu muốn đổi</text>
+
+          <line class="ln" x1="135" y1="398" x2="135" y2="438" marker-end="url(#ah-new)"/>
+          <text class="ts" x="145" y="423">phần còn lại</text>
+
+          <rect class="box human" x="20" y="438" width="230" height="64" rx="8"/>
+          <text class="tb" x="135" y="462" text-anchor="middle">AI hỏi bạn</text>
+          <text class="ts" x="135" y="482" text-anchor="middle">mục đích, ưu tiên, đánh đổi business</text>
+
+          <path class="ln" d="M250,458 H300 V232 H252" marker-end="url(#ah-new)"/>
+          <text class="ts" x="313" y="345" text-anchor="middle" transform="rotate(90 313 345)">câu trả lời chỉ ra chỗ cần tra tiếp</text>
+
+          <line class="ln" x1="135" y1="502" x2="135" y2="542" marker-end="url(#ah-new)"/>
+          <text class="ts" x="145" y="527">đủ hiểu rồi</text>
+
+          <rect class="box" x="20" y="542" width="230" height="76" rx="8"/>
+          <text class="tb" x="135" y="566" text-anchor="middle">Hướng tiếp cận, design doc</text>
+          <text class="ts" x="135" y="586" text-anchor="middle">có thêm mục: quyết định của AI</text>
+          <text class="ts" x="135" y="604" text-anchor="middle">bạn duyệt, rồi viết plan</text>
+        </svg>
+        <figcaption>Yêu cầu chỉ ra chỗ để nhìn thì AI tra định hướng trước, chưa thì hỏi một câu mở trước. Sau đó tra và hỏi xen kẽ: mỗi câu trả lời của bạn có thể mở thêm việc cần tra.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Một câu hỏi đi về đâu</h2>
+    <div class="split">
+      <figure>
+        <svg viewBox="0 0 480 370" role="img" aria-label="Mỗi câu AI cần biết đi qua hai phép thử: tra được bằng tool thì thành sự thật kèm link; nhỏ và đảo ngược được thì AI tự quyết; còn lại thì hỏi người dùng.">
+          <defs>
+            <marker id="ah-tri" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          </defs>
+          <rect class="box" x="20" y="10" width="210" height="40" rx="8"/>
+          <text class="tb" x="125" y="35" text-anchor="middle">Một câu AI cần biết</text>
+
+          <line class="ln" x1="125" y1="50" x2="125" y2="86" marker-end="url(#ah-tri)"/>
+
+          <rect class="box" x="20" y="86" width="210" height="60" rx="8"/>
+          <text x="125" y="112" text-anchor="middle">Tra được bằng tool có sẵn,</text>
+          <text x="125" y="130" text-anchor="middle">và nguồn không mâu thuẫn?</text>
+
+          <line class="ln" x1="230" y1="116" x2="270" y2="116" marker-end="url(#ah-tri)"/>
+          <text class="ts" x="250" y="108" text-anchor="middle">có</text>
+          <rect class="box fact" x="270" y="86" width="190" height="60" rx="8"/>
+          <text class="tb" x="365" y="111" text-anchor="middle">Sự thật</text>
+          <text class="ts" x="365" y="130" text-anchor="middle">báo kèm link bằng chứng</text>
+
+          <line class="ln" x1="125" y1="146" x2="125" y2="190" marker-end="url(#ah-tri)"/>
+          <text class="ts" x="135" y="173">không</text>
+
+          <rect class="box" x="20" y="190" width="210" height="60" rx="8"/>
+          <text x="125" y="216" text-anchor="middle">Nhỏ, đảo ngược được,</text>
+          <text x="125" y="234" text-anchor="middle">không tốn kém, không rủi ro?</text>
+
+          <line class="ln" x1="230" y1="220" x2="270" y2="220" marker-end="url(#ah-tri)"/>
+          <text class="ts" x="250" y="212" text-anchor="middle">có</text>
+          <rect class="box call" x="270" y="190" width="190" height="60" rx="8"/>
+          <text class="tb" x="365" y="215" text-anchor="middle">Tôi tự quyết</text>
+          <text class="ts" x="365" y="234" text-anchor="middle">ghi rõ là "my call", kèm link</text>
+
+          <line class="ln" x1="125" y1="250" x2="125" y2="294" marker-end="url(#ah-tri)"/>
+          <text class="ts" x="135" y="277">không</text>
+
+          <rect class="box human" x="20" y="294" width="210" height="60" rx="8"/>
+          <text class="tb" x="125" y="319" text-anchor="middle">Cần bạn quyết</text>
+          <text class="ts" x="125" y="338" text-anchor="middle">hỏi bạn, nói rõ vì sao hỏi</text>
+
+          <text class="ts" x="250" y="306">Gồm: mục đích, ưu tiên,</text>
+          <text class="ts" x="250" y="322">đánh đổi business, việc khó</text>
+          <text class="ts" x="250" y="338">đảo ngược, nguồn thiếu</text>
+          <text class="ts" x="250" y="354">hoặc mâu thuẫn nhau.</text>
+        </svg>
+        <figcaption>Ranh giới là sự thật hay quyết định, không phải business hay technical. Câu technical tốn kém hoặc khó đảo ngược vẫn thuộc về bạn.</figcaption>
+      </figure>
+
+      <div class="report">
+        <h3>Tin nhắn đầu tiên của AI, ví dụ "thêm tính năng hủy đơn hàng"</h3>
+        <div class="group">
+          <div class="group-title"><span class="dot fact"></span>Đã xác nhận</div>
+          <ul>
+            <li>Orders ghi không qua transaction <span class="src">orders.ts:42</span></li>
+            <li>12% dòng orders có status NULL <span class="src">query read-only, 21/11</span></li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group-title"><span class="dot call"></span>Tôi tự quyết (nói nếu bạn muốn đổi)</div>
+          <ul>
+            <li>Dùng lại queue BullMQ hiện có <span class="src">queue.ts:10</span></li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group-title"><span class="dot human"></span>Cần bạn quyết</div>
+          <ul>
+            <li>Khách B2B có được hủy đơn sau khi giao không?</li>
+          </ul>
+        </div>
+        <p class="note">Trong tin nhắn thật, mỗi mục gạch chân là một link. Nó mở thẳng file và dòng, trang docs đúng version, hoặc hàng bằng chứng trong research brief nếu nguồn là query hay logs. Với yêu cầu chưa chỉ ra chỗ để nhìn, như "làm website cho tiệm bánh", tin nhắn đầu chỉ có một câu hỏi mở và chưa có báo cáo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Bạn cần làm gì</h2>
+    <div class="todo">
+      <div><b>Đọc nhanh</b><span>Khối "Tôi tự quyết": thấy sai thì nói. Không phản đối thì AI đi tiếp.</span></div>
+      <div><b>Bấm link khi nghi ngờ</b><span>Link đưa bạn tới bằng chứng gốc, không cần tin lời AI.</span></div>
+      <div><b>Duyệt design doc</b><span>Doc có mục "Quyết định do AI đưa ra". Duyệt doc là chấp nhận hoặc ghi đè các quyết định đó.</span></div>
+    </div>
+    <p class="limits">Giới hạn: AI vẫn có thể tự quyết sai, và link bằng chứng là để bạn phát hiện điều đó. Nếu session không có tool cho một nguồn nào đó, câu liên quan chuyển thành câu hỏi cho bạn.</p>
+  </section>
+</div>
+
+</body></html>
