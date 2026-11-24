@@ -119,9 +119,17 @@ if (typeof context !== "string" || context.trim() === "") {
   fail("injected context was empty");
 }
 
-const expectedText = process.env.EXPECT_CONTAINS || "";
-if (expectedText && !context.includes(expectedText)) {
-  fail(`context did not contain expected text: ${expectedText}`);
+if (!context.startsWith("<EXTREMELY_IMPORTANT>\nYou have superpowers.")) {
+  fail("context did not start with <EXTREMELY_IMPORTANT>\\nYou have superpowers.");
+}
+
+const expectedTexts = (process.env.EXPECT_CONTAINS || "")
+  .split("\u001f")
+  .filter(Boolean);
+for (const expectedText of expectedTexts) {
+  if (!context.includes(expectedText)) {
+    fail(`context did not contain expected text: ${expectedText}`);
+  }
 }
 
 const forbiddenTexts = (process.env.EXPECT_NOT_CONTAINS || "")
@@ -178,11 +186,15 @@ else
     fail "hooks.json registers SessionStart with shell:bash dispatch"
 fi
 
+claude_loader="For all other skills, use the 'Skill' tool:"
+neutral_loader="For all other skills, use your platform's skill tool (or read SKILL.md):"
+forbidden_claude_loader="use the 'Skill' tool"
+
 claude_home="$(make_home claude-code)"
 assert_command_output \
     "Claude Code emits nested SessionStart additionalContext" \
     "nested" \
-    "" \
+    "$claude_loader" \
     "" \
     "$claude_home" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
@@ -192,7 +204,7 @@ wrapper_home="$(make_home run-hook-wrapper)"
 assert_command_output \
     "run-hook.cmd wrapper dispatches to the named session-start script" \
     "nested" \
-    "" \
+    "$claude_loader" \
     "" \
     "$wrapper_home" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
@@ -209,10 +221,10 @@ fi
 
 cursor_home="$(make_home cursor)"
 assert_command_output \
-    "Cursor emits top-level additional_context only" \
+    "Cursor emits top-level additional_context with neutral loader wording" \
     "cursor" \
-    "" \
-    "" \
+    "$neutral_loader" \
+    "$forbidden_claude_loader" \
     "$cursor_home" \
     CURSOR_PLUGIN_ROOT="$REPO_ROOT" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
@@ -220,12 +232,32 @@ assert_command_output \
 
 copilot_home="$(make_home copilot-cli)"
 assert_command_output \
-    "Copilot CLI emits top-level additionalContext only" \
+    "Copilot CLI emits top-level additionalContext with neutral loader wording" \
     "sdk" \
-    "" \
-    "" \
+    "$neutral_loader" \
+    "$forbidden_claude_loader" \
     "$copilot_home" \
     COPILOT_CLI=1 \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$HOOK_UNDER_TEST"
+
+generic_home="$(make_home generic)"
+assert_command_output \
+    "Generic host emits top-level additionalContext with neutral loader wording" \
+    "sdk" \
+    "$neutral_loader" \
+    "$forbidden_claude_loader" \
+    "$generic_home" \
+    bash "$HOOK_UNDER_TEST"
+
+muse_home="$(make_home muse)"
+assert_command_output \
+    "Muse emits nested SessionStart additionalContext with neutral wording" \
+    "nested" \
+    "$neutral_loader" \
+    "$forbidden_claude_loader" \
+    "$muse_home" \
+    MUSE_PLUGIN_ROOT="/opt/muse/plugin/" \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
@@ -298,6 +330,15 @@ if zsh_bin="$(command -v zsh)"; then
             CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
             "$runner_bin" "$WRAPPER_UNDER_TEST" session-start
     done
+    assert_command_output \
+        "Muse emits valid JSON under zsh" \
+        "nested" \
+        "$neutral_loader" \
+        "$forbidden_claude_loader" \
+        "$(make_home "muse-zsh")" \
+        PATH="$no_bash_bin" \
+        MUSE_PLUGIN_ROOT="/opt/muse/plugin" \
+        "$zsh_bin" "$WRAPPER_UNDER_TEST" session-start
 else
     echo "  [SKIP] run-hook.cmd without bash: zsh not installed"
 fi

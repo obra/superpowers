@@ -78,12 +78,17 @@ escape_for_json() {
   [ -z "$cr" ] || replace_all "$escaped" "$cr" '\r'
   replace_all "$escaped" "$nl" '\n'
   replace_all "$escaped" "$tab" '\t'
-  using_superpowers_escaped=$escaped
+  session_context_escaped=$escaped
 }
 
-escape_for_json "$using_superpowers_content"
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
-
+# Output context injection as JSON.
+# Cursor hooks expect additional_context (snake_case).
+# Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
+# Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
+# Claude Code reads BOTH additional_context and hookSpecificOutput without
+# deduplication, so we must emit only the field the current platform consumes.
+# Muse sets MUSE_PLUGIN_ROOT and expects hookSpecificOutput.additionalContext (nested).
+#
 # emit_json absorbs EPIPE without a pipe through `cat` (#1612).
 emit_json() {
   trap '' PIPE
@@ -91,18 +96,41 @@ emit_json() {
   printf "$@" 2>/dev/null || true
 }
 
+intro_prefix="<EXTREMELY_IMPORTANT>${nl}You have superpowers.${nl}${nl}**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills."
+claude_intro="${intro_prefix} For all other skills, use the 'Skill' tool:**"
+neutral_intro="${intro_prefix} For all other skills, use your platform's skill tool (or read SKILL.md):**"
+
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
-  emit_json '{\n  "additional_context": "%s"\n}\n' "$session_context"
+  output_shape="cursor"
+  session_intro="$neutral_intro"
 elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ] && [ -z "${MUSE_PLUGIN_ROOT:-}" ]; then
   # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI/MUSE_PLUGIN_ROOT
-  emit_json '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
+  output_shape="nested"
+  session_intro="$claude_intro"
 elif [ -n "${MUSE_PLUGIN_ROOT:-}" ]; then
-  # Muse sets MUSE_PLUGIN_ROOT — try Claude-style nested output for Muse Spark
-  emit_json '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
+  # Muse sets MUSE_PLUGIN_ROOT — uses Claude-style nested output for Muse Spark
+  output_shape="nested"
+  session_intro="$neutral_intro"
 else
   # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
-  emit_json '{\n  "additionalContext": "%s"\n}\n' "$session_context"
+  output_shape="sdk"
+  session_intro="$neutral_intro"
 fi
+
+session_context="${session_intro}${nl}${nl}${using_superpowers_content}${nl}</EXTREMELY_IMPORTANT>"
+escape_for_json "$session_context"
+
+case "$output_shape" in
+  cursor)
+    emit_json '{\n  "additional_context": "%s"\n}\n' "$session_context_escaped"
+    ;;
+  nested)
+    emit_json '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context_escaped"
+    ;;
+  sdk)
+    emit_json '{\n  "additionalContext": "%s"\n}\n' "$session_context_escaped"
+    ;;
+esac
 
 exit 0
