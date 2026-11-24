@@ -420,6 +420,386 @@ PLAN
         echo "    stderr: $fence_err"
     fi
 
+    # --- Preamble inclusion without controller leak (#2493) ---
+    cat > "$repo/plan-preamble.md" <<'PLAN'
+# Widget Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
+> Continuation line of worker blockquote.
+
+**Goal:** Build widget
+
+## Global Constraints
+
+- Keep zero dependencies
+
+## Review Focus
+
+- Verify CRLF handling
+
+---
+
+### Task 1: First widget
+
+BODY-PREAMBLE-1
+
+### Task 2: Second widget
+
+BODY-PREAMBLE-2
+PLAN
+    local pre_b1 pre_b2 pre_dir
+    pre_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" plan-preamble.md)"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 1 >/dev/null)
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 2 >/dev/null)
+    pre_b1="$pre_dir/task-1-brief.md"
+    pre_b2="$pre_dir/task-2-brief.md"
+    if grep -q '^\*\*Goal:\*\* Build widget$' "$pre_b1" \
+        && grep -q '^## Global Constraints$' "$pre_b1" \
+        && grep -q '^- Keep zero dependencies$' "$pre_b1" \
+        && grep -q '^## Review Focus$' "$pre_b1" \
+        && grep -q 'BODY-PREAMBLE-1' "$pre_b1" \
+        && ! grep -q 'BODY-PREAMBLE-2' "$pre_b1" \
+        && grep -q '^\*\*Goal:\*\* Build widget$' "$pre_b2" \
+        && grep -q '^## Global Constraints$' "$pre_b2" \
+        && grep -q '^## Review Focus$' "$pre_b2" \
+        && grep -q 'BODY-PREAMBLE-2' "$pre_b2" \
+        && ! grep -q 'BODY-PREAMBLE-1' "$pre_b2"; then
+        pass "task-brief prepends plan preamble (Goal, Global Constraints, Review Focus) to Task 1 and Task 2"
+    else
+        fail "task-brief prepends plan preamble (Goal, Global Constraints, Review Focus) to Task 1 and Task 2"
+        echo "    brief1:"; sed 's/^/      /' "$pre_b1" 2>/dev/null || true
+        echo "    brief2:"; sed 's/^/      /' "$pre_b2" 2>/dev/null || true
+    fi
+    if ! grep -q 'REQUIRED SUB-SKILL' "$pre_b1" \
+        && ! grep -q 'For agentic workers:' "$pre_b1" \
+        && ! grep -q 'Continuation line of worker blockquote' "$pre_b1" \
+        && ! grep -q 'REQUIRED SUB-SKILL' "$pre_b2"; then
+        pass "task-brief strips worker dispatch blockquote from preamble"
+    else
+        fail "task-brief strips worker dispatch blockquote from preamble"
+    fi
+
+    # 0-preamble plan (or worker-blockquote-only header) gets no leading blank lines
+    cat > "$repo/plan-zero-preamble.md" <<'PLAN'
+### Task 1: Zero preamble
+
+ZERO-BODY
+PLAN
+    local zero_out="$TEST_ROOT/zero-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-zero-preamble.md 1 "$zero_out" >/dev/null)
+    if [[ "$(head -n 1 "$zero_out")" == "### Task 1: Zero preamble" ]]; then
+        pass "0-preamble plan gets no leading blank lines"
+    else
+        fail "0-preamble plan gets no leading blank lines"
+        echo "    first line: $(head -n 1 "$zero_out")"
+    fi
+
+    cat > "$repo/plan-only-worker-quote.md" <<'PLAN'
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
+
+### Task 1: Starts clean
+
+CLEAN-BODY
+PLAN
+    local qonly_out="$TEST_ROOT/qonly-brief.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-only-worker-quote.md 1 "$qonly_out" >/dev/null)
+    if [[ "$(head -n 1 "$qonly_out")" == "### Task 1: Starts clean" ]] && ! grep -q 'REQUIRED SUB-SKILL' "$qonly_out"; then
+        pass "plan with only worker blockquote before Task 1 gets no leading blank lines"
+    else
+        fail "plan with only worker blockquote before Task 1 gets no leading blank lines"
+        echo "    first line: $(head -n 1 "$qonly_out")"
+    fi
+
+    # --- Final-task boundary (#2406), nested fences, ~~~ fences, and CRLF ---
+    cat > "$repo/plan-fences-final.md" <<'PLAN'
+# Fences Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
+
+**Goal:** Test fences and boundaries
+
+### Task 1: Intermediate with nested fences
+
+````markdown
+```bash
+echo hi
+```
+
+## Inner Heading
+
+### Task 99: Fake inside 4-backtick fence
+````
+
+~~~sh
+echo tilde
+### Task 2: Fake inside tilde fence
+## Fake Heading inside tilde fence
+~~~
+
+~~~~markdown
+~~~
+still open inside 4-tilde fence
+### Task 2: Fake inside 4-tilde fence
+```
+still open inside 4-tilde fence
+~~~~
+
+  ```text
+  ### Task 2: Fake inside 2-space indented fence
+  ```
+
+    ```
+```inline`tick```
+AFTER-NESTED-AND-TILDE
+
+### Task 2: Final task
+
+FINAL-BODY
+
+```markdown
+## Fenced Heading Inside Final Task
+```
+
+#### Step 1: Subheading inside final task
+
+STEP-1-BODY
+
+## Self-Review
+
+SELF-REVIEW-LEAK
+
+## Execution Handoff
+
+HANDOFF-LEAK
+PLAN
+    local f1_out="$TEST_ROOT/fences-t1.md" f2_out="$TEST_ROOT/fences-t2.md" f1_err="" f2_err=""
+    rc=0
+    f1_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fences-final.md 1 "$f1_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && -z "$f1_err" ]] \
+        && grep -q '^## Inner Heading$' "$f1_out" \
+        && grep -q '```bash' "$f1_out" \
+        && grep -q 'AFTER-NESTED-AND-TILDE' "$f1_out" \
+        && ! grep -q 'FINAL-BODY' "$f1_out"; then
+        pass 'intermediate task with nested ````markdown, ```bash, ## Inner Heading, and ~~~ fences extracts in full'
+    else
+        fail 'intermediate task with nested ````markdown, ```bash, ## Inner Heading, and ~~~ fences extracts in full'
+        echo "    rc: $rc, err: $f1_err"
+        sed 's/^/      /' "$f1_out" 2>/dev/null || true
+    fi
+
+    rc=0
+    f2_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fences-final.md 2 "$f2_out" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && "$f2_err" == *"## Self-Review"* ]] \
+        && grep -q 'FINAL-BODY' "$f2_out" \
+        && grep -q '^## Fenced Heading Inside Final Task$' "$f2_out" \
+        && grep -q 'STEP-1-BODY' "$f2_out" \
+        && ! grep -q 'SELF-REVIEW-LEAK' "$f2_out" \
+        && ! grep -q '## Self-Review' "$f2_out" \
+        && ! grep -q 'HANDOFF-LEAK' "$f2_out" \
+        && ! grep -q '## Execution Handoff' "$f2_out"; then
+        pass "final task stops before trailing ## Self-Review / ## Execution Handoff and notes heading on stderr"
+    else
+        fail "final task stops before trailing ## Self-Review / ## Execution Handoff and notes heading on stderr"
+        echo "    rc: $rc, err: $f2_err"
+        sed 's/^/      /' "$f2_out" 2>/dev/null || true
+    fi
+
+    # Backtick info string containing backtick is not a fence; 4-space indent is not a fence
+    cat > "$repo/plan-backtick-info.md" <<'PLAN'
+### Task 1: Inline backticks
+
+```foo`bar```
+    ```
+    ### Task 1b: Indented 4 spaces is code, or at least not a fence opener
+
+AFTER-INLINE-TICKS
+
+### Task 2: Second
+
+TASK-2-CLEAN
+PLAN
+    local bt_out="$TEST_ROOT/bt-t2.md"
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-backtick-info.md 2 "$bt_out" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 0 ]] && grep -q 'TASK-2-CLEAN' "$bt_out" && ! grep -q 'AFTER-INLINE-TICKS' "$bt_out"; then
+        pass "backtick fence info string containing backtick and 4-space indented backticks do not swallow Task 2"
+    else
+        fail "backtick fence info string containing backtick and 4-space indented backticks do not swallow Task 2"
+        echo "    rc: $rc"
+    fi
+
+    # CRLF plan extracts cleanly without \r
+    printf '# CRLF Plan\r\n\r\n> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development\r\n\r\n**Goal:** CRLF test\r\n\r\n### Task 1: CRLF one\r\n\r\n```sh\r\necho one\r\n```\r\n\r\nCRLF-1\r\n\r\n### Task 2: CRLF two\r\n\r\nCRLF-2\r\n\r\n## Execution Handoff\r\n\r\nCRLF-HANDOFF\r\n' > "$repo/plan-crlf.md"
+    local crlf1="$TEST_ROOT/crlf-1.md" crlf2="$TEST_ROOT/crlf-2.md"
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-crlf.md 1 "$crlf1" >/dev/null 2>&1) || rc=$?
+    local rc2=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-crlf.md 2 "$crlf2" >/dev/null 2>&1) || rc2=$?
+    if [[ "$rc" -eq 0 && "$rc2" -eq 0 ]] \
+        && grep -q 'CRLF-1' "$crlf1" \
+        && ! grep -q 'CRLF-2' "$crlf1" \
+        && grep -q 'CRLF-2' "$crlf2" \
+        && ! grep -q 'CRLF-HANDOFF' "$crlf2" \
+        && ! grep -q 'REQUIRED SUB-SKILL' "$crlf1" \
+        && ! grep -q $'\r' "$crlf1" \
+        && ! grep -q $'\r' "$crlf2"; then
+        pass "CRLF plan extracts cleanly without CR bytes and respects fences and headings"
+    else
+        fail "CRLF plan extracts cleanly without CR bytes and respects fences and headings"
+        echo "    rc1: $rc, rc2: $rc2"
+    fi
+
+    # --- Missing task on plan with preamble, atomic write, and /dev/null OUTFILE (#2611) ---
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 99 >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 3 && ! -e "$pre_dir/task-99-brief.md" ]]; then
+        pass "missing task on plan with preamble exits 3 and creates no task-99-brief.md"
+    else
+        fail "missing task on plan with preamble exits 3 and creates no task-99-brief.md"
+        echo "    rc: $rc, exists: $(test -e "$pre_dir/task-99-brief.md" && echo yes || echo no)"
+    fi
+
+    local existing_brief="$TEST_ROOT/existing-brief.md"
+    printf 'PRESERVED-BRIEF-BYTES\nline-two\n' > "$existing_brief"
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 99 "$existing_brief" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 3 && "$(cat "$existing_brief")" == $'PRESERVED-BRIEF-BYTES\nline-two' ]]; then
+        pass "missing task does not truncate or clobber an existing OUTFILE"
+    else
+        fail "missing task does not truncate or clobber an existing OUTFILE"
+        echo "    rc: $rc, content: $(cat "$existing_brief" 2>/dev/null)"
+    fi
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-unclosed.md 1 "$existing_brief" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 4 && "$(cat "$existing_brief")" == $'PRESERVED-BRIEF-BYTES\nline-two' ]]; then
+        pass "unclosed fence (exit 4) does not truncate or clobber an existing OUTFILE"
+    else
+        fail "unclosed fence (exit 4) does not truncate or clobber an existing OUTFILE"
+        echo "    rc: $rc, content: $(cat "$existing_brief" 2>/dev/null)"
+    fi
+
+    # Equal-depth non-Task heading inside Task 1 (including nested Task 1a subtask) followed by an unclosed fence hiding Task 2 must still exit 4
+    cat > "$repo/plan-footer-then-unclosed.md" <<'PLAN'
+### Task 1: First
+
+BODY-1
+
+#### Task 1a: Nested subtask
+
+BODY-1A
+
+### Requirements
+
+REQ-1
+
+```sh
+echo unclosed
+
+### Task 2: Hidden by fence
+
+BODY-2
+PLAN
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-footer-then-unclosed.md 1 "$existing_brief" >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 4 && "$(cat "$existing_brief")" == $'PRESERVED-BRIEF-BYTES\nline-two' ]]; then
+        pass "parent task with nested subtask + equal-depth subheading + unclosed fence hiding Task 2 exits 4"
+    else
+        fail "parent task with nested subtask + equal-depth subheading + unclosed fence hiding Task 2 did not exit 4 (rc=$rc)"
+    fi
+
+    local null_out
+    rc=0
+    null_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 1 /dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && -c /dev/null && "$null_out" =~ ^wrote\ /dev/null:\ [1-9][0-9]*\ lines$ ]]; then
+        pass "task-brief with /dev/null OUTFILE exits 0 without mv onto /dev/null"
+    else
+        fail "task-brief with /dev/null OUTFILE exits 0 without mv onto /dev/null"
+        echo "    rc: $rc, out: $null_out"
+    fi
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 99 /dev/null >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 3 && -c /dev/null ]]; then
+        pass "task-brief missing task with /dev/null OUTFILE exits 3"
+    else
+        fail "task-brief missing task with /dev/null OUTFILE exits 3"
+        echo "    rc: $rc"
+    fi
+
+    # --- Deleted-plan fallback to claimed workspace brief (#2630) ---
+    local fb_bin="$TEST_ROOT/fb-bin" fb_ws="$TEST_ROOT/fb-ws" fb_explicit="$TEST_ROOT/fb-explicit.md" fb_out=""
+    mkdir -p "$fb_bin" "$fb_ws"
+    cp "$SDD_SCRIPTS/task-brief" "$fb_bin/task-brief"
+    cat > "$fb_bin/sdd-workspace" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "$fb_ws"
+EOF
+    printf '### Task 1: Cached\n\nCACHED-BODY\n' > "$fb_ws/task-1-brief.md"
+    rc=0
+    fb_out="$(cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$fb_out" == "wrote $fb_ws/task-1-brief.md: 3 lines" ]]; then
+        pass "task-brief returns existing cached brief when plan is deleted (#2630)"
+    else
+        fail "task-brief returns existing cached brief when plan is deleted (#2630)"
+        echo "    rc: $rc, out: $fb_out"
+    fi
+
+    rc=0
+    fb_out="$(cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1 "$fb_explicit")" || rc=$?
+    if [[ "$rc" -eq 0 && "$fb_out" == "wrote $fb_explicit: 3 lines" ]] && grep -q 'CACHED-BODY' "$fb_explicit"; then
+        pass "task-brief copies cached brief to explicit OUTFILE when plan is deleted"
+    else
+        fail "task-brief copies cached brief to explicit OUTFILE when plan is deleted"
+        echo "    rc: $rc, out: $fb_out"
+    fi
+
+    rc=0
+    (cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 99 >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "task-brief exits 2 when plan is deleted and no cached brief exists for task"
+    else
+        fail "task-brief exits 2 when plan is deleted and no cached brief exists for task"
+        echo "    rc: $rc"
+    fi
+
+    # Same-filesystem atomic rename & `--` handling: OUTFILE never depends on TMPDIR
+    local new_out_dir="$TEST_ROOT/new-brief-dir" new_out_file="" leftover_tmp=""
+    new_out_file="$new_out_dir/brief.md"
+    rc=0
+    (cd "$repo" && TMPDIR="$TEST_ROOT/nonexistent-tmpdir" "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$new_out_file" >/dev/null 2>&1) || rc=$?
+    leftover_tmp="$(find "$new_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
+    if [[ "$rc" -eq 0 && -s "$new_out_file" && -z "$leftover_tmp" ]]; then
+        pass "task-brief creates OUTFILE parent dir and temp file alongside OUTFILE without needing TMPDIR"
+    else
+        fail "task-brief creates OUTFILE parent dir and temp file alongside OUTFILE without needing TMPDIR"
+        echo "    rc: $rc, leftover: $leftover_tmp"
+    fi
+
+    rc=0
+    (cd "$TEST_ROOT" && TMPDIR="$TEST_ROOT/nonexistent-tmpdir" "$SDD_SCRIPTS/task-brief" "$repo/plan-a.md" 1 -dash-brief.md >/dev/null 2>&1) || rc=$?
+    local rc_fb_dash=0
+    (cd "$TEST_ROOT" && bash "$fb_bin/task-brief" deleted-plan.md 1 -dash-cached.md >/dev/null 2>&1) || rc_fb_dash=$?
+    if [[ "$rc" -eq 0 && -s "$TEST_ROOT/-dash-brief.md" && "$rc_fb_dash" -eq 0 ]] \
+        && grep -q 'CACHED-BODY' "$TEST_ROOT/-dash-cached.md"; then
+        pass "task-brief handles dash-prefixed OUTFILE in both normal and cached fallback paths"
+    else
+        fail "task-brief handles dash-prefixed OUTFILE in both normal and cached fallback paths"
+        echo "    rc: $rc, rc_fb_dash: $rc_fb_dash"
+    fi
+
+    # Directory OUTFILE is rejected without placing a temp file inside it
+    local dir_out_target="$TEST_ROOT/dir-as-outfile" rc_dir_norm=0 rc_dir_fb=0
+    mkdir -p "$dir_out_target"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$dir_out_target" >/dev/null 2>&1) || rc_dir_norm=$?
+    (cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1 "$dir_out_target" >/dev/null 2>&1) || rc_dir_fb=$?
+    if [[ "$rc_dir_norm" -eq 2 && "$rc_dir_fb" -eq 2 && -z "$(ls -A "$dir_out_target")" ]]; then
+        pass "task-brief rejects directory OUTFILE in both normal and cached paths without leaving temp files"
+    else
+        fail "task-brief rejects directory OUTFILE in both normal and cached paths without leaving temp files"
+        echo "    rc_dir_norm: $rc_dir_norm, rc_dir_fb: $rc_dir_fb, contents: $(ls -A "$dir_out_target")"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \
@@ -817,7 +1197,7 @@ PLAN
     mkdir -p "$own/.superpowers/sdd"
     printf '%s\n' "$own_ignore" > "$own/.superpowers/sdd/.gitignore"
     printf '# Plan\n\n## Task 1: One\n\nOne.\n' > "$own/plan.md"
-    (cd "$own" && git add -A && git -c user.name=t -c user.email=t@t commit -qm init)
+    (cd "$own" && git add -A && git "${git_id[@]}" commit -qm init)
     (cd "$own" && "$SDD_SCRIPTS/sdd-workspace" plan.md >/dev/null)
     if [[ "$(cat "$own/.superpowers/sdd/.gitignore")" == "$own_ignore" \
         && -z "$(cd "$own" && git status --porcelain -- .superpowers/sdd/.gitignore)" ]]; then
@@ -825,6 +1205,370 @@ PLAN
     else
         fail "an existing .superpowers/sdd/.gitignore is not overwritten"
         echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
+    fi
+
+    # --- Blocked .superpowers regular file fails fast (#2619) ---
+    local blocked="$TEST_ROOT/blocked-base"
+    git init -q -b main "$blocked"
+    printf '# Plan\n\n## Task 1: One\n\nOne.\n' > "$blocked/plan.md"
+    (cd "$blocked" && git add plan.md && git "${git_id[@]}" commit -qm init)
+    printf 'not a dir\n' > "$blocked/.superpowers"
+    local blocked_start=$SECONDS blocked_elapsed
+    rc=0
+    if command -v perl >/dev/null 2>&1; then
+        (cd "$blocked" && perl -e 'alarm 2; exec @ARGV' -- "$SDD_SCRIPTS/sdd-workspace" plan.md >/dev/null 2>&1) || rc=$?
+    else
+        (cd "$blocked" && timeout 2 "$SDD_SCRIPTS/sdd-workspace" plan.md >/dev/null 2>&1) || rc=$?
+    fi
+    blocked_elapsed=$((SECONDS - blocked_start))
+    if [[ "$rc" -eq 2 && "$blocked_elapsed" -lt 2 ]]; then
+        pass "blocked .superpowers regular file fails fast with exit 2 (${blocked_elapsed}s)"
+    else
+        fail "blocked .superpowers regular file fails fast with exit 2"
+        echo "    rc: $rc, elapsed: ${blocked_elapsed}s"
+    fi
+
+    # --- Cross-checkout plan_id with nested .worktrees/feat ---
+    local cross="$TEST_ROOT/cross-repo"
+    git init -q -b main "$cross"
+    mkdir -p "$cross/docs/plans"
+    printf '# Cross\n\n## Task 1: Cross\n\nCross.\n' > "$cross/docs/plans/x.md"
+    printf '.worktrees/\n' > "$cross/.gitignore"
+    (cd "$cross" && git add .gitignore docs/plans/x.md && git "${git_id[@]}" commit -qm init)
+    local cross_wt="$cross/.worktrees/feat"
+    (cd "$cross" && git worktree add -q "$cross_wt" -b feat)
+    local cross_wt_phys
+    cross_wt_phys="$(cd "$cross_wt" && git rev-parse --show-toplevel)"
+    cross_wt_phys="$(physical_path "$cross_wt_phys")"
+    # Uncommitted plan only in main vs relative inside worktree
+    printf '# Uncommitted Main\n\n## Task 1: Only Main\n\nBody.\n' > "$cross/docs/plans/main-uncommitted.md"
+    local d_cross_abs d_cross_rel d_cross_wt
+    d_cross_abs="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "$cross/docs/plans/x.md")"
+    d_cross_rel="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "docs/plans/x.md")"
+    if [[ "$d_cross_abs" == "$cross_wt_phys/.superpowers/sdd/x" \
+        && "$d_cross_abs" == "$d_cross_rel" \
+        && "$(cat "$d_cross_abs/plan-path" 2>/dev/null)" == "docs/plans/x.md" ]]; then
+        pass "nested .worktrees/feat resolves main-checkout path and relative path to same workspace"
+    else
+        fail "nested .worktrees/feat resolves main-checkout path and relative path to same workspace"
+        echo "    abs: $d_cross_abs"
+        echo "    rel: $d_cross_rel"
+        echo "    marker: $(cat "$d_cross_abs/plan-path" 2>/dev/null || true)"
+    fi
+    # Longest worktree prefix wins: <main>/.worktrees/feat/docs/plans/y.md -> docs/plans/y.md
+    # even when invoked from <main> (where <main>/ is also a prefix!).
+    printf '# WT Local\n\n## Task 1: WT\n\nWT.\n' > "$cross_wt/docs/plans/y.md"
+    d_cross_wt="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "$cross_wt/docs/plans/y.md")"
+    local d_main_to_wt
+    d_main_to_wt="$(cd "$cross" && "$SDD_SCRIPTS/sdd-workspace" "$cross_wt/docs/plans/y.md")"
+    if [[ "$d_cross_wt" == "$cross_wt_phys/.superpowers/sdd/y" \
+        && "$(cat "$d_cross_wt/plan-path" 2>/dev/null)" == "docs/plans/y.md" \
+        && "$(cat "$d_main_to_wt/plan-path" 2>/dev/null)" == "docs/plans/y.md" ]]; then
+        pass "nested worktree strips longest matching worktree prefix (not main prefix)"
+    else
+        fail "nested worktree strips longest matching worktree prefix (not main prefix)"
+        echo "    dir: $d_cross_wt"
+        echo "    marker_wt: $(cat "$d_cross_wt/plan-path" 2>/dev/null || true)"
+        echo "    marker_main: $(cat "$d_main_to_wt/plan-path" 2>/dev/null || true)"
+    fi
+    # Uncommitted main plan claimed from wt, then referred to via relative path in wt
+    local d_uncomm_abs d_uncomm_rel
+    d_uncomm_abs="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "$cross/docs/plans/main-uncommitted.md")"
+    d_uncomm_rel="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "docs/plans/main-uncommitted.md")" || true
+    if [[ "$d_uncomm_abs" == "$d_uncomm_rel" \
+        && "$(cat "$d_uncomm_abs/plan-path" 2>/dev/null)" == "docs/plans/main-uncommitted.md" ]]; then
+        pass "uncommitted main plan claimed from worktree also matches relative plan_id in worktree"
+    else
+        fail "uncommitted main plan claimed from worktree also matches relative plan_id in worktree"
+        echo "    abs: $d_uncomm_abs"
+        echo "    rel: $d_uncomm_rel"
+    fi
+
+    # --- Concurrent sdd-workspace claims (#2619) & stale-PID lock break ---
+    local conc="$TEST_ROOT/concurrent"
+    git init -q -b main "$conc"
+    mkdir -p "$conc/docs/a" "$conc/docs/b" "$conc/docs/same"
+    printf '# A\n\n## Task 1: A\n\nA.\n' > "$conc/docs/a/plan.md"
+    printf '# B\n\n## Task 1: B\n\nB.\n' > "$conc/docs/b/plan.md"
+    printf '# Same\n\n## Task 1: Same\n\nSame.\n' > "$conc/docs/same/unique.md"
+    (cd "$conc" && git add -A && git "${git_id[@]}" commit -qm init)
+
+    local conc_out="$TEST_ROOT/conc-out"
+    mkdir -p "$conc_out"
+    local i pids=()
+    for i in $(seq 1 20); do
+        (cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" docs/a/plan.md > "$conc_out/a-$i") &
+        pids+=($!)
+        (cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" docs/b/plan.md > "$conc_out/b-$i") &
+        pids+=($!)
+        (cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" docs/same/unique.md > "$conc_out/same-$i") &
+        pids+=($!)
+    done
+    local conc_rc=0 p
+    for p in "${pids[@]}"; do
+        wait "$p" || conc_rc=1
+    done
+    local uniq_a uniq_b uniq_same
+    uniq_a="$(sort -u "$conc_out"/a-*)"
+    uniq_b="$(sort -u "$conc_out"/b-*)"
+    uniq_same="$(sort -u "$conc_out"/same-*)"
+    if [[ "$conc_rc" -eq 0 \
+        && "$(printf '%s\n' "$uniq_a" | wc -l | tr -d ' ')" -eq 1 \
+        && "$(printf '%s\n' "$uniq_b" | wc -l | tr -d ' ')" -eq 1 \
+        && "$(printf '%s\n' "$uniq_same" | wc -l | tr -d ' ')" -eq 1 \
+        && "$uniq_a" != "$uniq_b" \
+        && "$(cat "$uniq_a/plan-path" 2>/dev/null)" == "docs/a/plan.md" \
+        && "$(cat "$uniq_b/plan-path" 2>/dev/null)" == "docs/b/plan.md" \
+        && "$(cat "$uniq_same/plan-path" 2>/dev/null)" == "docs/same/unique.md" ]]; then
+        pass "20 concurrent colliding and identical sdd-workspace invocations converge cleanly"
+    else
+        fail "20 concurrent colliding and identical sdd-workspace invocations converge cleanly"
+        echo "    rc: $conc_rc"
+        echo "    uniq_a: $uniq_a"
+        echo "    uniq_b: $uniq_b"
+        echo "    uniq_same: $uniq_same"
+    fi
+
+    # Copied backup workspace (a-backup) does not hijack canonical candidate lookup
+    printf '# Stale\n\n## Task 1: Stale\n\nStale.\n' > "$conc/stale.md"
+    local stale_dir="" after_backup_dir=""
+    stale_dir="$(cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" stale.md)"
+    cp -R "$stale_dir" "$conc/.superpowers/sdd/a-backup"
+    after_backup_dir="$(cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" stale.md)"
+    if [[ "$after_backup_dir" == "$stale_dir" ]]; then
+        pass "canonical candidate workspace wins over alphabetically earlier backup copy"
+    else
+        fail "canonical candidate workspace wins over alphabetically earlier backup copy"
+        echo "    got: $after_backup_dir, want: $stale_dir"
+    fi
+
+    # Stale .lock left by a dead PID is recovered automatically
+    mkdir -p "$conc/.superpowers/sdd/.lock"
+    printf '999999\n' > "$conc/.superpowers/sdd/.lock/pid"
+    local stale_lock_rc=0 stale_lock_dir=""
+    stale_lock_dir="$(cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" stale.md 2>/dev/null)" || stale_lock_rc=$?
+    if [[ "$stale_lock_rc" -eq 0 && "$stale_lock_dir" == "$stale_dir" && ! -d "$conc/.superpowers/sdd/.lock" ]]; then
+        pass "sdd-workspace recovers stale .lock left by dead PID"
+    else
+        fail "sdd-workspace recovers stale .lock left by dead PID"
+        echo "    rc: $stale_lock_rc, dir: $stale_lock_dir"
+    fi
+
+    # Absorbed submodule resolves repo-relative plan_id across primary and linked worktree
+    local sm_host="$TEST_ROOT/sm-host" sm_lib="$TEST_ROOT/sm-lib"
+    git init -q -b main "$sm_host"
+    git init -q -b main "$sm_lib"
+    printf '# Sub\n\n## Task 1: Sub\n\nSub.\n' > "$sm_lib/subplan.md"
+    (cd "$sm_lib" && git add subplan.md && git "${git_id[@]}" commit -qm init)
+    printf 'host\n' > "$sm_host/readme.md"
+    (cd "$sm_host" && git add readme.md && git "${git_id[@]}" commit -qm init)
+    (cd "$sm_host" && git -c protocol.file.allow=always submodule add -q "$sm_lib" libs/sub && git "${git_id[@]}" commit -qm add-sub)
+    local sm_dir=""
+    sm_dir="$(cd "$sm_host/libs/sub" && "$SDD_SCRIPTS/sdd-workspace" subplan.md)"
+    if [[ "$(cat "$sm_dir/plan-path" 2>/dev/null)" == "subplan.md" ]]; then
+        pass "absorbed submodule records repo-relative plan_id marker"
+    else
+        fail "absorbed submodule records repo-relative plan_id marker"
+        echo "    marker: $(cat "$sm_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # Counter bound: disambiguation stops at 100 and exits 2
+    printf '# Cap\n\n## Task 1: Cap\n\nCap.\n' > "$conc/cap.md"
+    local cap_base="$conc/.superpowers/sdd" cap_n
+    mkdir -p "$cap_base/cap" "$cap_base/cap-concurrent"
+    printf 'other/cap.md\n' > "$cap_base/cap/plan-path"
+    printf 'other-0/cap.md\n' > "$cap_base/cap-concurrent/plan-path"
+    for cap_n in $(seq 2 100); do
+        mkdir -p "$cap_base/cap-concurrent-$cap_n"
+        printf 'other-%s/cap.md\n' "$cap_n" > "$cap_base/cap-concurrent-$cap_n/plan-path"
+    done
+    rc=0
+    (cd "$conc" && "$SDD_SCRIPTS/sdd-workspace" cap.md >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 && ! -e "$cap_base/cap-concurrent-101" ]]; then
+        pass "sdd-workspace bounds disambiguation counter at <= 100 and exits 2"
+    else
+        fail "sdd-workspace bounds disambiguation counter at <= 100 and exits 2"
+        echo "    rc: $rc"
+    fi
+
+    # --- Deleted-plan resolution (#2630) end-to-end across all helpers ---
+    mkdir -p "$repo/docs/plans"
+    cat > "$repo/docs/plans/gone.md" <<'PLAN'
+# Gone Plan
+
+**Goal:** Survive plan deletion
+
+### Task 1: Initial
+
+GONE-TASK-1
+
+### Task 2: Uncached
+
+GONE-TASK-2
+PLAN
+    (cd "$repo" && git add docs/plans/gone.md && git "${git_id[@]}" commit -qm "add gone plan")
+    local gone_base gone_head gone_dir
+    gone_base="$(cd "$repo" && git rev-parse HEAD)"
+    gone_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" docs/plans/gone.md)"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" docs/plans/gone.md 1 >/dev/null)
+    (cd "$repo" && git rm -q docs/plans/gone.md && git "${git_id[@]}" commit -qm "remove gone plan")
+    gone_head="$(cd "$repo" && git rev-parse HEAD)"
+
+    local gone_ws_after="" gone_ws_dotdot=""
+    rc=0
+    gone_ws_after="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" docs/plans/gone.md 2>/dev/null)" || rc=$?
+    gone_ws_dotdot="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" docs/plans/./sub/../gone.md 2>/dev/null)" || true
+    if [[ "$rc" -eq 0 && "$gone_ws_after" == "$gone_dir" && "$gone_ws_dotdot" == "$gone_dir" && ! -d "$repo/docs/plans" ]]; then
+        pass "sdd-workspace resolves deleted plan even after parent directory removal"
+    else
+        fail "sdd-workspace resolves deleted plan even after parent directory removal"
+        echo "    rc: $rc, after: $gone_ws_after, dotdot: $gone_ws_dotdot, want: $gone_dir"
+    fi
+
+    local e2e_tb_out="" e2e_tb_err="" e2e_tb_exp="$TEST_ROOT/gone-nested/sub/gone-explicit.md"
+    rc=0
+    e2e_tb_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" docs/plans/gone.md 1 2>"$TEST_ROOT/gone-tb.err")" || rc=$?
+    e2e_tb_err="$(cat "$TEST_ROOT/gone-tb.err" 2>/dev/null || true)"
+    if [[ "$rc" -eq 0 && "$e2e_tb_out" == "wrote $gone_dir/task-1-brief.md: "* && "$e2e_tb_err" == *"serving cached brief"* ]] \
+        && (cd "$repo" && TMPDIR="$TEST_ROOT/nonexistent-tmpdir" "$SDD_SCRIPTS/task-brief" docs/plans/gone.md 1 "$e2e_tb_exp" >/dev/null 2>&1) \
+        && grep -q 'GONE-TASK-1' "$e2e_tb_exp"; then
+        pass "task-brief resolves deleted plan via real sdd-workspace, warns on stderr, and stages explicit OUTFILE in new parent dir"
+    else
+        fail "task-brief resolves deleted plan via real sdd-workspace, warns on stderr, and stages explicit OUTFILE in new parent dir"
+        echo "    rc: $rc, out: $e2e_tb_out, err: $e2e_tb_err"
+    fi
+
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" docs/plans/gone.md 2 >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 ]]; then
+        pass "task-brief exits 2 on deleted plan when requested task was never cached"
+    else
+        fail "task-brief exits 2 on deleted plan when requested task was never cached"
+        echo "    rc: $rc"
+    fi
+
+    local gone_rp3="" gone_rp3_path="" gone_rp4="$TEST_ROOT/gone-explicit-review.diff" gone_rp4_out=""
+    rc=0
+    gone_rp3="$(cd "$repo" && "$SDD_SCRIPTS/review-package" docs/plans/gone.md "$gone_base" "$gone_head" 2>/dev/null)" || rc=$?
+    gone_rp3_path="$(printf '%s\n' "$gone_rp3" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if [[ "$rc" -eq 0 && "$gone_rp3_path" == "$gone_dir/review-"*.diff && -s "$gone_rp3_path" ]]; then
+        pass "review-package (3-arg) succeeds on deleted claimed plan"
+    else
+        fail "review-package (3-arg) succeeds on deleted claimed plan"
+        echo "    rc: $rc, out: $gone_rp3"
+    fi
+
+    rc=0
+    gone_rp4_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" docs/plans/gone.md "$gone_base" "$gone_head" "$gone_rp4" 2>/dev/null)" || rc=$?
+    if [[ "$rc" -eq 0 && -s "$gone_rp4" && "$gone_rp4_out" == *"$gone_rp4"* ]]; then
+        pass "review-package (4-arg OUTFILE) succeeds on deleted claimed plan"
+    else
+        fail "review-package (4-arg OUTFILE) succeeds on deleted claimed plan"
+        echo "    rc: $rc, out: $gone_rp4_out"
+    fi
+
+    local never_out="$TEST_ROOT/never-claimed-out.diff"
+    rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" never-claimed.md HEAD HEAD >/dev/null 2>&1) || rc=$?
+    local rc_never4=0
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" never-claimed.md HEAD HEAD "$never_out" >/dev/null 2>&1) || rc_never4=$?
+    if [[ "$rc" -eq 2 && "$rc_never4" -eq 2 && ! -e "$never_out" ]]; then
+        pass "review-package exits 2 (not 3) for unclaimed missing plan in both 3-arg and 4-arg forms"
+    else
+        fail "review-package exits 2 (not 3) for unclaimed missing plan in both 3-arg and 4-arg forms"
+        echo "    rc3: $rc, rc4: $rc_never4, out_exists: $(test -e "$never_out" && echo yes || echo no)"
+    fi
+
+    # --- Hidden dot-prefixed plan (.plan.md) survives deletion ---
+    cat > "$repo/.plan.md" <<'PLAN'
+# Hidden Plan
+
+### Task 1: Hidden task
+
+HIDDEN-TASK-1
+PLAN
+    local hidden_dir="" hidden_after="" hidden_tb_out="" hidden_tb_exp="$TEST_ROOT/hidden-explicit.md"
+    hidden_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .plan.md)"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" .plan.md 1 >/dev/null)
+    rm -f "$repo/.plan.md"
+    rc=0
+    hidden_after="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .plan.md 2>/dev/null)" || rc=$?
+    local hidden_tb_rc=0
+    hidden_tb_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" .plan.md 1 2>/dev/null)" || hidden_tb_rc=$?
+    local hidden_tb_exp_rc=0
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" .plan.md 1 "$hidden_tb_exp" >/dev/null 2>&1) || hidden_tb_exp_rc=$?
+    if [[ "$hidden_dir" == "$repo/.superpowers/sdd/.plan" \
+        && "$rc" -eq 0 && "$hidden_after" == "$hidden_dir" \
+        && "$hidden_tb_rc" -eq 0 && "$hidden_tb_out" == "wrote $hidden_dir/task-1-brief.md: "* \
+        && "$hidden_tb_exp_rc" -eq 0 ]] \
+        && grep -q 'HIDDEN-TASK-1' "$hidden_tb_exp"; then
+        pass "hidden dot-prefixed plan (.plan.md) resolves via sdd-workspace and task-brief after deletion"
+    else
+        fail "hidden dot-prefixed plan (.plan.md) resolves via sdd-workspace and task-brief after deletion"
+        echo "    dir: $hidden_dir, rc: $rc, after: $hidden_after, tb_rc: $hidden_tb_rc, tb_out: $hidden_tb_out"
+    fi
+
+    # --- Reserved control slugs (.lock.md, .LOCK.md, .gitignore.md) never collide with $base files ---
+    cat > "$repo/.lock.md" <<'PLAN'
+# Lock Plan
+
+### Task 1: Lock task
+
+LOCK-PLAN-1
+PLAN
+    cat > "$repo/.LOCK.md" <<'PLAN'
+# Upper Lock Plan
+
+### Task 1: Upper lock task
+
+UPPER-LOCK-PLAN-1
+PLAN
+    cat > "$repo/.gitignore.md" <<'PLAN'
+# Gitignore Plan
+
+### Task 1: Gitignore task
+
+GITIGNORE-PLAN-1
+PLAN
+    local lock_slug_dir="" upper_lock_dir="" gi_slug_dir=""
+    local lock_slug_rc=0 upper_lock_rc=0 gi_slug_rc=0
+    lock_slug_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .lock.md 2>/dev/null)" || lock_slug_rc=$?
+    upper_lock_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .LOCK.md 2>/dev/null)" || upper_lock_rc=$?
+    gi_slug_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .gitignore.md 2>/dev/null)" || gi_slug_rc=$?
+    if [[ "$lock_slug_rc" -eq 0 && "$upper_lock_rc" -eq 0 && "$gi_slug_rc" -eq 0 \
+        && "$lock_slug_dir" == "$repo/.superpowers/sdd/plan-lock" \
+        && "$gi_slug_dir" == "$repo/.superpowers/sdd/plan-gitignore" \
+        && "$(cat "$repo/.superpowers/sdd/.gitignore")" == "*" \
+        && -d "$upper_lock_dir" ]]; then
+        pass "plans named .lock.md, .LOCK.md, and .gitignore.md reserve control names case-insensitively"
+    else
+        fail "plans named .lock.md, .LOCK.md, and .gitignore.md reserve control names case-insensitively"
+        echo "    lock_rc: $lock_slug_rc ($lock_slug_dir), upper_rc: $upper_lock_rc ($upper_lock_dir), gi_rc: $gi_slug_rc ($gi_slug_dir)"
+    fi
+
+    # --- review-package rejects non-commit objects (#2620) and includes commit bodies (#2298) ---
+    local tree_err="" rc_tree_base=0 rc_tree_head=0 rc_blob=0
+    tree_err="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md 'HEAD^{tree}' HEAD 2>&1 >/dev/null)" || rc_tree_base=$?
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 'HEAD^{tree}' >/dev/null 2>&1) || rc_tree_head=$?
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md 'HEAD:plan-a.md' HEAD >/dev/null 2>&1) || rc_blob=$?
+    if [[ "$rc_tree_base" -eq 2 && "$rc_tree_head" -eq 2 && "$rc_blob" -eq 2 && "$tree_err" == *"bad BASE:"* ]]; then
+        pass "review-package rejects tree and blob refs with exit 2 (not 3)"
+    else
+        fail "review-package rejects tree and blob refs with exit 2 (not 3)"
+        echo "    rc_tree_base: $rc_tree_base, rc_tree_head: $rc_tree_head, rc_blob: $rc_blob, err: $tree_err"
+    fi
+
+    printf 'body-test\n' > "$repo/body-file.txt"
+    (cd "$repo" && git add body-file.txt && git "${git_id[@]}" commit -qm "subject line for review" -m $'Detailed multi-line commit body explaining why.\nSecond line of commit body.')
+    local body_diff="$TEST_ROOT/body-review.diff"
+    (cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD "$body_diff" >/dev/null)
+    if grep -q 'subject line for review' "$body_diff" \
+        && grep -q 'Detailed multi-line commit body explaining why.' "$body_diff" \
+        && grep -q 'Second line of commit body.' "$body_diff"; then
+        pass "review-package includes full multi-line commit bodies under ## Commits"
+    else
+        fail "review-package includes full multi-line commit bodies under ## Commits"
+        sed -n '1,40p' "$body_diff" | sed 's/^/      /'
     fi
 
     echo ""

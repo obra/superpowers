@@ -1,36 +1,7 @@
 #!/usr/bin/env bash
 # Resolve and ensure the working-tree directory SDD uses for one plan's
-# short-lived artifacts: task briefs, implementer reports, review packages,
-# and the progress ledger. Print the plan directory's absolute path.
-#
-# One directory per plan (.superpowers/sdd/<plan-basename>/) so a follow-up
-# plan in the same working tree can never read or overwrite another plan's
-# artifacts. A stale ledger misread as current progress makes controllers
-# skip whole task sequences — plan-scoping removes that failure structurally.
-#
-# Basename slugs collide when two plans share a filename (docs/alpha/plan.md
-# vs docs/beta/plan.md), so each workspace records its owning plan's path in
-# a plan-path marker (repo-relative in-repo, absolute outside). A workspace
-# owned by a different plan is skipped and the slug disambiguated with the
-# plan's parent-directory name, then a counter. A workspace with no marker
-# predates the marker scheme and is adopted for the current plan so in-flight
-# workspaces keep resolving — which means the first collision on such a
-# legacy workspace adopts instead of detecting; acceptable, marker-less
-# workspaces age out as plans finish.
-#
-# The workspace lives in the working tree (not under .git/) because Claude Code
-# treats .git/ as a protected path and denies agent writes there — which blocks
-# an implementer subagent from writing its report file. A self-ignoring
-# .gitignore at .superpowers/sdd/ keeps every plan's workspace out of
-# `git status` and out of accidental commits without modifying any tracked file.
-#
-# Single source of truth for the workspace location, so task-brief and
-# review-package cannot drift to different directories.
-#
-# The repository is the current directory's (see sdd-repo). -C DIR runs as
-# if started in DIR, the way git -C does: a caller working on another
-# checkout or worktree needs no `cd DIR ;` prefix, a compound that harnesses
-# cannot allowlist because DIR differs on every run (#1799).
+# artifacts: task briefs, implementer reports, review packages, and progress ledger.
+# Print the plan directory's absolute path.
 #
 # Usage: sdd-workspace [-C DIR] PLAN_FILE
 set -euo pipefail
@@ -42,69 +13,201 @@ if [ "${1:-}" = "-C" ]; then
   shift 2
 fi
 
-if [ $# -ne 1 ]; then
-  echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2
-  exit 2
-fi
-
+[ $# -eq 1 ] && [ -n "$1" ] || { echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2; exit 2; }
 plan=$1
-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+[ ! -e "$plan" ] || [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-slug=$(basename "$plan" .md)
-[ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
-  || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
-
-# Physical path, spelled the way pwd -P spells the plan path below: on Git
-# Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
-# repo-relative marker check needs both in the same form. Two steps, so a
-# failing sdd-repo stops the script instead of handing cd an empty path.
-# Invoke via bash rather than direct exec: some extractors (Python zipfile)
-# strip Unix exec bits when unpacking marketplace packages (#2040).
+# Resolve repository root first (via sdd-repo for shared error messages).
 toplevel=$("${BASH:-bash}" "$here/sdd-repo")
 root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
 base="$root/.superpowers/sdd"
 
-# Normalize the plan path (physical directory, so relative/absolute/../
-# spellings of one plan compare equal) and express it as the marker value:
-# repo-relative when the plan lives under the repo root, absolute otherwise.
-plan_dir=$(CDPATH='' cd -- "$(dirname "$plan")" && pwd -P)
-plan_abs="$plan_dir/$(basename "$plan")"
-case "$plan_abs" in
-  "$root"/*) plan_id=${plan_abs#"$root"/} ;;
-  *)         plan_id=$plan_abs ;;
+# Collapse lexical . and .. segments, then walk up to the deepest existing ancestor
+# so deleted plans under removed subdirectories still resolve their claimed workspace.
+case "$plan" in
+  /*|[A-Za-z]:/*) raw_abs=$plan ;;
+  *) raw_abs="$(pwd -P)/$plan" ;;
 esac
 
-# True when the workspace at $1 is (or becomes) this plan's: an existing
-# marker must name this plan; a missing marker means a new workspace or a
-# pre-marker legacy one, and either way the plan claims it by writing one.
-owns() {
-  if [ -e "$1/plan-path" ]; then
-    [ "$(cat "$1/plan-path")" = "$plan_id" ]
-  else
-    mkdir -p "$1"
-    printf '%s\n' "$plan_id" > "$1/plan-path"
-  fi
+IFS=/ read -r -a raw_parts <<< "$raw_abs"
+parts=()
+for seg in "${raw_parts[@]}"; do
+  case "$seg" in
+    ""|.) continue ;;
+    ..) [ ${#parts[@]} -gt 0 ] && unset "parts[$((${#parts[@]} - 1))]" || true ;;
+    *) parts+=("$seg") ;;
+  esac
+done
+
+lex_abs=""
+for seg in "${parts[@]+"${parts[@]}"}"; do
+  case "$lex_abs" in
+    ""|[A-Za-z]:) lex_abs="${lex_abs}${lex_abs:+/}$seg" ;;
+    *) lex_abs="$lex_abs/$seg" ;;
+  esac
+done
+[ -n "$lex_abs" ] || lex_abs="/"
+case "$raw_abs" in
+  [A-Za-z]:/*) ;;
+  *) [ "${lex_abs#/}" != "$lex_abs" ] || lex_abs="/$lex_abs" ;;
+esac
+
+plan_base=${lex_abs##*/}
+probe=${lex_abs%/*}
+[ -n "$probe" ] || probe="/"
+tail=""
+while [ ! -d "$probe" ]; do
+  seg=${probe##*/}
+  tail="${seg}${tail:+/$tail}"
+  parent_probe=${probe%/*}
+  [ -n "$parent_probe" ] || parent_probe="/"
+  [ "$parent_probe" = "$probe" ] && break
+  probe=$parent_probe
+done
+[ -d "$probe" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+
+probe_phys=$(CDPATH='' cd -- "$probe" && pwd -P)
+[ "$probe_phys" = "/" ] && probe_phys=""
+plan_dir="${probe_phys}${tail:+/$tail}"
+[ -n "$plan_dir" ] || plan_dir="/"
+plan_abs="$plan_dir/$plan_base"
+
+case "$plan_base" in
+  *.md) slug=${plan_base%.md} ;;
+  *.markdown) slug=${plan_base%.markdown} ;;
+  *) slug=$plan_base ;;
+esac
+slug_lc=$(printf '%s' "$slug" | tr '[:upper:]' '[:lower:]')
+case "$slug_lc" in
+  ""|.|..) echo "cannot derive a workspace name from: $plan" >&2; exit 2 ;;
+  .lock|.lock.*|.gitignore|.gitignore.*|.plan-path|.plan-path.*) slug="plan-${slug#.}" ;;
+esac
+
+parent=$(basename "$plan_dir")
+[ -n "$parent" ] && [ "$parent" != "/" ] || parent="root"
+
+# Longest matching worktree prefix wins so nested .worktrees/ and absorbed submodules match.
+plan_id=$plan_abs
+best_len=0
+case "$plan_abs" in
+  "$root"/*) best_len=${#root}; plan_id=${plan_abs#"$root"/} ;;
+esac
+while IFS= read -r line; do
+  case "$line" in
+    "worktree "*)
+      wt=${line#worktree }
+      wt_top=$(git -C "$wt" rev-parse --show-toplevel 2>/dev/null) || continue
+      wt_phys=$(CDPATH='' cd -- "$wt_top" 2>/dev/null && pwd -P) || continue
+      case "$plan_abs" in
+        "$wt_phys"/*)
+          if [ "${#wt_phys}" -gt "$best_len" ]; then
+            best_len=${#wt_phys}
+            plan_id=${plan_abs#"$wt_phys"/}
+          fi
+          ;;
+      esac
+      ;;
+  esac
+done < <(git -c core.quotePath=false worktree list --porcelain 2>/dev/null || true)
+
+print_dir() {
+  CDPATH='' cd -- "$1"
+  if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi
 }
 
-dir="$base/$slug"
-if ! owns "$dir"; then
-  parent=$(basename "$plan_dir")
-  dir="$base/$slug-$parent"
-  if ! owns "$dir"; then
-    n=2
-    while ! owns "$base/$slug-$parent-$n"; do n=$((n + 1)); done
-    dir="$base/$slug-$parent-$n"
+find_claimed() {
+  local cand="$base/$slug"
+  if [ -f "$cand/plan-path" ] && [ "$(cat "$cand/plan-path")" = "$plan_id" ]; then
+    printf '%s\n' "$cand"; return 0
   fi
+  cand="$base/$slug-$parent"
+  if [ -f "$cand/plan-path" ] && [ "$(cat "$cand/plan-path")" = "$plan_id" ]; then
+    printf '%s\n' "$cand"; return 0
+  fi
+  local n=2
+  while [ "$n" -le 100 ]; do
+    cand="$base/$slug-$parent-$n"
+    if [ -f "$cand/plan-path" ] && [ "$(cat "$cand/plan-path")" = "$plan_id" ]; then
+      printf '%s\n' "$cand"; return 0
+    fi
+    n=$((n + 1))
+  done
+  return 1
+}
+
+if [ ! -f "$plan_abs" ]; then
+  if [ -d "$base" ] && dir=$(find_claimed); then
+    print_dir "$dir"
+    exit 0
+  fi
+  echo "no such plan file: $plan" >&2
+  exit 2
 fi
 
-# Create-only: a repo may commit its own .gitignore here (e.g. to version
-# progress.md ledgers); overwriting it would revert that on every run.
+mkdir -p "$base" 2>/dev/null && [ -d "$base" ] && [ -w "$base" ] \
+  || { echo "sdd-workspace: $base is not a writable directory" >&2; exit 2; }
+
+locked=0
+cleanup_lock() { [ "$locked" -eq 1 ] && rm -rf "$base/.lock"; }
+trap cleanup_lock EXIT
+
+tries=0
+empty_polls=0
+while ! mkdir "$base/.lock" 2>/dev/null; do
+  if [ -f "$base/.lock/pid" ]; then
+    lpid=$(cat "$base/.lock/pid" 2>/dev/null || true)
+    empty_polls=0
+    if [ -n "$lpid" ] && ! kill -0 "$lpid" 2>/dev/null; then
+      if mv "$base/.lock" "$base/.lock.stale.$$" 2>/dev/null; then
+        rm -rf "$base/.lock.stale.$$"
+        continue
+      fi
+    fi
+  else
+    empty_polls=$((empty_polls + 1))
+    if [ "$empty_polls" -ge 50 ] && mv "$base/.lock" "$base/.lock.stale.$$" 2>/dev/null; then
+      rm -rf "$base/.lock.stale.$$"
+      empty_polls=0
+      continue
+    fi
+  fi
+  tries=$((tries + 1))
+  [ "$tries" -lt 1000 ] || { echo "sdd-workspace: timed out waiting for $base/.lock" >&2; exit 2; }
+  sleep 0.02 2>/dev/null || sleep 1
+done
+locked=1
+{ printf '%s\n' "$$" > "$base/.lock/pid"; } 2>/dev/null || true
+
 [ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 
-# On Windows (Git Bash, MSYS2, Cygwin) print C:/Users/... rather than
-# /c/Users/... or /tmp/...: the caller may be PowerShell or another native
-# tool, which can't resolve MSYS paths, and bash accepts this form too.
-# Only the printed path changes; the plan-path markers above keep pwd -P's
-# spelling, so existing workspaces still match their plans.
-CDPATH='' cd -- "$dir"
-if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi
+claim_candidate() {
+  local cand=$1
+  if [ ! -e "$cand" ]; then
+    mkdir -p "$cand"
+    printf '%s\n' "$plan_id" > "$cand/plan-path"
+    dir=$cand
+    return 0
+  fi
+  if [ -d "$cand" ]; then
+    if [ -f "$cand/plan-path" ]; then
+      [ "$(cat "$cand/plan-path")" = "$plan_id" ] && { dir=$cand; return 0; }
+    else
+      printf '%s\n' "$plan_id" > "$cand/plan-path"
+      dir=$cand
+      return 0
+    fi
+  fi
+  return 1
+}
+
+dir=""
+if ! claim_candidate "$base/$slug" && ! claim_candidate "$base/$slug-$parent"; then
+  n=2
+  while [ "$n" -le 100 ]; do
+    claim_candidate "$base/$slug-$parent-$n" && break
+    n=$((n + 1))
+  done
+fi
+
+[ -n "$dir" ] || { echo "sdd-workspace: exceeded 100 workspace candidates for $slug" >&2; exit 2; }
+print_dir "$dir"
