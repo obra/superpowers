@@ -12,7 +12,7 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
-**Complete worked example:** See CLAUDE_MD_TESTING.md in this directory for a full test campaign testing CLAUDE.md documentation variants.
+**Example test campaign plan:** See [CLAUDE_MD_TESTING.md](CLAUDE_MD_TESTING.md) in this directory for an example test campaign plan designed to evaluate CLAUDE.md documentation variants.
 
 ## When to Use
 
@@ -22,8 +22,8 @@ Test skills that:
 - Could be rationalized away ("just this once")
 - Contradict immediate goals (speed over quality)
 
-Don't test:
-- Pure reference skills (API docs, syntax guides)
+Do not run rationalization pressure scenarios on:
+- Pure reference skills (API docs, syntax guides) — test them with retrieval/application scenarios per [SKILL.md](../SKILL.md)
 - Skills without rules to violate
 - Skills agents have no incentive to bypass
 
@@ -290,7 +290,7 @@ Rationalization: "Tests after achieve same goals"
 
 ### Iteration 1 - Add Counter
 ```markdown
-Added section: "Why Order Matters"
+Added explicit counter for "tests after achieve same goals"
 Re-tested: Agent STILL chose C
 New rationalization: "Spirit not letter"
 ```
@@ -373,12 +373,3 @@ Tests pass once ≠ bulletproof.
 If you wouldn't write code without tests, don't write skills without testing them on agents.
 
 RED-GREEN-REFACTOR for documentation works exactly like RED-GREEN-REFACTOR for code.
-
-## Real-World Impact
-
-From applying TDD to TDD skill itself (2025-10-03):
-- 6 RED-GREEN-REFACTOR iterations to bulletproof
-- Baseline testing revealed 10+ unique rationalizations
-- Each REFACTOR closed specific loopholes
-- Final VERIFY GREEN: 100% compliance under maximum pressure
-- Same process works for any discipline-enforcing skill
