@@ -109,17 +109,6 @@ function removeShellPath(p) {
   execFileSync('bash', ['-c', 'rm -rf "$1"', 'bash', p], { stdio: 'ignore' });
 }
 
-function newestSessionDir(projectDir) {
-  const sessionDir = execFileSync('bash', [
-    '-c',
-    'find "$1/.superpowers/brainstorm" -mindepth 1 -maxdepth 1 -type d -print | sort | tail -1',
-    'bash',
-    projectDir
-  ], { encoding: 'utf8' }).trim();
-  assert(sessionDir, `expected at least one session dir under ${projectDir}/.superpowers/brainstorm`);
-  return sessionDir;
-}
-
 async function runTests() {
   let passed = 0, failed = 0;
   async function test(name, fn) {
@@ -168,21 +157,33 @@ async function runTests() {
 
   await test('start-server.sh --idle-timeout-minutes sets the timeout', async () => {
     const dir = makeShellTempDir('bs-life');
-    let info = null;
+    let started = null;
     let startProcess = null;
-    let sessionDir = null;
+    let stopped = false;
     try {
       if (isWindowsLikeShell()) {
         startProcess = spawn('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5']);
-        info = firstServerStarted(await waitForStartedOutput(startProcess));
+        started = firstServerStarted(await waitForStartedOutput(startProcess));
       } else {
         const out = execFileSync('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5', '--background'], { encoding: 'utf8' });
-        info = firstServerStarted(out);
+        started = firstServerStarted(out);
       }
-      sessionDir = newestSessionDir(dir);
-      assert.strictEqual(info.idle_timeout_ms, 5 * 60 * 1000, '5 minutes -> 300000 ms');
+      assert(started.state_dir, 'server-started should include state_dir');
+      assert.strictEqual(started.idle_timeout_ms, 5 * 60 * 1000, '5 minutes -> 300000 ms');
+      const stopRes = JSON.parse(execFileSync('bash', [STOP, started.state_dir], { encoding: 'utf8' }).trim());
+      assert.strictEqual(stopRes.status, 'stopped', 'stop-server.sh should stop the server when passed started.state_dir');
+      stopped = true;
     } finally {
-      if (sessionDir) execFileSync('bash', [STOP, sessionDir], { stdio: 'ignore' });
+      if (!stopped && started && started.state_dir) {
+        try { execFileSync('bash', [STOP, started.state_dir], { stdio: 'ignore' }); } catch (e) {}
+        const pidFile = path.join(started.state_dir, 'server.pid');
+        if (fs.existsSync(pidFile)) {
+          const pid = Number(fs.readFileSync(pidFile, 'utf8').trim());
+          if (Number.isInteger(pid) && pid > 0) {
+            try { process.kill(pid); } catch (e) {}
+          }
+        }
+      }
       if (startProcess && !await waitForExit(startProcess, 3000)) {
         await killAndWait(startProcess);
       }

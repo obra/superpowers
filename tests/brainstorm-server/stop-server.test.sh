@@ -50,7 +50,7 @@ UNRELATED=$!
 track_pid "$UNRELATED"
 disown "$UNRELATED" 2>/dev/null || true
 echo "$UNRELATED" > "$SESS/state/server.pid"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 if kill -0 "$UNRELATED" 2>/dev/null; then
   case "$OUT" in
     *stale_pid*) ok "unrelated reused PID is left alone (stale_pid)" ;;
@@ -71,7 +71,7 @@ disown "$SRV" 2>/dev/null || true
 for _ in $(seq 1 40); do kill -0 "$SRV" 2>/dev/null && break; sleep 0.1; done
 sleep 0.4
 echo "$SRV" > "$SESS/state/server.pid"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 sleep 0.3
 if kill -0 "$SRV" 2>/dev/null; then
   bad "real brainstorm server still running after stop" "$OUT"
@@ -97,7 +97,7 @@ for _ in $(seq 1 40); do
   sleep 0.1
 done
 echo "$SRV" > "$SESS/state/server.pid"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 sleep 0.3
 if kill -0 "$SRV" 2>/dev/null; then
   bad "persistent brainstorm server still running after stop" "$OUT"
@@ -117,7 +117,7 @@ fi
 
 # --- Test 3: no pid file ---
 SESS="$(mktemp -d)"; track_dir "$SESS"; mkdir -p "$SESS/state"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 case "$OUT" in
   *not_running*) ok "missing pid file reports not_running" ;;
   *) bad "missing pid file: unexpected status" "$OUT" ;;
@@ -130,7 +130,7 @@ IMPOSTOR=$!
 track_pid "$IMPOSTOR"
 disown "$IMPOSTOR" 2>/dev/null || true
 echo "$IMPOSTOR" > "$SESS/state/server.pid"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 if kill -0 "$IMPOSTOR" 2>/dev/null; then
   case "$OUT" in
     *stale_pid*) ok "missing instance id leaves node server.cjs impostor alone" ;;
@@ -150,7 +150,7 @@ IMPOSTOR=$!
 track_pid "$IMPOSTOR"
 disown "$IMPOSTOR" 2>/dev/null || true
 echo "$IMPOSTOR" > "$SESS/state/server.pid"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 if kill -0 "$IMPOSTOR" 2>/dev/null; then
   case "$OUT" in
     *stale_pid*) ok "wrong instance id leaves node server.cjs impostor alone" ;;
@@ -168,7 +168,7 @@ IMPOSTOR=$!
 track_pid "$IMPOSTOR"
 disown "$IMPOSTOR" 2>/dev/null || true
 echo "$IMPOSTOR" > "$SESS/state/server.pid"
-OUT="$("$STOP" "$SESS")"
+OUT="$("$STOP" "$SESS/state")"
 if kill -0 "$IMPOSTOR" 2>/dev/null; then
   case "$OUT" in
     *stale_pid*) ok "malformed instance id is fail-closed" ;;
@@ -177,6 +177,63 @@ if kill -0 "$IMPOSTOR" 2>/dev/null; then
 else
   bad "killed process despite malformed instance id" "$OUT"
 fi
+
+# --- Test 7: passing parent session dir (not a state dir) fails with exit 1 ---
+SESS="$(mktemp -d)"; track_dir "$SESS"; mkdir -p "$SESS/content" "$SESS/state"
+RC=0
+OUT="$("$STOP" "$SESS")" || RC=$?
+if [[ "$RC" -eq 1 && "$OUT" == *'"error":'* ]]; then
+  ok "passing parent session dir exits 1 with JSON error"
+else
+  bad "passing parent session dir should exit 1 with JSON error" "rc=$RC out=$OUT"
+fi
+
+RC=0
+OUT="$("$STOP" "$SESS/does-not-exist/state")" || RC=$?
+if [[ "$RC" -eq 1 && "$OUT" == *'"error":'* ]]; then
+  ok "missing state dir exits 1 with JSON error"
+else
+  bad "missing state dir should exit 1 with JSON error" "rc=$RC out=$OUT"
+fi
+
+# --- Test 8: /tmp project mockups are preserved while /tmp/brainstorm-* is deleted ---
+test_tmp_cleanup_case() {
+  local label="$1" sess_dir="$2" expect_deleted="$3"
+  local server_id srv rc=0 out=""
+
+  mkdir -p "$sess_dir/content" "$sess_dir/state"
+  printf '<h1>Mockup</h1>\n' > "$sess_dir/content/mockup.html"
+  server_id="$(new_server_id)"
+  printf '%s\n' "$server_id" > "$sess_dir/state/server-instance-id"
+  node -e 'setInterval(()=>{},60000)' -- "--brainstorm-server-id=$server_id" >/dev/null 2>&1 &
+  srv=$!
+  track_pid "$srv"
+  disown "$srv" 2>/dev/null || true
+  for _ in $(seq 1 20); do kill -0 "$srv" 2>/dev/null && break; sleep 0.05; done
+  echo "$srv" > "$sess_dir/state/server.pid"
+  out="$("$STOP" "$sess_dir/state")" || rc=$?
+  wait "$srv" 2>/dev/null || true
+  untrack_pid "$srv"
+  if [[ "$rc" -ne 0 || "$out" != *stopped* ]]; then
+    bad "$label: stop failed" "rc=$rc out=$out"
+  elif [[ "$expect_deleted" == "true" ]]; then
+    if [[ -e "$sess_dir" ]]; then
+      bad "$label: session dir was not deleted" "$sess_dir still exists"
+    else
+      ok "$label"
+    fi
+  elif [[ ! -f "$sess_dir/content/mockup.html" || ! -f "$sess_dir/state/server-stopped" ]]; then
+    bad "$label: expected mockup.html and server-stopped to remain" "$out"
+  else
+    ok "$label"
+  fi
+}
+
+BPROJ_ROOT="/tmp/brainstorm-proj-$$"; track_dir "$BPROJ_ROOT"
+test_tmp_cleanup_case "/tmp/brainstorm-* project session preserves content/mockup.html on stop" "$BPROJ_ROOT/.superpowers/brainstorm/123" "false"
+
+EPHEM_SESS="/tmp/brainstorm-ephemeral-$$"; track_dir "$EPHEM_SESS"
+test_tmp_cleanup_case "ephemeral /tmp/brainstorm-* session dir is deleted on stop" "$EPHEM_SESS" "true"
 
 echo "--- Results: $PASS passed, $FAIL failed ---"
 [ "$FAIL" -eq 0 ] || exit 1
