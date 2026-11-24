@@ -61,7 +61,7 @@ Generic polling function:
 ```typescript
 async function waitFor<T>(
   condition: () => T | undefined | null | false,
-  description: string,
+  description: string = 'condition',
   timeoutMs = 5000
 ): Promise<T> {
   const startTime = Date.now();
@@ -105,11 +105,3 @@ await new Promise(r => setTimeout(r, 200));   // Then: wait for timed behavior
 1. First wait for triggering condition
 2. Based on known timing (not guessing)
 3. Comment explaining WHY
-
-## Real-World Impact
-
-From debugging session (2025-10-03):
-- Fixed 15 flaky tests across 3 files
-- Pass rate: 60% → 100%
-- Execution time: 40% faster
-- No more race conditions
