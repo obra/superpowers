@@ -69,37 +69,37 @@ const extractAndStripFrontmatter = (content) => {
 };
 
 // Tool mapping injected into the bootstrap, differentiated by host flavor.
-// V1 (OpenCode 1.18.x) and V2 (OpenCode 2.0.4/2.0.7) expose different built-in
+// V1 (OpenCode 1.18.x/1.19.x) and V2 (OpenCode 2.3.x) expose different built-in
 // tools, so each flavor's injection path picks its own constant below.
 // Exported for tests (tests/opencode/test-bootstrap-caching.mjs).
 
-// V1 built-ins: todowrite, task (subagent_type), skill, read, apply_patch,
-// bash, grep, glob, webfetch.
+// V1 built-ins: todowrite, task (subagent_type), skill, read, write, edit
+// (or apply_patch on gpt- models), bash, grep, glob, webfetch.
 export const V1_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → \`todowrite\`
 - \`Subagent (general-purpose):\` → \`task\` with \`subagent_type: "general"\`
 - Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`name: "brainstorming"\`)
 - Read files → \`read\`
-- Create, edit, or delete files → \`apply_patch\`
+- Create, edit, or delete files → \`apply_patch\` on \`gpt-\` models; otherwise \`write\`, \`edit\`, and \`bash\` for deletion
 - Run shell commands → \`bash\`
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-// V2 built-ins: no todo tool at all; task → subagent (agent name in 'agent',
-// continuation via sessionID); apply_patch → patch (patchText, same patch
-// format); bash → shell. read, write, edit, grep, glob, webfetch, websearch,
-// and skill all exist under those names (verified against the 2.0.4 and 2.0.7
-// host contracts).
+// V2 built-ins: todowrite is off by default and enabled via experimental.todo;
+// task → subagent (agent name in 'agent', continuation via sessionID, always
+// background since 2.3.0); apply_patch → patch (patchText, same patch format);
+// bash → shell. read, write, edit, grep, glob, webfetch, websearch, and skill
+// all exist under those names (verified against the 2.3.x host contract).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
-- Create or update todos → OpenCode v2 has no todo tool; track the plan in a markdown file (or the harness's plan facility) instead
-- \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`, optionally \`background\`; pass \`sessionID\` to continue a previous subagent)
+- Create or update todos → \`todowrite\` when available (\`experimental.todo\`); otherwise track the plan in markdown
+- \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`; pass \`sessionID\` to continue a previous subagent)
 - Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`id: "brainstorming"\`)
 - Read files → \`read\`
-- Create, edit, or delete files → use \`patch\` with \`patchText\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`shell\` for deletion
+- Create, edit, or delete files → \`patch\` with \`patchText\` when available; otherwise \`write\`, \`edit\`, and \`shell\` for deletion
 - Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`

@@ -57,6 +57,7 @@ const result = {
   staleTaskMapping: bootstrapText(firstOutput).includes('`Task` tool with subagents'),
   mapsSubagentToTask: bootstrapText(firstOutput).includes('`task` with `subagent_type: "general"`'),
   mapsMutationToApplyPatch: bootstrapText(firstOutput).includes('`apply_patch`'),
+  mapsMutationToWriteEditBash: bootstrapText(firstOutput).includes('`write`') && bootstrapText(firstOutput).includes('`edit`') && bootstrapText(firstOutput).includes('`bash`'),
   firstReadCount: afterFirst.readCount,
   secondReadCount: afterSecond.readCount,
   firstExistsCount: afterFirst.existsCount,
@@ -64,10 +65,12 @@ const result = {
   v2BootstrapParts: v2Result.bootstrapParts,
   mapsV2SubagentTool: v2Result.text.includes('`subagent` with `agent: "general"`'),
   mapsV2SessionIDContinuation: v2Result.text.includes('`sessionID` to continue a previous subagent'),
-  mapsV2NoTodoTool: v2Result.text.includes('no todo tool'),
+  mapsV2ExperimentalTodo: v2Result.text.includes('`todowrite`') && v2Result.text.includes('experimental.todo') && v2Result.text.includes('markdown') && v2Result.text.includes('plan'),
+  staleV2BackgroundParam: v2Result.text.includes('optionally `background`'),
+  staleV2NoTodoClaim: v2Result.text.includes('no todo tool'),
   mapsV2MutationToPatch: v2Result.text.includes('`patch` with `patchText`'),
   mapsV2Shell: v2Result.text.includes('`shell`'),
-  staleV1ToolsInV2: v2Result.text.includes('`apply_patch`') || v2Result.text.includes('`todowrite`') || v2Result.text.includes('`subagent_type`'),
+  staleV1ToolsInV2: v2Result.text.includes('`apply_patch`') || v2Result.text.includes('`subagent_type`'),
 };
 
 const failures = scenario === 'present'
@@ -146,6 +149,9 @@ function assertPresentBootstrap(result) {
   if (!result.mapsMutationToApplyPatch) {
     failures.push('expected OpenCode bootstrap to map file mutation to apply_patch');
   }
+  if (!result.mapsMutationToWriteEditBash) {
+    failures.push('expected OpenCode bootstrap to include write, edit, and bash alongside apply_patch');
+  }
   return failures;
 }
 
@@ -175,15 +181,18 @@ function assertMappingConstants(mod) {
     failures.push('expected plugin to export V1_MAPPING and V2_MAPPING string constants');
     return failures;
   }
-  for (const needle of ['`todowrite`', '`task` with `subagent_type: "general"`', '`apply_patch`', '`bash`']) {
+  for (const needle of ['`todowrite`', '`task` with `subagent_type: "general"`', '`apply_patch`', '`write`', '`edit`', '`bash`']) {
     if (!mod.V1_MAPPING.includes(needle)) {
-      failures.push(`expected V1_MAPPING to keep the 1.18.x tool name ${needle}`);
+      failures.push(`expected V1_MAPPING to teach the V1 tool ${needle}`);
     }
   }
   for (const needle of [
     '`subagent` with `agent: "general"`',
     '`sessionID` to continue a previous subagent',
-    'no todo tool',
+    '`todowrite`',
+    'experimental.todo',
+    'markdown',
+    'plan',
     '`write`',
     '`edit`',
     '`patch` with `patchText`',
@@ -197,9 +206,14 @@ function assertMappingConstants(mod) {
       failures.push(`expected V2_MAPPING to teach the V2 tool ${needle}`);
     }
   }
-  for (const stale of ['`todowrite`', '`task` with', '`apply_patch`', '`bash`']) {
+  for (const stale of ['`task` with', '`apply_patch`', '`bash`']) {
     if (mod.V2_MAPPING.includes(stale)) {
       failures.push(`expected V2_MAPPING not to teach the V1-only tool name ${stale}`);
+    }
+  }
+  for (const stale of ['optionally `background`', 'no todo tool']) {
+    if (mod.V2_MAPPING.includes(stale)) {
+      failures.push(`expected V2_MAPPING not to contain stale 2.0.x text ${JSON.stringify(stale)}`);
     }
   }
   return failures;
@@ -274,8 +288,14 @@ function assertV2Bootstrap(result) {
   if (!result.mapsV2SessionIDContinuation) {
     failures.push('expected V2 bootstrap to teach sessionID continuation for subagents');
   }
-  if (!result.mapsV2NoTodoTool) {
-    failures.push('expected V2 bootstrap to state that V2 has no todo tool');
+  if (!result.mapsV2ExperimentalTodo) {
+    failures.push('expected V2 bootstrap to mention todowrite behind experimental.todo with markdown/plan fallback');
+  }
+  if (result.staleV2BackgroundParam) {
+    failures.push('expected V2 bootstrap not to include removed optionally `background` subagent param');
+  }
+  if (result.staleV2NoTodoClaim) {
+    failures.push('expected V2 bootstrap not to claim V2 has no todo tool');
   }
   if (!result.mapsV2MutationToPatch) {
     failures.push('expected V2 bootstrap to map file mutation to patch with patchText');
@@ -284,7 +304,7 @@ function assertV2Bootstrap(result) {
     failures.push('expected V2 bootstrap to map shell commands to the shell tool');
   }
   if (result.staleV1ToolsInV2) {
-    failures.push('expected V2 bootstrap not to teach V1-only tool names (apply_patch/todowrite/subagent_type)');
+    failures.push('expected V2 bootstrap not to teach V1-only tool names (apply_patch/subagent_type)');
   }
   return failures;
 }
