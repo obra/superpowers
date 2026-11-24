@@ -48,11 +48,11 @@ Steps 5–7 run only on their stated condition.
 5. **GitHub issues** — when report §7 says possible or likely, or your
    partner asks. Search open and closed issues for the symptoms per
    `references/github-issues.md`. Show matches and suggest adding the
-   report to the closest. If none match, write filled `templates/issue.md`
-   to the workspace. Scrub comments and issue drafts per
-   `references/redaction-policy.md` before showing; present exact text and
-   post only after approval. `gh` cannot attach files; if a bundle exists,
-   give your partner its path to attach in the browser.
+   report to the closest. If none match, fill `templates/issue.md`. Scrub
+   comments and issue drafts per `references/redaction-policy.md` before
+   writing to the workspace and showing; present exact text and post only
+   after approval. `gh` cannot attach files; if a bundle exists, give
+   your partner its path to attach in the browser.
 6. **Export** — only when your partner asks for a bundle; never build one
    unprompted. If the intake goal was a bug report, say once that a
    scrubbed bundle is available on request, then wait. Ask the redaction

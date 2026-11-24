@@ -169,6 +169,13 @@ else
   fail "SKILL.md removes todo instruction and Step 5 references references/redaction-policy.md"
 fi
 
+if grep -q '^## Comment' "$SKILL_DIR/references/github-issues.md" \
+  && grep -qF 'references/redaction-policy.md' "$SKILL_DIR/references/github-issues.md"; then
+  pass "references/github-issues.md covers comments and references references/redaction-policy.md"
+else
+  fail "references/github-issues.md covers comments and references references/redaction-policy.md"
+fi
+
 echo
 echo "Passed: $PASSES  Failed: $FAILURES"
 [ "$FAILURES" -eq 0 ]
