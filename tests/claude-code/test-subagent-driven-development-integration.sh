@@ -8,7 +8,6 @@
 #   - >=3 git commits (initial + per-task commits, exercising SDD's
 #     commit-per-task workflow shape)
 #   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1)
-#   - Claude Code task-tracking tool usage (drill makes no assertion)
 #   - test/math.test.js exists (drill relies on `npm test` succeeding)
 #   - analyze-token-usage.py token-budget telemetry
 # Kept until those assertions are added to drill or explicitly retired.
@@ -37,7 +36,7 @@ TEST_PROJECT=$(create_test_project)
 echo "Test project: $TEST_PROJECT"
 
 # Trap to cleanup
-trap "cleanup_test_project $TEST_PROJECT" EXIT
+trap 'cleanup_test_project "$TEST_PROJECT"' EXIT
 
 # Set up minimal Node.js project
 cd "$TEST_PROJECT"
@@ -165,9 +164,10 @@ PLUGIN_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
 cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+    claude_rc=$?
     echo ""
     echo "================================================================================"
-    echo "EXECUTION FAILED (exit code: $?)"
+    echo "EXECUTION FAILED (exit code: $claude_rc)"
     exit 1
 }
 echo "================================================================================"
@@ -215,7 +215,8 @@ echo ""
 
 # Test 2: Subagents were used (Agent / Task tool — name varies by harness version)
 echo "Test 2: Subagents dispatched..."
-task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || echo "0")
+task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || true)
+task_count=${task_count:-0}
 if [ "$task_count" -ge 2 ]; then
     echo "  [PASS] $task_count subagents dispatched"
 else
@@ -224,14 +225,14 @@ else
 fi
 echo ""
 
-# Test 3: Claude Code task-tracking tool was used
-echo "Test 3: Task tracking..."
-todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || echo "0")
+# Test 3: Claude Code task-tracking tool telemetry (optional — SDD tracks progress in ledger)
+echo "Test 3: Task tracking (optional)..."
+todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || true)
+todo_count=${todo_count:-0}
 if [ "$todo_count" -ge 1 ]; then
     echo "  [PASS] Task tracking used $todo_count time(s)"
 else
-    echo "  [FAIL] No Claude Code task-tracking tool used"
-    FAILED=$((FAILED + 1))
+    echo "  [INFO] No Claude Code task-tracking tool used (SDD tracks progress in ledger)"
 fi
 echo ""
 

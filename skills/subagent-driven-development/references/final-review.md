@@ -32,18 +32,22 @@ finishing-a-development-branch presents the options.
 
 ### Finish
 
-Before you delete anything, collect every ledger line containing `Ruling:` —
-preflight rulings, parked findings, breaker adjudications, all of them — into
-your final message under "Rulings I made", in the order you made them, each
-with what it costs if wrong. The list is exhaustive: if the ledger holds a
-ruling, the list holds it. That list is the only place the decisions you
-took on your human partner's behalf reach them — they read it and rework
-whatever you got wrong. A ruling that dies with the workspace was a decision
-made in secret.
+Before finishing, collect three exhaustive sections from `<workspace>/progress.md`
+for your final message, in the order recorded:
 
-When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
-the record now. Sibling directories belong to other plans; leave them
-alone.
+1. **"Rulings I made"**: every non-parked ledger line containing `Ruling:` —
+   preflight, task, and breaker/final rulings — each with what it costs if
+   wrong.
+2. **"Parked findings"**: every `parked` ledger line, with its attached `Ruling:`.
+3. **"Deferred minors"**: every `minor (deferred)` ledger line.
 
-Use superpowers:finishing-a-development-branch.
+These lists are the only place decisions and deferrals reach your human
+partner without reading `<workspace>/progress.md`. `git log` shows
+only committed tasks; rulings, briefs, reports, and logs live only in
+`<workspace>`.
+
+**After** assembling them (and completing the final review/fixes), append
+the exact line `finish` to `<workspace>/progress.md` — do not delete
+`<workspace>`. Sibling directories belong to other plans; leave them alone.
+
+Use superpowers:finishing-a-development-branch (keeping its option menu verbatim).
