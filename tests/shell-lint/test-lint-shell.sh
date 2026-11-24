@@ -127,6 +127,14 @@ run_lint_shell() {
 
 echo "Shell lint script tests"
 
+if help_output="$(bash "$SCRIPT_UNDER_TEST" --help 2>&1)"; then
+  pass "lint-shell --help exits successfully"
+else
+  fail "lint-shell --help exits successfully"
+  printf '%s\n' "$help_output" | sed 's/^/      /'
+fi
+assert_contains "$help_output" "lint a smaller set." "--help prints complete usage comment"
+
 fixture="$TEST_ROOT/repo"
 fakebin="$TEST_ROOT/bin"
 log="$TEST_ROOT/tool.log"
