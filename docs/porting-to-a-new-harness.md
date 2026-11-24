@@ -760,18 +760,22 @@ Then:
 
 Only relevant to the shell-hook shape. `hooks/run-hook.cmd` is a polyglot: a
 single file that's valid as both a Windows batch script and a Unix shell script.
-On Windows, `cmd.exe` runs the batch portion, which locates `bash` (Git for
-Windows, then `bash` on PATH) and runs the named hook script; if no bash is
-found it exits cleanly so the harness still works, just without injection. On
-Unix, the leading `:` makes the batch block a no-op and the shell runs the
-script directly.
+On Unix (`bash`/`zsh`/`sh`/`ash`), a four-line `:;` prologue before `@echo off` (no
+heredocs, which deadlock GNU `bash >= 5.1` on macOS under shrunken 512-byte xnu
+pipes, and no bare `#` comments before `@echo off`, which `cmd.exe` would error
+on) uses `${0%[/\\]*}` fork-free, selects `$BASH` → `bash` → `zsh` → `sh` →
+`/bin/sh` (working on empty `PATH` and on `sh`/`ash`/`dash`-only systems), and
+`exec`s the named hook script. On Windows, `cmd.exe` skips the leading `:` labels and runs
+the batch portion, which locates `bash` (Git for Windows, then `bash` on `PATH`
+excluding WSL launchers) and runs the hook script, exiting `0` cleanly if no
+bash is found so the harness still works without injection.
 
 Two rules this enforces, which you must respect:
 
 - **Hook scripts are extensionless** (`session-start`, not `session-start.sh`).
   Claude Code's Windows handling prepends `bash` to any command containing
   `.sh`, which would double-invoke. Name your hook script without an extension.
-- Don't write per-OS variants of the hook script. One extensionless bash script
+- Don't write per-OS variants of the hook script. One extensionless POSIX `sh` script
   plus the polyglot wrapper covers all three platforms.
 
 `hooks/run-hook.cmd` itself is the authoritative implementation — read it. See
