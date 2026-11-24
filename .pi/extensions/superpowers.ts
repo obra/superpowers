@@ -5,6 +5,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const EXTREMELY_IMPORTANT_MARKER = "<EXTREMELY_IMPORTANT>";
 const BOOTSTRAP_MARKER = "superpowers:using-superpowers bootstrap for pi";
+const BOOTSTRAP_PREFIX = `${EXTREMELY_IMPORTANT_MARKER}\n${BOOTSTRAP_MARKER}`;
 
 const extensionDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(extensionDir, "../..");
@@ -94,7 +95,7 @@ Pi does not ship a standard task-list tool. If an installed todo/task tool is av
 
 function messageContainsBootstrap(message: unknown): boolean {
 	const content = (message as { content?: unknown }).content;
-	if (typeof content === "string") return content.includes(BOOTSTRAP_MARKER);
+	if (typeof content === "string") return content.startsWith(BOOTSTRAP_PREFIX);
 	if (!Array.isArray(content)) return false;
 	return content.some((part) => {
 		return (
@@ -102,7 +103,7 @@ function messageContainsBootstrap(message: unknown): boolean {
 			typeof part === "object" &&
 			(part as { type?: unknown }).type === "text" &&
 			typeof (part as { text?: unknown }).text === "string" &&
-			(part as { text: string }).text.includes(BOOTSTRAP_MARKER)
+			(part as { text: string }).text.startsWith(BOOTSTRAP_PREFIX)
 		);
 	});
 }
