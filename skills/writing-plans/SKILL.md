@@ -11,7 +11,7 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** Write the plan in the current checkout; the executor sets up workspace isolation when implementation starts.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -56,7 +56,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -95,9 +95,9 @@ owns the code, in that task's own step style.]
 ### Task N: [Component Name]
 
 **Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
+- Create: `src/path/file.py`
+- Modify: `src/path/existing.py (function normalize_path)`
+- Test: `tests/path/test.py`
 
 **Interfaces:**
 - Consumes: [what this task uses from earlier tasks — exact signatures]
@@ -115,10 +115,10 @@ def test_specific_behavior():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest tests/path/test.py::test_name -v`
+Run: `pytest tests/path/test.py::test_specific_behavior -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
+- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `src/path/file.py`**
 
 One line on the approach when the signature and the test leave a choice
 (which library call, which data structure); a code block only for an
@@ -126,14 +126,14 @@ algorithm they do not determine.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pytest tests/path/test.py::test_name -v`
+Run: `pytest tests/path/test.py::test_specific_behavior -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git commit -m "<message matching this repo's commit style>"
 ```
 ````
 
@@ -183,6 +183,10 @@ to read. If they have already explicitly supplied an execution method, ask
 them to review the plan and confirm it captures what they want; wait for that
 review before implementation, then use the preserved method. Otherwise, ask
 them to review the plan and choose an execution method before implementation.
+If this session has accumulated substantial context, append a one-sentence
+offer to whichever handoff prompt below you send (with or without a supplied
+execution method), pointing to the saved plan path so execution can start in
+a fresh session if they prefer.
 
 **When no execution method has already been supplied:**
 
