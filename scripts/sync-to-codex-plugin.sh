@@ -50,6 +50,7 @@ EXCLUDES=(
   "/.codex/"
   "/.cursor-plugin/"
   "/.devin-plugin/"
+  "/.dsh/"
   "/.git/"
   "/.gitattributes"
   "/.github/"
