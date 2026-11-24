@@ -118,6 +118,28 @@ read_archive_file() {
   esac
 }
 
+assert_packaged_manifest() {
+  local archive_path="$1"
+
+  if read_archive_file "$archive_path" .codex-plugin/plugin.json | python3 -c '
+import json
+import subprocess
+import sys
+
+source = json.loads(subprocess.check_output(
+    ["git", "show", "HEAD:.codex-plugin/plugin.json"], cwd=sys.argv[1]
+))
+manifest = json.load(sys.stdin)
+assert "hooks" not in manifest, "packaged manifest must omit hook declarations"
+source.pop("hooks", None)
+assert manifest == source, "packaging must preserve all other manifest fields"
+' "$REPO_ROOT"; then
+    pass "archive omits hook declarations and preserves all other manifest fields"
+  else
+    fail "archive omits hook declarations and preserves all other manifest fields"
+  fi
+}
+
 write_metadata_fixture() {
   local destination="$1"
   local skill
@@ -145,6 +167,7 @@ write_metadata_fixture "$metadata_source"
 
 source_hooks="$(python3 -c 'import json; print(json.load(open("'"$REPO_ROOT"'/.codex-plugin/plugin.json")).get("hooks"))')"
 assert_equals "$source_hooks" "{}" "source Codex manifest suppresses local hook auto-discovery"
+source_manifest_checksum="$(shasum -a 256 "$REPO_ROOT/.codex-plugin/plugin.json" | awk '{print $1}')"
 
 if output="$("$SCRIPT_UNDER_TEST" --allow-dirty --metadata-source "$metadata_source" --output "$archive" 2>&1)"; then
   pass "package script exits successfully"
@@ -193,9 +216,7 @@ assert_contains "$archive_paths" "skills/brainstorming/agents/openai.yaml" "arch
 assert_contains "$archive_paths" "assets/app-icon.png" "archive includes app icon"
 assert_contains "$archive_paths" "assets/superpowers-small.svg" "archive includes composer icon"
 
-manifest_summary="$(read_archive_file "$archive" .codex-plugin/plugin.json | python3 -c 'import json,sys; data=json.load(sys.stdin); print("\t".join([data["name"], data["version"], data["skills"], str(data.get("hooks"))]))')"
-expected_version="$(python3 -c 'import json; print(json.load(open("'"$REPO_ROOT"'/.codex-plugin/plugin.json"))["version"])')"
-assert_equals "$manifest_summary" "superpowers	$expected_version	./skills/	$source_hooks" "archive manifest preserves source hooks"
+assert_packaged_manifest "$archive"
 
 skill_count="$(find "$extracted/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
 metadata_count="$(find "$extracted/skills" -path '*/agents/openai.yaml' -type f | wc -l | tr -d ' ')"
@@ -217,6 +238,23 @@ PY
 )"
 assert_equals "$zip_times" "(1980, 1, 1, 0, 0, 0)" "zip archive normalizes entry timestamps"
 
+restrictive_archive="$TEST_ROOT/superpowers-restrictive.zip"
+(
+  umask 077
+  "$SCRIPT_UNDER_TEST" --allow-dirty --metadata-source "$metadata_source" --output "$restrictive_archive" >/dev/null
+)
+restrictive_manifest_mode="$(python3 - "$restrictive_archive" <<'PY'
+import stat
+import sys
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    manifest = archive.getinfo(".codex-plugin/plugin.json")
+    print(oct(stat.S_IMODE(manifest.external_attr >> 16)))
+PY
+)"
+assert_equals "$restrictive_manifest_mode" "0o644" "manifest preserves its mode under a restrictive umask"
+
 if tar_output="$("$SCRIPT_UNDER_TEST" --allow-dirty --metadata-source "$metadata_source" --format tar.gz --output "$tar_archive" 2>&1)"; then
   pass "package script writes explicit tar.gz archive"
 else
@@ -228,6 +266,7 @@ assert_contains "$tar_output" "Format:  tar.gz" "reports explicit tar.gz format"
 extract_archive "$tar_archive" "$tar_extracted"
 tar_archive_paths="$(list_archive "$tar_archive" | normalize_archive_paths)"
 assert_equals "$tar_archive_paths" "$archive_paths" "zip and tar.gz archives contain the same paths"
+assert_packaged_manifest "$tar_archive"
 
 tar_task_brief_mode="$(tar -tzvf "$tar_archive" skills/subagent-driven-development/scripts/task-brief | awk '{print $1}')"
 assert_equals "$tar_task_brief_mode" "-rwxr-xr-x" "tar.gz archive preserves executable script mode"
@@ -310,6 +349,9 @@ else
   fail "package script rejects dirty worktree by default"
 fi
 assert_contains "$dirty_output" "Working tree has uncommitted changes:" "dirty worktree reports changed files"
+
+assert_equals "$(shasum -a 256 "$REPO_ROOT/.codex-plugin/plugin.json" | awk '{print $1}')" \
+  "$source_manifest_checksum" "packaging leaves the repository manifest unchanged"
 
 if [[ "$FAILURES" -eq 0 ]]; then
   echo "All Codex package archive tests passed"

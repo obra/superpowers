@@ -42,6 +42,7 @@ Options:
 The archive is rootless: .codex-plugin/, assets/, skills/, README.md, LICENSE,
 and CODE_OF_CONDUCT.md sit at the archive root. Source-only repo files, hooks, tests,
 docs, and other harness manifests are intentionally not shipped.
+Hook declarations are removed from the packaged manifest for portal submission.
 EOF
 }
 
@@ -243,6 +244,13 @@ git -C "$REPO_ROOT" -c tar.umask=0022 archive --format=tar "$REF" -- \
 
 VERSION="$(jq -r '.version // empty' "$STAGE/.codex-plugin/plugin.json")"
 [[ -n "$VERSION" ]] || die "could not read version from .codex-plugin/plugin.json"
+
+# Omit hook declarations from portal packages while retaining the source
+# manifest's suppression of hook discovery for repository installs.
+# Write into the extracted file to preserve its canonical mode.
+manifest_tmp="$WORK_DIR/plugin-manifest.json"
+jq 'del(.hooks)' "$STAGE/.codex-plugin/plugin.json" >"$manifest_tmp"
+cat "$manifest_tmp" >"$STAGE/.codex-plugin/plugin.json"
 
 if [[ -z "$OUTPUT" ]]; then
   case "$FORMAT" in
