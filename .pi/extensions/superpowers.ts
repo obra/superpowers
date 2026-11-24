@@ -15,13 +15,16 @@ let cachedBootstrap: string | null | undefined;
 
 export default function superpowersPiExtension(pi: ExtensionAPI) {
 	let injectBootstrap = true;
+	let bootstrapTimestamp = Date.now();
 
 	pi.on("session_start", async () => {
 		injectBootstrap = true;
+		bootstrapTimestamp = Date.now();
 	});
 
 	pi.on("session_compact", async () => {
 		injectBootstrap = true;
+		bootstrapTimestamp = Date.now();
 	});
 
 	// Messages returned from a context handler are sent to the provider but never
@@ -37,7 +40,7 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		const bootstrapMessage = {
 			role: "user" as const,
 			content: [{ type: "text" as const, text: bootstrap }],
-			timestamp: Date.now(),
+			timestamp: bootstrapTimestamp,
 		};
 
 		const insertAt = firstNonCompactionSummaryIndex(event.messages);
