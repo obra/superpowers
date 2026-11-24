@@ -4,8 +4,9 @@
  * Render graphviz diagrams from a skill's SKILL.md to SVG files.
  *
  * Usage:
- *   ./render-graphs.js <skill-directory>           # Render each diagram separately
- *   ./render-graphs.js <skill-directory> --combine # Combine all into one diagram
+ *   node render-graphs.js <skill-directory>                    # Render each diagram separately
+ *   node render-graphs.js <skill-directory> --combine          # Combine all into one diagram
+ *   node render-graphs.js <skill-directory> --out-dir <dir>    # Write output to <dir>
  *
  * Extracts all ```dot blocks from SKILL.md and renders to SVG.
  * Useful for helping your human partner visualize the process flows.
@@ -19,11 +20,11 @@ import { execFileSync } from 'child_process';
 
 function extractDotBlocks(markdown) {
   const blocks = [];
-  const regex = /```dot\n([\s\S]*?)```/g;
+  const regex = /```dot[ \t]*\r?\n([\s\S]*?)```/g;
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
-    const content = match[1].trim();
+    const content = match[1].replace(/\r\n/g, '\n').trim();
 
     // Extract digraph name
     const nameMatch = content.match(/digraph\s+(\w+)/);
@@ -81,20 +82,47 @@ function renderToSvg(dotContent) {
   }
 }
 
+function printUsage() {
+  console.error('Usage: node render-graphs.js <skill-directory> [--combine] [--out-dir <dir>]');
+  console.error('');
+  console.error('Options:');
+  console.error('  --combine        Combine all diagrams into one SVG');
+  console.error('  --out-dir <dir>  Write output files to <dir> (default: <skill-directory>/diagrams)');
+  console.error('');
+  console.error('Example:');
+  console.error('  node render-graphs.js ../subagent-driven-development');
+  console.error('  node render-graphs.js ../subagent-driven-development --combine');
+}
+
+function parseArgs(args) {
+  let combine = false;
+  let outDirArg = null;
+  let skillDirArg = null;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--combine') {
+      combine = true;
+    } else if (arg === '--out-dir' || arg.startsWith('--out-dir=')) {
+      const value = arg === '--out-dir' ? args[++i] : arg.slice('--out-dir='.length);
+      if (!value || value.startsWith('--')) {
+        console.error('Error: --out-dir requires a directory path');
+        process.exit(1);
+      }
+      outDirArg = value;
+    } else if (!arg.startsWith('--') && !skillDirArg) {
+      skillDirArg = arg;
+    }
+  }
+
+  return { combine, outDirArg, skillDirArg };
+}
+
 function main() {
-  const args = process.argv.slice(2);
-  const combine = args.includes('--combine');
-  const skillDirArg = args.find(a => !a.startsWith('--'));
+  const { combine, outDirArg, skillDirArg } = parseArgs(process.argv.slice(2));
 
   if (!skillDirArg) {
-    console.error('Usage: render-graphs.js <skill-directory> [--combine]');
-    console.error('');
-    console.error('Options:');
-    console.error('  --combine    Combine all diagrams into one SVG');
-    console.error('');
-    console.error('Example:');
-    console.error('  ./render-graphs.js ../subagent-driven-development');
-    console.error('  ./render-graphs.js ../subagent-driven-development --combine');
+    printUsage();
     process.exit(1);
   }
 
@@ -128,10 +156,10 @@ function main() {
 
   console.log(`Found ${blocks.length} diagram(s) in ${path.basename(skillDir)}/SKILL.md`);
 
-  const outputDir = path.join(skillDir, 'diagrams');
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
-  }
+  const outputDir = outDirArg ? path.resolve(outDirArg) : path.join(skillDir, 'diagrams');
+  fs.mkdirSync(outputDir, { recursive: true });
+
+  let hadFailure = false;
 
   if (combine) {
     // Combine all graphs into one
@@ -148,6 +176,7 @@ function main() {
       console.log(`  Source: ${skillName}_combined.dot`);
     } else {
       console.error('  Failed to render combined diagram');
+      hadFailure = true;
     }
   } else {
     // Render each separately
@@ -159,11 +188,16 @@ function main() {
         console.log(`  Rendered: ${block.name}.svg`);
       } else {
         console.error(`  Failed: ${block.name}`);
+        hadFailure = true;
       }
     }
   }
 
   console.log(`\nOutput: ${outputDir}/`);
+
+  if (hadFailure) {
+    process.exit(1);
+  }
 }
 
 main();
