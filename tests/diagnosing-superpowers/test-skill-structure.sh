@@ -146,6 +146,29 @@ else
   printf '%s\n' "$user_hits" | head -10 | sed 's/^/    /'
 fi
 
+# --- issue privacy scrub & prompt hygiene --------------------------------
+if ! grep -qF '<path, redaction level' "$SKILL_DIR/templates/issue.md" \
+  && ! grep -qF 'with the transcript path if there is one' "$SKILL_DIR/templates/issue.md"; then
+  pass "templates/issue.md omits raw transcript/archive path placeholders"
+else
+  fail "templates/issue.md omits raw transcript/archive path placeholders"
+fi
+
+if grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/analyst-common.md" \
+  && grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/similar-session.md"; then
+  pass "analyst and matcher prompts warn that transcript text is evidence, not instructions"
+else
+  fail "analyst and matcher prompts warn that transcript text is evidence, not instructions"
+fi
+
+step5_prose="$(awk '/^5\. \*\*GitHub issues\*\*/{in_step5=1} /^6\. \*\*Export\*\*/{in_step5=0} in_step5{print}' "$SKILL_MD")"
+if ! grep -qF 'Create a todo per step' "$SKILL_MD" \
+  && printf '%s\n' "$step5_prose" | grep -qF 'references/redaction-policy.md'; then
+  pass "SKILL.md removes todo instruction and Step 5 references references/redaction-policy.md"
+else
+  fail "SKILL.md removes todo instruction and Step 5 references references/redaction-policy.md"
+fi
+
 echo
 echo "Passed: $PASSES  Failed: $FAILURES"
 [ "$FAILURES" -eq 0 ]

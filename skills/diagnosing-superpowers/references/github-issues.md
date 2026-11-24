@@ -23,8 +23,9 @@ Without curl, hand over `https://github.com/obra/superpowers/issues?q=<terms>`.
 
 ## File
 
-Write the filled `templates/issue.md` to the workspace and show the exact
-text. After approval:
+Fill `templates/issue.md`, scrub it per `references/redaction-policy.md`,
+write the scrubbed draft to the workspace, and show your human partner
+the exact text for approval. After approval:
 
 ```bash
 gh issue create --repo obra/superpowers --title "<title>" --body-file <path> \
@@ -45,3 +46,19 @@ https://github.com/obra/superpowers/issues/new?template=bug_report.md&title=<url
 
 GitHub rejects URLs over about 8,000 characters; past that, send the link
 with the title only and tell your partner to paste the body from the file.
+
+## Comment
+
+When posting a comment onto an existing issue, run the draft comment
+through the exact same `references/redaction-policy.md` scrub, write the
+scrubbed draft to the workspace, and show your human partner the exact
+text for approval before posting. After approval:
+
+```bash
+gh issue comment <number> --repo obra/superpowers --body-file <path>
+```
+
+`gh` cannot attach files to comments either; if a bundle exists, give your
+partner its path to attach through the browser. Without `gh`, hand over
+`https://github.com/obra/superpowers/issues/<number>` and tell your
+partner to paste the scrubbed draft from the file.
