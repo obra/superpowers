@@ -107,6 +107,7 @@ function makeEnv() {
     },
     document: {
       querySelector: (s) => s === '.status' ? statusEl : null,
+      querySelectorAll: () => [],
       getElementById: () => null,
       createElement: () => ({ style: {}, id: '' }),
       addEventListener() {},
@@ -191,6 +192,158 @@ test('reloads to recover when tombstoned and no sessionStorage key is present', 
   e.fireReconnect(); e.last().open();                    // server back (e.g. cookie-only page)
   assert.strictEqual(e.state.reloads, 1, 'reloads once on recovery');
   assert.deepStrictEqual(e.state.replacements, []);
+});
+
+console.log('\n--- Choice hydration & keyboard accessibility ---');
+
+function makeEl(tag, { id = '', classes = [], dataset = {}, textContent = '', isContentEditable = false } = {}) {
+  const classSet = new Set(classes);
+  const attrs = new Map();
+  if (dataset.choice !== undefined) attrs.set('data-choice', String(dataset.choice));
+  const el = {
+    tagName: tag.toUpperCase(),
+    id,
+    dataset: { ...dataset },
+    textContent,
+    parentElement: null,
+    children: [],
+    clickCount: 0,
+    onclick: null,
+    isContentEditable: Boolean(isContentEditable),
+    classList: {
+      add: (...n) => n.forEach(c => classSet.add(c)),
+      remove: (...n) => n.forEach(c => classSet.delete(c)),
+      toggle: (c) => (classSet.has(c) ? (classSet.delete(c), false) : (classSet.add(c), true)),
+      contains: (c) => classSet.has(c)
+    },
+    getAttribute: (n) => (attrs.has(n) ? attrs.get(n) : null),
+    setAttribute: (n, v) => attrs.set(n, String(v)),
+    hasAttribute: (n) => attrs.has(n),
+    appendChild(child) { child.parentElement = el; el.children.push(child); return child; },
+    matches(sel) {
+      return sel.split(',').map(s => s.trim()).some(p =>
+        p === '[data-choice]' ? (el.dataset.choice !== undefined || attrs.has('data-choice')) :
+        p.startsWith('.') ? classSet.has(p.slice(1)) : el.tagName.toLowerCase() === p.toLowerCase()
+      );
+    },
+    closest(sel) { for (let cur = el; cur; cur = cur.parentElement) if (cur.matches(sel)) return cur; return null; },
+    querySelectorAll(sel) {
+      const out = [];
+      (function walk(node) { for (const c of node.children) { if (c.matches(sel)) out.push(c); walk(c); } })(el);
+      return out;
+    }
+  };
+  return el;
+}
+
+function makeChoiceEnv({ multiselect = false } = {}) {
+  const sentEvents = [];
+  const listeners = { click: [], keydown: [] };
+  class FakeWS {
+    constructor(url) { this.url = url; this.readyState = 1; }
+    send(payload) { sentEvents.push(JSON.parse(payload)); }
+    close() { this.readyState = 3; }
+  }
+  FakeWS.OPEN = 1;
+  const container = makeEl('div', { classes: ['options'], dataset: multiselect ? { multiselect: '' } : {} });
+  const divA = makeEl('div', { id: 'opt-a', classes: ['option'], dataset: { choice: 'a' }, textContent: 'Option A' });
+  const spanInA = divA.appendChild(makeEl('span', { textContent: 'Label A' }));
+  const nestedInput = divA.appendChild(makeEl('input'));
+  const nestedEditable = divA.appendChild(makeEl('div', { isContentEditable: true }));
+  const divB = makeEl('div', { id: 'opt-b', classes: ['option'], dataset: { choice: 'b' }, textContent: 'Option B' });
+  const buttonChoice = makeEl('button', { id: 'btn-c', dataset: { choice: 'c' }, textContent: 'Button C' });
+  [divA, divB, buttonChoice].forEach((el) => container.appendChild(el));
+  const body = makeEl('body');
+  body.appendChild(container);
+  const env = {
+    module: { exports: {} },
+    window: { location: { host: 'localhost:7777', reload() {}, replace() {} }, sessionStorage: { getItem: () => null } },
+    document: {
+      querySelector: () => null,
+      querySelectorAll: (s) => body.querySelectorAll(s),
+      getElementById: () => null,
+      createElement: () => ({ style: {}, id: '' }),
+      addEventListener: (t, fn) => (listeners[t] ||= []).push(fn),
+      body
+    },
+    WebSocket: FakeWS, setTimeout: () => 1, clearTimeout: () => {}, Date: { now: () => 12345 }, console
+  };
+  [divA, divB, buttonChoice].forEach((el) => {
+    el.click = () => { el.clickCount++; if (el.onclick) el.onclick(el); listeners.click.forEach(fn => fn({ target: el })); };
+  });
+  return {
+    env, divA, divB, spanInA, nestedInput, nestedEditable, buttonChoice, sentEvents,
+    boot() {
+      new Function(...Object.keys(env), src)(...Object.values(env));
+      [divA, divB, buttonChoice].forEach((el) => { el.onclick = () => env.window.toggleSelect(el); });
+    },
+    keydown(target, key, opts = {}) {
+      const ev = { key, target, repeat: Boolean(opts.repeat), defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+      listeners.keydown.forEach(fn => fn(ev));
+      return ev;
+    }
+  };
+}
+
+test('hydrates role, tabindex, and aria-pressed only on non-native [data-choice] elements', () => {
+  const c = makeChoiceEnv();
+  c.boot();
+  for (const el of [c.divA, c.divB]) {
+    assert.strictEqual(el.getAttribute('role'), 'button');
+    assert.strictEqual(el.getAttribute('tabindex'), '0');
+    assert.strictEqual(el.getAttribute('aria-pressed'), 'false');
+  }
+  for (const attr of ['role', 'tabindex', 'aria-pressed']) {
+    assert.strictEqual(c.buttonChoice.getAttribute(attr), null);
+  }
+});
+
+test('Enter, Space, and child targets activate [data-choice], sync aria-pressed, and ignore key repeat', () => {
+  const c = makeChoiceEnv();
+  c.boot();
+  assert.strictEqual(c.keydown(c.divA, 'Enter').defaultPrevented, false);
+  assert.strictEqual(c.divA.clickCount, 1);
+  assert.strictEqual(c.divA.getAttribute('aria-pressed'), 'true');
+  assert.strictEqual(c.env.window.selectedChoice, 'a');
+  assert.strictEqual(c.sentEvents[0].choice, 'a');
+
+  assert.strictEqual(c.keydown(c.divB, ' ').defaultPrevented, true);
+  assert.strictEqual(c.divB.getAttribute('aria-pressed'), 'true');
+  assert.strictEqual(c.divA.getAttribute('aria-pressed'), 'false');
+  assert.strictEqual(c.sentEvents.length, 2);
+
+  assert.strictEqual(c.keydown(c.divB, ' ', { repeat: true }).defaultPrevented, true);
+  assert.strictEqual(c.divB.clickCount, 1);
+  assert.strictEqual(c.sentEvents.length, 2);
+
+  c.keydown(c.spanInA, 'Enter');
+  assert.strictEqual(c.divA.clickCount, 2);
+  assert.strictEqual(c.divA.getAttribute('aria-pressed'), 'true');
+  assert.strictEqual(c.divB.getAttribute('aria-pressed'), 'false');
+});
+
+test('data-multiselect toggles aria-pressed independently', () => {
+  const c = makeChoiceEnv({ multiselect: true });
+  c.boot();
+  c.keydown(c.divA, ' ');
+  c.keydown(c.divB, 'Enter');
+  assert.strictEqual(c.divA.getAttribute('aria-pressed'), 'true');
+  assert.strictEqual(c.divB.getAttribute('aria-pressed'), 'true');
+  c.keydown(c.divA, ' ');
+  assert.strictEqual(c.divA.getAttribute('aria-pressed'), 'false');
+  assert.strictEqual(c.divB.getAttribute('aria-pressed'), 'true');
+});
+
+test('ignores keydown on native controls and editable descendants', () => {
+  const c = makeChoiceEnv();
+  c.boot();
+  for (const target of [c.buttonChoice, c.nestedInput, c.nestedEditable]) {
+    assert.strictEqual(c.keydown(target, ' ').defaultPrevented, false);
+    assert.strictEqual(c.keydown(target, 'Enter').defaultPrevented, false);
+  }
+  assert.strictEqual(c.buttonChoice.clickCount, 0);
+  assert.strictEqual(c.divA.clickCount, 0);
+  assert.strictEqual(c.sentEvents.length, 0);
 });
 
 console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
