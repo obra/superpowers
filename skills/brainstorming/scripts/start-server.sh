@@ -15,9 +15,16 @@
 #   --open                Auto-open the browser on the first screen (use only
 #                         after the user approves the visual companion).
 #   --foreground          Run server in the current terminal (no backgrounding).
-#   --background          Force background mode (overrides Codex auto-foreground).
+#   --background          Force background mode (overrides auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+require_flag_value() {
+  if [[ $# -lt 2 || -z "${2:-}" || "${2:-}" == --* ]]; then
+    echo "{\"error\": \"Missing value for $1\"}"
+    exit 1
+  fi
+}
 
 # Parse arguments
 PROJECT_DIR=""
@@ -29,18 +36,22 @@ IDLE_TIMEOUT_MINUTES=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
+      require_flag_value "$@"
       PROJECT_DIR="$2"
       shift 2
       ;;
     --host)
+      require_flag_value "$@"
       BIND_HOST="$2"
       shift 2
       ;;
     --url-host)
+      require_flag_value "$@"
       URL_HOST="$2"
       shift 2
       ;;
     --idle-timeout-minutes)
+      require_flag_value "$@"
       IDLE_TIMEOUT_MINUTES="$2"
       shift 2
       ;;
@@ -95,13 +106,10 @@ is_windows_like_shell() {
 }
 
 # Some environments reap detached/background processes. Auto-foreground when detected.
-if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  FOREGROUND="true"
-fi
-
-# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  if is_windows_like_shell; then
+  if [[ -n "${CODEX_CI:-}" || -n "${CURSOR_AGENT:-}" || -n "${CURSOR_EXTENSION_HOST_ROLE:-}" || -n "${CURSOR_PLUGIN_ROOT:-}" ]]; then
+    FOREGROUND="true"
+  elif is_windows_like_shell; then
     FOREGROUND="true"
   fi
 fi

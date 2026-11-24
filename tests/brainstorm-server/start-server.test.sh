@@ -39,6 +39,14 @@ EOF
   chmod +x "$fake_bin/uname"
 }
 
+run_bounded() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 3 "$@"
+  else
+    perl -e 'alarm 3; exec @ARGV' "$@"
+  fi
+}
+
 echo ""
 echo "--- start-server.sh platform detection ---"
 
@@ -153,6 +161,64 @@ for relative_dir in "." "new project dir"; do
          "no server.pid under '$brainstorm_dir/state', output: $captured"
   fi
 done
+
+echo ""
+echo "--- start-server.sh missing values & Cursor auto-foreground ---"
+
+mkdir -p "$TEST_DIR/nonwin-bin" "$TEST_DIR/arg-caller"
+cat > "$TEST_DIR/nonwin-bin/uname" <<'EOF'
+#!/usr/bin/env bash
+[[ "${1:-}" == "-s" ]] && echo "Linux" || exec /usr/bin/uname "$@"
+EOF
+cat > "$TEST_DIR/nonwin-bin/node" <<'EOF'
+#!/usr/bin/env bash
+echo "FOREGROUND_MODE=true"
+EOF
+chmod +x "$TEST_DIR/nonwin-bin/uname" "$TEST_DIR/nonwin-bin/node"
+
+check_missing_value() {
+  local label="$1" expected_flag="$2"
+  shift 2
+  local rc=0 captured=""
+  captured=$(cd "$TEST_DIR/arg-caller" && PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" "$@" 2>&1) || rc=$?
+  if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q '"error":' && echo "$captured" | grep -Fq -- "$expected_flag"; then
+    pass "$label"
+  else
+    fail "$label" "expected rc=1 and JSON error mentioning $expected_flag, got rc=$rc output: $captured"
+  fi
+}
+
+for flag in --project-dir --host --url-host --idle-timeout-minutes; do
+  check_missing_value "$flag with no value fails fast with JSON error" "$flag" "$flag"
+done
+check_missing_value "--project-dir followed by --open fails fast with JSON error" "--project-dir" --project-dir --open
+check_missing_value "--project-dir with empty string fails fast with JSON error" "--project-dir" --project-dir ""
+
+rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
+rc=0
+captured=$(CODEX_CI="" CURSOR_AGENT=1 CURSOR_EXTENSION_HOST_ROLE="" CURSOR_PLUGIN_ROOT="" MSYSTEM="" \
+  PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
+if [[ "$rc" -eq 0 ]] && echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
+  pass "auto-foregrounds when CURSOR_AGENT is set on non-Windows uname"
+else
+  fail "auto-foregrounds when CURSOR_AGENT is set on non-Windows uname" "expected rc=0 and FOREGROUND_MODE=true, got rc=$rc output: $captured"
+fi
+
+cat > "$TEST_DIR/nonwin-bin/node" <<'EOF'
+#!/usr/bin/env bash
+echo '{"type":"server-started","port":12345}'
+EOF
+chmod +x "$TEST_DIR/nonwin-bin/node"
+
+rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
+rc=0
+captured=$(CODEX_CI="" CURSOR_AGENT=1 CURSOR_EXTENSION_HOST_ROLE="" CURSOR_PLUGIN_ROOT="" MSYSTEM="" \
+  PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --background 2>&1) || rc=$?
+if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q "Server started but was killed"; then
+  pass "--background overrides Cursor auto-foreground"
+else
+  fail "--background overrides Cursor auto-foreground" "expected background branch, got rc=$rc output: $captured"
+fi
 
 echo ""
 echo "--- Results: $passed passed, $failed failed ---"
