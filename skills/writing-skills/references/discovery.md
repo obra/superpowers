@@ -172,9 +172,11 @@ You: Searching...
 
 **Verification:**
 ```bash
-wc -c skills/path/SKILL.md
-bash tests/skill-size/test-skill-size.sh
 # Every SKILL.md must stay under 20,000 bytes
+wc -c path/to/skill/SKILL.md
+
+# When working inside the Superpowers repository checkout:
+bash tests/skill-size/test-skill-size.sh
 ```
 
 **Name by what you DO or core insight:**
