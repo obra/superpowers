@@ -43,10 +43,10 @@ if manifest.get("version") != package.get("version"):
 
 # Superpowers keeps .devin-plugin/plugin.json skills-only (auto-discovered
 # from ./skills/); reject extra manifest fields that configure hooks or overrides.
-disallowed_fields = ["skills", "hooks", "commands", "sessionStart", "contextFileName", "inject"]
-present = sorted(field for field in disallowed_fields if field in manifest)
+unsupported = ["skills", "hooks", "commands", "sessionStart", "contextFileName", "inject"]
+present = sorted(field for field in unsupported if field in manifest)
 if present:
-    raise AssertionError("disallowed fields in skills-only Devin manifest: " + ", ".join(present))
+    raise AssertionError("unsupported Devin manifest fields present: " + ", ".join(present))
 
 version_config = json.loads((repo_root / ".version-bump.json").read_text(encoding="utf-8"))
 entries = version_config.get("files")
