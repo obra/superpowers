@@ -15,8 +15,9 @@ run_claude() {
         cmd+=(--allowed-tools="$allowed_tools")
     fi
 
-    # Run Claude in headless mode with timeout
-    if timeout "$timeout" "${cmd[@]}" > "$output_file" 2>&1; then
+    # Run Claude in headless mode with timeout. Redirect stdin from
+    # /dev/null so the CLI can't block waiting for input and hang the suite.
+    if timeout "$timeout" "${cmd[@]}" > "$output_file" 2>&1 < /dev/null; then
         cat "$output_file"
         rm -f "$output_file"
         return 0

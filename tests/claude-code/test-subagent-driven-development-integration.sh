@@ -23,7 +23,7 @@ echo "========================================"
 echo ""
 echo "This test executes a real plan using the skill and verifies:"
 echo "  1. Plan is read once (not per task)"
-echo "  2. Full task text provided to subagents"
+echo "  2. Task requirements routed to subagents via brief files"
 echo "  3. Subagents perform self-review"
 echo "  4. Spec compliance review before code quality"
 echo "  5. Review loops when issues found"
@@ -136,7 +136,7 @@ I want you to execute the implementation plan at docs/superpowers/plans/implemen
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
-2. Provide full task text to subagents (don't make them read files)
+2. Route each task's requirements to subagents via a task brief file (don't make them read the whole plan)
 3. Ensure subagents do self-review before reporting
 4. Run spec compliance review before code quality review
 5. Use review loops when issues are found
@@ -150,7 +150,7 @@ PROMPT="Execute the implementation plan at docs/superpowers/plans/implementation
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
-2. Provide full task text to subagents (don't make them read files)
+2. Route each task's requirements to subagents via a task brief file (don't make them read the whole plan)
 3. Ensure subagents do self-review before reporting
 4. Run spec compliance review before code quality review
 5. Use review loops when issues are found
@@ -164,7 +164,7 @@ PLUGIN_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 # other concurrent claude sessions.
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
-cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions < /dev/null 2>&1 | tee "$OUTPUT_FILE" || {
     echo ""
     echo "================================================================================"
     echo "EXECUTION FAILED (exit code: $?)"
@@ -316,7 +316,7 @@ if [ $FAILED -eq 0 ]; then
     echo ""
     echo "The subagent-driven-development skill correctly:"
     echo "  ✓ Reads plan once at start"
-    echo "  ✓ Provides full task text to subagents"
+    echo "  ✓ Routes task requirements via brief files"
     echo "  ✓ Enforces self-review"
     echo "  ✓ Runs spec compliance before code quality"
     echo "  ✓ Spec reviewer verifies independently"
