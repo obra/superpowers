@@ -19,7 +19,7 @@ import { execFileSync } from 'child_process';
 
 function extractDotBlocks(markdown) {
   const blocks = [];
-  const regex = /```dot[ \t]*\r?\n([\s\S]*?)```/g;
+  const regex = /```dot\r?\n([\s\S]*?)```/g;
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
