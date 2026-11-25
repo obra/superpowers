@@ -69,7 +69,7 @@ const extractAndStripFrontmatter = (content) => {
 };
 
 // Tool mapping injected into the bootstrap, differentiated by host flavor.
-// V1 (OpenCode 1.18.x/1.19.x) and V2 (OpenCode 2.3.x) expose different built-in
+// V1 (OpenCode 1.18.x/1.19.x) and V2 (OpenCode 2.0.4 and later) expose different built-in
 // tools, so each flavor's injection path picks its own constant below.
 // Exported for tests (tests/opencode/test-bootstrap-caching.mjs).
 
@@ -92,7 +92,7 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 // task → subagent (agent name in 'agent', continuation via sessionID, always
 // background since 2.3.0); apply_patch → patch (patchText, same patch format);
 // bash → shell. read, write, edit, grep, glob, webfetch, websearch, and skill
-// all exist under those names (verified against the 2.3.x host contract).
+// all exist under those names (checked against the 2.0.7 and 2.3.2 host contracts).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → \`todowrite\` when available (\`experimental.todo\`); otherwise track the plan in a markdown file (or the harness's plan facility) instead

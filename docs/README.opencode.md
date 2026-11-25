@@ -169,7 +169,7 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 
 In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, continuation happens by re-invoking with `sessionID`, and the `background` parameter was removed in 2.3.0), `apply_patch` → `patch`, and `bash` → `shell`, and disabled `todowrite` by default (available behind `experimental.todo`). The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
 
-(V1 list verified against OpenCode 1.18.x/1.19.x; V2 list verified against the OpenCode 2.3.x host contracts.)
+(V1 list verified against OpenCode 1.18.x/1.19.x; V2 list verified against the OpenCode 2.0.7 and 2.3.2 host contracts.)
 
 ## Troubleshooting
 
