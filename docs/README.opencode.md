@@ -157,17 +157,17 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 
 **V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
 
-- "Create a todo" → `todowrite` when available (`experimental.todo`); otherwise track the plan in markdown
+- "Create a todo" → `todowrite` when available (`experimental.todo`); otherwise the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
 - `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool with the bare skill id (`superpowers:brainstorming` → `id: "brainstorming"`)
 - "Read a file" → `read`
-- "Create, edit, or delete files" → `patch` with `patchText` when available; otherwise `write`, `edit`, and `shell` for deletion
+- "Create, edit, or delete files" → use `patch` with `patchText` when available; otherwise use `write` to create or overwrite files, `edit` for targeted changes, and `shell` for deletion
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 - "Search the web" → `websearch`
 
-In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, continuation happens by re-invoking with `sessionID`, and the `background` parameter was removed in 2.3.0), `apply_patch` → `patch`, and `bash` → `shell`, and disabled `todowrite` by default (available behind `experimental.todo`). In both V1 and V2, the available mutation tools depend on the selected model: `apply_patch` (V1) / `patch` (V2) is exposed for selected `gpt-` model IDs, while other models use `write` and `edit`.
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, continuation happens by re-invoking with `sessionID`, and the `background` parameter was removed in 2.3.0), `apply_patch` → `patch`, and `bash` → `shell`, and disabled `todowrite` by default (available behind `experimental.todo`). The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
 
 (V1 list verified against OpenCode 1.18.x/1.19.x; V2 list verified against the OpenCode 2.3.x host contracts.)
 

@@ -150,11 +150,11 @@ Skills speak in actions ("create a todo", "dispatch a subagent", "read a file").
 
 **V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
 
-- "Create a todo" → `todowrite` when available (`experimental.todo`); otherwise track the plan in markdown
+- "Create a todo" → `todowrite` when available (`experimental.todo`); otherwise track the plan in a markdown file instead
 - `Subagent (general-purpose):` template → `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool
 - "Read a file" → `read`
-- "Create, edit, or delete files" → `patch` with `patchText` when available; otherwise `write`, `edit`, and `shell` for deletion
+- "Create, edit, or delete files" → use `patch` with `patchText` when available; otherwise use `write` to create or overwrite files, `edit` for targeted changes, and `shell` for deletion
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`

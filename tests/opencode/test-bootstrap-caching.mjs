@@ -183,7 +183,7 @@ function assertMappingConstants(mod) {
   }
   for (const needle of ['`todowrite`', '`task` with `subagent_type: "general"`', '`apply_patch`', '`write`', '`edit`', '`bash`']) {
     if (!mod.V1_MAPPING.includes(needle)) {
-      failures.push(`expected V1_MAPPING to teach the V1 tool ${needle}`);
+      failures.push(`expected V1_MAPPING to keep the 1.18.x tool name ${needle}`);
     }
   }
   for (const needle of [

@@ -95,11 +95,11 @@ Use OpenCode's native \`skill\` tool to list and load skills.`;
 // all exist under those names (verified against the 2.3.x host contract).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
-- Create or update todos → \`todowrite\` when available (\`experimental.todo\`); otherwise track the plan in markdown
+- Create or update todos → \`todowrite\` when available (\`experimental.todo\`); otherwise track the plan in a markdown file (or the harness's plan facility) instead
 - \`Subagent (general-purpose):\` → \`subagent\` with \`agent: "general"\` (give it \`description\` and \`prompt\`; pass \`sessionID\` to continue a previous subagent)
 - Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`id: "brainstorming"\`)
 - Read files → \`read\`
-- Create, edit, or delete files → \`patch\` with \`patchText\` when available; otherwise \`write\`, \`edit\`, and \`shell\` for deletion
+- Create, edit, or delete files → use \`patch\` with \`patchText\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`shell\` for deletion
 - Run shell commands → \`shell\` (\`command\`, \`workdir\`, \`timeout\`, \`background\`)
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`
