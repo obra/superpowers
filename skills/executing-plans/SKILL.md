@@ -42,27 +42,6 @@ that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For
 those, stop and ask.
 
-## When to Use
-
-- You have a plan from superpowers:writing-plans and your human partner
-  chose inline execution at the handoff.
-- Your harness has no subagent tool (see the per-platform references in
-  `../using-superpowers/references/`). Never fabricate a dispatch; run
-  the plan here.
-- Tasks are mostly independent — the same precondition as
-  superpowers:subagent-driven-development.
-
-A fully specified plan makes inline execution transcription plus testing:
-it runs well on a mid-tier session model, and the one place the most
-capable model earns its cost is the final review, which this skill
-dispatches separately. Tell your human partner so when they choose inline.
-
-Prefer superpowers:subagent-driven-development when your human partner
-wants a review gate on every task, or when the plan is long enough that
-its later tasks would run on a compacted context. Inline execution over a
-long plan still works — the ledger is what makes it recoverable — but the
-last tasks get the least of you.
-
 ## The Process
 
 ```dot
