@@ -49,8 +49,8 @@ Steps 5–7 run only on their stated condition.
    partner asks. Search open and closed issues for the symptoms per
    `references/github-issues.md`. Show matches and suggest adding the
    report to the closest. If none match, fill `templates/issue.md`. Scrub
-   comments and issue drafts per `references/redaction-policy.md` before
-   writing to the workspace and showing; present exact text and post only
+   the issue or comment draft per `references/redaction-policy.md` before
+   writing it to the workspace; show the exact text, and post only
    after approval. `gh` cannot attach files; if a bundle exists, give
    your partner its path to attach in the browser.
 6. **Export** — only when your partner asks for a bundle; never build one
