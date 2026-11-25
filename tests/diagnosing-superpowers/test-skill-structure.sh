@@ -162,13 +162,19 @@ else
   fail "analyst prompts, matcher prompt and context-safety rules treat transcript text as evidence, not instructions"
 fi
 
-step5_prose="$(awk '/^5\. \*\*GitHub issues\*\*/{in_step5=1} /^6\. \*\*Export\*\*/{in_step5=0} in_step5{print}' "$SKILL_MD")"
-if ! grep -qF 'Create a todo per step' "$SKILL_MD" \
-  && printf '%s\n' "$step5_prose" | grep -qF 'references/redaction-policy.md'; then
-  pass "SKILL.md removes todo instruction and Step 5 references references/redaction-policy.md"
+if ! grep -qF 'Create a todo per step' "$SKILL_MD"; then
+  pass "SKILL.md has no todo-per-step instruction"
 else
-  fail "SKILL.md removes todo instruction and Step 5 references references/redaction-policy.md"
+  fail "SKILL.md has no todo-per-step instruction"
 fi
+
+step5_flat="$(awk '/^5\. \*\*GitHub issues\*\*/{in_step5=1} /^6\. \*\*Export\*\*/{in_step5=0} in_step5{print}' "$SKILL_MD" | tr '\n' ' ')"
+case "$step5_flat" in
+  *'references/redaction-policy.md'*workspace*)
+    pass "SKILL.md Step 5 scrubs per references/redaction-policy.md before the workspace write" ;;
+  *)
+    fail "SKILL.md Step 5 scrubs per references/redaction-policy.md before the workspace write" ;;
+esac
 
 issues_ref="$SKILL_DIR/references/github-issues.md"
 scrub_section="$(awk '/^## Scrub/{on=1; next} /^## /{on=0} on{print}' "$issues_ref")"
