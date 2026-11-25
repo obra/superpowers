@@ -18,6 +18,7 @@ Session ids, tool names, skill names, superpowers file paths relative to the
 install root, model ids, harness versions, and line numbers are kept: the
 bundle is useless without them.
 
+Apply these categories with the supplied PUBLIC_REPOS and PROPRIETARY lists.
 A private repository name does not make every command or result proprietary.
 Redact sensitive values while preserving safe command, result and source
 structure needed to verify findings. Keep original session-line markers and
