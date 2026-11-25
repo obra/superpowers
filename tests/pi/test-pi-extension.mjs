@@ -95,6 +95,40 @@ test('startup context injects the bootstrap as one user message', async () => {
   assert.equal(alreadyInjected, undefined, 'bootstrap should not duplicate when already present');
 });
 
+test('user text mentioning the bootstrap marker does not suppress injection', async () => {
+  const { handlers } = await loadExtension();
+  const context = firstHandler(handlers, 'context');
+
+  const markerMention = {
+    role: 'user',
+    content: [{ type: 'text', text: 'Please explain "superpowers:using-superpowers bootstrap for pi"' }],
+    timestamp: 1,
+  };
+  const result = await context({ type: 'context', messages: [markerMention] }, {});
+
+  assert.ok(result, 'bootstrap should still be injected when the marker is quoted');
+  assert.equal(result.messages.length, 2);
+  assert.match(textOf(result.messages[0]), /You have superpowers/);
+  assert.equal(result.messages[1], markerMention);
+});
+
+test('string message content mentioning the bootstrap marker does not suppress injection', async () => {
+  const { handlers } = await loadExtension();
+  const context = firstHandler(handlers, 'context');
+
+  const markerMention = {
+    role: 'user',
+    content: 'Please explain "superpowers:using-superpowers bootstrap for pi"',
+    timestamp: 1,
+  };
+  const result = await context({ type: 'context', messages: [markerMention] }, {});
+
+  assert.ok(result, 'bootstrap should still be injected when the marker is quoted');
+  assert.equal(result.messages.length, 2);
+  assert.match(textOf(result.messages[0]), /You have superpowers/);
+  assert.equal(result.messages[1], markerMention);
+});
+
 // pi emits agent_start/agent_end around every user prompt, not once per
 // session, and the messages a context handler returns are never written back
 // to session history. So every provider request of every prompt needs the
