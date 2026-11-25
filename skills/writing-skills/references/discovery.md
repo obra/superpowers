@@ -124,12 +124,12 @@ Use words an agent would search for:
 
 ### 4. Token Efficiency (Critical)
 
-**Problem:** Every token in `SKILL.md` competes with conversation history, and harnesses truncate large skills on compaction (e.g., at 20,000 characters). Every `SKILL.md` in this repo is enforced under 20,000 bytes (`tests/skill-size/test-skill-size.sh`).
+**Problem:** Every token in `SKILL.md` competes with conversation history once the skill loads. After a compaction, Claude Code re-attaches each invoked skill cut to 20,000 characters; anything past the cut is gone from context unless the agent re-reads the file.
 
-**Size limits and targets:**
-- Hard cap: under 20,000 bytes (`wc -c < skills/path/SKILL.md`) enforced by `tests/skill-size/test-skill-size.sh`
+**Size limits:**
+- Keep `SKILL.md` under 20,000 bytes (`wc -c path/to/skill/SKILL.md`). In the Superpowers repository, `tests/skill-size/test-skill-size.sh` enforces this for every skill.
 - Move heavy reference material or conditional workflows into `references/` so the agent reads them fresh from disk only at the step that needs them
-- Keep frequently-loaded skills concise (aim for <500 words when possible)
+- Write only what the agent would not know or do without being told. Frequently-loaded skills pay for every extra line in every session that loads them.
 
 **Techniques:**
 
