@@ -206,9 +206,7 @@ The frame template provides these CSS classes for your content:
 ```html
 <div class="cards">
   <div class="card" data-choice="design1" onclick="toggleSelect(this)">
-    <div class="card-image">
-      <!-- mockup content: stacked children stretch full width; direct img/svg center -->
-    </div>
+    <div class="card-image"><!-- mockup content --></div>
     <div class="card-body">
       <h3>Name</h3>
       <p>Description</p>

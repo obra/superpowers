@@ -15,7 +15,7 @@
 #   --open                Auto-open the browser on the first screen (use only
 #                         after the user approves the visual companion).
 #   --foreground          Run server in the current terminal (no backgrounding).
-#   --background          Force background mode (overrides auto-foreground).
+#   --background          Force background mode (overrides Codex auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -106,10 +106,13 @@ is_windows_like_shell() {
 }
 
 # Some environments reap detached/background processes. Auto-foreground when detected.
+if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  FOREGROUND="true"
+fi
+
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
 if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  if [[ -n "${CODEX_CI:-}" || -n "${CURSOR_AGENT:-}" || -n "${CURSOR_EXTENSION_HOST_ROLE:-}" || -n "${CURSOR_PLUGIN_ROOT:-}" ]]; then
-    FOREGROUND="true"
-  elif is_windows_like_shell; then
+  if is_windows_like_shell; then
     FOREGROUND="true"
   fi
 fi
