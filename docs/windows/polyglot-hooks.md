@@ -176,6 +176,7 @@ Your hook logic goes in the extensionless script file. A few portable patterns:
 nl='
 '
 tab='	'
+cr=$(printf '\r')
 
 replace_all() {
   rest=$1
@@ -198,6 +199,7 @@ escape_for_json() {
   escaped=$1
   replace_all "$escaped" '\' '\\'
   replace_all "$escaped" '"' '\"'
+  [ -z "$cr" ] || replace_all "$escaped" "$cr" '\r'
   replace_all "$escaped" "$nl" '\n'
   replace_all "$escaped" "$tab" '\t'
   printf '%s' "$escaped"
