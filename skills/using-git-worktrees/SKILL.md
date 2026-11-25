@@ -27,7 +27,7 @@ printf 'GIT_DIR=%s\nGIT_COMMON=%s\nBRANCH=%s\nSTART_HEAD=%s\n' "$GIT_DIR" "$GIT_
 
 Keep the printed `START_HEAD` (`<START_HEAD>`) and `BRANCH` (`<START_BRANCH>`) visible.
 
-**Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules. Before concluding "already in a worktree," verify you are not in a submodule:
+**Submodule guard:** Before concluding "already in a worktree," verify you are not in a submodule:
 
 ```bash
 # If this returns a path, you're in a submodule, not a worktree — treat as normal repo
