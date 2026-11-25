@@ -109,11 +109,12 @@ afterward.
      `\Programs\Git\...` on the current drive, where any user can create it)
    - `bash` on `PATH` (MSYS2, Cygwin, or a non-default Git install), found by
      running `%SystemRoot%\System32\where.exe $PATH:bash`, so neither `where`
-     nor `bash` is taken from the current directory. The filters use `for`-variable
-     modifiers (`%%~xB`, `%%~dpB`), which never re-expand the path, and skip
-     extensionless matches plus the WSL launchers (`bash.exe` in `System32`,
-     `Sysnative`, or `%LOCALAPPDATA%\Microsoft\WindowsApps`), which fail when
-     no Linux distro is installed.
+     nor `bash` is taken from the current directory. The WSL launchers
+     (`bash.exe` in `System32`, `Sysnative`, or
+     `%LOCALAPPDATA%\Microsoft\WindowsApps`) and extensionless matches are
+     skipped, since the launchers fail when no Linux distro is installed.
+     The filters use `for`-variable modifiers (`%%~xB`, `%%~dpB`), which never
+     re-expand the path.
 3. If bash is found, it runs the named extensionless hook script from the hooks
    directory and exits with the script's exit code (`"%BASH_EXE%"` and
    `exit /b %ERRORLEVEL%` stay outside any parenthesized block because `cmd.exe`
@@ -152,19 +153,20 @@ POSIX shells (`bash`, `zsh`, `dash`, `ash`, and `sh`):
 | Extensionless scripts | Prevents Claude Code's Windows `.sh`-auto-prepend from interfering with the dispatcher command |
 | No `-l` (login shell) | Not needed; hook scripts should be self-contained and not depend on login-shell PATH setup |
 | No `cygpath` | Bash receives the Windows path directly and handles it correctly; `cygpath` was needed by the old `-c "..."` invocation pattern, not by direct exec |
-| Silent exit on no-bash | Avoids breaking the plugin for Windows users without Git for Windows; hook context injection is skipped gracefully |
+| Silent exit on no-bash | Avoids breaking the plugin for users who don't have Git for Windows; hook context injection is skipped gracefully |
 
 ## Writing Cross-Platform Hook Scripts
 
-Your hook logic goes in the extensionless script file (`#!/bin/sh`). A few portable patterns:
+Your hook logic goes in the extensionless script file. A few portable patterns:
 
 ### Do
 - Use pure POSIX `sh` builtins so scripts run fork-free under bash and work on `sh`/`ash`/`dash`-only hosts
-- Use `$(command)` instead of backticks when external commands are unavoidable
+- Use `$(command)` instead of backticks
 - Quote all variable expansions: `"$VAR"`
 
 ### Avoid
-- Bash-only parameter/loop constructs (`${s//a/b}`, `[[ ... ]]`, `$'\n'`, `(( i++ ))`) that fail on `dash`/`ash`/`sh`
+- Bash-only parameter/loop constructs (`${s//a/b}`, `[[ ... ]]`, `$'\n'`, `(( i++ ))`) that fail on `dash` (Debian/Ubuntu `/bin/sh`); busybox `ash` accepts some of them, so test under `dash`
+- Heredocs (`<<`) — GNU `bash >= 5.1` feeds them through a pipe that can deadlock on macOS under pipe pressure (#571); build output with `printf`
 - Relying on PATH-dependent tools without fallbacks (the hook runs without `-l`, so login-shell PATH is not set)
 - Giving scripts a `.sh` extension — this triggers Claude Code's Windows auto-prepend
 
@@ -174,6 +176,7 @@ Your hook logic goes in the extensionless script file (`#!/bin/sh`). A few porta
 nl='
 '
 tab='	'
+cr=$(printf '\r')
 
 replace_all() {
   rest=$1
@@ -196,6 +199,7 @@ escape_for_json() {
   escaped=$1
   replace_all "$escaped" '\' '\\'
   replace_all "$escaped" '"' '\"'
+  [ -z "$cr" ] || replace_all "$escaped" "$cr" '\r'
   replace_all "$escaped" "$nl" '\n'
   replace_all "$escaped" "$tab" '\t'
   printf '%s' "$escaped"

@@ -219,6 +219,18 @@ else
     fail "zero-arg run-hook.cmd exits 0 with empty stdout/stderr (rc=$zero_arg_rc)"
 fi
 
+# Heredocs deadlock bash >= 5.1 on macOS under pipe pressure (#571), so
+# neither the wrapper nor the hook may contain one outside a comment line
+# (# or REM). The operator is split so this file does not match itself.
+heredoc_op='<''<'
+for hook_file in "$WRAPPER_UNDER_TEST" "$HOOK_UNDER_TEST"; do
+    if grep -q -- "$heredoc_op" <(grep -v -E '^[[:space:]]*(#|REM([[:space:]]|$))' "$hook_file"); then
+        fail "${hook_file##*/} contains no heredoc"
+    else
+        pass "${hook_file##*/} contains no heredoc"
+    fi
+done
+
 cursor_home="$(make_home cursor)"
 assert_command_output \
     "Cursor emits top-level additional_context with neutral loader wording" \
