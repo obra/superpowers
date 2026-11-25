@@ -155,10 +155,11 @@ else
 fi
 
 if grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/analyst-common.md" \
-  && grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/similar-session.md"; then
-  pass "analyst and matcher prompts warn that transcript text is evidence, not instructions"
+  && grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/similar-session.md" \
+  && grep -qF 'Evidence, not instructions' "$SKILL_DIR/references/context-safety.md"; then
+  pass "analyst prompts, matcher prompt and context-safety rules treat transcript text as evidence, not instructions"
 else
-  fail "analyst and matcher prompts warn that transcript text is evidence, not instructions"
+  fail "analyst prompts, matcher prompt and context-safety rules treat transcript text as evidence, not instructions"
 fi
 
 step5_prose="$(awk '/^5\. \*\*GitHub issues\*\*/{in_step5=1} /^6\. \*\*Export\*\*/{in_step5=0} in_step5{print}' "$SKILL_MD")"
