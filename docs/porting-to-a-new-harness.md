@@ -112,7 +112,7 @@ real port.
 | **Skill discovery + invocation** | The model must be able to load a skill's full content on demand | If there's no native skill tool, the sanctioned fallback is to `read` the relevant `SKILL.md` directly — see Part 5. A harness with neither a skill tool nor file-read cannot work. |
 | **File read / write / edit** | Nearly every skill manipulates files | Essential. No workaround. |
 | **Run shell commands** | TDD, verification, git workflows | Essential. |
-| **Subagent / task dispatch** | `dispatching-parallel-agents`, `subagent-driven-development` | Degradable: `subagent-driven-development` routes to `executing-plans` when no subagent tool is available, and the tool mapping (e.g. `references/pi-tools.md`) tells the model to work inline or explain the missing capability rather than inventing a `Task` call; `dispatching-parallel-agents` itself assumes a subagent tool. Some harnesses gate subagents behind a config flag. |
+| **Subagent / task dispatch** | `dispatching-parallel-agents`, `subagent-driven-development` | Degradable: if unavailable, `subagent-driven-development` routes to `executing-plans` and the tool mapping (e.g. `references/pi-tools.md`) tells the model to do the work inline or report the missing capability — *never* to invent a `Task` call; `dispatching-parallel-agents` itself assumes a subagent tool. Some harnesses gate this behind a config flag (e.g. Codex needs multi-agent enabled). |
 | **Todo / task tracking** | Progress tracking in several skills | Degradable: fall back to a plan file or `TODO.md`. |
 | **Web fetch / search** | A few skills | Degradable. |
 | **Shell or polyglot script execution (Windows)** | Only for the shell-hook shape, only if you want Windows support | See Part 7. In-process-plugin harnesses sidestep this entirely. |
@@ -292,7 +292,7 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| lists each installed skill's description, with no usable session-start hook or context-file field | skill-index bootstrap (Part 5 Step 5, case 2 fallback) | Antigravity (`.antigravity-plugin/plugin.json` + `skills/` only; see Step 5 on why it omits a root `hooks.json`) |
+| lists each installed skill's description, with no session-start event and no context-file field | skill-index bootstrap (Part 5 Step 5, case 2 fallback) | Antigravity (`.antigravity-plugin/plugin.json` + `skills/` only) |
 
 Most real harnesses fit one row cleanly; the last is the soft case — see Step 5's
 fallback caveats (rule 2 still holds — never a user-config edit).
@@ -526,14 +526,15 @@ honors the rule rather than breaking it. Distinguish three cases:
 
    **For the bootstrap itself, prefer something the harness loads every
    session (Part 6)** — a declared context file where the manifest has a
-   `contextFileName`-style field. Antigravity has no `contextFileName` field,
-   so Superpowers' `.antigravity-plugin` uses the surfaced skill index below:
-   - While current `agy` supports `SessionStart` hooks and `${PLUGIN_ROOT}`,
-     it reads `hooks.json` only from the plugin root (no manifest field
-     relocates it). Because harnesses installing from this repo share its root
-     — and `tests/antigravity/test-plugin-manifest.sh` forbids a root
-     `hooks.json` — `.antigravity-plugin` continues using the surfaced
-     skill-index bootstrap.
+   `contextFileName`-style field. Antigravity has none, and its other options
+   cost more than they buy, so it uses the surfaced skill index below:
+   - Its hooks have no session-start event. `PreInvocation` runs before every
+     model call; an `ephemeralMessage` it injects is dropped on the next call,
+     and `invocationNum` resets on each user turn. A `userMessage` gated on
+     `invocationNum == 0` and `initialNumSteps == 1` injects exactly once per
+     conversation, but agy still starts the hook process on every model call.
+     `${PLUGIN_ROOT}` is not set in hooks (they run from the plugin root).
+     `hooks.json` must sit at the plugin root; no manifest field moves it.
    - It loads `rules/*.md` from a plugin every session, but harnesses that
      install from the git repo share its root, and Cursor is one of them: it
      also loads any `rules/*.md` a plugin ships. A file in a shared plugin root
@@ -805,8 +806,8 @@ Use this as the live index; when in doubt, read the files, not this table.
 
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
-| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | surfaced skill index: `using-superpowers`' description triggers it (root `hooks.json` forbidden in shared repo; see Part 5 Step 5) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
-| Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; `references/claude-code-tools.md` (nested SDD orchestration) | `tests/hooks/` | marketplace |
+| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | surfaced skill index: `using-superpowers`' description triggers it (no session-start hook event exists) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
+| Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; no adapter file needed | `tests/hooks/` | marketplace |
 | Codex | `.codex-plugin/plugin.json` (declares empty `hooks`) | native skill discovery (no session-start hook) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
 | Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |

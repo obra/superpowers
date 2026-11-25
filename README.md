@@ -39,7 +39,7 @@ It starts from the moment you fire up your coding agent. As soon as it sees that
 
 Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY.
+After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
 
 Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
@@ -280,7 +280,7 @@ turn loses the bootstrap — start a fresh session if skills stop triggering.
 
 ### Muse
 
-Superpowers is available as a native Muse plugin — same repo, same skills, all harnesses. The `using-superpowers` bootstrap is injected via the native `SessionStart` hook alongside Claude Code, Cursor, Copilot CLI, and the other hook-based harnesses — no per-session opt-in.
+Superpowers is available as a native Muse plugin — same repo, same skills, all harnesses. The `using-superpowers` bootstrap is injected via the native `SessionStart` hook alongside Claude Code, Cursor, and the other hook-based harnesses — no per-session opt-in.
 
 - Install from a local checkout:
 
@@ -307,17 +307,17 @@ Restart any active Muse sessions after installing so the `SessionStart` hook tak
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before building anything. Draws out what you actually want, and why, through questions, plays its understanding back for correction, and writes a design doc (short for small changes, full for larger projects) for your approval.
+1. **brainstorming** - Activates before building anything. Draws out what you actually want, and why, through questions that get you describing it, then plays its understanding back for correction. Small changes get a short design doc; projects get a written design document a builder could plan from.
 
-2. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks with exact files, interfaces, and verification steps—recording concrete decisions without a full code transcript.
+2. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks. Every task has exact file paths and verification steps.
 
-3. **using-git-worktrees** - Activates at execution start (after plan approval). Creates an isolated workspace on a new branch, runs project setup, and verifies a clean test baseline.
+3. **using-git-worktrees** - Activates at execution start (after plan approval). Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
 
 4. **subagent-driven-development** or **executing-plans** - Activates with plan. Either dispatches a fresh subagent per task with a review after each (most thorough), or implements every task inline in the current session with one fresh review of the whole branch at the end (cheapest).
 
-5. **test-driven-development** - Loaded at setup by **executing-plans** (embedded in task prompts under **subagent-driven-development**). Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
-6. **requesting-code-review** - Activates on whole branches, milestones, or before merging (per-task SDD reviews use SDD's own task reviewer). Reviews against requirements and reports issues by severity. Critical issues block progress.
+6. **requesting-code-review** - Activates on whole branches, milestones, or before merging. Reviews against plan, reports issues by severity. Critical issues block progress.
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep), cleans up worktree.
 
@@ -325,9 +325,9 @@ Restart any active Muse sessions after installing so the `SessionStart` hook tak
 
 ## When Something Goes Wrong
 
-Sometimes a session misbehaves: a skill fires when it shouldn't, stays silent when it should, or the agent ignores its plan, repeats work, or burns more tokens than you'd expect. Ask your coding agent to "figure out what went wrong with superpowers in this session" and it will invoke **diagnosing-superpowers**. For an earlier session, start a fresh one (much cheaper than inspecting from inside a long context): "figure out what went wrong with superpowers in session `<id>`".
+Sometimes a session misbehaves: a skill fires when it shouldn't, stays silent when it should, or the agent ignores its plan, repeats work, or burns more tokens than you'd expect. Ask your coding agent to "figure out what went wrong with superpowers in this session" and it will invoke the **diagnosing-superpowers** skill. To examine an earlier session, name it: "figure out what went wrong with superpowers in session `<id>`".
 
-The skill reads the session transcript, reports line-level evidence—without modifying Superpowers—and, if you want, packages a scrubbed bundle or drafts a bug report.
+The skill reads the session transcript, reports what happened with line-level evidence, and, if you want, packages a scrubbed bundle for a bug report.
 
 ## Community
 
@@ -343,10 +343,10 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes `writing-good-tests.md` reference)
-- **verification-before-completion** - Require fresh verification evidence before claiming work is complete, fixed, or passing
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
+- **verification-before-completion** - Ensure it's actually fixed
 - **diagnosing-superpowers** - Work out what went wrong in a session, with evidence; export a scrubbed bundle or file an issue
 
 **Collaboration** 
@@ -354,11 +354,11 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Inline plan execution: one context, one final review
 - **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Whole-branch and milestone review via a fresh reviewer subagent
+- **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fresh subagent per task, single-pass task review (spec compliance + code quality), and whole-branch final review
+- **subagent-driven-development** - Fast iteration with single-pass task review (spec compliance + code quality)
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
@@ -383,7 +383,7 @@ The general contribution process for Superpowers is below. Keep in mind that we 
 4. Follow the `writing-skills` skill for creating and testing new and modified skills
 5. Submit a PR, filling in every section of the pull request template, including the summary a human writes in their own words.
 
-Skill-behavior evals use Quorum in [superpowers-evals](https://github.com/prime-radiant-inc/superpowers-evals/), cloned into `evals/` — see `evals/README.md` for setup. Plugin-infrastructure tests live at `tests/` and run via the relevant `run-*.sh` or `npm test`.
+Skill-behavior tests use the Quorum eval harness from [superpowers-evals](https://github.com/prime-radiant-inc/superpowers-evals/), cloned into `evals/` — see `evals/README.md` for setup. Plugin-infrastructure tests live at `tests/` and run via the relevant `run-*.sh` or `npm test`.
 
 See `skills/writing-skills/SKILL.md` for the complete guide.
 
