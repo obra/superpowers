@@ -17,7 +17,7 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
-**Adapted authoring reference:** See [references/anthropic-best-practices.md](references/anthropic-best-practices.md) for an adapted/vendored reference on skill authoring patterns and guidelines that complement the TDD-focused approach in this skill.
+**Official guidance:** For Anthropic's official skill authoring best practices, see references/anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
 ## What is a Skill?
 
@@ -381,13 +381,14 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 **Deployment:**
 - [ ] Commit skill to git and push to your fork (if configured)
+- [ ] Consider contributing back via PR (if broadly useful)
 
 ## Discovery Workflow
 
 How future agents find your skill:
 
 1. **Encounters problem** ("tests are flaky")
-2. **Scans skill listing** (harness injects skill names and descriptions into context)
+2. **Searches skills** (greps descriptions, browses categories)
 3. **Finds SKILL** (description matches)
 4. **Scans overview** (is this relevant?)
 5. **Reads patterns** (quick reference table)

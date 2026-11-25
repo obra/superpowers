@@ -3,6 +3,8 @@
 Part of superpowers:writing-skills. Use it when the baseline failure is a
 discipline failure: the agent knows the rule and skips it under pressure.
 
+## Bulletproofing Skills Against Rationalization
+
 Skills that enforce discipline (like TDD) need to resist rationalization. Agents are smart and will find loopholes when under pressure.
 
 **Scope:** this toolkit is for discipline failures — an agent that knows the rule and skips it under pressure. For wrong-shaped output or omitted elements, prohibition-based bulletproofing backfires; use the forms in Match the Form to the Failure instead.
@@ -69,7 +71,7 @@ Make it easy for agents to self-check when rationalizing:
 **All of these mean: Delete code. Start over with TDD.**
 ```
 
-### Update Skill Discovery Optimization for Violation Symptoms
+### Update SDO for Violation Symptoms
 
 Add to description: symptoms of when you're ABOUT to violate the rule:
 
