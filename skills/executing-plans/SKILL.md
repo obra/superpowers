@@ -21,6 +21,10 @@ the final reviewer is the second pair of eyes.
 prove each step with a test you watched fail and then pass, and leave a
 record that survives your own forgetting.
 
+**Never on main:** if you are on `main` or `master`, your first action is
+to create a branch for this plan (see Setup). No commit of this plan lands
+on main unless your human partner explicitly asked for main.
+
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 
@@ -111,6 +115,16 @@ Ensure the work happens in an isolated workspace: use
 superpowers:using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
+
+**Branch before your first edit.** Run `git branch --show-current`. If it
+prints `main` or `master`, create a branch for this plan before touching
+any file (a worktree via superpowers:using-git-worktrees, or at least
+`git switch -c <plan-file-basename>`), and make every commit there. This
+is not a stop: it needs no permission, so do it and keep going. Commit on
+main only when your human partner has said in so many words to work on
+main. "Execute the plan", "implement it" and "go ahead" are requests to do
+the work, not consent to put it on main. Name the branch in your final
+message.
 
 Conversation memory does not survive compaction. An inline executor that
 loses its place re-implements tasks whose commits already exist — the same
@@ -309,6 +323,7 @@ Use superpowers:finishing-a-development-branch.
 
 | Excuse | Reality |
 |--------|---------|
+| "They said implement it, and the repo is on main, so main is fine" | The request is to do the work, not where to put it. Branch first; they merge when they're ready. |
 | "I remember what Task N says" | You remember a summary. The brief has the exact values. Read it. |
 | "The plan's code is right, skip watching the test fail" | A test you never saw fail proves nothing. It is one step. Run it. |
 | "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
