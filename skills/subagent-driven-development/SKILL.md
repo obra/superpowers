@@ -108,7 +108,8 @@ partner's explicit consent.
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
-a ledger file.
+a ledger file. If you have a todo tool, also keep a todo per task as a
+live view; the ledger is the record.
 
 - Each plan owns a workspace: at skill start, run this skill's
   `bash scripts/sdd-workspace PLAN_FILE` by its absolute path, from the

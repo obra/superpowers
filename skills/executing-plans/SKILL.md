@@ -115,7 +115,8 @@ partner's explicit consent.
 Conversation memory does not survive compaction. An inline executor that
 loses its place re-implements tasks whose commits already exist — the same
 failure as a controller re-dispatching them, paid for in your own context.
-Track progress in a ledger file.
+Track progress in a ledger file. If you have a todo tool, also keep a
+todo per task as a live view; the ledger is the record.
 
 The workspace and ledger are shared with superpowers:subagent-driven-development
 — same directory, same format — so a plan can change executors mid-flight
