@@ -59,8 +59,8 @@ rewritten as `transcript line <n>`.>
 
 ## Debug log or conversation transcript
 
-Session id(s): <ids>. Delivered local archive: <yes (redaction level: <level>) | none built>.
-Attached bundle: <no claim; attach only after approval>.
+Session id(s): <ids>. Delivered local archive: <yes (redaction level: <level>)
+| none built>. Attached bundle: <no claim; attach only after approval>.
 Superpowers involvement per the diagnosis report: <possible | likely>, with
 evidence at <transcript lines>. This report does not propose a fix.
 
