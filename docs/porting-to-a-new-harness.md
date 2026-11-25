@@ -292,7 +292,7 @@ part of the installed extension** — never substitute "edit the user's global
 | runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
 | is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
 | ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| lists each installed skill's description, with no session-start event and no context-file field | skill-index bootstrap (Part 5 Step 5, case 2 fallback) | Antigravity (`.antigravity-plugin/plugin.json` + `skills/` only) |
+| lists each installed skill's description, with no session-start event and no context-file field | skill-index bootstrap (Part 5 Step 5, case 2 fallback) | Antigravity on agy 1.3.1 (`.antigravity-plugin/plugin.json` + `skills/` only) |
 
 Most real harnesses fit one row cleanly; the last is the soft case — see Step 5's
 fallback caveats (rule 2 still holds — never a user-config edit).
@@ -528,13 +528,16 @@ honors the rule rather than breaking it. Distinguish three cases:
    session (Part 6)** — a declared context file where the manifest has a
    `contextFileName`-style field. Antigravity has none, and its other options
    cost more than they buy, so it uses the surfaced skill index below:
-   - Its hooks have no session-start event. `PreInvocation` runs before every
+   - On agy 1.3.1, its hooks have no session-start event. `PreInvocation` runs before every
      model call; an `ephemeralMessage` it injects is dropped on the next call,
      and `invocationNum` resets on each user turn. A `userMessage` gated on
      `invocationNum == 0` and `initialNumSteps == 1` injects exactly once per
      conversation, but agy still starts the hook process on every model call.
      `${PLUGIN_ROOT}` is not set in hooks (they run from the plugin root).
      `hooks.json` must sit at the plugin root; no manifest field moves it.
+     agy 1.5.16 has a `SessionStart` hook event and sets `PLUGIN_ROOT` in
+     plugin hook commands (since 1.5.3), but reads `hooks.json` only from the
+     plugin root; no manifest field relocates it.
    - It loads `rules/*.md` from a plugin every session, but harnesses that
      install from the git repo share its root, and Cursor is one of them: it
      also loads any `rules/*.md` a plugin ships. A file in a shared plugin root
@@ -806,7 +809,7 @@ Use this as the live index; when in doubt, read the files, not this table.
 
 | Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
 |---|---|---|---|---|---|
-| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | surfaced skill index: `using-superpowers`' description triggers it (no session-start hook event exists) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
+| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | surfaced skill index: `using-superpowers`' description triggers it (no session-start hook event exists on agy 1.3.1) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
 | Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; no adapter file needed | `tests/hooks/` | marketplace |
 | Codex | `.codex-plugin/plugin.json` (declares empty `hooks`) | native skill discovery (no session-start hook) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
 | Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
