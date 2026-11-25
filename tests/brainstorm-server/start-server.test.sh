@@ -204,6 +204,16 @@ else
   fail "auto-foregrounds when CURSOR_AGENT is set on non-Windows uname" "expected rc=0 and FOREGROUND_MODE=true, got rc=$rc output: $captured"
 fi
 
+rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
+rc=0
+captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE=agent-exec CURSOR_PLUGIN_ROOT="" MSYSTEM="" \
+  PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
+if [[ "$rc" -eq 0 ]] && echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
+  pass "auto-foregrounds when CURSOR_EXTENSION_HOST_ROLE=agent-exec on non-Windows uname"
+else
+  fail "auto-foregrounds when CURSOR_EXTENSION_HOST_ROLE=agent-exec on non-Windows uname" "expected rc=0 and FOREGROUND_MODE=true, got rc=$rc output: $captured"
+fi
+
 cat > "$TEST_DIR/nonwin-bin/node" <<'EOF'
 #!/usr/bin/env bash
 echo '{"type":"server-started","port":12345}'
@@ -218,6 +228,26 @@ if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q "Server started but was kille
   pass "--background overrides Cursor auto-foreground"
 else
   fail "--background overrides Cursor auto-foreground" "expected background branch, got rc=$rc output: $captured"
+fi
+
+rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
+rc=0
+captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE=user CURSOR_PLUGIN_ROOT="" MSYSTEM="" \
+  PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
+if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q "Server started but was killed"; then
+  pass "stays in background when CURSOR_EXTENSION_HOST_ROLE is not agent-exec"
+else
+  fail "stays in background when CURSOR_EXTENSION_HOST_ROLE is not agent-exec" "expected background branch, got rc=$rc output: $captured"
+fi
+
+rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
+rc=0
+captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE="" CURSOR_PLUGIN_ROOT=/some/plugin MSYSTEM="" \
+  PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
+if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q "Server started but was killed"; then
+  pass "stays in background when only CURSOR_PLUGIN_ROOT is set"
+else
+  fail "stays in background when only CURSOR_PLUGIN_ROOT is set" "expected background branch, got rc=$rc output: $captured"
 fi
 
 echo ""

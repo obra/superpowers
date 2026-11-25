@@ -105,8 +105,25 @@ is_windows_like_shell() {
   return 1
 }
 
+is_cursor_agent() {
+  # Cursor sets these in agent Shell tool environments. Detached/nohup children
+  # are reaped when the launching tool call exits — same failure mode as Codex.
+  if [[ -n "${CURSOR_AGENT:-}" ]]; then
+    return 0
+  fi
+  if [[ "${CURSOR_EXTENSION_HOST_ROLE:-}" == "agent-exec" ]]; then
+    return 0
+  fi
+  return 1
+}
+
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  FOREGROUND="true"
+fi
+
+# Cursor reaps nohup children after the Shell tool call completes. Auto-foreground.
+if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]] && is_cursor_agent; then
   FOREGROUND="true"
 fi
 
