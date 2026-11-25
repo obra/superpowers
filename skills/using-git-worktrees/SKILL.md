@@ -113,10 +113,10 @@ git check-ignore -q "${LOCATION%/}/"
 
 ```bash
 # Determine path based on chosen location
-path="$LOCATION/$BRANCH_NAME"
+worktree_path="$LOCATION/$BRANCH_NAME"
 
-git worktree add "$path" -b "$BRANCH_NAME"
-cd "$path"
+git worktree add "$worktree_path" -b "$BRANCH_NAME"
+cd "$worktree_path"
 ```
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.

@@ -198,10 +198,40 @@ base_check_states() {
     fi
 }
 
+# In zsh, `path` is tied to PATH, so a snippet that assigns `path` leaves git
+# and every other command unfound in the agent's shell. Run the creation
+# snippet under zsh, then git in the same shell.
+creation_snippet_keeps_path_under_zsh() {
+    local create repo out rc
+    if ! command -v zsh >/dev/null 2>&1; then
+        echo "  [SKIP] zsh is not installed"
+        return
+    fi
+    create="$(skill_fence "$USING_SKILL" '#### Create the Worktree')"
+    if [[ -z "$create" ]]; then
+        fail "no bash fence under Create the Worktree"
+        return
+    fi
+
+    repo="$CASE_DIR/repo"
+    git init -q -b main "$repo"
+    fixture_commit "$repo" initial
+    rc=0
+    out="$(cd "$repo" && LOCATION=.worktrees BRANCH_NAME=feature \
+        zsh -f -c "$create"$'\n''git --version' 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && "$out" == *"git version"* && -d "$repo/.worktrees/feature" ]]; then
+        pass "the snippet creates the worktree, and git still runs after it"
+    else
+        fail "the snippet creates the worktree, and git still runs after it (exit $rc)"
+        echo "    got: $out"
+    fi
+}
+
 echo "=== Test: worktree and finishing mechanics ==="
 
 run_case ignore_check_uses_selected_dir
 run_case base_check_states
+run_case creation_snippet_keeps_path_under_zsh
 
 echo ""
 if [[ "$FAILURES" -gt 0 ]]; then
