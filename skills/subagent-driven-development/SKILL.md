@@ -105,6 +105,16 @@ superpowers:using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
+**Branch before your first edit.** Run `git branch --show-current`. If it
+prints `main` or `master`, create a branch for this plan before touching
+any file (a worktree via superpowers:using-git-worktrees, or at least
+`git switch -c <plan-file-basename>`), and make every commit there. This
+is not a stop: it needs no permission, so do it and keep going. Commit on
+main only when your human partner has said in so many words to work on
+main. "Execute the plan", "implement it" and "go ahead" are requests to do
+the work, not consent to put it on main. Name the branch in your final
+message.
+
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
@@ -328,6 +338,7 @@ covers the whole-branch review, its single fix wave, and how you finish.
 
 | Excuse | Reality |
 |--------|---------|
+| "They said implement it, and the repo is on main, so main is fine" | The request is to do the work, not where to put it. Branch first; they merge when they're ready. |
 | "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and adjudicate — those are the only exits. |
 | "I'll fix it myself, dispatching is overhead" | Controller fixes pollute your context and skip review. Resume the implementer. |
 | "One more round will converge" | Past the cap, rounds don't converge — the failure is structural. Adjudicate and route. |

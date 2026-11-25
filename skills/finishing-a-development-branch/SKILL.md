@@ -11,6 +11,21 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+## Never-committed files are not yours to delete
+
+A file in a worktree that was never committed (anything `git status
+--porcelain` lists) exists nowhere else: not on any branch, not in git
+history, not recoverable. Do not delete it yourself, by any route: no
+`rm`, no `git clean`, no `git stash`, no `git checkout`/`git restore`, no
+`git worktree remove --force`. "Clean up", "remove the worktree" and
+"delete the branch" do not cover these files. Only your human partner's
+answer about these specific files does.
+
+If you ask and get no answer (the question is skipped, the session is
+non-interactive, or they don't reply), the answer is **keep them**: leave
+the files and their worktree in place, finish the rest of the work, and
+end your turn with the file list and the question.
+
 ## Step 1: Verify Tests
 
 Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
@@ -34,6 +49,16 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 # before cleanup (Step 6) needs this value
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
 ```
+
+If `GIT_DIR != GIT_COMMON`, list files that exist only in this worktree:
+
+```bash
+git status --porcelain -uall
+```
+
+If it prints anything, the worktree cannot be cleaned up until your human
+partner decides what happens to those files (see Step 6). Tests and the
+chosen integration can still go ahead.
 
 This determines which menu to show and how cleanup works:
 
@@ -174,28 +199,28 @@ git worktree remove "$WORKTREE_PATH"
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
 
-**If removal is refused** (`contains modified or untracked files`): the
-worktree holds files that exist nowhere else — uncommitted plans, notes,
-or scratch work. Never `--force` on your own initiative. Show your human
-partner what is at stake and ask:
-
-```bash
-git -C "$WORKTREE_PATH" status --porcelain -uall
-```
+**If removal is refused** (`contains modified or untracked files`), or
+Step 2 listed files: the worktree holds files that exist nowhere else —
+uncommitted plans, notes, or scratch work. Stop cleanup here. Leave the
+worktree, its files, and its branch exactly as they are, and ask:
 
 ```
-Worktree removal refused — these files were never committed:
+Merged and tested. I stopped before removing the worktree, because these
+files in <path> were never committed and exist nowhere else (not in git
+history):
 
 <file list>
 
-1. Commit them to <branch> before cleanup
-2. Move them into <main repo root>
-3. Delete them (unrecoverable)
+1. Commit them to <branch>, then I remove the worktree
+2. Move them into <main repo root>, then I remove the worktree
+3. Delete them permanently
+4. Leave the worktree as it is
 
 Which?
 ```
 
-Carry out the choice, then remove the worktree.
+Act only on the option they pick. No answer means option 4. Never pick
+option 3 for them, and never describe deleted files as recoverable.
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
@@ -220,6 +245,11 @@ place. If your platform provides a workspace-exit tool, use it.
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
 | "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
+| "I'll delete the untracked files first, so removal works without `--force`" | Same loss as `--force`. `rm`, `git clean`, and `git stash` are all deletion here. Show the list and ask. |
+| "They said clean up, so that covers these files" | They asked to clean up a worktree. They have not seen these files. Ask about the files. |
+| "I asked, the question was skipped, so I'll use my judgment" | A skipped question is not a yes. Keep the files, leave the worktree, ask in your final message. |
+| "They're only scratch notes" | You can't know what they're worth. Only your human partner can. |
+| "They can be restored from git history" | Never-committed files are not in git history. Once deleted, they are gone. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
 | "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |

@@ -13,6 +13,19 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" worktree-guard",
+            "shell": "bash",
+            "async": false
+          }
+        ]
+      }
     ]
   }
 }
