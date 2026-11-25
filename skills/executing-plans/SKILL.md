@@ -84,6 +84,7 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Final whole-branch review (fresh reviewer if you have one)" [shape=box];
     "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" [shape=box];
+    "Final review clean: delete this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" -> "task-start: brief + BASE; read the brief";
@@ -99,19 +100,17 @@ digraph process {
     "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
     "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
     "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger";
-    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" -> "Use superpowers:finishing-a-development-branch";
+    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" -> "Final review clean: delete this plan's workspace";
+    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
 ## Setup
 
-First set up or verify workspace isolation with
-`superpowers:using-git-worktrees` (unless instructions disable worktrees).
-Never commit to `main`/`master`
-without your human partner's explicit consent — if you remain on
-`main`/`master` after workspace setup without explicit consent to commit
-there, create a feature branch (`git switch -c <branch>`) before your
-first edit.
+Ensure the work happens in an isolated workspace: use
+superpowers:using-git-worktrees to create one or verify the existing one.
+Never start implementation on a main/master branch without your human
+partner's explicit consent.
 
 Conversation memory does not survive compaction. An inline executor that
 loses its place re-implements tasks whose commits already exist — the same
@@ -129,15 +128,15 @@ and the new one resumes from the same ledger.
   (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to every
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
   directory is never yours to read or write.
-- Ignore any legacy `.superpowers/sdd/progress.md`. Check
-  `<workspace>/progress.md`'s first line: if it names a different plan file,
-  leave it untouched and resolve a separate workspace/ledger.
-  When it names your plan file: if it ends with exact line `finish`, it is a
-  completed prior run — overwrite
-  `<workspace>/progress.md` with a fresh `# SDD ledger — plan: <plan file path>`
-  header and start from Task 1; otherwise `Task <N>: complete` tasks
-  are DONE (after compaction, trust the ledger and `git log`).
-- Create the ledger with first line `# SDD ledger — plan: <plan file path>`.
+- Check for this plan's ledger at `<workspace>/progress.md`. If its first
+  line names your plan file, tasks with a `Task <N>: complete` line are
+  DONE — do not redo them; resume at the first task without one. Their
+  commits exist in git even when your context no longer remembers making
+  them: after compaction, trust the ledger and `git log` over your own
+  recollection. A ledger whose first line names a different plan file is
+  another plan's progress: leave it and start your own, fresh.
+- Create the ledger with its identity as the first line:
+  `# SDD ledger — plan: <plan file path>`.
 - `git clean -fdx` destroys `<workspace>` (git-ignored scratch): `git log`
   shows only committed tasks — rulings, parked findings, deferred minors,
   briefs, reports, and test logs live only in `<workspace>` and are lost.
@@ -292,24 +291,18 @@ in the rulings list. There is no second fix pass.
 
 ## Finish
 
-Before finishing, collect three exhaustive sections from `<workspace>/progress.md`
-for your final message, in the order recorded:
+Before you delete anything, collect every ledger line containing
+`Ruling:` into your final message under "Rulings I made", in the order you
+made them, each with what it costs if wrong, and every `minor (deferred)`
+line under "Deferred minors". Both lists are exhaustive. Your final
+message is the only place the decisions you took on your human partner's
+behalf — and the findings you chose not to act on — reach them.
 
-1. **"Rulings I made"**: every non-parked ledger line containing `Ruling:`,
-   each with what it costs if wrong.
-2. **"Parked findings"**: every `parked` ledger line, with its attached `Ruling:`.
-3. **"Deferred minors"**: every `minor (deferred)` ledger line.
+When the final review is clean and its fixes are committed, delete this
+plan's workspace directory — the git history is the record now. Sibling
+directories belong to other plans; leave them alone.
 
-These lists are the only place decisions and deferrals reach your human
-partner without reading `<workspace>/progress.md`. `git log` shows
-only committed tasks; rulings, briefs, reports, and logs live only in
-`<workspace>`.
-
-**After** assembling them (and completing the final review/fixes), append
-the exact line `finish` to `<workspace>/progress.md` — do not delete
-`<workspace>`. Sibling directories belong to other plans; leave them alone.
-
-Use superpowers:finishing-a-development-branch (keeping its option menu verbatim).
+Use superpowers:finishing-a-development-branch.
 
 ## Common Rationalizations
 
