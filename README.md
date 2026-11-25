@@ -17,6 +17,7 @@ Superpowers is a complete software development methodology for your coding agent
   - [Gemini CLI](#gemini-cli)
   - [GitHub Copilot CLI](#github-copilot-cli)
   - [Grok Build CLI](#grok-build-cli)
+  - [Kilo Code](#kilo-code)
   - [Kimi Code](#kimi-code)
   - [OpenCode](#opencode)
   - [Pi](#pi)
@@ -200,6 +201,22 @@ Superpowers is available via the [official Grok plugin marketplace](https://gith
   ```text
   /marketplace
   ```
+
+### Kilo Code
+
+Kilo support is a preview, not yet part of a released Superpowers version.
+From the root of a reviewed checkout containing `.kilo/plugin/superpowers.js`,
+install through Kilo's native plugin manager:
+
+```bash
+kilo plugin "file://$PWD" --global
+```
+
+Restart Kilo after installing. The server plugin registers skills and loads the
+`using-superpowers` bootstrap automatically, without copying skills or requiring
+per-session opt-in.
+
+- Detailed docs: [docs/README.kilo.md](docs/README.kilo.md)
 
 ### Kimi Code
 
