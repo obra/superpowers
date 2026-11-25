@@ -299,7 +299,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 ## Cleaning Up
 
 ```bash
-bash scripts/stop-server.sh "$STATE_DIR"
+bash scripts/stop-server.sh "$(dirname "$STATE_DIR")"
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
