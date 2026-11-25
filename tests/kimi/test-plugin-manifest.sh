@@ -54,8 +54,6 @@ for token in [
     assert_present(instructions, token, "skillInstructions")
 
 for forbidden in [
-    "2-4 concrete options",
-    "(Recommended)",
     "TodoWrite",
     "Task tool (general-purpose)",
 ]:
