@@ -10,9 +10,9 @@ set -eu
 # PATH (anthropics/claude-code#43127) before any PATH-repairing sibling hook
 # in the same startup batch takes effect.
 #
-# Uses pure POSIX sh builtins (no command substitution or pipes under bash)
-# so this runs zero-fork on Git Bash/macOS and still works on sh/ash/dash-only
-# systems where bash and zsh are absent.
+# No command substitution or pipe runs under bash: each one forks, and a
+# fork costs tens of milliseconds under Git Bash on Windows. The paths stay
+# relative to the current directory, which is all the file read below needs.
 case "$0" in
   */*|*\\*) SCRIPT_DIR="${0%[/\\]*}" ;;
   *) SCRIPT_DIR="." ;;
