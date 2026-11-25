@@ -24,7 +24,7 @@ When a skill mentions "your instructions file", on Muse this is **`CLAUDE.md`** 
 
 ## Skill invocation
 
-Muse has native skill support via `read_skill` (`muse skills`). Invoke a Superpowers skill with `read_skill` (or read its `SKILL.md`). The bootstrap (`using-superpowers`) is injected automatically at `SessionStart` via the plugin hook — you are already following it, do not re-load it.
+Muse loads skills with `read_skill`: pass the skill's id or path as it appears in your skill catalog (or read its `SKILL.md` directly). The bootstrap (`using-superpowers`) is injected automatically at `SessionStart` via the plugin hook — you are already following it, do not re-load it.
 
 ## Subagent dispatch
 
