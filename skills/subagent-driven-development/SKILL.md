@@ -14,17 +14,17 @@ Execute plan by dispatching a fresh implementer subagent per task, a task review
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are the four named below, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping, except for the stops below or an unresolved confirmed scope addition at the review cap. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
 **Rulings, not stalls.** A running plan does not wait on a human. Conflicts,
 ambiguities, plan defects, a cap you would have asked to exceed — decide
-them. The spec is the binding authority, the plan is its argument, and your
-judgment settles what neither answers. Record every decision in the ledger as
+them. The partner's request binds, then approved spec over approved plan;
+unapproved drafts are context. Judge remaining details. Record decisions as
 `Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
 going. A wrong ruling costs rework your human partner can see and undo; a
 session parked on a question costs their whole day and buys nothing.
 
-Four things stop you, and only these: an irreversible or destructive
+These four things also stop you: an irreversible or destructive
 operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For those,
@@ -67,7 +67,7 @@ digraph process {
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer implements, tests, commits, self-reviews" [shape=box];
+        "Implementer implements, tests, self-reviews, commits" [shape=box];
         "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
         "Spec ✅ and quality approved?" [shape=diamond];
         "Fix loop: read references/fix-loop.md before every round" [shape=box];
@@ -83,13 +83,13 @@ digraph process {
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
-    "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
+    "Answer questions, provide context" -> "Implementer implements, tests, self-reviews, commits";
+    "Implementer asks questions?" -> "Implementer implements, tests, self-reviews, commits" [label="no"];
+    "Implementer implements, tests, self-reviews, commits" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
     "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
     "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
     "Spec ✅ and quality approved?" -> "Fix loop: read references/fix-loop.md before every round" [label="no"];
-    "Fix loop: read references/fix-loop.md before every round" -> "Append completion to ledger, mark todo complete" [label="addressed, or parked at the cap"];
+    "Fix loop: read references/fix-loop.md before every round" -> "Append completion to ledger, mark todo complete" [label="addressed, or other findings parked at cap"];
     "Append completion to ledger, mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Final review and finish: read references/final-review.md" [label="no"];
@@ -128,14 +128,14 @@ a ledger file, not only in todos.
   that happens, recover from `git log`.
 
 Read the plan once, note its context and Global Constraints, and create a
-todo per task. If the plan names a Spec, read that too: the spec is the
-authority the plan argues from, and conflicts inside the plan resolve
-against it. A plan with no reachable spec gets a ledger note saying so —
-rulings made without one are provisional.
+todo per task. Read any named spec and record which plan or spec the
+partner approved; unapproved drafts are not binding. Preserve enough
+branch-start working-tree state to distinguish pre-existing work from the
+work reviewed at the end.
 
 Before dispatching Task 1, read [references/preflight.md](references/preflight.md)
 and run the conflict scan it describes. Its table and rulings go in the
-ledger.
+ledger. Resolve conflicts using the request and approval hierarchy above.
 
 ## Model Selection
 
@@ -197,22 +197,19 @@ child is noticed within minutes, not at the end of the session.
 
 ### 1. Dispatch the implementer
 
-Record BASE (`git rev-parse HEAD`) before dispatching — the review package
-and fix-round diffs need it.
+Record BASE (`git rev-parse HEAD`) and task-start staged, unstaged, and
+untracked state; preserve pre-existing work.
 
-- **Task brief:** before dispatching an implementer, run this skill's
-  `bash scripts/task-brief PLAN_FILE N` by its absolute path, from the
-  working tree you're executing in — it extracts the task's full text to a
-  uniquely named file and prints the path. Compose the dispatch so the
-  brief stays the single source of
-  requirements. Your dispatch should contain: (1) one line on where this
-  task fits in the project; (2) the brief path, introduced as "read this
-  first — it is your requirements, with the exact values to use verbatim";
-  (3) interfaces and decisions from earlier tasks that the brief cannot
-  know; (4) your resolution of any ambiguity you noticed in the brief;
-  (5) the report-file path and report contract. Exact values (numbers,
-  magic strings, signatures, test cases) appear only in the brief. Never
-  make a subagent read the whole plan file.
+- **Task brief:** run this skill's `bash scripts/task-brief PLAN_FILE N`
+  by its absolute path from the working tree. In the dispatch, separate
+  (1) verbatim partner messages, (2) approved plans/specs and evidence,
+  (3) the brief, interfaces, and unapproved assumptions as context, and
+  (4) the report path and contract. Adapt the template: implement the
+  request and approved documents, decide routine details autonomously,
+  and escalate material scope or safety blockers. Self-review before
+  authorized commit and report: remove confirmed task-owned, unauthorized,
+  unnecessary additions; retain and report uncertain ones. Never make a
+  subagent read the whole plan file.
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
@@ -240,7 +237,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from the working tree you're executing in — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package below, then dispatch the reviewer.
 
 **Any other status** (DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED): read
 [references/handling-reports.md](references/handling-reports.md) and follow
@@ -258,26 +255,26 @@ report missing either verdict — spec compliance AND task quality are both
 required. Implementer self-review never replaces the task review; both are
 needed.
 
-- Hand the reviewer its diff as a file: run this skill's
-  `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from
-  the working tree you're executing in, and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
-  and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
-  the commit list, stat summary, and full diff with context in one Read
-  call. Use the BASE you recorded before dispatching the implementer —
-  never `HEAD~1`, which silently truncates multi-commit tasks. Never
-  dispatch a task reviewer without a diff file.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
-- The global-constraints block you hand the reviewer is its attention
-  lens. Copy the binding requirements verbatim from the plan's Global
-  Constraints section or the spec: exact values, exact formats, and the
-  stated relationships between components ("same layout as X", "matches
-  Y"). The reviewer's template already carries the process rules (YAGNI,
-  test hygiene, review method) — the constraints block is for what THIS
-  project's spec demands.
+- Give the reviewer a file with the commit list, stat, and full diff with
+  context. For a nonempty range, run this skill's
+  `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path from
+  the working tree. Without bash, redirect `git log --oneline`,
+  `git diff --stat`, and `git diff -U10` to one file. Use recorded BASE,
+  not `HEAD~1`. Never dispatch without a diff file.
+- For uncommitted work, use the task-start comparison as the authoritative
+  final diff, covering committed, staged, unstaged, and untracked changes;
+  when the commit range is empty, use it instead of the helper. Apply this
+  to fix-start and branch-start comparisons in linked reviews. If ownership
+  or the baseline is unknown, retain doubtful work and report the limitation.
+  If the comparison is missing, report that review cannot be verified;
+  do not use the template's partial commit-only fallback.
+- **Reviewer inputs:** brief, report, diff file, relevant partner messages
+  verbatim, and separate approval evidence. Copy binding global constraints
+  verbatim from the approved plan or spec, including exact values, formats,
+  and component relationships. Use the scope check from
+  superpowers:requesting-code-review; adapt the template so an unapproved
+  brief or a file listed only in it is not itself proof of a requirement.
+  Retain and report uncertain removals separately from unverified requirements.
 - Do not add open-ended directives like "check all uses" or "run race tests
   if useful" without a concrete, task-specific reason
 - Do not ask a reviewer to re-run tests the implementer already ran on the
@@ -297,7 +294,9 @@ Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
 ### 4. The fix loop
 
 The loop triggers when the review reports spec ❌, any Critical or Important
-finding, or a ⚠️ item you confirmed as a real gap.
+finding, or a ⚠️ item you confirmed as a real gap. A confirmed scope
+addition is spec ❌ even if its quality severity is Minor. Send it through
+the loop; the linked plan-mandated exception applies only to approved text.
 
 When it triggers, read [references/fix-loop.md](references/fix-loop.md) and
 follow it. Read it again before every round, even if you read it earlier in
@@ -306,9 +305,11 @@ round writes, and your memory of it does not survive compaction.
 
 ### 5. Complete the task
 
-When the review comes back clean — or every open finding is parked with a
-ruling at the cap — append the completion line to the ledger in the same
-message as your other bookkeeping:
+If a confirmed scope addition remains at the cap, ledger it unresolved;
+do not write a completion line or mark the todo done. Stop and report
+incomplete; on resume, honor the cap rather than repeating fix rounds.
+Otherwise, when the review is clean or other findings are parked at the
+cap, append the completion line to the ledger with your bookkeeping:
 
 - `Task <N>: complete (commits <base7>..<head7>, review clean)`
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
@@ -323,6 +324,8 @@ parked-with-ruling at the cap.
 When every task is complete, read
 [references/final-review.md](references/final-review.md) and follow it. It
 covers the whole-branch review, its single fix wave, and how you finish.
+Give that reviewer the same request, approval, ownership, and scope-check
+context; report any unresolved confirmed scope addition as incomplete.
 
 ## Common Rationalizations
 

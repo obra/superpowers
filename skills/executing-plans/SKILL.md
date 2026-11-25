@@ -14,12 +14,12 @@ and a fresh reviewer on every task, each re-reading the codebase from zero.
 Inline execution pays for one context (yours) plus one reviewer at the end.
 What it gives up is a fresh context per task and a second pair of eyes per
 task. This skill keeps what those two things bought, by other means: the
-brief is the spec, the ledger is your memory, TDD is the per-task gate, and
-the final reviewer is the second pair of eyes.
+brief carries the task, the ledger is your memory, TDD is the per-task
+gate, and the final reviewer is the second pair of eyes.
 
-**Core principle:** The plan already did the thinking. Execute it exactly,
-prove each step with a test you watched fail and then pass, and leave a
-record that survives your own forgetting.
+**Core principle:** Execute the partner's request and approved plan, prove
+each step with a test you watched fail and then pass, and leave a record
+that survives your own forgetting.
 
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
@@ -30,9 +30,10 @@ between tasks. They chose inline execution to spend less, not to answer
 without stopping.
 
 **Rulings, not stalls.** Conflicts, ambiguities, plan defects — decide them.
-The spec is the binding authority, the plan is its argument, and your
-judgment settles what neither answers. Record every decision in the ledger
-as `Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
+The partner's request binds, then approved spec over approved plan;
+unapproved drafts are context. Judge remaining details. Record every
+decision in the ledger as
+`Ruling: <what you decided> — <why> — <what it costs if wrong>`, and keep
 going. Deviating from the plan without a ledgered ruling is a decision made
 in secret.
 
@@ -64,6 +65,9 @@ long plan still works — the ledger is what makes it recoverable — but the
 last tasks get the least of you.
 
 ## The Process
+
+Confirmed scope additions enter the fix pass regardless of quality
+severity; the diagram's Minor branch applies to other findings.
 
 ```dot
 digraph process {
@@ -142,10 +146,10 @@ and the new one resumes from the same ledger.
   if that happens, recover from `git log`.
 
 Read the plan once, note its context and Global Constraints, and create a
-todo per task. If the plan names a Spec, read that too: the spec is the
-authority the plan argues from, and conflicts inside the plan resolve
-against it. A plan with no reachable spec gets a ledger note saying so —
-rulings made without one are provisional.
+todo per task. Read any named spec and record which plan or spec the
+partner approved; unapproved drafts are not binding. Preserve enough
+branch-start working-tree state to distinguish pre-existing work from the
+work reviewed at the end.
 
 **REQUIRED SUB-SKILL:** load superpowers:test-driven-development now,
 before Task 1. It governs every step of every task below; a plan whose
@@ -157,10 +161,9 @@ Interfaces blocks tell you where to look: for every task that consumes
 what an earlier task produces, one ledger row — the two tasks, what one
 produces against what the other consumes, and what you found. Tasks that
 share nothing get no row; a plan whose tasks share nothing gets the single
-line `Pre-flight: no shared interfaces`. Rule on each conflict a row
-surfaces with the spec as the binding authority, record the ruling beside
-its row, and start Task 1. Each task's own text is checked when you read
-its brief, not here.
+line `Pre-flight: no shared interfaces`. Rule on each conflict using the
+request and approval hierarchy, record the ruling beside its row, and
+start Task 1. Check each task's own text when you read its brief.
 
 ## The Task Loop
 
@@ -174,8 +177,10 @@ in the workspace and read its tail; read a brief, not the whole plan.
   from the working tree you're executing in. It prints the brief
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
-  what you remember is a summary, the brief has the exact values,
-  signatures, and test cases.
+  what you remember is a summary; distinguish its approved requirements
+  from unapproved context.
+- Record staged, unstaged, and untracked state at task start to distinguish
+  task-owned changes from pre-existing work.
 - Mark the task's todo in_progress.
 
 Every tool call is a turn that re-reads your whole context. Bookkeeping
@@ -184,38 +189,42 @@ never in a call of its own.
 
 ### 2. Work the steps
 
-The plan's steps are already in RED-GREEN order; follow them in that
-order under superpowers:test-driven-development, loaded at setup. A test
-step's code is written first and run first. Watching it fail is a step,
-not a formality — a test that passes before the implementation exists is
-a finding about the test.
+Follow the plan's RED-GREEN steps that implement approved requirements or
+necessary behavior under superpowers:test-driven-development. Unapproved,
+unnecessary additions are context, not steps to execute. Write and run each
+test first; a test that passes before implementation is a finding about it.
 
-Every step that runs a command has an `Expected:` line. Run the command,
+Every executed step that runs a command has an `Expected:` line. Run the command,
 read its output, and compare. Three outcomes:
 
 - **Matches.** Next step.
 - **The code is wrong.** Use superpowers:systematic-debugging. Find the
   cause; never patch the symptom to make the step's output match.
-- **The plan is wrong** — a step contradicts the spec, an interface from an
-  earlier task doesn't match what this task consumes, a command that
-  cannot work. Rule on the smallest change that satisfies the spec, ledger
-  it as `Task <N>: Ruling: <finding> — <what you decided and why>`, and
-  continue. The ruling is carried, not remembered: later tasks that touch
-  the same interface read it from the ledger.
+- **The plan is wrong** — a step contradicts approved requirements, an
+  interface from an earlier task doesn't match what this task consumes, or
+  a command cannot work. Rule on the smallest change that satisfies the
+  approved requirements, ledger it as `Task <N>: Ruling: <finding> —
+  <what you decided and why>`, and continue. Later tasks that touch the
+  same interface read that ruling from the ledger.
 
 Commit as the plan's commit steps say. A task that spans several commits
-is fine; BASE is what the review range is cut from, never `HEAD~1`.
+is fine; BASE is what the review range is cut from, never `HEAD~1`. Before
+an authorized commit and before completing the task, use the scope check
+in superpowers:requesting-code-review on your task-owned work. Remove
+confirmed unauthorized, unnecessary additions; preserve and report
+uncertain or pre-existing work.
 
 ### 3. The completion contract
 
 Before a task's ledger line, all of the following are true, with evidence
 in this session — not inferred from the diff looking right:
 
-- Every test the brief names exists and ran in this task, and you read
-  the output.
+- Every test in the brief covering approved requirements or necessary
+  behavior exists and ran in this task, and you read the output.
 - The final test run for the task passed — `task-done` is that run, and
   it writes the command and result into the ledger line.
-- Every `Expected:` line in the brief was compared against real output.
+- Every `Expected:` line for approved or necessary work was compared
+  against real output.
 - Every deviation from the brief has a `Ruling:` line in the ledger.
 
 **REQUIRED SUB-SKILL:** superpowers:verification-before-completion governs
@@ -230,14 +239,27 @@ if they pass — appends the completion line to the ledger:
 
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
-A failing run records nothing; the task is not complete. When it records,
+A command that requires unapproved, unnecessary additions must be replaced
+with a relevant test command and a ledgered ruling. A failing run records
+nothing; the task is not complete. When it records,
 mark the todo complete and take the next task.
 
 ## Final Review
 
-Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
-by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.
-`git merge-base main HEAD`) and review from the file it prints.
+For a nonempty committed range, run
+`../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
+by its absolute path from the working tree (MERGE_BASE = the branch start).
+For uncommitted work, use the branch-start comparison as the authoritative
+final diff, covering committed, staged, unstaged, and untracked changes;
+use it instead of the commit-only helper when the range is empty.
+If ownership or the baseline is unknown, retain doubtful work and report
+the limitation.
+
+Apply superpowers:requesting-code-review's request provenance and scope
+check, whether the review is delegated or inline. Pass relevant partner
+messages verbatim as requirements, and identify any approved plan or spec
+and its approval separately. Unapproved briefs and rulings are context,
+not proof that an addition was requested.
 
 **With a subagent tool:** dispatch the reviewer on the most capable
 available model — the whole-branch review is a judgment task — using
@@ -270,21 +292,20 @@ person using this software gets if it ships, not whether the spec names
 the input that triggers it — a reviewer who set a finding at Minor
 because the spec was silent has graded the spec, not the effect. Then:
 
-- **Critical and Important** enter the fix pass.
-- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
+- **Critical, Important, and confirmed scope additions** enter the fix pass.
+- **Other Minor findings** go to the ledger as `Final: minor (deferred): <one-liner>`
   and to your final message under "Deferred minors". Minors never enter
-  the fix pass, and never become rulings — a ruling is a decision about a
-  conflict, not a note that you declined a polish suggestion.
+  the fix pass solely for quality, and never become rulings — a ruling is a
+  decision about a conflict, not a note that you declined a polish suggestion.
 
-Fix the Critical and Important findings yourself — you are the
-implementer here — in ONE pass. Each fix is verified by TDD, not by a
-second reviewer: write the test that reproduces the finding, watch it
-fail, make it pass, then run the whole suite. Record each in the ledger as
+Fix Critical, Important, and confirmed scope findings yourself in ONE
+pass. Verify each fix by TDD: write the test that reproduces the finding,
+watch it fail, make it pass, then run the whole suite. Record each as
 `Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
 without a test that failed first is not verified; a suite that is not
 green after the pass means the pass is not over. Do not dispatch a
-re-review: it would re-read a diff whose covering tests already answer
-"addressed" and whose suite run already answers "broke nothing".
+re-review.
+If a confirmed scope addition remains unresolved, report the work incomplete.
 
 A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
 <why the code stands> — <cost if wrong>` — and reaches your human partner
