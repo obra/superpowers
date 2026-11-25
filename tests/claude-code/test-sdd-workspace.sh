@@ -827,6 +827,195 @@ PLAN
         echo "    now: $(cat "$own/.superpowers/sdd/.gitignore")"
     fi
 
+    # --- An unwritable workspace fails fast with a message, never spins ---
+    # The slug loop runs in a `while ! owns ...` condition where `set -e` is
+    # suspended, so a failure of owns() beyond "another plan owns it" used to
+    # retry forever. A regular file squatting on the workspace parent is the
+    # deterministic trigger; timeout distinguishes "spins" from "fails".
+    git init -q -b main "$TEST_ROOT/spin"
+    local spin spin_rc=0
+    spin="$(cd "$TEST_ROOT/spin" && git rev-parse --show-toplevel)"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$spin/spin-plan.md"
+    mkdir -p "$spin/.superpowers/sdd"
+    printf 'blocker\n' > "$spin/.superpowers/sdd/spin-plan"
+    timeout 10 bash -c 'cd "$1" && "$2" spin-plan.md >/dev/null 2>&1' \
+        _ "$spin" "$SDD_SCRIPTS/sdd-workspace" || spin_rc=$?
+    if [[ "$spin_rc" -ne 0 && "$spin_rc" -ne 124 ]]; then
+        pass "unwritable workspace: non-zero exit, no timeout (fails instead of spinning)"
+    else
+        fail "unwritable workspace: non-zero exit, no timeout (fails instead of spinning)"
+        echo "    exit: $spin_rc (124 = killed by timeout = spin)"
+    fi
+
+    # --- A full counter range stops with a message, not forever ---
+    git init -q -b main "$TEST_ROOT/capped"
+    local capped rc_capped=0
+    capped="$(cd "$TEST_ROOT/capped" && git rev-parse --show-toplevel)"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$capped/plan.md"
+    for slot in plan plan-capped; do
+        mkdir -p "$capped/.superpowers/sdd/$slot"
+        printf 'other/plan.md\n' > "$capped/.superpowers/sdd/$slot/plan-path"
+    done
+    for i in $(seq 2 33); do
+        mkdir -p "$capped/.superpowers/sdd/plan-capped-$i"
+        printf 'other/plan.md\n' > "$capped/.superpowers/sdd/plan-capped-$i/plan-path"
+    done
+    timeout 10 bash -c 'cd "$1" && "$2" plan.md >/dev/null 2>&1' \
+        _ "$capped" "$SDD_SCRIPTS/sdd-workspace" || rc_capped=$?
+    if [[ "$rc_capped" -ne 0 && "$rc_capped" -ne 124 ]]; then
+        pass "33 occupied slots: gives up with non-zero exit (bounded search)"
+    else
+        fail "33 occupied slots: gives up with non-zero exit (bounded search)"
+        echo "    exit: $rc_capped"
+    fi
+
+    # --- A lost marker race is classified, never treated as unusable ---
+    # Two controllers can reach the same fresh slug. A wins `mkdir`; B sees
+    # the directory, takes the existing-directory branch, and wins the
+    # noclobber marker write. A's own write then fails, and A must classify
+    # via the winner's marker — skip the slot if another plan owns it, adopt
+    # it if it holds the same plan — instead of exiting 2 as "unusable".
+    # The PATH shim below makes that interleaving deterministic: it creates
+    # the directory and writes the winner's marker before owns() writes its
+    # own.
+    git init -q -b main "$TEST_ROOT/race"
+    local race race_bin race_dir race_rc own_race own_race_dir own_race_rc
+    race="$(physical_path "$(cd "$TEST_ROOT/race" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race/race-plan.md"
+    race_bin="$TEST_ROOT/race-bin"
+    mkdir -p "$race_bin"
+    cat > "$race_bin/mkdir" <<'SH'
+#!/usr/bin/env bash
+command -p mkdir "$@" || exit $?
+if [[ $# -eq 1 && "$1" == "${INJECT_DIR:-}" ]]; then
+    printf '%s\n' "${INJECT_PLAN:-other/plan.md}" > "$1/plan-path"
+    if [[ -n "${INJECT_SENTINEL:-}" ]]; then : > "$INJECT_SENTINEL"; fi
+fi
+SH
+    chmod +x "$race_bin/mkdir"
+
+    race_rc=0
+    race_dir="$(cd "$race" && PATH="$race_bin:$PATH" \
+        INJECT_DIR="$race/.superpowers/sdd/race-plan" \
+        "$SDD_SCRIPTS/sdd-workspace" race-plan.md 2>/dev/null)" || race_rc=$?
+    if [[ "$race_rc" -eq 0 && "$race_dir" == "$race/.superpowers/sdd/race-plan-race" \
+        && "$(cat "$race_dir/plan-path" 2>/dev/null)" == "race-plan.md" ]]; then
+        pass "lost marker race to another plan: skips the slot instead of failing"
+    else
+        fail "lost marker race to another plan: skips the slot instead of failing"
+        echo "    exit:   $race_rc"
+        echo "    dir:    $race_dir"
+        echo "    marker: $(cat "$race_dir/plan-path" 2>/dev/null)"
+    fi
+
+    git init -q -b main "$TEST_ROOT/race-own"
+    own_race_rc=0
+    own_race="$(physical_path "$(cd "$TEST_ROOT/race-own" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$own_race/race-own-plan.md"
+    own_race_dir="$(cd "$own_race" && PATH="$race_bin:$PATH" \
+        INJECT_DIR="$own_race/.superpowers/sdd/race-own-plan" \
+        INJECT_PLAN="race-own-plan.md" \
+        INJECT_SENTINEL="$TEST_ROOT/race-own-injected" \
+        "$SDD_SCRIPTS/sdd-workspace" race-own-plan.md 2>/dev/null)" || own_race_rc=$?
+    # The injected marker alone cannot prove the race happened: without it the
+    # fresh-directory path produces the same directory and marker, so the case
+    # would pass while never reaching claim_marker's lost-write branch. The
+    # sentinel the shim drops is the proof that the interleaving occurred.
+    if [[ "$own_race_rc" -eq 0 && "$own_race_dir" == "$own_race/.superpowers/sdd/race-own-plan" \
+        && -e "$TEST_ROOT/race-own-injected" \
+        && "$(cat "$own_race_dir/plan-path" 2>/dev/null)" == "race-own-plan.md" ]]; then
+        pass "lost marker race to the same plan: adopts the workspace"
+    else
+        fail "lost marker race to the same plan: adopts the workspace"
+        echo "    exit:     $own_race_rc"
+        echo "    dir:      $own_race_dir"
+        echo "    injected: $([[ -e "$TEST_ROOT/race-own-injected" ]] && echo yes || echo no)"
+        echo "    marker:   $(cat "$own_race_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # --- A read inside the winner's open-before-write gap retries ---
+    # The noclobber winner creates plan-path and writes the line as two
+    # steps, so a loser reading in between sees an empty file. Treating that
+    # as another plan's marker splits one plan across two slots; the reader
+    # must retry briefly instead. The cat shim below answers the first read
+    # with nothing and the retry with the real file.
+    git init -q -b main "$TEST_ROOT/race-empty"
+    local race_empty race_empty_dir race_empty_rc
+    race_empty="$(physical_path "$(cd "$TEST_ROOT/race-empty" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race_empty/race-empty-plan.md"
+    mkdir -p "$race_empty/.superpowers/sdd/race-empty-plan"
+    printf 'race-empty-plan.md\n' > "$race_empty/.superpowers/sdd/race-empty-plan/plan-path"
+    cat > "$race_bin/cat" <<'SH'
+#!/usr/bin/env bash
+if [[ -n "${EMPTY_ONCE_STAMP:-}" && ! -e "$EMPTY_ONCE_STAMP" && "${1:-}" == *plan-path ]]; then
+    : > "$EMPTY_ONCE_STAMP"
+    exit 0
+fi
+command -p cat "$@"
+SH
+    chmod +x "$race_bin/cat"
+    race_empty_rc=0
+    race_empty_dir="$(cd "$race_empty" && PATH="$race_bin:$PATH" \
+        EMPTY_ONCE_STAMP="$TEST_ROOT/race-empty-stamp" \
+        "$SDD_SCRIPTS/sdd-workspace" race-empty-plan.md 2>/dev/null)" || race_empty_rc=$?
+    if [[ "$race_empty_rc" -eq 0 && "$race_empty_dir" == "$race_empty/.superpowers/sdd/race-empty-plan" \
+        && -e "$TEST_ROOT/race-empty-stamp" \
+        && "$(cat "$race_empty_dir/plan-path" 2>/dev/null)" == "race-empty-plan.md" ]]; then
+        pass "empty marker read from the write gap: retries and adopts"
+    else
+        fail "empty marker read from the write gap: retries and adopts"
+        echo "    exit:     $race_empty_rc"
+        echo "    dir:      $race_empty_dir"
+        echo "    injected: $([[ -e "$TEST_ROOT/race-empty-stamp" ]] && echo yes || echo no)"
+        echo "    marker:   $(cat "$race_empty_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # --- A marker that stays empty is still another plan's slot ---
+    # The retries above only cover a writer that finishes; a marker left
+    # empty by a crashed winner must keep the pre-existing classification
+    # (skip the slot) instead of turning into a hard failure that blocks
+    # every later run of this plan.
+    git init -q -b main "$TEST_ROOT/race-stale"
+    local race_stale race_stale_dir race_stale_rc
+    race_stale="$(physical_path "$(cd "$TEST_ROOT/race-stale" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race_stale/race-stale-plan.md"
+    mkdir -p "$race_stale/.superpowers/sdd/race-stale-plan"
+    : > "$race_stale/.superpowers/sdd/race-stale-plan/plan-path"
+    race_stale_rc=0
+    race_stale_dir="$(cd "$race_stale" \
+        && "$SDD_SCRIPTS/sdd-workspace" race-stale-plan.md 2>/dev/null)" || race_stale_rc=$?
+    if [[ "$race_stale_rc" -eq 0 \
+        && "$race_stale_dir" == "$race_stale/.superpowers/sdd/race-stale-plan-race-stale" \
+        && "$(cat "$race_stale_dir/plan-path" 2>/dev/null)" == "race-stale-plan.md" ]]; then
+        pass "empty marker that stays empty: skips the slot instead of failing"
+    else
+        fail "empty marker that stays empty: skips the slot instead of failing"
+        echo "    exit:   $race_stale_rc"
+        echo "    dir:    $race_stale_dir"
+        echo "    marker: $(cat "$race_stale_dir/plan-path" 2>/dev/null)"
+    fi
+
+    # --- An unreadable marker is unusable, not another plan's slot ---
+    # A lost race whose marker cannot be read at all is the one case that
+    # must stop the caller: skipping it would leave the plan's artifacts in
+    # a workspace nobody owns. plan-path as a directory makes `cat` fail
+    # deterministically, and the diagnostic must name the failed write.
+    git init -q -b main "$TEST_ROOT/race-bad"
+    local race_bad race_bad_rc
+    race_bad="$(physical_path "$(cd "$TEST_ROOT/race-bad" && git rev-parse --show-toplevel)")"
+    printf '# P\n\n## Task 1: One\n\nOne.\n' > "$race_bad/race-bad-plan.md"
+    mkdir -p "$race_bad/.superpowers/sdd/race-bad-plan/plan-path"
+    race_bad_rc=0
+    ( cd "$race_bad" && "$SDD_SCRIPTS/sdd-workspace" race-bad-plan.md >/dev/null 2>"$TEST_ROOT/race-bad.err" ) \
+        || race_bad_rc=$?
+    if [[ "$race_bad_rc" -eq 2 ]] && grep -q "after a failed marker write" "$TEST_ROOT/race-bad.err"; then
+        pass "unreadable marker: exits 2 and names the failed write"
+    else
+        fail "unreadable marker: exits 2 and names the failed write"
+        echo "    exit: $race_bad_rc"
+        echo "    err:  $(cat "$TEST_ROOT/race-bad.err" 2>/dev/null)"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."

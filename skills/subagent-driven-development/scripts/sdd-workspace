@@ -77,23 +77,75 @@ esac
 # True when the workspace at $1 is (or becomes) this plan's: an existing
 # marker must name this plan; a missing marker means a new workspace or a
 # pre-marker legacy one, and either way the plan claims it by writing one.
+#
+# owns() distinguishes "this plan's" (0) from "another plan's" (1) from
+# "unusable" (2: mkdir/printf failed, or the marker cannot be read). The
+# caller loop must treat a failure as a reason to stop, never as a slot to
+# try next: with `set -e` suspended inside a `while ! owns ...` condition,
+# an unwritable workspace spun the slug counter forever (a regular file at
+# .superpowers reproduced 800+ iterations in 8s before exiting via timeout).
+#
+# claim_marker() is the single place that writes and classifies the marker,
+# so both the fresh-directory and the existing-directory paths agree. Two
+# controllers claiming one slug race on the marker: only the noclobber
+# winner's write lands, and the loser reads what it finds — this plan's
+# marker means it may adopt the workspace, another plan's means try the next
+# slot. A write that fails for any other reason leaves a marker that cannot
+# be read, which is the only "unusable" case.
+claim_marker() {
+  if ( set -C; printf '%s\n' "$plan_id" > "$1/plan-path" ) 2>/dev/null; then
+    return 0
+  fi
+  # The noclobber winner creates plan-path and then writes the line, so a
+  # read that lands in between sees an empty file. Retry briefly: an empty
+  # read is not another plan's marker, and treating it as one would split
+  # this plan across two slots. A marker that stays empty is a crashed
+  # winner's residue and still counts as another plan's, as before.
+  local val="" try
+  for try in 1 2 3; do
+    val=$(cat "$1/plan-path" 2>/dev/null) \
+      || { echo "cannot read marker in $1 after a failed marker write" >&2; return 2; }
+    if [ -n "$val" ]; then break; fi
+    if [ "$try" -lt 3 ]; then sleep 0.05; fi
+  done
+  [ "$val" = "$plan_id" ] && return 0 || return 1
+}
+
 owns() {
   if [ -e "$1/plan-path" ]; then
-    [ "$(cat "$1/plan-path")" = "$plan_id" ]
-  else
-    mkdir -p "$1"
-    printf '%s\n' "$plan_id" > "$1/plan-path"
+    claim_marker "$1" || return $?
+    return 0
   fi
+  if ! mkdir -p "$(dirname "$1")" 2>/dev/null; then
+    echo "cannot create workspace base $(dirname "$1")" >&2; return 2
+  fi
+  if ! mkdir "$1" 2>/dev/null && [ ! -d "$1" ]; then
+    echo "cannot create workspace $1" >&2; return 2
+  fi
+  claim_marker "$1" || return $?
+  return 0
+}
+
+claim() {
+  owns "$1"; rc=$?
+  case $rc in
+    0|1) return "$rc" ;;
+    *) exit 2 ;;
+  esac
 }
 
 dir="$base/$slug"
-if ! owns "$dir"; then
+if ! claim "$dir"; then
   parent=$(basename "$plan_dir")
   dir="$base/$slug-$parent"
-  if ! owns "$dir"; then
+  if ! claim "$dir"; then
     n=2
-    while ! owns "$base/$slug-$parent-$n"; do n=$((n + 1)); done
-    dir="$base/$slug-$parent-$n"
+    dir=""
+    while [ "$n" -le 32 ]; do
+      if claim "$base/$slug-$parent-$n"; then dir="$base/$slug-$parent-$n"; break; fi
+      n=$((n + 1))
+    done
+    [ -n "$dir" ] || { echo "no free workspace for $slug under $base after 32 attempts" >&2; exit 2; }
   fi
 fi
 
