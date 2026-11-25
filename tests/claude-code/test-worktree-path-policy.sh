@@ -51,6 +51,8 @@ assert_not_contains "$USING_SKILL" "~/.config/superpowers/worktrees" "using-git-
 assert_not_contains "$USING_SKILL" "global legacy" "using-git-worktrees does not use unclear global legacy shorthand"
 assert_not_contains "$USING_SKILL" "Global path" "using-git-worktrees has no global path quick-reference row"
 assert_contains "$USING_SKILL" 'default to `.worktrees/` at the project root' "using-git-worktrees defaults new manual worktrees to .worktrees/"
+assert_not_contains "$USING_SKILL" 'git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees' "using-git-worktrees does not use or-check across alternate worktree directories"
+assert_contains "$USING_SKILL" 'git check-ignore -q "$LOCATION"' "using-git-worktrees checks ignore status on the selected location"
 
 assert_not_contains "$FINISHING_SKILL" "~/.config/superpowers/worktrees" "finishing-a-development-branch does not treat old global path as owned"
 assert_contains "$FINISHING_SKILL" '`.worktrees/` or `worktrees/`' "finishing-a-development-branch keeps project-local cleanup ownership"

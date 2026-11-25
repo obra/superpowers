@@ -79,13 +79,15 @@ Follow this priority order. Explicit user preference always beats observed files
 
 **MUST verify directory is ignored before creating worktree:**
 
+Verify the selected directory is ignored (e.g. `$LOCATION`, whether `.worktrees` or `worktrees`):
+
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q "$LOCATION" 2>/dev/null
 ```
 
 **If NOT ignored:** Add to .gitignore, commit the change, then proceed.
 
-**Why critical:** Prevents accidentally committing worktree contents to repository.
+**Why critical:** Prevents accidentally committing worktree contents to repository. Never check an unselected alternative directory (`.worktrees` vs `worktrees`) because one being ignored does not protect the other.
 
 #### Create the Worktree
 
