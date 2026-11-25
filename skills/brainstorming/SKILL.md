@@ -244,9 +244,10 @@ builder check.
 
 **Where it goes:** in a software repo,
 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed by path
-(`git add <spec> && git commit -m ... -- <spec>`, unless instructions
-forbid commits). Otherwise, pick a sensible place and say where. Your
-human partner's preferences override both.
+so nothing else already staged goes in with it:
+`git add <path> && git commit -m "<message>" -- <path>`.
+Otherwise, pick a sensible place and say where. Your human partner's
+preferences override both.
 
 **Builder check** (for a project): dispatch a fresh subagent with
 `builder-check-prompt.md` in this directory. When you tell your human
