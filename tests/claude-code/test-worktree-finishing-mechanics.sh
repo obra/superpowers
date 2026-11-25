@@ -36,8 +36,8 @@ skill_fence() {
     awk -v m="$marker" '
         !found { if (index($0, m) == 1) found = 1; next }
         !in_code && /^#/ { exit }
-        !in_code && /^[[:space:]]*```bash[[:space:]]*$/ { in_code = 1; next }
-        in_code && /^[[:space:]]*```[[:space:]]*$/ { exit }
+        !in_code && /^[ \t]*```bash[ \t]*$/ { in_code = 1; next }
+        in_code && /^[ \t]*```[ \t]*$/ { exit }
         in_code { print }
     ' "$file"
 }
