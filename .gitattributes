@@ -1,3 +1,18 @@
+# Default: normalize every text file to LF in the working tree.
+#
+# Without this line, any extension not explicitly listed below falls back to
+# git's platform default, which on Windows means CRLF on checkout. That leaves
+# `git status` permanently dirty for Windows contributors and turns routine
+# pulls into whitespace conflicts.
+#
+# The *.cjs case shows why per-extension rules alone are fragile: renaming
+# server.js -> server.cjs in 5.0.5 silently dropped the brainstorm server out
+# of eol=lf coverage, because the rules match extensions rather than intent.
+* text=auto eol=lf
+
+# The rules below are redundant with the default above, but kept because they
+# document which files specifically depend on LF, and why.
+
 # Ensure shell scripts always have LF line endings
 *.sh text eol=lf
 hooks/session-start text eol=lf
@@ -9,6 +24,7 @@ hooks/session-start text eol=lf
 *.md text eol=lf
 *.json text eol=lf
 *.js text eol=lf
+*.cjs text eol=lf
 *.mjs text eol=lf
 *.ts text eol=lf
 
