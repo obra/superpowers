@@ -80,6 +80,8 @@ ignore_check_uses_selected_dir() {
 
     repo="$CASE_DIR/only-other-dir-ignored"
     git init -q -b main "$repo"
+    # A global excludes file may list .worktrees/; this repository must not.
+    git -C "$repo" config core.excludesFile /dev/null
     mkdir "$repo/.worktrees" "$repo/worktrees"
     printf 'worktrees/\n' >"$repo/.gitignore"
     rc=0
