@@ -12,6 +12,8 @@ If you think there is even a 1% chance a skill might apply to what you are doing
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
+A message may contain more than one task. Enumerate every distinct request in it, skill-check each request separately, and invoke ALL applicable skills — not just the one for the dominant task.
+
 This is not negotiable. You cannot rationalize your way out of this.
 </EXTREMELY-IMPORTANT>
 
@@ -29,6 +31,7 @@ When multiple skills apply, process skills come first — they set the approach,
 
 - "Let's build X" → superpowers:brainstorming first, then implementation skills.
 - "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
+- "Fix this bug, and while you're there add retry logic" → two tasks: systematic-debugging for the bug, brainstorming for the new feature. Skill-check every request, even during an emergency.
 
 ## Red Flags
 
