@@ -93,8 +93,9 @@ bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
 **Cursor:**
 ```bash
 # Cursor reaps detached processes. The script auto-detects Cursor and switches
-# to foreground mode — run this command with Cursor's background shell option
-# so the server survives across turns, then read $STATE_DIR/server-info.
+# to foreground mode. Set block_until_ms: 0 on the Shell tool call so the
+# server survives across turns, then take state_dir from the command's output
+# (or the session under .superpowers/brainstorm/ that has state/server-info).
 bash scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
