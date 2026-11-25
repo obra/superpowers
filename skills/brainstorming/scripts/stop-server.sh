@@ -1,25 +1,19 @@
 #!/usr/bin/env bash
 # Stop the brainstorm server and clean up
-# Usage: stop-server.sh <state_dir>
+# Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes ephemeral /tmp/brainstorm-*
-# session directories. Persistent directories (.superpowers/) are kept
-# so mockups can be reviewed later.
+# Kills the server process. Only deletes session directory if it's
+# under /tmp (ephemeral). Persistent directories (.superpowers/) are
+# kept so mockups can be reviewed later.
 
-STATE_DIR="${1:-}"
-STATE_DIR="${STATE_DIR%/}"
+SESSION_DIR="$1"
 
-if [[ -z "$STATE_DIR" ]]; then
-  echo '{"error": "Usage: stop-server.sh <state_dir>"}'
+if [[ -z "$SESSION_DIR" ]]; then
+  echo '{"error": "Usage: stop-server.sh <session_dir>"}'
   exit 1
 fi
 
-if ! { [[ -d "$STATE_DIR" ]] && [[ "$(basename "$STATE_DIR")" == "state" || -f "$STATE_DIR/server.pid" || -f "$STATE_DIR/server-info" || -f "$STATE_DIR/server-stopped" ]]; }; then
-  echo '{"error": "Expected a brainstorm state directory (<session_dir>/state)"}'
-  exit 1
-fi
-
-SESSION_DIR="$(dirname "$STATE_DIR")"
+STATE_DIR="${SESSION_DIR}/state"
 PID_FILE="${STATE_DIR}/server.pid"
 SERVER_ID_FILE="${STATE_DIR}/server-instance-id"
 
@@ -115,8 +109,8 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE" "$SERVER_ID_FILE" "${STATE_DIR}/server.log"
   mark_stopped "stop-server.sh"
 
-  # Only delete top-level ephemeral /tmp/brainstorm-* session directories
-  if [[ "$SESSION_DIR" == /tmp/brainstorm-* && "$SESSION_DIR" != /tmp/brainstorm-*/* && "$(basename "$STATE_DIR")" == "state" ]]; then
+  # Only delete ephemeral /tmp directories
+  if [[ "$SESSION_DIR" == /tmp/* ]]; then
     rm -rf "$SESSION_DIR"
   fi
 

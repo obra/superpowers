@@ -362,7 +362,7 @@ if ! wait_for_server_info "$TEST_DIR/stop-test"; then
   wait "$STOP_TEST_PID" 2>/dev/null || true
   STOP_TEST_PID=""
 else
-  bash "$STOP_SCRIPT" "$TEST_DIR/stop-test/state" >/dev/null 2>&1 || true
+  bash "$STOP_SCRIPT" "$TEST_DIR/stop-test" >/dev/null 2>&1 || true
   for _ in $(seq 1 10); do
     if ! kill -0 "$STOP_TEST_PID" 2>/dev/null; then
       wait "$STOP_TEST_PID" 2>/dev/null || true
