@@ -21,7 +21,11 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 BRANCH=$(git branch --show-current)
+START_HEAD=$(git rev-parse --verify HEAD 2>/dev/null || echo unborn)
+printf 'GIT_DIR=%s\nGIT_COMMON=%s\nBRANCH=%s\nSTART_HEAD=%s\n' "$GIT_DIR" "$GIT_COMMON" "$BRANCH" "$START_HEAD"
 ```
+
+Keep the printed `START_HEAD` (`<START_HEAD>`) and `BRANCH` (`<START_BRANCH>`) visible.
 
 **Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules. Before concluding "already in a worktree," verify you are not in a submodule:
 
@@ -50,9 +54,27 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree` or `create_worktree`, a `/worktree` command, or a `--worktree` flag. If you do, use it, then verify the base commit before Step 2. If the tool accepts a base ref or revision, pass `<START_HEAD>`.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+
+**Work in the new worktree.** Some tools move your session into it (`EnterWorktree` does). Others leave you in your current checkout and return the new path. Codex `create_worktree` does this, and it also returns before the worktree is ready: poll `get_worktree_creation_status` until it is. Then run the base check below, Step 2, Step 3 and all of the work in that path, not in the checkout you started from.
+
+**Verify the base commit before Step 2.** Skip this check if `<START_HEAD>` is `unborn`. A native tool may start the new worktree from the remote default branch instead of the commit you were on. Run this in the new worktree:
+
+```bash
+git rev-parse HEAD
+git merge-base --is-ancestor HEAD <START_HEAD> && echo "start-ahead"
+git merge-base --is-ancestor <START_HEAD> HEAD && echo "worktree-ahead"
+git symbolic-ref --short -q refs/remotes/origin/HEAD || echo "no origin/HEAD"
+```
+
+Take the first line that applies:
+
+- **Printed both `start-ahead` and `worktree-ahead`:** the worktree is at `<START_HEAD>`. Continue to Step 2.
+- **Printed `start-ahead` only:** the worktree lacks commits you started from, such as an unpushed plan. Run `git merge --ff-only <START_HEAD>`, then continue. If the merge refuses, stop and report its message.
+- **Printed `worktree-ahead` only, and the last line is `origin/<START_BRANCH>`:** your local default branch was behind its remote, so nothing is missing. Continue to Step 2.
+- **Anything else:** stop and ask your human partner which commit to build on, giving both SHAs. If they choose `<START_HEAD>`, run `git switch -C "$(git branch --show-current)" <START_HEAD>`, or `git switch --detach <START_HEAD>` if the worktree is on a detached HEAD.
 
 Only proceed to Step 1b if you have no native worktree tool available.
 

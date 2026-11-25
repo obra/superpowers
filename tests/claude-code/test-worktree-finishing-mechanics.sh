@@ -42,6 +42,21 @@ skill_fence() {
     ' "$file"
 }
 
+# True if OUTPUT has LINE as one of its lines.
+has_line() {
+    local output="$1"
+    local line="$2"
+    [[ $'\n'"$output"$'\n' == *$'\n'"$line"$'\n'* ]]
+}
+
+# Commit what is staged in DIR, allowing an empty commit.
+fixture_commit() {
+    local dir="$1"
+    local message="$2"
+    git -C "$dir" -c user.name=Test -c user.email=test@example.com \
+        -c commit.gpgsign=false commit -q --allow-empty -m "$message"
+}
+
 # Run the case function NAME with CASE_DIR set to a fresh directory of its own.
 run_case() {
     local name="$1"
@@ -87,9 +102,106 @@ ignore_check_uses_selected_dir() {
     fi
 }
 
+# Run the Step 1a base check in WORKTREE, with <START_HEAD> replaced by START.
+base_check_output() {
+    local check="$1"
+    local worktree="$2"
+    local start="$3"
+    (cd "$worktree" && bash -c "${check//"<START_HEAD>"/$start}")
+}
+
+# #2245: a native tool may create the worktree from origin's default branch.
+# The Step 1a check, run in the new worktree, tells apart the four states the
+# skill's bullets act on. <START_HEAD> and <START_BRANCH> are the values the
+# Step 0 snippet printed in the checkout the work started from.
+base_check_states() {
+    local step0 check seed origin user a b c step0_out start_a start_b branch out
+    step0="$(skill_fence "$USING_SKILL" '## Step 0: Detect Existing Isolation')"
+    check="$(skill_fence "$USING_SKILL" '**Verify the base commit before Step 2.**')"
+    if [[ -z "$check" ]]; then
+        fail "no bash fence after \"Verify the base commit before Step 2.\""
+        return
+    fi
+
+    # A is the common parent. origin/main moves on to C, and the user's main
+    # gains B, an unpushed commit such as a plan.
+    seed="$CASE_DIR/seed"
+    origin="$CASE_DIR/origin.git"
+    user="$CASE_DIR/user"
+    git init -q -b main "$seed"
+    fixture_commit "$seed" A
+    a="$(git -C "$seed" rev-parse HEAD)"
+    git clone -q --bare "$seed" "$origin"
+    git clone -q "$origin" "$user"
+    step0_out="$(cd "$user" && bash -c "$step0")"
+    start_a="$(printf '%s\n' "$step0_out" | sed -n 's/^START_HEAD=//p')"
+    branch="$(printf '%s\n' "$step0_out" | sed -n 's/^BRANCH=//p')"
+    fixture_commit "$seed" C
+    git -C "$seed" push -q "$origin" main
+    git -C "$user" fetch -q origin
+    c="$(git -C "$user" rev-parse origin/main)"
+    fixture_commit "$user" B
+    b="$(git -C "$user" rev-parse HEAD)"
+    step0_out="$(cd "$user" && bash -c "$step0")"
+    start_b="$(printf '%s\n' "$step0_out" | sed -n 's/^START_HEAD=//p')"
+    if [[ "$start_a" == "$a" && "$start_b" == "$b" && "$branch" == "main" ]]; then
+        pass "Step 0 prints the starting commit as START_HEAD and the branch as BRANCH"
+    else
+        fail "Step 0 prints the starting commit as START_HEAD and the branch as BRANCH"
+        echo "    got START_HEAD '$start_a' then '$start_b', BRANCH '$branch'"
+        return
+    fi
+
+    # Each worktree stands in for one that a native tool created.
+    git -C "$user" worktree add -q -b at "$CASE_DIR/wt-at" "$a"
+    git -C "$user" worktree add -q -b behind "$CASE_DIR/wt-behind" "$a"
+    git -C "$user" worktree add -q -b ahead "$CASE_DIR/wt-ahead" "$c"
+    git -C "$user" worktree add -q -b diverged "$CASE_DIR/wt-diverged" "$c"
+
+    out="$(base_check_output "$check" "$CASE_DIR/wt-at" "$start_a")"
+    if has_line "$out" start-ahead && has_line "$out" worktree-ahead; then
+        pass "at the start commit: prints both start-ahead and worktree-ahead"
+    else
+        fail "at the start commit: prints both start-ahead and worktree-ahead"
+        echo "    got: $out"
+    fi
+
+    out="$(base_check_output "$check" "$CASE_DIR/wt-behind" "$start_b")"
+    if has_line "$out" start-ahead && ! has_line "$out" worktree-ahead; then
+        pass "behind the start commit: prints start-ahead only"
+    else
+        fail "behind the start commit: prints start-ahead only"
+        echo "    got: $out"
+    fi
+    if git -C "$CASE_DIR/wt-behind" merge -q --ff-only "$start_b" &&
+        [[ "$(git -C "$CASE_DIR/wt-behind" rev-parse HEAD)" == "$b" ]]; then
+        pass "behind the start commit: git merge --ff-only <START_HEAD> brings it to the start commit"
+    else
+        fail "behind the start commit: git merge --ff-only <START_HEAD> brings it to the start commit"
+    fi
+
+    out="$(base_check_output "$check" "$CASE_DIR/wt-ahead" "$start_a")"
+    if ! has_line "$out" start-ahead && has_line "$out" worktree-ahead &&
+        [[ "${out##*$'\n'}" == "origin/$branch" ]]; then
+        pass "ahead of the start commit: prints worktree-ahead only, and origin/<START_BRANCH> last"
+    else
+        fail "ahead of the start commit: prints worktree-ahead only, and origin/<START_BRANCH> last"
+        echo "    got: $out"
+    fi
+
+    out="$(base_check_output "$check" "$CASE_DIR/wt-diverged" "$start_b")"
+    if ! has_line "$out" start-ahead && ! has_line "$out" worktree-ahead; then
+        pass "diverged from the start commit: prints neither marker"
+    else
+        fail "diverged from the start commit: prints neither marker"
+        echo "    got: $out"
+    fi
+}
+
 echo "=== Test: worktree and finishing mechanics ==="
 
 run_case ignore_check_uses_selected_dir
+run_case base_check_states
 
 echo ""
 if [[ "$FAILURES" -gt 0 ]]; then
