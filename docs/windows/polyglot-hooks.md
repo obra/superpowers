@@ -165,7 +165,7 @@ Your hook logic goes in the extensionless script file. A few portable patterns:
 - Quote all variable expansions: `"$VAR"`
 
 ### Avoid
-- Bash-only parameter/loop constructs (`${s//a/b}`, `[[ ... ]]`, `$'\n'`, `(( i++ ))`) that fail on `dash`/`ash`/`sh`
+- Bash-only parameter/loop constructs (`${s//a/b}`, `[[ ... ]]`, `$'\n'`, `(( i++ ))`) that fail on `dash` (Debian/Ubuntu `/bin/sh`); busybox `ash` accepts some of them, so test under `dash`
 - Heredocs (`<<`) — GNU `bash >= 5.1` feeds them through a pipe that can deadlock on macOS under pipe pressure (#571); build output with `printf`
 - Relying on PATH-dependent tools without fallbacks (the hook runs without `-l`, so login-shell PATH is not set)
 - Giving scripts a `.sh` extension — this triggers Claude Code's Windows auto-prepend
