@@ -13,9 +13,9 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Find files by name | `search` with `glob` |
 | Fetch a URL | `web_fetch` |
 | Search the web | `web_search` |
-| Invoke a skill | `read_skill` (or `read_file` on `skills/<name>/SKILL.md`) |
+| Invoke a skill | `read_file` on `skills/<name>/SKILL.md` or `read_skill` |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `subagent_spawn` with prompt filling |
-| Task tracking ("create a todo", "mark complete") | `write_todos` when available (else plan/conversation) |
+| Task tracking ("create a todo", "mark complete") | `write_todos` or `bash` task file |
 | Ask the user a question | `request_user_input` |
 
 ## Instructions file
@@ -24,7 +24,7 @@ When a skill mentions "your instructions file", on Muse this is **`CLAUDE.md`** 
 
 ## Skill invocation
 
-Muse has native skill support via `read_skill` (`muse skills`). Invoke a Superpowers skill with `read_skill` (or read its `SKILL.md`). The bootstrap (`using-superpowers`) is injected at `SessionStart` via the hook — do not re-load it.
+Muse has native skill support via `read_skill` (`muse skills`). Invoke a Superpowers skill with `read_skill` (or read its `SKILL.md`). The bootstrap (`using-superpowers`) is injected automatically at `SessionStart` via the plugin hook — you are already following it, do not re-load it.
 
 ## Subagent dispatch
 
@@ -32,4 +32,4 @@ Use `subagent_spawn` to delegate work to isolated subagents. Fill prompt templat
 
 ## Task tracking
 
-Use `write_todos` when available; otherwise track items in the plan or inline.
+Use `write_todos` for checklist tracking. Create one todo per skill checklist item, mark in_progress/completed as you go. If `write_todos` is unavailable, maintain a markdown task file via `write_file`/`edit_file`.

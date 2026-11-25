@@ -1,8 +1,9 @@
-## Subagent dispatch
+## Subagent dispatch requires multi-agent support
 
-Which multi-agent tools you get depends on the version your model preset
-selects (current presets run V2; older ones run V1). Trust your actual
-tool list over any table — including this one — when they disagree.
+Which tools you get depends on the multi-agent version your model
+preset selects (current presets run V2; older ones run V1). Trust your
+actual tool list over any table — including this one — when they
+disagree.
 
 - **Spawning:** give children a clean context with
   `spawn_agent {fork_turns: "none"}`; the default `"all"` copies your

@@ -17,7 +17,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Invoke a skill | `activate_skill` |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `invoke_agent` with `agent_name: "generalist"` (invocable via `@generalist` chat syntax — see [Subagent support](#subagent-support)) |
 | Multiple parallel dispatches | Multiple `invoke_agent` calls in the same response |
-| Task tracking ("create a todo", "mark complete") | `write_todos` when exposed; otherwise track in plan/markdown |
+| Task tracking ("create a todo", "mark complete") | `write_todos` when exposed (statuses: pending, in_progress, completed, cancelled, blocked) |
 
 ## Instructions file
 
@@ -45,7 +45,7 @@ Skills provide prompt templates with placeholders like `{WHAT_WAS_IMPLEMENTED}` 
 
 ### Parallel dispatch
 
-Gemini CLI supports parallel subagent dispatch: issue multiple `invoke_agent` calls in one response (or multiple `@generalist` invocations) for independent tasks that never mutate the same files. Keep dependent or overlapping-file tasks sequential.
+Gemini CLI supports parallel subagent dispatch. Issue multiple `invoke_agent` calls in the same response (or multiple `@generalist` invocations in one prompt) to run independent subagent work in parallel. Keep dependent tasks sequential, but do not serialize independent subagent tasks just to preserve a simpler history.
 
 ## Additional Gemini CLI tools
 
@@ -58,5 +58,5 @@ These tools are unique to Gemini CLI:
 | `enter_plan_mode` / `exit_plan_mode` | Switch into and out of read-only plan mode |
 | `update_topic` | Update the current conversation's topic / strategic-intent metadata |
 | `complete_task` | Signal that a Gemini subagent has completed and return its result to the parent agent |
-| `tracker_create_task`, `tracker_update_task`, `tracker_get_task`, `tracker_list_tasks`, `tracker_add_dependency`, `tracker_visualize` | Rich task tracker with dependency and visualization support (experimental) |
+| `tracker_create_task`, `tracker_update_task`, `tracker_get_task`, `tracker_list_tasks`, `tracker_add_dependency`, `tracker_visualize` | Rich task tracker with dependency and visualization support |
 | `read_mcp_resource`, `list_mcp_resources` | MCP resource access |
