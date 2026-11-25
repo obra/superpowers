@@ -33,9 +33,8 @@ than editing their words.>
 
 How I verified that this issue does not reproduce without Superpowers:
 <"Not tried", or what your partner ran without superpowers and what
-happened, citing the session id or ~/…-redacted path if there is one.
-Tick the box above only when a transcript shows the problem did not
-recur.>
+happened, with that run's session id if it left a transcript. Tick the
+box above only when a transcript shows the problem did not recur.>
 
 Evidence for involvement is below; it does not establish cause.
 
