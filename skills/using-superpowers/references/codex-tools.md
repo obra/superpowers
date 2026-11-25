@@ -84,9 +84,17 @@ BRANCH=$(git branch --show-current)
 - `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 2 for how each skill uses these signals. In Codex App, prefer
-`create_worktree` — manual `git worktree add` leaves the App task
-bound to the parent checkout.
+Step 2 for how each skill uses these signals.
+
+In Codex App, a manual `git worktree add` leaves the App task bound to
+the parent checkout: its diff view, branch, and PR controls keep
+showing the parent while your commands write elsewhere. Native
+task/worktree tools may be deferred — search your tool catalog before
+deciding Step 1a does not apply. If you fall back to `git worktree add`
+anyway, tell your human partner before the first write. Codex CLI's
+`create_worktree` does not move the task either: run everything in the
+`workspaceRoot` it returns, and pass `ref` when you need a base other
+than the remote default branch.
 
 ## Codex App Finishing
 
