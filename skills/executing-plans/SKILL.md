@@ -138,9 +138,9 @@ and the new one resumes from the same ledger.
   another plan's progress: leave it and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
-- `git clean -fdx` destroys `<workspace>` (git-ignored scratch): `git log`
-  shows only committed tasks — rulings, parked findings, deferred minors,
-  briefs, reports, and test logs live only in `<workspace>` and are lost.
+- `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
+  if that happens, recover the completed tasks from `git log`. Rulings and
+  deferred minors are not in git: they are lost.
 
 Read the plan once and note its context and Global Constraints. If the plan
 names a Spec, read that too: the spec is the

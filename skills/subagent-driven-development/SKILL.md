@@ -125,9 +125,9 @@ live view; the ledger is the record.
 - The ledger is your recovery map: the commits it names exist in git even
   when your context no longer remembers creating them. After compaction,
   trust the ledger and `git log` over your own recollection.
-- `git clean -fdx` destroys `<workspace>` (git-ignored scratch): `git log`
-  shows only committed tasks — rulings, parked findings, deferred minors,
-  briefs, reports, and test logs live only in `<workspace>` and are lost.
+- `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
+  that happens, recover the completed tasks from `git log`. Rulings and
+  deferred minors are not in git: they are lost.
 
 Read the plan once and note its context and Global Constraints. If the plan
 names a Spec, read that too: the spec is the
