@@ -81,7 +81,7 @@ When skills request actions, substitute OpenCode equivalents:
 - \`Subagent (general-purpose):\` → \`task\` with \`subagent_type: "general"\`
 - Invoke a skill → OpenCode's native \`skill\` tool. Skill ids are bare names, so drop the \`superpowers:\` prefix skills use when they name each other (\`superpowers:brainstorming\` → \`skill\` with \`name: "brainstorming"\`)
 - Read files → \`read\`
-- Create, edit, or delete files → \`apply_patch\` on \`gpt-\` models; otherwise \`write\`, \`edit\`, and \`bash\` for deletion
+- Create, edit, or delete files → use \`apply_patch\` when available; otherwise use \`write\` to create or overwrite files, \`edit\` for targeted changes, and \`bash\` for deletion
 - Run shell commands → \`bash\`
 - Search files → \`grep\`, \`glob\`
 - Fetch a URL → \`webfetch\`
