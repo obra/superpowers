@@ -53,6 +53,7 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
+import { tmpdir } from 'node:os';
 import { resolve, normalize, sep } from 'node:path';
 
 async function gitInit(directory: string) {
