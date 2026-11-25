@@ -216,7 +216,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-`.card-image` stacks children vertically (`min-height: 140px`) so multi-part mockups (e.g. `.mock-nav` + `.mock-content`) don't clip horizontally, while direct `img` and `svg` children stay centered. Non-native `[data-choice]` elements automatically get keyboard (`Enter` / `Space`) and button ARIA attributes.
+`.card-image` stacks children vertically (`min-height: 140px`) so multi-part mockups (e.g. `.mock-nav` + `.mock-content`) don't clip horizontally, while direct `img` and `svg` children stay centered.
 
 ### Mockup container
 
