@@ -206,7 +206,7 @@ fi
 
 rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
 rc=0
-captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE=agent-exec CURSOR_PLUGIN_ROOT="" MSYSTEM="" \
+captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE=agent-exec CURSOR_PLUGIN_ROOT="" MSYSTEM="" OSTYPE=linux-gnu \
   PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
 if [[ "$rc" -eq 0 ]] && echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
   pass "auto-foregrounds when CURSOR_EXTENSION_HOST_ROLE=agent-exec on non-Windows uname"
@@ -232,7 +232,7 @@ fi
 
 rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
 rc=0
-captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE=user CURSOR_PLUGIN_ROOT="" MSYSTEM="" \
+captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE=user CURSOR_PLUGIN_ROOT="" MSYSTEM="" OSTYPE=linux-gnu \
   PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
 if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q "Server started but was killed"; then
   pass "stays in background when CURSOR_EXTENSION_HOST_ROLE is not agent-exec"
@@ -242,7 +242,7 @@ fi
 
 rm -rf "$TEST_DIR/project"/* "$TEST_DIR/project"/.superpowers
 rc=0
-captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE="" CURSOR_PLUGIN_ROOT=/some/plugin MSYSTEM="" \
+captured=$(CODEX_CI="" CURSOR_AGENT="" CURSOR_EXTENSION_HOST_ROLE="" CURSOR_PLUGIN_ROOT=/some/plugin MSYSTEM="" OSTYPE=linux-gnu \
   PATH="$TEST_DIR/nonwin-bin:$PATH" run_bounded bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>&1) || rc=$?
 if [[ "$rc" -eq 1 ]] && echo "$captured" | grep -q "Server started but was killed"; then
   pass "stays in background when only CURSOR_PLUGIN_ROOT is set"
