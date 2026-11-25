@@ -170,12 +170,21 @@ else
   fail "SKILL.md removes todo instruction and Step 5 references references/redaction-policy.md"
 fi
 
-if grep -q '^## Comment' "$SKILL_DIR/references/github-issues.md" \
-  && grep -qF 'references/redaction-policy.md' "$SKILL_DIR/references/github-issues.md"; then
-  pass "references/github-issues.md covers comments and references references/redaction-policy.md"
+issues_ref="$SKILL_DIR/references/github-issues.md"
+scrub_section="$(awk '/^## Scrub/{on=1; next} /^## /{on=0} on{print}' "$issues_ref")"
+if printf '%s\n' "$scrub_section" | grep -qF 'references/redaction-policy.md'; then
+  pass "references/github-issues.md Scrub section cites references/redaction-policy.md"
 else
-  fail "references/github-issues.md covers comments and references references/redaction-policy.md"
+  fail "references/github-issues.md Scrub section cites references/redaction-policy.md"
 fi
+for section in File Comment; do
+  section_prose="$(awk -v h="## $section" '$0 == h {on=1; next} /^## /{on=0} on{print}' "$issues_ref")"
+  if printf '%s\n' "$section_prose" | grep -qF 'as described under Scrub'; then
+    pass "references/github-issues.md $section section requires the scrub"
+  else
+    fail "references/github-issues.md $section section requires the scrub"
+  fi
+done
 
 echo
 echo "Passed: $PASSES  Failed: $FAILURES"
