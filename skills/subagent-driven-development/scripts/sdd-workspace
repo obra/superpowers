@@ -13,15 +13,36 @@ if [ "${1:-}" = "-C" ]; then
   shift 2
 fi
 
-[ $# -eq 1 ] && [ -n "$1" ] || { echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2; exit 2; }
+if [ $# -ne 1 ] || [ -z "$1" ]; then
+  echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2
+  exit 2
+fi
+
 plan=$1
 [ ! -e "$plan" ] || [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-# Resolve repository root first (via sdd-repo for shared error messages).
+slug=$(basename "$plan" .md)
+[ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
+  || { echo "cannot derive a workspace name from: $plan" >&2; exit 2; }
+# .lock and .lock.* (any case) belong to the claim lock below, not a workspace.
+slug_lc=$(printf '%s' "$slug" | tr '[:upper:]' '[:lower:]')
+case "$slug_lc" in
+  .lock|.lock.*) slug="plan-${slug#.}" ;;
+esac
+
+# Physical path, spelled the way pwd -P spells the plan path below: on Git
+# Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
+# repo-relative marker check needs both in the same form. Two steps, so a
+# failing sdd-repo stops the script instead of handing cd an empty path.
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040).
 toplevel=$("${BASH:-bash}" "$here/sdd-repo")
 root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
 base="$root/.superpowers/sdd"
 
+# Normalize the plan path (physical directory, so relative/absolute/../
+# spellings of one plan compare equal) and express it as the marker value:
+# repo-relative when the plan lives under the repo root, absolute otherwise.
 # Collapse lexical . and .. segments, then walk up to the deepest existing ancestor
 # so deleted plans under removed subdirectories still resolve their claimed workspace.
 case "$plan" in
@@ -71,44 +92,12 @@ probe_phys=$(CDPATH='' cd -- "$probe" && pwd -P)
 plan_dir="${probe_phys}${tail:+/$tail}"
 [ -n "$plan_dir" ] || plan_dir="/"
 plan_abs="$plan_dir/$plan_base"
-
-case "$plan_base" in
-  *.md) slug=${plan_base%.md} ;;
-  *.markdown) slug=${plan_base%.markdown} ;;
-  *) slug=$plan_base ;;
-esac
-slug_lc=$(printf '%s' "$slug" | tr '[:upper:]' '[:lower:]')
-case "$slug_lc" in
-  ""|.|..) echo "cannot derive a workspace name from: $plan" >&2; exit 2 ;;
-  .lock|.lock.*|.gitignore|.gitignore.*|.plan-path|.plan-path.*) slug="plan-${slug#.}" ;;
+case "$plan_abs" in
+  "$root"/*) plan_id=${plan_abs#"$root"/} ;;
+  *)         plan_id=$plan_abs ;;
 esac
 
 parent=$(basename "$plan_dir")
-[ -n "$parent" ] && [ "$parent" != "/" ] || parent="root"
-
-# Longest matching worktree prefix wins so nested .worktrees/ and absorbed submodules match.
-plan_id=$plan_abs
-best_len=0
-case "$plan_abs" in
-  "$root"/*) best_len=${#root}; plan_id=${plan_abs#"$root"/} ;;
-esac
-while IFS= read -r line; do
-  case "$line" in
-    "worktree "*)
-      wt=${line#worktree }
-      wt_top=$(git -C "$wt" rev-parse --show-toplevel 2>/dev/null) || continue
-      wt_phys=$(CDPATH='' cd -- "$wt_top" 2>/dev/null && pwd -P) || continue
-      case "$plan_abs" in
-        "$wt_phys"/*)
-          if [ "${#wt_phys}" -gt "$best_len" ]; then
-            best_len=${#wt_phys}
-            plan_id=${plan_abs#"$wt_phys"/}
-          fi
-          ;;
-      esac
-      ;;
-  esac
-done < <(git -c core.quotePath=false worktree list --porcelain 2>/dev/null || true)
 
 print_dir() {
   CDPATH='' cd -- "$1"
@@ -180,6 +169,9 @@ locked=1
 
 [ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 
+# True when the workspace at $1 is (or becomes) this plan's: an existing
+# marker must name this plan; a missing marker means a new workspace or a
+# pre-marker legacy one, and either way the plan claims it by writing one.
 claim_candidate() {
   local cand=$1
   if [ ! -e "$cand" ]; then

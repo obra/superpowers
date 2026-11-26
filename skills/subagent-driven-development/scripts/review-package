@@ -49,9 +49,7 @@ git -C "$repo" merge-base --is-ancestor "$base" "$head" || { echo "HEAD is not a
 if [ $# -eq 4 ]; then
   out=$4
 else
-  if [ -z "$dir" ]; then
-    dir=$("${BASH:-bash}" "$here/sdd-workspace" "$plan")
-  fi
+  dir=$("${BASH:-bash}" "$here/sdd-workspace" "$plan")
   out="$dir/review-$(git -C "$repo" rev-parse --short "$base")..$(git -C "$repo" rev-parse --short "$head").diff"
 fi
 

@@ -1197,7 +1197,7 @@ PLAN
     mkdir -p "$own/.superpowers/sdd"
     printf '%s\n' "$own_ignore" > "$own/.superpowers/sdd/.gitignore"
     printf '# Plan\n\n## Task 1: One\n\nOne.\n' > "$own/plan.md"
-    (cd "$own" && git add -A && git "${git_id[@]}" commit -qm init)
+    (cd "$own" && git add -A && git -c user.name=t -c user.email=t@t commit -qm init)
     (cd "$own" && "$SDD_SCRIPTS/sdd-workspace" plan.md >/dev/null)
     if [[ "$(cat "$own/.superpowers/sdd/.gitignore")" == "$own_ignore" \
         && -z "$(cd "$own" && git status --porcelain -- .superpowers/sdd/.gitignore)" ]]; then
@@ -1226,62 +1226,6 @@ PLAN
     else
         fail "blocked .superpowers regular file fails fast with exit 2"
         echo "    rc: $rc, elapsed: ${blocked_elapsed}s"
-    fi
-
-    # --- Cross-checkout plan_id with nested .worktrees/feat ---
-    local cross="$TEST_ROOT/cross-repo"
-    git init -q -b main "$cross"
-    mkdir -p "$cross/docs/plans"
-    printf '# Cross\n\n## Task 1: Cross\n\nCross.\n' > "$cross/docs/plans/x.md"
-    printf '.worktrees/\n' > "$cross/.gitignore"
-    (cd "$cross" && git add .gitignore docs/plans/x.md && git "${git_id[@]}" commit -qm init)
-    local cross_wt="$cross/.worktrees/feat"
-    (cd "$cross" && git worktree add -q "$cross_wt" -b feat)
-    local cross_wt_phys
-    cross_wt_phys="$(cd "$cross_wt" && git rev-parse --show-toplevel)"
-    cross_wt_phys="$(physical_path "$cross_wt_phys")"
-    # Uncommitted plan only in main vs relative inside worktree
-    printf '# Uncommitted Main\n\n## Task 1: Only Main\n\nBody.\n' > "$cross/docs/plans/main-uncommitted.md"
-    local d_cross_abs d_cross_rel d_cross_wt
-    d_cross_abs="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "$cross/docs/plans/x.md")"
-    d_cross_rel="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "docs/plans/x.md")"
-    if [[ "$d_cross_abs" == "$cross_wt_phys/.superpowers/sdd/x" \
-        && "$d_cross_abs" == "$d_cross_rel" \
-        && "$(cat "$d_cross_abs/plan-path" 2>/dev/null)" == "docs/plans/x.md" ]]; then
-        pass "nested .worktrees/feat resolves main-checkout path and relative path to same workspace"
-    else
-        fail "nested .worktrees/feat resolves main-checkout path and relative path to same workspace"
-        echo "    abs: $d_cross_abs"
-        echo "    rel: $d_cross_rel"
-        echo "    marker: $(cat "$d_cross_abs/plan-path" 2>/dev/null || true)"
-    fi
-    # Longest worktree prefix wins: <main>/.worktrees/feat/docs/plans/y.md -> docs/plans/y.md
-    # even when invoked from <main> (where <main>/ is also a prefix!).
-    printf '# WT Local\n\n## Task 1: WT\n\nWT.\n' > "$cross_wt/docs/plans/y.md"
-    d_cross_wt="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "$cross_wt/docs/plans/y.md")"
-    local d_main_to_wt
-    d_main_to_wt="$(cd "$cross" && "$SDD_SCRIPTS/sdd-workspace" "$cross_wt/docs/plans/y.md")"
-    if [[ "$d_cross_wt" == "$cross_wt_phys/.superpowers/sdd/y" \
-        && "$(cat "$d_cross_wt/plan-path" 2>/dev/null)" == "docs/plans/y.md" \
-        && "$(cat "$d_main_to_wt/plan-path" 2>/dev/null)" == "docs/plans/y.md" ]]; then
-        pass "nested worktree strips longest matching worktree prefix (not main prefix)"
-    else
-        fail "nested worktree strips longest matching worktree prefix (not main prefix)"
-        echo "    dir: $d_cross_wt"
-        echo "    marker_wt: $(cat "$d_cross_wt/plan-path" 2>/dev/null || true)"
-        echo "    marker_main: $(cat "$d_main_to_wt/plan-path" 2>/dev/null || true)"
-    fi
-    # Uncommitted main plan claimed from wt, then referred to via relative path in wt
-    local d_uncomm_abs d_uncomm_rel
-    d_uncomm_abs="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "$cross/docs/plans/main-uncommitted.md")"
-    d_uncomm_rel="$(cd "$cross_wt" && "$SDD_SCRIPTS/sdd-workspace" "docs/plans/main-uncommitted.md")" || true
-    if [[ "$d_uncomm_abs" == "$d_uncomm_rel" \
-        && "$(cat "$d_uncomm_abs/plan-path" 2>/dev/null)" == "docs/plans/main-uncommitted.md" ]]; then
-        pass "uncommitted main plan claimed from worktree also matches relative plan_id in worktree"
-    else
-        fail "uncommitted main plan claimed from worktree also matches relative plan_id in worktree"
-        echo "    abs: $d_uncomm_abs"
-        echo "    rel: $d_uncomm_rel"
     fi
 
     # --- Concurrent sdd-workspace claims (#2619) & stale-PID lock break ---
@@ -1352,24 +1296,6 @@ PLAN
     else
         fail "sdd-workspace recovers stale .lock left by dead PID"
         echo "    rc: $stale_lock_rc, dir: $stale_lock_dir"
-    fi
-
-    # Absorbed submodule resolves repo-relative plan_id across primary and linked worktree
-    local sm_host="$TEST_ROOT/sm-host" sm_lib="$TEST_ROOT/sm-lib"
-    git init -q -b main "$sm_host"
-    git init -q -b main "$sm_lib"
-    printf '# Sub\n\n## Task 1: Sub\n\nSub.\n' > "$sm_lib/subplan.md"
-    (cd "$sm_lib" && git add subplan.md && git "${git_id[@]}" commit -qm init)
-    printf 'host\n' > "$sm_host/readme.md"
-    (cd "$sm_host" && git add readme.md && git "${git_id[@]}" commit -qm init)
-    (cd "$sm_host" && git -c protocol.file.allow=always submodule add -q "$sm_lib" libs/sub && git "${git_id[@]}" commit -qm add-sub)
-    local sm_dir=""
-    sm_dir="$(cd "$sm_host/libs/sub" && "$SDD_SCRIPTS/sdd-workspace" subplan.md)"
-    if [[ "$(cat "$sm_dir/plan-path" 2>/dev/null)" == "subplan.md" ]]; then
-        pass "absorbed submodule records repo-relative plan_id marker"
-    else
-        fail "absorbed submodule records repo-relative plan_id marker"
-        echo "    marker: $(cat "$sm_dir/plan-path" 2>/dev/null)"
     fi
 
     # Counter bound: disambiguation stops at 100 and exits 2
@@ -1508,7 +1434,7 @@ PLAN
         echo "    dir: $hidden_dir, rc: $rc, after: $hidden_after, tb_rc: $hidden_tb_rc, tb_out: $hidden_tb_out"
     fi
 
-    # --- Reserved control slugs (.lock.md, .LOCK.md, .gitignore.md) never collide with $base files ---
+    # --- Reserved control slugs (.lock.md, .LOCK.md) never collide with $base files ---
     cat > "$repo/.lock.md" <<'PLAN'
 # Lock Plan
 
@@ -1523,27 +1449,18 @@ PLAN
 
 UPPER-LOCK-PLAN-1
 PLAN
-    cat > "$repo/.gitignore.md" <<'PLAN'
-# Gitignore Plan
-
-### Task 1: Gitignore task
-
-GITIGNORE-PLAN-1
-PLAN
-    local lock_slug_dir="" upper_lock_dir="" gi_slug_dir=""
-    local lock_slug_rc=0 upper_lock_rc=0 gi_slug_rc=0
+    local lock_slug_dir="" upper_lock_dir=""
+    local lock_slug_rc=0 upper_lock_rc=0
     lock_slug_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .lock.md 2>/dev/null)" || lock_slug_rc=$?
     upper_lock_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .LOCK.md 2>/dev/null)" || upper_lock_rc=$?
-    gi_slug_dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace" .gitignore.md 2>/dev/null)" || gi_slug_rc=$?
-    if [[ "$lock_slug_rc" -eq 0 && "$upper_lock_rc" -eq 0 && "$gi_slug_rc" -eq 0 \
+    if [[ "$lock_slug_rc" -eq 0 && "$upper_lock_rc" -eq 0 \
         && "$lock_slug_dir" == "$repo/.superpowers/sdd/plan-lock" \
-        && "$gi_slug_dir" == "$repo/.superpowers/sdd/plan-gitignore" \
         && "$(cat "$repo/.superpowers/sdd/.gitignore")" == "*" \
         && -d "$upper_lock_dir" ]]; then
-        pass "plans named .lock.md, .LOCK.md, and .gitignore.md reserve control names case-insensitively"
+        pass "plans named .lock.md and .LOCK.md reserve the lock name case-insensitively"
     else
-        fail "plans named .lock.md, .LOCK.md, and .gitignore.md reserve control names case-insensitively"
-        echo "    lock_rc: $lock_slug_rc ($lock_slug_dir), upper_rc: $upper_lock_rc ($upper_lock_dir), gi_rc: $gi_slug_rc ($gi_slug_dir)"
+        fail "plans named .lock.md and .LOCK.md reserve the lock name case-insensitively"
+        echo "    lock_rc: $lock_slug_rc ($lock_slug_dir), upper_rc: $upper_lock_rc ($upper_lock_dir)"
     fi
 
     # --- review-package rejects non-commit objects (#2620) and includes commit bodies (#2298) ---
