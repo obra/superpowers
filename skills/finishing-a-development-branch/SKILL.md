@@ -65,7 +65,7 @@ too, and Step 6's `git worktree remove` deletes them without refusing.
 From the top of the worktree, list them as well:
 
 ```bash
-git status --porcelain --ignored=matching
+git status --porcelain --ignored=matching -unormal
 git ls-files --others --ignored --exclude-standard -- .superpowers
 ```
 

@@ -324,7 +324,8 @@ add_step2_files() {
 # file the human partner has to decide about, including an unfinished plan's
 # workspace, and leave out caches and Superpowers' own bookkeeping. A root
 # .gitignore that ignores .superpowers/ makes `git status` show it as one
-# entry; the second command names the files inside it.
+# entry; the second command names the files inside it. A user's
+# status.showUntrackedFiles=no must not stop the ignored listing.
 listing_shows_ignored_and_untracked() {
     local marker repo wt listed label
     for marker in "$UNTRACKED_LISTING" "$IGNORED_LISTING"; do
@@ -364,6 +365,20 @@ listing_shows_ignored_and_untracked() {
         .superpowers/brainstorm/1-2/content/mockup.html
     check_left_out "$label" "$listed" node_modules .superpowers/sdd/.gitignore \
         .superpowers/brainstorm/.last-port .superpowers/brainstorm/.last-token
+
+    label="status.showUntrackedFiles=no"
+    repo="$CASE_DIR/untracked-files-hidden"
+    finishing_fixture "$repo" $'.env.local\nnode_modules/\n.worktrees/\n'
+    git -C "$repo" config status.showUntrackedFiles no
+    wt="$repo/.worktrees/feat"
+    add_step2_files "$wt"
+    if ! listed="$(step2_listed_files "$wt")"; then
+        fail "$label: the Step 2 listings run"
+        return
+    fi
+    check_listed "$label" "$listed" \
+        NOTES.md .env.local build/out.txt .superpowers/sdd/plan-a/progress.md
+    check_left_out "$label" "$listed" node_modules .superpowers/sdd/.gitignore
 }
 
 # #2207: once the human partner's choice has dealt with the untracked files,
