@@ -19,7 +19,7 @@ import { execFileSync } from 'child_process';
 
 function extractDotBlocks(markdown) {
   const blocks = [];
-  const regex = /```dot\n([\s\S]*?)```/g;
+  const regex = /```dot\r?\n([\s\S]*?)```/g;
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
@@ -133,6 +133,8 @@ function main() {
     fs.mkdirSync(outputDir);
   }
 
+  let hadFailure = false;
+
   if (combine) {
     // Combine all graphs into one
     const combined = combineGraphs(blocks, skillName);
@@ -148,6 +150,7 @@ function main() {
       console.log(`  Source: ${skillName}_combined.dot`);
     } else {
       console.error('  Failed to render combined diagram');
+      hadFailure = true;
     }
   } else {
     // Render each separately
@@ -159,11 +162,16 @@ function main() {
         console.log(`  Rendered: ${block.name}.svg`);
       } else {
         console.error(`  Failed: ${block.name}`);
+        hadFailure = true;
       }
     }
   }
 
   console.log(`\nOutput: ${outputDir}/`);
+
+  if (hadFailure) {
+    process.exit(1);
+  }
 }
 
 main();

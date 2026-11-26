@@ -45,7 +45,7 @@ This cuts off entire class of "I'm following the spirit" rationalizations.
 
 ### Build Rationalization Table
 
-Capture rationalizations from baseline testing (see Testing section below). Every excuse agents make goes in the table:
+Capture rationalizations from baseline testing (see [testing-skills-with-subagents.md](testing-skills-with-subagents.md)). Every excuse agents make goes in the table:
 
 ```markdown
 | Excuse | Reality |

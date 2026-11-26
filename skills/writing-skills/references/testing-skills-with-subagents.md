@@ -22,7 +22,7 @@ Test skills that:
 - Could be rationalized away ("just this once")
 - Contradict immediate goals (speed over quality)
 
-Don't test:
+Do not run rationalization pressure scenarios on:
 - Pure reference skills (API docs, syntax guides)
 - Skills without rules to violate
 - Skills agents have no incentive to bypass
@@ -290,7 +290,7 @@ Rationalization: "Tests after achieve same goals"
 
 ### Iteration 1 - Add Counter
 ```markdown
-Added section: "Why Order Matters"
+Added explicit counter for "tests after achieve same goals"
 Re-tested: Agent STILL chose C
 New rationalization: "Spirit not letter"
 ```

@@ -7,9 +7,8 @@ describe and size a skill so agents find it and read it.
 
 **Frontmatter (YAML):**
 - Two required fields: `name` and `description` (see [agentskills.io/specification](https://agentskills.io/specification) for all supported fields)
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
+- `name`: Max 64 characters; lowercase letters, digits, and hyphens only, matching the directory name, with no leading, trailing, or doubled hyphens (no uppercase, parentheses, or special chars)
+- `description`: Max 1,024 characters; third-person, describes ONLY when to use (NOT what it does)
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see Skill Discovery Optimization below for why)
@@ -17,7 +16,7 @@ describe and size a skill so agents find it and read it.
 
 ```markdown
 ---
-name: Skill-Name-With-Hyphens
+name: skill-name-with-hyphens
 description: Use when [specific triggering conditions and symptoms]
 ---
 
@@ -125,12 +124,12 @@ Use words an agent would search for:
 
 ### 4. Token Efficiency (Critical)
 
-**Problem:** getting-started and frequently-referenced skills load into EVERY conversation. Every token counts.
+**Problem:** Every token in `SKILL.md` competes with conversation history once the skill loads. After a compaction, Claude Code re-attaches each invoked skill cut to 20,000 characters; anything past the cut is gone from context unless the agent re-reads the file.
 
-**Target word counts:**
-- getting-started workflows: <150 words each
-- Frequently-loaded skills: <200 words total
-- Other skills: <500 words (still be concise)
+**Size limits:**
+- Keep `SKILL.md` under 20,000 bytes (`wc -c path/to/skill/SKILL.md`). In the Superpowers repository, `tests/skill-size/test-skill-size.sh` enforces this for every skill.
+- Move heavy reference material or conditional workflows into `references/` so the agent reads them fresh from disk only at the step that needs them
+- Write only what the agent would not know or do without being told. Frequently-loaded skills pay for every extra line in every session that loads them.
 
 **Techniques:**
 
@@ -173,9 +172,11 @@ You: Searching...
 
 **Verification:**
 ```bash
-wc -w skills/path/SKILL.md
-# getting-started workflows: aim for <150 each
-# Other frequently-loaded: aim for <200 total
+# Every SKILL.md must stay under 20,000 bytes
+wc -c path/to/skill/SKILL.md
+
+# When working inside the Superpowers repository checkout:
+bash tests/skill-size/test-skill-size.sh
 ```
 
 **Name by what you DO or core insight:**
