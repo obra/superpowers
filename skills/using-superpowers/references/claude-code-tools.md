@@ -21,9 +21,9 @@ subagent on a mid-tier model with the plan path and the instruction to
 use superpowers:subagent-driven-development end to end. The orchestrator
 dispatches its own implementers and reviewers per that skill's Model
 Selection; the workspace and ledger live on disk, so nothing is lost to
-the extra layer. Its final message must carry the "Rulings I made" list
-verbatim — that list is how the decisions reach your human partner, and
-you relay it, not summarize it.
+the extra layer. Its final message must carry the "Rulings I made" and
+"Deferred minors" lists verbatim — those lists are how the decisions
+reach your human partner, and you relay them, not summarize them.
 
 Do this only for a whole plan. Nesting a single task's dispatch buys
 nothing and adds a seat.

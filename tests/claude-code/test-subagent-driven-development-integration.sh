@@ -36,7 +36,7 @@ TEST_PROJECT=$(create_test_project)
 echo "Test project: $TEST_PROJECT"
 
 # Trap to cleanup
-trap 'cleanup_test_project "$TEST_PROJECT"' EXIT
+trap "cleanup_test_project $TEST_PROJECT" EXIT
 
 # Set up minimal Node.js project
 cd "$TEST_PROJECT"
@@ -164,10 +164,9 @@ PLUGIN_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 echo "Running Claude (plugin-dir: $PLUGIN_DIR, cwd: $TEST_PROJECT)..."
 echo "================================================================================"
 cd "$TEST_PROJECT" && timeout 1800 claude -p "$PROMPT" --plugin-dir "$PLUGIN_DIR" --allowed-tools=all --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
-    claude_rc=$?
     echo ""
     echo "================================================================================"
-    echo "EXECUTION FAILED (exit code: $claude_rc)"
+    echo "EXECUTION FAILED (exit code: $?)"
     exit 1
 }
 echo "================================================================================"
@@ -215,8 +214,7 @@ echo ""
 
 # Test 2: Subagents were used (Agent / Task tool — name varies by harness version)
 echo "Test 2: Subagents dispatched..."
-task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || true)
-task_count=${task_count:-0}
+task_count=$(grep -cE '"name":"(Agent|Task)"' "$SESSION_FILE" || echo "0")
 if [ "$task_count" -ge 2 ]; then
     echo "  [PASS] $task_count subagents dispatched"
 else

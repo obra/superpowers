@@ -18,16 +18,16 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 **Before creating anything, check if you are already in an isolated workspace.**
 
 ```bash
-GIT_DIR=$(d=$(git rev-parse --git-dir 2>/dev/null) && cd "$d" && pwd -P || true)
-GIT_COMMON=$(d=$(git rev-parse --git-common-dir 2>/dev/null) && cd "$d" && pwd -P || true)
-BRANCH=$(git branch --show-current 2>/dev/null || true)
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+BRANCH=$(git branch --show-current)
 START_HEAD=$(git rev-parse --verify HEAD 2>/dev/null || echo unborn)
 printf 'GIT_DIR=%s\nGIT_COMMON=%s\nBRANCH=%s\nSTART_HEAD=%s\n' "$GIT_DIR" "$GIT_COMMON" "$BRANCH" "$START_HEAD"
 ```
 
-Keep the printed `START_HEAD` (`<START_HEAD>`) and `BRANCH` (`<START_BRANCH>`) visible; if `START_HEAD` is `unborn` (0-commit repo), git worktrees require an initial commit — work in place or ask your human partner.
+Keep the printed `START_HEAD` (`<START_HEAD>`) and `BRANCH` (`<START_BRANCH>`) visible.
 
-**Submodule guard:** A submodule checkout is not a feature worktree. Verify before concluding "already in a worktree":
+**Submodule guard:** Before concluding "already in a worktree," verify you are not in a submodule:
 
 ```bash
 # If this returns a path, you're in a submodule, not a worktree — treat as normal repo
@@ -54,13 +54,27 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `create_worktree` (Codex, pass `<START_HEAD>` if supported), a `/worktree` command, or a `--worktree` flag. If you do, use it, then verify the base commit before Step 2.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree` or `create_worktree`, a `/worktree` command, or a `--worktree` flag. If you do, use it, then verify the base commit before Step 2. If the tool accepts a base ref or revision, pass `<START_HEAD>`.
 
-Native tools handle placement, branching, and cleanup, though they often branch from `origin/<default>` rather than `<START_HEAD>`. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
+Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
 
-**Verify base commit before Step 2** (unless `<START_HEAD>` was `unborn`): if `git rev-parse HEAD` differs from `<START_HEAD>`:
-- If `<START_BRANCH>` is `main`, `master`, or `dev`, `git status --porcelain` is clean, **and** `git merge-base --is-ancestor HEAD <START_HEAD>` succeeds, run `git merge --ff-only <START_HEAD>`.
-- Otherwise **stop, report both refs/SHAs, and ask your human partner** whether to run `git switch -C <worktree-branch> <START_HEAD>` or keep the native base.
+**Work in the new worktree.** Some tools move your session into it (`EnterWorktree` does). Others leave you in your current checkout and return the new path. Codex `create_worktree` does this, and it also returns before the worktree is ready: poll `get_worktree_creation_status` until it is. Then run the base check below, Step 2, Step 3 and all of the work in that path, not in the checkout you started from.
+
+**Verify the base commit before Step 2.** Skip this check if `<START_HEAD>` is `unborn`. A native tool may start the new worktree from the remote default branch instead of the commit you were on. Run this in the new worktree:
+
+```bash
+git rev-parse HEAD
+git merge-base --is-ancestor HEAD <START_HEAD> && echo "start-ahead"
+git merge-base --is-ancestor <START_HEAD> HEAD && echo "worktree-ahead"
+git symbolic-ref --short -q refs/remotes/origin/HEAD || echo "no origin/HEAD"
+```
+
+Take the first line that applies:
+
+- **Printed both `start-ahead` and `worktree-ahead`:** the worktree is at `<START_HEAD>`. Continue to Step 2.
+- **Printed `start-ahead` only:** the worktree lacks commits you started from, such as an unpushed plan. Run `git merge --ff-only <START_HEAD>`, then continue. If the merge refuses, stop and report its message.
+- **Printed `worktree-ahead` only, and the last line is `origin/<START_BRANCH>`:** your local default branch was behind its remote, so nothing is missing. Continue to Step 2.
+- **Anything else:** stop and ask your human partner which commit to build on, giving both SHAs. If they choose `<START_HEAD>`, run `git switch -C "$(git branch --show-current)" <START_HEAD>`, or `git switch --detach <START_HEAD>` if the worktree is on a detached HEAD.
 
 Only proceed to Step 1b if you have no native worktree tool available.
 
@@ -83,31 +97,48 @@ Follow this priority order. Explicit user preference always beats observed files
 
 3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
 
-#### Safety Verification (project-local only)
+#### Safety Verification (project-local directories only)
 
-Skip Safety Verification when `<chosen-dir>` is outside `$(git rev-parse --show-toplevel)`.
-
-**MUST verify `<chosen-dir>/` is ignored**; if not, create self-ignoring `<chosen-dir>/.gitignore` (`*`) and re-verify `<chosen-dir>/<branch-name>` (never edit root `.gitignore` or commit):
+**MUST verify directory is ignored before creating worktree:**
 
 ```bash
-git check-ignore -q "<chosen-dir>/" || { mkdir -p "<chosen-dir>" && { [ -e "<chosen-dir>/.gitignore" ] || printf '*\n' > "<chosen-dir>/.gitignore"; }; }
-git check-ignore -q "<chosen-dir>/<branch-name>"
+git check-ignore -q "${LOCATION%/}/"
 ```
 
-If `<chosen-dir>/<branch-name>` still does not ignore the target (`git check-ignore` exits `1`), stop and ask your human partner (never edit root `.gitignore` or commit).
+**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+
+**Why critical:** Prevents accidentally committing worktree contents to repository.
 
 #### Create the Worktree
 
 ```bash
-git worktree add --no-track "<chosen-dir>/<branch-name>" -b "<branch-name>" HEAD
-cd "<chosen-dir>/<branch-name>"
+# Determine path based on chosen location
+worktree_path="$LOCATION/$BRANCH_NAME"
+
+git worktree add "$worktree_path" -b "$BRANCH_NAME"
+cd "$worktree_path"
 ```
 
-**Sandbox denial:** If `git worktree add` fails with a permission error, stop, report it, and **ask your human partner** before working in place.
+**Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
 ## Step 2: Project Setup
 
-Install dependencies using the project's lockfile or docs (`package-lock.json`/`pnpm-lock.yaml`/`yarn.lock`/`bun.lock`, `uv.lock`/`poetry.lock`/`requirements.txt`, `Cargo.toml`, `go.mod`); skip if none exist.
+Auto-detect and run appropriate setup:
+
+```bash
+# Node.js
+if [ -f package.json ]; then npm install; fi
+
+# Rust
+if [ -f Cargo.toml ]; then cargo build; fi
+
+# Python
+if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+if [ -f poetry.lock ] || grep -q '\[tool\.poetry\]' pyproject.toml 2>/dev/null; then poetry install; fi
+
+# Go
+if [ -f go.mod ]; then go mod download; fi
+```
 
 ## Step 3: Verify Clean Baseline
 
@@ -136,24 +167,23 @@ Ready to implement <feature-name>
 |-----------|--------|
 | Already in linked worktree | Skip creation (Step 0) |
 | In a submodule | Treat as normal repo (Step 0 guard) |
-| Native worktree tool available | Use it, then verify base commit (Step 1a) |
+| Native worktree tool available | Use it (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
-| Instruction file sets directory | Use declared directory (skip Safety Verification if external) |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Default `.worktrees/` |
-| Directory not ignored | Create self-ignoring `<chosen-dir>/.gitignore` (`*`) |
-| Permission error on create | Report denial + ask |
+| Neither exists | Check instruction file, then default `.worktrees/` |
+| Directory not ignored | Add to .gitignore + commit |
+| Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
-| No dependency manifest/lockfile | Skip dependency install |
+| No package.json/Cargo.toml | Skip dependency install |
 
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
 | "I'm obviously not in a worktree — no need to check" | Run Step 0. Harness-created isolation and submodules both fool eyeballing; the detection commands settle it. |
-| "`git worktree add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`, `create_worktree`) handles placement and isolation; use it, then verify the base commit against `<START_HEAD>` (Step 1a). Bypassing it is the #1 mistake and creates phantom state. |
+| "`git worktree add` is quicker than hunting for a native tool" | A native tool (e.g. `EnterWorktree`) owns placement, branching, and cleanup. Bypassing it is the #1 mistake — it creates phantom state your harness can't see or manage. |
 | "The worktree directory is surely ignored already" | Run `git check-ignore`. An unignored worktree directory commits the whole tree into the repo. |
 | "Any directory name works" | Explicit instructions beat an existing project-local directory, which beats the `.worktrees/` default. |
 | "The workspace is fresh — baseline tests can wait" | A dirty baseline makes every later failure ambiguous. Run the tests now; proceeding past failures is your human partner's call. |
