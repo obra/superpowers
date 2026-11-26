@@ -215,7 +215,7 @@ Step 2, from before that directory change.
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If `WORKTREE_PATH` is under `.worktrees/`, `worktrees/`, or the worktree directory your instructions declare:** Superpowers
+**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`, or under the worktree directory your instructions declare:** Superpowers
 created this worktree — we own cleanup:
 
 Run the block below only when both Step 2 listings, run again with
@@ -276,7 +276,7 @@ place. If your platform provides a workspace-exit tool, use it.
 | "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
 | "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
 | "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
-| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/`, `worktrees/`, or the worktree directory your instructions declare. Everything else belongs to the host. |
+| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`, or under the worktree directory your instructions declare. Everything else belongs to the host. |
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
 | "I'll delete the untracked files first, so removal works without `--force`" | Same loss as `--force`. `rm`, `git clean`, and `git stash` are all deletion here. Show the list and ask. |
 | "They said clean up, so that covers these files" | They asked to clean up a worktree. They have not seen these files. Ask about the files. |
