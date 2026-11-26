@@ -8,7 +8,6 @@
 #   - >=3 git commits (initial + per-task commits, exercising SDD's
 #     commit-per-task workflow shape)
 #   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1)
-#   - Claude Code task-tracking tool usage (drill makes no assertion)
 #   - test/math.test.js exists (drill relies on `npm test` succeeding)
 #   - analyze-token-usage.py token-budget telemetry
 # Kept until those assertions are added to drill or explicitly retired.
@@ -224,14 +223,14 @@ else
 fi
 echo ""
 
-# Test 3: Claude Code task-tracking tool was used
-echo "Test 3: Task tracking..."
-todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || echo "0")
+# Test 3: Claude Code task-tracking tool telemetry (optional — SDD tracks progress in ledger)
+echo "Test 3: Task tracking (optional)..."
+todo_count=$(grep -cE '"name":"(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet)"' "$SESSION_FILE" || true)
+todo_count=${todo_count:-0}
 if [ "$todo_count" -ge 1 ]; then
     echo "  [PASS] Task tracking used $todo_count time(s)"
 else
-    echo "  [FAIL] No Claude Code task-tracking tool used"
-    FAILED=$((FAILED + 1))
+    echo "  [INFO] No Claude Code task-tracking tool used (SDD tracks progress in ledger)"
 fi
 echo ""
 

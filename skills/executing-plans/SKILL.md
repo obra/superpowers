@@ -21,6 +21,10 @@ the final reviewer is the second pair of eyes.
 prove each step with a test you watched fail and then pass, and leave a
 record that survives your own forgetting.
 
+**Never on main:** if you are on `main` or `master`, your first action is
+to create a branch for this plan (see Setup). No commit of this plan lands
+on main unless your human partner explicitly asked for main.
+
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 
@@ -77,7 +81,7 @@ digraph process {
         "Plan wrong? Rule and ledger. Code wrong? systematic-debugging" [shape=box];
         "Commit as the plan's commit steps say" [shape=box];
         "Completion contract met?" [shape=diamond];
-        "task-done: run tests, ledger the result; mark todo complete" [shape=box];
+        "task-done: run tests, ledger the result" [shape=box];
     }
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" [shape=box];
@@ -95,8 +99,8 @@ digraph process {
     "Step output matches plan's Expected?" -> "Commit as the plan's commit steps say" [label="yes, last step"];
     "Commit as the plan's commit steps say" -> "Completion contract met?";
     "Completion contract met?" -> "Work the steps in order: TDD, run every verification, read every output" [label="no - finish the task"];
-    "Completion contract met?" -> "task-done: run tests, ledger the result; mark todo complete" [label="yes"];
-    "task-done: run tests, ledger the result; mark todo complete" -> "More tasks remain?";
+    "Completion contract met?" -> "task-done: run tests, ledger the result" [label="yes"];
+    "task-done: run tests, ledger the result" -> "More tasks remain?";
     "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
     "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
     "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger";
@@ -112,11 +116,21 @@ superpowers:using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
+**Branch before your first edit.** Run `git branch --show-current`. If it
+prints `main` or `master`, create a branch for this plan before touching
+any file (a worktree via superpowers:using-git-worktrees, or at least
+`git switch -c <plan-file-basename>`), and make every commit there. This
+is not a stop: it needs no permission, so do it and keep going. Commit on
+main only when your human partner has said in so many words to work on
+main. "Execute the plan", "implement it" and "go ahead" are requests to do
+the work, not consent to put it on main. Name the branch in your final
+message.
+
 Conversation memory does not survive compaction. An inline executor that
 loses its place re-implements tasks whose commits already exist — the same
 failure as a controller re-dispatching them, paid for in your own context.
-Track progress in a ledger file, not only in todos. Harness todos are a
-live view; the ledger is the record.
+Track progress in a ledger file. If you have a todo tool, also keep a
+todo per task as a live view; the ledger is the record.
 
 The workspace and ledger are shared with superpowers:subagent-driven-development
 — same directory, same format — so a plan can change executors mid-flight
@@ -139,10 +153,11 @@ and the new one resumes from the same ledger.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
-  if that happens, recover from `git log`.
+  if that happens, recover the completed tasks from `git log`. Rulings and
+  deferred minors are not in git: they are lost.
 
-Read the plan once, note its context and Global Constraints, and create a
-todo per task. If the plan names a Spec, read that too: the spec is the
+Read the plan once and note its context and Global Constraints. If the plan
+names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it. A plan with no reachable spec gets a ledger note saying so —
 rulings made without one are provisional.
@@ -176,7 +191,6 @@ in the workspace and read its tail; read a brief, not the whole plan.
   Read the brief for every task, including ones you remember from setup:
   what you remember is a summary, the brief has the exact values,
   signatures, and test cases.
-- Mark the task's todo in_progress.
 
 Every tool call is a turn that re-reads your whole context. Bookkeeping
 rides along with work — a ledger append in the same call as the commit,
@@ -231,7 +245,7 @@ if they pass — appends the completion line to the ledger:
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
 
 A failing run records nothing; the task is not complete. When it records,
-mark the todo complete and take the next task.
+take the next task.
 
 ## Final Review
 
@@ -309,6 +323,7 @@ Use superpowers:finishing-a-development-branch.
 
 | Excuse | Reality |
 |--------|---------|
+| "They said implement it, and the repo is on main, so main is fine" | The request is to do the work, not where to put it. Branch first; they merge when they're ready. |
 | "I remember what Task N says" | You remember a summary. The brief has the exact values. Read it. |
 | "The plan's code is right, skip watching the test fail" | A test you never saw fail proves nothing. It is one step. Run it. |
 | "I'll run the full suite at the end instead of per step" | Per-step runs are how you learn which step broke it. The end-of-task run is the contract, not a substitute. |
