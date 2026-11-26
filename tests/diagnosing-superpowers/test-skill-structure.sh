@@ -170,7 +170,7 @@ fi
 
 step5_flat="$(awk '/^5\. \*\*GitHub issues\*\*/{in_step5=1} /^6\. \*\*Export\*\*/{in_step5=0} in_step5{print}' "$SKILL_MD" | tr '\n' ' ')"
 case "$step5_flat" in
-  *'references/redaction-policy.md'*workspace*)
+  *'references/redaction-policy.md'*before*workspace*)
     pass "SKILL.md Step 5 scrubs per references/redaction-policy.md before the workspace write" ;;
   *)
     fail "SKILL.md Step 5 scrubs per references/redaction-policy.md before the workspace write" ;;
