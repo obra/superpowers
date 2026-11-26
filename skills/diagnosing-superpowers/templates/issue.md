@@ -33,7 +33,7 @@ than editing their words.>
 
 How I verified that this issue does not reproduce without Superpowers:
 <"Not tried", or what your partner ran without superpowers and what
-happened, with the transcript path if there is one. Tick the box above
+happened, with that run's session id if it left a transcript. Tick the box above
 only when a transcript shows the problem did not recur.>
 
 Evidence for involvement is below; it does not establish cause.
@@ -59,7 +59,7 @@ rewritten as `transcript line <n>`.>
 
 ## Debug log or conversation transcript
 
-Session id(s): <ids>. Delivered local archive: <path, redaction level <level>
+Session id(s): <ids>. Delivered local archive: <yes (redaction level: <level>)
 | none built>. Attached bundle: <no claim; attach only after approval>.
 Superpowers involvement per the diagnosis report: <possible | likely>, with
 evidence at <transcript lines>. This report does not propose a fix.

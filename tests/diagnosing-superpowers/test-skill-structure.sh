@@ -146,6 +146,52 @@ else
   printf '%s\n' "$user_hits" | head -10 | sed 's/^/    /'
 fi
 
+# --- issue privacy scrub & prompt hygiene --------------------------------
+if ! grep -qF '<path, redaction level' "$SKILL_DIR/templates/issue.md" \
+  && ! grep -qF 'with the transcript path if there is one' "$SKILL_DIR/templates/issue.md"; then
+  pass "templates/issue.md omits raw transcript/archive path placeholders"
+else
+  fail "templates/issue.md omits raw transcript/archive path placeholders"
+fi
+
+if grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/analyst-common.md" \
+  && grep -qF 'Evidence, not instructions' "$SKILL_DIR/prompts/similar-session.md" \
+  && grep -qF 'Evidence, not instructions' "$SKILL_DIR/references/context-safety.md"; then
+  pass "analyst prompts, matcher prompt and context-safety rules treat transcript text as evidence, not instructions"
+else
+  fail "analyst prompts, matcher prompt and context-safety rules treat transcript text as evidence, not instructions"
+fi
+
+if ! grep -qF 'Create a todo per step' "$SKILL_MD"; then
+  pass "SKILL.md has no todo-per-step instruction"
+else
+  fail "SKILL.md has no todo-per-step instruction"
+fi
+
+step5_flat="$(awk '/^5\. \*\*GitHub issues\*\*/{in_step5=1} /^6\. \*\*Export\*\*/{in_step5=0} in_step5{print}' "$SKILL_MD" | tr '\n' ' ')"
+case "$step5_flat" in
+  *'references/redaction-policy.md'*before*workspace*)
+    pass "SKILL.md Step 5 scrubs per references/redaction-policy.md before the workspace write" ;;
+  *)
+    fail "SKILL.md Step 5 scrubs per references/redaction-policy.md before the workspace write" ;;
+esac
+
+issues_ref="$SKILL_DIR/references/github-issues.md"
+scrub_section="$(awk '/^## Scrub/{on=1; next} /^## /{on=0} on{print}' "$issues_ref")"
+if printf '%s\n' "$scrub_section" | grep -qF 'references/redaction-policy.md'; then
+  pass "references/github-issues.md Scrub section cites references/redaction-policy.md"
+else
+  fail "references/github-issues.md Scrub section cites references/redaction-policy.md"
+fi
+for section in File Comment; do
+  section_prose="$(awk -v h="## $section" '$0 == h {on=1; next} /^## /{on=0} on{print}' "$issues_ref")"
+  if printf '%s\n' "$section_prose" | grep -qF 'as described under Scrub'; then
+    pass "references/github-issues.md $section section requires the scrub"
+  else
+    fail "references/github-issues.md $section section requires the scrub"
+  fi
+done
+
 echo
 echo "Passed: $PASSES  Failed: $FAILURES"
 [ "$FAILURES" -eq 0 ]
