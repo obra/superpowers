@@ -96,7 +96,7 @@ owns the code, in that task's own step style.]
 
 **Files:**
 - Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py (function normalize_path)`
+- Modify: `exact/path/to/existing.py` (function `normalize_path`)
 - Test: `tests/exact/path/to/test.py`
 
 **Interfaces:**
