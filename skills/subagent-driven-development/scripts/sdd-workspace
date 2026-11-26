@@ -1,7 +1,40 @@
 #!/usr/bin/env bash
 # Resolve and ensure the working-tree directory SDD uses for one plan's
-# artifacts: task briefs, implementer reports, review packages, and progress ledger.
-# Print the plan directory's absolute path.
+# short-lived artifacts: task briefs, implementer reports, review packages,
+# and the progress ledger. Print the plan directory's absolute path.
+#
+# One directory per plan (.superpowers/sdd/<plan-basename>/) so a follow-up
+# plan in the same working tree can never read or overwrite another plan's
+# artifacts. A stale ledger misread as current progress makes controllers
+# skip whole task sequences — plan-scoping removes that failure structurally.
+#
+# Basename slugs collide when two plans share a filename (docs/alpha/plan.md
+# vs docs/beta/plan.md), so each workspace records its owning plan's path in
+# a plan-path marker (repo-relative in-repo, absolute outside). A workspace
+# owned by a different plan is skipped and the slug disambiguated with the
+# plan's parent-directory name, then a counter up to 100. Claims run under a
+# mkdir lock at .superpowers/sdd/.lock holding the claimant's PID; a dead
+# holder's lock is reclaimed. A workspace with no marker
+# predates the marker scheme and is adopted for the current plan so in-flight
+# workspaces keep resolving — which means the first collision on such a
+# legacy workspace adopts instead of detecting; acceptable, marker-less
+# workspaces age out as plans finish. A plan file that no longer exists
+# resolves to the workspace whose marker already names it (#2630), so the
+# tasks after the one that deleted it still complete and review.
+#
+# The workspace lives in the working tree (not under .git/) because Claude Code
+# treats .git/ as a protected path and denies agent writes there — which blocks
+# an implementer subagent from writing its report file. A self-ignoring
+# .gitignore at .superpowers/sdd/ keeps every plan's workspace out of
+# `git status` and out of accidental commits without modifying any tracked file.
+#
+# Single source of truth for the workspace location, so task-brief and
+# review-package cannot drift to different directories.
+#
+# The repository is the current directory's (see sdd-repo). -C DIR runs as
+# if started in DIR, the way git -C does: a caller working on another
+# checkout or worktree needs no `cd DIR ;` prefix, a compound that harnesses
+# cannot allowlist because DIR differs on every run (#1799).
 #
 # Usage: sdd-workspace [-C DIR] PLAN_FILE
 set -euo pipefail
@@ -99,6 +132,11 @@ esac
 
 parent=$(basename "$plan_dir")
 
+# On Windows (Git Bash, MSYS2, Cygwin) print C:/Users/... rather than
+# /c/Users/... or /tmp/...: the caller may be PowerShell or another native
+# tool, which can't resolve MSYS paths, and bash accepts this form too.
+# Only the printed path changes; the plan-path markers above keep pwd -P's
+# spelling, so existing workspaces still match their plans.
 print_dir() {
   CDPATH='' cd -- "$1"
   if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi
@@ -167,6 +205,8 @@ done
 locked=1
 { printf '%s\n' "$$" > "$base/.lock/pid"; } 2>/dev/null || true
 
+# Create-only: a repo may commit its own .gitignore here (e.g. to version
+# progress.md ledgers); overwriting it would revert that on every run.
 [ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 
 # True when the workspace at $1 is (or becomes) this plan's: an existing
