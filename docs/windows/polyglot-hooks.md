@@ -176,7 +176,12 @@ Your hook logic goes in the extensionless script file. A few portable patterns:
 nl='
 '
 tab='	'
-cr=$(printf '\r')
+if [ -n "${BASH_VERSION:-}" ]; then
+  # shellcheck disable=SC3045 # bash builtin avoids a subshell fork (#2081)
+  printf -v cr '\r'
+else
+  cr=$(printf '\r' 2>/dev/null || true)
+fi
 
 replace_all() {
   rest=$1
@@ -202,7 +207,7 @@ escape_for_json() {
   [ -z "$cr" ] || replace_all "$escaped" "$cr" '\r'
   replace_all "$escaped" "$nl" '\n'
   replace_all "$escaped" "$tab" '\t'
-  printf '%s' "$escaped"
+  using_superpowers_escaped=$escaped
 }
 ```
 
