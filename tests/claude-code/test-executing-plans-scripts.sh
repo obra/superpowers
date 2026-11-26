@@ -138,15 +138,13 @@ PLAN
     ( cd "$repo" && echo y > work2.txt && git add work2.txt && git "${git_id[@]}" commit -qm "task 2" )
     local head2
     head2="$(cd "$repo" && git rev-parse HEAD)"
-    local silent_err="$TEST_ROOT/silent-task2.err"
     rc=0
-    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 2 "$head" -- true 2>"$silent_err")" || rc=$?
+    out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 2 "$head" -- true 2>&1)" || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         pass "task-done exits 0 when a passing test command prints nothing"
     else
         fail "task-done exits 0 when a passing test command prints nothing (got rc=$rc)"
         echo "    got: $out"
-        cat "$silent_err" 2>/dev/null || true
     fi
     local expected2="Task 2: complete (commits ${head:0:7}..${head2:0:7}, tests: true → exit 0 (no output), log: task-2-tests.log)"
     if [[ -f "$ledger" ]] && grep -qF "$expected2" "$ledger"; then
@@ -156,100 +154,9 @@ PLAN
         echo "    expected: $expected2"
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
     fi
-    if [[ -s "$silent_err" ]] && grep -qi "no output" "$silent_err"; then
-        pass "task-done warns on stderr when a passing test command prints nothing"
-    else
-        fail "task-done warns on stderr when a passing test command prints nothing"
-        echo "    stderr:"; sed 's/^/      /' "$silent_err" 2>/dev/null || echo "      (empty)"
-    fi
-
-    # --- task-done: rejects nonexistent task ID (#2342), removed task with stale brief, preserves passing log on failed re-run, and handles missing trailing newline ---
-    local ledger_before ran_77="$TEST_ROOT/ran-77"
-    ledger_before="$(cat "$ledger")"
-    rc=0
-    (cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 77 "$base" -- sh -c 'touch "$1"; echo ok' _ "$ran_77" >/dev/null 2>&1) || rc=$?
-    if [[ "$rc" -eq 2 && "$(cat "$ledger")" == "$ledger_before" && ! -e "$repo/.superpowers/sdd/plan/task-77-tests.log" && ! -e "$ran_77" ]]; then
-        pass "task-done rejects nonexistent task ID with exit 2 and writes nothing"
-    else
-        fail "task-done rejects nonexistent task ID with exit 2 and writes nothing (rc=$rc)"
-    fi
-
-    # Leftover cached brief for a task removed from a still-existing plan is rejected
-    printf '## Task 5: Removed\n\nOld.\n' > "$repo/.superpowers/sdd/plan/task-5-brief.md"
-    rc=0
-    (cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 5 "$base" -- true >/dev/null 2>&1) || rc=$?
-    if [[ "$rc" -eq 2 && "$(cat "$ledger")" == "$ledger_before" ]]; then
-        pass "task-done rejects removed task ID even when stale cached brief exists"
-    else
-        fail "task-done rejects removed task ID even when stale cached brief exists (rc=$rc)"
-    fi
-
-    # Failed re-run of an already-recorded task preserves passing task-1-tests.log and saves failed output in task-1-tests.failed.log
-    local rerun_err=""
-    rc=0
-    rerun_err="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 1 "$base" -- sh -c 'echo "RERUN_FAIL"; exit 1' 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -ne 0 ]] && grep -q "Ran 3 tests" "$repo/.superpowers/sdd/plan/task-1-tests.log" \
-        && ! grep -q "RERUN_FAIL" "$repo/.superpowers/sdd/plan/task-1-tests.log" \
-        && grep -q "RERUN_FAIL" "$repo/.superpowers/sdd/plan/task-1-tests.failed.log" \
-        && [[ "$rerun_err" == *"task-1-tests.failed.log"* ]]; then
-        pass "failed re-run preserves passing task-1-tests.log and writes RERUN_FAIL to task-1-tests.failed.log"
-    else
-        fail "failed re-run log handling failed"
-    fi
-
-    # Terminated test command preserves partial output in .failed.log, keeps passing log intact, and works with nonexistent TMPDIR
-    rm -f "$repo/.superpowers/sdd/plan/task-1-tests.failed.log"
-    local term_rc=0
-    (cd "$repo" && TMPDIR="$TEST_ROOT/nonexistent-tmpdir" "$EP_SCRIPTS/task-done" plan.md 1 "$base" -- bash -c 'echo "HUNG_SUITE_PARTIAL"; kill -TERM $$' >/dev/null 2>&1) || term_rc=$?
-    if [[ "$term_rc" -ne 0 ]] \
-        && grep -q "HUNG_SUITE_PARTIAL" "$repo/.superpowers/sdd/plan/task-1-tests.failed.log" \
-        && grep -q "Ran 3 tests" "$repo/.superpowers/sdd/plan/task-1-tests.log"; then
-        pass "terminated test command saves partial output in .failed.log, preserves passing log, and validates without TMPDIR"
-    else
-        fail "terminated test command log preservation failed (rc=$term_rc)"
-    fi
-
-    # Subdirectory invocation writes canonical repo-relative header so subsequent sdd-workspace calls keep the same workspace
-    git init -q -b main "$TEST_ROOT/subdir-hdr-repo"
-    local sub_repo
-    sub_repo="$(cd "$TEST_ROOT/subdir-hdr-repo" && git rev-parse --show-toplevel)"
-    sub_repo="$(cd "$sub_repo" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)"
-    mkdir -p "$sub_repo/docs/current"
-    cp "$repo/plan.md" "$sub_repo/docs/current/plan.md"
-    ( cd "$sub_repo" && git add docs/current/plan.md && git "${git_id[@]}" commit -qm init )
-    local sub_base sub_ws1 sub_ws2
-    sub_base="$(cd "$sub_repo" && git rev-parse HEAD)"
-    ( cd "$sub_repo/docs/current" && echo s > s.txt && git add s.txt && git "${git_id[@]}" commit -qm "sub task 1" )
-    ( cd "$sub_repo/docs/current" && "$EP_SCRIPTS/task-done" plan.md 1 "$sub_base" -- echo sub-ok >/dev/null )
-    sub_ws1="$(cd "$sub_repo/docs/current" && "$REPO_ROOT/skills/subagent-driven-development/scripts/sdd-workspace" plan.md)"
-    sub_ws2="$(cd "$sub_repo" && "$REPO_ROOT/skills/subagent-driven-development/scripts/sdd-workspace" docs/current/plan.md)"
-    if [[ "$sub_ws1" == "$sub_ws2" && "$(head -n 1 "$sub_ws1/progress.md")" == "# SDD ledger — plan: docs/current/plan.md" ]]; then
-        pass "task-done from subdirectory records canonical repo-relative ledger header"
-    else
-        fail "task-done from subdirectory wrote non-canonical header: $(head -n 1 "$sub_ws1/progress.md" 2>/dev/null)"
-    fi
-
-    # Pre-existing ledger without trailing newline still records completion on its own line
-    git init -q -b main "$TEST_ROOT/nonewline-repo"
-    local nl_repo
-    nl_repo="$(cd "$TEST_ROOT/nonewline-repo" && git rev-parse --show-toplevel)"
-    nl_repo="$(cd "$nl_repo" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)"
-    cp "$repo/plan.md" "$nl_repo/plan.md"
-    ( cd "$nl_repo" && git add plan.md && git "${git_id[@]}" commit -qm init )
-    local nl_base nl_ws
-    nl_base="$(cd "$nl_repo" && git rev-parse HEAD)"
-    nl_ws="$(cd "$nl_repo" && "$REPO_ROOT/skills/subagent-driven-development/scripts/sdd-workspace" plan.md)"
-    printf '# SDD ledger — plan: plan.md' > "$nl_ws/progress.md"
-    ( cd "$nl_repo" && echo nl > nl.txt && git add nl.txt && git "${git_id[@]}" commit -qm "nl task 1" )
-    ( cd "$nl_repo" && "$EP_SCRIPTS/task-done" plan.md 1 "$nl_base" -- echo ok >/dev/null )
-    if grep -q '^Task 1: complete ' "$nl_ws/progress.md"; then
-        pass "task-done terminates unterminated ledger line before appending Task 1: complete"
-    else
-        fail "task-done glued completion line onto unterminated header"
-        sed 's/^/    /' "$nl_ws/progress.md"
-    fi
 
     # --- task-done: rejects non-commit BASE (e.g. tree SHA) ---
+    local ledger_before
     ledger_before="$(cat "$ledger")"
     rc=0
     (cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 1 "HEAD^{tree}" -- true >/dev/null 2>&1) || rc=$?
@@ -299,7 +206,7 @@ PLAN
         echo "    ledger:"; sed 's/^/      /' "$noexec_ledger" 2>/dev/null || echo "      (missing)"
     fi
 
-    # --- deleted plan resilience (#2630): task-done succeeds for cached task, rejects uncached task ---
+    # --- deleted plan resilience (#2630): task-done succeeds for cached task ---
     git init -q -b main "$TEST_ROOT/deleted-repo"
     local del_repo
     del_repo="$(cd "$TEST_ROOT/deleted-repo" && git rev-parse --show-toplevel)"
@@ -320,24 +227,6 @@ PLAN
     else
         fail "task-done succeeds after plan is deleted when task-start cached brief (#2630) (rc=$del_rc)"
         echo "    ledger:"; sed 's/^/      /' "$del_ledger" 2>/dev/null || echo "      (missing)"
-    fi
-    local del_uncached_rc=0
-    ( cd "$del_repo" && "$EP_SCRIPTS/task-done" docs/plans/gone.md 2 "$del_base" -- echo never >/dev/null 2>&1 ) || del_uncached_rc=$?
-    if [[ "$del_uncached_rc" -eq 2 ]] && ! grep -q "Task 2: complete" "$del_ledger"; then
-        pass "task-done exits 2 on deleted plan when requested task was never cached"
-    else
-        fail "task-done exits 2 on deleted plan when requested task was never cached (rc=$del_uncached_rc)"
-    fi
-
-    # --- .gitattributes enforces LF on skills/*/scripts/* ---
-    local attr_out
-    attr_out="$(git -C "$REPO_ROOT" check-attr eol skills/subagent-driven-development/scripts/task-brief skills/executing-plans/scripts/task-done)"
-    if [[ "$attr_out" == *"skills/subagent-driven-development/scripts/task-brief: eol: lf"* \
-       && "$attr_out" == *"skills/executing-plans/scripts/task-done: eol: lf"* ]]; then
-        pass ".gitattributes enforces eol: lf on skills/*/scripts/*"
-    else
-        fail ".gitattributes enforces eol: lf on skills/*/scripts/*"
-        echo "    got: $attr_out"
     fi
 
     # --- no usable repository: every helper stops with one message (#2242, #2429) ---

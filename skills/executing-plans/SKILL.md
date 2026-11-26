@@ -244,9 +244,8 @@ if they pass — appends the completion line to the ledger:
 
 `Task <N>: complete (commits <base7>..<head7>, tests: <command> → exit 0, log: task-<N>-tests.log)`
 
-A failing run records nothing; the task is not complete (a silent pass
-warns and records `exit 0 (no output)`). When it records, take the next
-task.
+A failing run records nothing; the task is not complete. When it records,
+take the next task.
 
 ## Final Review
 

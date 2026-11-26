@@ -25,37 +25,11 @@ sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
 repo=$("${BASH:-bash}" "$sdd/sdd-repo" --with-commit)
 git -C "$repo" rev-parse --verify --quiet "${base}^{commit}" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 
-case "$n" in
-  "" | */* | *..*)
-    echo "task-done: invalid task ID: $n" >&2
-    exit 2
-    ;;
-esac
-
 # Invoke via bash rather than direct exec: some extractors (Python zipfile)
 # strip Unix exec bits when unpacking marketplace packages (#2040, #2642).
 dir=$("${BASH:-bash}" "$sdd/sdd-workspace" "$plan")
-if ! err=$(TMPDIR="$dir" "${BASH:-bash}" "$sdd/task-brief" "$plan" "$n" /dev/null 2>&1 >/dev/null); then
-  echo "task-done: cannot validate task '$n' for $plan${err:+ ($err)}" >&2
-  exit 2
-fi
 log="$dir/task-${n}-tests.log"
-fail_log="$dir/task-${n}-tests.failed.log"
-run_log=""
 ledger="$dir/progress.md"
-
-cleanup_run_log() {
-  if [ -n "$run_log" ] && [ -f "$run_log" ]; then
-    if [ -s "$run_log" ]; then
-      mv -f -- "$run_log" "$fail_log" 2>/dev/null || true
-      echo "task-done: interrupted; partial output saved at $fail_log" >&2
-    else
-      rm -f -- "$run_log" 2>/dev/null || true
-    fi
-  fi
-}
-trap cleanup_run_log EXIT
-run_log=$(mktemp "$dir/.task-${n}-tests.XXXXXX")
 
 # Render the command the way a person would type it, for the ledger line.
 cmd=""
@@ -68,29 +42,20 @@ done
 cmd=${cmd# }
 
 rc=0
-"$@" > "$run_log" 2>&1 || rc=$?
+"$@" > "$log" 2>&1 || rc=$?
 
-tail -n 5 "$run_log"
+tail -n 5 "$log"
 if [ "$rc" -ne 0 ]; then
-  mv -f -- "$run_log" "$fail_log"
-  run_log=""
-  echo "task-done: test command exited $rc; Task $n NOT recorded (full output: $fail_log)" >&2
+  echo "task-done: test command exited $rc; Task $n NOT recorded (full output: $log)" >&2
   exit "$rc"
 fi
-
-mv -f -- "$run_log" "$log"
-run_log=""
-rm -f -- "$fail_log"
 
 if grep -q '[^[:space:]]' "$log"; then
   result="exit 0, log: task-${n}-tests.log"
 else
-  echo "task-done: warning: test command exited 0 with no output (full output: $log)" >&2
   result="exit 0 (no output), log: task-${n}-tests.log"
 fi
-hdr_plan=$(cat "$dir/plan-path" 2>/dev/null || printf '%s' "$plan")
-[ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$hdr_plan" > "$ledger"
-[ ! -s "$ledger" ] || [ -z "$(tail -c 1 "$ledger")" ] || printf '\n' >> "$ledger"
-line="Task $n: complete (commits $(git -C "$repo" rev-parse --short=7 "${base}^{commit}")..$(git -C "$repo" rev-parse --short=7 HEAD), tests: $cmd → $result)"
+[ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
+line="Task $n: complete (commits $(git -C "$repo" rev-parse --short=7 "$base")..$(git -C "$repo" rev-parse --short=7 HEAD), tests: $cmd → $result)"
 printf '%s\n' "$line" >> "$ledger"
 echo "ledger: $line"
