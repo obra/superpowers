@@ -41,8 +41,8 @@ if manifest.get("version") != package.get("version"):
         f"manifest version {manifest.get('version')!r} != package.json version {package.get('version')!r}"
     )
 
-# Devin CLI plugins carry skills only (auto-discovered from ./skills/); the
-# manifest supports metadata + dependency lists, nothing executable.
+# Superpowers keeps .devin-plugin/plugin.json skills-only (auto-discovered
+# from ./skills/); reject extra manifest fields that configure hooks or overrides.
 unsupported = ["skills", "hooks", "commands", "sessionStart", "contextFileName", "inject"]
 present = sorted(field for field in unsupported if field in manifest)
 if present:
