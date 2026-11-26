@@ -23,7 +23,7 @@ Test skills that:
 - Contradict immediate goals (speed over quality)
 
 Do not run rationalization pressure scenarios on:
-- Pure reference skills (API docs, syntax guides) — test them with retrieval/application scenarios per [SKILL.md](../SKILL.md)
+- Pure reference skills (API docs, syntax guides)
 - Skills without rules to violate
 - Skills agents have no incentive to bypass
 
