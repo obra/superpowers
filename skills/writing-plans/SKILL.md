@@ -56,7 +56,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -96,7 +96,7 @@ owns the code, in that task's own step style.]
 
 **Files:**
 - Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
+- Modify: `exact/path/to/existing.py` (function `normalize_path`)
 - Test: `tests/exact/path/to/test.py`
 
 **Interfaces:**
@@ -133,7 +133,7 @@ Expected: PASS
 
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git commit -m "<message in the style of this repo's recent commits>"
 ```
 ````
 
@@ -191,11 +191,15 @@ them to review the plan and choose an execution method before implementation.
 - **Subagent-driven** - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
 - **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
-**For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
+**For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use? Either approach can also run in a fresh session, which reads the plan instead of carrying this whole conversation into every turn."**
 
 **When an execution method has already been supplied:**
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Does it capture what you want?"**
+**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Does it capture what you want? Execution can also run in a fresh session, which reads the plan instead of carrying this whole conversation into every turn."**
+
+**If a fresh session chosen (with either approach):**
+- Give them this line to start the new session with, opened in this checkout, where the plan is saved: "Use superpowers:<subagent-driven-development or executing-plans> to execute `docs/superpowers/plans/<filename>.md`." Name the skill for the approach they chose or supplied.
+- Invoke neither skill below in this session.
 
 **If Subagent-driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
