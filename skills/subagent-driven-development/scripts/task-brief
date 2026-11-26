@@ -35,31 +35,21 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 stage_tmpout() {
-  local target=$1 out_dir="" tmp_base=""
+  local target=$1 out_dir=""
   if [ -d "$target" ]; then
     echo "task-brief: output path is a directory: $target" >&2
     exit 2
   fi
-  if [ "$target" = "/dev/null" ]; then
-    tmp_base=${TMPDIR:-/tmp}
-    tmpout=$(mktemp "${tmp_base%/}/task-brief.XXXXXX")
-  else
-    out_dir=$(dirname -- "$target")
-    case "$out_dir" in
-      -*) out_dir="./$out_dir" ;;
-    esac
-    mkdir -p -- "$out_dir"
-    tmpout=$(mktemp "${out_dir%/}/.task-brief.XXXXXX")
-  fi
+  out_dir=$(dirname -- "$target")
+  case "$out_dir" in
+    -*) out_dir="./$out_dir" ;;
+  esac
+  tmpout=$(mktemp "${out_dir%/}/.task-brief.XXXXXX")
 }
 
 commit_tmpout() {
   local target=$1
-  if [ "$target" = "/dev/null" ]; then
-    rm -f -- "$tmpout"
-  else
-    mv -f -- "$tmpout" "$target"
-  fi
+  mv -f -- "$tmpout" "$target"
   tmpout=""
 }
 
@@ -78,7 +68,7 @@ if [ ! -f "$plan" ]; then
           echo "task-brief: output path is a directory: $out" >&2
           exit 2
         fi
-        if [ "$out" != "/dev/null" ] && ! [ "$out" -ef "$cached" ]; then
+        if ! [ "$out" -ef "$cached" ]; then
           stage_tmpout "$out"
           cp -f -- "$cached" "$tmpout"
           commit_tmpout "$out"
@@ -138,11 +128,12 @@ fi
 # heading; Pass 2 prepends the plan preamble (stripping the controller-only
 # `> **For agentic workers:**` blockquote) and bounds only the final task at
 # non-fenced non-Task headings of equal or shallower depth.
-# Plan path and task ID go through ENVIRON, not -v, avoiding backslash mangling.
+# The plan path goes through ENVIRON, not -v, which would mangle the
+# backslashes of a Windows path.
 stage_tmpout "$out"
 
 rc=0
-TASK_BRIEF_PLAN="$plan" TASK_BRIEF_N="$n" awk '
+TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
   function stderr(msg) {
     print msg | "cat >&2"
     used_stderr = 1
@@ -210,7 +201,6 @@ TASK_BRIEF_PLAN="$plan" TASK_BRIEF_N="$n" awk '
   }
 
   BEGIN {
-    n = ENVIRON["TASK_BRIEF_N"]
     f1["in"] = 0
     f2["in"] = 0
     f2["hidden"] = 0
@@ -311,12 +301,6 @@ TASK_BRIEF_PLAN="$plan" TASK_BRIEF_N="$n" awk '
       stderr("task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:")
       for (i = 1; i <= shaped; i++) stderr("  " shaped_heading[i])
     }
-    if (!found) {
-      stderr("task " n " not found in " ENVIRON["TASK_BRIEF_PLAN"] " (no heading matching '\''Task " n "'\'')")
-      if (used_stderr) close("cat >&2")
-      exit 3
-    }
-    if (used_stderr) close("cat >&2")
   }
 ' "$plan" "$plan" > "$tmpout" || rc=$?
 
@@ -326,7 +310,11 @@ if [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
-lines=$(wc -l < "$tmpout" | tr -d ' ')
+if [ ! -s "$tmpout" ]; then
+  echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
+  exit 3
+fi
+
 commit_tmpout "$out"
 
-echo "wrote ${out}: ${lines} lines"
+echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"

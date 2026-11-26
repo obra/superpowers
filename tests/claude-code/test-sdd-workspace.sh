@@ -649,7 +649,7 @@ PLAN
         echo "    rc1: $rc, rc2: $rc2"
     fi
 
-    # --- Missing task on plan with preamble, atomic write, and /dev/null OUTFILE (#2611) ---
+    # --- Missing task on plan with preamble and atomic write (#2611) ---
     rc=0
     (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 99 >/dev/null 2>&1) || rc=$?
     if [[ "$rc" -eq 3 && ! -e "$pre_dir/task-99-brief.md" ]]; then
@@ -708,25 +708,6 @@ PLAN
         fail "parent task with nested subtask + equal-depth subheading + unclosed fence hiding Task 2 did not exit 4 (rc=$rc)"
     fi
 
-    local null_out
-    rc=0
-    null_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 1 /dev/null)" || rc=$?
-    if [[ "$rc" -eq 0 && -c /dev/null && "$null_out" =~ ^wrote\ /dev/null:\ [1-9][0-9]*\ lines$ ]]; then
-        pass "task-brief with /dev/null OUTFILE exits 0 without mv onto /dev/null"
-    else
-        fail "task-brief with /dev/null OUTFILE exits 0 without mv onto /dev/null"
-        echo "    rc: $rc, out: $null_out"
-    fi
-
-    rc=0
-    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-preamble.md 99 /dev/null >/dev/null 2>&1) || rc=$?
-    if [[ "$rc" -eq 3 && -c /dev/null ]]; then
-        pass "task-brief missing task with /dev/null OUTFILE exits 3"
-    else
-        fail "task-brief missing task with /dev/null OUTFILE exits 3"
-        echo "    rc: $rc"
-    fi
-
     # --- Deleted-plan fallback to claimed workspace brief (#2630) ---
     local fb_bin="$TEST_ROOT/fb-bin" fb_ws="$TEST_ROOT/fb-ws" fb_explicit="$TEST_ROOT/fb-explicit.md" fb_out=""
     mkdir -p "$fb_bin" "$fb_ws"
@@ -766,13 +747,14 @@ EOF
     # Same-filesystem atomic rename & `--` handling: OUTFILE never depends on TMPDIR
     local new_out_dir="$TEST_ROOT/new-brief-dir" new_out_file="" leftover_tmp=""
     new_out_file="$new_out_dir/brief.md"
+    mkdir -p "$new_out_dir"
     rc=0
     (cd "$repo" && TMPDIR="$TEST_ROOT/nonexistent-tmpdir" "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$new_out_file" >/dev/null 2>&1) || rc=$?
     leftover_tmp="$(find "$new_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
     if [[ "$rc" -eq 0 && -s "$new_out_file" && -z "$leftover_tmp" ]]; then
-        pass "task-brief creates OUTFILE parent dir and temp file alongside OUTFILE without needing TMPDIR"
+        pass "task-brief stages its temp file beside OUTFILE without needing TMPDIR"
     else
-        fail "task-brief creates OUTFILE parent dir and temp file alongside OUTFILE without needing TMPDIR"
+        fail "task-brief stages its temp file beside OUTFILE without needing TMPDIR"
         echo "    rc: $rc, leftover: $leftover_tmp"
     fi
 
@@ -1352,15 +1334,16 @@ PLAN
     fi
 
     local e2e_tb_out="" e2e_tb_err="" e2e_tb_exp="$TEST_ROOT/gone-nested/sub/gone-explicit.md"
+    mkdir -p "$TEST_ROOT/gone-nested/sub"
     rc=0
     e2e_tb_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" docs/plans/gone.md 1 2>"$TEST_ROOT/gone-tb.err")" || rc=$?
     e2e_tb_err="$(cat "$TEST_ROOT/gone-tb.err" 2>/dev/null || true)"
     if [[ "$rc" -eq 0 && "$e2e_tb_out" == "wrote $gone_dir/task-1-brief.md: "* && "$e2e_tb_err" == *"serving cached brief"* ]] \
         && (cd "$repo" && TMPDIR="$TEST_ROOT/nonexistent-tmpdir" "$SDD_SCRIPTS/task-brief" docs/plans/gone.md 1 "$e2e_tb_exp" >/dev/null 2>&1) \
         && grep -q 'GONE-TASK-1' "$e2e_tb_exp"; then
-        pass "task-brief resolves deleted plan via real sdd-workspace, warns on stderr, and stages explicit OUTFILE in new parent dir"
+        pass "task-brief resolves deleted plan via real sdd-workspace, warns on stderr, and stages explicit OUTFILE"
     else
-        fail "task-brief resolves deleted plan via real sdd-workspace, warns on stderr, and stages explicit OUTFILE in new parent dir"
+        fail "task-brief resolves deleted plan via real sdd-workspace, warns on stderr, and stages explicit OUTFILE"
         echo "    rc: $rc, out: $e2e_tb_out, err: $e2e_tb_err"
     fi
 
