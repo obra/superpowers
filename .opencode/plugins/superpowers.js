@@ -74,7 +74,7 @@ const extractAndStripFrontmatter = (content) => {
 // Exported for tests (tests/opencode/test-bootstrap-caching.mjs).
 
 // V1 built-ins: todowrite, task (subagent_type), skill, read, write, edit
-// (or apply_patch on gpt- models), bash, grep, glob, webfetch.
+// (or apply_patch when available), bash, grep, glob, webfetch.
 export const V1_MAPPING = `**Tool Mapping for OpenCode:**
 When skills request actions, substitute OpenCode equivalents:
 - Create or update todos → \`todowrite\`
