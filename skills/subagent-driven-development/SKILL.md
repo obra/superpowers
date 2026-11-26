@@ -207,7 +207,8 @@ and fix-round diffs need it.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `bash scripts/task-brief PLAN_FILE N` by its absolute path, from the
-  working tree you're executing in — it extracts the task's full text to a
+  working tree you're executing in — it writes the plan header (whose
+  Global Constraints bind every task) and the task's full text to a
   uniquely named file and prints the path. Compose the dispatch so the
   brief stays the single source of
   requirements. Your dispatch should contain: (1) one line on where this
