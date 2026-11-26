@@ -237,6 +237,8 @@ IGNORED_LISTING='That listing leaves out ignored files'
 # What the skill leaves out of the ignored listing: Superpowers' own
 # bookkeeping files, and dependency and build caches, each shown as one entry.
 IGNORED_LEFT_OUT='^\.superpowers/sdd/\.gitignore$|^\.superpowers/brainstorm/\.last-(port|token)$|(^|/)(node_modules|\.venv|target|dist|build|__pycache__)/$'
+# The section whose first bash fence is the plain `git worktree remove` block.
+CLEANUP_HEADING='## Step 6: Cleanup Workspace'
 
 # Make REPO with one commit whose .gitignore holds IGNORES, and a linked
 # worktree for branch feat at REPO/.worktrees/feat.
@@ -364,12 +366,82 @@ listing_shows_ignored_and_untracked() {
         .superpowers/brainstorm/.last-port .superpowers/brainstorm/.last-token
 }
 
+# #2207: once the human partner's choice has dealt with the untracked files,
+# an ignored .env.local can remain. The listings still name it, and plain
+# `git worktree remove` deletes it without refusing, which is why Step 6
+# removes the worktree only once the listings name nothing. The removal is
+# asserted so that a change in git's behavior is noticed.
+removal_waits_for_ignored_files() {
+    local remove repo wt listed out rc
+    remove="$(skill_fence "$FINISHING_SKILL" "$CLEANUP_HEADING")"
+    if [[ -z "$remove" ]]; then
+        fail "no bash fence under $CLEANUP_HEADING"
+        return
+    fi
+
+    repo="$CASE_DIR/repo"
+    finishing_fixture "$repo" $'.env.local\n.worktrees/\n'
+    wt="$repo/.worktrees/feat"
+    printf 'notes\n' >"$wt/NOTES.md"
+    printf 'SECRET=1\n' >"$wt/.env.local"
+    git -C "$wt" add NOTES.md
+    fixture_commit "$wt" "add notes"
+    if ! listed="$(step2_listed_files "$wt")"; then
+        fail "the Step 2 listings run"
+        return
+    fi
+    if has_line "$listed" .env.local && ! has_line "$listed" NOTES.md; then
+        pass "with NOTES.md committed, the listings still name .env.local"
+    else
+        fail "with NOTES.md committed, the listings still name .env.local"
+        echo "    got: $(printf '%s' "$listed" | tr '\n' ' ')"
+    fi
+
+    # -e stops the block at its first failing command, so its exit status is
+    # that of git worktree remove.
+    rc=0
+    out="$(cd "$repo" && WORKTREE_PATH="$wt" bash -e -c "$remove" 2>&1)" || rc=$?
+    if [[ "$rc" -eq 0 && -z "$out" && ! -e "$wt/.env.local" ]]; then
+        pass "plain git worktree remove exits 0 and deletes the ignored .env.local"
+    else
+        fail "plain git worktree remove exits 0 and deletes the ignored .env.local (exit $rc)"
+        echo "    got: $out"
+    fi
+}
+
+# Plain `git worktree remove` refuses while an untracked file is present, with
+# the message Step 6 quotes, and leaves the file in place.
+removal_refuses_untracked() {
+    local remove repo wt out rc
+    remove="$(skill_fence "$FINISHING_SKILL" "$CLEANUP_HEADING")"
+    if [[ -z "$remove" ]]; then
+        fail "no bash fence under $CLEANUP_HEADING"
+        return
+    fi
+
+    repo="$CASE_DIR/repo"
+    finishing_fixture "$repo" $'.worktrees/\n'
+    wt="$repo/.worktrees/feat"
+    printf 'notes\n' >"$wt/NOTES.md"
+    rc=0
+    out="$(cd "$repo" && WORKTREE_PATH="$wt" bash -e -c "$remove" 2>&1)" || rc=$?
+    if [[ "$rc" -ne 0 && "$out" == *"contains modified or untracked files"* &&
+        -f "$wt/NOTES.md" ]]; then
+        pass "plain git worktree remove refuses, and NOTES.md remains"
+    else
+        fail "plain git worktree remove refuses, and NOTES.md remains (exit $rc)"
+        echo "    got: $out"
+    fi
+}
+
 echo "=== Test: worktree and finishing mechanics ==="
 
 run_case ignore_check_uses_selected_dir
 run_case base_check_states
 run_case creation_snippet_keeps_path_under_zsh
 run_case listing_shows_ignored_and_untracked
+run_case removal_waits_for_ignored_files
+run_case removal_refuses_untracked
 
 echo ""
 if [[ "$FAILURES" -gt 0 ]]; then

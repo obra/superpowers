@@ -218,6 +218,10 @@ Step 2, from before that directory change.
 **If `WORKTREE_PATH` is under `.worktrees/`, `worktrees/`, or the worktree directory your instructions declare:** Superpowers
 created this worktree — we own cleanup:
 
+Run the block below only when both Step 2 listings, run again with
+`git -C "$WORKTREE_PATH"`, list no files: `git worktree remove` deletes
+ignored files without refusing.
+
 ```bash
 git worktree remove "$WORKTREE_PATH"
 git worktree prune  # Self-healing: clean up any stale registrations
@@ -245,6 +249,11 @@ Which?
 
 Act only on the option they pick. No answer means option 4. Never pick
 option 3 for them, and never describe deleted files as recoverable.
+
+Never commit an ignored file or force-add it (`git add -f`), so for
+ignored files only options 2, 3 and 4 apply. After carrying out option
+1, 2 or 3, run both Step 2 listings again and ask about anything still
+listed; once they list no files, remove the worktree.
 
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
