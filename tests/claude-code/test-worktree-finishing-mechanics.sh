@@ -105,6 +105,31 @@ ignore_check_uses_selected_dir() {
     fi
 }
 
+# A shell variable set in one tool call is gone in the next, so an agent can
+# run the check with LOCATION unset. Unguarded, it then checks `/` and exits
+# 128 even where .worktrees/ is ignored, which an agent can read as "not
+# ignored". The check must stop with a message that says to set LOCATION.
+ignore_check_needs_location() {
+    local check repo err rc
+    check="$(skill_fence "$USING_SKILL" '#### Safety Verification (project-local directories only)')"
+    if [[ -z "$check" ]]; then
+        fail "no bash fence under Safety Verification"
+        return
+    fi
+
+    repo="$CASE_DIR/repo"
+    git init -q -b main "$repo"
+    printf '.worktrees/\n' >"$repo/.gitignore"
+    rc=0
+    err="$(cd "$repo" && env -u LOCATION bash -c "$check" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -ne 0 && "$err" == *"set LOCATION to the directory you selected above"* ]]; then
+        pass "LOCATION unset: the check fails and says to set LOCATION"
+    else
+        fail "LOCATION unset: the check fails and says to set LOCATION (exit $rc)"
+        echo "    got: $err"
+    fi
+}
+
 # Run the Step 1a base check in WORKTREE, with <START_HEAD> replaced by START.
 base_check_output() {
     local check="$1"
@@ -452,6 +477,7 @@ removal_refuses_untracked() {
 echo "=== Test: worktree and finishing mechanics ==="
 
 run_case ignore_check_uses_selected_dir
+run_case ignore_check_needs_location
 run_case base_check_states
 run_case creation_snippet_keeps_path_under_zsh
 run_case listing_shows_ignored_and_untracked
