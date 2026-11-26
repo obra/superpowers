@@ -352,15 +352,22 @@ if [[ -n "$posix_sh" ]]; then
             CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
             "$posix_sh" "$WRAPPER_UNDER_TEST" session-start
     fi
+else
+    echo "  [SKIP] run-hook.cmd/session-start sh-only tests: no non-bash/non-zsh POSIX sh found"
+fi
 
-    # Adversarial escaping test under POSIX sh (backslashes, quotes, tabs, globs, CRLF)
-    tricky_root="$TEST_ROOT/tricky-plugin"
-    mkdir -p "$tricky_root/hooks" "$tricky_root/skills/using-superpowers"
-    cp "$HOOK_UNDER_TEST" "$tricky_root/hooks/session-start"
-    printf 'Line1: C:\\Users\\new\\tab"quote\\*?[foo]\\bar\r\nLine2:\twith\ttabs and ""quotes""\n\n' > "$tricky_root/skills/using-superpowers/SKILL.md"
-    tricky_json="$(env -i PATH="" HOME="$(make_home sh-tricky)" CLAUDE_PLUGIN_ROOT="$tricky_root" \
-        "$posix_sh" "$tricky_root/hooks/session-start")"
-    if node -e '
+# Adversarial escaping test (backslashes, quotes, tabs, globs, CRLF) under
+# every shell the wrapper can pick. bash gets CR through printf -v, the
+# others through a command substitution.
+tricky_root="$TEST_ROOT/tricky-plugin"
+mkdir -p "$tricky_root/hooks" "$tricky_root/skills/using-superpowers"
+cp "$HOOK_UNDER_TEST" "$tricky_root/hooks/session-start"
+printf 'Line1: C:\\Users\\new\\tab"quote\\*?[foo]\\bar\r\nLine2:\twith\ttabs and ""quotes""\n\n' > "$tricky_root/skills/using-superpowers/SKILL.md"
+for tricky_sh in ${posix_sh:+"$posix_sh"} "$BASH" ${zsh_bin:+"$zsh_bin"}; do
+    tricky_rc=0
+    tricky_json="$(env -i PATH="" HOME="$(make_home "tricky-${tricky_sh##*/}")" CLAUDE_PLUGIN_ROOT="$tricky_root" \
+        "$tricky_sh" "$tricky_root/hooks/session-start")" || tricky_rc=$?
+    if [[ "$tricky_rc" -eq 0 ]] && node -e '
         const fs = require("fs");
         const raw = fs.readFileSync(process.argv[1], "utf8").replace(/\n+$/, "");
         const parsed = JSON.parse(process.argv[2]);
@@ -370,13 +377,11 @@ if [[ -n "$posix_sh" ]]; then
             process.exit(1);
         }
     ' "$tricky_root/skills/using-superpowers/SKILL.md" "$tricky_json"; then
-        pass "POSIX sh (${posix_sh##*/}) round-trips backslashes, quotes, tabs, globs, and CRLF in JSON"
+        pass "${tricky_sh##*/} round-trips backslashes, quotes, tabs, globs, and CRLF in JSON"
     else
-        fail "POSIX sh (${posix_sh##*/}) round-trips backslashes, quotes, tabs, globs, and CRLF in JSON"
+        fail "${tricky_sh##*/} round-trips backslashes, quotes, tabs, globs, and CRLF in JSON (rc=$tricky_rc)"
     fi
-else
-    echo "  [SKIP] run-hook.cmd/session-start sh-only tests: no non-bash/non-zsh POSIX sh found"
-fi
+done
 
 # Run by bare filename from inside hooks/ ($0 has no slash), the plugin root
 # must still resolve.
