@@ -17,7 +17,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Invoke a skill | `activate_skill` |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `invoke_agent` with `agent_name: "generalist"` (invocable via `@generalist` chat syntax — see [Subagent support](#subagent-support)) |
 | Multiple parallel dispatches | Multiple `invoke_agent` calls in the same response |
-| Task tracking ("create a todo", "mark complete") | `write_todos` (statuses: pending, in_progress, completed, cancelled, blocked) |
+| Task tracking ("create a todo", "mark complete") | `write_todos` when exposed (statuses: pending, in_progress, completed, cancelled, blocked) |
 
 ## Instructions file
 
@@ -53,7 +53,6 @@ These tools are unique to Gemini CLI:
 
 | Tool | Purpose |
 |------|---------|
-| `save_memory` (legacy) | Persist facts across sessions when `experimental.memoryV2 = false` |
 | `get_internal_docs` | Look up Gemini CLI's bundled documentation |
 | `ask_user` | Pose structured questions to the user (text / single-select / multi-select) |
 | `enter_plan_mode` / `exit_plan_mode` | Switch into and out of read-only plan mode |

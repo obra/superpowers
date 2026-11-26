@@ -145,6 +145,7 @@ const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'superpowers-frontmatt
 try {
   const fixturePlugin = path.join(fixtureRoot, '.opencode', 'plugins', 'superpowers.js');
   fs.mkdirSync(path.dirname(fixturePlugin), { recursive: true });
+  fs.writeFileSync(path.join(fixtureRoot, 'package.json'), '{"type":"module"}\n');
   fs.copyFileSync(pluginPath, fixturePlugin);
   for (const [id, { frontmatter }] of Object.entries(frontmatterFixtures)) {
     const skillDir = path.join(fixtureRoot, 'skills', id);

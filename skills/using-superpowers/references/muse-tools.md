@@ -13,7 +13,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Find files by name | `search` with `glob` |
 | Fetch a URL | `web_fetch` |
 | Search the web | `web_search` |
-| Invoke a skill | `read_file` on `skills/<name>/SKILL.md` or native skill tool |
+| Invoke a skill | `read_file` on `skills/<name>/SKILL.md` or `read_skill` |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | `subagent_spawn` with prompt filling |
 | Task tracking ("create a todo", "mark complete") | `write_todos` or `bash` task file |
 | Ask the user a question | `request_user_input` |
@@ -24,7 +24,7 @@ When a skill mentions "your instructions file", on Muse this is **`CLAUDE.md`** 
 
 ## Skill invocation
 
-Muse has native skill support via `muse skills`. To invoke a Superpowers skill, read its `SKILL.md` and follow the instructions. The bootstrap (`using-superpowers`) is injected automatically at `SessionStart` via the plugin hook — you are already following it, do not re-load it.
+Muse loads skills with `read_skill`: pass the skill's id or path as it appears in your skill catalog (or read its `SKILL.md` directly). The bootstrap (`using-superpowers`) is injected automatically at `SessionStart` via the plugin hook — you are already following it, do not re-load it.
 
 ## Subagent dispatch
 

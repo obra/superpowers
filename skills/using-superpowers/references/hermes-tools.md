@@ -14,9 +14,9 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Find files by name | `terminal` with `find` |
 | Fetch a URL / read a webpage | `web_extract(urls=[...])` |
 | Search the web | `web_search(query=...)` |
-| Dispatch a subagent | `delegate_task(goal=..., context=..., toolsets=[...], role="leaf")` |
+| Dispatch a subagent | `delegate_task(goal=..., context=..., role="leaf")` |
 | Task tracking | `todo` tool |
-| Invoke a skill | `skill_view("skill-name")` |
+| Invoke a skill | `skill_view("superpowers:skill-name")` |
 
 ## Instructions file
 
@@ -28,8 +28,8 @@ Hermes Agent has a `skills` toolset with `skill_view` and `skills_list` tools.
 To invoke a superpowers skill, use:
 
 ```
-skill_view("brainstorming")
-skill_view("test-driven-development")
+skill_view("superpowers:brainstorming")
+skill_view("superpowers:test-driven-development")
 ```
 
 If `skill_view` cannot find a superpowers skill (it may not appear in the catalog
@@ -46,7 +46,7 @@ This fallback is the same mechanism used by other harnesses without native skill
 Use `delegate_task` to spawn isolated subagents for parallel or sequential workstreams:
 
 ```
-delegate_task(goal="...", context="...", toolsets=[...], role="leaf")
+delegate_task(goal="...", context="...", role="leaf")
 ```
 
 If `delegate_task` is unavailable, do the work inline rather than inventing tool calls.

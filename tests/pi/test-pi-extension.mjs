@@ -164,3 +164,94 @@ test('pi tools reference documents pi-specific mappings', async () => {
     'mapping table documents task tracking',
   );
 });
+
+test('bootstrap message keeps one timestamp per session and refreshes on session_compact and session_start', async () => {
+  const { handlers } = await loadExtension();
+  const sessionStart = firstHandler(handlers, 'session_start');
+  const sessionCompact = firstHandler(handlers, 'session_compact');
+  const context = firstHandler(handlers, 'context');
+
+  await sessionStart({ type: 'session_start', reason: 'startup' }, {});
+
+  const messages = [
+    { role: 'user', content: [{ type: 'text', text: 'First prompt' }], timestamp: 1 },
+  ];
+  const res1 = await context({ type: 'context', messages }, {});
+  assert.equal(typeof res1.messages[0].timestamp, 'number');
+
+  await new Promise((r) => setTimeout(r, 15));
+
+  const res2 = await context({ type: 'context', messages }, {});
+  assert.equal(
+    res2.messages[0].timestamp,
+    res1.messages[0].timestamp,
+    'timestamp must stay stable across requests in one session',
+  );
+
+  await new Promise((r) => setTimeout(r, 15));
+  await sessionCompact({ type: 'session_compact', compactionEntry: {}, fromExtension: false }, {});
+
+  const resAfterCompact = await context({ type: 'context', messages }, {});
+  assert.ok(
+    resAfterCompact.messages[0].timestamp > res1.messages[0].timestamp,
+    'timestamp must refresh on session_compact',
+  );
+
+  await new Promise((r) => setTimeout(r, 15));
+  const resAfterCompact2 = await context({ type: 'context', messages }, {});
+  assert.equal(
+    resAfterCompact2.messages[0].timestamp,
+    resAfterCompact.messages[0].timestamp,
+    'post-compact timestamp must stay stable within the compacted session segment',
+  );
+
+  await new Promise((r) => setTimeout(r, 15));
+  await sessionStart({ type: 'session_start', reason: 'new' }, {});
+
+  const resAfterRestart = await context({ type: 'context', messages }, {});
+  assert.ok(
+    resAfterRestart.messages[0].timestamp > resAfterCompact.messages[0].timestamp,
+    'timestamp must refresh on session_start',
+  );
+
+  await new Promise((r) => setTimeout(r, 15));
+  const { handlers: secondHandlers } = await loadExtension();
+  await emit(secondHandlers, 'session_start', { reason: 'startup' });
+  const secondContext = firstHandler(secondHandlers, 'context');
+
+  const resSecondInstance = await secondContext({ type: 'context', messages }, {});
+  const resFirstInstanceCheck = await context({ type: 'context', messages }, {});
+  assert.equal(
+    resFirstInstanceCheck.messages[0].timestamp,
+    resAfterRestart.messages[0].timestamp,
+    'first extension instance timestamp must remain independent of second instance',
+  );
+  assert.ok(
+    resSecondInstance.messages[0].timestamp > resFirstInstanceCheck.messages[0].timestamp,
+    'independent loadExtension() instances must maintain independent timestamps',
+  );
+
+  // Verify two instances created from the same imported module also have independent state.
+  const mod = await import(pathToFileURL(extensionPath).href + `?cachebust=${Date.now()}-${Math.random()}`);
+  const handlersA = new Map();
+  const handlersB = new Map();
+  const makePi = (map) => ({
+    on(event, handler) {
+      if (!map.has(event)) map.set(event, []);
+      map.get(event).push(handler);
+    },
+  });
+  mod.default(makePi(handlersA));
+  await new Promise((r) => setTimeout(r, 15));
+  mod.default(makePi(handlersB));
+  await emit(handlersA, 'session_start', { reason: 'startup' });
+  await new Promise((r) => setTimeout(r, 15));
+  await emit(handlersB, 'session_start', { reason: 'startup' });
+
+  const resModA = await firstHandler(handlersA, 'context')({ type: 'context', messages }, {});
+  const resModB = await firstHandler(handlersB, 'context')({ type: 'context', messages }, {});
+  assert.ok(
+    resModB.messages[0].timestamp > resModA.messages[0].timestamp,
+    'same-module extension instances must not share bootstrapTimestamp state',
+  );
+});

@@ -88,6 +88,14 @@ class TestBootstrapContent:
     def test_skill_view_guidance_present(self):
         content = _bootstrap()
         assert 'skill_view("superpowers:brainstorming")' in content
+        assert 'skill_view("superpowers:skill-name")' in content
+        assert 'skill_view("superpowers:test-driven-development")' in content
+
+    def test_no_nonexistent_toolsets_or_unprefixed_skill_view(self):
+        content = _bootstrap()
+        assert "toolsets" not in content
+        assert 'skill_view("brainstorming")' not in content
+        assert 'skill_view("skill-name")' not in content
 
     def test_under_hermes_context_spill_limit(self):
         content = _bootstrap()

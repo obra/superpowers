@@ -21,6 +21,10 @@ def assert_present(text, needle, label):
     if needle not in text:
         raise AssertionError(f"{label}: missing {needle!r}")
 
+def assert_absent(text, needle, label):
+    if needle in text:
+        raise AssertionError(f"{label}: unexpectedly contains {needle!r}")
+
 assert_equal(manifest.get("name"), "superpowers", "plugin name")
 assert_equal(manifest.get("skills"), "./skills/", "skills path")
 assert_equal(
@@ -48,6 +52,31 @@ for token in [
     "WebSearch",
 ]:
     assert_present(instructions, token, "skillInstructions")
+
+for forbidden in [
+    "TodoWrite",
+    "Task tool (general-purpose)",
+]:
+    assert_absent(instructions, forbidden, "skillInstructions")
+
+for required in [
+    "create a todo",
+    "Subagent (general-purpose):",
+    "open-ended",
+    "plain assistant text",
+]:
+    assert_present(instructions, required, "skillInstructions")
+
+readme_kimi = (manifest_path.parents[1] / "docs" / "README.kimi.md").read_text(
+    encoding="utf-8"
+)
+assert_absent(
+    readme_kimi,
+    '"Ask the user" / "ask clarifying questions" -> `AskUserQuestion`',
+    "docs/README.kimi.md",
+)
+assert_present(readme_kimi, "open-ended", "docs/README.kimi.md")
+assert_present(readme_kimi, "plain assistant text", "docs/README.kimi.md")
 
 version_config = json.loads(
     (manifest_path.parents[1] / ".version-bump.json").read_text(encoding="utf-8")

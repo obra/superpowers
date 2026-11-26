@@ -1,14 +1,5 @@
 ## Subagent dispatch requires multi-agent support
 
-Add to your Codex config (`~/.codex/config.toml`):
-
-```toml
-[features]
-multi_agent = true
-```
-
-This enables the multi-agent tools that skills like
-`dispatching-parallel-agents` and `subagent-driven-development` use.
 Which tools you get depends on the multi-agent version your model
 preset selects (current presets run V2; older ones run V1). Trust your
 actual tool list over any table — including this one — when they
@@ -18,9 +9,9 @@ disagree.
   `spawn_agent {fork_turns: "none"}`; the default `"all"` copies your
   entire transcript into the child. On Codex 0.145+, role files under
   `~/.codex/agents/` attach to isolated forks via `agent_type`.
-  Full-history forks accept `model` and `reasoning_effort` overrides
-  (only `agent_type` is refused there) — isolated forks are the SDD
-  default for context hygiene, not because overrides require them.
+  Full-history forks (`fork_turns: "all"`) reject `model`,
+  `reasoning_effort`, and `agent_type` overrides — use
+  `fork_turns: "none"`.
 - **Fix rounds:** resume the implementer with `followup_task` — it
   delivers your message, triggers a turn, and transparently reloads a
   child the harness evicted. Never dispatch a fresh implementer on the
@@ -93,7 +84,17 @@ BRANCH=$(git branch --show-current)
 - `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Step 2 for how each skill uses these signals.
+
+In Codex App, a manual `git worktree add` leaves the App task bound to
+the parent checkout: its diff view, branch, and PR controls keep
+showing the parent while your commands write elsewhere. Native
+task/worktree tools may be deferred — search your tool catalog before
+deciding Step 1a does not apply. If you fall back to `git worktree add`
+anyway, tell your human partner before the first write. Codex CLI's
+`create_worktree` does not move the task either: run everything in the
+`workspaceRoot` it returns, and pass `ref` when you need a base other
+than the remote default branch.
 
 ## Codex App Finishing
 

@@ -150,14 +150,14 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 - `Subagent (general-purpose):` template → OpenCode's `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
 - "Invoke a skill" → OpenCode's native `skill` tool with the bare skill name (`superpowers:brainstorming` → `name: "brainstorming"`)
 - "Read a file" → `read`
-- "Create a file" / "edit a file" / "delete a file" → `apply_patch`
+- "Create a file" / "edit a file" / "delete a file" → `apply_patch` when available (OpenCode exposes it to most `gpt-` models); otherwise `write` to create or overwrite files, `edit` for targeted changes, and `bash` for deletion
 - "Run a shell command" → `bash`
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
 **V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
 
-- "Create a todo" → V2 has no todo tool of any kind; the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
+- "Create a todo" → `todowrite` when available (`experimental.todo`); otherwise the mapping tells the model to track the plan in a markdown file (or the harness's plan facility) instead
 - `Subagent (general-purpose):` template → OpenCode's `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
 - "Invoke a skill" → OpenCode's native `skill` tool with the bare skill id (`superpowers:brainstorming` → `id: "brainstorming"`)
 - "Read a file" → `read`
@@ -167,9 +167,9 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 - "Fetch a URL" → `webfetch`
 - "Search the web" → `websearch`
 
-In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, and continuation happens by re-invoking with `sessionID`), `apply_patch` → `patch`, and `bash` → `shell`, and it dropped the todo tool entirely. The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, continuation happens by re-invoking with `sessionID`, and the `background` parameter is present in 2.0.7 and absent in 2.3.2), `apply_patch` → `patch`, and `bash` → `shell`; 2.0.7 has no todo tool, and 2.3.2 has `todowrite` behind `experimental.todo`. The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
 
-(V1 list verified against the installed OpenCode 1.18.x CLI's tool inventory; V2 list verified against the OpenCode 2.0.4 and 2.0.7 host contracts.)
+(V1 list verified against OpenCode 1.18.x/1.19.x; V2 list verified against the OpenCode 2.0.7 and 2.3.2 host contracts.)
 
 ## Troubleshooting
 
