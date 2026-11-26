@@ -510,6 +510,49 @@ PLAN
         echo "    first line: $(head -n 1 "$qonly_out")"
     fi
 
+    # Chunked plan: the header is labelled and ends at its --- rule, so Chunk 1's
+    # heading and intro stay out of a task that sits under Chunk 2
+    cat > "$repo/plan-chunked.md" <<'PLAN'
+# Chunked Plan
+
+**Goal:** Build in chunks
+
+## Global Constraints
+
+- Keep zero dependencies
+
+---
+
+## Chunk 1: Storage
+
+Chunk 1 is pure storage with no CLI changes.
+
+### Task 1: Store
+
+STORE-BODY
+
+### Task 2: Load
+
+LOAD-BODY
+
+## Chunk 2: CLI
+
+### Task 3: Command
+
+COMMAND-BODY
+PLAN
+    local chunk_out="$TEST_ROOT/chunked-t3.md"
+    (cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-chunked.md 3 "$chunk_out" >/dev/null)
+    if grep -q '^## Global Constraints$' "$chunk_out" \
+        && grep -qF '> **From the plan header.** Its Global Constraints bind this task. The' "$chunk_out" \
+        && grep -q 'COMMAND-BODY' "$chunk_out" \
+        && ! grep -q 'Chunk 1' "$chunk_out"; then
+        pass "chunked plan: Task 3's brief has the labelled plan header and not Chunk 1"
+    else
+        fail "chunked plan: Task 3's brief has the labelled plan header and not Chunk 1"
+        sed 's/^/      /' "$chunk_out" 2>/dev/null || true
+    fi
+
     # --- Final-task boundary (#2406), nested fences, ~~~ fences, and CRLF ---
     cat > "$repo/plan-fences-final.md" <<'PLAN'
 # Fences Plan

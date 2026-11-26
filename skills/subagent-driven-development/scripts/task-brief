@@ -125,9 +125,11 @@ fi
 # ``` line) leaves the brief complete, so brief it with a warning.
 #
 # Two-pass scan (#2406, #2493): Pass 1 finds the last non-fenced valid Task
-# heading; Pass 2 prepends the plan preamble (stripping the controller-only
-# `> **For agentic workers:**` blockquote) and bounds only the final task at
-# non-fenced non-Task headings of equal or shallower depth.
+# heading; Pass 2 prepends the plan header — everything above the first
+# Task heading, ending at the header's last `---` rule when there is one,
+# under a label and without the controller-only `> **For agentic workers:**`
+# blockquote — and bounds only the final task at non-fenced non-Task
+# headings of equal or shallower depth.
 # The plan path goes through ENVIRON, not -v, which would mangle the
 # backslashes of a Windows path.
 stage_tmpout "$out"
@@ -192,10 +194,15 @@ TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
   function emit_preamble(    s, e, i) {
     s = 1
     while (s <= pre_len && pre[s] ~ /^[ \t]*$/) s++
-    e = pre_len
+    e = pre_rule ? pre_rule : pre_len
     while (e >= s && pre[e] ~ /^[ \t]*$/) e--
     if (s <= e) {
+      print "> **From the plan header.** Its Global Constraints bind this task. The"
+      print "> rest is context for the whole plan, not work for this task: your"
+      print "> requirements are the Task " n " section after the line of dashes."
+      print ""
       for (i = s; i <= e; i++) print pre[i]
+      if (pre[e] !~ /^---[ \t]*$/) { print ""; print "---" }
       print ""
     }
   }
@@ -275,6 +282,8 @@ TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
       }
       skipped_worker_quote = 0
       pre[++pre_len] = $0
+      if (!f2["in"] && $0 ~ /^#+[ \t]/) pre_heading = 1
+      if (!f2["in"] && pre_heading && $0 ~ /^---[ \t]*$/) pre_rule = pre_len
       next
     }
 
