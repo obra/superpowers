@@ -105,6 +105,31 @@ ignore_check_uses_selected_dir() {
     fi
 }
 
+# A shell variable set in one tool call is gone in the next, so an agent can
+# run the check with LOCATION unset. Unguarded, it then checks `/` and exits
+# 128 even where .worktrees/ is ignored, which an agent can read as "not
+# ignored". The check must stop with a message that says to set LOCATION.
+ignore_check_needs_location() {
+    local check repo err rc
+    check="$(skill_fence "$USING_SKILL" '#### Safety Verification (project-local directories only)')"
+    if [[ -z "$check" ]]; then
+        fail "no bash fence under Safety Verification"
+        return
+    fi
+
+    repo="$CASE_DIR/repo"
+    git init -q -b main "$repo"
+    printf '.worktrees/\n' >"$repo/.gitignore"
+    rc=0
+    err="$(cd "$repo" && env -u LOCATION bash -c "$check" 2>&1 >/dev/null)" || rc=$?
+    if [[ "$rc" -ne 0 && "$err" == *"set LOCATION to the directory you selected above"* ]]; then
+        pass "LOCATION unset: the check fails and says to set LOCATION"
+    else
+        fail "LOCATION unset: the check fails and says to set LOCATION (exit $rc)"
+        echo "    got: $err"
+    fi
+}
+
 # Run the Step 1a base check in WORKTREE, with <START_HEAD> replaced by START.
 base_check_output() {
     local check="$1"
@@ -227,6 +252,65 @@ creation_snippet_keeps_path_under_zsh() {
     else
         fail "the snippet creates the worktree, and git still runs after it (exit $rc)"
         echo "    got: $out"
+    fi
+}
+
+# Run Step 2's setup fence SETUP in the fixture directory DIR, with the poetry
+# stub in BIN first on PATH. True if the fence called the stub.
+setup_runs_poetry() {
+    local setup="$1"
+    local bin="$2"
+    local dir="$3"
+    (cd "$dir" && PATH="$bin:$PATH" POETRY_CALLS="$dir.calls" bash -c "$setup")
+    [[ -e "$dir.calls" ]]
+}
+
+# #1108: a pyproject.toml does not mean the project uses Poetry; uv, hatch,
+# pdm and setuptools projects have one too. Step 2 runs `poetry install`
+# only beside a poetry.lock or for a [tool.poetry] table. Each fixture
+# directory holds only the files named, so no other installer line in the
+# fence runs.
+poetry_install_only_for_poetry_projects() {
+    local setup bin dir
+    setup="$(skill_fence "$USING_SKILL" '## Step 2: Project Setup')"
+    if [[ -z "$setup" ]]; then
+        fail "no bash fence under Step 2: Project Setup"
+        return
+    fi
+
+    # The stub records each call's arguments in the file POETRY_CALLS names.
+    bin="$CASE_DIR/bin"
+    mkdir "$bin"
+    printf '#!/bin/sh\necho "$*" >>"$POETRY_CALLS"\n' >"$bin/poetry"
+    chmod +x "$bin/poetry"
+
+    dir="$CASE_DIR/no-poetry-table"
+    mkdir "$dir"
+    printf '[project]\nname = "app"\n' >"$dir/pyproject.toml"
+    if ! setup_runs_poetry "$setup" "$bin" "$dir"; then
+        pass "pyproject.toml with no [tool.poetry] table and no poetry.lock: poetry is not called"
+    else
+        fail "pyproject.toml with no [tool.poetry] table and no poetry.lock: poetry is not called"
+        echo "    got: poetry $(cat "$dir.calls")"
+    fi
+
+    dir="$CASE_DIR/poetry-table"
+    mkdir "$dir"
+    printf '[tool.poetry]\nname = "app"\n' >"$dir/pyproject.toml"
+    if setup_runs_poetry "$setup" "$bin" "$dir"; then
+        pass "pyproject.toml with a [tool.poetry] table: poetry is called"
+    else
+        fail "pyproject.toml with a [tool.poetry] table: poetry is called"
+    fi
+
+    dir="$CASE_DIR/poetry-lock"
+    mkdir "$dir"
+    printf '[project]\nname = "app"\n' >"$dir/pyproject.toml"
+    : >"$dir/poetry.lock"
+    if setup_runs_poetry "$setup" "$bin" "$dir"; then
+        pass "poetry.lock beside a pyproject.toml with no [tool.poetry] table: poetry is called"
+    else
+        fail "poetry.lock beside a pyproject.toml with no [tool.poetry] table: poetry is called"
     fi
 }
 
@@ -452,8 +536,10 @@ removal_refuses_untracked() {
 echo "=== Test: worktree and finishing mechanics ==="
 
 run_case ignore_check_uses_selected_dir
+run_case ignore_check_needs_location
 run_case base_check_states
 run_case creation_snippet_keeps_path_under_zsh
+run_case poetry_install_only_for_poetry_projects
 run_case listing_shows_ignored_and_untracked
 run_case removal_waits_for_ignored_files
 run_case removal_refuses_untracked

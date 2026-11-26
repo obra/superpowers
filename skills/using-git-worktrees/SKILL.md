@@ -102,6 +102,7 @@ Follow this priority order. Explicit user preference always beats observed files
 **MUST verify directory is ignored before creating worktree:**
 
 ```bash
+: "${LOCATION:?set LOCATION to the directory you selected above}"
 git check-ignore -q "${LOCATION%/}/"
 ```
 
