@@ -138,7 +138,6 @@ rc=0
 TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
   function stderr(msg) {
     print msg | "cat >&2"
-    used_stderr = 1
   }
 
   function fence_step(line, f, line_no,    lead, rest, flen, info) {
