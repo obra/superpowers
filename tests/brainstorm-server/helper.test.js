@@ -334,6 +334,16 @@ test('data-multiselect toggles aria-pressed independently', () => {
   assert.strictEqual(c.divB.getAttribute('aria-pressed'), 'true');
 });
 
+test('picking another single-select choice deselects a [data-choice] button that is not an .option or .card', () => {
+  const c = makeChoiceEnv();
+  c.boot();
+  c.buttonChoice.click();
+  assert.strictEqual(c.buttonChoice.getAttribute('aria-pressed'), 'true');
+  c.divA.click();
+  assert.strictEqual(c.buttonChoice.classList.contains('selected'), false);
+  assert.strictEqual(c.buttonChoice.getAttribute('aria-pressed'), 'false');
+});
+
 test('ignores keydown on native controls and editable descendants', () => {
   const c = makeChoiceEnv();
   c.boot();
