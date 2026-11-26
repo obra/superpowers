@@ -761,8 +761,8 @@ printf '%s\n' "$fb_ws"
 EOF
     printf '### Task 1: Cached\n\nCACHED-BODY\n' > "$fb_ws/task-1-brief.md"
     rc=0
-    fb_out="$(cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1)" || rc=$?
-    if [[ "$rc" -eq 0 && "$fb_out" == "wrote $fb_ws/task-1-brief.md: 3 lines" ]]; then
+    fb_out="$(cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1 2>"$TEST_ROOT/fb.err")" || rc=$?
+    if [[ "$rc" -eq 0 && "$fb_out" == "wrote $fb_ws/task-1-brief.md: 3 lines" ]] && grep -q 'serving cached brief' "$TEST_ROOT/fb.err"; then
         pass "task-brief returns existing cached brief when plan is deleted (#2630)"
     else
         fail "task-brief returns existing cached brief when plan is deleted (#2630)"
@@ -770,8 +770,8 @@ EOF
     fi
 
     rc=0
-    fb_out="$(cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1 "$fb_explicit")" || rc=$?
-    if [[ "$rc" -eq 0 && "$fb_out" == "wrote $fb_explicit: 3 lines" ]] && grep -q 'CACHED-BODY' "$fb_explicit"; then
+    fb_out="$(cd "$repo" && bash "$fb_bin/task-brief" deleted-plan.md 1 "$fb_explicit" 2>"$TEST_ROOT/fb-explicit.err")" || rc=$?
+    if [[ "$rc" -eq 0 && "$fb_out" == "wrote $fb_explicit: 3 lines" ]] && grep -q 'CACHED-BODY' "$fb_explicit" && grep -q 'serving cached brief' "$TEST_ROOT/fb-explicit.err"; then
         pass "task-brief copies cached brief to explicit OUTFILE when plan is deleted"
     else
         fail "task-brief copies cached brief to explicit OUTFILE when plan is deleted"
