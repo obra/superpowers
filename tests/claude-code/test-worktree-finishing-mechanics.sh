@@ -9,6 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 USING_SKILL="$REPO_ROOT/skills/using-git-worktrees/SKILL.md"
+FINISHING_SKILL="$REPO_ROOT/skills/finishing-a-development-branch/SKILL.md"
 
 FAILURES=0
 TEST_ROOT="$(mktemp -d)"
@@ -229,11 +230,146 @@ creation_snippet_keeps_path_under_zsh() {
     fi
 }
 
+# The two Step 2 listings in finishing-a-development-branch, by the line that
+# leads into each: untracked and changed files, then ignored files.
+UNTRACKED_LISTING='If `GIT_DIR != GIT_COMMON`, list files that exist only in this worktree:'
+IGNORED_LISTING='That listing leaves out ignored files'
+# What the skill leaves out of the ignored listing: Superpowers' own
+# bookkeeping files, and dependency and build caches, each shown as one entry.
+IGNORED_LEFT_OUT='^\.superpowers/sdd/\.gitignore$|^\.superpowers/brainstorm/\.last-(port|token)$|(^|/)(node_modules|\.venv|target|dist|build|__pycache__)/$'
+
+# Make REPO with one commit whose .gitignore holds IGNORES, and a linked
+# worktree for branch feat at REPO/.worktrees/feat.
+finishing_fixture() {
+    local repo="$1"
+    local ignores="$2"
+    git init -q -b main "$repo"
+    # A global excludes file must not change what this repository ignores.
+    git -C "$repo" config core.excludesFile /dev/null
+    printf '%s' "$ignores" >"$repo/.gitignore"
+    git -C "$repo" add .gitignore
+    fixture_commit "$repo" initial
+    git -C "$repo" worktree add -q -b feat "$repo/.worktrees/feat"
+}
+
+# Run both Step 2 listings in the worktree WT and print the files they name,
+# one per line, read the way the skill says: every path the first listing
+# prints; from the ignored listing, each `!!` entry outside .superpowers/ and
+# each path its second command prints, less IGNORED_LEFT_OUT.
+step2_listed_files() {
+    local wt="$1"
+    local untracked ignored
+    untracked="$(skill_fence "$FINISHING_SKILL" "$UNTRACKED_LISTING")"
+    ignored="$(skill_fence "$FINISHING_SKILL" "$IGNORED_LISTING")"
+    (cd "$wt" && bash -c "$untracked") | sed -n 's/^.. //p'
+    (cd "$wt" && bash -c "$ignored") | awk '
+        /^!! \.superpowers\// { next }
+        /^!! / { print substr($0, 4); next }
+        /^\.superpowers\// { print }
+    ' | { grep -v -E "$IGNORED_LEFT_OUT" || true; }
+}
+
+# Pass for each PATH that is a line of LISTED, fail for each that is not.
+# LABEL names the fixture.
+check_listed() {
+    local label="$1"
+    local listed="$2"
+    local path
+    shift 2
+    for path in "$@"; do
+        if has_line "$listed" "$path"; then
+            pass "$label: lists $path"
+        else
+            fail "$label: lists $path"
+            echo "    got: $(printf '%s' "$listed" | tr '\n' ' ')"
+        fi
+    done
+}
+
+# Pass for each NAME that no line of LISTED contains, fail for each that one
+# does. LABEL names the fixture.
+check_left_out() {
+    local label="$1"
+    local listed="$2"
+    local name
+    shift 2
+    for name in "$@"; do
+        if [[ "$listed" != *"$name"* ]]; then
+            pass "$label: leaves out $name"
+        else
+            fail "$label: leaves out $name"
+            echo "    got: $(printf '%s' "$listed" | tr '\n' ' ')"
+        fi
+    done
+}
+
+# Put in the worktree WT: untracked NOTES.md and build/out.txt, ignored
+# .env.local and node_modules/x, a plan workspace, and the .gitignore that
+# sdd-workspace writes beside it.
+add_step2_files() {
+    local wt="$1"
+    mkdir -p "$wt/node_modules" "$wt/build" "$wt/.superpowers/sdd/plan-a"
+    printf 'notes\n' >"$wt/NOTES.md"
+    printf 'SECRET=1\n' >"$wt/.env.local"
+    printf 'dependency\n' >"$wt/node_modules/x"
+    printf 'output\n' >"$wt/build/out.txt"
+    printf '# SDD ledger\n' >"$wt/.superpowers/sdd/plan-a/progress.md"
+    printf '*\n' >"$wt/.superpowers/sdd/.gitignore"
+}
+
+# #2207: `git status` without --ignored does not show ignored files, which
+# also exist only in the worktree. Together the two Step 2 listings name each
+# file the human partner has to decide about, including an unfinished plan's
+# workspace, and leave out caches and Superpowers' own bookkeeping. A root
+# .gitignore that ignores .superpowers/ makes `git status` show it as one
+# entry; the second command names the files inside it.
+listing_shows_ignored_and_untracked() {
+    local marker repo wt listed label
+    for marker in "$UNTRACKED_LISTING" "$IGNORED_LISTING"; do
+        if [[ -z "$(skill_fence "$FINISHING_SKILL" "$marker")" ]]; then
+            fail "no bash fence after \"$marker\""
+        fi
+    done
+
+    label="sdd workspace ignores itself"
+    repo="$CASE_DIR/sdd-ignores-itself"
+    finishing_fixture "$repo" $'.env.local\nnode_modules/\n.worktrees/\n'
+    wt="$repo/.worktrees/feat"
+    add_step2_files "$wt"
+    if ! listed="$(step2_listed_files "$wt")"; then
+        fail "$label: the Step 2 listings run"
+        return
+    fi
+    check_listed "$label" "$listed" \
+        NOTES.md .env.local build/out.txt .superpowers/sdd/plan-a/progress.md
+    check_left_out "$label" "$listed" node_modules .superpowers/sdd/.gitignore
+
+    label=".superpowers/ ignored at the root"
+    repo="$CASE_DIR/superpowers-ignored-at-root"
+    finishing_fixture "$repo" $'.env.local\nnode_modules/\n.worktrees/\n.superpowers/\n'
+    wt="$repo/.worktrees/feat"
+    add_step2_files "$wt"
+    mkdir -p "$wt/.superpowers/brainstorm/1-2/content"
+    printf '52341\n' >"$wt/.superpowers/brainstorm/.last-port"
+    printf 'token\n' >"$wt/.superpowers/brainstorm/.last-token"
+    printf '<p>mockup</p>\n' >"$wt/.superpowers/brainstorm/1-2/content/mockup.html"
+    if ! listed="$(step2_listed_files "$wt")"; then
+        fail "$label: the Step 2 listings run"
+        return
+    fi
+    check_listed "$label" "$listed" \
+        NOTES.md .env.local build/out.txt .superpowers/sdd/plan-a/progress.md \
+        .superpowers/brainstorm/1-2/content/mockup.html
+    check_left_out "$label" "$listed" node_modules .superpowers/sdd/.gitignore \
+        .superpowers/brainstorm/.last-port .superpowers/brainstorm/.last-token
+}
+
 echo "=== Test: worktree and finishing mechanics ==="
 
 run_case ignore_check_uses_selected_dir
 run_case base_check_states
 run_case creation_snippet_keeps_path_under_zsh
+run_case listing_shows_ignored_and_untracked
 
 echo ""
 if [[ "$FAILURES" -gt 0 ]]; then

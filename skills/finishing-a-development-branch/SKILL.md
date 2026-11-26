@@ -60,6 +60,25 @@ If it prints anything, the worktree cannot be cleaned up until your human
 partner decides what happens to those files (see Step 6). Tests and the
 chosen integration can still go ahead.
 
+That listing leaves out ignored files, which exist only in this worktree
+too, and Step 6's `git worktree remove` deletes them without refusing.
+From the top of the worktree, list them as well:
+
+```bash
+git status --porcelain --ignored=matching
+git ls-files --others --ignored --exclude-standard -- .superpowers
+```
+
+Each `!!` entry counts as a listed file. Under `.superpowers/`, go by the
+second command instead: it names each ignored file there; the first can
+show the whole directory as one entry. Of these, leave out only
+`.superpowers/sdd/.gitignore`, `.superpowers/brainstorm/.last-port`,
+`.superpowers/brainstorm/.last-token`, and dependency and build caches
+such as `node_modules/`, `.venv/`, `target/`, `dist/`, `build/` and
+`__pycache__/`. When unsure whether an entry is a cache, keep it listed.
+A plan workspace still present in `.superpowers/sdd/` stays listed: it is
+an unfinished run.
+
 This determines which menu to show and how cleanup works:
 
 | State | Menu | Cleanup |
