@@ -207,7 +207,8 @@ and fix-round diffs need it.
 
 - **Task brief:** before dispatching an implementer, run this skill's
   `bash scripts/task-brief PLAN_FILE N` by its absolute path, from the
-  working tree you're executing in — it extracts the task's full text to a
+  working tree you're executing in — it writes the plan header (whose
+  Global Constraints bind every task) and the task's full text to a
   uniquely named file and prints the path. Compose the dispatch so the
   brief stays the single source of
   requirements. Your dispatch should contain: (1) one line on where this
@@ -266,7 +267,7 @@ needed.
 - Hand the reviewer its diff as a file: run this skill's
   `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from
   the working tree you're executing in, and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
+  it prints (or, without bash: `git log`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
   the commit list, stat summary, and full diff with context in one Read

@@ -13,7 +13,9 @@ Subagent (general-purpose):
     ## Task Description
 
     Read your task brief first: [BRIEF_FILE]
-    It contains the full task text from the plan.
+    It opens with the plan header, whose Global Constraints bind you; the
+    rest of the header is background. Your task is the Task section after
+    the line of dashes, with its full text from the plan.
 
     ## Context
 

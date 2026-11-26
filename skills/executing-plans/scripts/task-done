@@ -23,9 +23,11 @@ sdd="$(cd "$(dirname "$0")/../../subagent-driven-development/scripts" && pwd)"
 # The repository the workspace and ledger belong to (see sdd-repo); BASE and
 # HEAD are read there, not in the bare cwd.
 repo=$("${BASH:-bash}" "$sdd/sdd-repo" --with-commit)
-git -C "$repo" rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+git -C "$repo" rev-parse --verify --quiet "${base}^{commit}" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 
-dir=$("$sdd/sdd-workspace" "$plan")
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040, #2642).
+dir=$("${BASH:-bash}" "$sdd/sdd-workspace" "$plan")
 log="$dir/task-${n}-tests.log"
 ledger="$dir/progress.md"
 
@@ -48,8 +50,12 @@ if [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
-last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
+if grep -q '[^[:space:]]' "$log"; then
+  result="exit 0, log: task-${n}-tests.log"
+else
+  result="exit 0 (no output), log: task-${n}-tests.log"
+fi
 [ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
-line="Task $n: complete (commits $(git -C "$repo" rev-parse --short=7 "$base")..$(git -C "$repo" rev-parse --short=7 HEAD), tests: $cmd → $last)"
+line="Task $n: complete (commits $(git -C "$repo" rev-parse --short=7 "$base")..$(git -C "$repo" rev-parse --short=7 HEAD), tests: $cmd → $result)"
 printf '%s\n' "$line" >> "$ledger"
 echo "ledger: $line"

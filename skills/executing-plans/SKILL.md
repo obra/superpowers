@@ -137,8 +137,8 @@ The workspace and ledger are shared with superpowers:subagent-driven-development
 and the new one resumes from the same ledger.
 
 - Each plan owns a workspace: at skill start, run
-  `../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` by its
-  absolute path, from the working tree you're executing in — it
+  `bash ../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` by
+  its absolute path, from the working tree you're executing in — it
   prints the plan's git-ignored directory
   (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to every
   artifact for THIS plan: ledger, briefs, review packages. Another plan's
@@ -185,8 +185,8 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-- Run this skill's `scripts/task-start PLAN_FILE N` by its absolute path,
-  from the working tree you're executing in. It prints the brief
+- Run this skill's `bash scripts/task-start PLAN_FILE N` by its absolute
+  path, from the working tree you're executing in. It prints the brief
   path and BASE (the commit the task's range is cut from) in one call.
   Read the brief for every task, including ones you remember from setup:
   what you remember is a summary, the brief has the exact values,
@@ -228,7 +228,7 @@ in this session — not inferred from the diff looking right:
 - Every test the brief names exists and ran in this task, and you read
   the output.
 - The final test run for the task passed — `task-done` is that run, and
-  it writes the command and result into the ledger line.
+  it writes the command, exit status, and log filename into the ledger line.
 - Every `Expected:` line in the brief was compared against real output.
 - Every deviation from the brief has a `Ruling:` line in the ledger.
 
@@ -237,19 +237,28 @@ the claim. If any item is missing, the task is not complete: finish it.
 
 ### 4. Complete the task
 
-Run this skill's `scripts/task-done PLAN_FILE N BASE -- <test command>`
+Run this skill's `bash scripts/task-done PLAN_FILE N BASE -- <test command>`
 by its absolute path, from the working tree you're executing in, with the test command the brief names for the whole task. It runs the
 tests, keeps the full output in the workspace, prints the tail, and — only
 if they pass — appends the completion line to the ledger:
 
-`Task <N>: complete (commits <base7>..<head7>, tests: <command> → <result>)`
+`Task <N>: complete (commits <base7>..<head7>, tests: <command> → exit 0, log: task-<N>-tests.log)`
 
 A failing run records nothing; the task is not complete. When it records,
 take the next task.
 
 ## Final Review
 
-Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
+Before the review package, finish the plan's own closing sections. The
+last task's brief ends at the first plan-level heading after that task
+(`task-brief` names it when it stops), so nothing from that heading to
+the end of the plan is in any brief. Read those sections in the plan and
+run every check they name, comparing each `Expected:` line; a check that
+fails is fixed like a failing step before you build the package. Notes
+the author wrote about writing the plan (self-review, execution handoff)
+are not steps.
+
+Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
 by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.
 `git merge-base main HEAD`) and review from the file it prints.
 

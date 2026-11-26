@@ -90,7 +90,7 @@ PLAN
     out="$(cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 1 "$base" -- sh -c 'echo "Ran 3 tests"; echo OK')"
     rc=$?
     local ledger="$repo/.superpowers/sdd/plan/progress.md"
-    local expected="Task 1: complete (commits ${base:0:7}..${head:0:7}, tests: sh -c 'echo \"Ran 3 tests\"; echo OK' → OK)"
+    local expected="Task 1: complete (commits ${base:0:7}..${head:0:7}, tests: sh -c 'echo \"Ran 3 tests\"; echo OK' → exit 0, log: task-1-tests.log)"
     if [[ -f "$ledger" ]] && grep -qF "$expected" "$ledger"; then
         pass "task-done appends the completion line with commit range and test result"
     else
@@ -146,13 +146,87 @@ PLAN
         fail "task-done exits 0 when a passing test command prints nothing (got rc=$rc)"
         echo "    got: $out"
     fi
-    local expected2="Task 2: complete (commits ${head:0:7}..${head2:0:7}, tests: true → (no output))"
+    local expected2="Task 2: complete (commits ${head:0:7}..${head2:0:7}, tests: true → exit 0 (no output), log: task-2-tests.log)"
     if [[ -f "$ledger" ]] && grep -qF "$expected2" "$ledger"; then
         pass "task-done records a passing task that printed no output"
     else
         fail "task-done records a passing task that printed no output"
         echo "    expected: $expected2"
         echo "    ledger:"; sed 's/^/      /' "$ledger" 2>/dev/null || echo "      (missing)"
+    fi
+
+    # --- task-done: rejects non-commit BASE (e.g. tree SHA) ---
+    local ledger_before
+    ledger_before="$(cat "$ledger")"
+    rc=0
+    (cd "$repo" && "$EP_SCRIPTS/task-done" plan.md 1 "HEAD^{tree}" -- true >/dev/null 2>&1) || rc=$?
+    if [[ "$rc" -eq 2 && "$(cat "$ledger")" == "$ledger_before" ]]; then
+        pass "task-done rejects HEAD^{tree} as BASE with exit 2"
+    else
+        fail "task-done rejects HEAD^{tree} as BASE with exit 2 (rc=$rc)"
+    fi
+
+    # --- stripped execute bits (#2642): bash invocation survives chmod -x ---
+    local stripped="$TEST_ROOT/stripped"
+    mkdir -p "$stripped/executing-plans/scripts" "$stripped/subagent-driven-development/scripts"
+    cp "$EP_SCRIPTS"/* "$stripped/executing-plans/scripts/"
+    cp "$REPO_ROOT/skills/subagent-driven-development/scripts"/* "$stripped/subagent-driven-development/scripts/"
+    chmod -x "$stripped/executing-plans/scripts"/* "$stripped/subagent-driven-development/scripts"/*
+
+    git init -q -b main "$TEST_ROOT/noexec-repo"
+    local noexec_repo
+    noexec_repo="$(cd "$TEST_ROOT/noexec-repo" && git rev-parse --show-toplevel)"
+    noexec_repo="$(cd "$noexec_repo" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)"
+    cp "$repo/plan.md" "$noexec_repo/plan.md"
+    ( cd "$noexec_repo" && git add plan.md && git "${git_id[@]}" commit -qm fixture )
+    local noexec_base
+    noexec_base="$(cd "$noexec_repo" && git rev-parse HEAD)"
+
+    local noexec_start_out="" noexec_start_rc=0
+    noexec_start_out="$(cd "$noexec_repo" && bash "$stripped/executing-plans/scripts/task-start" plan.md 1 2>&1)" || noexec_start_rc=$?
+    if [[ "$noexec_start_rc" -eq 0 && -s "$noexec_repo/.superpowers/sdd/plan/task-1-brief.md" && "$noexec_start_out" == *"base: $noexec_base"* ]]; then
+        pass "bash task-start succeeds when all scripts have execute bits stripped"
+    else
+        fail "bash task-start succeeds when all scripts have execute bits stripped (rc=$noexec_start_rc)"
+        echo "    out: $noexec_start_out"
+    fi
+
+    ( cd "$noexec_repo" && echo z > work.txt && git add work.txt && git "${git_id[@]}" commit -qm "task 1" )
+    local noexec_head
+    noexec_head="$(cd "$noexec_repo" && git rev-parse HEAD)"
+    local noexec_done_out="" noexec_done_rc=0
+    noexec_done_out="$(cd "$noexec_repo" && bash "$stripped/executing-plans/scripts/task-done" plan.md 1 "$noexec_base" -- echo noexec-ok 2>&1)" || noexec_done_rc=$?
+    local noexec_ledger="$noexec_repo/.superpowers/sdd/plan/progress.md"
+    local noexec_expected="Task 1: complete (commits ${noexec_base:0:7}..${noexec_head:0:7}, tests: echo noexec-ok → exit 0, log: task-1-tests.log)"
+    if [[ "$noexec_done_rc" -eq 0 && -f "$noexec_ledger" ]] && grep -qF "$noexec_expected" "$noexec_ledger"; then
+        pass "bash task-done succeeds when all scripts have execute bits stripped"
+    else
+        fail "bash task-done succeeds when all scripts have execute bits stripped (rc=$noexec_done_rc)"
+        echo "    out: $noexec_done_out"
+        echo "    ledger:"; sed 's/^/      /' "$noexec_ledger" 2>/dev/null || echo "      (missing)"
+    fi
+
+    # --- deleted plan resilience (#2630): task-done succeeds for cached task ---
+    git init -q -b main "$TEST_ROOT/deleted-repo"
+    local del_repo
+    del_repo="$(cd "$TEST_ROOT/deleted-repo" && git rev-parse --show-toplevel)"
+    del_repo="$(cd "$del_repo" && if command -v cygpath >/dev/null 2>&1; then cygpath -m "$PWD"; else pwd; fi)"
+    mkdir -p "$del_repo/docs/plans"
+    cp "$repo/plan.md" "$del_repo/docs/plans/gone.md"
+    ( cd "$del_repo" && git add docs/plans/gone.md && git "${git_id[@]}" commit -qm "add plan" )
+    local del_base del_head del_rc=0
+    del_base="$(cd "$del_repo" && git rev-parse HEAD)"
+    ( cd "$del_repo" && "$EP_SCRIPTS/task-start" docs/plans/gone.md 1 >/dev/null )
+    ( cd "$del_repo" && git rm -q docs/plans/gone.md && git "${git_id[@]}" commit -qm "delete plan" )
+    del_head="$(cd "$del_repo" && git rev-parse HEAD)"
+    ( cd "$del_repo" && "$EP_SCRIPTS/task-done" docs/plans/gone.md 1 "$del_base" -- echo gone-ok >/dev/null 2>&1 ) || del_rc=$?
+    local del_ledger="$del_repo/.superpowers/sdd/gone/progress.md"
+    local del_expected="Task 1: complete (commits ${del_base:0:7}..${del_head:0:7}, tests: echo gone-ok → exit 0, log: task-1-tests.log)"
+    if [[ "$del_rc" -eq 0 && -f "$del_ledger" ]] && grep -qF "$del_expected" "$del_ledger"; then
+        pass "task-done succeeds after plan is deleted when task-start cached brief (#2630)"
+    else
+        fail "task-done succeeds after plan is deleted when task-start cached brief (#2630) (rc=$del_rc)"
+        echo "    ledger:"; sed 's/^/      /' "$del_ledger" 2>/dev/null || echo "      (missing)"
     fi
 
     # --- no usable repository: every helper stops with one message (#2242, #2429) ---

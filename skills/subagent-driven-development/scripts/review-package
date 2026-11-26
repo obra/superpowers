@@ -26,14 +26,20 @@ fi
 plan=$1
 base=$2
 head=$3
-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
 # Invoke via bash rather than direct exec: some extractors (Python zipfile)
 # strip Unix exec bits when unpacking marketplace packages (#2040).
 repo=$("${BASH:-bash}" "$here/sdd-repo" --with-commit)
 
-git -C "$repo" rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git -C "$repo" rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+# Resolve/validate deleted plans via sdd-workspace before range guards, even
+# when an explicit OUTFILE is passed (#2630).
+dir=""
+if [ ! -f "$plan" ]; then
+  dir=$("${BASH:-bash}" "$here/sdd-workspace" "$plan")
+fi
+
+git -C "$repo" rev-parse --verify --quiet "${base}^{commit}" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+git -C "$repo" rev-parse --verify --quiet "${head}^{commit}" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
 
 # Range guards (exit 3): a wrong-branch HEAD yields a range that is empty or
 # not rooted at BASE; either would silently produce a bogus review package.
@@ -51,7 +57,7 @@ fi
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Commits"
-  git -C "$repo" log --oneline "${base}..${head}"
+  git -C "$repo" log --format=medium "${base}..${head}"
   echo
   echo "## Files changed"
   git -C "$repo" diff --stat "${base}..${head}"

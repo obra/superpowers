@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Extract one task's full text from an implementation plan into a file the
-# implementer reads in one call, so the task text never has to be pasted
-# through the controller's context.
+# Extract one task's full text from an implementation plan, preceded by the
+# plan header, into a file the implementer reads in one call, so the task
+# text never has to be pasted through the controller's context.
 #
 # Usage: task-brief [-C DIR] PLAN_FILE TASK_NUMBER [OUTFILE]
 # Default OUTFILE: <repo-root>/.superpowers/sdd/<plan-basename>/task-<N>-brief.md
@@ -23,7 +23,78 @@ fi
 
 plan=$1
 n=$2
-[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+
+tmpout=""
+cleanup_tmpout() {
+  if [ -n "$tmpout" ]; then
+    rm -f -- "$tmpout"
+  fi
+}
+trap cleanup_tmpout EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+stage_tmpout() {
+  local target=$1 out_dir=""
+  if [ -d "$target" ]; then
+    echo "task-brief: output path is a directory: $target" >&2
+    exit 2
+  fi
+  if [ -L "$target" ] || { [ -e "$target" ] && [ ! -f "$target" ]; }; then
+    echo "task-brief: output path is a symlink or special file: $target" >&2
+    exit 2
+  fi
+  out_dir=$(dirname -- "$target")
+  case "$out_dir" in
+    -*) out_dir="./$out_dir" ;;
+  esac
+  tmpout=$(mktemp "${out_dir%/}/.task-brief.XXXXXX")
+}
+
+commit_tmpout() {
+  local target=$1
+  mv -f -- "$tmpout" "$target"
+  tmpout=""
+}
+
+if [ ! -f "$plan" ]; then
+  # Invoke via bash rather than direct exec: some extractors (Python zipfile)
+  # strip Unix exec bits when unpacking marketplace packages (#2040).
+  # If the plan was already claimed and its brief exists in the workspace
+  # (#2630), serve the cached brief even after the plan file is deleted.
+  if dir=$("${BASH:-bash}" "$here/sdd-workspace" "$plan" 2>/dev/null); then
+    cached="$dir/task-${n}-brief.md"
+    if [ -s "$cached" ]; then
+      echo "task-brief: warning: $plan not found; serving cached brief" >&2
+      if [ $# -eq 3 ]; then
+        out=$3
+        if [ -d "$out" ]; then
+          echo "task-brief: output path is a directory: $out" >&2
+          exit 2
+        fi
+        if ! [ "$out" -ef "$cached" ]; then
+          stage_tmpout "$out"
+          cp -f -- "$cached" "$tmpout"
+          commit_tmpout "$out"
+        fi
+      else
+        out=$cached
+      fi
+      lines=$(wc -l < "$cached" | tr -d ' ')
+      echo "wrote ${out}: ${lines} lines"
+      exit 0
+    fi
+    echo "no such plan file: $plan" >&2
+    exit 2
+  fi
+  ws_rc=0
+  "${BASH:-bash}" "$here/sdd-workspace" "$plan" >/dev/null || ws_rc=$?
+  if [ "$ws_rc" -ne 0 ]; then
+    exit "$ws_rc"
+  fi
+  echo "no such plan file: $plan" >&2
+  exit 2
+fi
 
 if [ $# -eq 3 ]; then
   out=$3
@@ -56,53 +127,206 @@ fi
 # When it hides the requested heading itself, say so before the not-found
 # error. A stray fence that hides no Task heading (real plans end with a lone
 # ``` line) leaves the brief complete, so brief it with a warning.
+#
+# Two-pass scan (#2406, #2493): Pass 1 finds the last non-fenced valid Task
+# heading; Pass 2 prepends the plan header — everything above the first
+# Task heading, ending at the header's last `---` rule when there is one,
+# under a label and without the controller-only `> **For agentic workers:**`
+# blockquote — and bounds only the final task at non-fenced non-Task
+# headings of equal or shallower depth.
 # The plan path goes through ENVIRON, not -v, which would mangle the
 # backslashes of a Windows path.
+stage_tmpout "$out"
+
 rc=0
 TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
-  /^```/ { infence = !infence; if (infence) { fence_line = NR; hidden = 0 } }
-  infence && /^#+[ \t]+Task[ \t]/ { hidden = 1 }
-  !infence && /^#+[ \t]+Task[ \t]/ {
-    id = $0
-    sub(/^#+[ \t]+Task[ \t]+/, "", id)
-    if (match(id, /^[A-Za-z0-9]+(\.[A-Za-z0-9]+)*/) && substr(id, 1, RLENGTH) ~ /[0-9]/) {
-      tasks++
-      id = substr(id, 1, RLENGTH)
-      match($0, /^#+/)
-      subtask = intask && RLENGTH > level && substr(id, 1, length(n)) == n \
-        && substr(id, length(n) + 1, 1) ~ /[A-Za-z.]/
-      if (!subtask) {
-        intask = (id == n)
-        level = RLENGTH
+  function stderr(msg) {
+    print msg | "cat >&2"
+  }
+
+  function fence_step(line, f, line_no,    lead, rest, flen, info) {
+    match(line, /^ */)
+    lead = RLENGTH
+    if (!f["in"]) {
+      if (lead <= 3) {
+        rest = substr(line, lead + 1)
+        if (match(rest, /^```+/)) {
+          flen = RLENGTH
+          info = substr(rest, flen + 1)
+          if (index(info, "`") == 0) {
+            f["in"] = 1
+            f["ch"] = "`"
+            f["len"] = flen
+            f["line"] = line_no
+            f["hidden"] = 0
+          }
+        } else if (match(rest, /^~~~+/)) {
+          flen = RLENGTH
+          f["in"] = 1
+          f["ch"] = "~"
+          f["len"] = flen
+          f["line"] = line_no
+          f["hidden"] = 0
+        }
+      }
+    } else if (lead <= 3) {
+      rest = substr(line, lead + 1)
+      if (f["ch"] == "`" && rest ~ /^```+[ \t]*$/) {
+        match(rest, /^```+/)
+        if (RLENGTH >= f["len"]) f["in"] = 0
+      } else if (f["ch"] == "~" && rest ~ /^~~~+[ \t]*$/) {
+        match(rest, /^~~~+/)
+        if (RLENGTH >= f["len"]) f["in"] = 0
       }
     }
+    if (f["in"] && line ~ /^#+[ \t]+Task[ \t]/) {
+      f["hidden"] = 1
+    }
   }
-  !infence && /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5 { shaped_heading[++shaped] = $0 }
-  intask { print; found = 1 }
+
+  function task_heading_id(line,    id) {
+    if (line !~ /^#+[ \t]+Task[ \t]/) return ""
+    id = line
+    sub(/^#+[ \t]+Task[ \t]+/, "", id)
+    if (match(id, /^[A-Za-z0-9]+(\.[A-Za-z0-9]+)*/) && substr(id, 1, RLENGTH) ~ /[0-9]/) {
+      return substr(id, 1, RLENGTH)
+    }
+    return ""
+  }
+
+  function emit_preamble(    s, e, i) {
+    s = 1
+    while (s <= pre_len && pre[s] ~ /^[ \t]*$/) s++
+    e = pre_rule ? pre_rule : pre_len
+    while (e >= s && pre[e] ~ /^[ \t]*$/) e--
+    if (s <= e) {
+      print "> **From the plan header.** Its Global Constraints bind this task. The"
+      print "> rest is context for the whole plan, not work for this task: your"
+      print "> requirements are the Task " n " section after the line of dashes."
+      print ""
+      for (i = s; i <= e; i++) print pre[i]
+      if (pre[e] !~ /^---[ \t]*$/) { print ""; print "---" }
+      print ""
+    }
+  }
+
+  BEGIN {
+    f1["in"] = 0
+    f2["in"] = 0
+    f2["hidden"] = 0
+    f2["line"] = 0
+  }
+
+  # Pass 1: record line number of the last non-fenced valid Task heading.
+  NR == FNR {
+    sub(/\r$/, "")
+    fence_step($0, f1, FNR)
+    if (!f1["in"] && task_heading_id($0) != "") {
+      last_task_line = FNR
+    }
+    next
+  }
+
+  # Pass 2: buffer preamble, extract requested task, bound final task.
+  {
+    sub(/\r$/, "")
+    fence_step($0, f2, FNR)
+
+    if (!f2["in"]) {
+      tid = task_heading_id($0)
+      if (tid != "") {
+        seen_task = 1
+        tasks++
+        match($0, /^#+/)
+        hlevel = RLENGTH
+        subtask = intask && hlevel > level && substr(tid, 1, length(n)) == n \
+          && substr(tid, length(n) + 1, 1) ~ /[A-Za-z.]/
+        if (!subtask) {
+          intask = (tid == n)
+          level = hlevel
+          if (intask) {
+            task_start_line = FNR
+            if (!preamble_emitted) {
+              emit_preamble()
+              preamble_emitted = 1
+            }
+          }
+        }
+      } else {
+        if ($0 ~ /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5) {
+          shaped_heading[++shaped] = $0
+        }
+        if (intask && (task_start_line == last_task_line || FNR > last_task_line) && $0 ~ /^#+[ \t]+[^ \t]/) {
+          match($0, /^#+/)
+          if (RLENGTH <= level) {
+            stderr("task-brief: Task " n " is the plan'\''s last task; its brief ends before the plan-level heading \"" $0 "\", and the plan from that heading on is in no brief")
+            intask = 0
+            stopped_at_footer = 1
+          }
+        }
+      }
+    }
+
+    if (!seen_task) {
+      if (!f2["in"] && $0 ~ /^>[ \t]*\*\*For agentic workers:\*\*/) {
+        in_worker_quote = 1
+        skipped_worker_quote = 1
+        next
+      }
+      if (in_worker_quote) {
+        if (!f2["in"] && $0 ~ /^>/) {
+          next
+        }
+        in_worker_quote = 0
+        if ($0 ~ /^[ \t]*$/ && skipped_worker_quote && (pre_len == 0 || pre[pre_len] ~ /^[ \t]*$/)) {
+          skipped_worker_quote = 0
+          next
+        }
+      }
+      skipped_worker_quote = 0
+      pre[++pre_len] = $0
+      if (!f2["in"] && $0 ~ /^#+[ \t]/) pre_heading = 1
+      if (!f2["in"] && pre_heading && $0 ~ /^---[ \t]*$/) pre_rule = pre_len
+      next
+    }
+
+    if (intask) {
+      print
+      found = 1
+    }
+  }
+
   END {
-    where = "the code fence opened at line " fence_line " of " ENVIRON["TASK_BRIEF_PLAN"] " never closes"
-    if (infence && hidden && (intask || !found)) {
-      print "task-brief: " where ", so no Task heading after it can be seen; close that fence in the plan and rerun" | "cat >&2"
-      if (intask) exit 4
-    } else if (infence && intask) {
-      print "task-brief: warning: " where "; it hides no Task heading, so this brief is complete" | "cat >&2"
+    where = "the code fence opened at line " f2["line"] " of " ENVIRON["TASK_BRIEF_PLAN"] " never closes"
+    if (f2["in"] && f2["hidden"] && (intask || stopped_at_footer || !found)) {
+      stderr("task-brief: " where ", so no Task heading after it can be seen; close that fence in the plan and rerun")
+      if (intask || stopped_at_footer) {
+        close("cat >&2")
+        exit 4
+      }
+    } else if (f2["in"] && intask) {
+      stderr("task-brief: warning: " where "; it hides no Task heading, so this brief is complete")
     }
     # An open fence that hid Task headings already explains why none were
     # seen; the English-word hint would contradict it.
-    if (!tasks && shaped && !(infence && hidden)) {
-      print "task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:" | "cat >&2"
-      for (i = 1; i <= shaped; i++) print "  " shaped_heading[i] | "cat >&2"
+    if (!tasks && shaped && !(f2["in"] && f2["hidden"])) {
+      stderr("task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:")
+      for (i = 1; i <= shaped; i++) stderr("  " shaped_heading[i])
     }
   }
-' "$plan" > "$out" || rc=$?
+' "$plan" "$plan" > "$tmpout" || rc=$?
+
 if [ "$rc" -ne 0 ]; then
-  if [ -f "$out" ]; then rm -f "$out"; fi
+  rm -f -- "$tmpout"
+  tmpout=""
   exit "$rc"
 fi
 
-if [ ! -s "$out" ]; then
+if [ ! -s "$tmpout" ]; then
   echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
   exit 3
 fi
+
+commit_tmpout "$out"
 
 echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"
