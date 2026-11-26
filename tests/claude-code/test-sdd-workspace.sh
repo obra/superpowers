@@ -830,17 +830,20 @@ EOF
     local fifo_out_dir="$TEST_ROOT/fifo-outfile-dir" fifo_out="" fifo_err="" fifo_leftover=""
     fifo_out="$fifo_out_dir/brief.md"
     mkdir -p "$fifo_out_dir"
-    mkfifo "$fifo_out"
-    rc=0
-    fifo_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$fifo_out" 2>&1 >/dev/null)" || rc=$?
-    fifo_leftover="$(find "$fifo_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
-    if [[ "$rc" -eq 2 && "$fifo_err" == *"output path is a symlink or special file"* \
-        && -p "$fifo_out" && -z "$fifo_leftover" ]]; then
-        pass "task-brief refuses a FIFO OUTFILE and leaves it a FIFO"
+    if ! mkfifo "$fifo_out" 2>/dev/null || [[ ! -p "$fifo_out" ]]; then
+        echo "  [SKIP] task-brief refusing a FIFO OUTFILE (this shell cannot make a FIFO)"
     else
-        fail "task-brief refuses a FIFO OUTFILE and leaves it a FIFO"
-        echo "    exit: $rc, fifo: $(test -p "$fifo_out" && echo yes || echo no), leftover: $fifo_leftover"
-        echo "    stderr: $fifo_err"
+        rc=0
+        fifo_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$fifo_out" 2>&1 >/dev/null)" || rc=$?
+        fifo_leftover="$(find "$fifo_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
+        if [[ "$rc" -eq 2 && "$fifo_err" == *"output path is a symlink or special file"* \
+            && -p "$fifo_out" && -z "$fifo_leftover" ]]; then
+            pass "task-brief refuses a FIFO OUTFILE and leaves it a FIFO"
+        else
+            fail "task-brief refuses a FIFO OUTFILE and leaves it a FIFO"
+            echo "    exit: $rc, fifo: $(test -p "$fifo_out" && echo yes || echo no), leftover: $fifo_leftover"
+            echo "    stderr: $fifo_err"
+        fi
     fi
 
     # A symlink OUTFILE is refused too: the rename would replace the link
@@ -850,17 +853,20 @@ EOF
     link_target="$link_out_dir/linked-brief.md"
     mkdir -p "$link_out_dir"
     printf 'LINKED-BRIEF-BYTES\n' > "$link_target"
-    ln -s "$link_target" "$link_out"
-    rc=0
-    link_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$link_out" 2>&1 >/dev/null)" || rc=$?
-    link_leftover="$(find "$link_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
-    if [[ "$rc" -eq 2 && "$link_err" == *"output path is a symlink or special file"* \
-        && -L "$link_out" && "$(cat "$link_target")" == "LINKED-BRIEF-BYTES" && -z "$link_leftover" ]]; then
-        pass "task-brief refuses a symlink OUTFILE and leaves the link and its target unchanged"
+    if ! ln -s "$link_target" "$link_out" 2>/dev/null || [[ ! -L "$link_out" ]]; then
+        echo "  [SKIP] task-brief refusing a symlink OUTFILE (ln -s does not make a symlink here)"
     else
-        fail "task-brief refuses a symlink OUTFILE and leaves the link and its target unchanged"
-        echo "    exit: $rc, symlink: $(test -L "$link_out" && echo yes || echo no), target: $(cat "$link_target" 2>/dev/null), leftover: $link_leftover"
-        echo "    stderr: $link_err"
+        rc=0
+        link_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$link_out" 2>&1 >/dev/null)" || rc=$?
+        link_leftover="$(find "$link_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
+        if [[ "$rc" -eq 2 && "$link_err" == *"output path is a symlink or special file"* \
+            && -L "$link_out" && "$(cat "$link_target")" == "LINKED-BRIEF-BYTES" && -z "$link_leftover" ]]; then
+            pass "task-brief refuses a symlink OUTFILE and leaves the link and its target unchanged"
+        else
+            fail "task-brief refuses a symlink OUTFILE and leaves the link and its target unchanged"
+            echo "    exit: $rc, symlink: $(test -L "$link_out" && echo yes || echo no), target: $(cat "$link_target" 2>/dev/null), leftover: $link_leftover"
+            echo "    stderr: $link_err"
+        fi
     fi
 
     # --- review-package takes the plan first and lands in its directory ---
