@@ -30,9 +30,9 @@ partner says is public; `PROPRIETARY` is the terms they name as
 proprietary, which may be none. Unless they already told you, ask which
 repositories and terms in the draft are public or proprietary. Where the
 policy says to report to your dispatcher, ask your partner. Rewrite
-`path:line` citations as `transcript line <n>` and name each transcript
-by session id, never by path. The draft is the only copy you modify; the
-report, the case file, and the session files stay as they are.
+transcript `path:line` citations as `transcript line <n>` and name each
+transcript by session id, never by path. The draft is the only copy you
+modify; the report, the case file, and the session files stay as they are.
 
 Two slots carry your partner's own wording: the name they file under and
 their summary. Keep both as given. If the summary contains something the
