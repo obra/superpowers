@@ -167,7 +167,7 @@ Skills speak in actions rather than naming any one runtime's tools. The bootstra
 - "Fetch a URL" → `webfetch`
 - "Search the web" → `websearch`
 
-In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, continuation happens by re-invoking with `sessionID`, and the `background` parameter was removed in 2.3.0), `apply_patch` → `patch`, and `bash` → `shell`, and disabled `todowrite` by default (available behind `experimental.todo`). The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
+In short, V2 renamed `task` → `subagent` (the agent name moved from `subagent_type` to `agent`, continuation happens by re-invoking with `sessionID`, and the `background` parameter is present in 2.0.7 and absent in 2.3.2), `apply_patch` → `patch`, and `bash` → `shell`; 2.0.7 has no todo tool, and 2.3.2 has `todowrite` behind `experimental.todo`. The available mutation tools depend on the selected model: `patch` is available for selected GPT model IDs, while other models use `write` and `edit`.
 
 (V1 list verified against OpenCode 1.18.x/1.19.x; V2 list verified against the OpenCode 2.0.7 and 2.3.2 host contracts.)
 

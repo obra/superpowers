@@ -88,9 +88,10 @@ When skills request actions, substitute OpenCode equivalents:
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-// V2 built-ins: todowrite is off by default and enabled via experimental.todo;
-// task → subagent (agent name in 'agent', continuation via sessionID, always
-// background since 2.3.0); apply_patch → patch (patchText, same patch format);
+// V2 built-ins: 2.0.7 has no todo tool, and 2.3.2 has todowrite behind
+// experimental.todo; task → subagent (agent name in 'agent', continuation via
+// sessionID, background parameter present in 2.0.7 and absent in 2.3.2);
+// apply_patch → patch (patchText, same patch format);
 // bash → shell. read, write, edit, grep, glob, webfetch, websearch, and skill
 // all exist under those names (checked against the 2.0.7 and 2.3.2 host contracts).
 export const V2_MAPPING = `**Tool Mapping for OpenCode:**
