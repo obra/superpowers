@@ -198,6 +198,27 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$WRAPPER_UNDER_TEST" session-start
 
+zero_arg_out="$TEST_ROOT/zero-arg.out"
+zero_arg_rc=0
+bash "$WRAPPER_UNDER_TEST" >"$zero_arg_out" 2>&1 || zero_arg_rc=$?
+if [[ "$zero_arg_rc" -eq 0 && ! -s "$zero_arg_out" ]]; then
+    pass "zero-arg run-hook.cmd exits 0 with empty stdout/stderr"
+else
+    fail "zero-arg run-hook.cmd exits 0 with empty stdout/stderr (rc=$zero_arg_rc)"
+fi
+
+# Heredocs deadlock bash >= 5.1 on macOS under pipe pressure (#571), so
+# neither the wrapper nor the hook may contain one outside a comment line
+# (# or REM). The operator is split so this file does not match itself.
+heredoc_op='<''<'
+for hook_file in "$WRAPPER_UNDER_TEST" "$HOOK_UNDER_TEST"; do
+    if grep -q -- "$heredoc_op" <(grep -v -E '^[[:space:]]*(#|REM([[:space:]]|$))' "$hook_file"); then
+        fail "${hook_file##*/} contains no heredoc"
+    else
+        pass "${hook_file##*/} contains no heredoc"
+    fi
+done
+
 cursor_home="$(make_home cursor)"
 assert_command_output \
     "Cursor emits top-level additional_context only" \
@@ -266,10 +287,14 @@ assert_command_output \
 # the wrapper must find zsh, which runs session-start unchanged. sh only
 # counts when it isn't bash (Git Bash's and macOS's sh are bash, which sets
 # $BASH and never reaches the fallback).
-posix_sh="$(command -v sh)"
-if [[ -n "$(env -i "$posix_sh" -c 'echo "${BASH:-}"')" ]]; then
-    posix_sh=""
-fi
+posix_sh=""
+for candidate in dash ash sh; do
+    if cand_bin="$(command -v "$candidate" 2>/dev/null)" \
+        && [[ -z "$(env -i "$cand_bin" -c 'echo "${BASH_VERSION:-}${ZSH_VERSION:-}"' 2>/dev/null)" ]]; then
+        posix_sh="$cand_bin"
+        break
+    fi
+done
 no_bash_bin="$TEST_ROOT/no-bash/bin"
 mkdir -p "$no_bash_bin"
 if zsh_bin="$(command -v zsh)"; then
@@ -289,20 +314,74 @@ else
     echo "  [SKIP] run-hook.cmd without bash: zsh not installed"
 fi
 
-# With neither bash nor zsh, exit 0 quietly like the Windows half: the plugin
-# still works, just without the bootstrap.
+# On sh/ash/dash-only systems (neither bash nor zsh installed), run-hook.cmd
+# falls back to sh (or /bin/sh on empty PATH) and session-start still injects
+# full context.
 if [[ -n "$posix_sh" ]]; then
-    no_shell_rc=0
-    no_shell_out="$(env -i PATH="$TEST_ROOT/no-shell" HOME="$TEST_ROOT" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
-        "$posix_sh" "$WRAPPER_UNDER_TEST" session-start 2>&1)" || no_shell_rc=$?
-    if [[ "$no_shell_rc" -eq 0 && -z "$no_shell_out" ]]; then
-        pass "run-hook.cmd with neither bash nor zsh exits 0 with no output"
-    else
-        fail "run-hook.cmd with neither bash nor zsh exits 0 with no output (rc=$no_shell_rc, out=$no_shell_out)"
+    sh_only_bin="$TEST_ROOT/sh-only/bin"
+    mkdir -p "$sh_only_bin"
+    ln -s "$posix_sh" "$sh_only_bin/sh"
+    assert_command_output \
+        "run-hook.cmd with only sh (${posix_sh##*/}) dispatches session-start" \
+        "nested" \
+        "" \
+        "" \
+        "$(make_home sh-only-wrapper)" \
+        PATH="$sh_only_bin" \
+        CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+        "$posix_sh" "$WRAPPER_UNDER_TEST" session-start
+
+    assert_command_output \
+        "session-start run directly by ${posix_sh##*/} with empty PATH emits nested additionalContext" \
+        "nested" \
+        "" \
+        "" \
+        "$(make_home sh-direct-empty-path)" \
+        PATH="" \
+        CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+        "$posix_sh" "$HOOK_UNDER_TEST"
+
+    if [[ -x /bin/sh ]]; then
+        assert_command_output \
+            "run-hook.cmd with empty PATH falls back cleanly via /bin/sh" \
+            "nested" \
+            "" \
+            "" \
+            "$(make_home sh-wrapper-empty-path)" \
+            PATH="" \
+            CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+            "$posix_sh" "$WRAPPER_UNDER_TEST" session-start
     fi
 else
-    echo "  [SKIP] run-hook.cmd with neither bash nor zsh: sh is bash here"
+    echo "  [SKIP] run-hook.cmd/session-start sh-only tests: no non-bash/non-zsh POSIX sh found"
 fi
+
+# Adversarial escaping test (backslashes, quotes, tabs, globs, CRLF) under
+# every shell the wrapper can pick. bash gets CR through printf -v, the
+# others through a command substitution.
+tricky_root="$TEST_ROOT/tricky-plugin"
+mkdir -p "$tricky_root/hooks" "$tricky_root/skills/using-superpowers"
+cp "$HOOK_UNDER_TEST" "$tricky_root/hooks/session-start"
+printf 'Line1: C:\\Users\\new\\tab"quote\\*?[foo]\\bar\r\nLine2:\twith\ttabs and ""quotes""\n\n' > "$tricky_root/skills/using-superpowers/SKILL.md"
+for tricky_sh in ${posix_sh:+"$posix_sh"} "$BASH" ${zsh_bin:+"$zsh_bin"}; do
+    tricky_rc=0
+    tricky_json="$(env -i PATH="" HOME="$(make_home "tricky-${tricky_sh##*/}")" CLAUDE_PLUGIN_ROOT="$tricky_root" \
+        "$tricky_sh" "$tricky_root/hooks/session-start")" || tricky_rc=$?
+    if [[ "$tricky_rc" -eq 0 ]] && node -e '
+        const fs = require("fs");
+        const raw = fs.readFileSync(process.argv[1], "utf8").replace(/\n+$/, "");
+        const parsed = JSON.parse(process.argv[2]);
+        const ctx = parsed && parsed.hookSpecificOutput && parsed.hookSpecificOutput.additionalContext;
+        if (!ctx || !ctx.includes(raw)) {
+            console.error("tricky roundtrip mismatch");
+            process.exit(1);
+        }
+    ' "$tricky_root/skills/using-superpowers/SKILL.md" "$tricky_json"; then
+        pass "${tricky_sh##*/} round-trips backslashes, quotes, tabs, globs, and CRLF in JSON"
+    else
+        fail "${tricky_sh##*/} round-trips backslashes, quotes, tabs, globs, and CRLF in JSON (rc=$tricky_rc)"
+    fi
+done
 
 # Run by bare filename from inside hooks/ ($0 has no slash), the plugin root
 # must still resolve.

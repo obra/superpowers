@@ -1,4 +1,7 @@
-: << 'CMDBLOCK'
+:; [ $# -ge 1 ] || exit 0
+:; case "$0" in */*|*\\*) SCRIPT_DIR="${0%[/\\]*}" ;; *) SCRIPT_DIR="." ;; esac
+:; if [ -n "${BASH:-}" ]; then shell="$BASH"; elif command -v bash >/dev/null 2>&1; then shell="bash"; elif command -v zsh >/dev/null 2>&1; then shell="zsh"; elif command -v sh >/dev/null 2>&1; then shell="sh"; elif [ -x /bin/sh ]; then shell="/bin/sh"; else exit 0; fi
+:; SCRIPT_NAME="$1"; shift; exec "$shell" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
 @echo off
 REM Cross-platform polyglot wrapper for hook scripts.
 REM On Windows: cmd.exe runs the batch portion, which finds and calls bash.
@@ -45,35 +48,3 @@ REM inside a block when it parses the block, which would lose the hook's
 REM exit code.
 "%BASH_EXE%" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
 exit /b %ERRORLEVEL%
-CMDBLOCK
-
-# Unix: run the named script directly
-# Splits $0 on its last / or \ (cmd passes Windows paths) instead of calling
-# dirname, and uses $BASH (bash's own absolute path, always set once bash is
-# running) instead of a PATH lookup for bash, so this keeps working when
-# Claude Code spawns the SessionStart hook with a broken/empty PATH
-# (anthropics/claude-code#43127).
-# No $(cd ... && pwd) subshell: a fork costs tens of milliseconds under Git
-# Bash on Windows, and a relative directory is enough for the exec below.
-case "$0" in
-  */*|*\\*) SCRIPT_DIR="${0%[/\\]*}" ;;
-  *) SCRIPT_DIR="." ;;
-esac
-SCRIPT_NAME="$1"
-shift
-
-# Without bash installed, the harness runs this file with zsh or sh and $BASH
-# is unset (#2503). session-start runs unchanged under zsh, so fall back to
-# it, and otherwise exit quietly like the Windows half: the plugin still
-# works, just without SessionStart context injection.
-if [ -n "${BASH:-}" ]; then
-  shell="$BASH"
-elif command -v bash >/dev/null 2>&1; then
-  shell="bash"
-elif command -v zsh >/dev/null 2>&1; then
-  shell="zsh"
-else
-  exit 0
-fi
-
-exec "$shell" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
