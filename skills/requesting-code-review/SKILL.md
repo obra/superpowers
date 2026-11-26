@@ -20,7 +20,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 - Before refactoring (baseline check)
 - After fixing complex bug
 
-**Executing a plan?** subagent-driven-development reviews each task with its own task reviewer, and both it and executing-plans end with one whole-branch review using [code-reviewer.md](code-reviewer.md). Follow their review steps; don't add a review of your own after each task.
+**Executing a plan?** superpowers:subagent-driven-development reviews each task with its own task reviewer, and both it and superpowers:executing-plans end with one whole-branch review using [code-reviewer.md](code-reviewer.md). Follow their review steps; don't add a review of your own after each task.
 
 ## How to Request
 
