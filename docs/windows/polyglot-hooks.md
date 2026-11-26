@@ -209,6 +209,11 @@ escape_for_json() {
   replace_all "$escaped" "$tab" '\t'
   using_superpowers_escaped=$escaped
 }
+
+# The result is left in a variable instead of printed, because capturing
+# output with $(...) forks. Call the function, then read the variable:
+#   escape_for_json "$content"
+#   json=$using_superpowers_escaped
 ```
 
 ## Troubleshooting
