@@ -29,8 +29,10 @@ else
   cr=$(printf '\r' 2>/dev/null || true)
 fi
 
-# Read using-superpowers content via POSIX read (no cat, no $(< file) subshell),
-# dropping trailing blank lines as $(< file) did.
+# Read using-superpowers content with the read builtin (no cat, for the same
+# PATH-independence reason, and no $(< file) subshell). read returns 1 at end
+# of file, hence || [ -n "$line" ]; the loop drops trailing newlines as
+# $(< file) did.
 skill_md="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
 using_superpowers_content="Error reading using-superpowers skill"
 if [ -r "$skill_md" ]; then
