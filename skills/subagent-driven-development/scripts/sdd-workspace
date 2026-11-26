@@ -46,7 +46,7 @@ if [ "${1:-}" = "-C" ]; then
   shift 2
 fi
 
-if [ $# -ne 1 ] || [ -z "$1" ]; then
+if [ $# -ne 1 ]; then
   echo "usage: sdd-workspace [-C DIR] PLAN_FILE" >&2
   exit 2
 fi
