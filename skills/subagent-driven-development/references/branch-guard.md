@@ -1,7 +1,7 @@
 # The Branch Guard
 
 Part of superpowers:subagent-driven-development. Follow it in Setup,
-before your first edit.
+before you dispatch Task 1: implementers commit on the branch you are on.
 
 **Branch before your first edit.** Run `git branch --show-current`. If it
 prints `main` or `master`, create a branch for this plan before touching

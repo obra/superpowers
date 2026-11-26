@@ -105,7 +105,7 @@ superpowers:using-git-worktrees to create one or verify the existing one.
 Never start implementation on a main/master branch without your human
 partner's explicit consent.
 
-Before your first edit, read
+Before you dispatch Task 1, read
 [references/branch-guard.md](references/branch-guard.md) and follow it.
 
 Conversation memory does not survive compaction. In real sessions,
