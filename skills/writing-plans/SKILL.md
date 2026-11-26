@@ -133,7 +133,7 @@ Expected: PASS
 
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "<message matching this repo's commit style>"
+git commit -m "<message in the style of this repo's recent commits>"
 ```
 ````
 
