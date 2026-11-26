@@ -825,6 +825,44 @@ EOF
         echo "    rc_dir_norm: $rc_dir_norm, rc_dir_fb: $rc_dir_fb, contents: $(ls -A "$dir_out_target")"
     fi
 
+    # A FIFO OUTFILE is refused before anything is staged: renaming the brief
+    # into place would replace the pipe with a regular file
+    local fifo_out_dir="$TEST_ROOT/fifo-outfile-dir" fifo_out="" fifo_err="" fifo_leftover=""
+    fifo_out="$fifo_out_dir/brief.md"
+    mkdir -p "$fifo_out_dir"
+    mkfifo "$fifo_out"
+    rc=0
+    fifo_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$fifo_out" 2>&1 >/dev/null)" || rc=$?
+    fifo_leftover="$(find "$fifo_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
+    if [[ "$rc" -eq 2 && "$fifo_err" == *"output path is a symlink or special file"* \
+        && -p "$fifo_out" && -z "$fifo_leftover" ]]; then
+        pass "task-brief refuses a FIFO OUTFILE and leaves it a FIFO"
+    else
+        fail "task-brief refuses a FIFO OUTFILE and leaves it a FIFO"
+        echo "    exit: $rc, fifo: $(test -p "$fifo_out" && echo yes || echo no), leftover: $fifo_leftover"
+        echo "    stderr: $fifo_err"
+    fi
+
+    # A symlink OUTFILE is refused too: the rename would replace the link
+    # itself, not write through it to its target
+    local link_out_dir="$TEST_ROOT/symlink-outfile-dir" link_out="" link_target="" link_err="" link_leftover=""
+    link_out="$link_out_dir/brief.md"
+    link_target="$link_out_dir/linked-brief.md"
+    mkdir -p "$link_out_dir"
+    printf 'LINKED-BRIEF-BYTES\n' > "$link_target"
+    ln -s "$link_target" "$link_out"
+    rc=0
+    link_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-a.md 1 "$link_out" 2>&1 >/dev/null)" || rc=$?
+    link_leftover="$(find "$link_out_dir" -name '.task-brief.*' 2>/dev/null || true)"
+    if [[ "$rc" -eq 2 && "$link_err" == *"output path is a symlink or special file"* \
+        && -L "$link_out" && "$(cat "$link_target")" == "LINKED-BRIEF-BYTES" && -z "$link_leftover" ]]; then
+        pass "task-brief refuses a symlink OUTFILE and leaves the link and its target unchanged"
+    else
+        fail "task-brief refuses a symlink OUTFILE and leaves the link and its target unchanged"
+        echo "    exit: $rc, symlink: $(test -L "$link_out" && echo yes || echo no), target: $(cat "$link_target" 2>/dev/null), leftover: $link_leftover"
+        echo "    stderr: $link_err"
+    fi
+
     # --- review-package takes the plan first and lands in its directory ---
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
     ( cd "$repo" \

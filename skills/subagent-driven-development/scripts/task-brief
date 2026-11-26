@@ -40,6 +40,10 @@ stage_tmpout() {
     echo "task-brief: output path is a directory: $target" >&2
     exit 2
   fi
+  if [ -L "$target" ] || { [ -e "$target" ] && [ ! -f "$target" ]; }; then
+    echo "task-brief: output path is a symlink or special file: $target" >&2
+    exit 2
+  fi
   out_dir=$(dirname -- "$target")
   case "$out_dir" in
     -*) out_dir="./$out_dir" ;;
