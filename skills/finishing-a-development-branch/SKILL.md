@@ -148,6 +148,11 @@ tooling — its CLI if one is available, or the creation URL most forges
 print when you push — following the repo's PR template and conventions if
 present, and report the URL to your human partner.
 
+If a plan executor's final message listed deferred minors or parked
+findings, copy those lines into the PR description under
+"Deferred items": that is where your human partner reviews, and it
+outlives the session.
+
 Keep the worktree — your human partner iterates on PR feedback there.
 
 ### Option 3: Keep As-Is
