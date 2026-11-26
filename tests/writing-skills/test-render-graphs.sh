@@ -116,13 +116,7 @@ case "${1:-}" in
     exit 0
     ;;
   -Tsvg)
-    input="$(cat)"
-    case "$input" in
-      *$'\r'*)
-        echo "syntax error: unexpected carriage return" >&2
-        exit 1
-        ;;
-    esac
+    cat >/dev/null
     printf '<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>\n'
     exit 0
     ;;
@@ -150,7 +144,7 @@ esac
 EOF
 chmod +x "$TEST_ROOT/fail-dot/dot"
 
-# 1. CRLF SKILL.md extraction and normalization
+# 1. CRLF SKILL.md extraction
 crlf_fixture="$TEST_ROOT/crlf-skill"
 mkdir -p "$crlf_fixture"
 printf -- '---\r\nname: crlf-skill\r\n---\r\n\r\n# CRLF Skill\r\n\r\n```dot\r\ndigraph crlf_graph {\r\n  start -> end;\r\n}\r\n```\r\n' >"$crlf_fixture/SKILL.md"

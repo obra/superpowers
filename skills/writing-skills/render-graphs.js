@@ -23,7 +23,7 @@ function extractDotBlocks(markdown) {
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
-    const content = match[1].replace(/\r\n/g, '\n').trim();
+    const content = match[1].trim();
 
     // Extract digraph name
     const nameMatch = content.match(/digraph\s+(\w+)/);
