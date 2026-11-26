@@ -256,7 +256,7 @@ TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
         if (intask && (task_start_line == last_task_line || FNR > last_task_line) && $0 ~ /^#+[ \t]+[^ \t]/) {
           match($0, /^#+/)
           if (RLENGTH <= level) {
-            stderr("task-brief: stopped Task " n " capture before heading: " $0)
+            stderr("task-brief: Task " n " is the plan'\''s last task; its brief ends before the plan-level heading \"" $0 "\", and the plan from that heading on is in no brief")
             intask = 0
             stopped_at_footer = 1
           }

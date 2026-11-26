@@ -249,6 +249,15 @@ take the next task.
 
 ## Final Review
 
+Before the review package, finish the plan's own closing sections. The
+last task's brief ends at the first plan-level heading after that task
+(`task-brief` names it when it stops), so nothing from that heading to
+the end of the plan is in any brief. Read those sections in the plan and
+run every check they name, comparing each `Expected:` line; a check that
+fails is fixed like a failing step before you build the package. Notes
+the author wrote about writing the plan (self-review, execution handoff)
+are not steps.
+
 Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
 by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.
 `git merge-base main HEAD`) and review from the file it prints.

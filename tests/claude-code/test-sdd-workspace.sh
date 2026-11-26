@@ -632,7 +632,7 @@ PLAN
 
     rc=0
     f2_err="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan-fences-final.md 2 "$f2_out" 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 0 && "$f2_err" == *"## Self-Review"* ]] \
+    if [[ "$rc" -eq 0 && "$f2_err" == *"## Self-Review"* && "$f2_err" == *"in no brief"* ]] \
         && grep -q 'FINAL-BODY' "$f2_out" \
         && grep -q '^## Fenced Heading Inside Final Task$' "$f2_out" \
         && grep -q 'STEP-1-BODY' "$f2_out" \
