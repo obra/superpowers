@@ -267,7 +267,7 @@ needed.
 - Hand the reviewer its diff as a file: run this skill's
   `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from
   the working tree you're executing in, and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
+  it prints (or, without bash: `git log`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
   the commit list, stat summary, and full diff with context in one Read
