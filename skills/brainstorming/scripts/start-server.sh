@@ -19,6 +19,13 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+require_flag_value() {
+  if [[ $# -lt 2 || -z "${2:-}" || "${2:-}" == --* ]]; then
+    echo "{\"error\": \"Missing value for $1\"}"
+    exit 1
+  fi
+}
+
 # Parse arguments
 PROJECT_DIR=""
 FOREGROUND="false"
@@ -29,18 +36,22 @@ IDLE_TIMEOUT_MINUTES=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
+      require_flag_value "$@"
       PROJECT_DIR="$2"
       shift 2
       ;;
     --host)
+      require_flag_value "$@"
       BIND_HOST="$2"
       shift 2
       ;;
     --url-host)
+      require_flag_value "$@"
       URL_HOST="$2"
       shift 2
       ;;
     --idle-timeout-minutes)
+      require_flag_value "$@"
       IDLE_TIMEOUT_MINUTES="$2"
       shift 2
       ;;
@@ -94,8 +105,25 @@ is_windows_like_shell() {
   return 1
 }
 
+is_cursor_agent() {
+  # Cursor sets these in agent Shell tool environments. Detached/nohup children
+  # are reaped when the launching tool call exits — same failure mode as Codex.
+  if [[ -n "${CURSOR_AGENT:-}" ]]; then
+    return 0
+  fi
+  if [[ "${CURSOR_EXTENSION_HOST_ROLE:-}" == "agent-exec" ]]; then
+    return 0
+  fi
+  return 1
+}
+
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  FOREGROUND="true"
+fi
+
+# Cursor reaps nohup children after the Shell tool call completes. Auto-foreground.
+if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]] && is_cursor_agent; then
   FOREGROUND="true"
 fi
 

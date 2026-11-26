@@ -90,6 +90,15 @@ bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
 bash scripts/start-server.sh --project-dir /path/to/project --open --foreground
 ```
 
+**Cursor:**
+```bash
+# Cursor reaps detached processes. The script auto-detects Cursor and switches
+# to foreground mode. Set block_until_ms: 0 on the Shell tool call so the
+# server survives across turns, then take state_dir from the command's output
+# (or the session under .superpowers/brainstorm/ that has state/server-info).
+bash scripts/start-server.sh --project-dir /path/to/project --open
+```
+
 **Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
 
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
@@ -207,6 +216,8 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
+`.card-image` stacks children vertically (`min-height: 140px`) so multi-part mockups (e.g. `.mock-nav` + `.mock-content`) don't clip horizontally, while direct `img` and `svg` children stay centered.
+
 ### Mockup container
 
 ```html
@@ -288,7 +299,7 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 ## Cleaning Up
 
 ```bash
-bash scripts/stop-server.sh $SESSION_DIR
+bash scripts/stop-server.sh "${STATE_DIR%/state}"
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.

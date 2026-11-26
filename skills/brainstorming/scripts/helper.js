@@ -126,6 +126,25 @@
     }
   }
 
+  const NATIVE_CONTROLS = 'button, a, input, select, textarea';
+
+  function isNativeControl(el) {
+    return el.matches(NATIVE_CONTROLS);
+  }
+
+  function syncAriaPressed(el) {
+    if (!isNativeControl(el) || el.tagName === 'BUTTON' || el.hasAttribute('aria-pressed')) {
+      el.setAttribute('aria-pressed', String(el.classList.contains('selected')));
+    }
+  }
+
+  document.querySelectorAll('[data-choice]').forEach((el) => {
+    if (isNativeControl(el)) return;
+    if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+    if (!el.hasAttribute('aria-pressed')) syncAriaPressed(el);
+  });
+
   // Capture clicks on choice elements
   document.addEventListener('click', (e) => {
     const target = e.target.closest('[data-choice]');
@@ -137,7 +156,20 @@
       choice: target.dataset.choice,
       id: target.id || null
     });
+  });
 
+  // Activate non-native [data-choice] controls via Enter / Space
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || (e.key !== 'Enter' && e.key !== ' ')) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const origin = e.target;
+    if (!origin || typeof origin.closest !== 'function') return;
+    if (origin.isContentEditable || origin.closest(NATIVE_CONTROLS)) return;
+    const target = origin.closest('[data-choice]');
+    if (!target || isNativeControl(target)) return;
+
+    if (e.key === ' ') e.preventDefault();
+    if (!e.repeat) target.click();
   });
 
   // Frame UI: selection tracking
@@ -147,13 +179,15 @@
     const container = el.closest('.options') || el.closest('.cards');
     const multi = container && container.dataset.multiselect !== undefined;
     if (container && !multi) {
-      container.querySelectorAll('.option, .card').forEach(o => o.classList.remove('selected'));
+      container.querySelectorAll('.option, .card, [data-choice]').forEach(o => o.classList.remove('selected'));
     }
     if (multi) {
       el.classList.toggle('selected');
     } else {
       el.classList.add('selected');
     }
+    if (container) container.querySelectorAll('[data-choice]').forEach(syncAriaPressed);
+    syncAriaPressed(el);
     window.selectedChoice = el.dataset.choice;
   };
 
