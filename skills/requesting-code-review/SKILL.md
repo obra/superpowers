@@ -24,8 +24,11 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## How to Request
 
 **1. Get git SHAs:**
+
+Identify the base commit to review against. Use the commit recorded before the work started, or compute the merge base with the target branch (never default to `HEAD~1`, which silently drops all but the last commit of multi-commit work):
+
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or: git merge-base origin/main HEAD
+BASE_SHA=$(git merge-base origin/main HEAD)  # or the commit recorded before starting work
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
@@ -36,7 +39,7 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
+- `{BASE_SHA}` - Starting commit (recorded before work started, or merge-base; never `HEAD~1` for multi-commit work)
 - `{HEAD_SHA}` - Ending commit
 
 **3. Act on feedback:**
@@ -78,11 +81,13 @@ You: [Fix progress indicators]
 |--------|---------|
 | "I'll just review the diff myself instead of dispatching a reviewer" | You're the coordinator — reviewing the diff inline burns the context window you need to keep driving the work. Dispatch a reviewer subagent: the diff and the evaluation live in its context, and only the findings come back to you. |
 | "The reviewer needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the reviewer on the work product, not your thought process. |
+| "HEAD~1 is convenient as the base SHA" | If the task or feature has multiple commits, `HEAD~1` reviews only the final commit. Use the commit recorded before the work started, or `git merge-base origin/main HEAD`. |
 
 ## Red Flags
 
 **Never:**
 - Skip review because "it's simple"
+- Default to `HEAD~1` when work spans multiple commits (silently drops earlier commits from review)
 - Ignore Critical issues
 - Proceed with unfixed Important issues
 - Argue with valid technical feedback
