@@ -87,9 +87,16 @@ test('startup context injects the bootstrap as one user message', async () => {
   assert.match(textOf(result.messages[0]), /Pi tool mapping/);
   assert.equal(result.messages[1], originalMessages[0]);
 
+  const first = await context({ type: 'context', messages: originalMessages }, {});
   const repeatedProviderRequest = await context({ type: 'context', messages: originalMessages }, {});
   assert.equal(repeatedProviderRequest.messages.length, 2);
   assert.match(textOf(repeatedProviderRequest.messages[0]), /You have superpowers/);
+  assert.equal(
+    repeatedProviderRequest.messages[0].timestamp,
+    first.messages[0].timestamp,
+    'bootstrap timestamp must remain stable across provider requests',
+  );
+  assert.deepEqual(repeatedProviderRequest.messages[0], first.messages[0]);
 
   const alreadyInjected = await context({ type: 'context', messages: result.messages }, {});
   assert.equal(alreadyInjected, undefined, 'bootstrap should not duplicate when already present');
@@ -111,8 +118,9 @@ test('every provider request of every prompt in a session carries the bootstrap'
     { text: 'second prompt with a tool call', providerRequests: 2 },
     { text: 'third prompt', providerRequests: 1 },
   ];
+  const seenTimestamps = new Set();
   for (const [promptIndex, prompt] of prompts.entries()) {
-    history.push({ role: 'user', content: [{ type: 'text', text: prompt.text }], timestamp: promptIndex });
+    history.push({ role: 'user', content: [{ type: 'text', text: prompt.text }], timestamp: promptIndex + 10 });
     await emit(handlers, 'agent_start', {});
     for (let request = 1; request <= prompt.providerRequests; request += 1) {
       await emit(handlers, 'turn_start', {});
@@ -121,12 +129,14 @@ test('every provider request of every prompt in a session carries the bootstrap'
       assert.ok(result, `${label}: bootstrap missing`);
       assert.equal(result.messages.length, history.length + 1, `${label}: expected exactly one bootstrap message`);
       assert.match(textOf(result.messages[0]), /You have superpowers/, `${label}: bootstrap not first`);
-      history.push({ role: 'assistant', content: [{ type: 'text', text: 'ok' }], timestamp: promptIndex });
+      seenTimestamps.add(result.messages[0].timestamp);
+      history.push({ role: 'assistant', content: [{ type: 'text', text: 'ok' }], timestamp: promptIndex + 10 });
       await emit(handlers, 'turn_end', {});
     }
     await emit(handlers, 'agent_end', { messages: [] });
     await emit(handlers, 'agent_settled', {});
   }
+  assert.equal(seenTimestamps.size, 1, 'bootstrap timestamp must stay identical across all requests in a session');
 });
 
 test('session_compact injects bootstrap after compaction summaries, not before compaction', async () => {

@@ -15,18 +15,23 @@ let cachedBootstrap: string | null | undefined;
 
 export default function superpowersPiExtension(pi: ExtensionAPI) {
 	let injectBootstrap = true;
+	let bootstrapTimestamp: number | null = null;
 
 	pi.on("session_start", async () => {
 		injectBootstrap = true;
+		bootstrapTimestamp = null;
 	});
 
 	pi.on("session_compact", async () => {
 		injectBootstrap = true;
+		bootstrapTimestamp = null;
 	});
 
 	// Messages returned from a context handler are sent to the provider but never
 	// written to session history, so the bootstrap has to be injected into every
 	// provider request, on every prompt, for the whole session.
+	// Keep the injected message's timestamp stable across requests so prefix-cache
+	// and context-management extensions do not see a different leading message each turn.
 	pi.on("context", async (event) => {
 		if (!injectBootstrap) return;
 		if (event.messages.some(messageContainsBootstrap)) return;
@@ -34,13 +39,20 @@ export default function superpowersPiExtension(pi: ExtensionAPI) {
 		const bootstrap = getBootstrapContent();
 		if (!bootstrap) return;
 
+		const insertAt = firstNonCompactionSummaryIndex(event.messages);
+		if (bootstrapTimestamp === null) {
+			const anchorTimestamp = (event.messages[insertAt] as { timestamp?: unknown } | undefined)?.timestamp;
+			bootstrapTimestamp = typeof anchorTimestamp === "number" && Number.isFinite(anchorTimestamp)
+				? Math.max(0, anchorTimestamp - 1)
+				: Date.now();
+		}
+
 		const bootstrapMessage = {
 			role: "user" as const,
 			content: [{ type: "text" as const, text: bootstrap }],
-			timestamp: Date.now(),
+			timestamp: bootstrapTimestamp,
 		};
 
-		const insertAt = firstNonCompactionSummaryIndex(event.messages);
 		return {
 			messages: [
 				...event.messages.slice(0, insertAt),
