@@ -21,6 +21,10 @@ why?
 
 - **Everything that matters is in the request** ("make the icon cornflower
   blue"). This is a quick, clear task. Do it, and say what you did.
+- **A new standalone thing that fits in one file** (a script, a
+  one-off tool), where anything they left out has an obvious default.
+  Build it, and say what you built and which defaults you chose.
+  They'll tell you what to change.
 - **Something non-trivial is missing.** Start the conversation.
 
 Before you start implementing, you must, in order:
@@ -34,6 +38,12 @@ Before you start implementing, you must, in order:
 If nothing is open when you write your first message and there's one
 sensible way, steps 1 to 3 happen in that message (see Your First
 Message).
+
+If the whole change fits in a message (the actual lines you'd add or
+edit, a fix or a tweak), showing it is the design. Show the change, say
+why this way, and ask for their yes. With their yes, make it, test-first
+where there's behavior to test. There's no design doc and no plan for a
+change you showed whole.
 
 Two things aren't implementing: a spike they said yes to (see Spike to
 feel things out), and doing what they asked once they've opted out of
@@ -58,14 +68,26 @@ Move the work forward, with one of these:
   request back in your own words, so they can see whether you've got its
   shape: what they want, who it's for, and why, as far as they've said.
   Add what you found that bears on it: how the relevant parts work today
-  and what the change would touch. If you found something they may not
+  and what the change would touch. Give each finding as what it means
+  for what they asked; name each part the way their message does. If
+  their message used the code's own terms (a file, a function, a
+  command, a ticket), where the finding comes from (the file and the
+  function or setting) goes after it in parentheses. If their message
+  has none, name the part as they'd see it (the login page, the list of
+  books), with no file or code names. If you found something they may not
   have considered that would change what they're asking for or how it
   has to be built, like a constraint, a conflict, or a cheaper path, say
-  so plainly. How to build it comes later, once you understand what they
+  so plainly. If it means their request can't do what they want it for,
+  that's your question. If it's a limit of what they asked for, or a way
+  it could go further, it's a note: one line, and their scope stands.
+  How to build it comes later, once you understand what they
   want (see Lay out the approaches). End with one line inviting
-  corrections. Then, if they haven't told you why they want it, even if
-  you can guess, ask about that: one open question in their own terms,
-  with nothing to pick from. If they have told you, and their request
+  corrections. Then, if they haven't told you why they want it and the
+  request and the project make it plain, say what you take it to be for
+  in a line that starts "I think", as your reading they can correct. If you can't tell from
+  either, ask: one question in their own terms about the part you can't
+  see from where you are. Once the why is on the table, theirs or your
+  reading, and their request
   and the project leave open something whose answer would change what
   gets built, ask about the one that would change it most; when its
   choices can be named, sketch each concretely, with what it trades off
@@ -75,8 +97,12 @@ Move the work forward, with one of these:
   to approve it. Their approval covers the approach and the design: write
   the short design doc as approved and go on to the plan.
   Specs are often incomplete, so confirm before you build on one.
-- **They haven't:** one open question, in their own terms, about the
-  biggest thing their request leaves unsettled. Say why you're asking:
+- **They haven't:** if there's a project to read, what you find usually
+  turns a loose request into specific decisions: say what you found and
+  carry on as above. When what's unsettled is something only they know,
+  like who gets a say or who it's for, ask for the one or two facts
+  your design turns on, by name and in their own terms. Say why you're
+  asking:
   what the answer would change about what you build. For "a website for
   my bakery": "If it's mostly for people deciding whether to stop by,
   I'd lead with hours and what's in the case today; taking orders is a
@@ -87,12 +113,20 @@ brainstorming:
 
 - **They asked for it** (by name, by invoking it, or by asking for a
   design discussion): end there. They want this conversation.
-- **They didn't:** they may not want a conversation at all. End with a
-  light, one-line offer to just get going instead, like
-  "Or if you'd rather I just dive in, say so." If they take you up on
-  it, this skill is done: state any significant how-it-gets-made choice
-  (platform, language, medium) in one plain line, then do what they
-  asked through the normal workflow.
+- **They didn't:** they may not want a conversation at all. After your
+  question, end with the design you'd build if it were your call, so
+  they can take it whole: "If I were designing this myself, I would..."
+  then the design as they'd meet it: what they'd see and do (the page,
+  the command, the email) and the rules that matter, in up to 200-300
+  words on top of the rest of the message. If they've talked about how
+  it gets made, include your calls on that; otherwise leave the how
+  out. Then "If that
+  sounds right, say so and I'll run with it." If they say so, that's
+  their approval of the approach and the design: write the short design
+  doc as you stated it and go on to the plan. If they tell you instead
+  to skip the questions or just build it, this skill is done: state any
+  significant how-it-gets-made choice (platform, language, medium) in
+  one plain line, then do what they asked through the normal workflow.
 
 That's the whole message.
 
@@ -213,6 +247,7 @@ how big the work is in plain words. They can override it.
 
 | Size | The design doc |
 |------|----------------|
+| A change you showed whole | none: the change as shown is the design |
 | A small change | a short one: what you already covered together, written down |
 | A project | the full written design (below) |
 
@@ -267,8 +302,9 @@ round of questions the check produces. Without a subagent tool, read the
 document as that builder yourself.
 
 <HARD-GATE>
-Nothing gets built until your human partner approves the design doc:
-the short one for a small change, the full one for a project.
+Nothing gets built until your human partner approves the design: the
+change itself when you showed it whole, the short design doc for a small
+change, the full one for a project.
 Building includes writing product code, scaffolding, installing
 dependencies, creating projects, and invoking an implementation skill.
 Reading and exploring are fine.
@@ -288,6 +324,7 @@ superpowers:writing-plans and no other skill.
 |---------|---------|
 | "I'll offer a menu of what they might want" | Options steer. Ask them to describe it first. |
 | "I'll fill in sensible defaults" | Good. Say them out loud. A default they never heard is one they couldn't reject. |
+| "They may need more than they asked for" | They told you what they want. Note the limit in a line and build what they asked. |
 | "I've answered their questions, so I'll write the doc" | Lay out the approaches first, in a message of their own (or, when nothing was open from the start, in your first message's short design). |
 | "I should explain the process first" | Ask your question. The process shows itself. |
 | "They said 'sounds good' to the idea" | Approval covers what you showed them. A design doc you haven't written isn't approved. |
